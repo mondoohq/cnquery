@@ -3,8 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -39,8 +37,12 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 		cmd.Flags().String("platform-id", "", "select an specific asset by providing the platform id for the target")
 		cmd.Flags().Bool("instances", false, "also scan instances (only applies to api targets like aws, azure or gcp)")
 		cmd.Flags().Bool("host-machines", false, "also scan host machines like ESXi server")
+
 		cmd.Flags().Bool("record", false, "records backend calls")
 		cmd.Flags().MarkHidden("record")
+
+		cmd.Flags().String("record-file", "", "file path to for the recorded provider calls (only works for operating system providers)")
+		cmd.Flags().MarkHidden("record-file")
 
 		cmd.Flags().String("path", "", "path to a local file or directory that the connection should use")
 		cmd.Flags().StringToString("option", nil, "addition connection options, multiple options can be passed in via --option key=value")
@@ -58,6 +60,9 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 
 		viper.BindPFlag("vault.name", cmd.Flags().Lookup("vault"))
 		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+
+		viper.BindPFlag("record", cmd.Flags().Lookup("record"))
+		viper.BindPFlag("record-file", cmd.Flags().Lookup("record-file"))
 	},
 	Docs: builder.CommandsDocs{
 		Entries: map[string]builder.CommandDocsEntry{
@@ -280,12 +285,12 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 		}
 
-		record, _ := cmd.Flags().GetBool("record")
+		record := viper.GetBool("record")
 		if record {
 			log.Info().Msg("enable recording of platform calls")
 		}
 
-		backend, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, record)
+		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, record)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not connect to asset")
 		}
@@ -293,22 +298,17 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		// when we close the shell, we need to close the backend and store the recording
 		onCloseHandler := func() {
 			// store tracked commands and files
-			if backend.IsRecording() {
-				filename := "recording-" + time.Now().Format("20060102150405") + ".toml"
-				log.Info().Str("filename", filename).Msg("store recordings")
-				data := backend.Recording()
-				ioutil.WriteFile(filename, data, 0o700)
-			}
+			storeRecording(m)
 
 			// close backend connection
-			backend.Close()
+			m.Close()
 		}
 
 		shellOptions := []shell.ShellOption{}
 		shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
 		shellOptions = append(shellOptions, shell.WithFeatures(features))
 
-		sh, err := shell.New(backend, shellOptions...)
+		sh, err := shell.New(m, shellOptions...)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to initialize Mondoo Shell")
 		}
