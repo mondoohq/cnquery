@@ -18,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
 	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/version"
 )
@@ -170,6 +171,10 @@ func (t *manifestProvider) Name() (string, error) {
 	clusterName := common.ProjectNameFromPath(t.manifestFile)
 	clusterName = "K8S Manifest " + clusterName
 	return clusterName, nil
+}
+
+func (t *manifestProvider) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
+	return []admissionv1.AdmissionReview{}, nil
 }
 
 func loadManifestFile(manifestFile string) ([]byte, error) {

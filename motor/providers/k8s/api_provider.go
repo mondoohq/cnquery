@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
+	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -453,4 +454,8 @@ func (t *apiProvider) Secret(namespace, name string) (*v1.Secret, error) {
 		return nil, err
 	}
 	return secret, err
+}
+
+func (t *apiProvider) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
+	return []admissionv1.AdmissionReview{}, nil
 }

@@ -11,9 +11,10 @@ import (
 	platform "go.mondoo.com/cnquery/motor/platform"
 	providers "go.mondoo.com/cnquery/motor/providers"
 	resources "go.mondoo.com/cnquery/motor/providers/k8s/resources"
-	v1 "k8s.io/api/apps/v1"
-	v10 "k8s.io/api/batch/v1"
-	v11 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/admission/v1"
+	v10 "k8s.io/api/apps/v1"
+	v11 "k8s.io/api/batch/v1"
+	v12 "k8s.io/api/core/v1"
 	version "k8s.io/apimachinery/pkg/version"
 )
 
@@ -38,6 +39,21 @@ func NewMockKubernetesProvider(ctrl *gomock.Controller) *MockKubernetesProvider 
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockKubernetesProvider) EXPECT() *MockKubernetesProviderMockRecorder {
 	return m.recorder
+}
+
+// AdmissionReviews mocks base method.
+func (m *MockKubernetesProvider) AdmissionReviews() ([]v1.AdmissionReview, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdmissionReviews")
+	ret0, _ := ret[0].([]v1.AdmissionReview)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdmissionReviews indicates an expected call of AdmissionReviews.
+func (mr *MockKubernetesProviderMockRecorder) AdmissionReviews() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdmissionReviews", reflect.TypeOf((*MockKubernetesProvider)(nil).AdmissionReviews))
 }
 
 // Capabilities mocks base method.
@@ -67,10 +83,10 @@ func (mr *MockKubernetesProviderMockRecorder) Close() *gomock.Call {
 }
 
 // CronJob mocks base method.
-func (m *MockKubernetesProvider) CronJob(namespace, name string) (*v10.CronJob, error) {
+func (m *MockKubernetesProvider) CronJob(namespace, name string) (*v11.CronJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CronJob", namespace, name)
-	ret0, _ := ret[0].(*v10.CronJob)
+	ret0, _ := ret[0].(*v11.CronJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -82,10 +98,10 @@ func (mr *MockKubernetesProviderMockRecorder) CronJob(namespace, name interface{
 }
 
 // CronJobs mocks base method.
-func (m *MockKubernetesProvider) CronJobs(namespace v11.Namespace) ([]v10.CronJob, error) {
+func (m *MockKubernetesProvider) CronJobs(namespace v12.Namespace) ([]v11.CronJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CronJobs", namespace)
-	ret0, _ := ret[0].([]v10.CronJob)
+	ret0, _ := ret[0].([]v11.CronJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -97,10 +113,10 @@ func (mr *MockKubernetesProviderMockRecorder) CronJobs(namespace interface{}) *g
 }
 
 // DaemonSet mocks base method.
-func (m *MockKubernetesProvider) DaemonSet(namespace, name string) (*v1.DaemonSet, error) {
+func (m *MockKubernetesProvider) DaemonSet(namespace, name string) (*v10.DaemonSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DaemonSet", namespace, name)
-	ret0, _ := ret[0].(*v1.DaemonSet)
+	ret0, _ := ret[0].(*v10.DaemonSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -112,10 +128,10 @@ func (mr *MockKubernetesProviderMockRecorder) DaemonSet(namespace, name interfac
 }
 
 // DaemonSets mocks base method.
-func (m *MockKubernetesProvider) DaemonSets(namespace v11.Namespace) ([]v1.DaemonSet, error) {
+func (m *MockKubernetesProvider) DaemonSets(namespace v12.Namespace) ([]v10.DaemonSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DaemonSets", namespace)
-	ret0, _ := ret[0].([]v1.DaemonSet)
+	ret0, _ := ret[0].([]v10.DaemonSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -127,10 +143,10 @@ func (mr *MockKubernetesProviderMockRecorder) DaemonSets(namespace interface{}) 
 }
 
 // Deployment mocks base method.
-func (m *MockKubernetesProvider) Deployment(namespace, name string) (*v1.Deployment, error) {
+func (m *MockKubernetesProvider) Deployment(namespace, name string) (*v10.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Deployment", namespace, name)
-	ret0, _ := ret[0].(*v1.Deployment)
+	ret0, _ := ret[0].(*v10.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -142,10 +158,10 @@ func (mr *MockKubernetesProviderMockRecorder) Deployment(namespace, name interfa
 }
 
 // Deployments mocks base method.
-func (m *MockKubernetesProvider) Deployments(namespace v11.Namespace) ([]v1.Deployment, error) {
+func (m *MockKubernetesProvider) Deployments(namespace v12.Namespace) ([]v10.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Deployments", namespace)
-	ret0, _ := ret[0].([]v1.Deployment)
+	ret0, _ := ret[0].([]v10.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -187,10 +203,10 @@ func (mr *MockKubernetesProviderMockRecorder) Identifier() *gomock.Call {
 }
 
 // Job mocks base method.
-func (m *MockKubernetesProvider) Job(namespace, name string) (*v10.Job, error) {
+func (m *MockKubernetesProvider) Job(namespace, name string) (*v11.Job, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Job", namespace, name)
-	ret0, _ := ret[0].(*v10.Job)
+	ret0, _ := ret[0].(*v11.Job)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -202,10 +218,10 @@ func (mr *MockKubernetesProviderMockRecorder) Job(namespace, name interface{}) *
 }
 
 // Jobs mocks base method.
-func (m *MockKubernetesProvider) Jobs(namespace v11.Namespace) ([]v10.Job, error) {
+func (m *MockKubernetesProvider) Jobs(namespace v12.Namespace) ([]v11.Job, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Jobs", namespace)
-	ret0, _ := ret[0].([]v10.Job)
+	ret0, _ := ret[0].([]v11.Job)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -246,10 +262,10 @@ func (mr *MockKubernetesProviderMockRecorder) Name() *gomock.Call {
 }
 
 // Namespaces mocks base method.
-func (m *MockKubernetesProvider) Namespaces() ([]v11.Namespace, error) {
+func (m *MockKubernetesProvider) Namespaces() ([]v12.Namespace, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Namespaces")
-	ret0, _ := ret[0].([]v11.Namespace)
+	ret0, _ := ret[0].([]v12.Namespace)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -261,10 +277,10 @@ func (mr *MockKubernetesProviderMockRecorder) Namespaces() *gomock.Call {
 }
 
 // Nodes mocks base method.
-func (m *MockKubernetesProvider) Nodes() ([]v11.Node, error) {
+func (m *MockKubernetesProvider) Nodes() ([]v12.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Nodes")
-	ret0, _ := ret[0].([]v11.Node)
+	ret0, _ := ret[0].([]v12.Node)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -319,10 +335,10 @@ func (mr *MockKubernetesProviderMockRecorder) PlatformInfo() *gomock.Call {
 }
 
 // Pod mocks base method.
-func (m *MockKubernetesProvider) Pod(namespace, name string) (*v11.Pod, error) {
+func (m *MockKubernetesProvider) Pod(namespace, name string) (*v12.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pod", namespace, name)
-	ret0, _ := ret[0].(*v11.Pod)
+	ret0, _ := ret[0].(*v12.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -334,10 +350,10 @@ func (mr *MockKubernetesProviderMockRecorder) Pod(namespace, name interface{}) *
 }
 
 // Pods mocks base method.
-func (m *MockKubernetesProvider) Pods(namespace v11.Namespace) ([]v11.Pod, error) {
+func (m *MockKubernetesProvider) Pods(namespace v12.Namespace) ([]v12.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pods", namespace)
-	ret0, _ := ret[0].([]v11.Pod)
+	ret0, _ := ret[0].([]v12.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -349,10 +365,10 @@ func (mr *MockKubernetesProviderMockRecorder) Pods(namespace interface{}) *gomoc
 }
 
 // ReplicaSet mocks base method.
-func (m *MockKubernetesProvider) ReplicaSet(namespace, name string) (*v1.ReplicaSet, error) {
+func (m *MockKubernetesProvider) ReplicaSet(namespace, name string) (*v10.ReplicaSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReplicaSet", namespace, name)
-	ret0, _ := ret[0].(*v1.ReplicaSet)
+	ret0, _ := ret[0].(*v10.ReplicaSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -364,10 +380,10 @@ func (mr *MockKubernetesProviderMockRecorder) ReplicaSet(namespace, name interfa
 }
 
 // ReplicaSets mocks base method.
-func (m *MockKubernetesProvider) ReplicaSets(namespace v11.Namespace) ([]v1.ReplicaSet, error) {
+func (m *MockKubernetesProvider) ReplicaSets(namespace v12.Namespace) ([]v10.ReplicaSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReplicaSets", namespace)
-	ret0, _ := ret[0].([]v1.ReplicaSet)
+	ret0, _ := ret[0].([]v10.ReplicaSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -408,10 +424,10 @@ func (mr *MockKubernetesProviderMockRecorder) Runtime() *gomock.Call {
 }
 
 // Secret mocks base method.
-func (m *MockKubernetesProvider) Secret(namespace, name string) (*v11.Secret, error) {
+func (m *MockKubernetesProvider) Secret(namespace, name string) (*v12.Secret, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Secret", namespace, name)
-	ret0, _ := ret[0].(*v11.Secret)
+	ret0, _ := ret[0].(*v12.Secret)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -437,10 +453,10 @@ func (mr *MockKubernetesProviderMockRecorder) ServerVersion() *gomock.Call {
 }
 
 // StatefulSet mocks base method.
-func (m *MockKubernetesProvider) StatefulSet(namespace, name string) (*v1.StatefulSet, error) {
+func (m *MockKubernetesProvider) StatefulSet(namespace, name string) (*v10.StatefulSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StatefulSet", namespace, name)
-	ret0, _ := ret[0].(*v1.StatefulSet)
+	ret0, _ := ret[0].(*v10.StatefulSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -452,10 +468,10 @@ func (mr *MockKubernetesProviderMockRecorder) StatefulSet(namespace, name interf
 }
 
 // StatefulSets mocks base method.
-func (m *MockKubernetesProvider) StatefulSets(namespace v11.Namespace) ([]v1.StatefulSet, error) {
+func (m *MockKubernetesProvider) StatefulSets(namespace v12.Namespace) ([]v10.StatefulSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StatefulSets", namespace)
-	ret0, _ := ret[0].([]v1.StatefulSet)
+	ret0, _ := ret[0].([]v10.StatefulSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

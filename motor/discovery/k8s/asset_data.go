@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -46,8 +46,11 @@ func createPlatformData(objectKind, runtime string) (*platform.Platform, error) 
 	case "DaemonSet":
 		platformData.Name = "k8s-daemonset"
 		platformData.Title = "Kubernetes DaemonSet"
+	case "AdmissionReview":
+		platformData.Name = "k8s-admission"
+		platformData.Title = "Kubernetes Admission Review"
 	default:
-		return nil, errors.New("could not determine object kind")
+		return nil, fmt.Errorf("could not determine object kind %s", objectKind)
 	}
 	return platformData, nil
 }
