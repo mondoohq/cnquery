@@ -4,68 +4,70 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/resources/packs/k8s"
 	"go.mondoo.com/cnquery/resources/packs/os"
 	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
-func TestResource_SSHD(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock(), os.Registry)
-	x.TestSimpleErrors(t, []testutils.SimpleTest{
-		{
-			"sshd.config('1').params['2'] == '3'",
-			0, "failed to create resource 'sshd.config': could not load sshd configuration: 1",
-		},
-	})
+func TestResource_K8sKubelet(t *testing.T) {
+	combinedRegistry := k8s.Registry
+	combinedRegistry.Add(os.Registry)
+	x := testutils.InitTester(testutils.KubeletMock(), combinedRegistry)
 
-	t.Run("sshd file path", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.file.path")
+	t.Run("k8s.kubelet resource", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet")
 		assert.NotEmpty(t, res)
 		assert.NoError(t, res[0].Data.Error)
 	})
 
-	t.Run("sshd params", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.params")
+	t.Run("kubelet configFile path", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.configFile.path")
 		assert.NotEmpty(t, res)
 		assert.NoError(t, res[0].Data.Error)
 	})
 
-	t.Run("sshd file error propagation", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config('nope').params")
-		assert.Error(t, res[0].Data.Error)
+	t.Run("kubelet process command", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.process.executable")
+		assert.NotEmpty(t, res)
+		assert.NoError(t, res[0].Data.Error)
+		assert.Equal(t, "/var/lib/minikube/binaries/v1.24.3/kubelet", res[0].Data.Value)
 	})
 
-	t.Run("specific sshd param", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.params[\"UsePAM\"]")
+	t.Run("kubelet config file flag", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.options[\"config\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "yes", res[0].Data.Value)
+		assert.Equal(t, "/var/lib/kubelet/config.yaml", res[0].Data.Value)
 	})
 
-	t.Run("parse ciphers", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.ciphers")
+	t.Run("check for default value", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.options[\"volumePluginDir\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{"chacha20-poly1305@openssh.com", "aes256-gcm@openssh.com", "aes128-gcm@openssh.com", "aes256-ctr", "aes192-ctr", "aes128-ctr"}, res[0].Data.Value)
+		assert.Equal(t, "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/", res[0].Data.Value)
 	})
 
-	t.Run("parse macs", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.macs")
+	t.Run("check for config file param", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.options[\"healthzBindAddress\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{"hmac-sha2-512-etm@openssh.com", "hmac-sha2-256-etm@openssh.com", "umac-128-etm@openssh.com", "hmac-sha2-512", "hmac-sha2-256"}, res[0].Data.Value)
+		assert.Equal(t, "127.0.0.1", res[0].Data.Value)
 	})
 
-	t.Run("parse kexs", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.kexs")
+	t.Run("check for cli flag overwrite", func(t *testing.T) {
+		res := x.TestQuery(t, "k8s.kubelet.process.flags[\"runtime-request-timeout\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{"curve25519-sha256@libssh.org", "diffie-hellman-group-exchange-sha256"}, res[0].Data.Value)
-	})
+		assert.Equal(t, "15m", res[0].Data.Value)
 
-	t.Run("parse hostKeys", func(t *testing.T) {
-		res := x.TestQuery(t, "sshd.config.hostkeys")
+		res = x.TestQuery(t, "k8s.kubelet.configFile.content")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, []interface{}{"/etc/ssh/ssh_host_rsa_key", "/etc/ssh/ssh_host_ecdsa_key", "/etc/ssh/ssh_host_ed25519_key"}, res[0].Data.Value)
+		assert.Contains(t, res[0].Data.Value, "runtimeRequestTimeout: 0s")
+
+		res = x.TestQuery(t, "k8s.kubelet.options[\"runtimeRequestTimeout\"]")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, "15m", res[0].Data.Value)
 	})
 }

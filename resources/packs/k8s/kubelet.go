@@ -22,7 +22,7 @@ import (
 const defaultKubeletConfig = "/var/lib/kubelet/config.yaml"
 
 func (k *mqlK8sKubelet) init(args *resources.Args) (*resources.Args, K8sKubelet, error) {
-	if len(*args) > 1 {
+	if len(*args) > 0 {
 		return args, nil, nil
 	}
 

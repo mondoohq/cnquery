@@ -197,6 +197,10 @@ func LinuxMock() *motor.Motor {
 	return Mock("../testdata/arch.toml")
 }
 
+func KubeletMock() *motor.Motor {
+	return Mock("../k8s/testdata/kubelet.toml")
+}
+
 func WindowsMock() *motor.Motor {
 	return Mock("../testdata/windows.toml")
 }
