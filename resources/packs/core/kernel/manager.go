@@ -111,6 +111,18 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 	kernelParameters := make(map[string]string)
 	err := fsUtil.Walk(sysctlPath, func(path string, f os.FileInfo, err error) error {
 		if f != nil && !f.IsDir() {
+			stat, err := s.provider.FS().Stat(path)
+			if err != nil {
+				log.Error().Err(err)
+				return nil
+			}
+			details := pOs.FileModeDetails{
+				FileMode: stat.Mode(),
+			}
+			if !details.UserReadable() {
+				return nil
+			}
+
 			f, err := s.provider.FS().Open(path)
 			if err != nil {
 				log.Error().Err(err)
@@ -119,8 +131,8 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 
 			content, err := io.ReadAll(f)
 			if err != nil {
-				log.Error().Err(err)
-				return err
+				log.Error().Err(err).Msg("cannot read content")
+				return nil
 			}
 			// remove leading sysctl path
 			k := strings.Replace(path, sysctlPath, "", -1)
