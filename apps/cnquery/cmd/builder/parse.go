@@ -157,13 +157,11 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 				})
 			}
 			if identityFile != "" {
-				if password != "" {
-					connection.Credentials = append(connection.Credentials, &vault.Credential{
-						Type:           vault.CredentialType_private_key,
-						User:           username,
-						PrivateKeyPath: identityFile,
-					})
-				}
+				connection.Credentials = append(connection.Credentials, &vault.Credential{
+					Type:           vault.CredentialType_private_key,
+					User:           username,
+					PrivateKeyPath: identityFile,
+				})
 			}
 		}
 	case providers.ProviderType_WINRM:
