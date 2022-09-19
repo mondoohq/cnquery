@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -16,36 +17,25 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 )
 
-func newAdmissionProvider(selectedResourceID string, opts ...Option) (KubernetesProvider, error) {
-	t := &manifestProvider{}
-
-	for _, option := range opts {
-		option(t)
-	}
-
-	manifest, err := loadManifestFile(t.manifestFile)
+func newAdmissionProvider(data string, selectedResourceID string) (KubernetesProvider, error) {
+	t := &admissionProvider{}
+	admission, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return nil, err
-	}
-	t.manifestParser, err = newManifestParser(manifest, t.namespace, selectedResourceID)
-	if err != nil {
+		log.Error().Err(err).Msg("failed to decode admission review")
 		return nil, err
 	}
 
-	res, err := t.Resources("admissionrequest.v1.admission", "", "")
+	t.manifestParser, err = newManifestParser(admission, "", selectedResourceID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(res.Resources) < 1 {
-		return nil, fmt.Errorf("no admission request found")
-	}
+	res, err := t.AdmissionReviews()
 
-	for _, r := range res.Resources {
+	for _, r := range res {
 		// For each admission we want to also parse the object as an individual asset so we
 		// can show the admission review and the resource together in the CI/CD view.
-		a := r.(*admission.AdmissionReview)
-		objs, err := resources.ResourcesFromManifest(bytes.NewReader(a.Request.Object.Raw))
+		objs, err := resources.ResourcesFromManifest(bytes.NewReader(r.Request.Object.Raw))
 		if err != nil {
 			log.Error().Err(err).Msg("failed to parse object from admission review")
 		}
@@ -58,7 +48,6 @@ func newAdmissionProvider(selectedResourceID string, opts ...Option) (Kubernetes
 
 type admissionProvider struct {
 	manifestParser
-	namespace          string
 	selectedResourceID string
 }
 
@@ -160,7 +149,7 @@ func (t *admissionProvider) AdmissionReviews() ([]admission.AdmissionReview, err
 		return nil, fmt.Errorf("no admission review found")
 	}
 
-	reviews := make([]admission.AdmissionReview, len(res.Resources), 0)
+	reviews := make([]admission.AdmissionReview, 0, len(res.Resources))
 	for _, r := range res.Resources {
 		reviews = append(reviews, *r.(*admission.AdmissionReview))
 	}

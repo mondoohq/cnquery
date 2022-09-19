@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -51,6 +52,7 @@ func MergeManifestFiles(filenames []string) (io.Reader, error) {
 func ClientSchema() *runtime.Scheme {
 	scheme := runtime.NewScheme()
 	// TODO: we need to add more core resources here
+	admissionv1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	v1beta1.AddToScheme(scheme)

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	platform "go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
@@ -92,9 +91,8 @@ func New(ctx context.Context, tc *providers.Config) (KubernetesProvider, error) 
 		return newManifestProvider(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE]))
 	}
 
-	if admission, admissionDefined := tc.Options[OPTION_ADMISSION]; admissionDefined {
-		log.Debug().Msg(admission)
-		return newAdmissionProvider(tc.PlatformId)
+	if data, admissionDefined := tc.Options[OPTION_ADMISSION]; admissionDefined {
+		return newAdmissionProvider(data, tc.PlatformId)
 	}
 
 	// initialize resource cache, so that the same k8s resources can be re-used
