@@ -261,9 +261,12 @@ func (s *Shell) changeLivePrefix() (string, bool) {
 	return "", false
 }
 
+// handleExit is called when the user wants to exit the shell, it restores the terminal
+// when the interactive prompt has been used and writes the history to disk. Once that
+// is completed it calls Close() to call the optional close handler for the provider
 func (s *Shell) handleExit() {
 	rawHistory := strings.Join(s.History, "\n")
-	err := ioutil.WriteFile(s.HistoryPath, []byte(rawHistory), 0o640)
+	err := os.WriteFile(s.HistoryPath, []byte(rawHistory), 0o640)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to save history")
 	}
@@ -271,11 +274,17 @@ func (s *Shell) handleExit() {
 	s.restoreTerminalSettings()
 
 	// run onClose handler if set
+	s.Close()
+
+	os.Exit(0)
+}
+
+// Close is called when the shell is closed and calls the onCloseHandler
+func (s *Shell) Close() {
+	// run onClose handler if set
 	if s.onCloseHandler != nil {
 		s.onCloseHandler()
 	}
-
-	os.Exit(0)
 }
 
 // RunOnce executes the query and returns
