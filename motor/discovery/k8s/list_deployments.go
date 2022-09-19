@@ -60,9 +60,8 @@ func ListDeployments(
 	assets := []*asset.Asset{}
 	for i := range deployments {
 		deployment := deployments[i]
-		if od != nil {
-			od.Add(&deployment)
-		}
+		od.Add(&deployment)
+
 		asset, err := createAssetFromObject(&deployment, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from deployment")

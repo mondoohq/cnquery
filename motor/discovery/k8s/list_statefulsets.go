@@ -60,9 +60,8 @@ func ListStatefulSets(
 	assets := []*asset.Asset{}
 	for i := range statefulSets {
 		statefulSet := statefulSets[i]
-		if od != nil {
-			od.Add(&statefulSet)
-		}
+		od.Add(&statefulSet)
+
 		asset, err := createAssetFromObject(&statefulSet, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create asset from statefulset")
