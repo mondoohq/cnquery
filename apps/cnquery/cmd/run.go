@@ -199,6 +199,7 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 		if err != nil {
 			log.Error().Err(err).Msg("failed to initialize Mondoo Shell")
 		}
+		defer sh.Close()
 
 		code, results, err := sh.RunOnce(command)
 		if err != nil {
