@@ -103,6 +103,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			Filter:  discoveryFilter,
 		},
 		Credentials: []*vault.Credential{},
+		Options:     map[string]string{},
 	}
 
 	log.Debug().Str("provider", providerType.String()).Int64("asset-type", int64(assetType)).Msg("parsing asset")
@@ -115,6 +116,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 	case providers.ProviderType_MOCK:
 		connection.Backend = providerType
+		connection.Options["path"] = filepath
 	case providers.ProviderType_VAGRANT:
 		connection.Backend = providerType
 		connection.Host = args[0]
