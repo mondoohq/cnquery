@@ -1,6 +1,6 @@
 package providers
 
-//go:generate protoc --proto_path=../..:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --iam-actions_out=. provider.proto
+//go:generate protoc --proto_path=../..:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. provider.proto
 
 type PlatformIdDetector string
 
