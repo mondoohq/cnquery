@@ -66,8 +66,14 @@ func (ctx *Registry) LoadJson(raw []byte) error {
 
 	sort.Strings(keys)
 	for i := range keys {
+		isAlias := keys[i] != schema.Resources[keys[i]].Id
 		if err := ctx.AddResourceInfo(schema.Resources[keys[i]]); err != nil {
 			return errors.New("failed to add resource info: " + err.Error())
+		}
+		if isAlias {
+			info := ctx.Resources[schema.Resources[keys[i]].Id]
+			ctx.Resources[keys[i]] = info
+			ctx.ensureResourceChain(keys[i], info.Private)
 		}
 	}
 
@@ -137,10 +143,6 @@ func (ctx *Registry) AddResourceInfo(info *ResourceInfo) error {
 
 	ctx.ensureResourceChain(name, info.Private)
 
-	if info.Name == "user" {
-		ctx.Resources["os.base.user"] = ctx.Resources["user"]
-		ctx.ensureResourceChain("os.base.user", info.Private)
-	}
 	return nil
 }
 

@@ -137,11 +137,28 @@ func (ctx *Runtime) createMockResource(name string, cls *ResourceCls) (ResourceT
 	return res, nil
 }
 
+func (ctx *Runtime) lookupResource(name string) (*ResourceCls, error) {
+	for {
+		r := ctx.Registry.Resources[name]
+		if r == nil {
+			return nil, errors.New("cannot find resource '" + name + "'")
+		} else if r.Factory != nil {
+			return r, nil
+		} else if r.Name != name {
+			// A resource was given an alias. Look up through aliases
+			name = r.Name
+		} else {
+			// We found a resource with a factory
+			return nil, errors.New("cannot find resource resource factory for '" + name + "'")
+		}
+	}
+}
+
 // CreateResourceWithID creates a new resource instance and force it to have a certain ID
 func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interface{}) (ResourceType, error) {
-	r, ok := ctx.Registry.Resources[name]
-	if !ok {
-		return nil, errors.New("cannot find resource '" + name + "'")
+	r, err := ctx.lookupResource(name)
+	if err != nil {
+		return nil, err
 	}
 
 	argsMap, err := args2map(args)

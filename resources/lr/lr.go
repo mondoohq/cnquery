@@ -42,14 +42,21 @@ func (m *Map) Capture(values []string) error {
 	return nil
 }
 
+type Alias struct {
+	Definition SimpleType `@@`
+	Type       SimpleType `'=' @@`
+}
+
 // LR are MQL resources parsed into an AST
 // nolint: govet
 type LR struct {
 	Imports   []string    `{ "import" @String }`
 	Options   Map         `{ "option" @(Ident '=' String) }`
+	Aliases   []Alias     `{ "alias" @@ }`
 	Resources []*Resource `{ @@ }`
 	imports   map[string]map[string]struct{}
 	packPaths map[string]string
+	aliases   map[string]*Resource
 }
 
 // Resource in LR
