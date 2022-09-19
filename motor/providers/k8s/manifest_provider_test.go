@@ -25,7 +25,8 @@ func TestManifestFiles(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run("k8s "+testCase.kind, func(t *testing.T) {
 			manifestFile := "./resources/testdata/" + testCase.kind + ".yaml"
-			transport := newManifestProvider("", WithManifestFile(manifestFile))
+			transport, err := newManifestProvider("", WithManifestFile(manifestFile))
+			require.NoError(t, err)
 			require.NotNil(t, transport)
 			res, err := transport.Resources(testCase.kind, "mondoo", "default")
 			require.NoError(t, err)
