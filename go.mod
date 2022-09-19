@@ -144,6 +144,7 @@ require (
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
+	k8s.io/component-base v0.25.0
 	k8s.io/klog/v2 v2.70.1
 	k8s.io/kubelet v0.25.0
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
@@ -371,7 +372,7 @@ require (
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/polyfloyd/go-errorlint v0.0.0-20210722154253-910bb7978349 // indirect
+	github.com/polyfloyd/go-errorlint v1.0.2 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
@@ -440,7 +441,6 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	honnef.co/go/tools v0.3.3 // indirect
-	k8s.io/component-base v0.25.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.36.0 // indirect
