@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/ssh"
 )
@@ -40,7 +41,14 @@ func ResolveManager(motor *motor.Motor) (OSProcessManager, error) {
 	// procfs over ssh is super slow, lets deactivate until we have a faster approach
 	disableProcFs := false
 	switch motor.Provider.(type) {
+	case *mock.Provider:
+		disableProcFs = true
 	case *ssh.Provider:
+		disableProcFs = true
+	}
+	// if we record proc fs calls, the recording will become super long, also it makes it unclear if we need to
+	// read from /proc or command if we read the mock file, this ensures the mock files has a consistent approach
+	if motor.IsRecording() {
 		disableProcFs = true
 	}
 
