@@ -92,6 +92,14 @@ func k8sResourceToMql(r *resources.Runtime, kind string, fn resourceConvertFn) (
 	return resp, nil
 }
 
+func getNameAndNamespace(runtime *resources.Runtime) (string, string, error) {
+	asset := runtime.Motor.GetAsset()
+	if asset == nil || asset.Labels == nil {
+		return getPlatformIdentifierElements(runtime.Motor.Provider)
+	}
+	return asset.Labels["k8s.mondoo.com/name"], asset.Labels["k8s.mondoo.com/namespace"], nil
+}
+
 func getPlatformIdentifierElements(transport providers.Instance) (string, string, error) {
 	kt, err := k8sProvider(transport)
 	if err != nil {
@@ -166,7 +174,7 @@ func initNamespacedResource[T K8sNamespacedObject](
 	}
 
 	// get platform identifier infos
-	identifierName, identifierNamespace, err := getPlatformIdentifierElements(runtime.Motor.Provider)
+	identifierName, identifierNamespace, err := getNameAndNamespace(runtime)
 	if err != nil {
 		return args, *new(T), nil
 	}
@@ -236,7 +244,7 @@ func initResource[T K8sObject](
 	}
 
 	// get platform identifier infos
-	identifierName, _, err := getPlatformIdentifierElements(runtime.Motor.Provider)
+	identifierName, _, err := getNameAndNamespace(runtime)
 	if err != nil {
 		return args, *new(T), nil
 	}
