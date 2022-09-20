@@ -76,6 +76,8 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 	},
 })
 
+// GetCobraRunConfig parses cobra and viper flags targeted at a "run" call
+// and translates them into a config for the runner.
 func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*RunQueryConfig, error) {
 	conf := RunQueryConfig{
 		Features: cnquery.DefaultFeatures,
