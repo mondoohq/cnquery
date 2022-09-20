@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -15,7 +15,7 @@ import (
 
 func createPlatformData(objectKind, runtime string) (*platform.Platform, error) {
 	platformData := &platform.Platform{
-		Family:  []string{"k8s", "k8s-workload"},
+		Family:  []string{"k8s"},
 		Kind:    providers.Kind_KIND_K8S_OBJECT,
 		Runtime: runtime,
 	}
@@ -23,31 +23,43 @@ func createPlatformData(objectKind, runtime string) (*platform.Platform, error) 
 	// Here it is needed for the discovery and this is what ends up in  the database
 	switch objectKind {
 	case "Node":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-node"
 		platformData.Title = "Kubernetes Node"
 	case "Pod":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-pod"
 		platformData.Title = "Kubernetes Pod"
 	case "CronJob":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-cronjob"
 		platformData.Title = "Kubernetes CronJob"
 	case "StatefulSet":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-statefulset"
 		platformData.Title = "Kubernetes StatefulSet"
 	case "Deployment":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-deployment"
 		platformData.Title = "Kubernetes Deployment"
 	case "Job":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-job"
 		platformData.Title = "Kubernetes Job"
 	case "ReplicaSet":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-replicaset"
 		platformData.Title = "Kubernetes ReplicaSet"
 	case "DaemonSet":
+		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-daemonset"
 		platformData.Title = "Kubernetes DaemonSet"
+	case "AdmissionReview":
+		platformData.Family = append(platformData.Family, "k8s-admission")
+		platformData.Name = "k8s-admission"
+		platformData.Title = "Kubernetes Admission Review"
 	default:
-		return nil, errors.New("could not determine object kind")
+		return nil, fmt.Errorf("could not determine object kind %s", objectKind)
 	}
 	return platformData, nil
 }

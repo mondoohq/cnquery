@@ -19,15 +19,16 @@ import (
 var _ common.ContextInitializer = (*Resolver)(nil)
 
 const (
-	DiscoveryAll             = "all"
-	DiscoveryPods            = "pods"
-	DiscoveryJobs            = "jobs"
-	DiscoveryCronJobs        = "cronjobs"
-	DiscoveryStatefulSets    = "statefulsets"
-	DiscoveryDeployments     = "deployments"
-	DiscoveryReplicaSets     = "replicasets"
-	DiscoveryDaemonSets      = "daemonsets"
-	DiscoveryContainerImages = "container-images"
+	DiscoveryAll              = "all"
+	DiscoveryPods             = "pods"
+	DiscoveryJobs             = "jobs"
+	DiscoveryCronJobs         = "cronjobs"
+	DiscoveryStatefulSets     = "statefulsets"
+	DiscoveryDeployments      = "deployments"
+	DiscoveryReplicaSets      = "replicasets"
+	DiscoveryDaemonSets       = "daemonsets"
+	DiscoveryContainerImages  = "container-images"
+	DiscoveryAdmissionReviews = "admissionreviews"
 )
 
 type Resolver struct{}
@@ -105,7 +106,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	// see https://github.com/kubernetes/kubernetes/issues/44954
 	clusterName := ""
 
-	if tc.Options["path"] != "" {
+	if tc.Options[k8s.OPTION_MANIFEST] != "" || tc.Options[k8s.OPTION_ADMISSION] != "" {
 		clusterName, _ = p.Name()
 	} else {
 		// try to parse context from kubectl config
@@ -288,6 +289,18 @@ func addSeparateAssets(
 		replicasets, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s replicasets")
+			return nil, err
+		}
+		resolved = append(resolved, replicasets...)
+	}
+
+	// discover admissionreviews
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryAdmissionReviews) {
+		log.Debug().Msg("search for admissionreviews")
+		connection := tc.Clone()
+		replicasets, err := ListAdmissionReviews(p, connection, clusterIdentifier, od)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s admissionreviews")
 			return nil, err
 		}
 		resolved = append(resolved, replicasets...)

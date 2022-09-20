@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -154,13 +155,26 @@ func (ri *ApiResourceIndex) Lookup(kind string) (*ApiResource, error) {
 		if len(out) != 0 {
 			return &out[0], nil
 		}
+	case "admissionreview.v1.admission":
+		// AdmissionReview resources are special since they don't exist in the public
+		// k8s API. However, we do work with them since we scan them via our admission
+		// controller. To work around this we manually create the AdmissionReview ApiResource
+		// and give it "list" access so the rest of our code can handle this type.
+		return &ApiResource{
+			Resource: metav1.APIResource{
+				Name:  "admissionreviews",
+				Kind:  "AdmissionReview",
+				Verbs: []string{"list"},
+			},
+			GroupVersion: admissionv1.SchemeGroupVersion,
+		}, nil
 	}
 
 	apiResults := ri.find(kind)
 	if len(apiResults) == 0 {
 		return nil, fmt.Errorf("could not find api kind %q", kind)
 	} else if len(apiResults) > 1 {
-		// handle case where resource name is not speicfic enough
+		// handle case where resource name is not specific enough
 		names := make([]string, 0, len(apiResults))
 		for _, a := range apiResults {
 			names = append(names, a.FullApiName())

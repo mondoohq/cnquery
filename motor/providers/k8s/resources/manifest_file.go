@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -51,6 +52,7 @@ func MergeManifestFiles(filenames []string) (io.Reader, error) {
 func ClientSchema() *runtime.Scheme {
 	scheme := runtime.NewScheme()
 	// TODO: we need to add more core resources here
+	admissionv1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	v1beta1.AddToScheme(scheme)
@@ -99,6 +101,8 @@ var serverresources embed.FS
 // CachedServerResources mimics the CachedServerResources call from the dynamic client but based on a manifest file
 func CachedServerResources() ([]*metav1.APIResourceList, error) {
 	arl := []*metav1.APIResourceList{}
+	// Running cnquery with DEBUG=1 will create a .cache folder in the working dir which contains these files for the
+	// different k8s resource types.
 	dir := "serverresources"
 	entries, err := serverresources.ReadDir(dir)
 	if err != nil {

@@ -2,12 +2,15 @@ package k8s
 
 import (
 	"context"
+	"encoding/base64"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/k8s"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
 )
 
@@ -33,6 +36,32 @@ func TestManifestResolver(t *testing.T) {
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, assetList[3].Platform.Runtime, "docker-registry")
+}
+
+func TestAdmissionReviewResolver(t *testing.T) {
+	resolver := &Resolver{}
+
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+	data, err := os.ReadFile("../../providers/k8s/resources/testdata/admission-review.json")
+	require.NoError(t, err)
+
+	admission := base64.StdEncoding.EncodeToString(data)
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
+		Backend: providers.ProviderType_K8S,
+		Options: map[string]string{
+			k8s.OPTION_ADMISSION: admission,
+		},
+		Discover: &providers.Discovery{
+			Targets: []string{"all"},
+		},
+	}, nil, nil)
+	require.NoError(t, err)
+	assert.Equal(t, 4, len(assetList))
+	assert.Equal(t, assetList[1].Platform.Name, "k8s-pod")
+	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
+	assert.Contains(t, assetList[1].Platform.Family, "k8s")
+	assert.Equal(t, assetList[2].Platform.Runtime, "docker-registry")
+	assert.Equal(t, assetList[3].Platform.Runtime, "k8s-admission")
 }
 
 func TestManifestResolverDiscoveries(t *testing.T) {

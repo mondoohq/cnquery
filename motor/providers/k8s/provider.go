@@ -10,6 +10,7 @@ import (
 	platform "go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
+	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -20,6 +21,7 @@ import (
 const (
 	OPTION_MANIFEST  = "path"
 	OPTION_NAMESPACE = "namespace"
+	OPTION_ADMISSION = "k8s-admission-review"
 )
 
 var (
@@ -60,6 +62,7 @@ type KubernetesProvider interface {
 	DaemonSet(namespace, name string) (*appsv1.DaemonSet, error)
 	DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error)
 	Secret(namespace, name string) (*v1.Secret, error)
+	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
 }
 
 type ClusterInfo struct {
@@ -86,9 +89,12 @@ func New(ctx context.Context, tc *providers.Config) (KubernetesProvider, error) 
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]
-	if manifestDefined {
-		return newManifestProvider(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE])), nil
+	if manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]; manifestDefined {
+		return newManifestProvider(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE]))
+	}
+
+	if data, admissionDefined := tc.Options[OPTION_ADMISSION]; admissionDefined {
+		return newAdmissionProvider(data, tc.PlatformId)
 	}
 
 	// initialize resource cache, so that the same k8s resources can be re-used
