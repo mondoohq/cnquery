@@ -49,6 +49,12 @@ func WithFeatures(features cnquery.Features) ShellOption {
 	}
 }
 
+func WithOutput(writer io.Writer) ShellOption {
+	return func(t *Shell) {
+		t.out = writer
+	}
+}
+
 // Shell is the interactive explorer
 type Shell struct {
 	Runtime     *resources.Runtime

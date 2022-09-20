@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -12,21 +10,11 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
-	"go.mondoo.com/cnquery/cli/assetlist"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
-	"go.mondoo.com/cnquery/cli/printer"
-	"go.mondoo.com/cnquery/cli/shell"
-	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery"
-	"go.mondoo.com/cnquery/motor/inventory"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/providers"
-	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/mqlc/parser"
-	"go.mondoo.com/cnquery/resources/packs/all/info"
 )
 
 func init() {
@@ -81,158 +69,72 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 		viper.BindPFlag("record-file", cmd.Flags().Lookup("record-file"))
 	},
 	Run: func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) {
-		ctx := discovery.InitCtx(context.Background())
-
-		// check if the user used --password without a value
-		askPass, err := cmd.Flags().GetBool("ask-pass")
-		if err == nil && askPass {
-			askForPassword("Enter password: ", cmd.Flags())
-		}
-
-		flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
-
-		command, _ := cmd.Flags().GetString("command")
-		// fallback to --query
-		if command == "" {
-			command, _ = cmd.Flags().GetString("query")
-		}
-
-		// determine the scan config from pipe or args
-		v1Inventory, err := getInventory(flagAsset, viper.GetBool("insecure"))
+		conf, err := GetCobraRunConfig(cmd, args, provider, assetType)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not load configuration")
+			log.Fatal().Err(err).Msg("failed to prepare config")
 		}
-		features := cnquery.DefaultFeatures
 
-		doParse, err := cmd.Flags().GetBool("parse")
+		err = RunQuery(conf, os.Stdout)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not load parse setting")
-		}
-		if doParse {
-			ast, err := parser.Parse(command)
-			fmt.Println(logger.PrettyJSON(ast))
-
-			if err != nil {
-				log.Error().Err(err).Msg("failed to parse command")
-			}
-			return
-		}
-
-		doAST, err := cmd.Flags().GetBool("ast")
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not load AST setting")
-		}
-		if doAST {
-			b, err := mqlc.Compile(command, info.Registry.Schema(), features, nil)
-
-			fmt.Println(logger.PrettyJSON(b))
-			res := printer.DefaultPrinter.CodeBundle(b)
-			fmt.Println(res)
-
-			if err != nil {
-				log.Error().Err(err).Msg("failed to compile")
-			}
-			return
-		}
-
-		doJSON, err := cmd.Flags().GetBool("json")
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not load json export setting")
-		}
-
-		log.Info().Msgf("discover related assets for %d asset(s)", len(v1Inventory.Spec.Assets))
-		im, err := inventory.New(inventory.WithInventory(v1Inventory))
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not load asset information")
-		}
-		assetErrors := im.Resolve(ctx)
-		if len(assetErrors) > 0 {
-			for a := range assetErrors {
-				log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not connect to asset")
-			}
-		}
-
-		assetList := im.GetAssets()
-		if len(assetList) == 0 {
-			log.Fatal().Msg("could not find an asset that we can connect to")
-		}
-
-		var connectAsset *asset.Asset
-		selectedPlatformID := viper.GetString("platform-id")
-
-		if len(assetList) == 1 {
-			connectAsset = assetList[0]
-		} else if len(assetList) > 1 && selectedPlatformID != "" {
-			connectAsset, err = filterAssetByPlatformID(assetList, selectedPlatformID)
-			if err != nil {
-				log.Fatal().Err(err).Send()
-			}
-		} else if len(assetList) > 1 {
-			r := &assetlist.SimpleRender{}
-			fmt.Println(r.Render(assetList))
-			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
-		}
-
-		record := viper.GetBool("record")
-		if record {
-			log.Info().Msg("enable recording of platform calls")
-		}
-
-		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, record)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not connect to asset")
-		}
-
-		// when we close the shell, we need to close the backend and store the recording
-		onCloseHandler := func() {
-			storeRecording(m)
-
-			// close backend connection
-			m.Close()
-		}
-
-		shellOptions := []shell.ShellOption{}
-		shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
-		shellOptions = append(shellOptions, shell.WithFeatures(features))
-
-		sh, err := shell.New(m, shellOptions...)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to initialize the shell")
-		}
-		defer sh.Close()
-
-		code, results, err := sh.RunOnce(command)
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to run")
-		}
-
-		if !doJSON {
-			sh.PrintResults(code, results)
-			return
-		}
-
-		var checksums []string
-		eps := code.CodeV2.Entrypoints()
-		checksums = make([]string, len(eps))
-		for i, ref := range eps {
-			checksums[i] = code.CodeV2.Checksums[ref]
-		}
-
-		for _, checksum := range checksums {
-			result := results[checksum]
-			if result == nil {
-				log.Fatal().Msg("cannot find result for this query")
-			}
-
-			if result.Data.Error != nil {
-				log.Fatal().Err(result.Data.Error).Msg("received an error:")
-			}
-
-			j := result.Data.JSON(checksum, code)
-			fmt.Println(string(j))
+			log.Fatal().Err(err).Msg("failed to run query")
 		}
 	},
 })
+
+func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*RunQueryConfig, error) {
+	conf := RunQueryConfig{
+		Features: cnquery.DefaultFeatures,
+	}
+
+	// check if the user used --password without a value
+	askPass, err := cmd.Flags().GetBool("ask-pass")
+	if err == nil && askPass {
+		askForPassword("Enter password: ", cmd.Flags())
+	}
+
+	conf.Command, _ = cmd.Flags().GetString("command")
+	// fallback to --query
+	if conf.Command == "" {
+		conf.Command, _ = cmd.Flags().GetString("query")
+	}
+
+	conf.DoParse, err = cmd.Flags().GetBool("parse")
+	if err != nil {
+		return nil, errors.New("could not load parse setting")
+	}
+	if conf.DoParse {
+		return &conf, nil
+	}
+
+	conf.DoAST, err = cmd.Flags().GetBool("ast")
+	if err != nil {
+		return nil, errors.New("could not load AST setting")
+	}
+	if conf.DoAST {
+		return &conf, nil
+	}
+
+	doJSON, err := cmd.Flags().GetBool("json")
+	if err != nil {
+		return nil, errors.New("could not load JSON export setting")
+	}
+	if doJSON {
+		conf.Format = "json"
+	}
+
+	conf.DoRecord = viper.GetBool("record")
+
+	// determine the scan config from pipe or args
+	flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
+	conf.Inventory, err = getInventory(flagAsset, viper.GetBool("insecure"))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not load configuration")
+	}
+
+	conf.PlatformID = viper.GetString("platform-id")
+
+	return &conf, nil
+}
 
 // TODO: consider moving this to inventoryloader package
 func getInventory(cliAsset *asset.Asset, insecure bool) (*v1.Inventory, error) {
