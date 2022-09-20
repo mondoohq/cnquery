@@ -285,8 +285,7 @@ func TestBooleans(t *testing.T) {
 }
 
 // tests operations + vars
-// FIXME: temporarily deactivated
-func tTestOperations_Equality(t *testing.T) {
+func TestOperations_Equality(t *testing.T) {
 	vals := []string{
 		"null",
 		"true", "false",
@@ -348,10 +347,10 @@ func tTestOperations_Equality(t *testing.T) {
 				{a + " != " + b, 0, !res},
 				{"a = " + a + "  a == " + b, 0, res},
 				{"a = " + a + "  a != " + b, 0, !res},
-				{"b = " + b + "; " + a + " == b", 0, res},
-				{"b = " + b + "; " + a + " != b", 0, !res},
-				{"a = " + a + "; b = " + b + "; a == b", 0, res},
-				{"a = " + a + "; b = " + b + "; a != b", 0, !res},
+				{"b = " + b + "; " + a + " == b", 1, res},
+				{"b = " + b + "; " + a + " != b", 1, !res},
+				{"a = " + a + "; b = " + b + "; a == b", 1, res},
+				{"a = " + a + "; b = " + b + "; a != b", 1, !res},
 			}...)
 		}
 	}
@@ -1285,7 +1284,8 @@ func TestBrokenQueryExecution(t *testing.T) {
 		bundle.DeprecatedV5Code.Code[1].Id = "fakecontains"
 	}
 	results := x.TestMqlc(t, bundle, nil)
-	require.Len(t, results, 2)
+	require.Len(t, results, 3)
 	require.Error(t, results[0].Data.Error)
 	require.Error(t, results[1].Data.Error)
+	require.Error(t, results[2].Data.Error)
 }
