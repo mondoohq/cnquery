@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/cockroachdb/errors"
 	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -13,8 +15,12 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/config"
+	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/asset"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 )
 
 const (
@@ -93,4 +99,60 @@ func askForPassword(prompt string, flagset *flag.FlagSet) {
 	if err := p.Start(); err != nil {
 		panic(err)
 	}
+}
+
+// storeRecording stores tracked commands and files into the recording file
+func storeRecording(m *motor.Motor) {
+	if m.IsRecording() {
+		filename := viper.GetString("record-file")
+		if filename == "" {
+			filename = "recording-" + time.Now().Format("20060102150405") + ".toml"
+		}
+		log.Info().Str("filename", filename).Msg("store recordings")
+		data := m.Recording()
+		os.WriteFile(filename, data, 0o700)
+	}
+}
+
+func filterAssetByPlatformID(assetList []*asset.Asset, selectionID string) (*asset.Asset, error) {
+	var foundAsset *asset.Asset
+	for i := range assetList {
+		assetObj := assetList[i]
+		for j := range assetObj.PlatformIds {
+			if assetObj.PlatformIds[j] == selectionID {
+				return assetObj, nil
+			}
+		}
+	}
+
+	if foundAsset == nil {
+		return nil, errors.New("could not find an asset with the provided identifer: " + selectionID)
+	}
+	return foundAsset, nil
+}
+
+// TODO: consider moving this to inventoryloader package
+func getInventory(cliAsset *asset.Asset, insecure bool) (*v1.Inventory, error) {
+	var v1inventory *v1.Inventory
+	var err error
+
+	// parses optional inventory file if inventory was not piped already
+	if v1inventory == nil {
+		v1inventory, err = inventoryloader.Parse()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not parse inventory")
+		}
+	}
+
+	// add asset from cli to inventory
+	if (len(v1inventory.Spec.GetAssets()) == 0) && cliAsset != nil {
+		v1inventory.AddAssets(cliAsset)
+	}
+
+	// if the --insecure flag is set, we overwrite the individual setting for the asset
+	if insecure == true {
+		v1inventory.MarkConnectionsInsecure()
+	}
+
+	return v1inventory, nil
 }
