@@ -25,7 +25,7 @@ func init() {
 var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 	Use:   "shell",
 	Short: "Interactive query shell for MQL",
-	Long:  `Allows for the interactive exploration of mondoo queries`,
+	Long:  `Allows for the interactive exploration of MQL queries`,
 	CommonFlags: func(cmd *cobra.Command) {
 		cmd.Flags().StringP("password", "p", "", "connection password e.g. for ssh/winrm")
 		cmd.Flags().Bool("ask-pass", false, "ask for connection password")
@@ -74,8 +74,8 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 				Long: `Connect to a mock target, i.e. a simulated asset, whose data was recorded beforehand.
 Provide the recording with mock data as an argument:
 
-    mondoo shell container ubuntu:latest --record
-    mondoo shell mock recording-20220519173543.toml
+    cnquery shell container ubuntu:latest --record
+    cnquery shell mock recording-20220519173543.toml
 `,
 			},
 			"vagrant": {
@@ -96,14 +96,14 @@ Provide the recording with mock data as an argument:
 we will try to auto-detect the container or image from the provided ID, even
 if it's not the full ID:
 
-    mondoo shell container b62b276baab6
-    mondoo shell container b62
-    mondoo shell container ubuntu:latest
+    cnquery shell container b62b276baab6
+    cnquery shell container b62
+    cnquery shell container ubuntu:latest
 
 You can also explicitly connect to an image or a container registry:
 
-    mondoo shell container image ubuntu:20.04
-    mondoo shell container registry harbor.yourdomain.com/project/repository
+    cnquery shell container image ubuntu:20.04
+    cnquery shell container registry harbor.yourdomain.com/project/repository
 `,
 			},
 			"container-image": {
@@ -113,9 +113,9 @@ You can also explicitly connect to an image or a container registry:
 				Short: "Connect to a container registry",
 				Long: `Connect to a container registry. Supports more parameters for different registries:
 
-    mondoo shell cr harbor.yourdomain.com/project/repository
-    mondoo shell cr yourname.azurecr.io
-    mondoo shell cr 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
+    cnquery shell cr harbor.yourdomain.com/project/repository
+    cnquery shell cr yourname.azurecr.io
+    cnquery shell cr 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
 `,
 			},
 			"docker": {
@@ -123,10 +123,10 @@ You can also explicitly connect to an image or a container registry:
 				Long: `Connect to a Docker container or image by automatically detecting the provided ID.
 You can also specify a subcommand to narrow the scan to containers or images.
 
-    mondoo shell docker b62b276baab6
+    cnquery shell docker b62b276baab6
 
-    mondoo shell docker container b62b
-    mondoo shell docker image ubuntu:latest
+    cnquery shell docker container b62b
+    cnquery shell docker image ubuntu:latest
 `,
 			},
 			"docker-container": {
@@ -209,12 +209,12 @@ configure your Azure credentials and have SSH access to your instances.`,
 				Long: `
 This command opens a shell to a Microsoft 365 tenant:
 
-    $ mondoo shell ms365 --tenant-id {tennant id} --client-id {client id} --client-secret {client secret}
+    $ cnquery shell ms365 --tenant-id {tennant id} --client-id {client id} --client-secret {client secret}
 
 This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
-    $ mondoo shell ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
-    $ mondoo shell ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
+    $ cnquery shell ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
+    $ cnquery shell ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
 `,
 			},
 			"host": {
@@ -310,7 +310,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
 		sh, err := shell.New(m, shellOptions...)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to initialize Mondoo Shell")
+			log.Error().Err(err).Msg("failed to initialize interactive shell")
 		}
 		sh.RunInteractive(command)
 	},

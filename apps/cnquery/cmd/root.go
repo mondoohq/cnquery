@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	askForPasswordValue = ">mondoopasswordisnotset<"
+	askForPasswordValue = ">passwordisnotset<"
 	rootCmdDesc         = "cnquery is a cloud-native tool for querying your entire fleet\n"
 )
 
