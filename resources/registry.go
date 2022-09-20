@@ -73,7 +73,7 @@ func (ctx *Registry) LoadJson(raw []byte) error {
 		if isAlias {
 			info := ctx.Resources[schema.Resources[keys[i]].Id]
 			ctx.Resources[keys[i]] = info
-			ctx.ensureResourceChain(keys[i], info.Private)
+			ctx.ensureResourceChain(keys[i], info.Private, isAlias)
 		}
 	}
 
@@ -82,7 +82,7 @@ func (ctx *Registry) LoadJson(raw []byte) error {
 
 // for a given resource name, make sure all parent resources exist
 // e.g. sshd.config ==> make sure sshd exists
-func (ctx *Registry) ensureResourceChain(name string, isPrivate bool) {
+func (ctx *Registry) ensureResourceChain(name string, isPrivate, isAlias bool) {
 	parts := strings.Split(name, ".")
 	if len(parts) == 1 {
 		return
@@ -90,6 +90,13 @@ func (ctx *Registry) ensureResourceChain(name string, isPrivate bool) {
 	cur := parts[0]
 	for i := 0; i < len(parts)-1; i++ {
 		o, ok := ctx.Resources[cur]
+		// it can be that we're trying to lookup an alias that doesn't have the parent defined
+		if !ok && isAlias {
+			o, ok = ctx.Resources[parts[i]]
+			if ok {
+				ctx.Resources[cur] = o
+			}
+		}
 		if !ok {
 			o = newResourceCls(cur)
 			ctx.Resources[cur] = o
@@ -141,7 +148,7 @@ func (ctx *Registry) AddResourceInfo(info *ResourceInfo) error {
 		ResourceInfo: *info,
 	}
 
-	ctx.ensureResourceChain(name, info.Private)
+	ctx.ensureResourceChain(name, info.Private, false)
 
 	return nil
 }
