@@ -29,7 +29,6 @@ func ListAdmissionReviews(
 	assets := []*asset.Asset{}
 	for i := range admissionReviews {
 		aReview := admissionReviews[i]
-		od.Add(&aReview)
 
 		asset, err := assetFromAdmissionReview(aReview, p.Runtime(), connection, clusterIdentifier)
 		if err != nil {
@@ -63,7 +62,7 @@ func assetFromAdmissionReview(a admissionv1.AdmissionReview, runtime string, con
 	}
 
 	objectKind := objType.GetKind()
-	platformData, err := createPlatformData(objectKind, runtime)
+	platformData, err := createPlatformData(a.Kind, runtime)
 	if err != nil {
 		return nil, err
 	}
