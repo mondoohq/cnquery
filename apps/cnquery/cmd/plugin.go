@@ -3,11 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/cockroachdb/errors"
+	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery"
+	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/cli/assetlist"
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/shell"
@@ -15,30 +15,39 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources/packs/os/info"
+	"go.mondoo.com/cnquery/shared"
+	"go.mondoo.com/cnquery/shared/proto"
 )
 
-// RunQueryConfig is the configuration for running a query in a CLI given
-// the commandline and config inputs.
-// TODO: the config is a shared structure, which should be moved to proto
-type RunQueryConfig struct {
-	Command    string
-	Inventory  *v1.Inventory
-	Features   cnquery.Features
-	PlatformID string
+// pluginCmd represents the version command
+var pluginCmd = &cobra.Command{
+	Use:    "run_as_plugin",
+	Hidden: true,
+	Short:  "Run as a plugin",
+	Run: func(cmd *cobra.Command, args []string) {
+		plugin.Serve(&plugin.ServeConfig{
+			HandshakeConfig: shared.Handshake,
+			Plugins: map[string]plugin.Plugin{
+				"counter": &shared.CNQueryPlugin{Impl: &cnqueryPlugin{}},
+			},
 
-	DoRecord bool
-	DoParse  bool
-	DoAST    bool
-	Format   string
+			// A non-nil value here enables gRPC serving for this plugin...
+			GRPCServer: plugin.DefaultGRPCServer,
+		})
+	},
 }
 
-// RunQuery will take the given command and run it in the CLI
-func RunQuery(conf *RunQueryConfig, out io.Writer) error {
+func init() {
+	rootCmd.AddCommand(pluginCmd)
+}
+
+type cnqueryPlugin struct{}
+
+func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHelper) error {
 	if conf.Command == "" {
 		return errors.New("No command provided, nothing to do.")
 	}
@@ -50,19 +59,17 @@ func RunQuery(conf *RunQueryConfig, out io.Writer) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to parse command")
 		}
-		out.Write([]byte(logger.PrettyJSON(ast)))
+		out.WriteString(logger.PrettyJSON(ast))
 		return nil
 	}
 
-	if conf.DoAST {
+	if conf.DoAst {
 		b, err := mqlc.Compile(conf.Command, info.Registry.Schema(), conf.Features, nil)
 		if err != nil {
 			return errors.Wrap(err, "failed to compile command")
 		}
 
-		out.Write([]byte(logger.PrettyJSON((b))))
-		out.Write([]byte{'\n'})
-		out.Write([]byte(printer.DefaultPrinter.CodeBundle(b)))
+		out.WriteString(logger.PrettyJSON((b)) + "\n" + printer.DefaultPrinter.CodeBundle(b))
 
 		return nil
 	}
@@ -88,15 +95,14 @@ func RunQuery(conf *RunQueryConfig, out io.Writer) error {
 
 	if len(assetList) == 1 {
 		connectAsset = assetList[0]
-	} else if len(assetList) > 1 && conf.PlatformID != "" {
-		connectAsset, err = filterAssetByPlatformID(assetList, conf.PlatformID)
+	} else if len(assetList) > 1 && conf.PlatformId != "" {
+		connectAsset, err = filterAssetByPlatformID(assetList, conf.PlatformId)
 		if err != nil {
 			return err
 		}
 	} else if len(assetList) > 1 {
 		r := &assetlist.SimpleRender{}
-		out.Write([]byte(r.Render(assetList)))
-		out.Write([]byte{'\n'})
+		out.WriteString(r.Render(assetList) + "\n")
 		return errors.New("cannot connect to more than one asset, use --platform-id to select a specific asset")
 	}
 
@@ -158,8 +164,7 @@ func RunQuery(conf *RunQueryConfig, out io.Writer) error {
 		}
 
 		j := result.Data.JSON(checksum, code)
-		out.Write(j)
-		out.Write([]byte{'\n'})
+		out.Write(append(j, '\n'))
 	}
 
 	return nil

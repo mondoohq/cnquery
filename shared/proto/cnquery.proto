@@ -1,0 +1,33 @@
+syntax = "proto3";
+package proto;
+option go_package = "go.mondoo.com/cnquery/shared/proto";
+
+import "motor/inventory/v1/inventory.proto";
+
+message RunQueryConfig {
+  string command = 1;
+  uint32 callback_server = 2;
+
+  mondoo.motor.inventory.v1.Inventory inventory = 3;
+  bytes features = 4;
+
+  bool do_parse = 5;
+  bool do_ast = 6;
+  bool do_record = 7;
+  string format = 8;
+  string platform_id = 9;
+}
+
+message Empty {}
+
+message String {
+  string data = 1;
+}
+
+service CNQuery {
+  rpc RunQuery(RunQueryConfig) returns (Empty);
+}
+
+service OutputHelper {
+  rpc Write(String) returns (Empty);
+}
