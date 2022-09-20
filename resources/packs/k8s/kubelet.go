@@ -32,14 +32,14 @@ func (k *mqlK8sKubelet) init(args *resources.Args) (*resources.Args, K8sKubelet,
 	}
 	(*args)["process"] = p
 
-	kubeletParameters, err := p.Flags()
+	kubeletFlags, err := p.Flags()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Check kublet for "--config" flag and set path to config file accordingly
+	// Check kubelet for "--config" flag and set path to config file accordingly
 	configFilePath := defaultKubeletConfig
-	if kubeletConfigFilePath, ok := kubeletParameters["config"]; ok {
+	if kubeletConfigFilePath, ok := kubeletFlags["config"]; ok {
 		path, ok := kubeletConfigFilePath.(string)
 		if !ok {
 			return nil, nil, errors.New("wrong type for value of '--config' flag, it must be a string")
@@ -57,7 +57,7 @@ func (k *mqlK8sKubelet) init(args *resources.Args) (*resources.Args, K8sKubelet,
 	(*args)["configFile"] = mqlFile
 
 	// I cannot re-use "mqlFile" here, as it is not read at this point in time
-	options, err := k.getOptions(kubeletParameters, configFilePath)
+	options, err := k.getOptions(kubeletFlags, configFilePath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -70,7 +70,10 @@ func (k *mqlK8sKubelet) id() (string, error) {
 	return "k8s.kubelet", nil
 }
 
-func (k *mqlK8sKubelet) getOptions(kubeletParameters map[string]interface{}, path string) (map[string]interface{}, error) {
+// getOptions applies the kubelet defaults to the config and then
+// merges the kubelet flags and the kubelet config file into a single map
+// This map is representing the running state of the kubelet config
+func (k *mqlK8sKubelet) getOptions(kubeletFlags map[string]interface{}, configFilePath string) (map[string]interface{}, error) {
 	provider, ok := k.MotorRuntime.Motor.Provider.(os.OperatingSystemProvider)
 	if !ok {
 		return nil, fmt.Errorf("error getting operating system provider")
@@ -79,11 +82,11 @@ func (k *mqlK8sKubelet) getOptions(kubeletParameters map[string]interface{}, pat
 	kubeletConfig := kubeletconfigv1beta1.KubeletConfiguration{}
 	SetDefaults_KubeletConfiguration(&kubeletConfig)
 
-	fileContent, err := afero.ReadFile(provider.FS(), path)
+	configFileContent, err := afero.ReadFile(provider.FS(), configFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("error when getting file content: %v", err)
 	}
-	err = yaml.Unmarshal([]byte(fileContent), &kubeletConfig)
+	err = yaml.Unmarshal([]byte(configFileContent), &kubeletConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error when converting file content into KubeletConfiguration: %v", err)
 	}
@@ -93,12 +96,12 @@ func (k *mqlK8sKubelet) getOptions(kubeletParameters map[string]interface{}, pat
 		return nil, fmt.Errorf("error when converting KubeletConfig into dict: %v", err)
 	}
 
-	err = parseFlagsIntoConfig(options, kubeletParameters)
+	err = mergeFlagsIntoConfig(options, kubeletFlags)
 	if err != nil {
 		return nil, fmt.Errorf("error applying precedence to KubeletConfig: %v", err)
 	}
 
-	err = parseDeprecatedFlagsIntoConfig(options, kubeletParameters)
+	err = mergeDeprecatedFlagsIntoConfig(options, kubeletFlags)
 	if err != nil {
 		return nil, fmt.Errorf("error applying precedence for deprecated flags to KubeletConfig: %v", err)
 	}

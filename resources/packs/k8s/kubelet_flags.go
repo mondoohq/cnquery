@@ -10,13 +10,13 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-// parseFlagsIntoConfig adds flags to the kubelet config
+// mergeFlagsIntoConfig adds flags to the kubelet config
 // It does not take care of deprecated flags
 // The flags are not just kubelet specific, but can also be global flags
 // That also means, that some flags do not have a matching parameter in the kubelet config file and are added as is
 // The list of flags is taken from
 // /var/lib/minikube/binaries/v1.24.3/kubelet --help | grep -v DEPRECATED | grep -v -E "(vmodule|version|help|v level)"
-func parseFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {
+func mergeFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {
 	cliOnlyFlags := []string{
 		"azure-container-registry-config",
 		"bootstrap-kubeconfig",
@@ -60,12 +60,12 @@ func parseFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string
 	return nil
 }
 
-// parseDeprecatedFlagsIntoConfig merges deprecated cli flags into the kubelet config
+// mergeDeprecatedFlagsIntoConfig merges deprecated cli flags into the kubelet config
 // It only takes care of deprecated flags.
 // This is a seperate functzion in hope we can get rid of it in the future
 // The list of flags is taken from
 // https://github.com/kubernetes/kubernetes/blob/release-1.25/cmd/kubelet/app/options/options.go
-func parseDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {
+func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {
 	if _, ok := flags["enable-server"]; ok {
 		kubeletConfig["enableServer"] = flags["enable-server"]
 	}
@@ -481,9 +481,7 @@ func parseDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 		kubeletConfig["registerWithTaints"] = data
 	}
 
-	/*
-	  Looks like these flags do not have a corresponding config option in the file:
-	*/
+	// Looks like these flags do not have a corresponding config option in the file:
 	deprecatedCliOnlyFlags := []string{
 		"minimum-container-ttl-duration",
 		"maximum-dead-containers-per-container",
