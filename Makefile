@@ -128,49 +128,49 @@ lr/docs/serve:
 .PHONY: lr/docs/markdown
 lr/docs/markdown: lr/build
 	./lr markdown resources/packs/aws/aws.lr \
+        --pack-name "Amazon Web Services (AWS)" \
 		--docs-file resources/packs/aws/aws.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/aws
+		--output ../web/docs/docs/references/mql/aws-pack
 	./lr markdown resources/packs/azure/azure.lr \
+		--pack-name "Azure" \
 		--docs-file resources/packs/azure/azure.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/azure
+		--output ../web/docs/docs/references/mql/azure-pack
 	./lr markdown resources/packs/core/core.lr \
+		--pack-name "Core" \
 		--docs-file resources/packs/core/core.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/core
+		--output ../web/docs/docs/references/mql/core-pack
 	./lr markdown resources/packs/gcp/gcp.lr \
+		--pack-name "Google Cloud Platform (GCP)" \
 		--docs-file resources/packs/gcp/gcp.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/gcp
+		--output ../web/docs/docs/references/mql/gcp-pack
 	./lr markdown resources/packs/github/github.lr \
+		--pack-name "GitHub" \
 		--docs-file resources/packs/github/github.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/github
+		--output ../web/docs/docs/references/mql/github-pack
 	./lr markdown resources/packs/gitlab/gitlab.lr \
+		--pack-name "GitLab" \
 		--docs-file resources/packs/gitlab/gitlab.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/gitlab
+		--output ../web/docs/docs/references/mql/gitlab-pack
 	./lr markdown resources/packs/k8s/k8s.lr \
+		--pack-name "Kubernetes (K8s)" \
 		--docs-file resources/packs/k8s/k8s.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/k8s
+		--output ../web/docs/docs/references/mql/k8s-pack
 	./lr markdown resources/packs/ms365/ms365.lr \
+		--pack-name "Microsoft 365 (MS365)" \
 		--docs-file resources/packs/ms365/ms365.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/ms365
+		--output ../web/docs/docs/references/mql/ms365-pack
 	./lr markdown resources/packs/os/os.lr \
+		--pack-name "Operating Systems (OS)" \
 		--docs-file resources/packs/os/os.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/os
+		--output ../web/docs/docs/references/mql/os-pack
 	./lr markdown resources/packs/terraform/terraform.lr \
+		--pack-name "Terraform IaC" \
 		--docs-file resources/packs/terraform/terraform.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/terraform
+		--output ../web/docs/docs/references/mql/terraform-pack
 	./lr markdown resources/packs/vsphere/vsphere.lr \
+		--pack-name "VMware vSphere" \
 		--docs-file resources/packs/vsphere/vsphere.lr.manifest.yaml \
-		--front-matter-file ../web/docs/templates/mql-resources-front-matter.md \
-		--output ../web/docs/docs/references/mql/vsphere
+		--output ../web/docs/docs/references/mql/vsphere-pack
 
 .PHONY: resources
 resources: | lr resources/generate resources/test

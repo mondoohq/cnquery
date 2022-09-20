@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/zerolog/log"
@@ -17,11 +20,20 @@ import (
 )
 
 func init() {
+	markdownCmd.Flags().String("pack-name", "", "name of the resource pack")
 	markdownCmd.Flags().String("docs-file", "", "optional docs yaml to enrich the resource information")
-	markdownCmd.Flags().String("front-matter-file", "", "optional file path for yaml front matter")
 	markdownCmd.Flags().StringP("output", "o", ".build", "optional docs yaml to enrich the resource information")
 	rootCmd.AddCommand(markdownCmd)
 }
+
+const frontMatterTemplate = `
+---
+title: {{ .PackName }} Resource Pack - Mondoo Query Language (MQL) Resources
+sidebar_label: {{ .PackName }} Resource Pack
+sidebar_position: 1
+description: Learn about all of the available Mondoo Query Language (MQL) resources and how you can use them to query your infrastructure and to create policies to keep your business secure and compliant.
+---
+`
 
 var markdownCmd = &cobra.Command{
 	Use:   "markdown",
@@ -69,23 +81,6 @@ var markdownCmd = &cobra.Command{
 			log.Info().Msg("no docs file provided")
 		}
 
-		// write optional front-matter
-		frontMatterPath, _ := cmd.Flags().GetString("front-matter-file")
-		var frontMatter string
-		if frontMatterPath != "" {
-			_, err = os.Stat(frontMatterPath)
-			if err != nil {
-				log.Fatal().Err(err).Msg("could not find front matter file " + frontMatterPath)
-			}
-
-			log.Info().Msg("load front matter data")
-			content, err := os.ReadFile(frontMatterPath)
-			if err != nil {
-				log.Fatal().Err(err).Msg("could not read file " + frontMatterPath)
-			}
-			frontMatter = string(content)
-		}
-
 		// to ensure we generate the same markdown, we sort the resources first
 		sort.SliceStable(res.Resources, func(i, j int) bool {
 			return res.Resources[i].ID < res.Resources[j].ID
@@ -104,11 +99,12 @@ var markdownCmd = &cobra.Command{
 		}
 
 		// render readme
+		packName, _ := cmd.Flags().GetString("pack-name")
 		err = os.MkdirAll(outputDir, 0o755)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not create directory: " + outputDir)
 		}
-		err = os.WriteFile(filepath.Join(outputDir, "resources.md"), []byte(r.renderToc(res.Resources, frontMatter)), 0o600)
+		err = os.WriteFile(filepath.Join(outputDir, "README.md"), []byte(r.renderToc(packName, res.Resources, schema)), 0o600)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not write file")
 		}
@@ -136,21 +132,33 @@ type lrSchemaRenderer struct {
 	resourceHrefMap map[string]bool
 }
 
-func (l *lrSchemaRenderer) renderToc(resources []*lr.Resource, frontMatter string) string {
+func (l *lrSchemaRenderer) renderToc(packName string, resources []*lr.Resource, schema *resources.Schema) string {
 	builder := &strings.Builder{}
 
-	if frontMatter != "" {
-		builder.WriteString(frontMatter)
-		builder.WriteString("\n")
+	// render front matter
+	tpl, _ := template.New("frontmatter").Parse(frontMatterTemplate)
+	var buf bytes.Buffer
+	writer := bufio.NewWriter(&buf)
+	err := tpl.Execute(writer, struct {
+		PackName string
+	}{
+		PackName: packName,
+	})
+	if err != nil {
+		panic(err)
 	}
+	writer.Flush()
+	builder.WriteString(buf.String())
+	builder.WriteString("\n")
 
-	builder.WriteString("# Mondoo Resource Reference\n\n")
+	// render content
+	builder.WriteString("# Mondoo " + packName + " Resource Pack Reference\n\n")
 	builder.WriteString("# Table of Contents\n\n")
 	rows := [][]string{}
 
 	for i := range resources {
 		resource := resources[i]
-		rows = append(rows, []string{"[" + resource.ID + "](" + mdRef(resource.ID) + ")", strings.Join(sanitizeComments(resource.Comments), ",")})
+		rows = append(rows, []string{"[" + resource.ID + "](" + mdRef(resource.ID) + ")", strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), " ")})
 	}
 
 	table := tablewriter.NewWriter(builder)
