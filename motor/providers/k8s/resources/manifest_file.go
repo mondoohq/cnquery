@@ -101,6 +101,8 @@ var serverresources embed.FS
 // CachedServerResources mimics the CachedServerResources call from the dynamic client but based on a manifest file
 func CachedServerResources() ([]*metav1.APIResourceList, error) {
 	arl := []*metav1.APIResourceList{}
+	// Running cnquery with DEBUG=1 will create a .cache folder in the working dir which contains these files for the
+	// different k8s resource types.
 	dir := "serverresources"
 	entries, err := serverresources.ReadDir(dir)
 	if err != nil {

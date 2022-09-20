@@ -49,6 +49,7 @@ func assetFromAdmissionReview(a admissionv1.AdmissionReview, runtime string, con
 	obj, err := resources.ResourcesFromManifest(bytes.NewReader(a.Request.Object.Raw))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to parse object from admission review")
+		return nil, err
 	}
 	objMeta, err := meta.Accessor(obj[0])
 	if err != nil {
