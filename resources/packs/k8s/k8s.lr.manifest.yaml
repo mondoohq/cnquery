@@ -76,7 +76,7 @@ resources:
     fields:
       configFile: {}
       process: {}
-      options: {}
+      configuration: {}
     min_mondoo_version: 6.17.0
   k8s.configmap:
     fields:

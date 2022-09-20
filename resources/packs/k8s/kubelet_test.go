@@ -34,21 +34,21 @@ func TestResource_K8sKubelet(t *testing.T) {
 	})
 
 	t.Run("kubelet config file flag", func(t *testing.T) {
-		res := x.TestQuery(t, "k8s.kubelet.options[\"config\"]")
+		res := x.TestQuery(t, "k8s.kubelet.configuration[\"config\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "/var/lib/kubelet/config.yaml", res[0].Data.Value)
 	})
 
 	t.Run("check for default value", func(t *testing.T) {
-		res := x.TestQuery(t, "k8s.kubelet.options[\"volumePluginDir\"]")
+		res := x.TestQuery(t, "k8s.kubelet.configuration[\"volumePluginDir\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/", res[0].Data.Value)
 	})
 
 	t.Run("check for config file param", func(t *testing.T) {
-		res := x.TestQuery(t, "k8s.kubelet.options[\"healthzBindAddress\"]")
+		res := x.TestQuery(t, "k8s.kubelet.configuration[\"healthzBindAddress\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "127.0.0.1", res[0].Data.Value)
@@ -65,7 +65,7 @@ func TestResource_K8sKubelet(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Contains(t, res[0].Data.Value, "runtimeRequestTimeout: 0s")
 
-		res = x.TestQuery(t, "k8s.kubelet.options[\"runtimeRequestTimeout\"]")
+		res = x.TestQuery(t, "k8s.kubelet.configuration[\"runtimeRequestTimeout\"]")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, "15m", res[0].Data.Value)

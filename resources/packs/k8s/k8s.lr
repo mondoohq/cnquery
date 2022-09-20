@@ -95,7 +95,7 @@ k8s.kubelet {
   // Kubelet process
   process core.process
   // Combination of config file parameters and cli parameters
-  options dict
+  configuration dict
 }
 
 // Kubernetes Namespace

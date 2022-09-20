@@ -57,11 +57,11 @@ func (k *mqlK8sKubelet) init(args *resources.Args) (*resources.Args, K8sKubelet,
 	(*args)["configFile"] = mqlFile
 
 	// I cannot re-use "mqlFile" here, as it is not read at this point in time
-	options, err := k.getOptions(kubeletFlags, configFilePath)
+	configuration, err := k.createConfiguration(kubeletFlags, configFilePath)
 	if err != nil {
 		return nil, nil, err
 	}
-	(*args)["options"] = options
+	(*args)["configuration"] = configuration
 
 	return args, nil, nil
 }
@@ -70,10 +70,10 @@ func (k *mqlK8sKubelet) id() (string, error) {
 	return "k8s.kubelet", nil
 }
 
-// getOptions applies the kubelet defaults to the config and then
+// createConfiguration applies the kubelet defaults to the config and then
 // merges the kubelet flags and the kubelet config file into a single map
 // This map is representing the running state of the kubelet config
-func (k *mqlK8sKubelet) getOptions(kubeletFlags map[string]interface{}, configFilePath string) (map[string]interface{}, error) {
+func (k *mqlK8sKubelet) createConfiguration(kubeletFlags map[string]interface{}, configFilePath string) (map[string]interface{}, error) {
 	provider, ok := k.MotorRuntime.Motor.Provider.(os.OperatingSystemProvider)
 	if !ok {
 		return nil, fmt.Errorf("error getting operating system provider")
