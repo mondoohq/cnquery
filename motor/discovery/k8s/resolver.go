@@ -69,9 +69,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	allNamespaces := tc.Options["all-namespaces"]
+	allNamespaces := root.Options["all-namespaces"]
 	if allNamespaces != "true" {
-		namespace := tc.Options["namespace"]
+		namespace := root.Options[k8s.OPTION_NAMESPACE]
 		if len(namespace) > 0 {
 			namespacesFilter = append(namespacesFilter, namespace)
 		} else {
@@ -105,7 +105,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	// see https://github.com/kubernetes/kubernetes/issues/44954
 	clusterName := ""
 
-	if tc.Options["path"] != "" {
+	if root.Options[k8s.OPTION_MANIFEST] != "" {
 		clusterName, _ = p.Name()
 	} else {
 		// try to parse context from kubectl config
@@ -124,7 +124,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 
 		clusterName = "K8S Cluster " + clusterName
-		ns, ok := tc.Options[k8s.OPTION_NAMESPACE]
+		ns, ok := root.Options[k8s.OPTION_NAMESPACE]
 		if ok && ns != "" {
 			clusterName += " (Namespace: " + ns + ")"
 		}
