@@ -28,8 +28,8 @@ Building:
 make prep 
 
 # build and install cnquery
-make build
-make install
+make cnquery/build
+make cnquery/install
 ```
 
 Some files in this repo are auto-generated. Whenever a proto or resource pack is changed, these will need to be rebuilt. Please re-run:
