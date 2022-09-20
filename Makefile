@@ -37,6 +37,10 @@ clean/proto:
 version:
 	@echo $(VERSION)
 
+.PHONY: build
+build:
+	go build -o cnquery ${LDFLAGSDIST} apps/cnquery/cnquery.go
+
 
 #   🔨 TOOLS       #
 
