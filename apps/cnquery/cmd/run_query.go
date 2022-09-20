@@ -22,18 +22,22 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/os/info"
 )
 
+// RunQueryConfig is the configuration for running a query in a CLI given
+// the commandline and config inputs.
+// TODO: the config is a shared structure, which should be moved to proto
 type RunQueryConfig struct {
-	Command   string
-	Inventory *v1.Inventory
-	Features  cnquery.Features
-
-	DoParse    bool
-	DoAST      bool
-	DoRecord   bool
-	Format     string
+	Command    string
+	Inventory  *v1.Inventory
+	Features   cnquery.Features
 	PlatformID string
+
+	DoRecord bool
+	DoParse  bool
+	DoAST    bool
+	Format   string
 }
 
+// RunQuery will take the given command and run it in the CLI
 func RunQuery(conf *RunQueryConfig, out io.Writer) error {
 	if conf.Command == "" {
 		return errors.New("No command provided, nothing to do.")

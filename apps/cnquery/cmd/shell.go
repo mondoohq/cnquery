@@ -1,21 +1,13 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
-	"go.mondoo.com/cnquery/cli/assetlist"
-	"go.mondoo.com/cnquery/cli/shell"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery"
-	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers"
-	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
 )
 
 func init() {
@@ -30,6 +22,8 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 		cmd.Flags().StringP("password", "p", "", "connection password e.g. for ssh/winrm")
 		cmd.Flags().Bool("ask-pass", false, "ask for connection password")
 
+		cmd.Flags().String("query", "", "MQL query to be executed")
+		cmd.Flags().MarkHidden("query")
 		cmd.Flags().StringP("command", "c", "", "a command to run in the shell")
 		cmd.Flags().StringP("identity-file", "i", "", "Selects a file from which the identity (private key) for public key authentication is read.")
 		cmd.Flags().Bool("insecure", false, "disables TLS/SSL checks or SSH hostkey config")
@@ -226,92 +220,45 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		},
 	},
 	Run: func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) {
-		ctx := discovery.InitCtx(context.Background())
-
-		// check if the user used --password without a value
-		askPass, err := cmd.Flags().GetBool("ask-pass")
-		if err == nil && askPass {
-			askForPassword("Enter password: ", cmd.Flags())
-		}
-
-		flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
-
-		// Note: this flags is not stored in the config and not retrieved from Viper
-		command, err := cmd.Flags().GetString("command")
+		conf, err := GetCobraShellConfig(cmd, args, provider, assetType)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to read command flags")
+			log.Fatal().Err(err).Msg("failed to prepare config")
 		}
 
-		// determine the scan config from pipe or args
-		v1Inventory, err := getInventory(flagAsset, viper.GetBool("insecure"))
+		err = StartShell(conf)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not load configuration")
+			log.Fatal().Err(err).Msg("failed to run query")
 		}
-		features := cnquery.DefaultFeatures
-
-		log.Info().Msgf("discover related assets for %d asset(s)", len(v1Inventory.Spec.Assets))
-		im, err := inventory.New(inventory.WithInventory(v1Inventory))
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not load asset information")
-		}
-		assetErrors := im.Resolve(ctx)
-		if len(assetErrors) > 0 {
-			for a := range assetErrors {
-				log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not connect to asset")
-			}
-			log.Fatal().Msg("could not resolve assets")
-		}
-
-		assetList := im.GetAssets()
-		log.Debug().Msgf("resolved %d assets", len(assetList))
-
-		if len(assetList) == 0 {
-			log.Fatal().Msg("could not find an asset that we can connect to")
-		}
-
-		var connectAsset *asset.Asset
-		selectedPlatformID := viper.GetString("platform-id")
-
-		if len(assetList) == 1 {
-			connectAsset = assetList[0]
-		} else if len(assetList) > 1 && selectedPlatformID != "" {
-			connectAsset, err = filterAssetByPlatformID(assetList, selectedPlatformID)
-			if err != nil {
-				log.Fatal().Err(err).Send()
-			}
-		} else if len(assetList) > 1 {
-			r := &assetlist.SimpleRender{}
-			fmt.Println(r.Render(assetList))
-			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
-		}
-
-		record := viper.GetBool("record")
-		if record {
-			log.Info().Msg("enable recording of platform calls")
-		}
-
-		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, record)
-		if err != nil {
-			log.Fatal().Err(err).Msg("could not connect to asset")
-		}
-
-		// when we close the shell, we need to close the backend and store the recording
-		onCloseHandler := func() {
-			// store tracked commands and files
-			storeRecording(m)
-
-			// close backend connection
-			m.Close()
-		}
-
-		shellOptions := []shell.ShellOption{}
-		shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
-		shellOptions = append(shellOptions, shell.WithFeatures(features))
-
-		sh, err := shell.New(m, shellOptions...)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to initialize interactive shell")
-		}
-		sh.RunInteractive(command)
 	},
 })
+
+func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*ShellConfig, error) {
+	conf := ShellConfig{
+		Features: cnquery.DefaultFeatures,
+	}
+
+	// check if the user used --password without a value
+	askPass, err := cmd.Flags().GetBool("ask-pass")
+	if err == nil && askPass {
+		askForPassword("Enter password: ", cmd.Flags())
+	}
+
+	conf.Command, _ = cmd.Flags().GetString("command")
+	// fallback to --query
+	if conf.Command == "" {
+		conf.Command, _ = cmd.Flags().GetString("query")
+	}
+
+	conf.DoRecord = viper.GetBool("record")
+
+	// determine the scan config from pipe or args
+	flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
+	conf.Inventory, err = getInventory(flagAsset, viper.GetBool("insecure"))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not load configuration")
+	}
+
+	conf.PlatformID = viper.GetString("platform-id")
+
+	return &conf, nil
+}
