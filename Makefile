@@ -37,11 +37,6 @@ clean/proto:
 version:
 	@echo $(VERSION)
 
-.PHONY: build
-build:
-	go build -o cnquery ${LDFLAGSDIST} apps/cnquery/cnquery.go
-
-
 #   🔨 TOOLS       #
 
 prep: prep/tools
@@ -204,6 +199,10 @@ mqlc/test:
 	go test -timeout 5s $(shell go list ./mqlc/... | grep -v '/vendor/')
 
 #   🏗 Binary / Build   #
+
+.PHONY: cnquery/build
+cnquery/build:
+	go build -o cnquery ${LDFLAGSDIST} apps/cnquery/cnquery.go
 
 .PHONY: cnquery/install
 cnquery/install:
