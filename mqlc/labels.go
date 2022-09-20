@@ -24,6 +24,9 @@ func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resou
 		return id, nil
 	}
 
+	if id == "createResource" {
+		return string(chunk.Type()), nil
+	}
 	// TODO: workaround to get past the builtin global call
 	// this needs proper handling for global calls
 	if chunk.Function.Binding == 0 && id != "if" {
