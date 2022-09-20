@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/resources"
 )
@@ -13,7 +14,15 @@ func (s *mqlPlatform) id() (string, error) {
 }
 
 func (s *mqlPlatform) init(args *resources.Args) (*resources.Args, Platform, error) {
-	platform, err := s.MotorRuntime.Motor.Platform()
+	var platform *platform.Platform
+	var err error
+	platform = s.MotorRuntime.Motor.GetAsset().GetPlatform()
+	if platform == nil {
+		// TODO(jaym): I don't know why we would need to do this if
+		// the resolved asset is already on the motor. Maybe lazy
+		// evaluation?
+		platform, err = s.MotorRuntime.Motor.Platform()
+	}
 	if err == nil {
 		labels := map[string]interface{}{}
 		for k := range platform.Labels {
