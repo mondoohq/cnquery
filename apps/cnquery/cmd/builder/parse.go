@@ -357,8 +357,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			} else if x != "" {
 				connection.Credentials = append(connection.Credentials, &vault.Credential{
 					Type:     vault.CredentialType_password,
-					User:     username,
-					Password: password,
+					Password: x,
 				})
 			}
 		case GithubRepositoryAssetType:
@@ -380,8 +379,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			} else if x != "" {
 				connection.Credentials = append(connection.Credentials, &vault.Credential{
 					Type:     vault.CredentialType_password,
-					User:     username,
-					Password: password,
+					Password: x,
 				})
 			}
 		case GithubUserAssetType:
@@ -393,8 +391,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			} else if x != "" {
 				connection.Credentials = append(connection.Credentials, &vault.Credential{
 					Type:     vault.CredentialType_password,
-					User:     username,
-					Password: password,
+					Password: x,
 				})
 			}
 		default:
