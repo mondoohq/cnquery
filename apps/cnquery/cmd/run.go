@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
+	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/shared"
 	"go.mondoo.com/cnquery/shared/proto"
@@ -127,7 +128,7 @@ func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.Pro
 
 	// determine the scan config from pipe or args
 	flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
-	conf.Inventory, err = getInventory(flagAsset, viper.GetBool("insecure"))
+	conf.Inventory, err = inventoryloader.ParseOrUse(flagAsset, viper.GetBool("insecure"))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load configuration")
 	}
