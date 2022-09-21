@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
+	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/shared"
@@ -91,7 +92,11 @@ func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.Pro
 	// check if the user used --password without a value
 	askPass, err := cmd.Flags().GetBool("ask-pass")
 	if err == nil && askPass {
-		askForPassword("Enter password: ", cmd.Flags())
+		pass, err := components.AskPassword("Enter password: ")
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to get password")
+		}
+		cmd.Flags().Set("password", pass)
 	}
 
 	conf.Command, _ = cmd.Flags().GetString("command")
