@@ -2,7 +2,7 @@ package gcp_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseGcloudConfig(t *testing.T) {
-	data, err := ioutil.ReadFile("./testdata/gcloud_config.json")
+	data, err := os.ReadFile("./testdata/gcloud_config.json")
 	require.NoError(t, err)
 
 	config, err := gcp.ParseGcloudConfig(bytes.NewReader(data))

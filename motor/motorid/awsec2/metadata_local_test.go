@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -32,7 +33,7 @@ func fakeConfig() aws.Config {
 }
 
 func TestEC2RoleProviderInstanceIdentityLocal(t *testing.T) {
-	instanceIdentityDocument, err := ioutil.ReadFile("./testdata/instance-identity-document.json")
+	instanceIdentityDocument, err := os.ReadFile("./testdata/instance-identity-document.json")
 	if err != nil {
 		t.Fatal(err)
 	}

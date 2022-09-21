@@ -3,7 +3,7 @@ package mock
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/rs/zerolog/log"
@@ -45,7 +45,7 @@ func Parse(data string) (*TomlData, error) {
 func LoadFile(mock *Provider, path string) error {
 	log.Debug().Str("path", path).Msg("mock> load toml into mock backend")
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return errors.New("could not open: " + path)
 	}

@@ -1,7 +1,7 @@
 package ansibleinventory_test
 
 import (
-	"io/ioutil"
+	"os"
 	"sort"
 	"testing"
 
@@ -45,7 +45,7 @@ func TestValidInventory(t *testing.T) {
 }
 
 func TestParseInventory(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/empty.json")
+	input, err := os.ReadFile("./testdata/empty.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -56,7 +56,7 @@ func TestParseInventory(t *testing.T) {
 }
 
 func TestParseInventoryUngrouped(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/ungrouped.json")
+	input, err := os.ReadFile("./testdata/ungrouped.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -69,7 +69,7 @@ func TestParseInventoryUngrouped(t *testing.T) {
 }
 
 func TestFullInventory(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/inventory.json")
+	input, err := os.ReadFile("./testdata/inventory.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -97,7 +97,7 @@ func sortHosts(hosts []*ansibleinventory.Host) {
 }
 
 func TestHostExtraction(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/ungrouped.json")
+	input, err := os.ReadFile("./testdata/ungrouped.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -142,7 +142,7 @@ func TestHostExtraction(t *testing.T) {
 // convert the ini via
 // ansible-inventory -i integrations/ansibleinventory/testdata/local.ini --list > integrations/ansibleinventory/testdata/local.json
 func TestHostConnectionLocal(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/local.json")
+	input, err := os.ReadFile("./testdata/local.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -165,7 +165,7 @@ func TestHostConnectionLocal(t *testing.T) {
 
 // yq -y . integrations/ansibleinventory/testdata/local.json
 func TestHostConnectionLocalYaml(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/local.yaml")
+	input, err := os.ReadFile("./testdata/local.yaml")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -189,7 +189,7 @@ func TestHostConnectionLocalYaml(t *testing.T) {
 // convert winrm.ini via
 // ansible-inventory -i integrations/ansibleinventory/testdata/windows.ini --list > integrations/ansibleinventory/testdata/windows.json
 func TestHostConnectionWinrm(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/winrm.json")
+	input, err := os.ReadFile("./testdata/winrm.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -222,7 +222,7 @@ func TestHostConnectionWinrm(t *testing.T) {
 }
 
 func TestHostSSHPrivateKey(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/ssh_private_key.json")
+	input, err := os.ReadFile("./testdata/ssh_private_key.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -243,7 +243,7 @@ func TestHostSSHPrivateKey(t *testing.T) {
 }
 
 func TestInventoryConversion(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/inventory.json")
+	input, err := os.ReadFile("./testdata/inventory.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -257,7 +257,7 @@ func TestInventoryConversion(t *testing.T) {
 }
 
 func TestInventoryWithUsernameConversion(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/hosts.json")
+	input, err := os.ReadFile("./testdata/hosts.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 
@@ -286,7 +286,7 @@ func TestInventoryWithUsernameConversion(t *testing.T) {
 }
 
 func TestTagsAndGroups(t *testing.T) {
-	input, err := ioutil.ReadFile("./testdata/tags_groups.json")
+	input, err := os.ReadFile("./testdata/tags_groups.json")
 	assert.Nil(t, err)
 	assert.True(t, ansibleinventory.IsInventory(input))
 

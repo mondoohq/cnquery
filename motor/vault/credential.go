@@ -3,7 +3,6 @@ package vault
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -73,7 +72,7 @@ func NewPrivateKeyCredentialFromPath(user string, path string, password string) 
 		return nil, errors.New("private key does not exist " + path)
 	}
 
-	pemBytes, err := ioutil.ReadFile(path)
+	pemBytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

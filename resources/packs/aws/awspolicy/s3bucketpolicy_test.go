@@ -2,7 +2,7 @@ package awspolicy
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +10,6 @@ import (
 )
 
 func TestS3BucketPolicies(t *testing.T) {
-
 	files := []string{
 		"./testdata/s3bucket_policy1.json",
 		"./testdata/s3bucket_policy2.json",
@@ -27,7 +26,7 @@ func TestS3BucketPolicies(t *testing.T) {
 	}
 
 	for _, f := range files {
-		data, err := ioutil.ReadFile(f)
+		data, err := os.ReadFile(f)
 		require.NoError(t, err, f)
 
 		var policy S3BucketPolicy
@@ -38,7 +37,7 @@ func TestS3BucketPolicies(t *testing.T) {
 
 func TestPolicyPrincipal(t *testing.T) {
 	f := "./testdata/s3bucket_principal.json"
-	data, err := ioutil.ReadFile(f)
+	data, err := os.ReadFile(f)
 	require.NoError(t, err, f)
 
 	var policy S3BucketPolicy
@@ -46,6 +45,6 @@ func TestPolicyPrincipal(t *testing.T) {
 	require.NoError(t, err, f)
 
 	assert.Equal(t, map[string][]string{
-		"AWS": []string{"*"},
+		"AWS": {"*"},
 	}, policy.Statements[0].Principal.Data())
 }

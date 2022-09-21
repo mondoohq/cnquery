@@ -4,7 +4,7 @@
 package lr
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -195,7 +195,7 @@ func TestParseLR(t *testing.T) {
 
 		t.Run(lrPath, func(t *testing.T) {
 			res, err := Resolve(absPath, func(path string) ([]byte, error) {
-				raw, err := ioutil.ReadFile(path)
+				raw, err := os.ReadFile(path)
 				if err != nil {
 					t.Fatal("failed to load " + path + ":" + err.Error())
 				}
