@@ -23,7 +23,6 @@ func createPlatformData(objectKind, runtime string) (*platform.Platform, error) 
 	// Here it is needed for the discovery and this is what ends up in  the database
 	switch objectKind {
 	case "Node":
-		platformData.Family = append(platformData.Family, "k8s-workload")
 		platformData.Name = "k8s-node"
 		platformData.Title = "Kubernetes Node"
 	case "Pod":
