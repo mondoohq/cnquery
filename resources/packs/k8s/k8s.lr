@@ -179,6 +179,10 @@ private k8s.container {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
+  // env variables
+  env dict
+  // envFrom settings
+  envFrom dict
 }
 
 // Kubernetes Init Container
@@ -210,6 +214,10 @@ private k8s.initContainer {
   workingDir string
   // Whether this container should allocate a TTY for itself
   tty bool
+  // env variables
+  env dict
+  // envFrom settings
+  envFrom dict
 }
 
 // Kubernetes Deployment
