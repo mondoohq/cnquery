@@ -48,6 +48,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 		DiscoveryReplicaSets,
 		DiscoveryDaemonSets,
 		DiscoveryContainerImages,
+		DiscoveryAdmissionReviews,
 	}
 }
 
@@ -136,10 +137,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	// Only discover cluster and nodes if there are no resource filters.
+	// Only discover cluster and nodes if there are no resource filters. For CI/CD do not
+	// discover the cluster asset at all. In that case that would be the admission review resource
+	// for which we only care if we have explictly enabled discovery for it.
 	var clusterAsset *asset.Asset
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	if len(resourcesFilter) == 0 {
+	if len(resourcesFilter) == 0 && root.Category != asset.AssetCategory_CATEGORY_CICD {
 		clusterAsset = &asset.Asset{
 			PlatformIds: []string{clusterIdentifier},
 			Name:        clusterName,
@@ -298,12 +301,12 @@ func addSeparateAssets(
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryAdmissionReviews) {
 		log.Debug().Msg("search for admissionreviews")
 		connection := tc.Clone()
-		replicasets, err := ListAdmissionReviews(p, connection, clusterIdentifier, od)
+		admissionReviews, err := ListAdmissionReviews(p, connection, clusterIdentifier, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s admissionreviews")
 			return nil, err
 		}
-		resolved = append(resolved, replicasets...)
+		resolved = append(resolved, admissionReviews...)
 	}
 
 	// build a lookup on the k8s uid to look up individual assets to link
