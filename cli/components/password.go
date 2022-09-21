@@ -1,8 +1,12 @@
 package components
 
 import (
+	"errors"
+	"os"
+
 	input "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mattn/go-isatty"
 )
 
 type passwordErrMsg error
@@ -74,4 +78,28 @@ func (m password) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m password) View() string {
 	return m.textInput.View() + "\n"
+}
+
+// AskPassword will only prompt the user for a password if they are on a TTY.
+func AskPassword(prompt string) (string, error) {
+	// check if password is set
+	if !isatty.IsTerminal(os.Stdout.Fd()) {
+		return "", errors.New("asking passwords is only supported when used with an interactive terminal (TTY)")
+	}
+
+	// ask user for password
+	var res string = ""
+	passwordModel := NewPasswordModel(prompt, func(userPassword string, aborted bool) {
+		res = userPassword
+		if aborted {
+			os.Exit(1)
+		}
+	})
+
+	p := tea.NewProgram(passwordModel)
+	if err := p.Start(); err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
