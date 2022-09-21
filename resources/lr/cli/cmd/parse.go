@@ -3,7 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ var parseCmd = &cobra.Command{
 	Long:  `parse an LR file and print the AST`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		raw, err := ioutil.ReadFile(args[0])
+		raw, err := os.ReadFile(args[0])
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return

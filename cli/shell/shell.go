@@ -3,7 +3,6 @@ package shell
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
@@ -13,8 +12,6 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/cnquery/mql"
-
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
@@ -22,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources"
@@ -129,7 +127,7 @@ func (s *Shell) RunInteractive(cmd string) {
 	s.History = []string{}
 	homeDir, _ := homedir.Dir()
 	s.HistoryPath = path.Join(homeDir, ".mondoo_history")
-	if rawHistory, err := ioutil.ReadFile(s.HistoryPath); err == nil {
+	if rawHistory, err := os.ReadFile(s.HistoryPath); err == nil {
 		s.History = strings.Split(string(rawHistory), "\n")
 	}
 

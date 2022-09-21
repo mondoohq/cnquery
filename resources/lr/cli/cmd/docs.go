@@ -36,7 +36,7 @@ var docsYamlCmd = &cobra.Command{
 	Long:  `parse an LR file and generates a yaml file structure for additional documentation.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		raw, err := ioutil.ReadFile(args[0])
+		raw, err := os.ReadFile(args[0])
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return
@@ -95,7 +95,7 @@ var docsYamlCmd = &cobra.Command{
 		_, err = os.Stat(filepath)
 		if err == nil {
 			log.Info().Msg("load existing data")
-			content, err := ioutil.ReadFile(filepath)
+			content, err := os.ReadFile(filepath)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not read file " + filepath)
 			}
@@ -217,7 +217,7 @@ var docsJSONCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
 
-		raw, err := ioutil.ReadFile(file)
+		raw, err := os.ReadFile(file)
 		if err != nil {
 			log.Fatal().Err(err)
 		}

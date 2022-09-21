@@ -2,6 +2,7 @@ package lr
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -51,7 +52,7 @@ func (c *Collector) collect() error {
 		}
 
 		f := path.Join(c.path, file.Name())
-		res, err := ioutil.ReadFile(f)
+		res, err := os.ReadFile(f)
 		if err != nil {
 			return err
 		}

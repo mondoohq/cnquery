@@ -41,7 +41,7 @@ type SftpFsContext struct {
 // it should be possible to use $HOME/.ssh/id_rsa to login into the stub sftp server
 func SftpConnect(user, password, host string) (*SftpFsContext, error) {
 	/*
-		pemBytes, err := ioutil.ReadFile(os.Getenv("HOME") + "/.ssh/id_rsa")
+		pemBytes, err := os.ReadFile(os.Getenv("HOME") + "/.ssh/id_rsa")
 		if err != nil {
 			return nil,err
 		}

@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/cockroachdb/errors"
@@ -54,7 +54,7 @@ func InventoryFromFile(path string) (*Inventory, error) {
 		return nil, err
 	}
 
-	inventoryData, err := ioutil.ReadFile(absPath)
+	inventoryData, err := os.ReadFile(absPath)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (p *Inventory) PreProcess() error {
 				}
 			}
 
-			data, err := ioutil.ReadFile(path)
+			data, err := os.ReadFile(path)
 			if err != nil {
 				return errors.New("cannot read credential: " + path)
 			}

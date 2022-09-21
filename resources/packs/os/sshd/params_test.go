@@ -1,16 +1,15 @@
 package sshd
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSSHParser(t *testing.T) {
-	raw, err := ioutil.ReadFile("./testdata/sshd_config")
+	raw, err := os.ReadFile("./testdata/sshd_config")
 	require.NoError(t, err)
 
 	sshParams, err := Params(string(raw))
@@ -27,7 +26,7 @@ func TestSSHParser(t *testing.T) {
 }
 
 func TestSSHParseCaseInsensitive(t *testing.T) {
-	raw, err := ioutil.ReadFile("./testdata/case_insensitive")
+	raw, err := os.ReadFile("./testdata/case_insensitive")
 	require.NoError(t, err)
 
 	sshParams, err := Params(string(raw))
