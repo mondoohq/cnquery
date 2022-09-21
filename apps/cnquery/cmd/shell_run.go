@@ -24,7 +24,8 @@ type ShellConfig struct {
 	Features   cnquery.Features
 	PlatformID string
 
-	DoRecord bool
+	DoRecord       bool
+	WelcomeMessage string
 }
 
 // StartShell will start an interactive CLI shell
@@ -87,6 +88,9 @@ func StartShell(conf *ShellConfig) error {
 	sh, err := shell.New(m, shellOptions...)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to initialize interactive shell")
+	}
+	if conf.WelcomeMessage != "" {
+		sh.Theme.Welcome = conf.WelcomeMessage
 	}
 	sh.RunInteractive(conf.Command)
 
