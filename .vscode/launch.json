@@ -10,6 +10,20 @@
       "request": "launch",
       "mode": "auto",
       "program": "${fileDirname}"
-    }
+    },
+    {
+      "name": "cnquery-run",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "args": [
+        "run",
+        "local",
+        "--record",
+        "--sudo",
+        "-c",
+        "processes.list"
+      ],
+    },
   ]
 }
