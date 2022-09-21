@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
-var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:(\d+)\s(day[s]*|min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+([\d\.]+)[,\s]+([\d\.]+)[,\s]+([\d\.]+)\s*$`)
+var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:(\d+)\s(day[s]*|min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)
 
 type UnixUptimeResult struct {
 	Duration           int64
@@ -84,17 +84,17 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 		}
 	}
 
-	loadOneMinute, err := strconv.ParseFloat(m[5], 64)
+	loadOneMinute, err := strconv.ParseFloat(strings.Replace(m[5], ",", ".", 1), 64)
 	if err != nil {
 		return nil, err
 	}
 
-	loadFiveMinutes, err := strconv.ParseFloat(m[6], 64)
+	loadFiveMinutes, err := strconv.ParseFloat(strings.Replace(m[6], ",", ".", 1), 64)
 	if err != nil {
 		return nil, err
 	}
 
-	loadFifteenMinutes, err := strconv.ParseFloat(m[7], 64)
+	loadFifteenMinutes, err := strconv.ParseFloat(strings.Replace(m[7], ",", ".", 1), 64)
 	if err != nil {
 		return nil, err
 	}
