@@ -48,6 +48,7 @@ prep/tools/windows:
 prep/tools:
 	# protobuf tooling
 	command -v protoc-gen-go || go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	command -v protoc-gen-go-grpc || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	command -v protoc-gen-rangerrpc || go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
 	command -v protoc-gen-rangerrpc-swagger || go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
 	# additional helper
@@ -57,7 +58,7 @@ prep/tools:
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr
+cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr shared/generate
 
 motor/generate:
 	go generate .
@@ -213,6 +214,9 @@ cnquery/dist/goreleaser/stable:
 
 cnquery/dist/goreleaser/edge:
 	goreleaser release --rm-dist --skip-publish --skip-validate	-f .goreleaser.yml --timeout 120m --snapshot
+
+shared/generate:
+	go generate ./shared/proto/.
 
 #   ⛹🏽‍ Testing   #
 

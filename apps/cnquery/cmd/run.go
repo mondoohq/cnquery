@@ -10,6 +10,8 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/shared"
+	"go.mondoo.com/cnquery/shared/proto"
 )
 
 func init() {
@@ -69,7 +71,9 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 			log.Fatal().Err(err).Msg("failed to prepare config")
 		}
 
-		err = RunQuery(conf, os.Stdout)
+		x := cnqueryPlugin{}
+		w := shared.IOWriter{Writer: os.Stdout}
+		err = x.RunQuery(conf, &w)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to run query")
 		}
@@ -78,8 +82,8 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 
 // GetCobraRunConfig parses cobra and viper flags targeted at a "run" call
 // and translates them into a config for the runner.
-func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*RunQueryConfig, error) {
-	conf := RunQueryConfig{
+func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*proto.RunQueryConfig, error) {
+	conf := proto.RunQueryConfig{
 		Features: cnquery.DefaultFeatures,
 	}
 
@@ -103,11 +107,11 @@ func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.Pro
 		return &conf, nil
 	}
 
-	conf.DoAST, err = cmd.Flags().GetBool("ast")
+	conf.DoAst, err = cmd.Flags().GetBool("ast")
 	if err != nil {
 		return nil, errors.New("could not load AST setting")
 	}
-	if conf.DoAST {
+	if conf.DoAst {
 		return &conf, nil
 	}
 
@@ -128,7 +132,7 @@ func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.Pro
 		return nil, errors.Wrap(err, "could not load configuration")
 	}
 
-	conf.PlatformID = viper.GetString("platform-id")
+	conf.PlatformId = viper.GetString("platform-id")
 
 	return &conf, nil
 }
