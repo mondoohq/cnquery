@@ -100,6 +100,8 @@ func getNameAndNamespace(runtime *resources.Runtime) (string, string, error) {
 	return asset.Labels["k8s.mondoo.com/name"], asset.Labels["k8s.mondoo.com/namespace"], nil
 }
 
+// This function is now (v6.17.0) no longer needed
+// Perhaps remove it in v8?
 func getPlatformIdentifierElements(transport providers.Instance) (string, string, error) {
 	kt, err := k8sProvider(transport)
 	if err != nil {

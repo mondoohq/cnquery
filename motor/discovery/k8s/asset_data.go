@@ -96,8 +96,29 @@ func createAssetFromObject(object runtime.Object, runtime string, connection *pr
 		name = ns + "/" + objMeta.GetName()
 		platformData.Labels["namespace"] = ns
 		assetLabels["namespace"] = ns
+		assetLabels["k8s.mondoo.com/namespace"] = ns
 	} else {
 		name = objMeta.GetName()
+	}
+	assetLabels["k8s.mondoo.com/name"] = objMeta.GetName()
+	if string(objMeta.GetUID()) != "" {
+		// objects discoverd from manifest do not neccecarily have a UID
+		assetLabels["k8s.mondoo.com/uid"] = string(objMeta.GetUID())
+	}
+	assetLabels["k8s.mondoo.com/kind"] = objectKind
+	assetLabels["k8s.mondoo.com/apiVersion"] = objType.GetAPIVersion()
+	if objMeta.GetResourceVersion() != "" {
+		// objects discoverd from manifest do not neccecarily have a resource version
+		assetLabels["k8s.mondoo.com/resourceVersion"] = objMeta.GetResourceVersion()
+	}
+	assetLabels["k8s.mondoo.com/cluster-id"] = clusterIdentifier
+
+	owners := objMeta.GetOwnerReferences()
+	if len(owners) > 0 {
+		owner := owners[0]
+		assetLabels["k8s.mondoo.com/owner-kind"] = owner.Kind
+		assetLabels["k8s.mondoo.com/owner-name"] = owner.Name
+		assetLabels["k8s.mondoo.com/owner-uid"] = string(owner.UID)
 	}
 
 	asset := &asset.Asset{

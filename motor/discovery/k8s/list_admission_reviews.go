@@ -82,9 +82,23 @@ func assetFromAdmissionReview(a admissionv1.AdmissionReview, runtime string, con
 		name = ns + "/" + objMeta.GetName()
 		platformData.Labels["namespace"] = ns
 		assetLabels["namespace"] = ns
+		assetLabels["k8s.mondoo.com/namespace"] = ns
 	} else {
 		name = objMeta.GetName()
 	}
+
+	assetLabels["k8s.mondoo.com/name"] = objMeta.GetName()
+	if string(objMeta.GetUID()) != "" {
+		// objects discoverd from manifest do not neccecarily have a UID
+		assetLabels["k8s.mondoo.com/uid"] = string(objMeta.GetUID())
+	}
+	assetLabels["k8s.mondoo.com/kind"] = objectKind
+	assetLabels["k8s.mondoo.com/apiVersion"] = objType.GetAPIVersion()
+	if objMeta.GetResourceVersion() != "" {
+		// objects discoverd from manifest do not neccecarily have a resource version
+		assetLabels["k8s.mondoo.com/resourceVersion"] = objMeta.GetResourceVersion()
+	}
+	assetLabels["k8s.mondoo.com/cluster-id"] = clusterIdentifier
 
 	asset := &asset.Asset{
 		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
