@@ -24,18 +24,22 @@ func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resou
 		return id, nil
 	}
 
-	if id == "createResource" {
-		return string(chunk.Type()), nil
-	}
 	// TODO: workaround to get past the builtin global call
 	// this needs proper handling for global calls
-	if chunk.Function.Binding == 0 && id != "if" {
+	if chunk.Function.Binding == 0 && id != "if" && id != "createResource" {
 		return id, nil
 	}
 
 	var parentLabel string
 	var err error
-	if chunk.Function.Binding != 0 {
+	if id == "createResource" {
+		if ref, ok := chunk.Function.Args[0].RefV2(); ok {
+			parentLabel, err = createLabel(code, ref, labels, schema)
+			if err != nil {
+				return "", err
+			}
+		}
+	} else if chunk.Function.Binding != 0 {
 		parentLabel, err = createLabel(code, chunk.Function.Binding, labels, schema)
 		if err != nil {
 			return "", err
@@ -65,6 +69,8 @@ func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resou
 		}
 	case "{}", "${}":
 		res = parentLabel
+	case "createResource":
+		res = parentLabel + "." + string(chunk.Type())
 	case "if":
 		res = "if"
 	default:
@@ -148,6 +154,7 @@ func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema
 		}
 
 		labels.Labels[checksum], err = createLabel(code, entrypoint, labels, schema)
+
 		if err != nil {
 			return err
 		}
