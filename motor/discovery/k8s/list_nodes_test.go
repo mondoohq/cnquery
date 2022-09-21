@@ -80,7 +80,7 @@ func TestListNodesAKS(t *testing.T) {
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)
 	require.Equal(t, "k8s-node", assets[0].Platform.Name)
 	require.Equal(t, providers.Kind_KIND_K8S_OBJECT, assets[0].Platform.Kind)
-	require.ElementsMatch(t, []string{"k8s-workload", "k8s"}, assets[0].Platform.Family)
+	require.ElementsMatch(t, []string{"k8s"}, assets[0].Platform.Family)
 	require.Equal(t, []string{"//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc/nodes/name/aks-default-36939070-vmss000000"}, assets[0].PlatformIds)
 
 	// Adds relatonship to host
@@ -162,7 +162,7 @@ func TestListNodesGKE(t *testing.T) {
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)
 	require.Equal(t, "k8s-node", assets[0].Platform.Name)
 	require.Equal(t, providers.Kind_KIND_K8S_OBJECT, assets[0].Platform.Kind)
-	require.ElementsMatch(t, []string{"k8s-workload", "k8s"}, assets[0].Platform.Family)
+	require.ElementsMatch(t, []string{"k8s"}, assets[0].Platform.Family)
 	require.Equal(t, []string{"//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc/nodes/name/gke-gke-cluster-generic-pool-4dfcd37f-s3d6"}, assets[0].PlatformIds)
 
 	// Adds relatonship to host
@@ -237,7 +237,7 @@ func TestListNodesEKS(t *testing.T) {
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)
 	require.Equal(t, "k8s-node", assets[0].Platform.Name)
 	require.Equal(t, providers.Kind_KIND_K8S_OBJECT, assets[0].Platform.Kind)
-	require.ElementsMatch(t, []string{"k8s-workload", "k8s"}, assets[0].Platform.Family)
+	require.ElementsMatch(t, []string{"k8s"}, assets[0].Platform.Family)
 	require.Equal(t, []string{"//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc/nodes/name/ip-10-0-5-36.eu-central-1.compute.internal"}, assets[0].PlatformIds)
 
 	require.Len(t, assets[0].RelatedAssets, 0)
@@ -268,7 +268,8 @@ func TestListNodesK3S(t *testing.T) {
 					"k3s.io/node-config-hash":      "LUZJBAJBVUEWLANIK5CQFBP3IKZUSSX643EDQVRRLL4O4D6AVNLQ====",
 					"k3s.io/node-env":              `'{"K3S_DATA_DIR":"/var/lib/rancher/k3s/data/577968fa3d58539cc4265245941b7be688833e6bf5ad7869fa2afe02f15f1cd2"}'`,
 					"node.alpha.kubernetes.io/ttl": "0",
-					"volumes.kubernetes.io/controller-managed-attach-detach": "true"},
+					"volumes.kubernetes.io/controller-managed-attach-detach": "true",
+				},
 				Labels: map[string]string{
 					"beta.kubernetes.io/arch":               "amd64",
 					"beta.kubernetes.io/instance-type":      "k3s",
@@ -302,7 +303,7 @@ func TestListNodesK3S(t *testing.T) {
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)
 	require.Equal(t, "k8s-node", assets[0].Platform.Name)
 	require.Equal(t, providers.Kind_KIND_K8S_OBJECT, assets[0].Platform.Kind)
-	require.ElementsMatch(t, []string{"k8s-workload", "k8s"}, assets[0].Platform.Family)
+	require.ElementsMatch(t, []string{"k8s"}, assets[0].Platform.Family)
 	require.Equal(t, []string{"//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc/nodes/name/x1"}, assets[0].PlatformIds)
 
 	// Adds relatonship to host

@@ -55,3 +55,29 @@ func TestAssetData(t *testing.T) {
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, asset.Platform.Family)
 	assert.Equal(t, "test123", asset.Labels["namespace"])
 }
+
+func TestAssetNodeData(t *testing.T) {
+	// Seed CronJobs
+	node := corev1.Node{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Node",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "minikube",
+			UID:  "123",
+		},
+		Spec: corev1.NodeSpec{},
+	}
+
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+
+	tc := &providers.Config{}
+
+	asset, err := createAssetFromObject(&node, "k8s-cluster", tc, clusterIdentifier)
+	require.NoError(t, err)
+
+	assert.Equal(t, "v1", asset.Platform.Version)
+	assert.Equal(t, "k8s-node", asset.Platform.Name)
+	assert.ElementsMatch(t, []string{"k8s"}, asset.Platform.Family)
+}
