@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/inventory/ansibleinventory"
 	"go.mondoo.com/cnquery/motor/inventory/domainlist"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
@@ -129,4 +130,29 @@ func parseDomainListInventory(data []byte) (*v1.Inventory, error) {
 		return nil, err
 	}
 	return inventory.ToV1Inventory(), nil
+}
+
+// ParseOrUse tries to load the inventory and if nothing exists it
+// will instead use the provided asset.
+func ParseOrUse(cliAsset *asset.Asset, insecure bool) (*v1.Inventory, error) {
+	var v1inventory *v1.Inventory
+	var err error
+
+	// parses optional inventory file if inventory was not piped already
+	v1inventory, err = Parse()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse inventory")
+	}
+
+	// add asset from cli to inventory
+	if (len(v1inventory.Spec.GetAssets()) == 0) && cliAsset != nil {
+		v1inventory.AddAssets(cliAsset)
+	}
+
+	// if the --insecure flag is set, we overwrite the individual setting for the asset
+	if insecure == true {
+		v1inventory.MarkConnectionsInsecure()
+	}
+
+	return v1inventory, nil
 }
