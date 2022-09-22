@@ -52,13 +52,20 @@ const (
 	// start: v6.x
 	// end:   v8.0
 	BoolAssertions
+
+	// MQLAssetContext feature flag
+	//
+	// start: v6.x
+	// end:   v8.0
+	MQLAssetContext
 )
 
 // FeaturesValue is a map from feature name to feature flag
 var FeaturesValue = map[string]Feature{
-	MassQueries.String():    MassQueries,
-	PiperCode.String():      PiperCode,
-	BoolAssertions.String(): BoolAssertions,
+	MassQueries.String():     MassQueries,
+	PiperCode.String():       PiperCode,
+	BoolAssertions.String():  BoolAssertions,
+	MQLAssetContext.String(): MQLAssetContext,
 }
 
 // DefaultFeatures are a set of default flags that are active

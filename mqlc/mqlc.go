@@ -2,6 +2,7 @@ package mqlc
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"sort"
 	"strconv"
@@ -75,6 +76,8 @@ type compiler struct {
 
 	// helps chaining of builtin calls like `if (..) else if (..) else ..`
 	prevID string
+
+	features cnquery.Features
 }
 
 func (c *compiler) isInMyBlock(ref uint64) bool {
@@ -121,6 +124,7 @@ func (c *compiler) newBlockCompiler(binding *variable) compiler {
 		blockRef:   ref,
 		props:      c.props,
 		standalone: true,
+		features:   c.features,
 	}
 }
 
@@ -785,6 +789,14 @@ func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string)
 // example: user { name } , where name is compiled bound to the user
 // it will return false if it cannot bind the identifier
 func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
+	if c.features.IsActive(cnquery.MQLAssetContext) {
+		return c.compileBoundIdentifierWithMqlCtx(id, binding, call)
+	} else {
+		return c.compileBoundIdentifierWithoutMqlCtx(id, binding, call)
+	}
+}
+
+func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
 	typ := binding.typ
 
 	if typ.IsResource() {
@@ -861,6 +873,71 @@ func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *pa
 				lastRef = c.tailRef()
 			}
 
+			return true, typ, nil
+		}
+	}
+
+	h, _ := builtinFunction(typ, id)
+	if h != nil {
+		call = filterTrailingNullArgs(call)
+		typ, err := c.compileBuiltinFunction(h, id, binding, call)
+		return true, typ, err
+	}
+
+	return false, types.Nil, nil
+}
+
+// compileBoundIdentifierWithoutMqlCtx will compile a bound identifier without being able
+// create implicit resources with context attached. The reason this is needed is because
+// that feature requires use of a new global function 'createResource'. We cannot start
+// automatically adding that to compiled queries without breaking existing clients
+func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
+	typ := binding.typ
+
+	if typ.IsResource() {
+		resource, ok := c.Schema.Resources[typ.ResourceName()]
+		if !ok {
+			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
+		}
+
+		fieldinfo, ok := resource.Fields[id]
+		if ok {
+			if call != nil && len(call.Function) > 0 {
+				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
+			}
+
+			if fieldinfo.IsEmbedded {
+				return true, types.Nil, fmt.Errorf("field '%s' on '%s' requires the MQLAssetContext feature", id, typ.Label())
+			}
+
+			c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, typ.ResourceName(), id)
+
+			// this only happens when we call a field of a bridging resource,
+			// in which case we don't call the field (since there is nothing to do)
+			// and instead we call the resource directly:
+			typ := types.Type(fieldinfo.Type)
+			if fieldinfo.IsImplicitResource {
+				name := typ.ResourceName()
+				c.addChunk(&llx.Chunk{
+					Call: llx.Chunk_FUNCTION,
+					Id:   name,
+				})
+
+				// the new ID is now the full resource call, which is not what the
+				// field is originally labeled when we get it, so we have to fix it
+				checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+				c.Result.Labels.Labels[checksum] = id
+				return true, typ, nil
+			}
+
+			c.addChunk(&llx.Chunk{
+				Call: llx.Chunk_FUNCTION,
+				Id:   id,
+				Function: &llx.Function{
+					Type:    fieldinfo.Type,
+					Binding: binding.ref,
+				},
+			})
 			return true, typ, nil
 		}
 	}
@@ -1544,7 +1621,7 @@ func getMinMondooVersion(current string, resource string, field string) string {
 }
 
 // CompileAST with a schema into a chunky code
-func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx.Primitive, features cnquery.Features) (*llx.CodeBundle, error) {
 	if schema == nil {
 		return nil, errors.New("mqlc> please provide a schema to compile this code")
 	}
@@ -1576,13 +1653,14 @@ func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx
 		block:      codeBundle.CodeV2.Blocks[0],
 		props:      props,
 		standalone: true,
+		features:   features,
 	}
 
 	return c.Result, c.CompileParsed(ast)
 }
 
 // Compile a code piece against a schema into chunky code
-func compile(input string, schema *resources.Schema, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
+func compile(input string, schema *resources.Schema, props map[string]*llx.Primitive, features cnquery.Features) (*llx.CodeBundle, error) {
 	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
 
@@ -1595,11 +1673,11 @@ func compile(input string, schema *resources.Schema, props map[string]*llx.Primi
 	// we want to get any compiler suggestions for auto-complete / fixing it.
 	// That said, we must return an error either way.
 	if err != nil {
-		res, _ := CompileAST(ast, schema, props)
+		res, _ := CompileAST(ast, schema, props, features)
 		return res, err
 	}
 
-	res, err := CompileAST(ast, schema, props)
+	res, err := CompileAST(ast, schema, props, features)
 	if err != nil {
 		return res, err
 	}
@@ -1623,7 +1701,7 @@ func compile(input string, schema *resources.Schema, props map[string]*llx.Primi
 
 func Compile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
 	if features.IsActive(cnquery.PiperCode) {
-		res, err := compile(input, schema, props)
+		res, err := compile(input, schema, props, features)
 		if err != nil {
 			return res, err
 		}
