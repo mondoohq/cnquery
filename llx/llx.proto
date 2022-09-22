@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package mondoo.llx;
+package cnquery.llx;
 option go_package = "go.mondoo.com/cnquery/llx";
 
 message Primitive {
@@ -106,7 +106,7 @@ message CodeBundle {
 }
 
 message Result {
-  mondoo.llx.Primitive data = 1;
+  Primitive data = 1;
   string error = 2;
   string code_id = 3;
 }
