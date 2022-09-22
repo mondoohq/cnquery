@@ -49,6 +49,8 @@ k8s {
   rolebindings() []k8s.rbac.rolebinding
   // Kubernetes custom resources
   customresources() []k8s.customresource
+  // Kubernetes admission reviews
+  admissionreviews() []k8s.admissionreview
 }
 
 // Kubernetes API Resources
@@ -688,4 +690,22 @@ k8s.customresource {
   created time
   // Full resource manifest
   manifest dict
+}
+
+k8s.admissionReview {
+	request() k8s.admissionRequest
+}
+
+private k8s.admissionRequest {
+  name string
+  namespace string
+  operation string
+  userInfo() k8s.userInfo
+  object dict
+  oldObject dict
+}
+
+private k8s.userInfo {
+  username string
+  uid string
 }
