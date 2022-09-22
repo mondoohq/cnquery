@@ -7,6 +7,7 @@ alias os.base.user = core.user
 alias os.base.group = core.group
 alias os.base.file = core.file
 alias os.base.time = core.time
+alias os.base.packages = core.packages
 alias os.base.platform = core.platform
 alias os.base.platform.virtualization = core.platform.virtualization
 alias os.base.platform.advisories = core.platform.advisories
