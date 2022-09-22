@@ -134,7 +134,7 @@ func TestListReplicaSets(t *testing.T) {
 	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
 	assert.Equal(t, "k8s-replicaset", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
-	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
+	assert.Equal(t, nss[0].Name, assets[0].Labels["k8s.mondoo.com/namespace"])
 }
 
 func TestListReplicaSets_Filter(t *testing.T) {
@@ -223,5 +223,5 @@ func TestListReplicaSets_Filter(t *testing.T) {
 	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
 	assert.Equal(t, "k8s-replicaset", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
-	assert.Equal(t, replicaSets[0].Namespace, assets[0].Labels["namespace"])
+	assert.Equal(t, replicaSets[0].Namespace, assets[0].Labels["k8s.mondoo.com/namespace"])
 }

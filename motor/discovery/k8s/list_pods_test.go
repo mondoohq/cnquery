@@ -120,7 +120,7 @@ func TestListPods(t *testing.T) {
 	assert.Equal(t, "v1", assets[0].Platform.Version)
 	assert.Equal(t, "k8s-pod", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
-	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
+	assert.Equal(t, nss[0].Name, assets[0].Labels["k8s.mondoo.com/namespace"])
 }
 
 func TestListPods_Filter(t *testing.T) {
@@ -200,5 +200,5 @@ func TestListPods_Filter(t *testing.T) {
 	assert.Equal(t, "v1", assets[0].Platform.Version)
 	assert.Equal(t, "k8s-pod", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
-	assert.Equal(t, pods[0].Namespace, assets[0].Labels["namespace"])
+	assert.Equal(t, pods[0].Namespace, assets[0].Labels["k8s.mondoo.com/namespace"])
 }

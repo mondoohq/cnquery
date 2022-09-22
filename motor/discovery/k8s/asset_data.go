@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s"
 	"k8s.io/apimachinery/pkg/api/meta"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -95,10 +96,11 @@ func createAssetFromObject(object runtime.Object, runtime string, connection *pr
 	if ns != "" {
 		name = ns + "/" + objMeta.GetName()
 		platformData.Labels["namespace"] = ns
-		assetLabels["namespace"] = ns
 	} else {
 		name = objMeta.GetName()
 	}
+
+	addMondooAssetLabels(assetLabels, objMeta, objType, clusterIdentifier)
 
 	asset := &asset.Asset{
 		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
@@ -110,4 +112,31 @@ func createAssetFromObject(object runtime.Object, runtime string, connection *pr
 	}
 
 	return asset, nil
+}
+
+func addMondooAssetLabels(assetLabels map[string]string, objMeta v1.Object, objType meta.Type, clusterIdentifier string) {
+	ns := objMeta.GetNamespace()
+	if ns != "" {
+		assetLabels["k8s.mondoo.com/namespace"] = ns
+	}
+	assetLabels["k8s.mondoo.com/name"] = objMeta.GetName()
+	if string(objMeta.GetUID()) != "" {
+		// objects discovered from manifest do not necessarily have a UID
+		assetLabels["k8s.mondoo.com/uid"] = string(objMeta.GetUID())
+	}
+	assetLabels["k8s.mondoo.com/kind"] = objType.GetKind()
+	assetLabels["k8s.mondoo.com/apiVersion"] = objType.GetAPIVersion()
+	if objMeta.GetResourceVersion() != "" {
+		// objects discovered from manifest do not necessarily have a resource version
+		assetLabels["k8s.mondoo.com/resourceVersion"] = objMeta.GetResourceVersion()
+	}
+	assetLabels["k8s.mondoo.com/cluster-id"] = clusterIdentifier
+
+	owners := objMeta.GetOwnerReferences()
+	if len(owners) > 0 {
+		owner := owners[0]
+		assetLabels["k8s.mondoo.com/owner-kind"] = owner.Kind
+		assetLabels["k8s.mondoo.com/owner-name"] = owner.Name
+		assetLabels["k8s.mondoo.com/owner-uid"] = string(owner.UID)
+	}
 }

@@ -81,10 +81,11 @@ func assetFromAdmissionReview(a admissionv1.AdmissionReview, runtime string, con
 	if ns != "" {
 		name = ns + "/" + objMeta.GetName()
 		platformData.Labels["namespace"] = ns
-		assetLabels["namespace"] = ns
 	} else {
 		name = objMeta.GetName()
 	}
+
+	addMondooAssetLabels(assetLabels, objMeta, objType, clusterIdentifier)
 
 	asset := &asset.Asset{
 		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
