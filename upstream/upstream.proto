@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package mondoo.upstream.v1;
+option go_package = "go.mondoo.com/cnquery/upstream";
+
+message ServiceAccountCredentials {
+  string mrn = 1;
+  string parent_mrn = 2;
+  string private_key = 3;
+  string certificate = 4;
+  string api_endpoint = 5;
+}
+
+service AgentManager {
+  // Service Account Credential Test Endpoint
+  rpc PingPong(Ping) returns (Pong);
+}
+
+message Ping {}
+message Pong {}
