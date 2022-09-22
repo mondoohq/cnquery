@@ -67,14 +67,20 @@ var docsYamlCmd = &cobra.Command{
 			Resources: map[string]*docs.LrDocsEntry{},
 		}
 
-		fields := map[string][]*lr.Field{}
+		fields := map[string][]*lr.BasicField{}
 		isPrivate := map[string]bool{}
 		for i := range res.Resources {
 			id := res.Resources[i].ID
 			isPrivate[id] = res.Resources[i].IsPrivate
 			d.Resources[id] = nil
 			if res.Resources[i].Body != nil {
-				fields[id] = res.Resources[i].Body.Fields
+				basicFields := []*lr.BasicField{}
+				for _, f := range res.Resources[i].Body.Fields {
+					if f.BasicField != nil {
+						basicFields = append(basicFields, f.BasicField)
+					}
+				}
+				fields[id] = basicFields
 			}
 		}
 
@@ -168,7 +174,7 @@ func ensureDefaults(id string, entry *docs.LrDocsEntry, version string) *docs.Lr
 	return entry
 }
 
-func mergeFields(version string, entry *docs.LrDocsEntry, fields []*lr.Field) {
+func mergeFields(version string, entry *docs.LrDocsEntry, fields []*lr.BasicField) {
 	if entry == nil && len(fields) > 0 {
 		entry = &docs.LrDocsEntry{}
 		entry.Fields = map[string]*docs.LrDocsField{}
