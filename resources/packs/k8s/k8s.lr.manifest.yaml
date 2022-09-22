@@ -117,9 +117,9 @@ resources:
       volumeMounts: {}
       workingDir: {}
       env:
-        min_mondoo_version: 6.18.0
+        min_mondoo_version: 6.17.0
       envFrom:
-        min_mondoo_version: 6.18.0
+        min_mondoo_version: 6.17.0
     is_private: true
     min_mondoo_version: 5.15.0
     platform:
@@ -237,9 +237,9 @@ resources:
       volumeMounts: {}
       workingDir: {}
       env:
-        min_mondoo_version: 6.18.0
+        min_mondoo_version: 6.17.0
       envFrom:
-        min_mondoo_version: 6.18.0
+        min_mondoo_version: 6.17.0
     is_private: true
     min_mondoo_version: 6.10.0
     platform:
