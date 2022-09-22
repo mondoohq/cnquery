@@ -87,7 +87,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	annotations, err := cmd.Flags().GetStringToString("annotation")
 
 	parsedAsset := &asset.Asset{
-		Options:     optionData,
+		Options:     map[string]string{},
 		Labels:      labels,
 		Annotations: annotations,
 		Connections: []*providers.Config{},
@@ -100,7 +100,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			Filter:  discoveryFilter,
 		},
 		Credentials: []*vault.Credential{},
-		Options:     map[string]string{},
+		Options:     optionData,
 	}
 
 	log.Debug().Str("provider", providerType.String()).Int64("asset-type", int64(assetType)).Msg("parsing asset")
