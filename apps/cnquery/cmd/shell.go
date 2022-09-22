@@ -7,9 +7,14 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
+	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/components"
+	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/ranger-rpc"
 )
 
 func init() {
@@ -235,6 +240,13 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 })
 
 func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*ShellConfig, error) {
+	opts, optsErr := cnquery_config.ReadConfig()
+	if optsErr != nil {
+		log.Fatal().Err(optsErr).Msg("could not load configuration")
+	}
+
+	config.DisplayUsedConfig()
+
 	conf := ShellConfig{
 		Features: cnquery.DefaultFeatures,
 	}
@@ -265,6 +277,19 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 	}
 
 	conf.PlatformID = viper.GetString("platform-id")
+
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount != nil {
+		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+
+		conf.UpstreamConfig = &resources.UpstreamConfig{
+			SpaceMrn:    opts.GetParentMrn(),
+			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			Plugins:     []ranger.ClientPlugin{certAuth},
+			// we do not use opts here since we want to ensure the result is not stored when users use the shell
+			Incognito: true,
+		}
+	}
 
 	return &conf, nil
 }
