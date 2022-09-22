@@ -85,6 +85,16 @@ func getContainers(
 			return nil, err
 		}
 
+		env, err := core.JsonToDictSlice(c.Env)
+		if err != nil {
+			return nil, err
+		}
+
+		envFrom, err := core.JsonToDictSlice(c.EnvFrom)
+		if err != nil {
+			return nil, err
+		}
+
 		args := []interface{}{
 			"uid", id + "/" + c.Name, // container names are unique within a resource
 			"name", c.Name,
@@ -99,6 +109,8 @@ func getContainers(
 			"securityContext", secContext,
 			"workingDir", c.WorkingDir,
 			"tty", c.TTY,
+			"env", env,
+			"envFrom", envFrom,
 		}
 
 		if containerType == ContainerContainerType {
