@@ -692,20 +692,34 @@ k8s.customresource {
   manifest dict
 }
 
-k8s.admissionReview {
-	request() k8s.admissionRequest
+// Kubernetes AdmissionReview
+k8s.admissionreview {
+  // Mondoo ID for Kubernetes AdmissionReview
+  id string
+  // The requested admission
+	request() k8s.admissionrequest
 }
 
-private k8s.admissionRequest {
+// Kubernetes AdmissionRequest
+private k8s.admissionrequest {
+  // The name of the object presented in the request
   name string
+  // The namespace associated with the request (if any)
   namespace string
+  // The operation being performed
   operation string
-  userInfo() k8s.userInfo
+  // Information about the requesting user
+  userInfo() k8s.userinfo
+  // The incoming object from the request
   object dict
+  // The existing object. Only populated for UPDATE and DELETE requests
   oldObject dict
 }
 
-private k8s.userInfo {
+// Kubernetes UserInfo
+private k8s.userinfo {
+  // The username of the user
   username string
+  // The UID of the user
   uid string
 }
