@@ -95,5 +95,5 @@ func TestListAdmissionReviews(t *testing.T) {
 	assert.Equal(t, "admission.k8s.io/v1", assets[0].Platform.Version)
 	assert.Equal(t, "k8s-admission", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-admission"}, assets[0].Platform.Family)
-	assert.Equal(t, pod.Namespace, assets[0].Labels["namespace"])
+	assert.Equal(t, pod.Namespace, assets[0].Labels["k8s.mondoo.com/namespace"])
 }

@@ -130,7 +130,7 @@ func TestListDeployments(t *testing.T) {
 	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
 	assert.Equal(t, "k8s-deployment", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
-	assert.Equal(t, nss[0].Name, assets[0].Labels["namespace"])
+	assert.Equal(t, nss[0].Name, assets[0].Labels["k8s.mondoo.com/namespace"])
 }
 
 func TestListDeployments_Filter(t *testing.T) {
@@ -219,5 +219,5 @@ func TestListDeployments_Filter(t *testing.T) {
 	assert.Equal(t, "apps/v1", assets[0].Platform.Version)
 	assert.Equal(t, "k8s-deployment", assets[0].Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
-	assert.Equal(t, deployments[0].Namespace, assets[0].Labels["namespace"])
+	assert.Equal(t, deployments[0].Namespace, assets[0].Labels["k8s.mondoo.com/namespace"])
 }
