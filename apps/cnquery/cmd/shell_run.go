@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+
+	"github.com/mattn/go-isatty"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
@@ -57,7 +60,6 @@ func StartShell(conf *ShellConfig) error {
 	}
 
 	var connectAsset *asset.Asset
-
 	if len(assetList) == 1 {
 		connectAsset = assetList[0]
 	} else if len(assetList) > 1 && conf.PlatformID != "" {
@@ -66,8 +68,13 @@ func StartShell(conf *ShellConfig) error {
 			log.Fatal().Err(err).Send()
 		}
 	} else if len(assetList) > 1 {
-		fmt.Println(components.AssetList(theme.OperatingSytemTheme, assetList))
-		log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
+		isTTY := isatty.IsTerminal(os.Stdout.Fd())
+		if isTTY {
+			connectAsset = components.AssetSelect(assetList)
+		} else {
+			fmt.Println(components.AssetList(theme.OperatingSytemTheme, assetList))
+			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
+		}
 	}
 
 	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, conf.DoRecord)
