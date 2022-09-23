@@ -3,6 +3,7 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/os"
 
+alias os.base.command = command
 alias os.base.user = core.user
 alias os.base.group = core.group
 alias os.base.file = core.file
