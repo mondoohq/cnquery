@@ -243,6 +243,10 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			connection.Options["region"] = region
 		}
 	case providers.ProviderType_AWS_EC2_EBS:
+		noSetup := "false"
+		if connection.Options[awsec2ebs.NoSetup] != "" {
+			noSetup = connection.Options[awsec2ebs.NoSetup]
+		}
 		assembleAwsEc2EbsConnectionUrl := func(flagAsset *asset.Asset, arg string, targetType string) string {
 			instanceInfo, err := awsec2ebs.GetRawInstanceInfo(flagAsset.Options["profile"])
 			if err != nil {
@@ -284,10 +288,11 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		connection.Backend = providerType
 		connection.PlatformId = platformId
 		connection.Options = map[string]string{
-			"account": target.Account,
-			"region":  target.Region,
-			"id":      target.Id,
-			"type":    target.Type,
+			"account":         target.Account,
+			"region":          target.Region,
+			"id":              target.Id,
+			"type":            target.Type,
+			awsec2ebs.NoSetup: noSetup,
 		}
 	case providers.ProviderType_AWS_SSM_RUN_COMMAND:
 		connection.Backend = providers.ProviderType_SSH // TODO: allow the usage the provider type here
