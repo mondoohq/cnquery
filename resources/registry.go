@@ -145,18 +145,6 @@ func mergeResourceInfoPartial(a *ResourceCls, b *ResourceInfo) error {
 			a.Id, b.Id)
 	}
 
-	if len(a.Fields) != len(b.Fields) {
-		return fmt.Errorf("could not merge resources %s and %s because fields do not match",
-			a.Id, b.Id)
-	}
-
-	for _, f := range b.Fields {
-		if _, ok := a.Fields[f.Name]; !ok {
-			return fmt.Errorf("could not merge resources %s and %s because fields do not match",
-				a.Id, b.Id)
-		}
-	}
-
 	if a.ListType != b.ListType {
 		return fmt.Errorf("could not merge resources %s and %s because list type does not match",
 			a.Id, b.Id)
@@ -177,6 +165,12 @@ func mergeResourceInfoPartial(a *ResourceCls, b *ResourceInfo) error {
 
 	if a.MinMondooVersion == "" {
 		a.MinMondooVersion = b.MinMondooVersion
+	}
+
+	for _, f := range b.Fields {
+		if _, ok := a.Fields[f.Name]; !ok {
+			a.Fields[f.Name] = f
+		}
 	}
 
 	return nil
