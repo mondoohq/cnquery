@@ -71,14 +71,7 @@ type UpstreamConfig struct {
 
 // Runtime of all initialized resources
 type Runtime struct {
-	// Asset represents the asset currently being used
-	Asset *asset.Asset
-	// Motor is how we're connected to that asset. There
-	// can be multiple Runtime objects with the same asset
-	// and different motors. Or The assets could be different
-	// and the motor being the same
-	Motor *motor.Motor
-
+	Motor          *motor.Motor
 	Registry       *Registry
 	cache          *Cache
 	Observers      *Observers
@@ -217,17 +210,20 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 	if p == nil {
 		p = ctx.Motor.Provider
 	}
+	if a == nil {
+		a = ctx.Motor.GetAsset()
+	}
 	nextCtx := ctx
-	if ctx.Motor.Provider != p || !isSameAsset(ctx.Asset, a) {
-		newCtx := NewRuntime(ctx.Registry, ctx.Motor)
-		newCtx.Asset = a
-		if ctx.Motor.Provider != p {
-			m, err := motor.New(p)
-			if err != nil {
-				return nil, err
-			}
-			newCtx.Motor = m
+	if ctx.Motor.Provider != p || !isSameAsset(ctx.Motor.GetAsset(), a) {
+		// TODO:
+		// If we create a new motor, but p is shared, bad things may happen
+		// when closing the motor
+		m, err := motor.New(p)
+		if err != nil {
+			return nil, err
 		}
+		m.SetAsset(a)
+		newCtx := NewRuntime(ctx.Registry, m)
 		nextCtx = newCtx
 	}
 	return nextCtx.CreateResourceWithID(name, "", args...)
