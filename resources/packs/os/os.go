@@ -352,9 +352,10 @@ func (s *mqlOs) GetMachineid() (string, error) {
 }
 
 func (p *mqlOsBase) id() (string, error) {
-	ident := p.MotorRuntime.Asset.GetMrn()
+	a := p.MotorRuntime.Motor.GetAsset()
+	ident := a.GetMrn()
 	if ident == "" {
-		ident = strings.Join(p.MotorRuntime.Asset.PlatformIds, ",")
+		ident = strings.Join(a.GetPlatformIds(), ",")
 	}
 	return "os.base(" + ident + ")", nil
 }
@@ -673,9 +674,10 @@ func (s *mqlOsBase) GetUsers() (resources.ResourceType, error) {
 }
 
 func (s *mqlOsUnix) id() (string, error) {
-	ident := s.MotorRuntime.Asset.GetMrn()
+	a := s.MotorRuntime.Motor.GetAsset()
+	ident := a.GetMrn()
 	if ident == "" {
-		ident = strings.Join(s.MotorRuntime.Asset.PlatformIds, ",")
+		ident = strings.Join(a.GetPlatformIds(), ",")
 	}
 	return "os.unix(" + ident + ")", nil
 }
@@ -685,9 +687,10 @@ func (s *mqlOsUnix) GetBase() (resources.ResourceType, error) {
 }
 
 func (s *mqlOsLinux) id() (string, error) {
-	ident := s.MotorRuntime.Asset.GetMrn()
+	a := s.MotorRuntime.Motor.GetAsset()
+	ident := a.GetMrn()
 	if ident == "" {
-		ident = strings.Join(s.MotorRuntime.Asset.PlatformIds, ",")
+		ident = strings.Join(a.GetPlatformIds(), ",")
 	}
 	return "os.linux(" + ident + ")", nil
 }

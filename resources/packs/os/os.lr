@@ -13,6 +13,7 @@ alias os.base.packages = core.packages
 alias os.base.platform = core.platform
 alias os.base.platform.virtualization = core.platform.virtualization
 alias os.base.platform.advisories = core.platform.advisories
+alias os.base.service = service
 alias os.base.services = services
 alias os.unix.sshd = sshd
 alias os.unix.ntp = ntp.conf
