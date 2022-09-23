@@ -219,7 +219,7 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 	}
 	nextCtx := ctx
 	if ctx.Motor.Provider != p || !isSameAsset(ctx.Asset, a) {
-		newCtx := *ctx
+		newCtx := NewRuntime(ctx.Registry, ctx.Motor)
 		newCtx.Asset = a
 		if ctx.Motor.Provider != p {
 			m, err := motor.New(p)
@@ -228,7 +228,7 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 			}
 			newCtx.Motor = m
 		}
-		nextCtx = &newCtx
+		nextCtx = newCtx
 	}
 	return nextCtx.CreateResourceWithID(name, "", args...)
 }
