@@ -7,6 +7,7 @@ package resources
 import (
 	"encoding/json"
 	"errors"
+	fmt "fmt"
 	"sort"
 	"strings"
 
@@ -65,6 +66,7 @@ func (ctx *Registry) LoadJson(raw []byte) error {
 	}
 
 	sort.Strings(keys)
+
 	for i := range keys {
 		isAlias := keys[i] != schema.Resources[keys[i]].Id
 		if err := ctx.AddResourceInfo(schema.Resources[keys[i]]); err != nil {
@@ -132,12 +134,63 @@ func (ctx *Registry) ensureResourceChain(name string, isPrivate, isAlias bool) {
 	}
 }
 
+func mergeResourceInfoPartial(a *ResourceCls, b *ResourceInfo) error {
+	if a.Id != b.Id {
+		return fmt.Errorf("could not merge resources %s and %s",
+			a.Id, b.Id)
+	}
+
+	if a.Name != b.Name {
+		return fmt.Errorf("could not merge resources %s and %s because names differ",
+			a.Id, b.Id)
+	}
+
+	if len(a.Fields) != len(b.Fields) {
+		return fmt.Errorf("could not merge resources %s and %s because fields do not match",
+			a.Id, b.Id)
+	}
+
+	for _, f := range b.Fields {
+		if _, ok := a.Fields[f.Name]; !ok {
+			return fmt.Errorf("could not merge resources %s and %s because fields do not match",
+				a.Id, b.Id)
+		}
+	}
+
+	if a.ListType != b.ListType {
+		return fmt.Errorf("could not merge resources %s and %s because list type does not match",
+			a.Id, b.Id)
+	}
+
+	if a.Private != b.Private {
+		return fmt.Errorf("could not merge resources %s and %s because private modifier does not match",
+			a.Id, b.Id)
+	}
+
+	if a.Title == "" {
+		a.Title = b.Title
+	}
+
+	if a.Desc == "" {
+		a.Desc = b.Desc
+	}
+
+	if a.MinMondooVersion == "" {
+		a.MinMondooVersion = b.MinMondooVersion
+	}
+
+	return nil
+}
+
 func (ctx *Registry) AddResourceInfo(info *ResourceInfo) error {
 	name := info.Id
 
 	// NOTE: we do not yet merge resources! So error for now.
-	if _, ok := ctx.Resources[name]; ok {
-		return errors.New("already defined resource " + name + ", we don't support merging yet")
+	if r, ok := ctx.Resources[name]; ok {
+		if err := mergeResourceInfoPartial(r, info); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	if info.Fields == nil {
