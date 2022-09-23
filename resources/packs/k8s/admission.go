@@ -23,8 +23,7 @@ func (k *mqlK8s) GetAdmissionreviews() ([]interface{}, error) {
 
 	resp := make([]interface{}, 0, len(result))
 	for _, a := range result {
-		r, err := k.MotorRuntime.CreateResource("k8s.admissionreview",
-			"id", objIdFromFields("admission", a.Request.Namespace, a.Request.Name))
+		r, err := k.MotorRuntime.CreateResource("k8s.admissionreview")
 		if err != nil {
 			return nil, err
 		}
@@ -100,11 +99,7 @@ func (k *mqlK8sAdmissionrequest) GetUserInfo() (interface{}, error) {
 }
 
 func (k *mqlK8sAdmissionreview) id() (string, error) {
-	return k.Id()
-}
-
-func (r *mqlK8sAdmissionreview) init(args *resources.Args) (*resources.Args, K8sAdmissionreview, error) {
-	return args, nil, nil
+	return "admissionreview", nil
 }
 
 func (k *mqlK8sAdmissionrequest) id() (string, error) {

@@ -694,8 +694,6 @@ k8s.customresource {
 
 // Kubernetes AdmissionReview
 k8s.admissionreview {
-  // Mondoo ID for Kubernetes AdmissionReview
-  id string
   // The requested admission
 	request() k8s.admissionrequest
 }
