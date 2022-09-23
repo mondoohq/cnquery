@@ -22,7 +22,12 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 
 	res.imports = make(map[string]map[string]struct{})
 	res.packPaths = map[string]string{}
-	importMap := map[string]map[string]*Resource{}
+	importMap := map[string]map[string]*Resource{
+		"": map[string]*Resource{},
+	}
+	for _, r := range res.Resources {
+		importMap[""][r.ID] = r
+	}
 	for i := range res.Imports {
 		// note: we do not recurse into these imports; we only need to know
 		// about the things that the import exposes, not about its dependencies
@@ -59,11 +64,13 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 
 	res.aliases = map[string]*Resource{}
 	for _, a := range res.Aliases {
+		found := false
 		pack, resourceName, ok := strings.Cut(a.Type.Type, ".")
 		if !ok {
-			return nil, fmt.Errorf("%v is not a valid alias", a)
+			pack = ""
+			resourceName = a.Type.Type
 		}
-		found := false
+
 		p, ok := importMap[pack]
 		if ok {
 			r, ok := p[resourceName]
@@ -72,6 +79,7 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 			}
 			res.aliases[a.Definition.Type] = r
 		}
+
 		if !found {
 			return nil, fmt.Errorf("%s was aliased but not imported", a.Type.Type)
 		}
