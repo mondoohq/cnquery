@@ -672,6 +672,18 @@ func (s *mqlOsBase) GetUsers() (resources.ResourceType, error) {
 	return s.MotorRuntime.CreateResource("users")
 }
 
+func (s *mqlOsUnix) id() (string, error) {
+	ident := s.MotorRuntime.Asset.GetMrn()
+	if ident == "" {
+		ident = strings.Join(s.MotorRuntime.Asset.PlatformIds, ",")
+	}
+	return "os.unix(" + ident + ")", nil
+}
+
+func (s *mqlOsUnix) GetBase() (resources.ResourceType, error) {
+	return s.MotorRuntime.CreateResource("os.base")
+}
+
 func (s *mqlOsLinux) id() (string, error) {
 	ident := s.MotorRuntime.Asset.GetMrn()
 	if ident == "" {
@@ -680,8 +692,8 @@ func (s *mqlOsLinux) id() (string, error) {
 	return "os.linux(" + ident + ")", nil
 }
 
-func (s *mqlOsLinux) GetBase() (resources.ResourceType, error) {
-	return s.MotorRuntime.CreateResource("os.base")
+func (s *mqlOsLinux) GetUnix() (resources.ResourceType, error) {
+	return s.MotorRuntime.CreateResource("os.unix")
 }
 
 func (s *mqlOsLinux) GetIptables() (resources.ResourceType, error) {

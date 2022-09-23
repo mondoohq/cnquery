@@ -213,8 +213,13 @@ os.base {
   embed machine
 }
 
+
+os.unix {
+  embed os.base as base
+}
+
 os.linux {
-    embed os.base as base
+    embed os.unix as unix
 
     iptables() iptables
     ip6tables() ip6tables
