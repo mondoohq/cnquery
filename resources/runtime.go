@@ -119,6 +119,19 @@ func args2map(args []interface{}) (*Args, error) {
 	return &res, nil
 }
 
+func (ctx *Runtime) cloneWithMotor(motor *motor.Motor) *Runtime {
+	if motor == nil {
+		panic("cannot initialize a MQL runtime without a motor")
+	}
+
+	return &Runtime{
+		Registry:  ctx.Registry,
+		Observers: ctx.Observers,
+		Motor:     motor,
+		cache:     &Cache{},
+	}
+}
+
 func (ctx *Runtime) createMockResource(name string, cls *ResourceCls) (ResourceType, error) {
 	res := MockResource{
 		StaticFields: cls.Fields,
@@ -222,8 +235,9 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 		if err != nil {
 			return nil, err
 		}
+
 		m.SetAsset(a)
-		newCtx := NewRuntime(ctx.Registry, m)
+		newCtx := ctx.cloneWithMotor(m)
 		nextCtx = newCtx
 	}
 	return nextCtx.CreateResourceWithID(name, "", args...)
