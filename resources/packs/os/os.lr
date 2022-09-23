@@ -11,6 +11,7 @@ alias os.base.packages = core.packages
 alias os.base.platform = core.platform
 alias os.base.platform.virtualization = core.platform.virtualization
 alias os.base.platform.advisories = core.platform.advisories
+alias os.unix.sshd = sshd
 
 // Results of running a command on the system
 command {
