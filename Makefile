@@ -217,6 +217,8 @@ cnquery/dist/goreleaser/edge:
 
 shared/generate:
 	go generate ./shared/proto/.
+	go generate ./upstream/
+	go generate ./upstream/health
 
 #   ⛹🏽‍ Testing   #
 
