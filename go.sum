@@ -1588,8 +1588,8 @@ go.etcd.io/etcd v0.0.0-20200513171258-e048e166ab9c/go.mod h1:xCI7ZzBfRuGgBXyXO6y
 go.etcd.io/etcd/api/v3 v3.5.0/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.0/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
 go.etcd.io/etcd/client/v2 v2.305.0/go.mod h1:h9puh54ZTgAKtEbut2oe9P4L/oqKCVB6xsXlzd7alYQ=
-go.mondoo.com/ranger-rpc v0.5.0 h1:Ky8tK6J/cJdnR6p4fp62Ovv2x4gLqtqZ6/3PY/Dto68=
-go.mondoo.com/ranger-rpc v0.5.0/go.mod h1:IWO2typb0uC6zFwgcz+sjOouZTzuWdft5RaVplc6Nlg=
+go.mondoo.com/ranger-rpc v0.5.1-0.20220923135836-9e7732899d34 h1:mtPZ1J+nRI/ivV+n41bjIwY6Rfxb2Jf49svZSQMGHIA=
+go.mondoo.com/ranger-rpc v0.5.1-0.20220923135836-9e7732899d34/go.mod h1:3YKcqFrlPgaB4FZ4EoLgdmRtwMQdO7RoAkZYFn+F1eY=
 go.mozilla.org/mozlog v0.0.0-20170222151521-4bb13139d403/go.mod h1:jHoPAGnDrCy6kaI2tAze5Prf0Nr0w/oNkROt2lw3n3o=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=

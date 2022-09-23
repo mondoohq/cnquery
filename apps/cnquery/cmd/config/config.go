@@ -35,6 +35,9 @@ type CliConfig struct {
 
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
+
+	// labels that will be applied to all assets
+	Labels map[string]string `json:"labels,omitempty" mapstructure:"labels"`
 }
 
 func (c *CliConfig) GetFeatures() cnquery.Features {
