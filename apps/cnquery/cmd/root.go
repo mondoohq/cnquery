@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -10,16 +11,23 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/config"
+	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/ranger-rpc"
+	"go.mondoo.com/ranger-rpc/plugins/scope"
 )
 
 const (
 	askForPasswordValue = ">passwordisnotset<"
 	rootCmdDesc         = "cnquery is a cloud-native tool for querying your entire fleet\n"
+
+	// we send a 78 exit code to prevent systemd service from restart
+	ConfigurationErrorCode = 78
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -104,4 +112,33 @@ func filterAssetByPlatformID(assetList []*asset.Asset, selectionID string) (*ass
 		return nil, errors.New("could not find an asset with the provided identifer: " + selectionID)
 	}
 	return foundAsset, nil
+}
+
+func defaultRangerPlugins(sysInfo *sysinfo.SystemInfo, features cnquery.Features) []ranger.ClientPlugin {
+	plugins := []ranger.ClientPlugin{}
+	plugins = append(plugins, scope.NewRequestIDRangerPlugin())
+	plugins = append(plugins, sysInfoHeader(sysInfo, features))
+	return plugins
+}
+
+func sysInfoHeader(sysInfo *sysinfo.SystemInfo, features cnquery.Features) ranger.ClientPlugin {
+	const (
+		HttpHeaderUserAgent      = "User-Client"
+		HttpHeaderClientFeatures = "Mondoo-Features"
+		HttpHeaderPlatformID     = "Mondoo-PlatformID"
+	)
+
+	h := http.Header{}
+	h.Set(HttpHeaderUserAgent, scope.XInfoHeader(map[string]string{
+		"cnquery": cnquery.Version,
+		"build":   cnquery.Build,
+		"PN":      sysInfo.Platform.Name,
+		"PR":      sysInfo.Platform.Version,
+		"PA":      sysInfo.Platform.Arch,
+		"IP":      sysInfo.IP,
+		"HN":      sysInfo.Hostname,
+	}))
+	h.Set(HttpHeaderClientFeatures, features.Encode())
+	h.Set(HttpHeaderPlatformID, sysInfo.PlatformId)
+	return scope.NewCustomHeaderRangerPlugin(h)
 }

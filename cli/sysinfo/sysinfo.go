@@ -28,7 +28,6 @@ func WithMotor(m *motor.Motor) SystemInfoOption {
 }
 
 type SystemInfo struct {
-	Mrn        string             `json:"mrn,omitempty"`
 	Version    string             `json:"version,omitempty"`
 	Build      string             `json:"build,omitempty"`
 	Platform   *platform.Platform `json:"platform,omitempty"`

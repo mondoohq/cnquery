@@ -19,6 +19,8 @@ import (
 // service interface definition
 
 type AgentManager interface {
+	RegisterAgent(context.Context, *AgentRegistrationRequest) (*AgentRegistrationConfirmation, error)
+	UnRegisterAgent(context.Context, *Mrn) (*Confirmation, error)
 	PingPong(context.Context, *Ping) (*Pong, error)
 }
 
@@ -48,6 +50,16 @@ func NewAgentManagerClient(addr string, client ranger.HTTPClient, plugins ...ran
 	serviceClient.AddPlugins(plugins...)
 	return serviceClient, nil
 }
+func (c *AgentManagerClient) RegisterAgent(ctx context.Context, in *AgentRegistrationRequest) (*AgentRegistrationConfirmation, error) {
+	out := new(AgentRegistrationConfirmation)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/RegisterAgent"}, ""), in, out)
+	return out, err
+}
+func (c *AgentManagerClient) UnRegisterAgent(ctx context.Context, in *Mrn) (*Confirmation, error) {
+	out := new(Confirmation)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/UnRegisterAgent"}, ""), in, out)
+	return out, err
+}
 func (c *AgentManagerClient) PingPong(ctx context.Context, in *Ping) (*Pong, error) {
 	out := new(Pong)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/PingPong"}, ""), in, out)
@@ -76,7 +88,9 @@ func NewAgentManagerServer(handler AgentManager, opts ...AgentManagerServerOptio
 	service := ranger.Service{
 		Name: "AgentManager",
 		Methods: map[string]ranger.Method{
-			"PingPong": srv.PingPong,
+			"RegisterAgent":   srv.RegisterAgent,
+			"UnRegisterAgent": srv.UnRegisterAgent,
+			"PingPong":        srv.PingPong,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -87,6 +101,54 @@ type AgentManagerServer struct {
 	allowUnknownFields bool
 }
 
+func (p *AgentManagerServer) RegisterAgent(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req AgentRegistrationRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.RegisterAgent(ctx, &req)
+}
+func (p *AgentManagerServer) UnRegisterAgent(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req Mrn
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.UnRegisterAgent(ctx, &req)
+}
 func (p *AgentManagerServer) PingPong(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
 	var req Ping
 	var err error

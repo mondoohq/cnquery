@@ -12,9 +12,43 @@ message ServiceAccountCredentials {
 }
 
 service AgentManager {
+  // RegisterAgent registers a new managed agent
+  rpc RegisterAgent(AgentRegistrationRequest) returns (AgentRegistrationConfirmation);
+  // UnRegister removes the managed agent from management
+  rpc UnRegisterAgent(Mrn) returns (Confirmation);
+
   // Service Account Credential Test Endpoint
   rpc PingPong(Ping) returns (Pong);
 }
 
 message Ping {}
 message Pong {}
+
+
+message AgentRegistrationRequest {
+  string token = 1;
+  string name = 2;
+  AgentInfo agent_info = 3;
+}
+
+message AgentInfo {
+  string mrn = 1;
+  string version = 2;
+  string build = 3;
+  string platform_name = 4;
+  string platform_release = 5;
+  string platform_arch = 6;
+  string platform_ip = 7;
+  string platform_hostname = 8;
+  map<string, string> labels = 18;
+  string platform_id = 20;
+}
+
+message AgentRegistrationConfirmation {
+  string agent_mrn = 1;
+  ServiceAccountCredentials credential = 2;
+}
+
+message Mrn { string mrn = 1; }
+
+message Confirmation { string mrn = 1; }
