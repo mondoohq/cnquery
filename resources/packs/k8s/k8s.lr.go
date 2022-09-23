@@ -8,8 +8,8 @@ import (
 
 	"go.mondoo.com/cnquery/resources"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources/packs/os"
 	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/os"
 )
 
 // Init all resources into the registry
