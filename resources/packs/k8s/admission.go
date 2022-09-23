@@ -10,7 +10,7 @@ import (
 	v1 "k8s.io/api/admission/v1"
 )
 
-func (k *mqlK8s) GetAdmissionreviews() ([]interface{}, error) {
+func (k *mqlK8sAdmissionreview) GetRequest() (interface{}, error) {
 	kt, err := k8sProvider(k.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -20,41 +20,31 @@ func (k *mqlK8s) GetAdmissionreviews() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	resp := make([]interface{}, 0, len(result))
-	for _, a := range result {
-		r, err := k.MotorRuntime.CreateResource("k8s.admissionreview")
-		if err != nil {
-			return nil, err
-		}
-		r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: a})
-
-		resp = append(resp, r)
+	if len(result) == 0 {
+		return nil, nil
 	}
 
-	return resp, nil
-}
-
-func (k *mqlK8sAdmissionreview) GetRequest() (interface{}, error) {
-	entry, ok := k.Cache.Load("_resource")
-	if !ok {
-		return nil, fmt.Errorf("failed to load AdmissionReview resource from cache")
+	// At the moment we don't support scanning >1 admission review at a time.
+	if len(result) > 1 {
+		return nil, fmt.Errorf("received more than 1 admission review")
 	}
 
-	a, ok := entry.Data.(v1.AdmissionReview)
-	if !ok {
-		return nil, fmt.Errorf("failed to convert cache entrry to AdmissionReview")
-	}
-
-	aRequest := a.Request
+	aRequest := result[0].Request
 	obj, err := k8sResources.ResourcesFromManifest(bytes.NewReader(aRequest.Object.Raw))
 	if err != nil {
 		return nil, err
 	}
 
-	objDict, err := core.JsonToDictSlice(obj)
+	objDict, err := core.JsonToDict(obj[0])
 	if err != nil {
 		return nil, err
+	}
+
+	args := []interface{}{
+		"name", aRequest.Name,
+		"namespace", aRequest.Namespace,
+		"operation", string(aRequest.Operation),
+		"object", objDict,
 	}
 
 	oldObj, err := k8sResources.ResourcesFromManifest(bytes.NewReader(aRequest.OldObject.Raw))
@@ -62,17 +52,17 @@ func (k *mqlK8sAdmissionreview) GetRequest() (interface{}, error) {
 		return nil, err
 	}
 
-	oldObjDict, err := core.JsonToDictSlice(oldObj)
-	if err != nil {
-		return nil, err
+	if len(oldObj) == 1 {
+		oldObjDict, err := core.JsonToDict(oldObj[0])
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, "oldObject", oldObjDict)
+	} else {
+		args = append(args, "oldObject", nil)
 	}
 
-	r, err := k.MotorRuntime.CreateResource("k8s.admissionrequest",
-		"name", aRequest.Name,
-		"namespace", aRequest.Namespace,
-		"operation", string(aRequest.Operation),
-		"object", objDict,
-		"oldObject", oldObjDict)
+	r, err := k.MotorRuntime.CreateResource("k8s.admissionrequest", args...)
 	if err != nil {
 		return nil, err
 	}
