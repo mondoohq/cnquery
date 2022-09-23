@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/motor/inventory"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/resources"
 )
 
 // ShellConfig is the shared configuration for running a shell given all
@@ -26,6 +27,8 @@ type ShellConfig struct {
 
 	DoRecord       bool
 	WelcomeMessage string
+
+	UpstreamConfig *resources.UpstreamConfig
 }
 
 // StartShell will start an interactive CLI shell
@@ -84,6 +87,10 @@ func StartShell(conf *ShellConfig) error {
 	shellOptions := []shell.ShellOption{}
 	shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
 	shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
+
+	if conf.UpstreamConfig != nil {
+		shellOptions = append(shellOptions, shell.WithUpstreamConfig(conf.UpstreamConfig))
+	}
 
 	sh, err := shell.New(m, shellOptions...)
 	if err != nil {
