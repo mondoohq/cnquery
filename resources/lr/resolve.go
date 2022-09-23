@@ -64,13 +64,21 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 
 	res.aliases = map[string]*Resource{}
 	for _, a := range res.Aliases {
-		found := false
-		pack, resourceName, ok := strings.Cut(a.Type.Type, ".")
-		if !ok {
+		var pack string
+		var resourceName string
+
+		if _, ok := importMap[""][a.Type.Type]; ok {
 			pack = ""
 			resourceName = a.Type.Type
+		} else {
+			pack, resourceName, ok = strings.Cut(a.Type.Type, ".")
+			if !ok {
+				pack = ""
+				resourceName = a.Type.Type
+			}
 		}
 
+		found := false
 		p, ok := importMap[pack]
 		if ok {
 			r, ok := p[resourceName]
