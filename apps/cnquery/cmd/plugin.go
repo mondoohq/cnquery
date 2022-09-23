@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
@@ -134,9 +133,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	}
 	defer sh.Close()
 
-	fmt.Printf("%#v\n", conf.Command)
 	code, results, err := sh.RunOnce(conf.Command)
-	fmt.Printf("%#v\n", code)
 	if err != nil {
 		return errors.Wrap(err, "failed to run")
 	}
