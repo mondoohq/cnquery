@@ -11,7 +11,14 @@ alias os.base.packages = core.packages
 alias os.base.platform = core.platform
 alias os.base.platform.virtualization = core.platform.virtualization
 alias os.base.platform.advisories = core.platform.advisories
+alias os.base.services = services
 alias os.unix.sshd = sshd
+alias os.unix.ntp = ntp.conf
+alias os.unix.rsyslog = rsyslog.conf
+alias os.unix.lsblk = lsblk
+alias os.unix.mount = mount
+alias os.unix.shadow = shadow
+alias os.linux.yum = yum
 
 // Results of running a command on the system
 command {
