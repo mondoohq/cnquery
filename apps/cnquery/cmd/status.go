@@ -77,7 +77,6 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 
 		// check valid agent authentication
 		plugins := []ranger.ClientPlugin{}
-		// plugins = append(plugins, max.NewClientInfoPlugin(clientInfo, opts.GetFeatures()))
 
 		// try to load config into credentials struct
 		credentials := opts.GetServiceCredential()
@@ -90,7 +89,10 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 				s.Client.Mrn = "no managed client"
 			}
 
-			certAuth, _ := upstream.NewServiceAccountRangerPlugin(credentials)
+			certAuth, err := upstream.NewServiceAccountRangerPlugin(credentials)
+			if err != nil {
+				log.Fatal().Err(err).Msg("invalid credentials")
+			}
 			plugins = append(plugins, certAuth)
 
 			// try to ping the server
@@ -179,7 +181,7 @@ func (s Status) RenderCliStatus() {
 	if s.Client.Registered && s.Client.PingPongError == nil {
 		log.Info().Msg(theme.DefaultTheme.Success("client authenticated successfully"))
 	} else {
-		log.Error().Err(s.Client.PingPongError).Msg("could not connect to mondoo platform")
+		log.Error().Err(s.Client.PingPongError).Msg("could not connect to Mondoo Platform")
 	}
 
 	for i := range s.Upstream.Warnings {

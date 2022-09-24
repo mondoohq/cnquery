@@ -173,3 +173,99 @@ func (p *AgentManagerServer) PingPong(ctx context.Context, reqBytes *[]byte) (pb
 	}
 	return p.handler.PingPong(ctx, &req)
 }
+
+// service interface definition
+
+type SecureTokenService interface {
+	ExchangeSSH(context.Context, *ExchangeSSHKeyRequest) (*ExchangeSSHKeyResponse, error)
+}
+
+// client implementation
+
+type SecureTokenServiceClient struct {
+	ranger.Client
+	httpclient ranger.HTTPClient
+	prefix     string
+}
+
+func NewSecureTokenServiceClient(addr string, client ranger.HTTPClient, plugins ...ranger.ClientPlugin) (*SecureTokenServiceClient, error) {
+	base, err := url.Parse(ranger.SanitizeUrl(addr))
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := url.Parse("./SecureTokenService")
+	if err != nil {
+		return nil, err
+	}
+
+	serviceClient := &SecureTokenServiceClient{
+		httpclient: client,
+		prefix:     base.ResolveReference(u).String(),
+	}
+	serviceClient.AddPlugins(plugins...)
+	return serviceClient, nil
+}
+func (c *SecureTokenServiceClient) ExchangeSSH(ctx context.Context, in *ExchangeSSHKeyRequest) (*ExchangeSSHKeyResponse, error) {
+	out := new(ExchangeSSHKeyResponse)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ExchangeSSH"}, ""), in, out)
+	return out, err
+}
+
+// server implementation
+
+type SecureTokenServiceServerOption func(s *SecureTokenServiceServer)
+
+func WithUnknownFieldsForSecureTokenServiceServer() SecureTokenServiceServerOption {
+	return func(s *SecureTokenServiceServer) {
+		s.allowUnknownFields = true
+	}
+}
+
+func NewSecureTokenServiceServer(handler SecureTokenService, opts ...SecureTokenServiceServerOption) http.Handler {
+	srv := &SecureTokenServiceServer{
+		handler: handler,
+	}
+
+	for i := range opts {
+		opts[i](srv)
+	}
+
+	service := ranger.Service{
+		Name: "SecureTokenService",
+		Methods: map[string]ranger.Method{
+			"ExchangeSSH": srv.ExchangeSSH,
+		},
+	}
+	return ranger.NewRPCServer(&service)
+}
+
+type SecureTokenServiceServer struct {
+	handler            SecureTokenService
+	allowUnknownFields bool
+}
+
+func (p *SecureTokenServiceServer) ExchangeSSH(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req ExchangeSSHKeyRequest
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.ExchangeSSH(ctx, &req)
+}
