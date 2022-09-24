@@ -117,8 +117,6 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
 		storeRecording(m)
-
-		// close backend connection
 		m.Close()
 	}
 
