@@ -1,7 +1,7 @@
 package github
 
 import (
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v47/github"
 	"go.mondoo.com/cnquery/resources"
 )
 

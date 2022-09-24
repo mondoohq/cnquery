@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/go-github/v45/github"
+	"github.com/google/go-github/v47/github"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
