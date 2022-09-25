@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/go-github/v47/github"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
-
-	"github.com/google/go-github/v45/github"
 )
 
 var (
