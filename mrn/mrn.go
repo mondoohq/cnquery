@@ -11,6 +11,15 @@ func ServiceID(serviceName string, baseDomain string) string {
 	return res
 }
 
+func IsValid(mrn string) bool {
+	x, err := url.Parse(mrn)
+	if err != nil {
+		return false
+	}
+
+	return x.Scheme == "" && x.Fragment == "" && x.RawQuery == ""
+}
+
 func NewMRN(fullResourceName string) (*MRN, error) {
 	u, err := url.Parse(fullResourceName)
 	if err != nil {
