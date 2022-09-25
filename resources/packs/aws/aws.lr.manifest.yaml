@@ -492,7 +492,7 @@ resources:
           AWS_SECRET_ACCESS_KEY are not in plaintext
       - query: "aws.codebuild.projects.where( source['Type'] == \"BITBUCKET\" || source['Type']
         == \"GITHUB\" ) { \n  source['Auth']['Type'] == \"OAUTH\"\n}\n"
-        title: Checks that all projects using github or bitbucket as the source use
+        title: Checks that all projects using GitHub or Bitbucket as the source use
           oauth
   aws.codebuild.project:
     docs:

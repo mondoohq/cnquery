@@ -269,7 +269,7 @@ private aws.iam.virtualmfadevice {
   user aws.iam.user
 }
 
-// AWS service for machine learning
+// AWS SageMaker service for machine learning
 aws.sagemaker {
   // List of sagemaker endpoints
   endpoints() []aws.sagemaker.endpoint
@@ -277,6 +277,7 @@ aws.sagemaker {
   notebookInstances() []aws.sagemaker.notebookinstance
 }
 
+// AWS SageMaker Notebook Instance
 private aws.sagemaker.notebookinstance {
   // ARN for the notebook instance
   arn string
@@ -290,6 +291,7 @@ private aws.sagemaker.notebookinstance {
   tags map[string]string
 }
 
+// AWS SageMaker Notebook Instance Details
 private aws.sagemaker.notebookinstance.details {
   // ARN for the notebook instance
   arn string
@@ -442,7 +444,7 @@ aws.codebuild {
   projects() []aws.codebuild.project
 }
 
-// AWS Codebuild Project
+// AWS CodeBuild Project
 private aws.codebuild.project {
   // ARN for the project
   arn string
@@ -588,7 +590,7 @@ private aws.cloudwatch.metric {
   statistics() aws.cloudwatch.metricstatistics 
 }
 
-// AWS Cloudwatch Metric Dimension
+// AWS CloudWatch Metric Dimension
 aws.cloudwatch.metricdimension {
   // Name of the dimension
   name string
@@ -596,7 +598,7 @@ aws.cloudwatch.metricdimension {
   value string
 }
 
-// AWS Cloudwatch Metric Statistics
+// AWS CloudWatch Metric Statistics
 aws.cloudwatch.metricstatistics {
   init(namespace string, region string, name string)
   // Namespace for the metric
@@ -611,7 +613,7 @@ aws.cloudwatch.metricstatistics {
   datapoints []aws.cloudwatch.metric.datapoint
 }
 
-// AWS Cloudwatch Metric Datapoint
+// AWS CloudWatch Metric Datapoint
 private aws.cloudwatch.metric.datapoint {
   // unique identifier for the datapoint
   id string
@@ -654,13 +656,13 @@ private aws.cloudwatch.loggroup.metricsfilter {
   metrics []aws.cloudwatch.metric
 }
 
-// AWS Cloudtrail enables risk auditing of your AWS account
+// AWS CloudTrail enables risk auditing of your AWS account
 aws.cloudtrail {
   // a list of cloudtrail trails associated with the account
   trails() []aws.cloudtrail.trail
 }
 
-// AWS Cloudtrail Trail
+// AWS CloudTrail Trail
 private aws.cloudtrail.trail {
   // ARN of the trail
   arn string
@@ -1340,7 +1342,7 @@ private aws.ec2.instance.device {
   deviceName string
 }
 
-// AWS VPC resource
+// AWS Virtual Private Cloud (VPC) resource
 private aws.vpc {
   // arn of the vpc
   arn string
@@ -1360,7 +1362,7 @@ private aws.vpc {
   tags map[string]string
 }
 
-// Amazon Virtual Private Cloud Flow Log
+// Amazon Virtual Private Cloud (VPC) Flow Log
 private aws.vpc.flowlog {
   // unique id of the flowlog
   id string
@@ -1374,7 +1376,7 @@ private aws.vpc.flowlog {
   tags map[string]string
 }
 
-// Amazon Virtual Private Cloud Route Table
+// Amazon Virtual Private Cloud (VPC) Route Table
 private aws.vpc.routetable {
   // unique id of the route table
   id string
