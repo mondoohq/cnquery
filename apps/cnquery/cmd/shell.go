@@ -114,9 +114,9 @@ You can also explicitly connect to an image or a container registry:
 				Short: "Connect to a container registry",
 				Long: `Connect to a container registry. Supports more parameters for different registries:
 
-    cnquery shell cr harbor.yourdomain.com/project/repository
-    cnquery shell cr yourname.azurecr.io
-    cnquery shell cr 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
+    cnquery shell container registry harbor.yourdomain.com/project/repository
+    cnquery shell container registry yourname.azurecr.io
+    cnquery shell container registry 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
 `,
 			},
 			"docker": {

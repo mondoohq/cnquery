@@ -9,12 +9,6 @@ import (
 	"go.mondoo.com/cnquery/cli/theme/colors"
 )
 
-func init() {
-	DefaultTheme.PolicyPrinter.Error = DefaultTheme.Error
-	DefaultTheme.PolicyPrinter.Primary = DefaultTheme.Primary
-	DefaultTheme.PolicyPrinter.Secondary = DefaultTheme.Secondary
-}
-
 type PromptColors struct {
 	PrefixTextColor              prompt.Color
 	PreviewSuggestionTextColor   prompt.Color
@@ -44,15 +38,15 @@ type Theme struct {
 }
 
 func (t Theme) Primary(s ...interface{}) string {
-	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Primary).String()
+	return termenv.String(fmt.Sprint(s...)).Foreground(t.Colors.Primary).String()
 }
 
 func (t Theme) Secondary(s ...interface{}) string {
-	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Secondary).String()
+	return termenv.String(fmt.Sprint(s...)).Foreground(t.Colors.Secondary).String()
 }
 
 func (t Theme) Disabled(s ...interface{}) string {
-	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Disabled).String()
+	return termenv.String(fmt.Sprint(s...)).Foreground(t.Colors.Disabled).String()
 }
 
 func (t Theme) Error(s ...interface{}) string {
@@ -62,11 +56,3 @@ func (t Theme) Error(s ...interface{}) string {
 func (t Theme) Success(s ...interface{}) string {
 	return termenv.String(fmt.Sprint(s...)).Foreground(DefaultTheme.Colors.Success).String()
 }
-
-var DefaultTheme = OperatingSytemTheme
-
-const logo = " .--. ,-.,-. .---..-..-. .--. .--. .-..-.™\n" +
-	"'  ..': ,. :' .; :: :; :' '_.': ..': :; :\n" +
-	"`.__.':_;:_;`._. ;`.__.'`.__.':_;  `._. ;\n" +
-	"   mondoo™     : :                  .-. :\n" +
-	"               :_:                  `._.'"
