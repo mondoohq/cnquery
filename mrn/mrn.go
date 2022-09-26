@@ -25,6 +25,19 @@ func NewMRN(fullResourceName string) (*MRN, error) {
 	}, nil
 }
 
+func GetResource(mrn string, resource string) (string, error) {
+	parsed, err := NewMRN(mrn)
+	if err != nil {
+		return "", err
+	}
+
+	res, err := parsed.ResourceID(resource)
+	if err != nil {
+		return "", errors.New("invalid " + resource + " in mrn: " + mrn)
+	}
+	return res, nil
+}
+
 // MRN follows Google's Design for resource names
 // see https://cloud.google.com/apis/design/resource_names
 type MRN struct {
