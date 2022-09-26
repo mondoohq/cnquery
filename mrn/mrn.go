@@ -3,6 +3,8 @@ package mrn
 import (
 	"errors"
 	"net/url"
+	"path"
+	"regexp"
 	"strings"
 )
 
@@ -34,6 +36,20 @@ func NewMRN(fullResourceName string) (*MRN, error) {
 	}, nil
 }
 
+func NewChildMRN(ownerMRN string, resource string, resourceID string) (*MRN, error) {
+	if !isValidResourceID(resourceID) {
+		return nil, errors.New("invalid " + resource + " ID: " + resourceID)
+	}
+
+	mrn, err := NewMRN(ownerMRN)
+	if err != nil {
+		return nil, err
+	}
+
+	mrn.RelativeResourceName = path.Join(mrn.RelativeResourceName, resource, resourceID)
+	return mrn, nil
+}
+
 func GetResource(mrn string, resource string) (string, error) {
 	parsed, err := NewMRN(mrn)
 	if err != nil {
@@ -45,6 +61,24 @@ func GetResource(mrn string, resource string) (string, error) {
 		return "", errors.New("invalid " + resource + " in mrn: " + mrn)
 	}
 	return res, nil
+}
+
+// SafeComponentString sanitizes a string so that it can be safely used as a uri component for mrns
+func SafeComponentString(s string) string {
+	if s == "" {
+		return s
+	}
+	s = strings.ReplaceAll(s, " ", "_")
+	s = strings.ReplaceAll(s, "/", "-")
+	return s
+}
+
+// ID: lowercase letters, digits, dots or hyphens, fewer than 200 chars, more than 5 chars.
+// They may include dots/hyphens etc, e.g. 1.1.2-tmp-configured
+var reResourceID = regexp.MustCompile(`^([\d-_\.]|[a-zA-Z]){5,200}$`)
+
+func isValidResourceID(id string) bool {
+	return reResourceID.MatchString(id)
 }
 
 // MRN follows Google's Design for resource names
@@ -82,14 +116,4 @@ func (mrn *MRN) Equals(resource string) bool {
 		return true
 	}
 	return false
-}
-
-// SafeComponentString sanitizes a string so that it can be safely used as a uri component for mrns
-func SafeComponentString(s string) string {
-	if s == "" {
-		return s
-	}
-	s = strings.ReplaceAll(s, " ", "_")
-	s = strings.ReplaceAll(s, "/", "-")
-	return s
 }
