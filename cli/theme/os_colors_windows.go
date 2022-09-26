@@ -36,8 +36,8 @@ var OperatingSytemTheme = &Theme{
 		res := w.String()
 		return res[0 : len(res)-1]
 	},
-	Landing: termenv.String("mondoo™\n" + logo + "\n").Foreground(colors.DefaultColorTheme.Primary).String(),
-	Welcome: "mondoo™\n" + logo + " interactive shell\n",
+	Landing: termenv.String("cnquery™\n" + logo + "\n").Foreground(colors.DefaultColorTheme.Primary).String(),
+	Welcome: "cnquery™\n" + logo + " interactive shell\n",
 	// NOTE: this is important to be short for windows, otherwise the auto-complete will make strange be jumps
 	// ENSURE YOU TEST A CHANGE BEFORE COMMIT ON WINDOWS
 	Prefix:        "> ",

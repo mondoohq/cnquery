@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/cli/assetlist"
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/shell"
+	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery"
@@ -100,7 +101,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 			return err
 		}
 	} else if len(assetList) > 1 {
-		r := &assetlist.SimpleRender{}
+		r := assetlist.NewSimpleRenderer(theme.OperatingSytemTheme)
 		out.WriteString(r.Render(assetList) + "\n")
 		return errors.New("cannot connect to more than one asset, use --platform-id to select a specific asset")
 	}

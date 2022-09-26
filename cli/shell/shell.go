@@ -53,6 +53,12 @@ func WithOutput(writer io.Writer) ShellOption {
 	}
 }
 
+func WithTheme(theme *theme.Theme) ShellOption {
+	return func(t *Shell) {
+		t.Theme = theme
+	}
+}
+
 // Shell is the interactive explorer
 type Shell struct {
 	Runtime     *resources.Runtime
@@ -75,7 +81,6 @@ type Shell struct {
 // New creates a new Shell
 func New(backend *motor.Motor, opts ...ShellOption) (*Shell, error) {
 	res := Shell{
-		Theme:          theme.DefaultTheme,
 		alreadyPrinted: &sync.Map{},
 		out:            os.Stdout,
 		features:       cnquery.DefaultFeatures,
@@ -88,6 +93,11 @@ func New(backend *motor.Motor, opts ...ShellOption) (*Shell, error) {
 	for i := range opts {
 		opts[i](&res)
 	}
+
+	if res.Theme == nil {
+		res.Theme = theme.DefaultTheme
+	}
+
 	res.completer = NewCompleter(res.Schema, res.features, func() string {
 		return res.query
 	})
