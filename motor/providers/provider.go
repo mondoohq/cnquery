@@ -41,6 +41,28 @@ func ToPlatformIdDetectors(idDetectors []string) []PlatformIdDetector {
 	return idDetectorsCopy
 }
 
+func CompareProviders(a, b Instance) (bool, error) {
+	var idA string
+	var idB string
+	var err error
+	identifiableA, ok := a.(PlatformIdentifier)
+	if ok {
+		idA, err = identifiableA.Identifier()
+		if err != nil {
+			return false, err
+		}
+	}
+	identifiableB, ok := b.(PlatformIdentifier)
+	if ok {
+		idB, err = identifiableB.Identifier()
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return idA == idB, nil
+}
+
 type Instance interface {
 	PlatformIdDetectors() []PlatformIdDetector
 

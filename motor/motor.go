@@ -65,6 +65,7 @@ type Motor struct {
 	detector    *detector.Detector
 	watcher     providers.Watcher
 	isRecording bool
+	isClosed    bool
 }
 
 func (m *Motor) Platform() (*platform.Platform, error) {
@@ -132,11 +133,12 @@ func (m *Motor) Recording() []byte {
 }
 
 func (m *Motor) Close() {
-	if m == nil {
+	if m == nil || m.isClosed {
 		return
 	}
 	m.l.Lock()
 	defer m.l.Unlock()
+	m.isClosed = true
 
 	if m.Provider != nil {
 		m.Provider.Close()

@@ -256,6 +256,7 @@ func (c *MQLExecutorV2) Unregister() error {
 		return errors.New("multiple errors unregistering")
 	}
 
+	c.runtime.Close()
 	return nil
 }
 

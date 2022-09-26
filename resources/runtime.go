@@ -76,6 +76,7 @@ type Runtime struct {
 	cache          *Cache
 	Observers      *Observers
 	UpstreamConfig *UpstreamConfig
+	children       []*Runtime
 }
 
 // NewRuntime creates a new runtime from a registry and motor backend
@@ -92,6 +93,7 @@ func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 		Observers: NewObservers(),
 		Motor:     motor,
 		cache:     &Cache{},
+		children:  []*Runtime{},
 	}
 }
 
@@ -129,6 +131,7 @@ func (ctx *Runtime) cloneWithMotor(motor *motor.Motor) *Runtime {
 		Observers: ctx.Observers,
 		Motor:     motor,
 		cache:     &Cache{},
+		children:  []*Runtime{},
 	}
 }
 
@@ -217,7 +220,7 @@ func (ctx *Runtime) CreateResource(name string, args ...interface{}) (ResourceTy
 
 func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, p providers.Instance, args ...interface{}) (ResourceType, error) {
 	// This function will create the Resource. If the asset "a" and provider "p" match what "ctx"
-	// already holds, we do not need to create a new Rutnime and can attach it directly to the
+	// already holds, we do not need to create a new Runtime and can attach it directly to the
 	// new resource. Otherwise, a new runtime is created, where the asset and provider are changed.
 	// We probably also need to do something about ctx.UpstreamConfig
 	if p == nil {
@@ -227,7 +230,11 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 		a = ctx.Motor.GetAsset()
 	}
 	nextCtx := ctx
-	if ctx.Motor.Provider != p || !isSameAsset(ctx.Motor.GetAsset(), a) {
+	equalProviders, err := providers.CompareProviders(ctx.Motor.Provider, p)
+	if err != nil {
+		return nil, err
+	}
+	if !equalProviders || !isSameAsset(ctx.Motor.GetAsset(), a) {
 		// TODO:
 		// If we create a new motor, but p is shared, bad things may happen
 		// when closing the motor
@@ -238,6 +245,9 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 
 		m.SetAsset(a)
 		newCtx := ctx.cloneWithMotor(m)
+		if !equalProviders {
+			nextCtx.children = append(nextCtx.children, newCtx)
+		}
 		nextCtx = newCtx
 	}
 	return nextCtx.CreateResourceWithID(name, "", args...)
@@ -470,4 +480,11 @@ func (ctx *Runtime) Trigger(r ResourceType, field string) error {
 	}
 
 	return r.Compute(field)
+}
+
+func (r *Runtime) Close() {
+	for _, c := range r.children {
+		c.Close()
+	}
+	r.Motor.Close()
 }
