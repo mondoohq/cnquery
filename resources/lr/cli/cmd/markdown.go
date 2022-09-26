@@ -153,7 +153,7 @@ func (l *lrSchemaRenderer) renderToc(packName string, resources []*lr.Resource, 
 
 	// render content
 	builder.WriteString("# Mondoo " + packName + " Resource Pack Reference\n\n")
-	builder.WriteString("# Table of Contents\n\n")
+	builder.WriteString("## Table of Contents\n\n")
 	rows := [][]string{}
 
 	for i := range resources {
