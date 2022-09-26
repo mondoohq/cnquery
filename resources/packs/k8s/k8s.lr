@@ -689,3 +689,33 @@ k8s.customresource {
   // Full resource manifest
   manifest dict
 }
+
+// Kubernetes AdmissionReview
+k8s.admissionreview {
+  // The requested admission
+  request() k8s.admissionrequest
+}
+
+// Kubernetes AdmissionRequest
+private k8s.admissionrequest {
+  // The name of the object presented in the request
+  name string
+  // The namespace associated with the request (if any)
+  namespace string
+  // The operation being performed
+  operation string
+  // Information about the requesting user
+  userInfo() k8s.userinfo
+  // The incoming object from the request
+  object dict
+  // The existing object. Only populated for UPDATE and DELETE requests
+  oldObject dict
+}
+
+// Kubernetes UserInfo
+private k8s.userinfo {
+  // The username of the user
+  username string
+  // The UID of the user
+  uid string
+}
