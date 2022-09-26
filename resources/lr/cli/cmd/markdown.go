@@ -287,7 +287,7 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 			snippet := docs.Snippets[si]
 			builder.WriteString(snippet.Title)
 			builder.WriteString("\n\n")
-			builder.WriteString("```javascript\n")
+			builder.WriteString("```coffee\n")
 			builder.WriteString(strings.TrimSpace(snippet.Query))
 			builder.WriteString("\n```\n\n")
 		}
