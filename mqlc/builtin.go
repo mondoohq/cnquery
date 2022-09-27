@@ -148,6 +148,18 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 		if v.IsPrivate {
 			continue
 		}
+		if v.IsEmbedded {
+			name := types.Type(v.Type).ResourceName()
+			child, ok := c.Schema.Resources[name]
+			if !ok {
+				continue
+			}
+			childFields := publicFieldsInfo(c, child)
+			for k, v := range childFields {
+				res[k] = v
+			}
+			continue
+		}
 
 		if v.IsImplicitResource {
 			name := types.Type(v.Type).ResourceName()
