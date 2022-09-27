@@ -201,10 +201,6 @@ mqlc/test:
 
 #   🏗 Binary / Build   #
 
-.PHONY: cnquery/build
-cnquery/build:
-	go build -o cnquery ${LDFLAGSDIST} apps/cnquery/cnquery.go
-
 .PHONY: cnquery/install
 cnquery/install:
 	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/cnquery/cnquery.go

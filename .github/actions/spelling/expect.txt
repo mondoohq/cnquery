@@ -82,3 +82,12 @@ vswitch
 xyrt
 youtube
 zerotouch
+cnspec
+Kubernetes
+VMs
+mondoohq
+mypack
+orgs
+standalone
+stedolan
+sth
