@@ -42,6 +42,10 @@ func ToPlatformIdDetectors(idDetectors []string) []PlatformIdDetector {
 }
 
 func CompareProviders(a, b Instance) (bool, error) {
+	if a.Kind() != b.Kind() {
+		return false, nil
+	}
+
 	var idA string
 	var idB string
 	var err error
