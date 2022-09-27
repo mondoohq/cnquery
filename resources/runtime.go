@@ -230,26 +230,18 @@ func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, 
 		a = ctx.Motor.GetAsset()
 	}
 	nextCtx := ctx
-	equalProviders, err := providers.CompareProviders(ctx.Motor.Provider, p)
+	// TODO:
+	// If we create a new motor, but p is shared, bad things may happen
+	// when closing the motor
+	m, err := motor.New(p)
 	if err != nil {
 		return nil, err
 	}
-	if !equalProviders || !isSameAsset(ctx.Motor.GetAsset(), a) {
-		// TODO:
-		// If we create a new motor, but p is shared, bad things may happen
-		// when closing the motor
-		m, err := motor.New(p)
-		if err != nil {
-			return nil, err
-		}
 
-		m.SetAsset(a)
-		newCtx := ctx.cloneWithMotor(m)
-		if !equalProviders {
-			nextCtx.children = append(nextCtx.children, newCtx)
-		}
-		nextCtx = newCtx
-	}
+	m.SetAsset(a)
+	newCtx := ctx.cloneWithMotor(m)
+	nextCtx.children = append(nextCtx.children, newCtx)
+	nextCtx = newCtx
 	return nextCtx.CreateResourceWithID(name, "", args...)
 }
 

@@ -3,6 +3,7 @@ package mqlc
 import (
 	"errors"
 
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources"
@@ -148,7 +149,7 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 		if v.IsPrivate {
 			continue
 		}
-		if v.IsEmbedded {
+		if v.IsEmbedded && c.features.IsActive(cnquery.MQLAssetContext) {
 			name := types.Type(v.Type).ResourceName()
 			child, ok := c.Schema.Resources[name]
 			if !ok {
