@@ -283,7 +283,6 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
 
 		conf.UpstreamConfig = &resources.UpstreamConfig{
-			SpaceMrn:    opts.GetParentMrn(),
 			ApiEndpoint: opts.UpstreamApiEndpoint(),
 			Plugins:     []ranger.ClientPlugin{certAuth},
 			// we do not use opts here since we want to ensure the result is not stored when users use the shell
