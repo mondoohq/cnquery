@@ -22,7 +22,7 @@ builds:
       - -tags="production netgo"
     ldflags:
       - "-extldflags=-static"
-      - -s -w -X go.mondoo.com/mondoo.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
   - id: macos
     main: ./apps/cnquery/cnquery.go
     binary: cnquery
@@ -47,7 +47,7 @@ builds:
     flags: -tags production -buildmode exe
     ldflags:
       - "-extldflags -static"
-      - -s -w -X go.mondoo.com/mondoo.Version={{.Version}} -X go.mondoo.com/mondoo.Build={{.ShortCommit}} -X go.mondoo.com/mondoo.Date={{.Date}}
+      - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
 nfpms:
   -
     maintainer: Mondoo <hello@mondoo.com>
