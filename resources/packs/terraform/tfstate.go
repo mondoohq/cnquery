@@ -123,6 +123,42 @@ func (t *mqlTerraformState) GetModules() (interface{}, error) {
 	return list, nil
 }
 
+func (t *mqlTerraformState) GetResources() (interface{}, error) {
+	provider, err := terraformProvider(t.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	state, err := provider.State()
+	if err != nil {
+		return nil, err
+	}
+
+	if state.Values == nil {
+		return nil, nil
+	}
+
+	// resolve all tfstate resources, to achive this we need to walk all modules
+	resourceList := []*terraform.Resource{}
+
+	resourceList = append(resourceList, state.Values.RootModule.Resources...)
+	state.Values.RootModule.WalkChildModules(func(m *terraform.Module) {
+		resourceList = append(resourceList, m.Resources...)
+	})
+
+	// convert module list to mql resources
+	list := []interface{}{}
+	for i := range resourceList {
+		r, err := newMqlResource(t.MotorRuntime, resourceList[i])
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, r)
+	}
+
+	return list, nil
+}
+
 func (t *mqlTerraformStateOutput) id() (string, error) {
 	id, err := t.Identifier()
 	if err != nil {
@@ -248,21 +284,8 @@ func (t *mqlTerraformStateModule) GetResources() ([]interface{}, error) {
 
 	var list []interface{}
 	for i := range module.Resources {
-
 		resource := module.Resources[i]
-
-		r, err := t.MotorRuntime.CreateResource("terraform.state.resource",
-			"address", resource.Address,
-			"name", resource.Name,
-			"mode", resource.Mode,
-			"type", resource.Type,
-			"providerName", resource.ProviderName,
-			"schemaVersion", int64(resource.SchemaVersion),
-			"values", resource.AttributeValues,
-			"dependsOn", core.StrSliceToInterface(resource.DependsOn),
-			"tainted", resource.Tainted,
-			"deposedKey", resource.DeposedKey,
-		)
+		r, err := newMqlResource(t.MotorRuntime, resource)
 		if err != nil {
 			return nil, err
 		}
@@ -281,6 +304,25 @@ func newMqlModule(runtime *resources.Runtime, module *terraform.Module) (resourc
 	}
 	// store module in cache
 	r.MqlResource().Cache.Store("_module", &resources.CacheEntry{Data: module})
+	return r, nil
+}
+
+func newMqlResource(runtime *resources.Runtime, resource *terraform.Resource) (resources.ResourceType, error) {
+	r, err := runtime.CreateResource("terraform.state.resource",
+		"address", resource.Address,
+		"name", resource.Name,
+		"mode", resource.Mode,
+		"type", resource.Type,
+		"providerName", resource.ProviderName,
+		"schemaVersion", int64(resource.SchemaVersion),
+		"values", resource.AttributeValues,
+		"dependsOn", core.StrSliceToInterface(resource.DependsOn),
+		"tainted", resource.Tainted,
+		"deposedKey", resource.DeposedKey,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return r, nil
 }
 
