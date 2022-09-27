@@ -41,6 +41,21 @@ func compileT(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	compileProps(t, s, nil, f)
 }
 
+func compileCtx(t *testing.T, s string, f func(res *llx.CodeBundle)) {
+	newFeatures := cnquery.Features{byte(cnquery.MQLAssetContext)}
+	newFeatures = append(newFeatures, features...)
+	res, err := Compile(s, schema, newFeatures, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.NoError(t, Invariants.Check(res))
+	if res != nil && res.CodeV2 != nil {
+		assert.Nil(t, res.Suggestions)
+		if assert.NotEmpty(t, res.CodeV2.Blocks) {
+			f(res)
+		}
+	}
+}
+
 func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 	res, err := Compile(s, schema, features, nil)
 	require.NoError(t, err)
@@ -1076,6 +1091,94 @@ func TestCompiler_LongResourceWithUnnamedArgs(t *testing.T) {
 	})
 }
 
+func TestCompiler_EmbeddedResource(t *testing.T) {
+	compileCtx(t, "docker.containers[0].os", func(res *llx.CodeBundle) {
+		assertFunction(t, "os", &llx.Function{
+			Type:    string(types.Resource("os.linux")),
+			Binding: 1<<32 | 3,
+		}, res.CodeV2.Blocks[0].Chunks[3])
+	})
+}
+
+func TestCompiler_EmbeddedResource_Lookup(t *testing.T) {
+	compileCtx(t, "docker.containers[0].hostname", func(res *llx.CodeBundle) {
+		assertFunction(t, "os", &llx.Function{
+			Type:    string(types.Resource("os.linux")),
+			Binding: 1<<32 | 3,
+		}, res.CodeV2.Blocks[0].Chunks[3])
+
+		assertFunction(t, "unix", &llx.Function{
+			Type:    string(types.Resource("os.unix")),
+			Binding: 1<<32 | 4,
+		}, res.CodeV2.Blocks[0].Chunks[4])
+
+		assertFunction(t, "base", &llx.Function{
+			Type:    string(types.Resource("os.base")),
+			Binding: 1<<32 | 5,
+		}, res.CodeV2.Blocks[0].Chunks[5])
+
+		assertFunction(t, "hostname", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1<<32 | 6,
+		}, res.CodeV2.Blocks[0].Chunks[6])
+	})
+}
+
+func TestCompiler_EmbeddedResource_ImplicitResource(t *testing.T) {
+	compileCtx(t, "docker.containers[0].user(uid: 999).name", func(res *llx.CodeBundle) {
+		assertFunction(t, "createResource", &llx.Function{
+			Type: string(types.Resource("os.base.user")),
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2(1<<32 | 3),
+				llx.StringPrimitive("uid"),
+				llx.IntPrimitive(999),
+			},
+			Binding: 0,
+		}, res.CodeV2.Blocks[0].Chunks[3])
+
+		assert.Equal(t, "user", res.Labels.Labels[res.CodeV2.Checksums[1<<32|4]])
+
+		assertFunction(t, "name", &llx.Function{
+			Type:    string(types.String),
+			Binding: 1<<32 | 4,
+		}, res.CodeV2.Blocks[0].Chunks[4])
+	})
+}
+
+func TestCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
+	compileCtx(t, "docker.containers[0].user(uid: 999) { name }", func(res *llx.CodeBundle) {
+		assertFunction(t, "createResource", &llx.Function{
+			Type:    string(types.Resource("os.base.user")),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2(1<<32 | 3),
+				llx.StringPrimitive("uid"),
+				llx.IntPrimitive(999),
+			},
+		}, res.CodeV2.Blocks[0].Chunks[3])
+
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Block),
+			Binding: 1<<32 | 4,
+			Args: []*llx.Primitive{
+				llx.FunctionPrimitiveV2(2 << 32),
+			},
+		}, res.CodeV2.Blocks[0].Chunks[4])
+	})
+}
+
+func TestCompiler_EmbeddedResource_ImplicitResource_List(t *testing.T) {
+	compileCtx(t, "docker.containers[0].packages", func(res *llx.CodeBundle) {
+		assertFunction(t, "createResource", &llx.Function{
+			Type:    string(types.Resource("os.base.packages")),
+			Binding: 0,
+			Args: []*llx.Primitive{
+				llx.RefPrimitiveV2(1<<32 | 3),
+			},
+		}, res.CodeV2.Blocks[0].Chunks[3])
+	})
+}
+
 func TestCompiler_ExpectSimplest(t *testing.T) {
 	compileT(t, "expect(true)", func(res *llx.CodeBundle) {
 		f := res.CodeV2.Blocks[0].Chunks[0]
@@ -1455,14 +1558,16 @@ func TestChecksums_block(t *testing.T) {
 
 func TestSuggestions(t *testing.T) {
 	tests := []struct {
-		code        string
-		suggestions []string
-		err         error
+		code             string
+		suggestions      []string
+		err              error
+		requiredFeatures cnquery.Features
 	}{
 		{
 			"does_not_get_suggestions",
 			[]string{},
 			errors.New("cannot find resource for identifier 'does_not_get_suggestions'"),
+			nil,
 		},
 		{
 			// resource suggestions
@@ -1470,49 +1575,66 @@ func TestSuggestions(t *testing.T) {
 			"platfo",
 			[]string{"platform", "platform.advisories", "platform.cves", "platform.eol", "platform.virtualization"},
 			errors.New("cannot find resource for identifier 'platfo'"),
+			nil,
 		},
 		{
 			// resource with empty field call
 			"sshd.",
 			[]string{"config"},
 			errors.New("incomplete query, missing identifier after '.' at <source>:1:6"),
+			nil,
 		},
 		{
 			// list resource with empty field call
 			"users.",
 			[]string{"all", "any", "contains", "length", "list", "map", "none", "one", "where"},
 			errors.New("incomplete query, missing identifier after '.' at <source>:1:7"),
+			nil,
 		},
 		{
 			// resource with partial field call
 			"sshd.config.para",
 			[]string{"params"},
 			errors.New("cannot find field 'para' in sshd.config"),
+			nil,
 		},
 		{
 			// resource with partial field call in block
 			"sshd.config { para }",
 			[]string{"params"},
 			errors.New("cannot find field or resource 'para' in block for type 'sshd.config'"),
+			nil,
 		},
 		{
 			// native type function call
 			"sshd.config.params.leng",
 			[]string{"length"},
 			errors.New("cannot find field 'leng' in map[string]string"),
+			nil,
 		},
 		{
 			// builtin calls
 			"parse.d",
 			[]string{"date"},
 			errors.New("cannot find field 'd' in parse"),
+			nil,
+		},
+		{
+			// embedded
+			"docker.containers[0].hostnam",
+			[]string{"hostname"},
+			errors.New("cannot find field 'hostnam' in docker.container"),
+			cnquery.Features{byte(cnquery.MQLAssetContext)},
 		},
 	}
 
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			res, err := Compile(cur.code, schema, features, nil)
+			newFeatures := cnquery.Features{}
+			newFeatures = append(newFeatures, cur.requiredFeatures...)
+			newFeatures = append(newFeatures, features...)
+			res, err := Compile(cur.code, schema, newFeatures, nil)
 			assert.Empty(t, res.CodeV2.Entrypoints())
 			assert.Equal(t, cur.err.Error(), err.Error())
 
