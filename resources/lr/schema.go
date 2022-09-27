@@ -78,12 +78,13 @@ func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
 			}
 		}
 
+		title, desc := extractComments(f.Comments)
 		fields[f.BasicField.ID] = &resources.Field{
 			Name:        f.BasicField.ID,
 			Type:        string(f.BasicField.Type.Type(ast)),
 			IsMandatory: f.BasicField.isStatic(),
-			Title:       r.title,
-			Desc:        r.desc,
+			Title:       title,
+			Desc:        desc,
 			Refs:        refs,
 			IsEmbedded:  f.BasicField.isEmbedded,
 		}
