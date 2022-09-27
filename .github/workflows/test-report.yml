@@ -8,8 +8,9 @@ on:
 jobs:
   report:
     permissions:
-      contents: read
-      checks: write
+      actions: read  # Required to read the artifact
+      contents: read # Required to read the source
+      checks: write  # Required to write the results
     runs-on: ubuntu-latest
     steps:
     - uses: dorny/test-reporter@v1
