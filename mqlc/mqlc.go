@@ -861,12 +861,12 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 			}
 
 			lastRef := binding.ref
-			for _, p := range fieldPath {
+			for i, p := range fieldPath {
 				c.addChunk(&llx.Chunk{
 					Call: llx.Chunk_FUNCTION,
 					Id:   p,
 					Function: &llx.Function{
-						Type:    fieldinfo.Type,
+						Type:    fieldinfos[i].Type,
 						Binding: lastRef,
 					},
 				})
