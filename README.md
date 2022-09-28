@@ -16,36 +16,28 @@ cnquery shell aws
 > aws.ec2.instances{*}
 ```
 
-
 ## Installation
 
-Before starting, make sure you install:
+### Dependencies
+
+Before starting, make sure you have the following dependencies installed:
+
 - [Go 1.19.0+](https://golang.org/dl/)
 - [Protocol Buffers v21+](https://github.com/protocolbuffers/protobuf/releases)
 
-To simply install cnquery via Go, run:
+On macOS systems with homebrew run: `brew install go@1.19 protobuf`
+
+### Build & Install
+
+To build and install cnquery via Go, run:
 
 ```bash
 make cnquery/install
 ```
 
-### Development
+## Usage
 
-Whenever you change resources, providers, or protos, you will need to generate files for the compiler. To do this, make sure you have the necessary tools installed (e.g. protobuf):
-
-```
-make prep
-```
-
-Then, whenever you make changes, just run:
-
-```bash
-make cnquery/generate
-```
-
-This will generate and update all required files for the build. At this point you can `make cnquery/install` again as outlined above.
-
-## Interactive shell
+### Interactive shell
 
 The easiest way to explore cnquery is to use our interactive shell, which has auto-complete to guide you:
 
@@ -63,8 +55,7 @@ To learn more, use the `help` command.
 
 To exit, either press CTRL+D or type `exit`.
 
-
-## Run simple queries
+### Run simple queries
 
 To run standalone queries in your shell, use the `run` command:
 
@@ -92,10 +83,9 @@ cnquery run local -c "services.list{*}" -j
 
 You could then pipe it to [jq](https://stedolan.github.io/jq/) or other applications.
 
+### Query packs
 
-## Query packs
-
-You can combine multiple queries into query packs, which can run together. cnquery comes with a lot of query packs out of the box for most systems. You can simply run:
+You can combine multiple queries into query packs, which can run together. cnquery comes with a lot of query packs out of the box for most systems. You can run:
 
 ```bash
 cnquery explore local
@@ -111,20 +101,19 @@ cnquery explore local --pack incident-response
 
 You can also choose just one query from a query pack. Specify the query ID with the query pack:
 
-```
+```bash
 cnquery explore local --pack incident-response --query-id sth-01
 ```
 
 Custom query packs let you bundle queries to meet your specific needs. You can find a simple query pack example in `examples/simple.mql.yaml`. To run it:
 
-```
+```bash
 cnquery explore local -f examples/simple.mql.yaml
 ```
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
 
-
-## Distributing cnqueries across your fleet
+### Distributing cnqueries across your fleet
 
 You can share query packs across your fleet using the Query Hub.
 
@@ -148,8 +137,6 @@ To add custom query packs, you can upload them:
 cnquery pack upload mypack.mql.yaml
 ```
 
-
-
 ## What’s next?
 
 There are so many things cnquery can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, share data with auditors… cnquery is nearly limitless in capabilities.
@@ -164,9 +151,25 @@ Explore:
 
 Our goal is to become the API for your entire infrastructure. Join our [community](https://github.com/orgs/mondoohq/discussions) today and let’s grow it together!
 
-
-
 ## Development
+
+### Regenerating Files
+
+Whenever you change resources, providers, or protos, you will need to generate files for the compiler. To do this, make sure you have the necessary tools installed (e.g. protobuf):
+
+```bash
+make prep
+```
+
+Then, whenever you make changes, just run:
+
+```bash
+make cnquery/generate
+```
+
+This will generate and update all required files for the build. At this point, you can `make cnquery/install` again as outlined above.
+
+### Commit Emojis
 
 We love emojis in our commits. These are their meanings:
 
@@ -174,9 +177,7 @@ We love emojis in our commits. These are their meanings:
 ✨⭐🌟🎉 smaller or larger features 🐎 race condition  
 🌙 MQL 🌈 visual 🍏 fix tests 🎫 auth 🦅 falcon 🐳 container  
 
-
 ## Legal
 
 - **Copyright:** 2018-2022, Mondoo Inc, proprietary
 - **Authors:** Christoph Hartmann, Dominik Richter
-
