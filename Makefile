@@ -46,7 +46,6 @@ prep/tools/windows:
 	go get -u gotest.tools/gotestsum
 
 prep/tools:
-	command -v protoc || (echo "Please install protocol buffers as described in the README.md. It provides the protoc command." && exit 1)
 	# protobuf tooling
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
