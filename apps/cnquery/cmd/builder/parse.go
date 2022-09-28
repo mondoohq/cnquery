@@ -247,14 +247,15 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if connection.Options[awsec2ebs.NoSetup] != "" {
 			noSetup = connection.Options[awsec2ebs.NoSetup]
 		}
+		overrideRegion := connection.Options["region"]
 		assembleAwsEc2EbsConnectionUrl := func(flagAsset *asset.Asset, arg string, targetType string) string {
 			instanceInfo, err := awsec2ebs.GetRawInstanceInfo(flagAsset.Options["profile"])
 			if err != nil {
 				log.Fatal().Err(err).Msg("cannot detect instance info")
 			}
 			targetRegion := instanceInfo.Region
-			if flagAsset.Options["region"] != "" {
-				targetRegion = flagAsset.Options["region"]
+			if overrideRegion != "" {
+				targetRegion = overrideRegion
 			}
 			return "account/" + instanceInfo.AccountID + "/region/" + targetRegion + "/" + targetType + "/" + arg
 		}
