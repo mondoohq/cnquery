@@ -90,3 +90,20 @@ func ParseMondooSnapshotID(path string) (*MondooSnapshotId, error) {
 func IsValidMondooSnapshotId(path string) bool {
 	return VALID_MONDOO_INSTANCE_ID.MatchString(path)
 }
+
+var VALID_MONDOO_ACCOUNT_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/runtime/aws/accounts/\d{12}$`)
+
+func ParseMondooAccountID(path string) (string, error) {
+	if !IsValidMondooAccountId(path) {
+		return "", errors.New("invalid mondoo aws account id")
+	}
+	keyValues := strings.Split(path, "/")
+	if len(keyValues) != 7 {
+		return "", errors.New("invalid mondoo aws account id")
+	}
+	return keyValues[6], nil
+}
+
+func IsValidMondooAccountId(path string) bool {
+	return VALID_MONDOO_ACCOUNT_ID.MatchString(path)
+}
