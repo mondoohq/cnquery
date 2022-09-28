@@ -37,8 +37,10 @@ func WithManifestFile(filename string) Option {
 	}
 }
 
-func newManifestProvider(selectedResourceID string, opts ...Option) (KubernetesProvider, error) {
-	t := &manifestProvider{}
+func newManifestProvider(selectedResourceID string, objectKind string, opts ...Option) (KubernetesProvider, error) {
+	t := &manifestProvider{
+		objectKind: objectKind,
+	}
 
 	for _, option := range opts {
 		option(t)
@@ -62,6 +64,7 @@ type manifestProvider struct {
 	manifestFile       string
 	namespace          string
 	selectedResourceID string
+	objectKind         string
 }
 
 func (t *manifestProvider) RunCommand(command string) (*os_provider.Command, error) {
@@ -83,7 +86,7 @@ func (t *manifestProvider) Capabilities() providers.Capabilities {
 }
 
 func (t *manifestProvider) PlatformInfo() *platform.Platform {
-	platformData := getPlatformInfo(t.selectedResourceID, t.Runtime())
+	platformData := getPlatformInfo(t.objectKind, t.Runtime())
 	if platformData != nil {
 		return platformData
 	}

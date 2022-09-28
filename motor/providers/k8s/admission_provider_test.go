@@ -14,7 +14,7 @@ func TestAdmissionProvider(t *testing.T) {
 	data, err := os.ReadFile(manifestFile)
 	require.NoError(t, err)
 
-	transport, err := newAdmissionProvider(base64.StdEncoding.EncodeToString(data), "")
+	transport, err := newAdmissionProvider(base64.StdEncoding.EncodeToString(data), "", "")
 	require.NoError(t, err)
 	require.NotNil(t, transport)
 	res, err := transport.AdmissionReviews()

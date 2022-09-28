@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s"
+	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -102,11 +103,18 @@ func createAssetFromObject(object runtime.Object, runtime string, connection *pr
 
 	addMondooAssetLabels(assetLabels, objMeta, objType, clusterIdentifier)
 
+	newConnection := proto.Clone(connection).(*providers.Config)
+	newConnection.Options = map[string]string{}
+	for k, v := range connection.Options {
+		newConnection.Options[k] = v
+	}
+	newConnection.Options["object-kind"] = strings.ToLower(objectKind)
+
 	asset := &asset.Asset{
 		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
 		Name:        name,
 		Platform:    platformData,
-		Connections: []*providers.Config{connection},
+		Connections: []*providers.Config{newConnection},
 		State:       asset.State_STATE_ONLINE,
 		Labels:      assetLabels,
 	}

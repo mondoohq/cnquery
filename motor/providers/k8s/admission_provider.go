@@ -17,8 +17,10 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 )
 
-func newAdmissionProvider(data string, selectedResourceID string) (KubernetesProvider, error) {
-	t := &admissionProvider{}
+func newAdmissionProvider(data string, selectedResourceID string, objectKind string) (KubernetesProvider, error) {
+	t := &admissionProvider{
+		objectKind: objectKind,
+	}
 	admission, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to decode admission review")
@@ -49,6 +51,7 @@ func newAdmissionProvider(data string, selectedResourceID string) (KubernetesPro
 type admissionProvider struct {
 	manifestParser
 	selectedResourceID string
+	objectKind         string
 }
 
 func (t *admissionProvider) RunCommand(command string) (*os_provider.Command, error) {
@@ -70,7 +73,7 @@ func (t *admissionProvider) Capabilities() providers.Capabilities {
 }
 
 func (t *admissionProvider) PlatformInfo() *platform.Platform {
-	platformData := getPlatformInfo(t.selectedResourceID, t.Runtime())
+	platformData := getPlatformInfo(t.objectKind, t.Runtime())
 	if platformData != nil {
 		return platformData
 	}

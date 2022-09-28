@@ -54,6 +54,7 @@ func TestAssetData(t *testing.T) {
 	assert.Equal(t, "k8s-cronjob", asset.Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, asset.Platform.Family)
 	assert.Equal(t, "test123", asset.Labels["k8s.mondoo.com/namespace"])
+	assert.Equal(t, "cronjob", asset.Connections[0].Options["object-kind"])
 }
 
 func TestAssetNodeData(t *testing.T) {
@@ -80,4 +81,5 @@ func TestAssetNodeData(t *testing.T) {
 	assert.Equal(t, "v1", asset.Platform.Version)
 	assert.Equal(t, "k8s-node", asset.Platform.Name)
 	assert.ElementsMatch(t, []string{"k8s"}, asset.Platform.Family)
+	assert.Equal(t, "node", asset.Connections[0].Options["object-kind"])
 }
