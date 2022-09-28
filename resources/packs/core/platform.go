@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/resources"
 )
@@ -14,15 +13,19 @@ func (s *mqlPlatform) id() (string, error) {
 }
 
 func (s *mqlPlatform) init(args *resources.Args) (*resources.Args, Platform, error) {
-	var platform *platform.Platform
-	var err error
-	platform = s.MotorRuntime.Motor.GetAsset().GetPlatform()
-	if platform == nil {
-		// TODO(jaym): I don't know why we would need to do this if
-		// the resolved asset is already on the motor. Maybe lazy
-		// evaluation?
-		platform, err = s.MotorRuntime.Motor.Platform()
-	}
+	// var platform *platform.Platform
+	// var err error
+	// platform = s.MotorRuntime.Motor.GetAsset().GetPlatform()
+	// if platform == nil {
+	// 	// TODO(jaym): I don't know why we would need to do this if
+	// 	// the resolved asset is already on the motor. Maybe lazy
+	// 	// evaluation?
+	// 	platform, err = s.MotorRuntime.Motor.Platform()
+	// }
+	// TODO Preslav: the code above breaks platform props on container and container images
+	// The asset's platform contains no data at all, whereas the motor's platform has the right
+	// props. We need to figure out this mismatch.
+	platform, err := s.MotorRuntime.Motor.Platform()
 	if err == nil {
 		labels := map[string]interface{}{}
 		for k := range platform.Labels {
