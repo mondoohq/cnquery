@@ -19,7 +19,7 @@ cnquery shell aws
 
 ## Installation
 
-Before starting, make sure you install:
+Before starting, be sure to install:
 - [Go 1.19.0+](https://golang.org/dl/)
 - [Protocol Buffers v21+](https://github.com/protocolbuffers/protobuf/releases)
 
@@ -31,7 +31,7 @@ make cnquery/install
 
 ### Development
 
-Whenever you change resources, providers, or protos, you will need to generate files for the compiler. To do this, make sure you have the necessary tools installed (e.g. protobuf):
+Whenever you change resources, providers, or protos, you need to generate files for the compiler. To do this, make sure you have the necessary tools installed (such as protobuf):
 
 ```
 make prep
@@ -43,7 +43,7 @@ Then, whenever you make changes, just run:
 make cnquery/generate
 ```
 
-This will generate and update all required files for the build. At this point you can `make cnquery/install` again as outlined above.
+This generates and updates all required files for the build. At this point you can `make cnquery/install` again as outlined above.
 
 ## Interactive shell
 
@@ -90,7 +90,7 @@ For automation, it is often helpful to convert the output to JSON. Use `-j` or `
 cnquery run local -c "services.list{*}" -j
 ```
 
-You could then pipe it to [jq](https://stedolan.github.io/jq/) or other applications.
+You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other applications.
 
 
 ## Query packs
