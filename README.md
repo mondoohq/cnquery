@@ -31,7 +31,7 @@ make cnquery/install
 
 ### Development
 
-Whenever you change resources, providers, or protos, you will need to generate files for the compiler. To do this, make sure you have the necessary tools installed (e.g. protobuf):
+Whenever you change resources, providers, or protos, you will need to generate files for the compiler. To do this, make sure you have the necessary tools installed (such as protobuf):
 
 ```
 make prep
