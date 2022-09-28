@@ -42,18 +42,18 @@ version:
 prep: prep/tools
 
 prep/tools/windows:
-	go get github.com/golang/protobuf/proto
+	go get -u google.golang.org/protobuf
 	go get -u gotest.tools/gotestsum
 
 prep/tools:
 	# protobuf tooling
-	command -v protoc-gen-go || go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	command -v protoc-gen-go-grpc || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	command -v protoc-gen-rangerrpc || go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
-	command -v protoc-gen-rangerrpc-swagger || go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc@latest
+	go install go.mondoo.com/ranger-rpc/protoc-gen-rangerrpc-swagger@latest
 	# additional helper
-	command -v gotestsum || go install gotest.tools/gotestsum@latest
-	command -v golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install gotest.tools/gotestsum@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 
 #   🌙 MQL/MOTOR   #
