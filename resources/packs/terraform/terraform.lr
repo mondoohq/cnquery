@@ -93,6 +93,8 @@ terraform.state {
   rootModule() terraform.state.module
   // flat list of all modules
   modules() []terraform.state.module
+  // A flat list of all resources across all modules
+  resources() []terraform.state.resource
 }
 
 // Terraform state output values
