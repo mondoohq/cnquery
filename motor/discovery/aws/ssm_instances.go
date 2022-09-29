@@ -113,17 +113,19 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 			}
 
 			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Int("instance count", len(isssmresp.InstanceInformationList)).Msg("found ec2 ssm instances")
-
-			for i := range isssmresp.InstanceInformationList {
-				instance := isssmresp.InstanceInformationList[i]
-				// apply the tag filters here; we fetch the labels for the instance during ssmInstanceToAsset
+			// the aws tags get a prefix to them so we can build the right map here by prepending the same value to each tag we're searching for
+			tagsToFilter := map[string]string{}
+			for k, v := range ec2InstancesFilters.Tags {
+				tagsToFilter[ImportedFromAWSTagKeyPrefix+k] = v
+			}
+			for _, instance := range isssmresp.InstanceInformationList {
 				a := ssmInstanceToAsset(account, region, instance, clonedConfig)
-				if len(ec2InstancesFilters.Tags) > 0 {
-					if !assetHasLabels(a, ec2InstancesFilters.Tags) {
+				if len(tagsToFilter) > 0 {
+					if !assetHasLabels(a, tagsToFilter) {
 						continue
 					}
 				}
-				res = append(res, ssmInstanceToAsset(account, region, instance, clonedConfig))
+				res = append(res, a)
 			}
 			return jobpool.JobResult(res), nil
 		}

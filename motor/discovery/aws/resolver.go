@@ -86,23 +86,21 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	instancesPlatformIdsMap := map[string]*asset.Asset{}
 	// discover ssm instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) {
-		if val := discoverFilter["ssm"]; val == "true" {
-			// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
-			s, err := NewSSMManagedInstancesDiscovery(provider.Config())
-			if err != nil {
-				return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
-			}
-			s.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
-			assetList, err := s.List()
-			if err != nil {
-				return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
-			}
-			log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
-			for i := range assetList {
-				assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
-				log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
-				instancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
-			}
+		// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
+		s, err := NewSSMManagedInstancesDiscovery(provider.Config())
+		if err != nil {
+			return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
+		}
+		s.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
+		assetList, err := s.List()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
+		}
+		log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
+		for i := range assetList {
+			assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
+			log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
+			instancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
 		}
 	}
 	// discover ec2 instances
@@ -158,9 +156,7 @@ func AssembleEc2InstancesFilters(opts map[string]string) Ec2InstancesFilters {
 		for _, tagkv := range tags {
 			tag := strings.Split(tagkv, "=")
 			if len(tag) == 2 {
-				// to use tag filters with aws, we have to specify tag:KEY for the key, and then put the value as the values
-				key := "tag:" + tag[0]
-				ec2InstancesFilters.Tags[key] = tag[1]
+				ec2InstancesFilters.Tags[tag[0]] = tag[1]
 			} else if len(tag) == 1 {
 				// this means no value was included, so we search for just the tag key
 				ec2InstancesFilters.Tags["tag-key"] = tag[0]
