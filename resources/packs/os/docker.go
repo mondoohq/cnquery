@@ -7,7 +7,9 @@ import (
 
 	docker_types "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"go.mondoo.com/cnquery/motor/providers/container"
 	"go.mondoo.com/cnquery/motor/providers/local"
+	"go.mondoo.com/cnquery/resources"
 )
 
 func (p *mqlDocker) id() (string, error) {
@@ -75,7 +77,10 @@ func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 		return nil, err
 	}
 
+	providerFactory := p.MotorRuntime.Motor.Provider.(container.DockerContainerProviderFactory)
+
 	container := make([]interface{}, len(dContainers))
+
 	for i, dContainer := range dContainers {
 		labels := make(map[string]interface{})
 		for key := range dContainer.Labels {
@@ -87,7 +92,13 @@ func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 			names = append(names, dContainer.Names[i])
 		}
 
-		mqlDockerContainer, err := p.MotorRuntime.CreateResource("docker.container",
+		asset, dcp, err := providerFactory.NewDockerContainerProvider(dContainer.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlDockerContainer, err := p.MotorRuntime.CreateResourceWithAssetContext("docker.container",
+			asset, dcp,
 			"id", dContainer.ID,
 			"image", dContainer.Image,
 			"imageid", dContainer.ImageID,
@@ -105,6 +116,10 @@ func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 	}
 
 	return container, nil
+}
+
+func (p *mqlDockerContainer) GetOs() (resources.ResourceType, error) {
+	return p.MotorRuntime.CreateResource("os.linux")
 }
 
 func (p *mqlDockerImage) id() (string, error) {
