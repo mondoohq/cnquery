@@ -457,3 +457,10 @@ func (ctx *Runtime) Trigger(r ResourceType, field string) error {
 
 	return r.Compute(field)
 }
+
+func (r *Runtime) Close() {
+	for _, c := range r.children {
+		c.Close()
+	}
+	r.Motor.Close()
+}
