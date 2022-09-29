@@ -5,7 +5,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	platform "go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -19,9 +18,10 @@ import (
 )
 
 const (
-	OPTION_MANIFEST  = "path"
-	OPTION_NAMESPACE = "namespace"
-	OPTION_ADMISSION = "k8s-admission-review"
+	OPTION_MANIFEST    = "path"
+	OPTION_NAMESPACE   = "namespace"
+	OPTION_ADMISSION   = "k8s-admission-review"
+	OPTION_OBJECT_KIND = "object-kind"
 )
 
 var (
@@ -90,11 +90,11 @@ func New(ctx context.Context, tc *providers.Config) (KubernetesProvider, error) 
 	}
 
 	if manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]; manifestDefined {
-		return newManifestProvider(tc.PlatformId, WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE]))
+		return newManifestProvider(tc.PlatformId, tc.Options[OPTION_OBJECT_KIND], WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE]))
 	}
 
 	if data, admissionDefined := tc.Options[OPTION_ADMISSION]; admissionDefined {
-		return newAdmissionProvider(data, tc.PlatformId)
+		return newAdmissionProvider(data, tc.PlatformId, tc.Options[OPTION_OBJECT_KIND])
 	}
 
 	// initialize resource cache, so that the same k8s resources can be re-used
@@ -103,10 +103,10 @@ func New(ctx context.Context, tc *providers.Config) (KubernetesProvider, error) 
 		return nil, fmt.Errorf("context does not have an initialized discovery cache")
 	}
 
-	return newApiProvider(tc.Options[OPTION_NAMESPACE], tc.PlatformId, dCache)
+	return newApiProvider(tc.Options[OPTION_NAMESPACE], tc.Options[OPTION_OBJECT_KIND], tc.PlatformId, dCache)
 }
 
-func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platform {
+func getPlatformInfo(objectKind string, runtime string) *platform.Platform {
 	// We need this at two places (discovery and tranport)
 	// Here it is needed for the transport and this is what is shown on the cli
 	platformData := &platform.Platform{
@@ -114,32 +114,32 @@ func getPlatformInfo(selectedResourceID string, runtime string) *platform.Platfo
 		Kind:    providers.Kind_KIND_K8S_OBJECT,
 		Runtime: runtime,
 	}
-	switch selected := selectedResourceID; {
-	case strings.Contains(selected, "/pods/"):
+	switch objectKind {
+	case "pod":
 		platformData.Name = "k8s-pod"
 		platformData.Title = "Kubernetes Pod"
 		return platformData
-	case strings.Contains(selected, "/cronjobs/"):
+	case "cronjob":
 		platformData.Name = "k8s-cronjob"
 		platformData.Title = "Kubernetes CronJob"
 		return platformData
-	case strings.Contains(selected, "/statefulsets/"):
+	case "statefulset":
 		platformData.Name = "k8s-statefulset"
 		platformData.Title = "Kubernetes StatefulSet"
 		return platformData
-	case strings.Contains(selected, "/deployments/"):
+	case "deployment":
 		platformData.Name = "k8s-deployment"
 		platformData.Title = "Kubernetes Deployment"
 		return platformData
-	case strings.Contains(selected, "/jobs/"):
+	case "job":
 		platformData.Name = "k8s-job"
 		platformData.Title = "Kubernetes Job"
 		return platformData
-	case strings.Contains(selected, "/replicasets/"):
+	case "replicaset":
 		platformData.Name = "k8s-replicaset"
 		platformData.Title = "Kubernetes ReplicaSet"
 		return platformData
-	case strings.Contains(selected, "/daemonsets/"):
+	case "daemonset":
 		platformData.Name = "k8s-daemonset"
 		platformData.Title = "Kubernetes DaemonSet"
 		return platformData

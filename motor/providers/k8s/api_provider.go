@@ -24,7 +24,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func newApiProvider(namespace string, selectedResourceID string, dCache *resources.DiscoveryCache) (KubernetesProvider, error) {
+func newApiProvider(namespace string, objectKind string, selectedResourceID string, dCache *resources.DiscoveryCache) (KubernetesProvider, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -72,6 +72,7 @@ func newApiProvider(namespace string, selectedResourceID string, dCache *resourc
 		d:                  d,
 		clientset:          clientset,
 		selectedResourceID: selectedResourceID,
+		objectKind:         objectKind,
 	}, nil
 }
 
@@ -81,6 +82,7 @@ type apiProvider struct {
 	namespace          string
 	clientset          *kubernetes.Clientset
 	selectedResourceID string
+	objectKind         string
 }
 
 func (t *apiProvider) Close() {}
@@ -227,7 +229,7 @@ func (t *apiProvider) PlatformInfo() *platform.Platform {
 	build := ""
 	arch := ""
 
-	platformData := getPlatformInfo(t.selectedResourceID, t.Runtime())
+	platformData := getPlatformInfo(t.objectKind, t.Runtime())
 	if platformData != nil {
 		return platformData
 	}
