@@ -90,6 +90,8 @@ func gatherNameForPlatformId(id string) string {
 	if awsec2.IsValidMondooInstanceId(id) {
 		structId, _ := awsec2.ParseMondooInstanceID(id)
 		return structId.Id
+	} else if accountID, err := awsec2.ParseMondooAccountID(id); err == nil {
+		return fmt.Sprintf("AWS Account %s", accountID)
 	}
 	return ""
 }
@@ -97,6 +99,8 @@ func gatherNameForPlatformId(id string) string {
 func extractPlatformAndKindFromPlatformId(id string) (string, providers.Kind) {
 	if aws.ParseEc2PlatformID(id) != nil {
 		return providers.RUNTIME_AWS_EC2, providers.Kind_KIND_VIRTUAL_MACHINE
+	} else if awsec2.IsValidMondooAccountId(id) {
+		return providers.RUNTIME_AWS, providers.Kind_KIND_API
 	}
 	return "", providers.Kind_KIND_UNKNOWN
 }

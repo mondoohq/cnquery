@@ -22,7 +22,7 @@ var VALID_MONDOO_INSTANCE_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/
 
 func ParseMondooInstanceID(path string) (*MondooInstanceId, error) {
 	if !IsValidMondooInstanceId(path) {
-		return nil, errors.New("invalid mondoo aws ec2 instance id")
+		return nil, errors.New("invalid aws ec2 instance id")
 	}
 	keyValues := strings.Split(path, "/")
 	if len(keyValues) != 13 {
@@ -50,7 +50,7 @@ var VALID_MONDOO_VOLUME_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/ru
 
 func ParseMondooVolumeID(path string) (*MondooVolumeId, error) {
 	if !IsValidMondooVolumeId(path) {
-		return nil, errors.New("invalid mondoo aws ec2 volume id")
+		return nil, errors.New("invalid aws ec2 volume id")
 	}
 	keyValues := strings.Split(path, "/")
 	if len(keyValues) != 13 {
@@ -78,7 +78,7 @@ var VALID_MONDOO_SNAPSHOT_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/
 
 func ParseMondooSnapshotID(path string) (*MondooSnapshotId, error) {
 	if !IsValidMondooSnapshotId(path) {
-		return nil, errors.New("invalid mondoo aws ec2 snapshot id")
+		return nil, errors.New("invalid aws ec2 snapshot id")
 	}
 	keyValues := strings.Split(path, "/")
 	if len(keyValues) != 13 {
@@ -89,4 +89,21 @@ func ParseMondooSnapshotID(path string) (*MondooSnapshotId, error) {
 
 func IsValidMondooSnapshotId(path string) bool {
 	return VALID_MONDOO_INSTANCE_ID.MatchString(path)
+}
+
+var VALID_MONDOO_ACCOUNT_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/runtime/aws/accounts/\d{12}$`)
+
+func ParseMondooAccountID(path string) (string, error) {
+	if !IsValidMondooAccountId(path) {
+		return "", errors.New("invalid aws account id")
+	}
+	keyValues := strings.Split(path, "/")
+	if len(keyValues) != 7 {
+		return "", errors.New("invalid aws account id")
+	}
+	return keyValues[6], nil
+}
+
+func IsValidMondooAccountId(path string) bool {
+	return VALID_MONDOO_ACCOUNT_ID.MatchString(path)
 }
