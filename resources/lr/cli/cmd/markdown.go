@@ -29,8 +29,10 @@ func init() {
 const frontMatterTemplate = `
 ---
 title: {{ .PackName }} Resource Pack - Mondoo Query Language (MQL) Resources
+id: {{ .PackName }}
 sidebar_label: {{ .PackName }} Resource Pack
 sidebar_position: 1
+displayed_sidebar: mql
 description: Learn about all of the available Mondoo Query Language (MQL) resources and how you can use them to query your infrastructure and to create policies to keep your business secure and compliant.
 ---
 `
@@ -185,7 +187,9 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 
 	builder.WriteString("---\n")
 	builder.WriteString("title: " + resource.ID + "\n")
+	builder.WriteString("id: " + resource.ID + "\n")
 	builder.WriteString("sidebar_label: " + resource.ID + "\n")
+	builder.WriteString("displayed_sidebar: mql\n")
 
 	headerDesc := strings.Join(sanitizeComments([]string{schema.Resources[resource.ID].Title}), " ")
 	if headerDesc != "" {
