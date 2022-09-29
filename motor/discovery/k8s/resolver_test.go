@@ -64,6 +64,26 @@ func TestAdmissionReviewResolver(t *testing.T) {
 	assert.Equal(t, assetList[3].Platform.Runtime, "k8s-admission")
 }
 
+func TestManifestResolverDiscovery_NamespaceDoesNotExist(t *testing.T) {
+	resolver := &Resolver{}
+	manifestFile := "../../providers/k8s/resources/testdata/pod.yaml"
+
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	_, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
+		PlatformId: "//platform/k8s/uid/123/namespace/default/pod/name/mondoo",
+		Backend:    providers.ProviderType_K8S,
+		Options: map[string]string{
+			"path":      manifestFile,
+			"namespace": "bogus",
+		},
+		Discover: &providers.Discovery{
+			Targets: []string{"pod"},
+		},
+	}, nil, nil)
+	require.Error(t, err)
+}
+
 func TestManifestResolverDiscoveries(t *testing.T) {
 	testCases := []struct {
 		kind            string
