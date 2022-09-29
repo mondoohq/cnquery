@@ -68,49 +68,6 @@ func Init(registry *resources.Registry) {
 }
 
 func (b *goBuilder) goResource(r *Resource) error {
-	if r.ListType != nil {
-		t := r.ListType.Type.Type
-		args := r.ListType.Args
-
-		// args of nil tell the compiler that this field needs to be pre-populated
-		// however for list we don't have this logic, it is always computed
-		if args == nil {
-			args = &FieldArgs{}
-		}
-
-		field := &BasicField{
-			ID:   "list",
-			Args: args,
-			Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{t}}}},
-		}
-
-		r.Body.Fields = append(r.Body.Fields, &Field{BasicField: field})
-	}
-
-	for i, f := range r.Body.Fields {
-		if f.Embeddable == nil {
-			continue
-		}
-		var name string
-		if f.Embeddable.Alias != nil {
-			name = *f.Embeddable.Alias
-		} else {
-			// use the first part of the type name as a id, i.e. os for os.any
-			// this wont work if there're are multiple embedded resources without aliases that share the same package, i.e os.any and os.base
-			name = strings.Split(f.Embeddable.Type, ".")[0]
-		}
-		newField := &Field{
-			Comments: f.Comments,
-			BasicField: &BasicField{
-				ID:         name,
-				Type:       Type{SimpleType: &SimpleType{f.Embeddable.Type}},
-				Args:       &FieldArgs{},
-				isEmbedded: true,
-			},
-		}
-		r.Body.Fields[i] = newField
-	}
-
 	b.goInterface(r)
 	b.goStruct(r)
 	b.goFactory(r)

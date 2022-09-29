@@ -42,14 +42,21 @@ func (m *Map) Capture(values []string) error {
 	return nil
 }
 
+type Alias struct {
+	Definition SimpleType `@@`
+	Type       SimpleType `'=' @@`
+}
+
 // LR are MQL resources parsed into an AST
 // nolint: govet
 type LR struct {
 	Imports   []string    `{ "import" @String }`
 	Options   Map         `{ "option" @(Ident '=' String) }`
+	Aliases   []Alias     `{ "alias" @@ }`
 	Resources []*Resource `{ @@ }`
 	imports   map[string]map[string]struct{}
 	packPaths map[string]string
+	aliases   map[string]*Resource
 }
 
 // Resource in LR
@@ -213,6 +220,26 @@ func Parse(input string) (*LR, error) {
 		resource.title, resource.desc = extractComments(resource.Comments)
 		resource.Comments = nil
 
+		// List types have an implicit list field
+		if resource.ListType != nil {
+			t := resource.ListType.Type.Type
+			args := resource.ListType.Args
+
+			// args of nil tell the compiler that this field needs to be pre-populated
+			// however for list we don't have this logic, it is always computed
+			if args == nil {
+				args = &FieldArgs{}
+			}
+
+			field := &BasicField{
+				ID:   "list",
+				Args: args,
+				Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{t}}}},
+			}
+
+			resource.Body.Fields = append(resource.Body.Fields, &Field{BasicField: field})
+		}
+
 		if resource.Body == nil {
 			continue
 		}
@@ -232,6 +259,31 @@ func Parse(input string) (*LR, error) {
 		if ptr < len(arr) {
 			resource.Body.Fields = arr[:ptr]
 		}
+
+		for i, f := range resource.Body.Fields {
+			if f.Embeddable == nil {
+				continue
+			}
+			var name string
+			if f.Embeddable.Alias != nil {
+				name = *f.Embeddable.Alias
+			} else {
+				// use the first part of the type name as a id, i.e. os for os.any
+				// this wont work if there're are multiple embedded resources without aliases that share the same package, i.e os.any and os.base
+				name = strings.Split(f.Embeddable.Type, ".")[0]
+			}
+			newField := &Field{
+				Comments: f.Comments,
+				BasicField: &BasicField{
+					ID:         name,
+					Type:       Type{SimpleType: &SimpleType{f.Embeddable.Type}},
+					Args:       &FieldArgs{},
+					isEmbedded: true,
+				},
+			}
+			resource.Body.Fields[i] = newField
+		}
+
 	}
 
 	return res, err

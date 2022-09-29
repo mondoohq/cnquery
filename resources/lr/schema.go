@@ -21,6 +21,14 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		res.Resources[x.Id] = x
 	}
 
+	for defName, r := range ast.aliases {
+		x, err := resourceSchema(r, ast)
+		if err != nil {
+			return res, err
+		}
+		res.Resources[defName] = x
+	}
+
 	return res, nil
 }
 

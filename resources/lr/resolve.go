@@ -2,6 +2,7 @@ package lr
 
 import (
 	"errors"
+	"fmt"
 	"path"
 	"strings"
 )
@@ -21,7 +22,12 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 
 	res.imports = make(map[string]map[string]struct{})
 	res.packPaths = map[string]string{}
-
+	importMap := map[string]map[string]*Resource{
+		"": map[string]*Resource{},
+	}
+	for _, r := range res.Resources {
+		importMap[""][r.ID] = r
+	}
 	for i := range res.Imports {
 		// note: we do not recurse into these imports; we only need to know
 		// about the things that the import exposes, not about its dependencies
@@ -40,9 +46,11 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 		}
 
 		resources := map[string]struct{}{}
+		importMap[packName] = map[string]*Resource{}
 		for i := range childLR.Resources {
 			resource := childLR.Resources[i]
 			resources[resource.ID] = struct{}{}
+			importMap[packName][resource.ID] = resource
 		}
 
 		res.imports[packName] = resources
@@ -52,8 +60,39 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 			return nil, errors.New("cannot find name of the go package in " + importPath + " - make sure you set the go_package name")
 		}
 		res.packPaths[packName] = goPkg
-
 	}
+
+	res.aliases = map[string]*Resource{}
+	for _, a := range res.Aliases {
+		var pack string
+		var resourceName string
+
+		if _, ok := importMap[""][a.Type.Type]; ok {
+			pack = ""
+			resourceName = a.Type.Type
+		} else {
+			pack, resourceName, ok = strings.Cut(a.Type.Type, ".")
+			if !ok {
+				pack = ""
+				resourceName = a.Type.Type
+			}
+		}
+
+		found := false
+		p, ok := importMap[pack]
+		if ok {
+			r, ok := p[resourceName]
+			if ok {
+				found = true
+			}
+			res.aliases[a.Definition.Type] = r
+		}
+
+		if !found {
+			return nil, fmt.Errorf("%s was aliased but not imported", a.Type.Type)
+		}
+	}
+
 	res.Imports = nil
 
 	return res, nil
