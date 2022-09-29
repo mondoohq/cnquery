@@ -90,7 +90,7 @@ func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 
 	return &Runtime{
 		Registry:  registry,
-		Observers: NewObservers(motor),
+		Observers: NewObservers(),
 		Motor:     motor,
 		cache:     &Cache{},
 	}
