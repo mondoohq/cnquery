@@ -5,7 +5,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/components"
@@ -248,7 +247,7 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 	config.DisplayUsedConfig()
 
 	conf := ShellConfig{
-		Features: cnquery.DefaultFeatures,
+		Features: config.Features,
 	}
 
 	// check if the user used --password without a value

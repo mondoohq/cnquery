@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/logger"
 )
 
@@ -30,15 +31,43 @@ var (
 	DefaultInventoryFile = "inventory.yml"
 	Source               string
 	AppFs                afero.Fs
+	Features             cnquery.Features
 )
 
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
 	cobra.OnInitialize(initConfig)
 	AppFs = afero.NewOsFs()
-
+	Features = getFeatures()
 	// persistent flags are global for the application
 	rootCmd.PersistentFlags().StringVar(&UserProvidedPath, "config", "", "config file (default is $HOME/.config/mondoo/mondoo.yml)")
+}
+
+func getFeatures() cnquery.Features {
+	bitSet := make([]bool, 256)
+	flags := []byte{}
+
+	for _, f := range cnquery.DefaultFeatures {
+		if !bitSet[f] {
+			bitSet[f] = true
+			flags = append(flags, f)
+		}
+	}
+
+	envFeatures := viper.GetStringSlice("features")
+	for _, name := range envFeatures {
+		flag, ok := cnquery.FeaturesValue[name]
+		if ok {
+			if !bitSet[byte(flag)] {
+				bitSet[byte(flag)] = true
+				flags = append(flags, byte(flag))
+			}
+		} else {
+			log.Warn().Str("feature", name).Msg("could not parse feature")
+		}
+	}
+
+	return cnquery.Features(flags)
 }
 
 func isAccessible(path string) bool {
