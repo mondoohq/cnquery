@@ -71,10 +71,31 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
+	p, err := k8s.New(ctx, tc)
+	if err != nil {
+		return nil, err
+	}
+
 	allNamespaces := tc.Options["all-namespaces"]
 	if allNamespaces != "true" {
 		namespace := tc.Options["namespace"]
 		if len(namespace) > 0 {
+			nss, err := p.Namespaces()
+			if err != nil {
+				return nil, err
+			}
+
+			exists := false
+			for _, ns := range nss {
+				if ns.Name == namespace {
+					exists = true
+					break
+				}
+			}
+
+			if !exists {
+				return nil, fmt.Errorf("namespace %s does not exist", namespace)
+			}
 			namespacesFilter = append(namespacesFilter, namespace)
 		} else {
 			// try parse the current kubectl namespace
@@ -85,11 +106,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
-
-	p, err := k8s.New(ctx, tc)
-	if err != nil {
-		return nil, err
-	}
 
 	clusterIdentifier, err := p.Identifier()
 	if err != nil {
