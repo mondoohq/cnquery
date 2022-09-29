@@ -26,14 +26,32 @@ var globalFunctionsV2 map[string]handleFunctionV2
 
 func init() {
 	globalFunctionsV2 = map[string]handleFunctionV2{
-		"expect": expectV2,
-		"if":     ifCallV2,
-		"switch": switchCallV2,
-		"score":  scoreCallV2,
-		"typeof": typeofCallV2,
-		"{}":     blockV2,
-		"return": returnCallV2,
+		"expect":         expectV2,
+		"if":             ifCallV2,
+		"switch":         switchCallV2,
+		"score":          scoreCallV2,
+		"typeof":         typeofCallV2,
+		"{}":             blockV2,
+		"return":         returnCallV2,
+		"createResource": globalCreateResource,
 	}
+}
+
+func globalCreateResource(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
+	if l := len(f.Args); l%2 != 1 || l == 0 {
+		return nil, 0, errors.New("Called `createResource` with invalid number of arguments")
+	}
+
+	binding, ok := f.Args[0].RefV2()
+	if !ok {
+		return nil, 0, errors.New("Called `createResource` with invalid arguments: expected ref")
+	}
+
+	t := types.Type(f.Type)
+	return e.createResource(t.ResourceName(), binding, &Function{
+		Type: f.Type,
+		Args: f.Args[1:],
+	}, ref)
 }
 
 func ifCallV2(e *blockExecutor, f *Function, ref uint64) (*RawData, uint64, error) {
