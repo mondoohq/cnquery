@@ -94,7 +94,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			}
 
 			if !exists {
-				return nil, fmt.Errorf("namespace %s does not exist", namespace)
+				return nil, fmt.Errorf("namespace %s does not exist in cluster", namespace)
 			}
 			namespacesFilter = append(namespacesFilter, namespace)
 		} else {
