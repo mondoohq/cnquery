@@ -155,9 +155,9 @@ service QueryConductor {
   rpc Unassign(Assignment) returns (Empty) {}
 
   rpc Resolve(ResolveReq) returns (ResolvedPack) {}
-  // UpdateAssetJobs is used to update the jobs of an asset
+  // UpdateAssetJobs is used to update all jobs for this asset
   rpc UpdateAssetJobs(UpdateAssetJobsReq) returns (Empty) {}
-  // ResolveAndUpdate is used to update the jobs of an asset and return it
+  // ResolveAndUpdate is used to update all jobs and return them
   rpc ResolveAndUpdateJobs(UpdateAssetJobsReq) returns (ResolvedPack) {}
 
   rpc StoreResults(StoreResultsReq) returns (Empty) {}
@@ -218,4 +218,17 @@ message Report {
   int64 modified = 21;
 
   string resolved_version = 33;
+}
+
+// Asset is a lean layer of information about an asset
+message Asset {
+  string mrn = 1;
+  string name = 18;
+}
+
+message ReportCollection {
+  map<string, Asset> assets = 1;
+  Bundle bundle = 2;
+  map<string,  Report> reports = 3;
+  map<string,  string> errors = 4;
 }

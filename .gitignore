@@ -2,7 +2,7 @@
 dist
 alpine-container.tar
 centos-container.tar
-cnquery
+./cnquery
 file1
 id_rsa
 id_rsa.pub

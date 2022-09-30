@@ -23,7 +23,6 @@ type QueryHub interface {
 	DeleteQueryPack(context.Context, *Mrn) (*Empty, error)
 	ValidateBundle(context.Context, *Bundle) (*Empty, error)
 	GetQueryPack(context.Context, *Mrn) (*QueryPack, error)
-	GetBundle(context.Context, *Mrn) (*Bundle, error)
 	GetFilters(context.Context, *Mrn) (*Mqueries, error)
 	List(context.Context, *ListReq) (*QueryPacks, error)
 }
@@ -74,11 +73,6 @@ func (c *QueryHubClient) GetQueryPack(ctx context.Context, in *Mrn) (*QueryPack,
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetQueryPack"}, ""), in, out)
 	return out, err
 }
-func (c *QueryHubClient) GetBundle(ctx context.Context, in *Mrn) (*Bundle, error) {
-	out := new(Bundle)
-	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetBundle"}, ""), in, out)
-	return out, err
-}
 func (c *QueryHubClient) GetFilters(ctx context.Context, in *Mrn) (*Mqueries, error) {
 	out := new(Mqueries)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetFilters"}, ""), in, out)
@@ -116,7 +110,6 @@ func NewQueryHubServer(handler QueryHub, opts ...QueryHubServerOption) http.Hand
 			"DeleteQueryPack": srv.DeleteQueryPack,
 			"ValidateBundle":  srv.ValidateBundle,
 			"GetQueryPack":    srv.GetQueryPack,
-			"GetBundle":       srv.GetBundle,
 			"GetFilters":      srv.GetFilters,
 			"List":            srv.List,
 		},
@@ -224,30 +217,6 @@ func (p *QueryHubServer) GetQueryPack(ctx context.Context, reqBytes *[]byte) (pb
 		return nil, err
 	}
 	return p.handler.GetQueryPack(ctx, &req)
-}
-func (p *QueryHubServer) GetBundle(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
-	var req Mrn
-	var err error
-
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("could not access header")
-	}
-
-	switch md.First("Content-Type") {
-	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
-		err = pb.Unmarshal(*reqBytes, &req)
-	default:
-		// handle case of empty object
-		if len(*reqBytes) > 0 {
-			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return p.handler.GetBundle(ctx, &req)
 }
 func (p *QueryHubServer) GetFilters(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
 	var req Mrn

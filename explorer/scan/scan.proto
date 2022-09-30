@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package cnquery.explorer.scan;
+option go_package = "go.mondoo.com/cnquery/explorer/scan";
+
+import "motor/inventory/v1/inventory.proto";
+import "explorer/explorer.proto";
+
+message Job {
+  mondoo.motor.inventory.v1.Inventory inventory = 1;
+  cnquery.explorer.Bundle bundle = 2;
+  
+  bool do_record = 20;
+  repeated string query_pack_filters = 21;
+}
+
