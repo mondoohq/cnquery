@@ -58,7 +58,7 @@ prep/tools:
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr shared/generate
+cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr shared/generate explorer/generate
 
 motor/generate:
 	go generate .
@@ -198,6 +198,9 @@ mqlc: | llx mqlc/test
 
 mqlc/test:
 	go test -timeout 5s $(shell go list ./mqlc/... | grep -v '/vendor/')
+
+explorer/generate:
+	go generate ./explorer
 
 #   🏗 Binary / Build   #
 

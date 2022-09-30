@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+package cnquery.explorer;
+option go_package = "go.mondoo.com/cnquery/explorer";
+
+import "llx/llx.proto";
+
+message Bundle {
+  string owner_mrn = 1; 
+  repeated QueryPack packs = 2;
+}
+
+message QueryPack {
+  // user-defined UID, which is used to generate the MRN
+  string uid = 36;
+  // MRN to universally identify this query.
+  // UIDs are local to QueryPacks, MRNs are global
+  string mrn = 1;
+
+  string name = 2;
+  string version = 3;
+  string owner_mrn = 4; // auto-generated
+  
+  repeated Mquery queries = 6;
+  repeated string filters = 7;
+  string context = 8;
+  
+  bool is_public = 20;
+  string license = 21;
+  QueryPackDocs docs = 22;
+
+  repeated Author authors = 30;
+  int64 created = 32;
+  int64 modified = 33;
+  map<string,string> tags = 34;
+
+  string local_content_checksum = 23;
+  string local_execution_checksum = 24;
+}
+
+message QueryPacks {
+  repeated QueryPack items = 1;
+}
+
+message Docs {
+  string desc = 1;
+  repeated Reference refs = 2;
+}
+
+message Reference {
+  string title = 1;
+  string url = 2;
+}
+
+// Mquery is an MQL query representation
+message Mquery {
+  string query = 1;
+  string code_id = 2;
+  string checksum = 3;
+  string mrn = 4;
+  // UID is only needed on Mquery upload, when the MRN is computed.
+  // It will not be persisted.
+  string uid = 5;
+  string type = 6;
+  string context = 7;
+  string title = 20;
+  MqueryDocs docs = 21;
+  string desc = 35; // only used if docs.desc is not defined
+  repeated MqueryRef refs = 22;
+  map<string,string> tags = 34;
+}
+
+message QueryPackDocs {
+  string desc = 1;
+}
+
+message MqueryDocs {
+  string desc = 1;
+  string audit = 2;
+  string remediation = 3;
+}
+
+message Author {
+  string name = 1;
+  string email = 2;
+}
+
+message MqueryRef {
+  string title = 1;
+  string url = 2;
+}
+
+// **********  Resolution / Execution **************
+
+/*
+  The list of queries that an asset needs to execute
+  May be identical amongst multiple packs
+*/
+message ExecutionJob {
+  string checksum = 1;
+  // map of all queries that should be executed, checksum => query
+  map<string,ExecutionQuery> queries = 2;
+}
+
+/*
+  A query which is part of an ExecutionJob
+  Reduced to the bare minimum for the execution
+*/
+message ExecutionQuery {
+  string query = 1;
+  string checksum = 2;
+  // mapping from name => checksum, which is in the execution job
+  map<string,string> properties = 3;
+  // list of checksums that we collect as data points
+  repeated string datapoints = 4;
+  cnquery.llx.CodeBundle code = 5;
+}
+
+// **********       Query Hub        **************
+
+service QueryHub {
+  rpc SetBundle(Bundle) returns (Empty) {}
+  rpc DeleteQueryPack(Mrn) returns (Empty) {}
+  rpc ValidateBundle(Bundle) returns (Empty) {}
+  rpc GetQueryPack(Mrn) returns (QueryPack) {}
+  rpc GetBundle(Mrn) returns (Bundle) {}
+  rpc GetFilters(Mrn) returns (Mqueries) {}
+  rpc List(ListReq) returns (QueryPacks) {}
+}
+
+message Empty {}
+
+// MRNs are used to uniquely identify resources. They are globally unique.
+message Mrn {
+  string mrn = 1;
+}
+
+message Mqueries {
+  repeated Mquery items = 1;
+}
+
+message ListReq {
+  string owner_mrn = 1;
+  string name = 2;
+}
+
+// **********       Query Conductor        **************
+
+service QueryConductor {
+  rpc Assign(Assignment) returns (Empty) {}
+  rpc Unassign(Assignment) returns (Empty) {}
+
+  rpc Resolve(ResolveReq) returns (ResolvedPack) {}
+  // UpdateAssetJobs is used to update the jobs of an asset
+  rpc UpdateAssetJobs(UpdateAssetJobsReq) returns (Empty) {}
+  // ResolveAndUpdate is used to update the jobs of an asset and return it
+  rpc ResolveAndUpdateJobs(UpdateAssetJobsReq) returns (ResolvedPack) {}
+
+  rpc StoreResults(StoreResultsReq) returns (Empty) {}
+
+  rpc GetReport(EntityDataRequest) returns (Report) {}
+  rpc GetData(EntityDataRequest) returns (Report) {}
+}
+
+// Assign a number of packs to an asset. All of these are identified by MRN.
+// Generally query packs are assigned (via MRN).
+message Assignment {
+  string asset_mrn = 1;
+  repeated string pack_mrns = 2;
+}
+
+// Resolve a given entity via its MRN. Typically used to resolve assets.
+// Can also be used to resolve query packs.
+message ResolveReq {
+  string entity_mrn = 1;
+  repeated Mquery asset_filters = 2;
+}
+
+// ResolvedPack is returned from a resolve request. It includes the execution job
+// with all things that need to be run.
+message ResolvedPack {
+  ExecutionJob execution_job = 2;
+  repeated Mquery filters = 4;
+  string graph_execution_checksum = 7;
+  string filters_checksum = 20;
+}
+
+// Update asset jobs forces all jobs for a given asset to get refreshed.
+message UpdateAssetJobsReq {
+  string asset_mrn = 1;
+  repeated Mquery asset_filters = 2;
+}
+
+// Store results for a given asset
+message StoreResultsReq {
+  string asset_mrn = 1;
+  map<string, cnquery.llx.Result> data = 3;
+}
+
+// Retrieve data for a given set of entities which was previously stored
+message EntityDataRequest {
+  repeated string entity_mrns = 1;
+  repeated string data_mrns = 2;
+}
+
+// The report of all the things collected for an entity (typically asset).
+// The provided pack is used as the root to decide what data fields will be returned.
+message Report {
+  string pack_mrn = 1;
+  string entity_mrn = 2;
+  map<string, cnquery.llx.Result> data = 5;
+
+  int64 created = 20;
+  int64 modified = 21;
+
+  string resolved_version = 33;
+}
