@@ -7,9 +7,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
 	"go.mondoo.com/cnquery/cli/components"
+	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/shared"
@@ -86,7 +86,7 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 // and translates them into a config for the runner.
 func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*proto.RunQueryConfig, error) {
 	conf := proto.RunQueryConfig{
-		Features: cnquery.DefaultFeatures,
+		Features: config.Features,
 	}
 
 	// check if the user used --password without a value
