@@ -4,10 +4,12 @@ on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+    
 
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v3
