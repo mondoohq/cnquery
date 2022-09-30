@@ -26,8 +26,7 @@ func init() {
 	rootCmd.AddCommand(markdownCmd)
 }
 
-const frontMatterTemplate = `
----
+const frontMatterTemplate = `---
 title: {{ .PackName }} Resource Pack - Mondoo Query Language (MQL) Resources
 id: {{ .PackName }}
 sidebar_label: {{ .PackName }} Resource Pack
