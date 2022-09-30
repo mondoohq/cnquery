@@ -146,24 +146,6 @@ func (s *LocalServices) GetQueryPack(ctx context.Context, in *Mrn) (*QueryPack, 
 	return s.DataLake.GetQueryPack(ctx, in.Mrn)
 }
 
-// GetBundle retrieves the given bundle and all its dependencies (policies/queries)
-func (s *LocalServices) GetBundle(ctx context.Context, in *Mrn) (*Bundle, error) {
-	if in == nil || len(in.Mrn) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "mrn is required")
-	}
-
-	b, err := s.DataLake.GetBundle(ctx, in.Mrn)
-	if err == nil {
-		return b, nil
-	}
-	if s.Upstream == nil {
-		return nil, err
-	}
-
-	// try upstream
-	return s.cacheUpstreamQueryPack(ctx, in.Mrn)
-}
-
 // GetFilters retrieves the asset filter queries for a given query pack
 func (s *LocalServices) GetFilters(ctx context.Context, mrn *Mrn) (*Mqueries, error) {
 	if mrn == nil || len(mrn.Mrn) == 0 {

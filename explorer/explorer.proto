@@ -128,7 +128,6 @@ service QueryHub {
   rpc DeleteQueryPack(Mrn) returns (Empty) {}
   rpc ValidateBundle(Bundle) returns (Empty) {}
   rpc GetQueryPack(Mrn) returns (QueryPack) {}
-  rpc GetBundle(Mrn) returns (Bundle) {}
   rpc GetFilters(Mrn) returns (Mqueries) {}
   rpc List(ListReq) returns (QueryPacks) {}
 }
