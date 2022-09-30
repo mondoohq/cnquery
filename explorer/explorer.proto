@@ -67,7 +67,12 @@ message Mquery {
   MqueryDocs docs = 21;
   string desc = 35; // only used if docs.desc is not defined
   repeated MqueryRef refs = 22;
+  ImpactValue impact = 23;
   map<string,string> tags = 34;
+}
+
+message ImpactValue {
+  int32 value = 1;
 }
 
 message QueryPackDocs {

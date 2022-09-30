@@ -1,6 +1,7 @@
 package explorer
 
 import (
+	"encoding/json"
 	"sort"
 	"strings"
 
@@ -181,4 +182,26 @@ func (m *Mquery) Sanitize() {
 		}
 		m.Tags = sanitizedTags
 	}
+}
+
+func (v *ImpactValue) UnmarshalJSON(data []byte) error {
+	var res int32
+
+	if err := json.Unmarshal(data, &res); err == nil {
+		v.Value = res
+	} else {
+		v := &struct {
+			Value int32 `json:"value"`
+		}{}
+		if err := json.Unmarshal(data, &v); err != nil {
+			return err
+		}
+		v.Value = v.Value
+	}
+
+	if v.Value < 0 || v.Value > 100 {
+		return errors.New("impact must be between 0 and 100")
+	}
+
+	return nil
 }
