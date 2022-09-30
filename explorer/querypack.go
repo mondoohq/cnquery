@@ -92,13 +92,22 @@ func (p *QueryPack) UpdateChecksums() error {
 }
 
 // ComputeAssetFilters into mql
-func (p *QueryPack) ComputeAssetFilters(ctx context.Context) ([]*Mquery, error) {
+func (p *QueryPack) ComputeAssetFilters(ctx context.Context, ownerMRN string) ([]*Mquery, error) {
 	res := make([]*Mquery, len(p.Filters))
 	for i := range p.Filters {
 		code := p.Filters[i]
-		res[i] = &Mquery{
+
+		mquery := &Mquery{
 			Query: code,
 		}
+
+		bundle, err := mquery.Compile(nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to compile asset filter")
+		}
+		mquery.Mrn = ownerMRN + "/assetfilter/" + bundle.CodeV2.Id
+
+		res[i] = mquery
 	}
 
 	return res, nil

@@ -48,5 +48,18 @@
         "k8s.admissionreview{ request { * } }"
       ],
     },
+    {
+      "name": "cnquery-explore-file",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "explore",
+        "local",
+        "-f",
+        "./examples/example.mql.yaml"
+      ],
+    }
   ]
 }

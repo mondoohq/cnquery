@@ -51,6 +51,7 @@ const (
 	dbIDData           = "d\x00"
 	dbIDAsset          = "a\x00"
 	dbIDExecutionJob   = "ej\x00"
+	dbIDresolvedPack   = "rpa\x00"
 )
 
 func (db *Db) SetNowProvider(f func() time.Time) {

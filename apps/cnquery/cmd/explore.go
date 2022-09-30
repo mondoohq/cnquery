@@ -39,7 +39,7 @@ the local system with its pre-configured query pack:
 
 To manually configure a query pack, use this:
 
-    $ cnquery explore local --policy-bundle policyfile.yaml --incognito
+    $ cnquery explore local -f bundle.mql.yaml --incognito
 
 	`,
 	Docs: builder.CommandsDocs{
@@ -226,13 +226,13 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		cmd.Flags().Bool("domainlist-inventory", false, "set inventory format to domain list")
 		cmd.Flags().MarkDeprecated("domainlist-inventory", "use the new flag `inventory-domainlist` instead")
 
-		// policies & incognito mode
+		// bundles, packs & incognito mode
 		cmd.Flags().Bool("incognito", false, "incognito mode. do not report scan results to the Mondoo platform.")
-		cmd.Flags().StringSlice("policy", nil, "list of policies to be executed (requires incognito mode), multiple policies can be passed in via --policy POLICY")
-		cmd.Flags().StringSliceP("policy-bundle", "f", nil, "path to local policy bundle file")
+		cmd.Flags().StringSlice("querypack", nil, "list of query packs to be executed (requires incognito mode), multiple query packs can be specified")
+		cmd.Flags().StringSliceP("querypack-bundle", "f", nil, "path to local querypack bundle file")
 		// flag completion command
-		cmd.RegisterFlagCompletionFunc("policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			return getPoliciesForCompletion(), cobra.ShellCompDirectiveDefault
+		cmd.RegisterFlagCompletionFunc("querypack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			return getQueryPacksForCompletion(), cobra.ShellCompDirectiveDefault
 		})
 
 		// individual asset flags
@@ -275,7 +275,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		viper.BindPFlag("inventory-file", cmd.Flags().Lookup("inventory-file"))
 		viper.BindPFlag("inventory-ansible", cmd.Flags().Lookup("inventory-ansible"))
 		viper.BindPFlag("inventory-domainlist", cmd.Flags().Lookup("inventory-domainlist"))
-		viper.BindPFlag("policy-bundle", cmd.Flags().Lookup("policy-bundle"))
+		viper.BindPFlag("querypack-bundle", cmd.Flags().Lookup("querypack-bundle"))
 		viper.BindPFlag("id-detector", cmd.Flags().Lookup("id-detector"))
 		viper.BindPFlag("detect-cicd", cmd.Flags().Lookup("detect-cicd"))
 		viper.BindPFlag("category", cmd.Flags().Lookup("category"))
@@ -288,7 +288,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		// for all assets
 		viper.BindPFlag("incognito", cmd.Flags().Lookup("incognito"))
 		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
-		viper.BindPFlag("policies", cmd.Flags().Lookup("policy"))
+		viper.BindPFlag("querypacks", cmd.Flags().Lookup("querypack"))
 		viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
 		// FIXME: remove in v7.0 vv
 		viper.BindPFlag("exit-0-on-success", cmd.Flags().Lookup("exit-0-on-success"))
@@ -346,9 +346,9 @@ Please run one of the subcommands to specify the target system. For example:
 			log.Fatal().Err(err).Msg("failed to prepare config")
 		}
 
-		err = conf.loadPolicies()
+		err = conf.loadBundles()
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to resolve policies")
+			log.Fatal().Err(err).Msg("failed to resolve query packs")
 		}
 
 		report := RunScan(conf)
@@ -356,15 +356,15 @@ Please run one of the subcommands to specify the target system. For example:
 	},
 })
 
-// helper method to retrieve the list of policies for the policy flag
-func getPoliciesForCompletion() []string {
-	policyList := []string{}
+// helper method to retrieve the list of query packs for autocomplete
+func getQueryPacksForCompletion() []string {
+	querypackList := []string{}
 
-	// TODO: policy autocompletion
+	// TODO: autocompletion
 
-	sort.Strings(policyList)
+	sort.Strings(querypackList)
 
-	return policyList
+	return querypackList
 }
 
 type exploreConfig struct {
@@ -384,8 +384,8 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 		Features:       cnquery.DefaultFeatures,
 		IsIncognito:    viper.GetBool("incognito"),
 		DoRecord:       viper.GetBool("record"),
-		QueryPackPaths: viper.GetStringSlice("policy-bundle"),
-		QueryPackNames: viper.GetStringSlice("policies"),
+		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
+		QueryPackNames: viper.GetStringSlice("querypack"),
 	}
 	config.DisplayUsedConfig()
 
@@ -418,7 +418,7 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	// TODO: SERVICE CREDENTIALS
 
 	if len(conf.QueryPackPaths) > 0 && !conf.IsIncognito {
-		log.Warn().Msg("Scanning with local policy bundles will switch into --incognito mode by default. Your results will not be sent upstream.")
+		log.Warn().Msg("Scanning with local bundles will switch into --incognito mode by default. Your results will not be sent upstream.")
 		conf.IsIncognito = true
 	}
 
@@ -434,7 +434,7 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	return &conf, nil
 }
 
-func (c *exploreConfig) loadPolicies() error {
+func (c *exploreConfig) loadBundles() error {
 	if c.IsIncognito {
 		if len(c.QueryPackPaths) == 0 {
 			return nil
@@ -449,7 +449,7 @@ func (c *exploreConfig) loadPolicies() error {
 		return nil
 	}
 
-	return errors.New("Cannot yet resolve policies other than incognito")
+	return errors.New("Cannot yet resolve query packs other than incognito")
 }
 
 func RunScan(config *exploreConfig) *explorer.ReportCollection {

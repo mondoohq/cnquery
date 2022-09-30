@@ -65,9 +65,14 @@ func (s *LocalServices) PreparePack(ctx context.Context, querypack *QueryPack) (
 		}
 	}
 
-	filters, err := querypack.ComputeAssetFilters(ctx)
+	filters, err := querypack.ComputeAssetFilters(ctx, querypack.Mrn)
 	if err != nil {
 		return nil, nil, err
+	}
+	querypack.AssetFilters = map[string]*Mquery{}
+	for i := range filters {
+		cur := filters[i]
+		querypack.AssetFilters[cur.CodeId] = cur
 	}
 
 	return querypack, filters, nil
@@ -144,6 +149,15 @@ func (s *LocalServices) GetQueryPack(ctx context.Context, in *Mrn) (*QueryPack, 
 		return nil, err
 	}
 	return s.DataLake.GetQueryPack(ctx, in.Mrn)
+}
+
+// GetQueryPack for a given MRN
+func (s *LocalServices) GetBundle(ctx context.Context, in *Mrn) (*Bundle, error) {
+	if in == nil || len(in.Mrn) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "mrn is required")
+	}
+
+	return s.DataLake.GetBundle(ctx, in.Mrn)
 }
 
 // GetFilters retrieves the asset filter queries for a given query pack

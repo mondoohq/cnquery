@@ -22,7 +22,8 @@ message QueryPack {
   string owner_mrn = 4; // auto-generated
   
   repeated Mquery queries = 6;
-  repeated string filters = 7;
+  map<string,Mquery> asset_filters = 7; // key == checksum, internal
+  repeated string filters = 43; // user-defined
   string context = 8;
   
   bool is_public = 20;
@@ -105,6 +106,13 @@ message ExecutionJob {
   string checksum = 1;
   // map of all queries that should be executed, checksum => query
   map<string,ExecutionQuery> queries = 2;
+  // map of all datapoints to their info
+  map<string,DataQueryInfo> datapoints = 3;
+}
+
+message DataQueryInfo {
+  string type = 1;
+  repeated string notify = 2;
 }
 
 /*
@@ -127,6 +135,7 @@ service QueryHub {
   rpc SetBundle(Bundle) returns (Empty) {}
   rpc DeleteQueryPack(Mrn) returns (Empty) {}
   rpc ValidateBundle(Bundle) returns (Empty) {}
+  rpc GetBundle(Mrn) returns (Bundle) {}
   rpc GetQueryPack(Mrn) returns (QueryPack) {}
   rpc GetFilters(Mrn) returns (Mqueries) {}
   rpc List(ListReq) returns (QueryPacks) {}
@@ -153,17 +162,9 @@ message ListReq {
 service QueryConductor {
   rpc Assign(Assignment) returns (Empty) {}
   rpc Unassign(Assignment) returns (Empty) {}
-
   rpc Resolve(ResolveReq) returns (ResolvedPack) {}
-  // UpdateAssetJobs is used to update all jobs for this asset
-  rpc UpdateAssetJobs(UpdateAssetJobsReq) returns (Empty) {}
-  // ResolveAndUpdate is used to update all jobs and return them
-  rpc ResolveAndUpdateJobs(UpdateAssetJobsReq) returns (ResolvedPack) {}
-
   rpc StoreResults(StoreResultsReq) returns (Empty) {}
-
   rpc GetReport(EntityDataRequest) returns (Report) {}
-  rpc GetData(EntityDataRequest) returns (Report) {}
 }
 
 // Assign a number of packs to an asset. All of these are identified by MRN.
@@ -203,8 +204,8 @@ message StoreResultsReq {
 
 // Retrieve data for a given set of entities which was previously stored
 message EntityDataRequest {
-  repeated string entity_mrns = 1;
-  repeated string data_mrns = 2;
+  string entity_mrn = 1;
+  string data_mrn = 2;
 }
 
 // The report of all the things collected for an entity (typically asset).
@@ -231,4 +232,19 @@ message ReportCollection {
   Bundle bundle = 2;
   map<string,  Report> reports = 3;
   map<string,  string> errors = 4;
+}
+
+message AssignmentDelta {
+  string mrn = 1;
+  enum Action {
+    UNKNOWN = 0;
+    ADD = 1;
+    DELETE = 2;
+  }
+  Action action = 2;
+}
+
+message BundleMutationDelta {
+  string owner_mrn = 1;
+  map<string,AssignmentDelta> deltas = 2;
 }

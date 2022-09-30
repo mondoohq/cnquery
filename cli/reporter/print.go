@@ -44,5 +44,5 @@ func AllFormats() string {
 }
 
 func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
-	return errors.New("reporter #print NOT YET IMPLEMENTED")
+	return errors.New("Printing reports is NOT YET IMPLEMENTED")
 }

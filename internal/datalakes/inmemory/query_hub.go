@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/explorer"
+	"go.mondoo.com/cnquery/mrn"
 )
 
 type wrapQuery struct {
@@ -59,12 +60,19 @@ func (db *Db) GetQueryPack(ctx context.Context, mrn string) (*explorer.QueryPack
 }
 
 // GetQueryPackFilters retrieves the query pack filters
-func (db *Db) GetQueryPackFilters(ctx context.Context, mrn string) ([]*explorer.Mquery, error) {
-	q, ok := db.cache.Get(dbIDQueryPack + mrn)
-	if !ok {
-		return nil, errors.New("query pack '" + mrn + "' not found")
+func (db *Db) GetQueryPackFilters(ctx context.Context, in string) ([]*explorer.Mquery, error) {
+	// if it's an asset
+	if _, err := mrn.GetResource(in, explorer.MRN_RESOURCE_ASSET); err != nil {
+		return nil, errors.New("can only retrieve query pack filters for assets")
 	}
-	return (q.(wrapQueryPack)).filters, nil
+
+	x, ok := db.cache.Get(dbIDAsset + in)
+	if !ok {
+		return nil, errors.New("failed to find asset " + in)
+	}
+	asset := x.(wrapAsset)
+
+	return asset.Bundle.AssetFilters(), nil
 }
 
 func (db *Db) setQueryPack(ctx context.Context, in *explorer.QueryPack, filters []*explorer.Mquery) (wrapQueryPack, error) {
@@ -165,4 +173,73 @@ func (db *Db) listQueryPacks() (map[string]struct{}, error) {
 		return nil, errors.New("failed to initialize query packs list cache")
 	}
 	return nu, nil
+}
+
+// GetBundle retrieves and if necessary updates the pack. Used for assets,
+// which have multiple query packs associated with them.
+func (db *Db) GetBundle(ctx context.Context, mrn string) (*explorer.Bundle, error) {
+	x, ok := db.cache.Get(dbIDAsset + mrn)
+	if !ok {
+		return nil, errors.New("failed to find asset " + mrn)
+	}
+
+	return x.(wrapAsset).Bundle, nil
+}
+
+// MutateBundle runs the given mutation on a bundle, typically an asset.
+// If it cannot find the owner, it will create it.
+func (db *Db) MutateBundle(ctx context.Context, mutation *explorer.BundleMutationDelta, createIfMissing bool) (*explorer.Bundle, error) {
+	x, ok := db.cache.Get(dbIDAsset + mutation.OwnerMrn)
+	if !ok {
+		if !createIfMissing {
+			return nil, errors.New("failed to find asset " + mutation.OwnerMrn)
+		}
+
+		var err error
+		x, _, err = db.ensureAssetObject(ctx, mutation.OwnerMrn)
+		if err != nil {
+			return nil, err
+		}
+	}
+	asset := x.(wrapAsset)
+
+	if asset.Bundle == nil {
+		return nil, errors.New("found an asset without a bundle configured in the DB")
+	}
+
+	existing := map[string]*explorer.QueryPack{}
+	for i := range asset.Bundle.Packs {
+		cur := asset.Bundle.Packs[i]
+		existing[cur.Mrn] = cur
+	}
+
+	for _, delta := range mutation.Deltas {
+		switch delta.Action {
+		case explorer.AssignmentDelta_ADD:
+			pack, err := db.GetQueryPack(ctx, delta.Mrn)
+			if err != nil {
+				return nil, errors.New("failed to find query pack for assignment: " + delta.Mrn)
+			}
+
+			existing[delta.Mrn] = pack
+
+		case explorer.AssignmentDelta_DELETE:
+			delete(existing, delta.Mrn)
+
+		default:
+			return nil, errors.New("cannot mutate bundle, the action is unknown")
+		}
+	}
+
+	res := make([]*explorer.QueryPack, len(existing))
+	i := 0
+	for _, qp := range existing {
+		res[i] = qp
+		i++
+	}
+
+	asset.Bundle.Packs = res
+	db.cache.Set(dbIDAsset+mutation.OwnerMrn, asset, 1)
+
+	return asset.Bundle, nil
 }

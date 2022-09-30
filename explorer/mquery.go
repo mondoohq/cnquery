@@ -205,3 +205,22 @@ func (v *ImpactValue) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func ChecksumAssetFilters(queries []*Mquery) (string, error) {
+	for i := range queries {
+		if _, err := queries[i].refreshChecksumAndType(nil); err != nil {
+			return "", errors.New("failed to compile query: " + err.Error())
+		}
+	}
+
+	sort.Slice(queries, func(i, j int) bool {
+		return queries[i].CodeId < queries[j].CodeId
+	})
+
+	afc := checksums.New
+	for i := range queries {
+		afc = afc.Add(queries[i].CodeId)
+	}
+
+	return afc.String(), nil
+}

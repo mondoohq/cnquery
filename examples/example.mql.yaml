@@ -1,0 +1,12 @@
+packs:
+- uid: linux-mixed-queries
+  context: os.linux
+  filters:
+  - asset.family.contains("linux")
+
+  queries:
+  - query: |
+      packages.
+        where(name == /ssh/).
+        list
+    title: Find all SSH packages that are installed
