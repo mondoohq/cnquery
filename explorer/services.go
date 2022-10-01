@@ -15,7 +15,7 @@ type Services struct {
 	QueryConductor
 }
 
-// LocalServices is a bundle of all the services for handling policies.
+// LocalServices is an implementation of the explorer for a local execution.
 // It has an optional upstream-handler embedded. If a local service does not
 // yield results for a request, and the upstream handler is defined, it will
 // be used instead.

@@ -18,7 +18,7 @@ func (s *LocalServices) ValidateBundle(ctx context.Context, bundle *Bundle) (*Em
 	return globalEmpty, err
 }
 
-// SetBundle stores a bundle of policies and queries in this marketplace
+// SetBundle stores a bundle of query packs and queries in this marketplace
 func (s *LocalServices) SetBundle(ctx context.Context, bundle *Bundle) (*Empty, error) {
 	if len(bundle.OwnerMrn) == 0 {
 		return globalEmpty, status.Error(codes.InvalidArgument, "owner MRN is required")
@@ -160,7 +160,7 @@ func (s *LocalServices) GetFilters(ctx context.Context, mrn *Mrn) (*Mqueries, er
 	return &Mqueries{Items: filters}, nil
 }
 
-// List all policies for a given owner
+// List all query packs for a given owner
 func (s *LocalServices) List(ctx context.Context, filter *ListReq) (*QueryPacks, error) {
 	if filter == nil {
 		return nil, status.Error(codes.InvalidArgument, "need to provide a filter object for list")
@@ -195,27 +195,26 @@ func (s *LocalServices) DeleteQueryPack(ctx context.Context, in *Mrn) (*Empty, e
 // HELPER METHODS
 // =================
 
-// cacheUpstreamQueryPack by storing a copy of the upstream bundle in this db
+// cacheUpstreamQueryPack by storing a copy of the upstream pack in this db
 // Note: upstream has to be defined
-func (s *LocalServices) cacheUpstreamQueryPack(ctx context.Context, mrn string) (*Bundle, error) {
+func (s *LocalServices) cacheUpstreamQueryPack(ctx context.Context, mrn string) (*QueryPack, error) {
 	logCtx := logger.FromContext(ctx)
 	if s.Upstream == nil {
 		return nil, errors.New("failed to retrieve upstream query pack " + mrn + " since upstream is not defined")
 	}
 
-	logCtx.Debug().Str("querypack", mrn).Msg("query.hub> fetch bundle from upstream")
-	bundle, err := s.Upstream.GetBundle(ctx, &Mrn{Mrn: mrn})
+	logCtx.Debug().Str("querypack", mrn).Msg("query.hub> fetch query pack from upstream")
+	querypack, err := s.Upstream.GetQueryPack(ctx, &Mrn{Mrn: mrn})
 	if err != nil {
-		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to retrieve bundle from upstream")
+		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to retrieve query pack from upstream")
 		return nil, errors.New("failed to retrieve upstream query pack " + mrn + ": " + err.Error())
 	}
 
-	_, err = s.SetBundle(ctx, bundle)
-	if err != nil {
-		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to set bundle retrieved from upstream")
-		return nil, errors.New("failed to cache upstream query pack " + mrn + ": " + err.Error())
+	if err = s.setPack(ctx, querypack); err != nil {
+		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to set query pack retrieved from upstream")
+		return nil, err
 	}
 
 	logCtx.Debug().Str("querypack", mrn).Msg("query.hub> fetched bundle from upstream")
-	return bundle, nil
+	return querypack, nil
 }

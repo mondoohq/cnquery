@@ -148,7 +148,6 @@ func (p *Bundle) SourceHash() (string, error) {
 }
 
 // ToMap turns the Bundle into a BundleMap
-// dataLake (optional) may be used to provide queries/packs not found in the bundle
 func (p *Bundle) ToMap() *BundleMap {
 	res := NewBundleMap(p.OwnerMrn)
 

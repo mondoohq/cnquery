@@ -201,6 +201,7 @@ mqlc/test:
 
 explorer/generate:
 	go generate ./explorer
+	go generate ./explorer/scan
 
 #   🏗 Binary / Build   #
 
