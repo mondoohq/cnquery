@@ -17,8 +17,6 @@ type DataLake interface {
 	// DeleteQueryPack removes a given pack
 	// Note: the MRN has to be valid
 	DeleteQueryPack(ctx context.Context, mrn string) error
-	// GetBundle retrieves and if necessary updates the bundle
-	GetBundle(ctx context.Context, mrn string) (*Bundle, error)
 	// List all packs for a given owner
 	// Note: Owner MRN is required
 	ListQueryPacks(ctx context.Context, ownerMrn string, name string) ([]*QueryPack, error)
