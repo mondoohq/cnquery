@@ -49,7 +49,7 @@ asset {
   version string
   // Architecture this OS is running on
   arch string
-  // Human-readable title of the platform (e.g. "RedHat 8, Container")
+  // Human-readable title of the platform (e.g. "Red Hat 8, Container")
   title string
   // List of platform families that this platform belongs to
   family []string
