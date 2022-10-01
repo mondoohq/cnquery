@@ -156,7 +156,6 @@ There are so many things cnquery can do! Gather information about your fleet, fi
 
 Explore:
 - The Query Hub
-- [Policy as Code](https://mondoo.com/docs/tutorials/mondoo/policy-as-code/)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL resource packs](https://mondoo.com/docs/references/mql/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
