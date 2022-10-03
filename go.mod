@@ -19,7 +19,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7
 	github.com/aristanetworks/goeapi v1.0.0
 	github.com/aws/aws-sdk-go v1.44.86
-	github.com/aws/aws-sdk-go-v2 v1.16.11
+	github.com/aws/aws-sdk-go-v2 v1.16.16
 	github.com/aws/aws-sdk-go-v2/config v1.17.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.14
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.12
@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.14.12
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.18.13
-	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.16.4
+	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.16.10
 	github.com/aws/aws-sdk-go-v2/service/emr v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.14
@@ -61,7 +61,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.17.13
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.13
-	github.com/aws/smithy-go v1.12.1
+	github.com/aws/smithy-go v1.13.3
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.14.0
 	github.com/charmbracelet/bubbletea v0.22.1
@@ -187,8 +187,8 @@ require (
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.18 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.12 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.23 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.17 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.5 // indirect
