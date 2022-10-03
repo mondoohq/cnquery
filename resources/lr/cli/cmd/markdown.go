@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -28,7 +29,7 @@ func init() {
 
 const frontMatterTemplate = `---
 title: {{ .PackName }} Resource Pack - Mondoo Query Language (MQL) Resources
-id: {{ .PackName }}
+id: {{ .ID }}
 sidebar_label: {{ .PackName }} Resource Pack
 sidebar_position: 1
 displayed_sidebar: MQL
@@ -129,8 +130,16 @@ var markdownCmd = &cobra.Command{
 	},
 }
 
+var reNonID = regexp.MustCompile(`[^A-Za-z0-9-]+`)
+
 type lrSchemaRenderer struct {
 	resourceHrefMap map[string]bool
+}
+
+func toID(s string) string {
+	s = reNonID.ReplaceAllString(s, ".")
+	s = strings.ToLower(s)
+	return strings.Trim(s, ".")
 }
 
 func (l *lrSchemaRenderer) renderToc(packName string, resources []*lr.Resource, schema *resources.Schema) string {
@@ -142,8 +151,10 @@ func (l *lrSchemaRenderer) renderToc(packName string, resources []*lr.Resource, 
 	writer := bufio.NewWriter(&buf)
 	err := tpl.Execute(writer, struct {
 		PackName string
+		ID       string
 	}{
 		PackName: packName,
+		ID:       toID(packName),
 	})
 	if err != nil {
 		panic(err)
@@ -154,7 +165,7 @@ func (l *lrSchemaRenderer) renderToc(packName string, resources []*lr.Resource, 
 
 	// render content
 	builder.WriteString("# Mondoo " + packName + " Resource Pack Reference\n\n")
-	builder.WriteString("## In this pack:\n\n")
+	builder.WriteString("In this pack:\n\n")
 	rows := [][]string{}
 
 	for i := range resources {
