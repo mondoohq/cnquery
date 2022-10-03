@@ -2,7 +2,7 @@
 
 Cloud-Native Asset Inventory Framework
 
-cnquery is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
+`cnquery` is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
 ```bash
 # run a query and print the output
@@ -23,7 +23,7 @@ Before starting, be sure to install:
 - [Go 1.19.0+](https://golang.org/dl/)
 - [Protocol Buffers v21+](https://github.com/protocolbuffers/protobuf/releases)
 
-To simply install cnquery via Go, run:
+To install `cnquery` using Go, run:
 
 ```bash
 make cnquery/install
@@ -31,7 +31,7 @@ make cnquery/install
 
 ### Development
 
-Whenever you change resources, providers, or protos, you need to generate files for the compiler. To do this, make sure you have the necessary tools installed (such as protobuf):
+Whenever you change resources, providers, or protos, you must generate files for the compiler. To do this, make sure you have the necessary tools installed (such as protobuf):
 
 ```
 make prep
@@ -47,7 +47,7 @@ This generates and updates all required files for the build. At this point you c
 
 ## Interactive shell
 
-The easiest way to explore cnquery is to use our interactive shell, which has auto-complete to guide you:
+The easiest way to explore `cnquery` is to use our interactive shell, which has auto-complete to guide you:
 
 ```bash
 cnquery shell local
@@ -61,7 +61,7 @@ Once inside the shell, you can enter MQL queries like this:
 
 To learn more, use the `help` command. 
 
-To exit, either press CTRL+D or type `exit`.
+To exit, either press CTRL + D or type `exit`.
 
 
 ## Run simple queries
@@ -95,13 +95,13 @@ You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other ap
 
 ## Query packs
 
-You can combine multiple queries into query packs, which can run together. cnquery comes with a lot of query packs out of the box for most systems. You can simply run:
+You can combine multiple queries into query packs, which can run together. `cnquery` comes with a lot of query packs out of the box for most systems. You can simply run:
 
 ```bash
 cnquery explore local
 ```
 
-Without specifying anything else, cnquery tries to find and run the default query pack for the given system.
+Without specifying anything else, `cnquery` tries to find and run the default query pack for the given system.
 
 You can specify a query pack that you want to run. Use the `--pack` argument:
 
@@ -152,14 +152,13 @@ cnquery pack upload mypack.mql.yaml
 
 ## What’s next?
 
-There are so many things cnquery can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, share data with auditors… cnquery is nearly limitless in capabilities.
+There are so many things `cnquery` can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, share data with auditors… `cnquery` is nearly limitless in capabilities.
 
 Explore:
 - The Query Hub
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL resource packs](https://mondoo.com/docs/references/mql/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
-- Using cnquery with Mondoo
 
 Our goal is to become the API for your entire infrastructure. Join our [community](https://github.com/orgs/mondoohq/discussions) today and let’s grow it together!
 
