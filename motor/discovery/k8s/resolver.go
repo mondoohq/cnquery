@@ -152,15 +152,18 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 		resolved = append(resolved, clusterAsset)
 
+		// TODO: we disable this for now since we do not have a way of merging the data for k8s nodes and physical nodes
+		// We will re-evaluate how to do this once such a feature is implemented.
+
 		// nodes are only added as related assets because we have no policies to scan them
-		nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier, namespacesFilter)
-		if err == nil && len(nodes) > 0 {
-			ri := nodeRelationshipInfos[0]
-			if ri.cloudAccountAsset != nil {
-				clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, ri.cloudAccountAsset)
-			}
-			clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, nodes...)
-		}
+		// nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier, namespacesFilter)
+		// if err == nil && len(nodes) > 0 {
+		// 	ri := nodeRelationshipInfos[0]
+		// 	if ri.cloudAccountAsset != nil {
+		// 		clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, ri.cloudAccountAsset)
+		// 	}
+		// 	clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, nodes...)
+		// }
 	}
 
 	additionalAssets, err := addSeparateAssets(tc, p, namespacesFilter, resourcesFilter, clusterIdentifier, ownershipDir)
