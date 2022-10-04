@@ -66,52 +66,52 @@ func TestAdmissionReviewResolver(t *testing.T) {
 
 func TestManifestResolverDiscoveries(t *testing.T) {
 	testCases := []struct {
-		kind            string
-		discoveryOption string
-		platformName    string
-		numAssets       int
+		kind               string
+		discoveryOption    string
+		platformName       string
+		expectedAssetNames []string
 	}{
 		{
-			kind:            "pod",
-			discoveryOption: "pods",
-			platformName:    "k8s-pod",
-			numAssets:       3,
+			kind:               "pod",
+			discoveryOption:    "pods",
+			platformName:       "k8s-pod",
+			expectedAssetNames: []string{"default/mondoo", "default/hello-pod-2"},
 		},
 		{
-			kind:            "cronjob",
-			discoveryOption: "cronjobs",
-			platformName:    "k8s-cronjob",
-			numAssets:       2,
+			kind:               "cronjob",
+			discoveryOption:    "cronjobs",
+			platformName:       "k8s-cronjob",
+			expectedAssetNames: []string{"default/mondoo"},
 		},
 		{
-			kind:            "job",
-			discoveryOption: "jobs",
-			platformName:    "k8s-job",
-			numAssets:       2,
+			kind:               "job",
+			discoveryOption:    "jobs",
+			platformName:       "k8s-job",
+			expectedAssetNames: []string{"default/mondoo"},
 		},
 		{
-			kind:            "statefulset",
-			discoveryOption: "statefulsets",
-			platformName:    "k8s-statefulset",
-			numAssets:       2,
+			kind:               "statefulset",
+			discoveryOption:    "statefulsets",
+			platformName:       "k8s-statefulset",
+			expectedAssetNames: []string{"default/mondoo"},
 		},
 		{
-			kind:            "daemonset",
-			discoveryOption: "daemonsets",
-			platformName:    "k8s-daemonset",
-			numAssets:       2,
+			kind:               "daemonset",
+			discoveryOption:    "daemonsets",
+			platformName:       "k8s-daemonset",
+			expectedAssetNames: []string{"default/mondoo"},
 		},
 		{
-			kind:            "replicaset",
-			discoveryOption: "replicasets",
-			platformName:    "k8s-replicaset",
-			numAssets:       2,
+			kind:               "replicaset",
+			discoveryOption:    "replicasets",
+			platformName:       "k8s-replicaset",
+			expectedAssetNames: []string{"default/mondoo"},
 		},
 		{
-			kind:            "deployment",
-			discoveryOption: "deployments",
-			platformName:    "k8s-deployment",
-			numAssets:       2,
+			kind:               "deployment",
+			discoveryOption:    "deployments",
+			platformName:       "k8s-deployment",
+			expectedAssetNames: []string{"default/mondoo"},
 		},
 	}
 
@@ -135,12 +135,15 @@ func TestManifestResolverDiscoveries(t *testing.T) {
 			require.NoError(t, err)
 			// When this check fails locally, check your kubeconfig.
 			// context has to reference the default namespace
-			assert.Equal(t, testCase.numAssets, len(assetList))
-			assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
-			assert.Contains(t, assetList[1].Platform.Family, "k8s")
-			assert.Equal(t, "k8s-manifest", assetList[1].Platform.Runtime)
-			assert.Equal(t, testCase.platformName, assetList[1].Platform.Name)
-			assert.Equal(t, "default/mondoo", assetList[1].Name)
+			assert.Equal(t, len(testCase.expectedAssetNames), len(assetList))
+
+			for _, a := range assetList {
+				assert.Contains(t, a.Platform.Family, "k8s-workload")
+				assert.Contains(t, a.Platform.Family, "k8s")
+				assert.Equal(t, "k8s-manifest", a.Platform.Runtime)
+				assert.Equal(t, testCase.platformName, a.Platform.Name)
+				assert.Contains(t, testCase.expectedAssetNames, a.Name)
+			}
 		})
 	}
 }
