@@ -24,6 +24,21 @@ func TestUptimeOnLinux(t *testing.T) {
 	assert.Equal(t, "19m0s", required.String())
 }
 
+func TestUptimeOnLinuxLcDecimalDe(t *testing.T) {
+	// LC_NUMERIC=de_DE.UTF-8 on Ubuntu 22.04
+	mock, err := mock.NewFromTomlFile("./testdata/linux_de.toml")
+	require.NoError(t, err)
+	m, err := motor.New(mock)
+	require.NoError(t, err)
+
+	ut, err := uptime.New(m)
+	require.NoError(t, err)
+
+	required, err := ut.Duration()
+	require.NoError(t, err)
+	assert.Equal(t, "38h31m0s", required.String())
+}
+
 func TestUptimeOnFreebsd(t *testing.T) {
 	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
 	require.NoError(t, err)
