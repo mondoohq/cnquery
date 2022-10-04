@@ -199,7 +199,7 @@ func TestManifestResolverWrongDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	// When this check fails locally, check your kubeconfig.
 	// context has to reference the default namespace
-	assert.Equalf(t, 1, len(assetList), "discovering pods in a cronjob manifest should only result in the manifest")
+	assert.Equalf(t, 0, len(assetList), "discovering pods in a cronjob manifest should result in no assets")
 }
 
 func TestResourceFilter(t *testing.T) {
