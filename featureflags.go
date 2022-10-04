@@ -52,6 +52,13 @@ const (
 	// start: v6.x
 	// end:   v8.0
 	BoolAssertions
+
+	// K8sNodeDiscovery feature flag
+	// desc:  Enables discovery of Kubernetes cluster nodes as individual assets
+	//
+	// start: v6.12
+	// end:   unknown
+	K8sNodeDiscovery
 )
 
 // FeaturesValue is a map from feature name to feature flag

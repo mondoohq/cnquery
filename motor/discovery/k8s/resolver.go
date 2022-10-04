@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
@@ -59,6 +60,7 @@ type K8sResourceIdentifier struct {
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+	features := cnquery.GetFeatures(ctx)
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 
@@ -152,18 +154,17 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 		resolved = append(resolved, clusterAsset)
 
-		// TODO: we disable this for now since we do not have a way of merging the data for k8s nodes and physical nodes
-		// We will re-evaluate how to do this once such a feature is implemented.
-
-		// nodes are only added as related assets because we have no policies to scan them
-		// nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier, namespacesFilter)
-		// if err == nil && len(nodes) > 0 {
-		// 	ri := nodeRelationshipInfos[0]
-		// 	if ri.cloudAccountAsset != nil {
-		// 		clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, ri.cloudAccountAsset)
-		// 	}
-		// 	clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, nodes...)
-		// }
+		if features.IsActive(cnquery.K8sNodeDiscovery) {
+			// nodes are only added as related assets because we have no policies to scan them
+			nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier, namespacesFilter)
+			if err == nil && len(nodes) > 0 {
+				ri := nodeRelationshipInfos[0]
+				if ri.cloudAccountAsset != nil {
+					clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, ri.cloudAccountAsset)
+				}
+				clusterAsset.RelatedAssets = append(clusterAsset.RelatedAssets, nodes...)
+			}
+		}
 	}
 
 	additionalAssets, err := addSeparateAssets(tc, p, namespacesFilter, resourcesFilter, clusterIdentifier, ownershipDir)
