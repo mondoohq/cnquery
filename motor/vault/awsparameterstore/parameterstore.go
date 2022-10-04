@@ -44,7 +44,7 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 	// retrieve secret
 	out, err := c.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(name),
-		WithDecryption: true,
+		WithDecryption: aws.Bool(true),
 	})
 	if err != nil {
 		return nil, vault.NotFoundError
