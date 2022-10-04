@@ -16,7 +16,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/StackExchange/wmi v1.2.1
 	github.com/alecthomas/participle v0.3.0
-	github.com/alecthomas/participle/v2 v2.0.0-alpha7
+	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aristanetworks/goeapi v1.0.0
 	github.com/aws/aws-sdk-go v1.44.86
 	github.com/aws/aws-sdk-go-v2 v1.16.16
