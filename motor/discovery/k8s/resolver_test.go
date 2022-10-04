@@ -35,7 +35,7 @@ func TestManifestResolver(t *testing.T) {
 	assert.Equal(t, assetList[1].Platform.Name, "k8s-pod")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, assetList[3].Platform.Runtime, "docker-registry")
+	assert.Equal(t, assetList[3].Platform.Runtime, "docker-image")
 }
 
 func TestAdmissionReviewResolver(t *testing.T) {
@@ -60,7 +60,7 @@ func TestAdmissionReviewResolver(t *testing.T) {
 	assert.Equal(t, assetList[1].Platform.Name, "k8s-pod")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
-	assert.Equal(t, assetList[2].Platform.Runtime, "docker-registry")
+	assert.Equal(t, assetList[2].Platform.Runtime, "docker-image")
 	assert.Equal(t, assetList[3].Platform.Runtime, "k8s-admission")
 }
 

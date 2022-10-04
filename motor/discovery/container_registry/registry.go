@@ -187,7 +187,7 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 		Name:        imageUrl,
 		Platform: &platform.Platform{
 			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
-			Runtime: providers.RUNTIME_DOCKER_REGISTRY,
+			Runtime: providers.RUNTIME_DOCKER_IMAGE,
 		},
 		Connections: []*providers.Config{
 			{
