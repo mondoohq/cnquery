@@ -21,6 +21,7 @@ var _ common.ContextInitializer = (*Resolver)(nil)
 const (
 	DiscoveryAll              = "all"
 	DiscoveryAuto             = "auto"
+	DiscoveryClusters         = "clusters"
 	DiscoveryPods             = "pods"
 	DiscoveryJobs             = "jobs"
 	DiscoveryCronJobs         = "cronjobs"
@@ -41,6 +42,7 @@ func (r *Resolver) Name() string {
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{
 		DiscoveryAll,
+		DiscoveryClusters,
 		DiscoveryAuto,
 		DiscoveryPods,
 		DiscoveryJobs,
@@ -128,10 +130,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 
 		clusterName = "K8S Cluster " + clusterName
-		ns, ok := tc.Options[k8s.OPTION_NAMESPACE]
-		if ok && ns != "" {
-			clusterName += " (Namespace: " + ns + ")"
-		}
 	}
 
 	resourcesFilter, err := resourceFilters(tc)
@@ -144,7 +142,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	// for which we only care if we have explictly enabled discovery for it.
 	var clusterAsset *asset.Asset
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	if len(resourcesFilter) == 0 && root.Category != asset.AssetCategory_CATEGORY_CICD {
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
+		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(DiscoveryClusters) &&
+			len(resourcesFilter) == 0 && root.Category != asset.AssetCategory_CATEGORY_CICD {
 		clusterAsset = &asset.Asset{
 			PlatformIds: []string{clusterIdentifier},
 			Name:        clusterName,
