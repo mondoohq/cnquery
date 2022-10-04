@@ -167,15 +167,17 @@ func TestManifestResolverMultiPodDiscovery(t *testing.T) {
 	require.NoError(t, err)
 	// When this check fails locally, check your kubeconfig.
 	// context has to reference the default namespace
-	assert.Equal(t, 3, len(assetList))
+	assert.Equal(t, 2, len(assetList))
+	assert.Contains(t, assetList[0].Platform.Family, "k8s-workload")
+	assert.Contains(t, assetList[0].Platform.Family, "k8s")
+	assert.Equal(t, "k8s-manifest", assetList[0].Platform.Runtime)
+	assert.Equal(t, "k8s-pod", assetList[0].Platform.Name)
+	assert.Equal(t, "default/mondoo", assetList[0].Name)
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, "k8s-manifest", assetList[1].Platform.Runtime)
 	assert.Equal(t, "k8s-pod", assetList[1].Platform.Name)
-	assert.Equal(t, "default/mondoo", assetList[1].Name)
-	assert.Equal(t, "k8s-manifest", assetList[2].Platform.Runtime)
-	assert.Equal(t, "k8s-pod", assetList[2].Platform.Name)
-	assert.Equal(t, "default/hello-pod-2", assetList[2].Name)
+	assert.Equal(t, "default/hello-pod-2", assetList[1].Name)
 }
 
 func TestManifestResolverWrongDiscovery(t *testing.T) {
