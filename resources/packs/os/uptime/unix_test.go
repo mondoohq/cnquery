@@ -53,17 +53,17 @@ func TestAlpineUptime(t *testing.T) {
 
 func TestLcNumericDeUptime(t *testing.T) {
 	// LC_NUMERIC=de_DE.UTF-8 on Ubuntu 22.04
-	data := " 08:45:41 up 22 min,  1 user,  load average: 0,19, 0,15, 0,09"
+	data := " 06:47:21 up 1 day, 14:18,  1 user,  load average: 0,19, 0,15, 0,09"
 	duration, err := uptime.ParseUnixUptime(data)
 	assert.Nil(t, err)
 	assert.Equal(t, &uptime.UnixUptimeResult{
-		Duration:           1320000000000,
+		Duration:           137880000000000,
 		Users:              1,
 		LoadOneMinute:      float64(0.19),
 		LoadFiveMinutes:    float64(0.15),
 		LoadFifteenMinutes: float64(0.09),
 	}, duration)
-	assert.Equal(t, "22m0s", time.Duration(duration.Duration).String())
+	assert.Equal(t, "38h18m0s", time.Duration(duration.Duration).String())
 }
 
 func TestDebianUptime(t *testing.T) {
