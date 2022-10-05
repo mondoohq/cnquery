@@ -81,7 +81,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if allNamespaces != "true" {
 		namespace := tc.Options["namespace"]
 		if len(namespace) > 0 {
-			log.Warn().Msgf("namespace filter has been set to %q", namespace)
+			log.Info().Msgf("namespace filter has been set to %q", namespace)
 			namespacesFilter = append(namespacesFilter, namespace)
 		} else {
 			// try parse the current kubectl namespace
