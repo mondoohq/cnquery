@@ -69,6 +69,7 @@ func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c":
 			m.quitting = true
+			m.selectedHandler(-1)
 			return m, tea.Quit
 
 		case "enter":
