@@ -23,8 +23,13 @@ func (print *Printer) Results(bundle *llx.CodeBundle, results map[string]*llx.Ra
 	}
 
 	var res strings.Builder
+	i := 0
 	for _, v := range results {
 		res.WriteString(print.Result(v, bundle, useV2Code))
+		if len(results) > 1 && len(results) != i+1 {
+			res.WriteString("\n")
+		}
+		i++
 	}
 	return res.String()
 }
