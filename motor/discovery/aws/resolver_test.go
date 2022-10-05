@@ -30,5 +30,5 @@ func TestAssembleEc2InstancesFilters(t *testing.T) {
 	opts["tags"] = "env=test"
 	f = AssembleEc2InstancesFilters(opts)
 	assert.NotNil(t, f)
-	assert.Equal(t, map[string]string{"tag:env": "test"}, f.Tags)
+	assert.Equal(t, map[string]string{"env": "test"}, f.Tags)
 }
