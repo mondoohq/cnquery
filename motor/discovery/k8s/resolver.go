@@ -81,17 +81,19 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if allNamespaces != "true" {
 		namespace := tc.Options["namespace"]
 		if len(namespace) > 0 {
+			log.Warn().Msgf("namespace filter has been set to %q", namespace)
 			namespacesFilter = append(namespacesFilter, namespace)
 		} else {
 			// try parse the current kubectl namespace
 			if k8sctlConfig != nil && len(k8sctlConfig.CurrentNamespace()) > 0 {
-				namespacesFilter = append(namespacesFilter, k8sctlConfig.CurrentNamespace())
+				namespace = k8sctlConfig.CurrentNamespace()
+				log.Warn().Msgf("no namespace filter has been provided, using %q from kubeconfig", namespace)
+				namespacesFilter = append(namespacesFilter, namespace)
 			}
 		}
 	}
 
 	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
-
 	p, err := k8s.New(ctx, tc)
 	if err != nil {
 		return nil, err

@@ -34,7 +34,7 @@ func ListPodImages(p k8s.KubernetesProvider, namespaceFilter []string, od *k8s.P
 	for i := range namespaces {
 		namespace := namespaces[i]
 		if !isIncluded(namespace.Name, namespaceFilter) {
-			log.Info().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
+			log.Debug().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
 			continue
 		}
 
