@@ -227,6 +227,10 @@ func initNamespacedResource[T K8sNamespacedObject](
 		}
 	}
 
+	if matchFn == nil {
+		return args, *new(T), fmt.Errorf("cannot use resource without specifying id or name/namespace")
+	}
+
 	for i := range nsResources {
 		nsR := nsResources[i].(T)
 		if matchFn(nsR) {
@@ -288,6 +292,10 @@ func initResource[T K8sObject](
 			name, _ := nsR.Name()
 			return name == nameRaw
 		}
+	}
+
+	if matchFn == nil {
+		return args, *new(T), fmt.Errorf("cannot use resource without specifying id or name")
 	}
 
 	for i := range resources {
