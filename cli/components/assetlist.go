@@ -1,4 +1,4 @@
-package assetlist
+package components
 
 import (
 	"strings"
@@ -8,17 +8,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 )
 
-func NewSimpleRenderer(theme *theme.Theme) *simpleRender {
-	return &simpleRender{
-		theme: theme,
-	}
-}
-
-type simpleRender struct {
-	theme *theme.Theme
-}
-
-func (a *simpleRender) Render(assetList []*asset.Asset) string {
+func AssetList(theme *theme.Theme, assetList []*asset.Asset) string {
 	b := strings.Builder{}
 
 	log.Info().Msgf("discovered %d asset(s)", len(assetList))
@@ -26,12 +16,12 @@ func (a *simpleRender) Render(assetList []*asset.Asset) string {
 	for i := range assetList {
 		assetObj := assetList[i]
 
-		b.WriteString(a.theme.Primary("name:\t\t"))
+		b.WriteString(theme.Primary("name:\t\t"))
 		b.WriteString(assetObj.HumanName())
 		b.WriteRune('\n')
 
 		if len(assetObj.PlatformIds) > 0 {
-			b.WriteString(a.theme.Primary("platform-id:\t"))
+			b.WriteString(theme.Primary("platform-id:\t"))
 			for j := range assetObj.PlatformIds {
 				b.WriteString("  " + assetObj.PlatformIds[j])
 			}
