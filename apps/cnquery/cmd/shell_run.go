@@ -6,7 +6,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/cli/assetlist"
+	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -66,8 +66,7 @@ func StartShell(conf *ShellConfig) error {
 			log.Fatal().Err(err).Send()
 		}
 	} else if len(assetList) > 1 {
-		r := assetlist.NewSimpleRenderer(theme.OperatingSytemTheme)
-		fmt.Println(r.Render(assetList))
+		fmt.Println(components.AssetList(theme.OperatingSytemTheme, assetList))
 		log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 	}
 

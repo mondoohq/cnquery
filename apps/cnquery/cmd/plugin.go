@@ -3,11 +3,12 @@ package cmd
 import (
 	"context"
 
+	"go.mondoo.com/cnquery/cli/components"
+
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/cli/assetlist"
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/cli/theme"
@@ -101,8 +102,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 			return err
 		}
 	} else if len(assetList) > 1 {
-		r := assetlist.NewSimpleRenderer(theme.OperatingSytemTheme)
-		out.WriteString(r.Render(assetList) + "\n")
+		out.WriteString(components.AssetList(theme.OperatingSytemTheme, assetList) + "\n")
 		return errors.New("cannot connect to more than one asset, use --platform-id to select a specific asset")
 	}
 
