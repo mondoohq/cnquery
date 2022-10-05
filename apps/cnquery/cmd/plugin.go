@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"context"
-
-	"go.mondoo.com/cnquery/cli/components"
+	"encoding/json"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
@@ -11,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/shell"
-	"go.mondoo.com/cnquery/cli/theme"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery"
@@ -92,56 +91,73 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		return errors.New("could not find an asset that we can connect to")
 	}
 
-	var connectAsset *asset.Asset
-
-	if len(assetList) == 1 {
-		connectAsset = assetList[0]
-	} else if len(assetList) > 1 && conf.PlatformId != "" {
-		connectAsset, err = filterAssetByPlatformID(assetList, conf.PlatformId)
+	filteredAssets := []*asset.Asset{}
+	if len(assetList) > 1 && conf.PlatformId != "" {
+		filteredAsset, err := filterAssetByPlatformID(assetList, conf.PlatformId)
 		if err != nil {
 			return err
 		}
-	} else if len(assetList) > 1 {
-		out.WriteString(components.AssetList(theme.OperatingSytemTheme, assetList) + "\n")
-		return errors.New("cannot connect to more than one asset, use --platform-id to select a specific asset")
+		filteredAssets = append(filteredAssets, filteredAsset)
+	} else {
+		filteredAssets = assetList
 	}
 
 	if conf.DoRecord {
 		log.Info().Msg("enable recording of platform calls")
 	}
 
-	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, conf.DoRecord)
-	if err != nil {
-		return errors.New("could not connect to asset")
+	if conf.Format == "json" {
+		out.WriteString("[")
 	}
 
-	// when we close the shell, we need to close the backend and store the recording
-	onCloseHandler := func() {
-		storeRecording(m)
-		m.Close()
+	for i := range assetList {
+		connectAsset := assetList[i]
+		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, conf.DoRecord)
+		if err != nil {
+			return errors.New("could not connect to asset")
+		}
+
+		// when we close the shell, we need to close the backend and store the recording
+		onCloseHandler := func() {
+			storeRecording(m)
+			m.Close()
+		}
+
+		shellOptions := []shell.ShellOption{}
+		shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
+		shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
+		shellOptions = append(shellOptions, shell.WithOutput(out))
+
+		sh, err := shell.New(m, shellOptions...)
+		if err != nil {
+			return errors.Wrap(err, "failed to initialize the shell")
+		}
+		defer sh.Close()
+
+		code, results, err := sh.RunOnce(conf.Command)
+		if err != nil {
+			return errors.Wrap(err, "failed to run")
+		}
+
+		if conf.Format != "json" {
+			sh.PrintResults(code, results)
+		} else {
+			renderJson(code, results, out)
+			if len(assetList) != i+1 {
+				out.WriteString(",")
+			}
+		}
+
 	}
 
-	shellOptions := []shell.ShellOption{}
-	shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
-	shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
-	shellOptions = append(shellOptions, shell.WithOutput(out))
-
-	sh, err := shell.New(m, shellOptions...)
-	if err != nil {
-		return errors.Wrap(err, "failed to initialize the shell")
-	}
-	defer sh.Close()
-
-	code, results, err := sh.RunOnce(conf.Command)
-	if err != nil {
-		return errors.Wrap(err, "failed to run")
+	if conf.Format == "json" {
+		out.WriteString("]")
 	}
 
-	if conf.Format != "json" {
-		sh.PrintResults(code, results)
-		return nil
-	}
+	return nil
+}
 
+func renderJson(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {
 	var checksums []string
 	eps := code.CodeV2.Entrypoints()
 	checksums = make([]string, len(eps))
@@ -149,19 +165,43 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		checksums[i] = code.CodeV2.Checksums[ref]
 	}
 
-	for _, checksum := range checksums {
-		result := results[checksum]
-		if result == nil {
-			return errors.New("cannot find result for this query")
-		}
+	// since we iterate over checksums, we run into the situation that this could be a slice
+	// eg. cnquery run k8s --all-namespaces --query "platform { name } k8s.pod.name" --json
 
-		if result.Data.Error != nil {
-			return result.Data.Error
+	renderError := func(err error) {
+		data, jErr := json.Marshal(struct {
+			Error string `json:"error"`
+		}{Error: err.Error()})
+		if jErr == nil {
+			out.Write(data)
+		} else {
+			// this should never happen :-)
+			log.Warn().Err(err).Send()
 		}
-
-		j := result.Data.JSON(checksum, code)
-		out.Write(append(j, '\n'))
 	}
 
+	if len(checksums) > 1 {
+		out.WriteString("[")
+	}
+
+	for j, checksum := range checksums {
+		result := results[checksum]
+		if result == nil {
+			renderError(errors.New("cannot find result for this query"))
+		} else if result.Data.Error != nil {
+			renderError(result.Data.Error)
+		} else {
+			jsonData := result.Data.JSON(checksum, code)
+			out.Write(append(jsonData, '\n'))
+		}
+
+		if len(checksums) != j+1 {
+			out.WriteString(",")
+		}
+	}
+
+	if len(checksums) > 1 {
+		out.WriteString("]")
+	}
 	return nil
 }
