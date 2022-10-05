@@ -259,7 +259,7 @@ func (c *MQLExecutorV2) Unregister() error {
 	return nil
 }
 
-// Run a given set of code
+// Run a given set of code. Only returns an error if the couldn't be started.
 func (c *MQLExecutorV2) Run() error {
 	if len(c.blockExecutors) == 0 {
 		return errors.New("cannot find initial block executor for running this code")

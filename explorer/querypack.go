@@ -106,6 +106,7 @@ func (p *QueryPack) ComputeAssetFilters(ctx context.Context, ownerMRN string) ([
 			return nil, errors.Wrap(err, "failed to compile asset filter")
 		}
 		mquery.Mrn = ownerMRN + "/assetfilter/" + bundle.CodeV2.Id
+		mquery.CodeId = bundle.CodeV2.Id
 
 		res[i] = mquery
 	}
