@@ -65,6 +65,13 @@ type K8sResourceIdentifier struct {
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	features := cnquery.GetFeatures(ctx)
+	// If there is no discovery or there are no targets set the targets to DiscoveryAuto
+	if tc.Discover == nil {
+		tc.Discover = &providers.Discovery{}
+	}
+	if len(tc.Discover.Targets) == 0 {
+		tc.Discover.Targets = []string{DiscoveryAuto}
+	}
 	resolved := []*asset.Asset{}
 	namespacesFilter := []string{}
 
@@ -204,13 +211,6 @@ func addSeparateAssets(
 	clusterIdentifier string,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	// If there is no discovery or there are no targets set the targets to DiscoveryAuto
-	if tc.Discover == nil {
-		tc.Discover = &providers.Discovery{}
-	}
-	if len(tc.Discover.Targets) == 0 {
-		tc.Discover.Targets = []string{DiscoveryAuto}
-	}
 	resolved := []*asset.Asset{}
 
 	// discover deployments
