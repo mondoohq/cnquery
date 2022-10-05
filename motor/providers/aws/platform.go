@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/rs/zerolog/log"
 )
 
 func (t *Provider) Identifier() (string, error) {
@@ -25,9 +26,10 @@ func (t *Provider) Account() (Account, error) {
 	ctx := context.Background()
 	res, err := t.Iam("").ListAccountAliases(ctx, &iam.ListAccountAliasesInput{})
 	if err != nil {
+		log.Warn().Err(err).Msg("unable to list account aliases")
 		return Account{
 			ID: accountid,
-		}, err
+		}, nil
 	}
 	return Account{
 		ID:      accountid,
