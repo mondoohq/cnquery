@@ -132,6 +132,11 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	}
 
 	err = s.DataLake.SetResolvedPack(req.EntityMrn, filtersChecksum, res)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.DataLake.SetAssetResolvedPack(ctx, req.EntityMrn, res, V2Code)
 	return res, err
 }
 
