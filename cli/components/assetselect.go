@@ -22,7 +22,7 @@ func AssetSelect(assetList []*asset.Asset) *asset.Asset {
 		list[i] = name
 	}
 
-	var selection int
+	selection := -1 // make sure we have an invalid index
 	err := tea.NewProgram(NewListModel("Available assets", list, func(s int) {
 		selection = s
 	})).Start()
@@ -31,6 +31,9 @@ func AssetSelect(assetList []*asset.Asset) *asset.Asset {
 		os.Exit(1)
 	}
 
+	if selection == -1 {
+		return nil
+	}
 	selected := assetList[selection]
 	log.Info().Int("selection", selection).Str("asset", selected.Name).Msg("selected asset")
 	return selected
