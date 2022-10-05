@@ -21,7 +21,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{docker_engine.DiscoveryAll, docker_engine.DiscoveryContainerRunning, docker_engine.DiscoveryContainerImages}
+	return []string{common.DiscoveryAuto, docker_engine.DiscoveryAll, docker_engine.DiscoveryContainerRunning, docker_engine.DiscoveryContainerImages}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
