@@ -106,7 +106,7 @@ func (f *File) Readdirnames(n int) (names []string, err error) {
 	if list != nil {
 		// filter . and ..
 		keep := func(x string) bool {
-			if x == "." || x == ".." {
+			if x == "." || x == ".." || x == "" {
 				return false
 			}
 			return true
