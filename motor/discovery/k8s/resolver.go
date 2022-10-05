@@ -204,13 +204,6 @@ func addSeparateAssets(
 	clusterIdentifier string,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	// If there is no discovery or there are no targets set the targets to DiscoveryAuto
-	if tc.Discover == nil {
-		tc.Discover = &providers.Discovery{}
-	}
-	if len(tc.Discover.Targets) == 0 {
-		tc.Discover.Targets = []string{DiscoveryAuto}
-	}
 	resolved := []*asset.Asset{}
 
 	// discover deployments
