@@ -19,31 +19,14 @@ cnquery shell aws
 
 ## Installation
 
-Before starting, be sure to install:
-- [Go 1.19.0+](https://golang.org/dl/)
-- [Protocol Buffers v21+](https://github.com/protocolbuffers/protobuf/releases)
-
-To install `cnquery` using Go, run:
+Install cnquery with our installation script:
 
 ```bash
-make cnquery/install
+bash -c "$(curl -sSL https://install.mondoo.com/sh/cnquery)"
 ```
 
-### Development
+If you prefer a package, find it on [GitHub releases](https://github.com/mondoohq/cnquery/releases).
 
-Whenever you change resources, providers, or protos, you must generate files for the compiler. To do this, make sure you have the necessary tools installed (such as protobuf):
-
-```
-make prep
-```
-
-Then, whenever you make changes, just run:
-
-```bash
-make cnquery/generate
-```
-
-This generates and updates all required files for the build. At this point you can `make cnquery/install` again as outlined above.
 
 ## Interactive shell
 
