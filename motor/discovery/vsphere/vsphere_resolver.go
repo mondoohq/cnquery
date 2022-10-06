@@ -54,7 +54,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		return nil, err
 	}
 
-	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) || pCfg.IncludesDiscoveryTarget(DiscoveryApi) {
+	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) ||
+		pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+		pCfg.IncludesDiscoveryTarget(DiscoveryApi) {
 		// add asset for the api itself
 		info := trans.Info()
 		assetObj := &asset.Asset{
