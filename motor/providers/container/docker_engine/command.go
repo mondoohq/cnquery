@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
-	"io/ioutil"
 	"time"
 
 	"go.mondoo.com/cnquery/motor/providers/os"
@@ -25,7 +24,8 @@ func (c *Command) Exec(command string) (*os.Command, error) {
 	c.Command.Command = command
 	c.Command.Stats.Start = time.Now()
 
-	res, err := c.dockerClient.ContainerExecCreate(context.Background(), c.Container, docker.ExecConfig{
+	ctx := context.Background()
+	res, err := c.dockerClient.ContainerExecCreate(ctx, c.Container, docker.ExecConfig{
 		Cmd:          []string{"/bin/sh", "-c", c.Command.Command},
 		Detach:       true,
 		Tty:          false,
@@ -37,7 +37,7 @@ func (c *Command) Exec(command string) (*os.Command, error) {
 		return nil, err
 	}
 
-	resp, err := c.dockerClient.ContainerExecAttach(context.Background(), res.ID, docker.ExecStartCheck{
+	resp, err := c.dockerClient.ContainerExecAttach(ctx, res.ID, docker.ExecStartCheck{
 		Detach: false,
 		Tty:    false,
 	})
@@ -46,7 +46,7 @@ func (c *Command) Exec(command string) (*os.Command, error) {
 	}
 
 	// TODO: transformHijack breaks for long stdout, but not if we read stdout/stderr in upfront
-	content, err := ioutil.ReadAll(resp.Reader)
+	content, err := io.ReadAll(resp.Reader)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +68,12 @@ func (c *Command) Exec(command string) (*os.Command, error) {
 	defer stdErrWriter.Flush()
 
 	c.Command.Stats.Duration = time.Since(c.Command.Stats.Start)
+
+	info, err := c.dockerClient.ContainerExecInspect(ctx, res.ID)
+	if err != nil {
+		return nil, err
+	}
+	c.Command.ExitStatus = info.ExitCode
 
 	return &c.Command, nil
 }
