@@ -84,6 +84,13 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
+	// If no namespace options have been provided, then use all-namespaces by default
+	_, allNsSet := tc.Options["all-namespaces"]
+	_, nsSet := tc.Options["namespace"]
+	if !allNsSet && !nsSet {
+		tc.Options["all-namespaces"] = "true"
+	}
+
 	allNamespaces := tc.Options["all-namespaces"]
 	if allNamespaces != "true" {
 		namespace := tc.Options["namespace"]
