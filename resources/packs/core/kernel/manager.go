@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/motor/providers"
 	pOs "go.mondoo.com/cnquery/motor/providers/os"
 
 	"go.mondoo.com/cnquery/motor"
@@ -105,6 +106,14 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 }
 
 func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
+	if s.provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
+		cmd, err := s.provider.RunCommand("/sbin/sysctl -a")
+		// means sysctl is not present, fallback to /proc/sys walking
+		if err == nil {
+			return ParseSysctl(cmd.Stdout, "=")
+		}
+	}
+
 	fs := s.provider.FS()
 
 	fsUtil := afero.Afero{Fs: fs}
