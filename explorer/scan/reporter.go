@@ -12,15 +12,17 @@ type Reporter interface {
 }
 
 type AssetReport struct {
-	Mrn    string
-	Bundle *explorer.Bundle
-	Report *explorer.Report
+	Mrn      string
+	Bundle   *explorer.Bundle
+	Report   *explorer.Report
+	Resolved *explorer.ResolvedPack
 }
 
 type AggregateReporter struct {
 	assets       map[string]*explorer.Asset
 	assetReports map[string]*explorer.Report
 	assetErrors  map[string]error
+	resolved     map[string]*explorer.ResolvedPack
 	bundle       *explorer.Bundle
 }
 
@@ -38,12 +40,14 @@ func NewAggregateReporter(bundle *explorer.Bundle, assetList []*asset.Asset) *Ag
 		assets:       assets,
 		assetReports: map[string]*explorer.Report{},
 		assetErrors:  map[string]error{},
+		resolved:     map[string]*explorer.ResolvedPack{},
 		bundle:       bundle,
 	}
 }
 
 func (r *AggregateReporter) AddReport(asset *asset.Asset, results *AssetReport) {
 	r.assetReports[asset.Mrn] = results.Report
+	r.resolved[asset.Mrn] = results.Resolved
 	r.bundle = results.Bundle
 }
 
@@ -58,10 +62,11 @@ func (r *AggregateReporter) Reports() *explorer.ReportCollection {
 	}
 
 	return &explorer.ReportCollection{
-		Assets:  r.assets,
-		Reports: r.assetReports,
-		Errors:  errors,
-		Bundle:  r.bundle,
+		Assets:   r.assets,
+		Reports:  r.assetReports,
+		Errors:   errors,
+		Bundle:   r.bundle,
+		Resolved: r.resolved,
 	}
 }
 

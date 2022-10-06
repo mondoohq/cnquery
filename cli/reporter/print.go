@@ -1,11 +1,7 @@
 package reporter
 
 import (
-	"errors"
-	"io"
 	"strings"
-
-	"go.mondoo.com/cnquery/explorer"
 )
 
 type Format byte
@@ -41,8 +37,4 @@ func AllFormats() string {
 		}
 	}
 	return strings.Join(res, ", ")
-}
-
-func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
-	return errors.New("Printing reports is NOT YET IMPLEMENTED")
 }

@@ -230,8 +230,9 @@ message Asset {
 message ReportCollection {
   map<string, Asset> assets = 1;
   Bundle bundle = 2;
-  map<string,  Report> reports = 3;
-  map<string,  string> errors = 4;
+  map<string, Report> reports = 3;
+  map<string, string> errors = 4;
+  map<string, ResolvedPack> resolved = 5;
 }
 
 message AssignmentDelta {

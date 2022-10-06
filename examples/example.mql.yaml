@@ -5,8 +5,16 @@ packs:
   - asset.family.contains("linux")
 
   queries:
-  - query: |
+  - title: Find all SSH packages that are installed
+    query: |
       packages.
         where(name == /ssh/).
         list
-    title: Find all SSH packages that are installed
+  - title: Get SSH services
+    query: |
+      services.
+        where(name == /ssh/).
+        list
+  - title: All the SSH config
+    query: |
+      sshd.config.params
