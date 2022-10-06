@@ -20,6 +20,7 @@ import (
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/explorer/scan"
+	"go.mondoo.com/cnquery/motor/discovery/common"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/providers"
 )
@@ -243,7 +244,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
 		cmd.Flags().String("path", "", "path to a local file or directory that the connection should use")
 		cmd.Flags().StringToString("option", nil, "addition connection options, multiple options can be passed in via --option key=value")
-		cmd.Flags().String("discover", "", "enable the discovery of nested assets. Supported are 'all|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
+		cmd.Flags().String("discover", common.DiscoveryAuto, "enable the discovery of nested assets. Supported are 'all|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
 		cmd.Flags().StringToString("discover-filter", nil, "additional filter for asset discovery")
 		cmd.Flags().StringToString("label", nil, "label for asset")           // used by mondoo, hidden to the user so we can still apply labels when needed (e.g. ssm scans)
 		cmd.Flags().StringToString("annotation", nil, "annotation for asset") // user-added, editable
