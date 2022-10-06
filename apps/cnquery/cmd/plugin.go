@@ -110,8 +110,8 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		out.WriteString("[")
 	}
 
-	for i := range assetList {
-		connectAsset := assetList[i]
+	for i := range filteredAssets {
+		connectAsset := filteredAssets[i]
 		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, conf.DoRecord)
 		if err != nil {
 			return errors.New("could not connect to asset")
@@ -143,7 +143,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 			sh.PrintResults(code, results)
 		} else {
 			renderJson(code, results, out)
-			if len(assetList) != i+1 {
+			if len(filteredAssets) != i+1 {
 				out.WriteString(",")
 			}
 		}
