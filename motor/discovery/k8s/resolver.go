@@ -21,7 +21,6 @@ var _ common.ContextInitializer = (*Resolver)(nil)
 
 const (
 	DiscoveryAll              = "all"
-	DiscoveryAuto             = "auto"
 	DiscoveryClusters         = "clusters"
 	DiscoveryPods             = "pods"
 	DiscoveryJobs             = "jobs"
@@ -44,7 +43,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{
 		DiscoveryAll,
 		DiscoveryClusters,
-		DiscoveryAuto,
+		common.DiscoveryAuto,
 		DiscoveryPods,
 		DiscoveryJobs,
 		DiscoveryCronJobs,
@@ -137,7 +136,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	var clusterAsset *asset.Asset
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryClusters) &&
 			len(resourcesFilter) == 0 && root.Category != asset.AssetCategory_CATEGORY_CICD {
 		clusterAsset = &asset.Asset{
@@ -200,7 +199,7 @@ func addSeparateAssets(
 
 	// discover deployments
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryDeployments) {
 		// fetch deployment information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for deployments")
@@ -215,7 +214,7 @@ func addSeparateAssets(
 
 	// discover k8s pods
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryPods) {
 		// fetch pod information
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
@@ -230,7 +229,7 @@ func addSeparateAssets(
 
 	// discovery k8s daemonsets
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryDaemonSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for daemonsets")
 		connection := tc.Clone()
@@ -256,7 +255,7 @@ func addSeparateAssets(
 
 	// discover cronjobs
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryCronJobs) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for cronjobs")
 		connection := tc.Clone()
@@ -270,7 +269,7 @@ func addSeparateAssets(
 
 	// discover statefulsets
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryStatefulSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for statefulsets")
 		connection := tc.Clone()
@@ -296,7 +295,7 @@ func addSeparateAssets(
 
 	// discover replicasets
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryReplicaSets) {
 		log.Debug().Strs("namespace", namespacesFilter).Msg("search for replicasets")
 		connection := tc.Clone()
