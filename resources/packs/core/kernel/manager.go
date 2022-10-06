@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/motor/providers"
 	pOs "go.mondoo.com/cnquery/motor/providers/os"
 
 	"go.mondoo.com/cnquery/motor"
@@ -105,8 +106,17 @@ func (s *LinuxKernelManager) Info() (KernelInfo, error) {
 }
 
 func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
-	fs := s.provider.FS()
+	if s.provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
+		cmd, err := s.provider.RunCommand("/sbin/sysctl -a")
+		// in case of err, the command is not there and we fallback to /proc/sys walking
+		if err == nil && cmd.ExitStatus == 0 {
+			log.Debug().Msg("using sysctl to read kernel parameters")
+			return ParseSysctl(cmd.Stdout, "=")
+		}
+	}
 
+	log.Debug().Msg("using /proc/sys walking to read kernel parameters")
+	fs := s.provider.FS()
 	fsUtil := afero.Afero{Fs: fs}
 	kernelParameters := make(map[string]string)
 	err := fsUtil.Walk(sysctlPath, func(path string, f os.FileInfo, err error) error {
