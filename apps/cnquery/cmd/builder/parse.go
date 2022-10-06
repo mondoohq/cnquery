@@ -223,12 +223,6 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		} else if namespace != "" {
 			connection.Options["namespace"] = namespace
 		}
-
-		if allNamespaces, err := cmd.Flags().GetBool("all-namespaces"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --all-namespaces values")
-		} else if allNamespaces == true {
-			connection.Options["all-namespaces"] = "true"
-		}
 	case providers.ProviderType_AWS:
 		connection.Backend = providerType
 		if profile, err := cmd.Flags().GetString("profile"); err != nil {
