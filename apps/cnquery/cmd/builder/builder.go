@@ -397,7 +397,6 @@ func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, 
 		Args:    cobra.MaximumNArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
-			viper.BindPFlag("all-namespaces", cmd.Flags().Lookup("all-namespaces"))
 			viper.BindPFlag("namespace", cmd.Flags().Lookup("namespace"))
 			viper.BindPFlag("context", cmd.Flags().Lookup("context"))
 		},
@@ -409,7 +408,6 @@ func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, 
 		},
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().Bool("all-namespaces", false, "list the resources across all namespaces.")
 	cmd.Flags().String("namespace", "", "target a kubernetes namespace")
 	cmd.Flags().String("context", "", "target a kubernetes context")
 	return cmd
