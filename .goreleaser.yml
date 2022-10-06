@@ -48,6 +48,9 @@ builds:
     ldflags:
       - "-extldflags -static"
       - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
+    hooks:
+      post:
+        - ./scripts/sign-windows-executable.sh '{{ .Path }}'
 nfpms:
   -
     maintainer: Mondoo <hello@mondoo.com>
