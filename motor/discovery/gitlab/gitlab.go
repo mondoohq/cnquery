@@ -11,6 +11,8 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 
+const DiscoveryGroup = "group"
+
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -18,7 +20,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto}
+	return []string{common.DiscoveryAuto, DiscoveryGroup}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -44,22 +46,27 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	name := root.Name
-	if name == "" {
-		grp, err := trans.Group()
-		if err != nil {
-			return nil, err
+	var assets []*asset.Asset
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAuto) || tc.IncludesDiscoveryTarget(DiscoveryGroup) {
+		name := root.Name
+		if name == "" {
+			grp, err := trans.Group()
+			if err != nil {
+				return nil, err
+			}
+			if grp != nil {
+				name = "GitLab Group " + grp.Name
+			}
 		}
-		if grp != nil {
-			name = "GitLab Group " + grp.Name
-		}
+
+		assets = append(assets, &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+			State:       asset.State_STATE_ONLINE,
+		})
 	}
 
-	return []*asset.Asset{{
-		PlatformIds: []string{identifier},
-		Name:        name,
-		Platform:    pf,
-		Connections: []*providers.Config{tc}, // pass-in the current config
-		State:       asset.State_STATE_ONLINE,
-	}}, nil
+	return assets, nil
 }

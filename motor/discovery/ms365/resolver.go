@@ -11,6 +11,8 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 
+const DiscoveryTenant = "tenant"
+
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -47,15 +49,17 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 		return nil, err
 	}
 
-	resolved = append(resolved, &asset.Asset{
-		PlatformIds: []string{identifier},
-		Name:        "Microsoft 365 tenant " + provider.TenantID(),
-		Platform:    pf,
-		Connections: []*providers.Config{cc}, // pass-in the current config
-		Labels: map[string]string{
-			"azure.com/tenant": provider.TenantID(),
-		},
-	})
+	if cc.IncludesDiscoveryTarget(common.DiscoveryAuto) || cc.IncludesDiscoveryTarget(DiscoveryTenant) {
+		resolved = append(resolved, &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        "Microsoft 365 tenant " + provider.TenantID(),
+			Platform:    pf,
+			Connections: []*providers.Config{cc}, // pass-in the current config
+			Labels: map[string]string{
+				"azure.com/tenant": provider.TenantID(),
+			},
+		})
+	}
 
 	return resolved, nil
 }

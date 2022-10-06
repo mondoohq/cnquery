@@ -16,6 +16,7 @@ import (
 
 const (
 	DiscoveryAll       = "all"
+	DiscoveryAccounts  = "accounts"
 	DiscoveryInstances = "instances"
 	DiscoverySSM       = "ssm"
 )
@@ -27,7 +28,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryInstances, DiscoverySSM}
+	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -63,19 +64,24 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		alias = info.Aliases[0]
 	}
 
-	name := root.Name
-	if name == "" {
-		name = AssembleIntegrationName(alias, info.ID)
-	}
+	var resolvedRoot *asset.Asset
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(DiscoveryAccounts) {
+		name := root.Name
+		if name == "" {
+			name = AssembleIntegrationName(alias, info.ID)
+		}
 
-	resolvedRoot := &asset.Asset{
-		PlatformIds: []string{identifier},
-		Name:        name,
-		Platform:    pf,
-		Connections: []*providers.Config{tc}, // pass-in the current config
-		State:       asset.State_STATE_ONLINE,
+		resolvedRoot = &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+			State:       asset.State_STATE_ONLINE,
+		}
+		resolved = append(resolved, resolvedRoot)
 	}
-	resolved = append(resolved, resolvedRoot)
 
 	// filter assets
 	discoverFilter := map[string]string{}
@@ -98,7 +104,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 		log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 		for i := range assetList {
-			assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
+			if resolvedRoot != nil {
+				assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
+			}
 			log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
 			instancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
 		}
@@ -120,7 +128,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("instances", len(assetList)).Bool("insecure", r.Insecure).Msg("completed instance search")
 		for i := range assetList {
 			a := assetList[i]
-			a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			if resolvedRoot != nil {
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			}
 			log.Debug().Str("name", a.Name).Msg("resolved ec2 instance")
 			id := a.PlatformIds[0]
 			existing, ok := instancesPlatformIdsMap[id]

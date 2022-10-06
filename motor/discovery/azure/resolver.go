@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	DiscoveryAll       = "all"
-	DiscoveryInstances = "instances"
+	DiscoveryAll           = "all"
+	DiscoverySubscriptions = "subscriptions"
+	DiscoveryInstances     = "instances"
 )
 
 type Resolver struct{}
@@ -24,7 +25,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryInstances}
+	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions, DiscoveryInstances}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -76,26 +77,30 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	name := root.Name
-	if name == "" {
-		subName := subscriptionID
-		if subscription.DisplayName != nil {
-			subName = *subscription.DisplayName
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(DiscoverySubscriptions) {
+		name := root.Name
+		if name == "" {
+			subName := subscriptionID
+			if subscription.DisplayName != nil {
+				subName = *subscription.DisplayName
+			}
+			name = "Azure subscription " + subName
 		}
-		name = "Azure subscription " + subName
-	}
 
-	resolved = append(resolved, &asset.Asset{
-		PlatformIds: []string{identifier},
-		Name:        name,
-		Platform:    pf,
-		Connections: []*providers.Config{tc}, // pass-in the current config
-		Labels: map[string]string{
-			"azure.com/subscription": subscriptionID,
-			"azure.com/tenant":       *subscription.TenantID,
-			common.ParentId:          subscriptionID,
-		},
-	})
+		resolved = append(resolved, &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+			Labels: map[string]string{
+				"azure.com/subscription": subscriptionID,
+				"azure.com/tenant":       *subscription.TenantID,
+				common.ParentId:          subscriptionID,
+			},
+		})
+	}
 
 	// get all compute instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {

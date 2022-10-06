@@ -10,6 +10,8 @@ import (
 	ipmi_provider "go.mondoo.com/cnquery/motor/providers/ipmi"
 )
 
+const DiscoveryDevice = "device"
+
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -17,7 +19,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto}
+	return []string{common.DiscoveryAuto, DiscoveryDevice}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -37,19 +39,22 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, t *providers.
 	if err != nil {
 		return nil, err
 	}
+	var assets []*asset.Asset
+	if t.IncludesDiscoveryTarget(common.DiscoveryAuto) || t.IncludesDiscoveryTarget(DiscoveryDevice) {
+		resolved := &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        root.Name,
+			Platform:    pf,
+			Connections: []*providers.Config{t}, // pass-in the current config
+			Labels:      map[string]string{},
+		}
 
-	resolved := &asset.Asset{
-		PlatformIds: []string{identifier},
-		Name:        root.Name,
-		Platform:    pf,
-		Connections: []*providers.Config{t}, // pass-in the current config
-		Labels:      map[string]string{},
+		// TODO: consider using the ipmi vendor id and product id
+		if resolved.Name == "" {
+			resolved.Name = "IPMI device " + provider.Guid()
+		}
+		assets = append(assets, resolved)
 	}
 
-	// TODO: consider using the ipmi vendor id and product id
-	if resolved.Name == "" {
-		resolved.Name = "IPMI device " + provider.Guid()
-	}
-
-	return []*asset.Asset{resolved}, nil
+	return assets, nil
 }
