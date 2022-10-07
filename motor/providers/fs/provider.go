@@ -23,25 +23,19 @@ func NewWithClose(endpoint *providers.Config, closeFN func()) (*Provider, error)
 		closeFN:      closeFN,
 		tcPlatformId: endpoint.PlatformId,
 		fs:           NewMountedFs(mountDir),
+		runtime:      endpoint.Runtime,
 	}, nil
 }
 
 func New(endpoint *providers.Config) (*Provider, error) {
-	mountDir := endpoint.Host + endpoint.Path
-	log.Info().Str("mountdir", mountDir).Msg("load fs")
-
-	return &Provider{
-		MountedDir:   mountDir,
-		tcPlatformId: endpoint.PlatformId,
-		fs:           NewMountedFs(mountDir),
-	}, nil
+	return NewWithClose(endpoint, nil)
 }
 
 type Provider struct {
 	MountedDir   string
 	fs           afero.Fs
-	kind         providers.Kind
 	runtime      string
+	kind         providers.Kind
 	tcPlatformId string
 	closeFN      func()
 }
