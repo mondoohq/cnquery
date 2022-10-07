@@ -57,10 +57,10 @@ jobs:
         run: sudo apt-get install -y rpm reprepro
       - name: Set up GPG for RPM
         run: |
-          echo "${{secrets.GPG_PASSPHRASE}}" | base64 -d > passphrase
-          echo "${{secrets.GPG_PUBKEY}}" | base64 -d  > mondoo_gpg2_pub.gpg
-          echo "${{secrets.GPG_PUBKEY}}" | base64 -d | gpg --import --no-tty --batch --yes
-          echo "${{secrets.GPG_KEY}}" | base64 -d | gpg --import --passphrase-file passphrase --allow-secret-key-import --pinentry-mode loopback --no-tty --batch --yes
+          echo "${{ secrets.GPG_PASSPHRASE }}" > passphrase
+          echo "${{ secrets.GPG_PUBKEY }}" > mondoo_gpg2_pub.gpg
+          echo "${{ secrets.GPG_PUBKEY }}" | gpg --import --no-tty --batch --yes
+          echo "${{ secrets.GPG_KEY }}" | gpg --import --passphrase-file passphrase --allow-secret-key-import --pinentry-mode loopback --no-tty --batch --yes
           rpm --import mondoo_gpg2_pub.gpg
       - name: Sign RPMs
         run: |
