@@ -8,7 +8,7 @@ Cloud-Native Asset Inventory Framework
 # run a query and print the output
 cnquery run local -c "packages.installed { name version }"
 
-# execute a query pack on a docker image and print results as json
+# execute a query pack on a Docker image and print results as json
 cnquery explore docker 14119a -f pack.mql.yaml -j
 
 # open an interactive shell to an aws account
@@ -74,7 +74,7 @@ You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other ap
 
 ## Query packs
 
-You can combine multiple queries into query packs, which can run together. `cnquery` comes with a lot of query packs out of the box for most systems. You can simply run:
+You can combine multiple queries into query packs, which can run together. `cnquery` comes with query packs out of the box for most systems. You can simply run:
 
 ```bash
 cnquery explore local
@@ -114,7 +114,7 @@ To use the Query Hub:
 cnquery auth login
 ```
 
-Once set up, you can collect your asset’s data:
+Once set up, you can collect your asset's data:
 
 ```bash
 cnquery explore local
@@ -128,7 +128,7 @@ cnquery pack upload mypack.mql.yaml
 
 ## What’s next?
 
-There are so many things `cnquery` can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, share data with auditors… `cnquery` is nearly limitless in capabilities.
+There are so many things `cnquery` can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, and share data with auditors… `cnquery` is nearly limitless in capabilities.
 
 Explore:
 
