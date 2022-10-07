@@ -141,11 +141,7 @@ Our goal is to become the API for your entire infrastructure. Join our [communit
 
 ## Development
 
-We love emojis in our commits. These are their meanings:
-
-🛑 breaking 🐛 bugfix 🧹 cleanup/internals 📄 docs  
-✨⭐🌟🎉 smaller or larger features 🐎 race condition  
-🌙 MQL 🌈 visual 🍏 fix tests 🎫 auth 🦅 falcon 🐳 container  
+See our [Development Documentation](docs/development.md) for information on building and contributing to cnquery.
 
 ## Legal
 
