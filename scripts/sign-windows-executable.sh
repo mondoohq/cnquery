@@ -41,7 +41,7 @@ if [ -z "$CERT_PASSWORD" ]; then
   exit 1
 fi
 
-osslsigncode sign -n "GitHub CLI" -t http://timestamp.digicert.com \
+osslsigncode sign -n "Mondoo cnquery" -t http://timestamp.digicert.com \
   -pkcs12 "$CERT_FILE" -readpass <(printf "%s" "$CERT_PASSWORD") -h sha256 \
   -in "$EXE" -out "$EXE"~
 

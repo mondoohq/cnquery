@@ -7,3 +7,4 @@ file1
 id_rsa
 id_rsa.pub
 mondoo-test-secret-key
+gha-creds-*.json
