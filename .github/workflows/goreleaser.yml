@@ -36,7 +36,7 @@ jobs:
         run: |
           cert="$(mktemp -t cert.XXX)"
           content=$(gcloud secrets versions access latest --secret=mondoo_code_sign_certificate_pfx --format='get(payload.data)')
-          base64 -d <<<"$content" > "$cert"
+          basenc -d --base64url <<<"$content" > "$cert"
           echo "CERT_FILE=$cert" >> $GITHUB_ENV
       - name: "Fetch Windows Signing Cert Challenge"
         run: |
