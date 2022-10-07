@@ -53,7 +53,7 @@ func TestKubernetesManifest(t *testing.T) {
 
 	name, err := p.Name()
 	require.NoError(t, err)
-	assert.Equal(t, "K8S Manifest testdata", name)
+	assert.Equal(t, "K8s Manifest testdata", name)
 }
 
 func TestKubernetesAdmission(t *testing.T) {
@@ -75,5 +75,5 @@ func TestKubernetesAdmission(t *testing.T) {
 
 	name, err := p.Name()
 	require.NoError(t, err)
-	assert.Equal(t, "K8S Manifest testdata", name)
+	assert.Equal(t, "K8s Manifest testdata", name)
 }
