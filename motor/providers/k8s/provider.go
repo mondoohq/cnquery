@@ -150,8 +150,8 @@ func getPlatformInfo(objectKind string, runtime string) *platform.Platform {
 
 func sliceToPtrSlice[T any](items []T) []*T {
 	ptrItems := make([]*T, 0, len(items))
-	for _, item := range items {
-		ptrItems = append(ptrItems, &item)
+	for i := range items {
+		ptrItems = append(ptrItems, &items[i])
 	}
 	return ptrItems
 }

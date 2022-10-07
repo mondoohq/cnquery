@@ -229,7 +229,7 @@ func TestListCronJobs_Filter(t *testing.T) {
 		},
 	}
 
-	p.EXPECT().CronJob(cronjobs[0].Namespace, cronjobs[0].Name).Return(&cronjobs[0], nil)
+	p.EXPECT().CronJob(cronjobs[0].Namespace, cronjobs[0].Name).Return(cronjobs[0], nil)
 
 	expectedAssetNames := []string{
 		cronjobs[0].Namespace + "/" + cronjobs[0].Name,
@@ -443,7 +443,7 @@ func TestListDaemonsets_Filter(t *testing.T) {
 		},
 	}
 
-	p.EXPECT().DaemonSet(daemonsets[0].Namespace, daemonsets[0].Name).Return(&daemonsets[0], nil)
+	p.EXPECT().DaemonSet(daemonsets[0].Namespace, daemonsets[0].Name).Return(daemonsets[0], nil)
 
 	expectedAssetNames := []string{
 		daemonsets[0].Namespace + "/" + daemonsets[0].Name,
@@ -650,7 +650,7 @@ func TestListDeployments_Filter(t *testing.T) {
 		},
 	}
 
-	p.EXPECT().Deployment(deployments[0].Namespace, deployments[0].Name).Return(&deployments[0], nil)
+	p.EXPECT().Deployment(deployments[0].Namespace, deployments[0].Name).Return(deployments[0], nil)
 
 	expectedAssetNames := []string{
 		deployments[0].Namespace + "/" + deployments[0].Name,
@@ -878,7 +878,7 @@ func TestListJobs_Filter(t *testing.T) {
 		},
 	}
 
-	p.EXPECT().Job(jobs[0].Namespace, jobs[0].Name).Return(&jobs[0], nil)
+	p.EXPECT().Job(jobs[0].Namespace, jobs[0].Name).Return(jobs[0], nil)
 
 	expectedAssetNames := []string{
 		jobs[0].Namespace + "/" + jobs[0].Name,
@@ -1067,7 +1067,7 @@ func TestListPods_Filter(t *testing.T) {
 		},
 	}
 
-	p.EXPECT().Pod(pods[0].Namespace, pods[0].Name).Return(&pods[0], nil)
+	p.EXPECT().Pod(pods[0].Namespace, pods[0].Name).Return(pods[0], nil)
 
 	expectedAssetNames := []string{
 		pods[0].Namespace + "/" + pods[0].Name,
@@ -1139,7 +1139,7 @@ func TestListReplicaSets(t *testing.T) {
 		},
 	}
 	// Seed ReplicaSets
-	replicaSets := []appsv1.ReplicaSet{
+	replicaSets := []*appsv1.ReplicaSet{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ReplicaSet",
@@ -1277,7 +1277,7 @@ func TestListReplicaSets_Filter(t *testing.T) {
 		},
 	}
 
-	p.EXPECT().ReplicaSet(replicaSets[0].Namespace, replicaSets[0].Name).Return(&replicaSets[0], nil)
+	p.EXPECT().ReplicaSet(replicaSets[0].Namespace, replicaSets[0].Name).Return(replicaSets[0], nil)
 
 	expectedAssetNames := []string{
 		replicaSets[0].Namespace + "/" + replicaSets[0].Name,
@@ -1511,7 +1511,7 @@ func TestListStatefulSets_Filter(t *testing.T) {
 		},
 	}
 
-	p.EXPECT().StatefulSet(statefulsets[0].Namespace, statefulsets[0].Name).Return(&statefulsets[0], nil)
+	p.EXPECT().StatefulSet(statefulsets[0].Namespace, statefulsets[0].Name).Return(statefulsets[0], nil)
 
 	expectedAssetNames := []string{
 		statefulsets[0].Namespace + "/" + statefulsets[0].Name,
