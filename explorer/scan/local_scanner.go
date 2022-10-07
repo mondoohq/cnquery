@@ -233,17 +233,13 @@ func (s *localAssetScanner) run() (*AssetReport, error) {
 		return nil, err
 	}
 
-	bundle, report, err := s.runQueryPack()
+	res, err := s.runQueryPack()
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("scan complete")
-	return &AssetReport{
-		Mrn:    s.job.Asset.Mrn,
-		Bundle: bundle,
-		Report: report,
-	}, nil
+	return res, nil
 }
 
 func (s *localAssetScanner) prepareAsset() error {
@@ -281,14 +277,14 @@ func (s *localAssetScanner) ensureBundle() error {
 	return errors.New("Default Query Packs are NOT YET IMPLEMENTED")
 }
 
-func (s *localAssetScanner) runQueryPack() (*explorer.Bundle, *explorer.Report, error) {
+func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	var hub explorer.QueryHub = s.services
 	var conductor explorer.QueryConductor = s.services
 
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("client> request bundle for asset")
 	assetBundle, err := hub.GetBundle(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	log.Debug().Msg("client> got bundle")
 	logger.TraceJSON(assetBundle)
@@ -296,14 +292,14 @@ func (s *localAssetScanner) runQueryPack() (*explorer.Bundle, *explorer.Report, 
 
 	rawFilters, err := hub.GetFilters(s.job.Ctx, &explorer.Mrn{Mrn: s.job.Asset.Mrn})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("client> got filters")
 	logger.TraceJSON(rawFilters)
 
 	filters, err := s.UpdateFilters(rawFilters, 5*time.Second)
 	if err != nil {
-		return s.job.Bundle, nil, err
+		return nil, err
 	}
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("client> shell update filters")
 	logger.DebugJSON(filters)
@@ -313,7 +309,7 @@ func (s *localAssetScanner) runQueryPack() (*explorer.Bundle, *explorer.Report, 
 		AssetFilters: filters,
 	})
 	if err != nil {
-		return s.job.Bundle, nil, err
+		return nil, err
 	}
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("client> got resolved bundle for asset")
 	logger.DebugDumpJSON("resolvedPack", resolvedPack)
@@ -321,12 +317,17 @@ func (s *localAssetScanner) runQueryPack() (*explorer.Bundle, *explorer.Report, 
 	features := cnquery.GetFeatures(s.job.Ctx)
 	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.Progress)
 	if err != nil {
-		return s.job.Bundle, nil, err
+		return nil, err
 	}
 
 	err = e.WaitUntilDone(10 * time.Second)
 	if err != nil {
-		return s.job.Bundle, nil, err
+		return nil, err
+	}
+
+	err = e.StoreData()
+	if err != nil {
+		return nil, err
 	}
 
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("generate report")
@@ -337,10 +338,15 @@ func (s *localAssetScanner) runQueryPack() (*explorer.Bundle, *explorer.Report, 
 		DataMrn:   s.job.Asset.Mrn,
 	})
 	if err != nil {
-		return s.job.Bundle, nil, err
+		return nil, err
 	}
 
-	return s.job.Bundle, report, nil
+	return &AssetReport{
+		Mrn:      s.job.Asset.Mrn,
+		Bundle:   assetBundle,
+		Report:   report,
+		Resolved: resolvedPack,
+	}, nil
 }
 
 // FilterQueries returns all queries whose result is truthy

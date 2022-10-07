@@ -150,6 +150,12 @@ func (db *Db) GetReport(ctx context.Context, assetMrn string, packMrn string) (*
 		if !ok {
 			continue
 		}
+		if datum == nil {
+			data[id] = &llx.Result{
+				Data:   llx.NilPrimitive,
+				CodeId: id,
+			}
+		}
 		data[id] = datum.(*llx.Result)
 	}
 

@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -28,7 +29,11 @@ func RunExecutionJob(
 		i++
 	}
 
-	return runCode(schema, runtime, bundles, timeout, progressFn)
+	res := newInstance(schema, runtime, progressFn)
+	res.assetMrn = assetMrn
+	res.collector = collectorSvc
+
+	return res, res.runCode(bundles, timeout)
 }
 
 func RunFilterQueries(
@@ -53,7 +58,8 @@ func RunFilterQueries(
 		return nil, errs
 	}
 
-	instance, err := runCode(schema, runtime, bundles, timeout, progress.Noop{})
+	instance := newInstance(schema, runtime, nil)
+	err := instance.runCode(bundles, timeout)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -87,33 +93,19 @@ func RunFilterQueries(
 	return res, errs
 }
 
-func runCode(
-	schema *resources.Schema, runtime *resources.Runtime,
-	bundles []*llx.CodeBundle, timeout time.Duration,
-	progress progress.Progress,
-) (*instance, error) {
-	instance := &instance{
-		schema:           schema,
-		runtime:          runtime,
-		execs:            make(map[string]*llx.MQLExecutorV2, len(bundles)),
-		datapointTracker: map[string]struct{}{},
-		results:          map[string]*llx.RawResult{},
-		isAborted:        false,
-		isDone:           false,
-		done:             make(chan struct{}),
-		progress:         progress,
-	}
+func (e *instance) runCode(bundles []*llx.CodeBundle, timeout time.Duration) error {
+	e.execs = make(map[string]*llx.MQLExecutorV2, len(bundles))
 
 	for i := range bundles {
 		bundle := bundles[i]
 
 		checksums := bundle.DatapointChecksums(true)
-		for i := range checksums {
-			instance.datapointTracker[checksums[i]] = struct{}{}
+		for j := range checksums {
+			e.datapointTracker[checksums[j]] = struct{}{}
 		}
 		checksums = bundle.EntrypointChecksums(true)
-		for i := range checksums {
-			instance.datapointTracker[checksums[i]] = struct{}{}
+		for j := range checksums {
+			e.datapointTracker[checksums[j]] = struct{}{}
 		}
 	}
 
@@ -121,7 +113,7 @@ func runCode(
 	for i := range bundles {
 		bundle := bundles[i]
 
-		exec, err := llx.NewExecutorV2(bundle.CodeV2, runtime, nil, instance.collect)
+		exec, err := llx.NewExecutorV2(bundle.CodeV2, e.runtime, nil, e.collect)
 		if err != nil {
 			multierror.Append(errs, err)
 			continue
@@ -133,10 +125,10 @@ func runCode(
 			continue
 		}
 
-		instance.execs[bundle.CodeV2.Id] = exec
+		e.execs[bundle.CodeV2.Id] = exec
 	}
 
-	return instance, errs
+	return errs
 }
 
 // One instance of the executor. May be returned but not instantiated
@@ -152,6 +144,25 @@ type instance struct {
 	isDone           bool
 	done             chan struct{}
 	progress         progress.Progress
+	collector        explorer.QueryConductor
+	assetMrn         string
+}
+
+func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressFn progress.Progress) *instance {
+	if progressFn == nil {
+		progressFn = progress.Noop{}
+	}
+
+	return &instance{
+		schema:           schema,
+		runtime:          runtime,
+		datapointTracker: map[string]struct{}{},
+		results:          map[string]*llx.RawResult{},
+		isAborted:        false,
+		isDone:           false,
+		done:             make(chan struct{}),
+		progress:         progressFn,
+	}
 }
 
 func (i *instance) WaitUntilDone(timeout time.Duration) error {
@@ -170,6 +181,26 @@ func (i *instance) WaitUntilDone(timeout time.Duration) error {
 		}
 		return errors.New("execution timed out after " + timeout.String())
 	}
+}
+
+func (i *instance) StoreData() error {
+	if i.collector == nil {
+		return errors.New("cannot store data, no collector provided")
+	}
+
+	i.mutex.Lock()
+	results := make(map[string]*llx.Result, len(i.results))
+	for id, cur := range i.results {
+		results[id] = cur.Result()
+	}
+	i.mutex.Unlock()
+
+	_, err := i.collector.StoreResults(context.Background(), &explorer.StoreResultsReq{
+		AssetMrn: i.assetMrn,
+		Data:     results,
+	})
+
+	return err
 }
 
 func (i *instance) collect(res *llx.RawResult) {

@@ -114,15 +114,30 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	}
 
 	job := ExecutionJob{
-		Queries: make(map[string]*ExecutionQuery),
+		Queries:    make(map[string]*ExecutionQuery),
+		Datapoints: make(map[string]*DataQueryInfo),
 	}
 	for i := range applicablePacks {
 		pack := applicablePacks[i]
 		for i := range pack.Queries {
 			query := pack.Queries[i]
-			job.Queries[query.CodeId], err = query2executionQuery(query)
+			equery, err := query2executionQuery(query)
 			if err != nil {
 				return nil, err
+			}
+
+			code := equery.Code.CodeV2
+			refs := append(code.Datapoints(), code.Entrypoints()...)
+
+			job.Queries[query.CodeId] = equery
+			for i := range refs {
+				ref := refs[i]
+				checksum := code.Checksums[ref]
+				typ := code.Chunk(ref).DereferencedTypeV2(code)
+
+				job.Datapoints[checksum] = &DataQueryInfo{
+					Type: string(typ),
+				}
 			}
 		}
 	}
