@@ -30,24 +30,20 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v0'
-      - name: "Fetch Windows Signing Cert"
+      - id: 'gcp_secrets'
+        uses: 'google-github-actions/get-secretmanager-secrets@v0'
+        with:
+          secrets: |-
+            code_sign_cert_b64:mondoo_base_infra/mondoo_code_sign_certificate_pfx
+            code_sign_cert_challenge:mondoo_base_infra/mondoo_code_sign_challenge
+      - name: "Convert Windows Signing Cert"
         run: |
           cert="$(mktemp -t cert.XXX)"
           # We need to transform the secret which is in base64url encoding to base64 encoding
-          content=$(gcloud secrets versions access latest --secret=mondoo_code_sign_certificate_pfx --format='get(payload.data)' | sed 's|_|/|g; s|-|+|g')
-          base64 -d <<<"$content" > "$cert"
-          echo "CERT_FILE=$cert" >> $GITHUB_ENV
-      - name: "Fetch Windows Signing Cert Challenge"
-        run: |
-          pass=$(gcloud secrets versions access latest --secret=mondoo_code_sign_challenge)
-          echo "CERT_PASS=$pass >> $GITHUB_ENV"
-      - name: Obtain signing cert
-        run: |
-          cert="$(mktemp -t cert.XXX)"
           base64 -d <<<"$CERT_CONTENTS" > "$cert"
           echo "CERT_FILE=$cert" >> $GITHUB_ENV
+        env:
+          CERT_CONTENTS: '${{ steps.gcp_secrets.outputs.code_sign_cert_b64 }}'
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
@@ -56,3 +52,4 @@ jobs:
           args: release --rm-dist --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CERT_PASS: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
