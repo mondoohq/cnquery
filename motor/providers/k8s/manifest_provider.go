@@ -172,7 +172,7 @@ func (t *manifestProvider) Identifier() (string, error) {
 func (t *manifestProvider) Name() (string, error) {
 	// manifest parent directory name
 	clusterName := common.ProjectNameFromPath(t.manifestFile)
-	clusterName = "K8S Manifest " + clusterName
+	clusterName = "K8s Manifest " + clusterName
 	return clusterName, nil
 }
 
