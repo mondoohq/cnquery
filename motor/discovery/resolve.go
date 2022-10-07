@@ -33,7 +33,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/mock"
 	"go.mondoo.com/cnquery/motor/discovery/ms365"
 	"go.mondoo.com/cnquery/motor/discovery/network"
-	"go.mondoo.com/cnquery/motor/discovery/standard"
+	"go.mondoo.com/cnquery/motor/discovery/os"
 	"go.mondoo.com/cnquery/motor/discovery/tar"
 	"go.mondoo.com/cnquery/motor/discovery/terraform"
 	"go.mondoo.com/cnquery/motor/discovery/vagrant"
@@ -56,8 +56,8 @@ var resolver map[string]Resolver
 func init() {
 	resolver = map[string]Resolver{
 		providers.ProviderID_LOCAL:              &local.Resolver{},
-		providers.ProviderID_WINRM:              &standard.Resolver{},
-		providers.ProviderID_SSH:                &standard.Resolver{},
+		providers.ProviderID_WINRM:              &os.Resolver{},
+		providers.ProviderID_SSH:                &os.Resolver{},
 		providers.ProviderID_DOCKER:             &docker_engine.Resolver{},
 		providers.ProviderID_DOCKER_IMAGE:       &docker_engine.Resolver{},
 		providers.ProviderID_DOCKER_CONTAINER:   &docker_engine.Resolver{},
@@ -72,10 +72,10 @@ func init() {
 		providers.ProviderID_MOCK:               &mock.Resolver{},
 		providers.ProviderID_VSPHERE:            &vsphere.Resolver{},
 		providers.ProviderID_VSPHERE_VM:         &vsphere.VMGuestResolver{},
-		providers.ProviderID_ARISTA:             &standard.Resolver{},
+		providers.ProviderID_ARISTA:             &os.Resolver{},
 		providers.ProviderID_MS365:              &ms365.Resolver{},
 		providers.ProviderID_IPMI:               &ipmi.Resolver{},
-		providers.ProviderID_FS:                 &standard.Resolver{},
+		providers.ProviderID_FS:                 &os.Resolver{},
 		providers.ProviderID_EQUINIX:            &equinix.Resolver{},
 		providers.ProviderID_GITHUB:             &github.Resolver{},
 		providers.ProviderID_AWS_EC2_EBS:        &ebs.Resolver{},
@@ -120,8 +120,8 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialF
 			assetFallbackName(root, pCfg)
 			return nil, errors.New("unsupported backend: " + resolverId)
 		}
-
 		log.Debug().Str("resolver-id", resolverId).Str("resolver", r.Name()).Msg("run resolver")
+
 		// check that all discovery options are supported and show a user warning
 		availableTargets := r.AvailableDiscoveryTargets()
 		if pCfg.Discover != nil {

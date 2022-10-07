@@ -1,4 +1,4 @@
-package standard
+package os
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
-	return "Standard Resolver"
+	return "OS Resolver"
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
