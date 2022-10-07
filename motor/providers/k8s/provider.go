@@ -48,19 +48,19 @@ type KubernetesProvider interface {
 	Nodes() ([]v1.Node, error)
 	Namespaces() ([]v1.Namespace, error)
 	Pod(namespace, name string) (*v1.Pod, error)
-	Pods(namespace v1.Namespace) ([]v1.Pod, error)
+	Pods(namespace v1.Namespace) ([]*v1.Pod, error)
 	CronJob(namespace, name string) (*batchv1.CronJob, error)
-	CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error)
+	CronJobs(namespace v1.Namespace) ([]*batchv1.CronJob, error)
 	StatefulSet(namespace, name string) (*appsv1.StatefulSet, error)
-	StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error)
+	StatefulSets(namespace v1.Namespace) ([]*appsv1.StatefulSet, error)
 	Deployment(namespace, name string) (*appsv1.Deployment, error)
-	Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error)
+	Deployments(namespace v1.Namespace) ([]*appsv1.Deployment, error)
 	Job(namespace, name string) (*batchv1.Job, error)
-	Jobs(namespace v1.Namespace) ([]batchv1.Job, error)
+	Jobs(namespace v1.Namespace) ([]*batchv1.Job, error)
 	ReplicaSet(namespace, name string) (*appsv1.ReplicaSet, error)
-	ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error)
+	ReplicaSets(namespace v1.Namespace) ([]*appsv1.ReplicaSet, error)
 	DaemonSet(namespace, name string) (*appsv1.DaemonSet, error)
-	DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error)
+	DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error)
 	Secret(namespace, name string) (*v1.Secret, error)
 	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
 }
@@ -146,4 +146,12 @@ func getPlatformInfo(objectKind string, runtime string) *platform.Platform {
 	}
 
 	return nil
+}
+
+func sliceToPtrSlice[T any](items []T) []*T {
+	ptrItems := make([]*T, 0, len(items))
+	for _, item := range items {
+		ptrItems = append(ptrItems, &item)
+	}
+	return ptrItems
 }

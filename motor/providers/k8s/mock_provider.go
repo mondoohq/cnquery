@@ -98,10 +98,10 @@ func (mr *MockKubernetesProviderMockRecorder) CronJob(namespace, name interface{
 }
 
 // CronJobs mocks base method.
-func (m *MockKubernetesProvider) CronJobs(namespace v12.Namespace) ([]v11.CronJob, error) {
+func (m *MockKubernetesProvider) CronJobs(namespace v12.Namespace) ([]*v11.CronJob, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CronJobs", namespace)
-	ret0, _ := ret[0].([]v11.CronJob)
+	ret0, _ := ret[0].([]*v11.CronJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -128,10 +128,10 @@ func (mr *MockKubernetesProviderMockRecorder) DaemonSet(namespace, name interfac
 }
 
 // DaemonSets mocks base method.
-func (m *MockKubernetesProvider) DaemonSets(namespace v12.Namespace) ([]v10.DaemonSet, error) {
+func (m *MockKubernetesProvider) DaemonSets(namespace v12.Namespace) ([]*v10.DaemonSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DaemonSets", namespace)
-	ret0, _ := ret[0].([]v10.DaemonSet)
+	ret0, _ := ret[0].([]*v10.DaemonSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -158,10 +158,10 @@ func (mr *MockKubernetesProviderMockRecorder) Deployment(namespace, name interfa
 }
 
 // Deployments mocks base method.
-func (m *MockKubernetesProvider) Deployments(namespace v12.Namespace) ([]v10.Deployment, error) {
+func (m *MockKubernetesProvider) Deployments(namespace v12.Namespace) ([]*v10.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Deployments", namespace)
-	ret0, _ := ret[0].([]v10.Deployment)
+	ret0, _ := ret[0].([]*v10.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -218,10 +218,10 @@ func (mr *MockKubernetesProviderMockRecorder) Job(namespace, name interface{}) *
 }
 
 // Jobs mocks base method.
-func (m *MockKubernetesProvider) Jobs(namespace v12.Namespace) ([]v11.Job, error) {
+func (m *MockKubernetesProvider) Jobs(namespace v12.Namespace) ([]*v11.Job, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Jobs", namespace)
-	ret0, _ := ret[0].([]v11.Job)
+	ret0, _ := ret[0].([]*v11.Job)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -350,10 +350,10 @@ func (mr *MockKubernetesProviderMockRecorder) Pod(namespace, name interface{}) *
 }
 
 // Pods mocks base method.
-func (m *MockKubernetesProvider) Pods(namespace v12.Namespace) ([]v12.Pod, error) {
+func (m *MockKubernetesProvider) Pods(namespace v12.Namespace) ([]*v12.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Pods", namespace)
-	ret0, _ := ret[0].([]v12.Pod)
+	ret0, _ := ret[0].([]*v12.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -380,10 +380,10 @@ func (mr *MockKubernetesProviderMockRecorder) ReplicaSet(namespace, name interfa
 }
 
 // ReplicaSets mocks base method.
-func (m *MockKubernetesProvider) ReplicaSets(namespace v12.Namespace) ([]v10.ReplicaSet, error) {
+func (m *MockKubernetesProvider) ReplicaSets(namespace v12.Namespace) ([]*v10.ReplicaSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReplicaSets", namespace)
-	ret0, _ := ret[0].([]v10.ReplicaSet)
+	ret0, _ := ret[0].([]*v10.ReplicaSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -468,10 +468,10 @@ func (mr *MockKubernetesProviderMockRecorder) StatefulSet(namespace, name interf
 }
 
 // StatefulSets mocks base method.
-func (m *MockKubernetesProvider) StatefulSets(namespace v12.Namespace) ([]v10.StatefulSet, error) {
+func (m *MockKubernetesProvider) StatefulSets(namespace v12.Namespace) ([]*v10.StatefulSet, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StatefulSets", namespace)
-	ret0, _ := ret[0].([]v10.StatefulSet)
+	ret0, _ := ret[0].([]*v10.StatefulSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
