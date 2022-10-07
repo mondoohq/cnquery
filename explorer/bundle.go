@@ -9,8 +9,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/checksums"
 	llx "go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mrn"
 	"sigs.k8s.io/yaml"
 )
 
@@ -109,10 +111,22 @@ func aggregateFilesToBundle(paths []string) (*Bundle, error) {
 			return nil, errors.Wrap(err, "could not load file: "+path)
 		}
 
-		mergedBundle.AddBundle(bundle)
+		bundle.EnsureUIDs()
+
+		combineBundles(mergedBundle, bundle)
 	}
 
 	return mergedBundle, nil
+}
+
+// Combine two bundles, even if they aren't compiled yet.
+// Uses the existing owner MRN if it is set, otherwise the other is used.
+func combineBundles(into *Bundle, other *Bundle) {
+	if into.OwnerMrn == "" {
+		into.OwnerMrn = other.OwnerMrn
+	}
+
+	into.Packs = append(into.Packs, other.Packs...)
 }
 
 // bundleFromSingleFile loads a bundle from a single file
@@ -254,4 +268,82 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 	}
 
 	return res, nil
+}
+
+// FilterQueryPacks only keeps the given UIDs or MRNs and removes every other one.
+// If a given query pack has a MRN set (but no UID) it will try to get the UID from the MRN
+// and also filter by that criteria.
+// If the list of IDs is empty this function doesn't do anything.
+func (p *Bundle) FilterQueryPacks(IDs []string) {
+	if len(IDs) == 0 {
+		return
+	}
+
+	valid := make(map[string]struct{}, len(IDs))
+	for i := range IDs {
+		valid[IDs[i]] = struct{}{}
+	}
+
+	var res []*QueryPack
+	for i := range p.Packs {
+		cur := p.Packs[i]
+
+		if cur.Mrn != "" {
+			if _, ok := valid[cur.Mrn]; ok {
+				res = append(res, cur)
+				continue
+			}
+
+			uid, _ := mrn.GetResource(cur.Mrn, MRN_RESOURCE_QUERYPACK)
+			if _, ok := valid[uid]; ok {
+				res = append(res, cur)
+			}
+
+			// if we have a MRN we do not check the UID
+			continue
+		}
+
+		if _, ok := valid[cur.Uid]; ok {
+			res = append(res, cur)
+		}
+	}
+
+	p.Packs = res
+}
+
+// Makes sure every query in the bundle and every query pack has a UID set,
+// IF the MRN is empty. Otherwise MRNs suffice.
+func (p *Bundle) EnsureUIDs() {
+	for i := range p.Packs {
+		pack := p.Packs[i]
+		if pack.Mrn == "" && pack.Uid == "" {
+			pack.Uid = ksuid.New().String()
+		}
+
+		for j := range pack.Queries {
+			query := pack.Queries[j]
+			if query.Mrn == "" && query.Uid == "" {
+				query.Uid = ksuid.New().String()
+			}
+		}
+	}
+}
+
+func (p *Bundle) AssetFilters() []*Mquery {
+	uniq := map[string]*Mquery{}
+	for i := range p.Packs {
+		pack := p.Packs[i]
+		for k, v := range pack.AssetFilters {
+			uniq[k] = v
+		}
+	}
+
+	res := make([]*Mquery, len(uniq))
+	i := 0
+	for _, v := range uniq {
+		res[i] = v
+		i++
+	}
+
+	return res
 }

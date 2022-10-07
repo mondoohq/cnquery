@@ -22,6 +22,7 @@ type QueryHub interface {
 	SetBundle(context.Context, *Bundle) (*Empty, error)
 	DeleteQueryPack(context.Context, *Mrn) (*Empty, error)
 	ValidateBundle(context.Context, *Bundle) (*Empty, error)
+	GetBundle(context.Context, *Mrn) (*Bundle, error)
 	GetQueryPack(context.Context, *Mrn) (*QueryPack, error)
 	GetFilters(context.Context, *Mrn) (*Mqueries, error)
 	List(context.Context, *ListReq) (*QueryPacks, error)
@@ -68,6 +69,11 @@ func (c *QueryHubClient) ValidateBundle(ctx context.Context, in *Bundle) (*Empty
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ValidateBundle"}, ""), in, out)
 	return out, err
 }
+func (c *QueryHubClient) GetBundle(ctx context.Context, in *Mrn) (*Bundle, error) {
+	out := new(Bundle)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetBundle"}, ""), in, out)
+	return out, err
+}
 func (c *QueryHubClient) GetQueryPack(ctx context.Context, in *Mrn) (*QueryPack, error) {
 	out := new(QueryPack)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetQueryPack"}, ""), in, out)
@@ -109,6 +115,7 @@ func NewQueryHubServer(handler QueryHub, opts ...QueryHubServerOption) http.Hand
 			"SetBundle":       srv.SetBundle,
 			"DeleteQueryPack": srv.DeleteQueryPack,
 			"ValidateBundle":  srv.ValidateBundle,
+			"GetBundle":       srv.GetBundle,
 			"GetQueryPack":    srv.GetQueryPack,
 			"GetFilters":      srv.GetFilters,
 			"List":            srv.List,
@@ -194,6 +201,30 @@ func (p *QueryHubServer) ValidateBundle(ctx context.Context, reqBytes *[]byte) (
 	}
 	return p.handler.ValidateBundle(ctx, &req)
 }
+func (p *QueryHubServer) GetBundle(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req Mrn
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.GetBundle(ctx, &req)
+}
 func (p *QueryHubServer) GetQueryPack(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
 	var req Mrn
 	var err error
@@ -273,11 +304,8 @@ type QueryConductor interface {
 	Assign(context.Context, *Assignment) (*Empty, error)
 	Unassign(context.Context, *Assignment) (*Empty, error)
 	Resolve(context.Context, *ResolveReq) (*ResolvedPack, error)
-	UpdateAssetJobs(context.Context, *UpdateAssetJobsReq) (*Empty, error)
-	ResolveAndUpdateJobs(context.Context, *UpdateAssetJobsReq) (*ResolvedPack, error)
 	StoreResults(context.Context, *StoreResultsReq) (*Empty, error)
 	GetReport(context.Context, *EntityDataRequest) (*Report, error)
-	GetData(context.Context, *EntityDataRequest) (*Report, error)
 }
 
 // client implementation
@@ -321,16 +349,6 @@ func (c *QueryConductorClient) Resolve(ctx context.Context, in *ResolveReq) (*Re
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/Resolve"}, ""), in, out)
 	return out, err
 }
-func (c *QueryConductorClient) UpdateAssetJobs(ctx context.Context, in *UpdateAssetJobsReq) (*Empty, error) {
-	out := new(Empty)
-	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/UpdateAssetJobs"}, ""), in, out)
-	return out, err
-}
-func (c *QueryConductorClient) ResolveAndUpdateJobs(ctx context.Context, in *UpdateAssetJobsReq) (*ResolvedPack, error) {
-	out := new(ResolvedPack)
-	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/ResolveAndUpdateJobs"}, ""), in, out)
-	return out, err
-}
 func (c *QueryConductorClient) StoreResults(ctx context.Context, in *StoreResultsReq) (*Empty, error) {
 	out := new(Empty)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/StoreResults"}, ""), in, out)
@@ -339,11 +357,6 @@ func (c *QueryConductorClient) StoreResults(ctx context.Context, in *StoreResult
 func (c *QueryConductorClient) GetReport(ctx context.Context, in *EntityDataRequest) (*Report, error) {
 	out := new(Report)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetReport"}, ""), in, out)
-	return out, err
-}
-func (c *QueryConductorClient) GetData(ctx context.Context, in *EntityDataRequest) (*Report, error) {
-	out := new(Report)
-	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/GetData"}, ""), in, out)
 	return out, err
 }
 
@@ -369,14 +382,11 @@ func NewQueryConductorServer(handler QueryConductor, opts ...QueryConductorServe
 	service := ranger.Service{
 		Name: "QueryConductor",
 		Methods: map[string]ranger.Method{
-			"Assign":               srv.Assign,
-			"Unassign":             srv.Unassign,
-			"Resolve":              srv.Resolve,
-			"UpdateAssetJobs":      srv.UpdateAssetJobs,
-			"ResolveAndUpdateJobs": srv.ResolveAndUpdateJobs,
-			"StoreResults":         srv.StoreResults,
-			"GetReport":            srv.GetReport,
-			"GetData":              srv.GetData,
+			"Assign":       srv.Assign,
+			"Unassign":     srv.Unassign,
+			"Resolve":      srv.Resolve,
+			"StoreResults": srv.StoreResults,
+			"GetReport":    srv.GetReport,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -459,54 +469,6 @@ func (p *QueryConductorServer) Resolve(ctx context.Context, reqBytes *[]byte) (p
 	}
 	return p.handler.Resolve(ctx, &req)
 }
-func (p *QueryConductorServer) UpdateAssetJobs(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
-	var req UpdateAssetJobsReq
-	var err error
-
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("could not access header")
-	}
-
-	switch md.First("Content-Type") {
-	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
-		err = pb.Unmarshal(*reqBytes, &req)
-	default:
-		// handle case of empty object
-		if len(*reqBytes) > 0 {
-			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return p.handler.UpdateAssetJobs(ctx, &req)
-}
-func (p *QueryConductorServer) ResolveAndUpdateJobs(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
-	var req UpdateAssetJobsReq
-	var err error
-
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("could not access header")
-	}
-
-	switch md.First("Content-Type") {
-	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
-		err = pb.Unmarshal(*reqBytes, &req)
-	default:
-		// handle case of empty object
-		if len(*reqBytes) > 0 {
-			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return p.handler.ResolveAndUpdateJobs(ctx, &req)
-}
 func (p *QueryConductorServer) StoreResults(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
 	var req StoreResultsReq
 	var err error
@@ -554,28 +516,4 @@ func (p *QueryConductorServer) GetReport(ctx context.Context, reqBytes *[]byte) 
 		return nil, err
 	}
 	return p.handler.GetReport(ctx, &req)
-}
-func (p *QueryConductorServer) GetData(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
-	var req EntityDataRequest
-	var err error
-
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, errors.New("could not access header")
-	}
-
-	switch md.First("Content-Type") {
-	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
-		err = pb.Unmarshal(*reqBytes, &req)
-	default:
-		// handle case of empty object
-		if len(*reqBytes) > 0 {
-			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return p.handler.GetData(ctx, &req)
 }
