@@ -9,6 +9,11 @@ on:
 
 jobs:
   goreleaser:
+    # Add "id-token" for google-github-actions/auth
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     runs-on: self-hosted
     timeout-minutes: 120
     steps:
