@@ -51,7 +51,7 @@ func TestListCronJobs(t *testing.T) {
 	}
 
 	// Seed CronJobs
-	cronjobs := []batchv1.CronJob{
+	cronjobs := []*batchv1.CronJob{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "CronJob",
@@ -170,7 +170,7 @@ func TestListCronJobs_Filter(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed CronJobs
-	cronjobs := []batchv1.CronJob{
+	cronjobs := []*batchv1.CronJob{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "CronJob",
@@ -305,7 +305,7 @@ func TestListDaemonsets(t *testing.T) {
 	}
 
 	// Seed DaemonSets
-	daemonsets := []appsv1.DaemonSet{
+	daemonsets := []*appsv1.DaemonSet{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "DaemonSet",
@@ -404,7 +404,7 @@ func TestListDaemonsets_Filter(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed DaemonSets
-	daemonsets := []appsv1.DaemonSet{
+	daemonsets := []*appsv1.DaemonSet{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "DaemonSet",
@@ -512,7 +512,7 @@ func TestListDeployments(t *testing.T) {
 	}
 
 	// Seed Deployments
-	deployments := []appsv1.Deployment{
+	deployments := []*appsv1.Deployment{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Deployment",
@@ -611,7 +611,7 @@ func TestListDeployments_Filter(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed Deployments
-	deployments := []appsv1.Deployment{
+	deployments := []*appsv1.Deployment{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Deployment",
@@ -719,7 +719,7 @@ func TestListJobs(t *testing.T) {
 	}
 
 	// Seed Jobs
-	jobs := []batchv1.Job{
+	jobs := []*batchv1.Job{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Job",
@@ -829,7 +829,7 @@ func TestListJobs_Filter(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed Jobs
-	jobs := []batchv1.Job{
+	jobs := []*batchv1.Job{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Job",
@@ -946,7 +946,7 @@ func TestListPods(t *testing.T) {
 	}
 
 	// Seed Pods
-	pods := []corev1.Pod{
+	pods := []*corev1.Pod{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Pod",
@@ -1036,7 +1036,7 @@ func TestListPods_Filter(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed Pods
-	pods := []corev1.Pod{
+	pods := []*corev1.Pod{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Pod",
@@ -1238,7 +1238,7 @@ func TestListReplicaSets_Filter(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed ReplicaSets
-	replicaSets := []appsv1.ReplicaSet{
+	replicaSets := []*appsv1.ReplicaSet{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ReplicaSet",
@@ -1353,7 +1353,7 @@ func TestListStatefulSets(t *testing.T) {
 	}
 
 	// Seed StatefulSets
-	statefulsets := []appsv1.StatefulSet{
+	statefulsets := []*appsv1.StatefulSet{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "StatefulSet",
@@ -1462,7 +1462,7 @@ func TestListStatefulSets_Filter(t *testing.T) {
 	p.EXPECT().Runtime().Return("k8s-cluster")
 
 	// Seed StatefulSets
-	statefulsets := []appsv1.StatefulSet{
+	statefulsets := []*appsv1.StatefulSet{
 		{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "StatefulSet",
