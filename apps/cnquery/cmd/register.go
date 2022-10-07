@@ -26,17 +26,17 @@ func init() {
 
 var registerCmd = &cobra.Command{
 	Use:   "register",
-	Short: "Registers Client with Mondoo Platform",
+	Short: "Register with Mondoo Platform",
 	Long: `
-This command registers the Mondoo Client with Mondoo Platform by using a registration
-token. To pass in the token, use the '--token' flag.
+This command registers with Mondoo Platform by using a registration token. To pass in the token, use 
+the '--token' flag.
 
 You can generate a new registration token via the Mondoo Dashboard
 https://console.mondoo.com -> Space -> Settings -> Registration Token. Copy the token and pass it in 
 as the '--token' argument.
 
 Every client remains registered until you explicitly unregister it. You can
-unregister an client in Mondoo Platform, or by using 'unregister' subcommand.
+unregister via Mondoo Platform, or by using 'unregister' subcommand.
 	`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("api_endpoint", cmd.Flags().Lookup("api-endpoint"))
