@@ -22,9 +22,8 @@ func init() {
 
 var unregisterCmd = &cobra.Command{
 	Use:   "unregister",
-	Short: "Unregister Client from Mondoo Platform",
+	Short: "Unregister from Mondoo Platform",
 	Long: `
-By calling unregister, the client will be detached from Mondoo Platform
 This process also initiates a revocation of the client's service account to ensure
 the credentials cannot be used in future anymore.
 `,
