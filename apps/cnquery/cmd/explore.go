@@ -226,7 +226,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		// bundles, packs & incognito mode
 		cmd.Flags().Bool("incognito", false, "incognito mode. do not report scan results to the Mondoo platform.")
 		cmd.Flags().StringSlice("querypack", nil, "list of query packs to be executed (requires incognito mode), multiple query packs can be specified")
-		cmd.Flags().StringSliceP("querypack-bundle", "f", nil, "path to local querypack bundle file")
+		cmd.Flags().StringSliceP("querypack-bundle", "f", nil, "path to local query pack file")
 		// flag completion command
 		cmd.RegisterFlagCompletionFunc("querypack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			return getQueryPacksForCompletion(), cobra.ShellCompDirectiveDefault
