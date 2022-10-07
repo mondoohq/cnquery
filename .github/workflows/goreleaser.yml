@@ -65,4 +65,5 @@ jobs:
       - name: Sign RPMs
         run: |
           cp scripts/rpmmacros ~/.rpmmacros
+          export GPG_TTY=$(tty)
           rpmsign --addsign dist/*.rpm
