@@ -16,7 +16,6 @@ cnquery shell aws
 > aws.ec2.instances{*}
 ```
 
-
 ## Installation
 
 Install cnquery with our installation script:
@@ -26,7 +25,6 @@ bash -c "$(curl -sSL https://install.mondoo.com/sh/cnquery)"
 ```
 
 If you prefer a package, find it on [GitHub releases](https://github.com/mondoohq/cnquery/releases).
-
 
 ## Interactive shell
 
@@ -45,7 +43,6 @@ Once inside the shell, you can enter MQL queries like this:
 To learn more, use the `help` command. 
 
 To exit, either press CTRL + D or type `exit`.
-
 
 ## Run simple queries
 
@@ -75,7 +72,6 @@ cnquery run local -c "services.list{*}" -j
 
 You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other applications.
 
-
 ## Query packs
 
 You can combine multiple queries into query packs, which can run together. `cnquery` comes with a lot of query packs out of the box for most systems. You can simply run:
@@ -94,18 +90,17 @@ cnquery explore local --pack incident-response
 
 You can also choose just one query from a query pack. Specify the query ID with the query pack:
 
-```
+```bash
 cnquery explore local --pack incident-response --query-id sth-01
 ```
 
 Custom query packs let you bundle queries to meet your specific needs. You can find a simple query pack example in `examples/simple.mql.yaml`. To run it:
 
-```
+```bash
 cnquery explore local -f examples/simple.mql.yaml
 ```
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
-
 
 ## Distributing cnqueries across your fleet
 
@@ -131,21 +126,18 @@ To add custom query packs, you can upload them:
 cnquery pack upload mypack.mql.yaml
 ```
 
-
-
 ## What’s next?
 
 There are so many things `cnquery` can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, share data with auditors… `cnquery` is nearly limitless in capabilities.
 
 Explore:
+
 - The Query Hub
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL resource packs](https://mondoo.com/docs/references/mql/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
 
 Our goal is to become the API for your entire infrastructure. Join our [community](https://github.com/orgs/mondoohq/discussions) today and let’s grow it together!
-
-
 
 ## Development
 
@@ -155,9 +147,7 @@ We love emojis in our commits. These are their meanings:
 ✨⭐🌟🎉 smaller or larger features 🐎 race condition  
 🌙 MQL 🌈 visual 🍏 fix tests 🎫 auth 🦅 falcon 🐳 container  
 
-
 ## Legal
 
 - **Copyright:** 2018-2022, Mondoo Inc, proprietary
 - **Authors:** Christoph Hartmann, Dominik Richter
-
