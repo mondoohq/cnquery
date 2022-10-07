@@ -173,9 +173,6 @@ configure your Azure credentials and have SSH access to your instances.`,
 			"github-org": {
 				Short: "Explore a GitHub organization",
 			},
-			"github-user": {
-				Short: "Explore a GitHub user",
-			},
 			"github-repo": {
 				Short: "Explore a GitHub repository",
 			},

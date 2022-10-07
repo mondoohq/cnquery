@@ -22,7 +22,6 @@ const (
 	Ec2ebsSnapshotAssetType
 	GcrContainerRegistryAssetType
 	GithubOrganizationAssetType
-	GithubUserAssetType
 	GithubRepositoryAssetType
 )
 
@@ -117,8 +116,6 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	githubCmd := scanGithubCmd(commonCmdFlags, preRun, runFn, docs)
 	githubOrgCmd := githubProviderOrganizationCmd(commonCmdFlags, preRun, runFn, docs)
 	githubCmd.AddCommand(githubOrgCmd)
-	githubUserCmd := githubProviderUserCmd(commonCmdFlags, preRun, runFn, docs)
-	githubCmd.AddCommand(githubUserCmd)
 	githubRepositoryCmd := githubProviderRepositoryCmd(commonCmdFlags, preRun, runFn, docs)
 	githubCmd.AddCommand(githubRepositoryCmd)
 
@@ -625,7 +622,6 @@ func scanGithubCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn ru
 			os.Exit(0)
 		},
 	}
-	commonCmdFlags(cmd)
 	return cmd
 }
 
@@ -641,25 +637,6 @@ func githubProviderOrganizationCmd(commonCmdFlags commonFlagsFn, preRun commonPr
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_GITHUB, GithubOrganizationAssetType)
-		},
-	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "GitHub access tokens")
-	return cmd
-}
-
-func githubProviderUserCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "user",
-		Short: docs.GetShort("github-user"),
-		Long:  docs.GetLong("github-user"),
-		Args:  cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GITHUB, GithubUserAssetType)
 		},
 	}
 	commonCmdFlags(cmd)
