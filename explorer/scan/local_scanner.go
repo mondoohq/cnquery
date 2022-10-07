@@ -319,7 +319,7 @@ func (s *localAssetScanner) runQueryPack() (*explorer.Bundle, *explorer.Report, 
 	logger.DebugDumpJSON("resolvedPack", resolvedPack)
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	e, err := executor.ExecuteResolvedPack(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.Progress)
+	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.Progress)
 	if err != nil {
 		return s.job.Bundle, nil, err
 	}
@@ -345,7 +345,7 @@ func (s *localAssetScanner) runQueryPack() (*explorer.Bundle, *explorer.Report, 
 
 // FilterQueries returns all queries whose result is truthy
 func (s *localAssetScanner) FilterQueries(queries []*explorer.Mquery, timeout time.Duration) ([]*explorer.Mquery, []error) {
-	return executor.ExecuteFilterQueries(s.Schema, s.Runtime, queries, timeout)
+	return executor.RunFilterQueries(s.Schema, s.Runtime, queries, timeout)
 }
 
 // UpdateFilters takes a list of test filters and runs them against the backend
