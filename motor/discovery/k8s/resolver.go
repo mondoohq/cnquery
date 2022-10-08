@@ -130,7 +130,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			}
 		}
 
-		clusterName = "K8S Cluster " + clusterName
+		clusterName = "K8s Cluster " + clusterName
 	}
 
 	resourcesFilter, err := resourceFilters(tc)

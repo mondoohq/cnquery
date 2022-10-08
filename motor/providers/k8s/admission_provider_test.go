@@ -30,5 +30,5 @@ func TestAdmissionProvider(t *testing.T) {
 	assert.Equal(t, "k8s-admission", transport.PlatformInfo().Runtime)
 	name, err := transport.Name()
 	require.NoError(t, err)
-	assert.Equal(t, "K8S Admission review "+res[0].Request.Name, name)
+	assert.Equal(t, "K8s Admission review "+res[0].Request.Name, name)
 }
