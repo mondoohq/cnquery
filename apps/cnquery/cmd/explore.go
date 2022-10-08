@@ -242,18 +242,11 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		cmd.Flags().StringToString("option", nil, "addition connection options, multiple options can be passed in via --option key=value")
 		cmd.Flags().String("discover", "", "enable the discovery of nested assets. Supported are 'all|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
 		cmd.Flags().StringToString("discover-filter", nil, "additional filter for asset discovery")
-		cmd.Flags().StringToString("label", nil, "label for asset")                     // used by mondoo, hidden to the user so we can still apply labels when needed (e.g. ssm scans)
 		cmd.Flags().StringToString("annotation", nil, "add an annotation to the asset") // user-added, editable
-		cmd.Flags().MarkDeprecated("label", "please use --annotation instead")
 
 		// global asset flags
 		cmd.Flags().Bool("insecure", false, "disable TLS/SSL checks or SSH hostkey config")
 		cmd.Flags().Bool("sudo", false, "run with sudo")
-		// FIXME: remove in v7.0 vv
-		cmd.Flags().Bool("exit-0-on-success", false, "return 0 as exit code if the scan execution was successful")
-		cmd.Flags().MarkHidden("exit-0-on-success")
-		// ^^
-		cmd.Flags().Int("score-threshold", 0, "fail with exit code 1 if any score falls below the threshold")
 		cmd.Flags().Bool("record", false, "record backend calls")
 		cmd.Flags().MarkHidden("record")
 
@@ -287,10 +280,6 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
 		viper.BindPFlag("querypacks", cmd.Flags().Lookup("querypack"))
 		viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
-		// FIXME: remove in v7.0 vv
-		viper.BindPFlag("exit-0-on-success", cmd.Flags().Lookup("exit-0-on-success"))
-		// ^^
-		viper.BindPFlag("score-threshold", cmd.Flags().Lookup("score-threshold"))
 
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 		// the logic is that noPager takes precedence over pager if both are sent
