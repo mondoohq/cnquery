@@ -53,3 +53,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
+      - name: Install RPM packaging dependencies
+        run: sudo apt-get install -y rpm reprepro
+      - name: Set up GPG for RPM
+        run: |
+          echo "${{ secrets.GPG_PASSPHRASE }}" > passphrase
+          echo "${{ secrets.GPG_PUBKEY }}" > mondoo_gpg2_pub.gpg
+          echo "${{ secrets.GPG_PUBKEY }}" | gpg --import --no-tty --batch --yes
+          echo "${{ secrets.GPG_KEY }}" | gpg --import --passphrase-file passphrase --allow-secret-key-import --pinentry-mode loopback --no-tty --batch --yes
+          rpm --import mondoo_gpg2_pub.gpg
+      - name: Sign RPMs
+        run: |
+          cp scripts/rpmmacros ~/.rpmmacros
+          export GPG_TTY=$(tty)
+          ls -lR
+          rpmsign --addsign dist/*.rpm
