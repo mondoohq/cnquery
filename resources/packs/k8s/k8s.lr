@@ -89,6 +89,7 @@ k8s.node {
   kind string
 }
 
+// Kubernetes Kubelet configuration
 k8s.kubelet {
   // Kubelet config file
   configFile core.file
