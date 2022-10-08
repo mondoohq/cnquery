@@ -22,12 +22,17 @@ func ReadConfig() (*CliConfig, error) {
 }
 
 type CliConfig struct {
+	// inherit common config
+	CommonCliConfig `mapstructure:",squash"`
+}
+
+type CommonCliConfig struct {
 	// client identifier
 	AgentMrn string `json:"agent_mrn,omitempty" mapstructure:"agent_mrn"`
 
 	// service account credentials
 	ServiceAccountMrn string `json:"mrn,omitempty" mapstructure:"mrn"`
-	ParentMrn         string `json:"space_mrn,omitempty" mapstructure:"parent_mrn"`
+	ParentMrn         string `json:"parent_mrn,omitempty" mapstructure:"parent_mrn"`
 	SpaceMrn          string `json:"space_mrn,omitempty" mapstructure:"space_mrn"`
 	PrivateKey        string `json:"private_key,omitempty" mapstructure:"private_key"`
 	Certificate       string `json:"certificate,omitempty" mapstructure:"certificate"`
@@ -40,7 +45,7 @@ type CliConfig struct {
 	Labels map[string]string `json:"labels,omitempty" mapstructure:"labels"`
 }
 
-func (c *CliConfig) GetFeatures() cnquery.Features {
+func (c *CommonCliConfig) GetFeatures() cnquery.Features {
 	bitSet := make([]bool, 256)
 	flags := []byte{}
 
@@ -66,7 +71,14 @@ func (c *CliConfig) GetFeatures() cnquery.Features {
 	return flags
 }
 
-func (v *CliConfig) GetServiceCredential() *upstream.ServiceAccountCredentials {
+// GetServiceCredential returns the service credential that is defined in the config.
+// If no service credential is defined, it will return an nil.
+func (v *CommonCliConfig) GetServiceCredential() *upstream.ServiceAccountCredentials {
+	// return nil when no service account is defined
+	if v.ServiceAccountMrn == "" && v.PrivateKey == "" && v.Certificate == "" {
+		return nil
+	}
+
 	return &upstream.ServiceAccountCredentials{
 		Mrn:         v.ServiceAccountMrn,
 		ParentMrn:   v.GetParentMrn(),
@@ -76,7 +88,7 @@ func (v *CliConfig) GetServiceCredential() *upstream.ServiceAccountCredentials {
 	}
 }
 
-func (o *CliConfig) GetParentMrn() string {
+func (o *CommonCliConfig) GetParentMrn() string {
 	parent := o.ParentMrn
 
 	// fallback to old space_mrn config
@@ -87,7 +99,7 @@ func (o *CliConfig) GetParentMrn() string {
 	return parent
 }
 
-func (o *CliConfig) UpstreamApiEndpoint() string {
+func (o *CommonCliConfig) UpstreamApiEndpoint() string {
 	apiEndpoint := o.APIEndpoint
 
 	// fallback to default api if nothing was set
