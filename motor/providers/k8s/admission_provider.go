@@ -139,7 +139,7 @@ func (t *admissionProvider) Name() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "K8S Admission review " + reviews[0].Request.Name, nil
+	return "K8s Admission review " + reviews[0].Request.Name, nil
 }
 
 func (t *admissionProvider) AdmissionReviews() ([]admission.AdmissionReview, error) {
