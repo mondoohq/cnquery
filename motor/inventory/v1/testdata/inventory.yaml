@@ -12,6 +12,7 @@ spec:
     - id: windows
       connections:
         - host: 192.168.1.1
+          backend: ssh
           credentials:
             - # should generate implicit type: password
               user: username
@@ -26,6 +27,7 @@ spec:
     - id: linux-ssh-key
       connections:
         - host: example.com
+          backend: ssh
           credentials:
             - type: ssh_agent # todo, make this a implicit?
               user: username
@@ -35,18 +37,21 @@ spec:
     - id: linux-identity-key
       connections:
         - host: x
+          backend: ssh
           credentials:
             - user: chris # implicit type private key
               private_key_path: ./private_key_02
     - id: linux-embedded-pem
       connections:
         - host: x
+          backend: ssh
           credentials:
             - secret_id: secret-1
 
     - id: vsphere # asset with dynamic discovery
       connections:
         - host: 192.168.1.100
+          backend: ssh
           credentials:
             - user: root # implicit type password
               password: pwd
@@ -59,6 +64,7 @@ spec:
       # no platform -> ssh connected read ssh hostkey (no hostname)
     - connections:
         - host: 192.134.100.1
+          backend: ssh
           credentials:
             - secret_id: secret-2
 
