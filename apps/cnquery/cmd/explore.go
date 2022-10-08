@@ -242,8 +242,8 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		cmd.Flags().StringToString("option", nil, "addition connection options, multiple options can be passed in via --option key=value")
 		cmd.Flags().String("discover", "", "enable the discovery of nested assets. Supported are 'all|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
 		cmd.Flags().StringToString("discover-filter", nil, "additional filter for asset discovery")
-		cmd.Flags().StringToString("label", nil, "label for asset")           // used by mondoo, hidden to the user so we can still apply labels when needed (e.g. ssm scans)
-		cmd.Flags().StringToString("annotation", nil, "annotation for asset") // user-added, editable
+		cmd.Flags().StringToString("label", nil, "label for asset")                     // used by mondoo, hidden to the user so we can still apply labels when needed (e.g. ssm scans)
+		cmd.Flags().StringToString("annotation", nil, "add an annotation to the asset") // user-added, editable
 		cmd.Flags().MarkDeprecated("label", "please use --annotation instead")
 
 		// global asset flags
@@ -253,12 +253,12 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		cmd.Flags().Bool("exit-0-on-success", false, "return 0 as exit code if the scan execution was successful")
 		cmd.Flags().MarkHidden("exit-0-on-success")
 		// ^^
-		cmd.Flags().Int("score-threshold", 0, "if any score falls below the threshold, exit 1")
+		cmd.Flags().Int("score-threshold", 0, "fail with exit code 1 if any score falls below the threshold")
 		cmd.Flags().Bool("record", false, "record backend calls")
 		cmd.Flags().MarkHidden("record")
 
 		// v6 should make detect-cicd and category flag public, default for "detect-cicd" should switch to true
-		cmd.Flags().Bool("detect-cicd", true, "tries to detect CI/CD environments and sets the asset category to 'cicd' if detected")
+		cmd.Flags().Bool("detect-cicd", true, "attempt to detect CI/CD environments and sets the asset category to 'cicd' if detected")
 		cmd.Flags().String("category", "fleet", "sets the category for the assets 'fleet|cicd'")
 		cmd.Flags().MarkHidden("category")
 
