@@ -9,8 +9,8 @@ import (
 	"go.mondoo.com/cnquery/cli/theme/colors"
 )
 
-// OperatingSytemTheme for windows shell
-var OperatingSytemTheme = &Theme{
+// OperatingSystemTheme for windows shell
+var OperatingSystemTheme = &Theme{
 	Colors: colors.DefaultColorTheme,
 	// NOTE: windows cmd does not render purple well
 	PromptColors: PromptColors{

@@ -78,8 +78,8 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 	// use hostname as asset name
 	if p != nil && assetObj.Name == "" {
-		osProvider, isOSProvicer := m.Provider.(os.OperatingSystemProvider)
-		if isOSProvicer {
+		osProvider, isOSProvider := m.Provider.(os.OperatingSystemProvider)
+		if isOSProvider {
 			// retrieve hostname
 			hostname, err := hostname.Hostname(osProvider, p)
 			if err == nil && len(hostname) > 0 {

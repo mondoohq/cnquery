@@ -20,7 +20,7 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 	if pf.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow
 		// because it iterates through files we don't need to check. This
-		// is an optimzation for our sshfs. Also, be aware that on linux,
+		// is an optimization for our sshfs. Also, be aware that on linux,
 		// you may not have access to all the smbios things under /sys, so
 		// you want to make sure to only check the product_version file
 		content, err := afero.ReadFile(provider.FS(), azureIdentifierFileLinux)

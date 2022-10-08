@@ -58,7 +58,7 @@ func NewGithubUserIdentifier(userId string) string {
 	return "//platformid.api.mondoo.app/runtime/github/user/" + userId
 }
 
-func NewGitubRepoIdentifier(ownerId string, repoId string) string {
+func NewGitHubRepoIdentifier(ownerId string, repoId string) string {
 	return "//platformid.api.mondoo.app/runtime/github/owner/" + ownerId + "/repository/" + repoId
 }
 
@@ -82,7 +82,7 @@ func (p *Provider) Identifier() (string, error) {
 		if ownerId == "" {
 			ownerId = p.opts["user"]
 		}
-		return NewGitubRepoIdentifier(ownerId, repoId), nil
+		return NewGitHubRepoIdentifier(ownerId, repoId), nil
 	}
 
 	return "", errors.New("could not identifier GitHub asset")

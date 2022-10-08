@@ -9,10 +9,10 @@ import (
 type detect func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error)
 
 type PlatformResolver struct {
-	Name      string
-	IsFamiliy bool
-	Children  []*PlatformResolver
-	Detect    detect
+	Name     string
+	IsFamily bool
+	Children []*PlatformResolver
+	Detect   detect
 }
 
 func (r *PlatformResolver) Resolve(p os.OperatingSystemProvider) (*Platform, bool) {
@@ -51,8 +51,8 @@ func (r *PlatformResolver) resolvePlatform(pf *Platform, p os.OperatingSystemPro
 	}
 
 	// if detection is true but we have a family
-	if detected == true && r.IsFamiliy == true {
-		// we are a familiy and we may have childs to try
+	if detected == true && r.IsFamily == true {
+		// we are a family and we may have children to try
 		for _, c := range r.Children {
 			detected, resolved := c.resolvePlatform(pf, p)
 			if resolved {
@@ -69,7 +69,7 @@ func (r *PlatformResolver) resolvePlatform(pf *Platform, p os.OperatingSystemPro
 	}
 
 	// return if the detect is true and we have a leaf
-	if detected && r.IsFamiliy == false {
+	if detected && r.IsFamily == false {
 		return pf, true
 	}
 

@@ -11,7 +11,7 @@ func TestRawDataJson_removeUnderscoreKeys(t *testing.T) {
 		input []string
 		want  []string
 	}{
-		"no underscpres": {
+		"no underscores": {
 			input: []string{"this", "that"},
 			want:  []string{"this", "that"},
 		},

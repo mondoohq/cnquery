@@ -26,8 +26,8 @@ var (
 
 // Operating Systems
 var macOS = &PlatformResolver{
-	Name:      "macos",
-	IsFamiliy: false,
+	Name:     "macos",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// when we reach here, we know it is darwin
 		// check xml /System/Library/CoreServices/SystemVersion.plist
@@ -59,16 +59,16 @@ var macOS = &PlatformResolver{
 
 // is part of the darwin platfrom and fallback for non-known darwin systems
 var otherDarwin = &PlatformResolver{
-	Name:      "darwin",
-	IsFamiliy: false,
+	Name:     "darwin",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		return true, nil
 	},
 }
 
 var alpine = &PlatformResolver{
-	Name:      "alpine",
-	IsFamiliy: false,
+	Name:     "alpine",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// check if we are on edge
 		osrd := NewOSReleaseDetector(p)
@@ -106,8 +106,8 @@ var alpine = &PlatformResolver{
 }
 
 var arch = &PlatformResolver{
-	Name:      "arch",
-	IsFamiliy: false,
+	Name:     "arch",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "arch" {
 			return true, nil
@@ -117,8 +117,8 @@ var arch = &PlatformResolver{
 }
 
 var manjaro = &PlatformResolver{
-	Name:      "manjaro",
-	IsFamiliy: false,
+	Name:     "manjaro",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "manjaro" {
 			return true, nil
@@ -128,8 +128,8 @@ var manjaro = &PlatformResolver{
 }
 
 var debian = &PlatformResolver{
-	Name:      "debian",
-	IsFamiliy: false,
+	Name:     "debian",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		osrd := NewOSReleaseDetector(p)
 
@@ -166,8 +166,8 @@ var debian = &PlatformResolver{
 }
 
 var ubuntu = &PlatformResolver{
-	Name:      "ubuntu",
-	IsFamiliy: false,
+	Name:     "ubuntu",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "ubuntu" {
 			return true, nil
@@ -177,8 +177,8 @@ var ubuntu = &PlatformResolver{
 }
 
 var raspbian = &PlatformResolver{
-	Name:      "raspbian",
-	IsFamiliy: false,
+	Name:     "raspbian",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "raspbian" {
 			return true, nil
@@ -188,8 +188,8 @@ var raspbian = &PlatformResolver{
 }
 
 var kali = &PlatformResolver{
-	Name:      "kali",
-	IsFamiliy: false,
+	Name:     "kali",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "kali" {
 			return true, nil
@@ -199,8 +199,8 @@ var kali = &PlatformResolver{
 }
 
 var linuxmint = &PlatformResolver{
-	Name:      "linuxmint",
-	IsFamiliy: false,
+	Name:     "linuxmint",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "linuxmint" {
 			return true, nil
@@ -210,8 +210,8 @@ var linuxmint = &PlatformResolver{
 }
 
 var popos = &PlatformResolver{
-	Name:      "pop",
-	IsFamiliy: false,
+	Name:     "pop",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "pop" {
 			return true, nil
@@ -222,8 +222,8 @@ var popos = &PlatformResolver{
 
 // rhel PlatformResolver only detects redhat and no derivatives
 var rhel = &PlatformResolver{
-	Name:      "redhat",
-	IsFamiliy: false,
+	Name:     "redhat",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// etc redhat release was parsed by the family already,
 		// we reuse that information here
@@ -256,8 +256,8 @@ var rhel = &PlatformResolver{
 
 // The centos platform resolver finds CentOS and CentOS-like platforms alike alma and rocky
 var centos = &PlatformResolver{
-	Name:      "centos",
-	IsFamiliy: false,
+	Name:     "centos",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// works for centos 5+
 		if strings.Contains(pf.Title, "CentOS") || pf.Name == "centos" {
@@ -293,8 +293,8 @@ var centos = &PlatformResolver{
 }
 
 var fedora = &PlatformResolver{
-	Name:      "fedora",
-	IsFamiliy: false,
+	Name:     "fedora",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if strings.Contains(pf.Title, "Fedora") || pf.Name == "fedora" {
 			pf.Name = "fedora"
@@ -322,8 +322,8 @@ var fedora = &PlatformResolver{
 }
 
 var oracle = &PlatformResolver{
-	Name:      "oracle",
-	IsFamiliy: false,
+	Name:     "oracle",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// works for oracle 7+
 		if pf.Name == "ol" {
@@ -352,8 +352,8 @@ var oracle = &PlatformResolver{
 }
 
 var scientific = &PlatformResolver{
-	Name:      "scientific",
-	IsFamiliy: false,
+	Name:     "scientific",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// works for oracle 7+
 		if pf.Name == "scientific" {
@@ -371,8 +371,8 @@ var scientific = &PlatformResolver{
 }
 
 var amazonlinux = &PlatformResolver{
-	Name:      "amazonlinux",
-	IsFamiliy: false,
+	Name:     "amazonlinux",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "amzn" {
 			pf.Name = "amazonlinux"
@@ -383,8 +383,8 @@ var amazonlinux = &PlatformResolver{
 }
 
 var windriver = &PlatformResolver{
-	Name:      "wrlinux",
-	IsFamiliy: false,
+	Name:     "wrlinux",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "wrlinux" {
 			return true, nil
@@ -394,8 +394,8 @@ var windriver = &PlatformResolver{
 }
 
 var opensuse = &PlatformResolver{
-	Name:      "opensuse",
-	IsFamiliy: false,
+	Name:     "opensuse",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "opensuse" || pf.Name == "opensuse-leap" || pf.Name == "opensuse-tumbleweed" {
 			return true, nil
@@ -406,8 +406,8 @@ var opensuse = &PlatformResolver{
 }
 
 var sles = &PlatformResolver{
-	Name:      "sles",
-	IsFamiliy: false,
+	Name:     "sles",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "sles" {
 			return true, nil
@@ -417,8 +417,8 @@ var sles = &PlatformResolver{
 }
 
 var suseMicroOs = &PlatformResolver{
-	Name:      "suse-microos",
-	IsFamiliy: false,
+	Name:     "suse-microos",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "suse-microos" {
 			return true, nil
@@ -428,8 +428,8 @@ var suseMicroOs = &PlatformResolver{
 }
 
 var gentoo = &PlatformResolver{
-	Name:      "gentoo",
-	IsFamiliy: false,
+	Name:     "gentoo",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		f, err := p.FS().Open("/etc/gentoo-release")
 		if err != nil {
@@ -461,8 +461,8 @@ var gentoo = &PlatformResolver{
 }
 
 var ubios = &PlatformResolver{
-	Name:      "ubios",
-	IsFamiliy: false,
+	Name:     "ubios",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "ubios" {
 			return true, nil
@@ -472,8 +472,8 @@ var ubios = &PlatformResolver{
 }
 
 var busybox = &PlatformResolver{
-	Name:      "busybox",
-	IsFamiliy: false,
+	Name:     "busybox",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		busyboxExists, err := afero.Exists(p.FS(), "/bin/busybox")
 		if !busyboxExists || err != nil {
@@ -523,8 +523,8 @@ var busybox = &PlatformResolver{
 }
 
 var photon = &PlatformResolver{
-	Name:      "photon",
-	IsFamiliy: false,
+	Name:     "photon",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if pf.Name == "photon" {
 			return true, nil
@@ -534,8 +534,8 @@ var photon = &PlatformResolver{
 }
 
 var openwrt = &PlatformResolver{
-	Name:      "openwrt",
-	IsFamiliy: false,
+	Name:     "openwrt",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// No clue why they are not using either lsb-release or os-release
 		f, err := p.FS().Open("/etc/openwrt_release")
@@ -569,8 +569,8 @@ var openwrt = &PlatformResolver{
 
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
-	Name:      "generic-linux",
-	IsFamiliy: false,
+	Name:     "generic-linux",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// if we reach here, we know that we detected linux already
 		log.Debug().Msg("platform> we do not know the linux system, but we do our best in guessing")
@@ -579,8 +579,8 @@ var defaultLinux = &PlatformResolver{
 }
 
 var netbsd = &PlatformResolver{
-	Name:      "netbsd",
-	IsFamiliy: false,
+	Name:     "netbsd",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if strings.Contains(strings.ToLower(pf.Name), "netbsd") == false {
 			return false, nil
@@ -598,8 +598,8 @@ var netbsd = &PlatformResolver{
 }
 
 var freebsd = &PlatformResolver{
-	Name:      "freebsd",
-	IsFamiliy: false,
+	Name:     "freebsd",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if strings.Contains(strings.ToLower(pf.Name), "freebsd") == false {
 			return false, nil
@@ -617,8 +617,8 @@ var freebsd = &PlatformResolver{
 }
 
 var openbsd = &PlatformResolver{
-	Name:      "openbsd",
-	IsFamiliy: false,
+	Name:     "openbsd",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if strings.Contains(strings.ToLower(pf.Name), "openbsd") == false {
 			return false, nil
@@ -636,8 +636,8 @@ var openbsd = &PlatformResolver{
 }
 
 var dragonflybsd = &PlatformResolver{
-	Name:      "dragonflybsd",
-	IsFamiliy: false,
+	Name:     "dragonflybsd",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if strings.Contains(strings.ToLower(pf.Name), "dragonfly") == false {
 			return false, nil
@@ -656,8 +656,8 @@ var dragonflybsd = &PlatformResolver{
 }
 
 var windows = &PlatformResolver{
-	Name:      "windows",
-	IsFamiliy: false,
+	Name:     "windows",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		data, err := win.GetWmiInformation(p)
 		if err != nil {
@@ -695,9 +695,9 @@ var windows = &PlatformResolver{
 
 // Families
 var darwinFamily = &PlatformResolver{
-	Name:      FAMILY_DARWIN,
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{macOS, otherDarwin},
+	Name:     FAMILY_DARWIN,
+	IsFamily: true,
+	Children: []*PlatformResolver{macOS, otherDarwin},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		if strings.Contains(strings.ToLower(pf.Name), "darwin") == false {
 			return false, nil
@@ -732,9 +732,9 @@ var darwinFamily = &PlatformResolver{
 }
 
 var bsdFamily = &PlatformResolver{
-	Name:      FAMILY_BSD,
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{darwinFamily, netbsd, freebsd, openbsd, dragonflybsd},
+	Name:     FAMILY_BSD,
+	IsFamily: true,
+	Children: []*PlatformResolver{darwinFamily, netbsd, freebsd, openbsd, dragonflybsd},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		osrd := NewOSReleaseDetector(p)
 		unames, err := osrd.unames()
@@ -757,8 +757,8 @@ var bsdFamily = &PlatformResolver{
 }
 
 var redhatFamily = &PlatformResolver{
-	Name:      "redhat",
-	IsFamiliy: true,
+	Name:     "redhat",
+	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
 	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific},
@@ -801,29 +801,29 @@ var redhatFamily = &PlatformResolver{
 }
 
 var debianFamily = &PlatformResolver{
-	Name:      "debian",
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{debian, ubuntu, raspbian, kali, linuxmint, popos},
+	Name:     "debian",
+	IsFamily: true,
+	Children: []*PlatformResolver{debian, ubuntu, raspbian, kali, linuxmint, popos},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		return true, nil
 	},
 }
 
 var suseFamily = &PlatformResolver{
-	Name:      "suse",
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{opensuse, sles, suseMicroOs},
+	Name:     "suse",
+	IsFamily: true,
+	Children: []*PlatformResolver{opensuse, sles, suseMicroOs},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		return true, nil
 	},
 }
 
 var archFamily = &PlatformResolver{
-	Name:      "arch",
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{arch, manjaro},
+	Name:     "arch",
+	IsFamily: true,
+	Children: []*PlatformResolver{arch, manjaro},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
-		// if the file exists, we are on arch or one of its derivates
+		// if the file exists, we are on arch or one of its derivatives
 		f, err := p.FS().Open("/etc/arch-release")
 		if err != nil {
 			return false, nil
@@ -852,9 +852,9 @@ var archFamily = &PlatformResolver{
 }
 
 var linuxFamily = &PlatformResolver{
-	Name:      FAMILY_LINUX,
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, defaultLinux},
+	Name:     FAMILY_LINUX,
+	IsFamily: true,
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(p)
@@ -961,9 +961,9 @@ var linuxFamily = &PlatformResolver{
 }
 
 var unixFamily = &PlatformResolver{
-	Name:      FAMILY_UNIX,
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{bsdFamily, linuxFamily, solaris},
+	Name:     FAMILY_UNIX,
+	IsFamily: true,
+	Children: []*PlatformResolver{bsdFamily, linuxFamily, solaris},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// in order to support linux container image detection, we cannot run
 		// processes here, lets just read files to detect a system
@@ -972,8 +972,8 @@ var unixFamily = &PlatformResolver{
 }
 
 var solaris = &PlatformResolver{
-	Name:      "solaris",
-	IsFamiliy: false,
+	Name:     "solaris",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		osrd := NewOSReleaseDetector(p)
 
@@ -995,7 +995,7 @@ var solaris = &PlatformResolver{
 
 		pf.Name = "solaris"
 
-		// NOTE: we have only one solaris system here, since we only get here is the familiy is sunos, we pass
+		// NOTE: we have only one solaris system here, since we only get here is the family is sunos, we pass
 
 		// try to read "/etc/release" for more details
 		f, err := p.FS().Open("/etc/release")
@@ -1022,8 +1022,8 @@ var solaris = &PlatformResolver{
 }
 
 var esxi = &PlatformResolver{
-	Name:      "esxi",
-	IsFamiliy: false,
+	Name:     "esxi",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		log.Debug().Msg("check for esxi system")
 		// at this point, we are already 99% its esxi
@@ -1051,9 +1051,9 @@ var esxi = &PlatformResolver{
 }
 
 var esxFamily = &PlatformResolver{
-	Name:      "esx",
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{esxi},
+	Name:     "esx",
+	IsFamily: true,
+	Children: []*PlatformResolver{esxi},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		osrd := NewOSReleaseDetector(p)
 
@@ -1080,17 +1080,17 @@ var esxFamily = &PlatformResolver{
 }
 
 var WindowsFamily = &PlatformResolver{
-	Name:      FAMILY_WINDOWS,
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{windows},
+	Name:     FAMILY_WINDOWS,
+	IsFamily: true,
+	Children: []*PlatformResolver{windows},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		return true, nil
 	},
 }
 
 var unknownOperatingSystem = &PlatformResolver{
-	Name:      "unknown-os",
-	IsFamiliy: false,
+	Name:     "unknown-os",
+	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		// if we reach here, we really do not know the system
 		log.Debug().Msg("platform> we do not know the operating system, please contact support")
@@ -1099,9 +1099,9 @@ var unknownOperatingSystem = &PlatformResolver{
 }
 
 var OperatingSystems = &PlatformResolver{
-	Name:      "os",
-	IsFamiliy: true,
-	Children:  []*PlatformResolver{unixFamily, WindowsFamily, esxFamily, unknownOperatingSystem},
+	Name:     "os",
+	IsFamily: true,
+	Children: []*PlatformResolver{unixFamily, WindowsFamily, esxFamily, unknownOperatingSystem},
 	Detect: func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error) {
 		return true, nil
 	},

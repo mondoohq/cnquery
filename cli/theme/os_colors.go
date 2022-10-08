@@ -11,8 +11,8 @@ import (
 	"go.mondoo.com/cnquery/cli/theme/colors"
 )
 
-// OperatingSytemTheme for unix shell
-var OperatingSytemTheme = &Theme{
+// OperatingSystemTheme for unix shell
+var OperatingSystemTheme = &Theme{
 	Colors: colors.DefaultColorTheme,
 	PromptColors: PromptColors{
 		PrefixTextColor:              prompt.Purple,

@@ -251,9 +251,9 @@ func TestInventoryConversion(t *testing.T) {
 	err = ansibleInventory.Decode(input)
 	assert.Nil(t, err)
 
-	v1Intentory := ansibleInventory.ToV1Inventory()
+	v1Inventory := ansibleInventory.ToV1Inventory()
 
-	assert.Equal(t, 8, len(v1Intentory.Spec.Assets))
+	assert.Equal(t, 8, len(v1Inventory.Spec.Assets))
 }
 
 func TestInventoryWithUsernameConversion(t *testing.T) {
@@ -265,22 +265,22 @@ func TestInventoryWithUsernameConversion(t *testing.T) {
 	err = ansibleInventory.Decode(input)
 	assert.Nil(t, err)
 
-	v1Intentory := ansibleInventory.ToV1Inventory()
-	assert.Equal(t, 2, len(v1Intentory.Spec.Assets))
+	v1Inventory := ansibleInventory.ToV1Inventory()
+	assert.Equal(t, 2, len(v1Inventory.Spec.Assets))
 
-	a := findAsset(v1Intentory.Spec.Assets, "instance1")
+	a := findAsset(v1Inventory.Spec.Assets, "instance1")
 	assert.NotNil(t, a)
 	assert.Equal(t, "104.154.55.51", a.Connections[0].Host)
 	secretId := a.Connections[0].Credentials[0].SecretId
-	cred := v1Intentory.Spec.Credentials[secretId]
+	cred := v1Inventory.Spec.Credentials[secretId]
 	assert.Equal(t, "chris", cred.User)
 	assert.Equal(t, vault.CredentialType_ssh_agent, cred.Type)
 
-	a = findAsset(v1Intentory.Spec.Assets, "34.133.130.53")
+	a = findAsset(v1Inventory.Spec.Assets, "34.133.130.53")
 	assert.NotNil(t, a)
 	assert.Equal(t, "34.133.130.53", a.Connections[0].Host)
 	secretId = a.Connections[0].Credentials[0].SecretId
-	cred = v1Intentory.Spec.Credentials[secretId]
+	cred = v1Inventory.Spec.Credentials[secretId]
 	assert.Equal(t, "chris", cred.User)
 	assert.Equal(t, vault.CredentialType_ssh_agent, cred.Type)
 }
@@ -307,14 +307,14 @@ func TestTagsAndGroups(t *testing.T) {
 	}}, hosts)
 
 	// convert to mondoo inventory
-	v1Intentory := ansibleInventory.ToV1Inventory()
-	assert.Equal(t, 1, len(v1Intentory.Spec.Assets))
+	v1Inventory := ansibleInventory.ToV1Inventory()
+	assert.Equal(t, 1, len(v1Inventory.Spec.Assets))
 
-	a := findAsset(v1Intentory.Spec.Assets, "instance1")
+	a := findAsset(v1Inventory.Spec.Assets, "instance1")
 	assert.NotNil(t, a)
 	assert.Equal(t, "192.168.178.11", a.Connections[0].Host)
 	secretId := a.Connections[0].Credentials[0].SecretId
-	cred := v1Intentory.Spec.Credentials[secretId]
+	cred := v1Inventory.Spec.Credentials[secretId]
 	assert.Equal(t, "custom-user", cred.User)
 	assert.Equal(t, vault.CredentialType_private_key, cred.Type)
 	assert.Equal(t, "/home/custom-user/.ssh/id_rsa", cred.PrivateKeyPath)

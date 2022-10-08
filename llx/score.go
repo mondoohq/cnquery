@@ -31,7 +31,7 @@ func scoreString(vector string) ([]byte, error) {
 	}
 }
 
-// ScoreString turns a given score data into a printeable string
+// ScoreString turns a given score data into a printable string
 func ScoreString(b []byte) string {
 	switch b[0] {
 	case scoreTypeMondoo:

@@ -337,7 +337,7 @@ func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volI
 		if location != newlocation {
 			location = newlocation
 		} else {
-			location = newVolumeAttachmentLoc() // we shouldnt have gotten the same one the first go round, but it is randomized, so there is a possibility. try again in that case.
+			location = newVolumeAttachmentLoc() // we shouldn't have gotten the same one the first go round, but it is randomized, so there is a possibility. try again in that case.
 		}
 		res, err = ec2svc.AttachVolume(ctx, &ec2.AttachVolumeInput{
 			Device: aws.String(location), VolumeId: &volID, // warning: there is no guarantee that aws will place the volume at this location

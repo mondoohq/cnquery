@@ -84,7 +84,7 @@ func platfromPartens(r *PlatformResolver) map[string][]string {
 }
 
 func traverseFamily(r *PlatformResolver, parents []string) map[string][]string {
-	if r.IsFamiliy {
+	if r.IsFamily {
 		// make sure we completely copy the values, otherwise they are going to overwrite themselves
 		p := make([]string, len(parents))
 		copy(p, parents)

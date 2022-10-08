@@ -98,7 +98,7 @@ func TestTarSymlinkFile(t *testing.T) {
 }
 
 // deactivate test for now for speedier testing
-// in contrast to alpine, the symlink on centos is pointinng to a relative target and not an absolute one
+// in contrast to alpine, the symlink on centos is pointing to a relative target and not an absolute one
 func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 	err := cacheCentos()
 	require.NoError(t, err, "should create tar without error")
