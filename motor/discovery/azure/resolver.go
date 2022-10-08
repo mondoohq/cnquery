@@ -30,7 +30,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	subscriptionID := tc.Options["subscriptionID"]
+	subscriptionID := tc.Options["subscription-id"]
 
 	// TODO: for now we only support the azure cli authentication
 	err := azure_provider.IsAzInstalled()
@@ -57,7 +57,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	// attach tenant to config
-	tc.Options["tenantID"] = *subscription.TenantID
+	tc.Options["tenant-id"] = *subscription.TenantID
 
 	provider, err := azure_provider.New(tc)
 	if err != nil {

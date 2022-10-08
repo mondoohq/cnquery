@@ -90,6 +90,10 @@ func (p *Inventory) ToYAML() ([]byte, error) {
 // Re-generating yaml, results into a different yaml output. While the results are identical,
 // the yaml file is not.
 func (p *Inventory) PreProcess() error {
+	if p.Spec == nil {
+		p.Spec = &InventorySpec{}
+	}
+
 	if p.Spec.Credentials == nil {
 		p.Spec.Credentials = map[string]*vault.Credential{}
 	}
@@ -159,7 +163,11 @@ func (p *Inventory) PreProcess() error {
 				return errors.New("cannot read credential: " + path)
 			}
 			cred.Secret = data
-			cred.Type = vault.CredentialType_private_key
+
+			// only set the credential type if it is not set, pkcs12 also uses the private key path
+			if cred.Type == vault.CredentialType_undefined {
+				cred.Type = vault.CredentialType_private_key
+			}
 		}
 	}
 	return nil

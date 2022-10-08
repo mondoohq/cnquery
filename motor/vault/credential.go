@@ -14,7 +14,9 @@ func (cred *Credential) PreProcess() {
 	if cred.PrivateKey != "" {
 		cred.Secret = []byte(cred.PrivateKey)
 		cred.PrivateKey = ""
-		cred.Type = CredentialType_private_key
+		if cred.Type == CredentialType_undefined {
+			cred.Type = CredentialType_private_key
+		}
 	}
 
 	// NOTE: it is possible that private keys hold an additional password, therefore we only

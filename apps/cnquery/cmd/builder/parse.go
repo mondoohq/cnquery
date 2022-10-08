@@ -304,7 +304,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if subscription, err := cmd.Flags().GetString("subscription"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --subscription value")
 		} else if subscription != "" {
-			connection.Options["subscriptionID"] = subscription
+			connection.Options["subscription-id"] = subscription
 		}
 	case providers.ProviderType_GCP:
 		connection.Backend = providerType
@@ -418,10 +418,10 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 
 		if tenantId, err := cmd.Flags().GetString("tenant-id"); err == nil {
-			connection.Options["tenantId"] = tenantId
+			connection.Options["tenant-id"] = tenantId
 		}
 		if clientID, err := cmd.Flags().GetString("client-id"); err == nil {
-			connection.Options["clientId"] = clientID
+			connection.Options["client-id"] = clientID
 		}
 
 		if clientSecret, err := cmd.Flags().GetString("client-secret"); err != nil {
@@ -437,20 +437,19 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if certificatepPath, err := cmd.Flags().GetString("certificate-path"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --certificate-path value")
 		} else if certificatepPath != "" {
+			if password == "" {
+				certificateSecret, err := cmd.Flags().GetString("certificate-secret")
+				if err != nil {
+					log.Fatal().Err(err).Msg("cannot parse --certificate-secret value")
+				} else {
+					password = certificateSecret
+				}
+			}
 			connection.Credentials = append(connection.Credentials, &vault.Credential{
-				Type:           vault.CredentialType_private_key,
+				Type:           vault.CredentialType_pkcs12,
 				User:           username,
 				PrivateKeyPath: certificatepPath,
-			})
-		}
-
-		if certificateSecret, err := cmd.Flags().GetString("certificate-secret"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --certificate-secret value")
-		} else if certificateSecret != "" {
-			connection.Credentials = append(connection.Credentials, &vault.Credential{
-				Type:     vault.CredentialType_password,
-				User:     username,
-				Password: password,
+				Password:       password,
 			})
 		}
 	case providers.ProviderType_HOST:
