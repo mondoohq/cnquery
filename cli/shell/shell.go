@@ -360,7 +360,7 @@ func (s *Shell) listFilteredResources(cmd string) {
 	search := m[1]
 	schema := all.Registry.Schema()
 
-	// if we find the requrested resource, just return it
+	// if we find the requested resource, just return it
 	if _, ok := schema.Resources[search]; ok {
 		s.renderResources(schema, []string{search})
 		return

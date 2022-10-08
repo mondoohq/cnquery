@@ -72,7 +72,7 @@ func StartShell(conf *ShellConfig) error {
 		if isTTY {
 			connectAsset = components.AssetSelect(assetList)
 		} else {
-			fmt.Println(components.AssetList(theme.OperatingSytemTheme, assetList))
+			fmt.Println(components.AssetList(theme.OperatingSystemTheme, assetList))
 			log.Fatal().Msg("cannot connect to more than one asset, use --platform-id to select a specific asset")
 		}
 	}

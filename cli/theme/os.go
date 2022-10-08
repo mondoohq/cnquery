@@ -6,7 +6,7 @@ const logo = " .--. ,-.,-. .---..-..-. .--. .--. .-..-.™\n" +
 	"   mondoo™     : :                  .-. :\n" +
 	"               :_:                  `._.'"
 
-var DefaultTheme = OperatingSytemTheme
+var DefaultTheme = OperatingSystemTheme
 
 func init() {
 	DefaultTheme.PolicyPrinter.Error = DefaultTheme.Error

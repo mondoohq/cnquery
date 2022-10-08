@@ -36,7 +36,7 @@ func (a *DockerRegistryImages) remoteOptions() []remote.Option {
 	options := []remote.Option{}
 
 	// does not work with bearer auth, therefore it need to be disabled when other remote auth options are used
-	// TODO: we should implement this a bit differentlys
+	// TODO: we should implement this a bit differently
 	if a.DisableKeychainAuth == false {
 		options = append(options, remote.WithAuthFromKeychain(authn.DefaultKeychain))
 	}

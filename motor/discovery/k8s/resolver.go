@@ -140,7 +140,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 	// Only discover cluster and nodes if there are no resource filters. For CI/CD do not
 	// discover the cluster asset at all. In that case that would be the admission review resource
-	// for which we only care if we have explictly enabled discovery for it.
+	// for which we only care if we have explicitly enabled discovery for it.
 	var clusterAsset *asset.Asset
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||

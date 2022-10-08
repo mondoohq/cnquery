@@ -76,7 +76,7 @@ func (ri *ApiResourceIndex) find(s string) []ApiResource {
 		return m
 	}
 
-	// discover resoure type by shortname
+	// discover resource type by shortname
 	m, ok = ri.shortnameindex[s]
 	if ok {
 		return m

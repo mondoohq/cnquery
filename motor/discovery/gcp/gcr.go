@@ -108,7 +108,7 @@ func (a *GcrImages) ListRepository(repository string, recursive bool) ([]*asset.
 	return imgs, nil
 }
 
-// List uses your GCP credentials to iterate over all your projects to identify protential repos
+// List uses your GCP credentials to iterate over all your projects to identify potential repos
 func (a *GcrImages) List() ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	// repoAssets, err := a.ListRepository("index.docker.io/mondoo/client", false)

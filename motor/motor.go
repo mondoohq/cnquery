@@ -114,7 +114,7 @@ func (m *Motor) IsRecording() bool {
 	return m.isRecording
 }
 
-// returns marshaled toml stucture
+// returns marshaled toml structure
 func (m *Motor) Recording() []byte {
 	m.l.Lock()
 	defer m.l.Unlock()

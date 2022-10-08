@@ -320,7 +320,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		}
 
 		// FIXME: remove in v7.0 vv
-		// We are still supporting the --connection flag througout v6.x and will remove
+		// We are still supporting the --connection flag throughout v6.x and will remove
 		// it after. Remember to migrate the zero-state here
 		connection, _ := cmd.Flags().GetString("connection")
 		// Since we support the fallback for --connection, we check if it was provided

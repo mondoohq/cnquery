@@ -127,7 +127,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 				delete(clonedConfig.Options, "user")
 
 				list = append(list, &asset.Asset{
-					PlatformIds: []string{github_provider.NewGitubRepoIdentifier(owner, repoName)},
+					PlatformIds: []string{github_provider.NewGitHubRepoIdentifier(owner, repoName)},
 					Name:        owner + "/" + repoName,
 					Platform:    github_provider.GithubRepoPlatform,
 					Connections: []*providers.Config{clonedConfig}, // pass-in the current config
