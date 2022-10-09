@@ -1,0 +1,42 @@
+packs:
+  - uid: mondoo-kubernetes-cluster-incident-response
+    filters:
+      - asset.platform == "kubernetes"
+    queries:
+      - uid: k8s-cluster-version
+        title: Gather Kubernetes Cluster Version
+        query: |
+          k8s.serverVersion
+  - uid: mondoo-kubernetes-pods-incident-response
+    filters:
+      - asset.platform == "k8s-pod"
+    queries:
+      - uid: k8s-pod-security-context
+        title: Gather Pods Security Context
+        query: |
+          k8s.pod {
+            initContainers {
+              securityContext
+            }
+            containers {
+              securityContext
+            }
+          }
+      - uid: k8s-pod-container
+        title: Gather Container Image Information
+        query: |
+          k8s.pod { 
+            name
+            containers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
+          }
