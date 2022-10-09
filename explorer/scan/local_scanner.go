@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gogo/status"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -14,11 +15,13 @@ import (
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/explorer/executor"
 	"go.mondoo.com/cnquery/internal/datalakes/inmemory"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
@@ -26,11 +29,14 @@ import (
 )
 
 type LocalScanner struct {
-	ctx context.Context
+	ctx     context.Context
+	fetcher *fetcher
 }
 
 func NewLocalScanner() *LocalScanner {
-	return &LocalScanner{}
+	return &LocalScanner{
+		fetcher: newFetcher(),
+	}
 }
 
 func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.ReportCollection, error) {
@@ -44,18 +50,6 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 
 	if ctx == nil {
 		return nil, errors.New("no context provided to run job with local scanner")
-	}
-
-	if job.Bundle == nil {
-		return nil, errors.New("no bundle provided to run")
-	}
-
-	if len(job.Bundle.Packs) == 0 {
-		return nil, errors.New("bundle doesn't contain any query packs")
-	}
-
-	if job.Bundle.OwnerMrn == "" {
-		job.Bundle.OwnerMrn = "//bundle.api.mondoo.app"
 	}
 
 	dctx := discovery.InitCtx(ctx)
@@ -197,6 +191,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 			db:       db,
 			services: services,
 			job:      job,
+			fetcher:  s.fetcher,
 			Registry: registry,
 			Schema:   schema,
 			Runtime:  runtime,
@@ -216,6 +211,7 @@ type localAssetScanner struct {
 	db       *inmemory.Db
 	services *explorer.LocalServices
 	job      *AssetJob
+	fetcher  *fetcher
 
 	Registry *resources.Registry
 	Schema   *resources.Schema
@@ -250,6 +246,19 @@ func (s *localAssetScanner) prepareAsset() error {
 		return err
 	}
 
+	if s.job.Bundle == nil {
+		return errors.New("no bundle provided to run")
+	}
+
+	if len(s.job.Bundle.Packs) == 0 {
+		return errors.New("bundle doesn't contain any query packs")
+	}
+
+	// TODO: we should only set this if we are running incognito
+	if s.job.Bundle.OwnerMrn == "" {
+		s.job.Bundle.OwnerMrn = "//local.cnspec.io/run/" + uuid.New().String()
+	}
+
 	// FIXME: we do not currently respect bundle filters!
 	_, err := hub.SetBundle(s.job.Ctx, s.job.Bundle)
 	if err != nil {
@@ -269,12 +278,53 @@ func (s *localAssetScanner) prepareAsset() error {
 	return err
 }
 
+var assetDetectBundle = executor.MustCompile("asset { kind platform runtime version family }")
+
 func (s *localAssetScanner) ensureBundle() error {
 	if s.job.Bundle != nil {
 		return nil
 	}
 
-	return errors.New("Default Query Packs are NOT YET IMPLEMENTED")
+	features := cnquery.GetFeatures(s.job.Ctx)
+	res, err := mql.ExecuteCode(s.Schema, s.Runtime, assetDetectBundle, nil, features)
+	if err != nil {
+		panic(err)
+	}
+
+	if err != nil {
+		return errors.Wrap(err, "failed to run asset detection query")
+	}
+
+	// FIXME: remove hardcoded lookup and use embedded datastructures instead
+	data := res["IA0bVPKFxIh8Z735sqDh7bo/FNIYUQ/B4wLijN+YhiBZePu1x2sZCMcHoETmWM9jocdWbwGykKvNom/7QSm8ew=="].Data.Value.(map[string]interface{})
+	kind := data["1oxYPIhW1eZ+14s234VsQ0Q7p9JSmUaT/RTWBtDRG1ZwKr8YjMcXz76x10J9iu13AcMmGZd43M1NNqPXZtTuKQ=="].(*llx.RawData).Value.(string)
+	platform := data["W+8HW/v60Fx0nqrVz+yTIQjImy4ki4AiqxcedooTPP3jkbCESy77ptEhq9PlrKjgLafHFn8w4vrimU4bwCi6aQ=="].(*llx.RawData).Value.(string)
+	runtime := data["a3RMPjrhk+jqkeXIISqDSi7EEP8QybcXCeefqNJYVUNcaDGcVDdONFvcTM2Wts8qTRXL3akVxpskitXWuI/gdA=="].(*llx.RawData).Value.(string)
+	version := data["5d4FZxbPkZu02MQaHp3C356NJ9TeVsJBw8Enu+TDyBGdWlZM/AE+J5UT/TQ72AmDViKZe97Hxz1Jt3MjcEH/9Q=="].(*llx.RawData).Value.(string)
+	fraw := data["l/aGjrixdNHvCxu5ib4NwkYb0Qrh3sKzcrGTkm7VxNWfWaaVbOxOEoGEMnjGJTo31jhYNeRm39/zpepZaSbUIw=="].(*llx.RawData).Value.([]interface{})
+	family := make([]string, len(fraw))
+	for i := range fraw {
+		family[i] = fraw[i].(string)
+	}
+
+	var hub explorer.QueryHub = s.services
+	urls, err := hub.DefaultPacks(s.job.Ctx, &explorer.DefaultPacksReq{
+		Kind:     kind,
+		Platform: platform,
+		Runtime:  runtime,
+		Version:  version,
+		Family:   family,
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(urls.Urls) == 0 {
+		return errors.New("cannot find any default policies for this asset (" + platform + ")")
+	}
+
+	s.job.Bundle, err = s.fetcher.fetchBundles(s.job.Ctx, urls.Urls...)
+	return err
 }
 
 func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {

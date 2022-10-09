@@ -13,15 +13,21 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
+	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/config"
+	"go.mondoo.com/cnquery/cli/execruntime"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/explorer/scan"
+	"go.mondoo.com/cnquery/motor/asset"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/ranger-rpc"
 )
 
 func init() {
@@ -363,11 +369,24 @@ type exploreConfig struct {
 
 	IsIncognito bool
 	DoRecord    bool
+
+	UpstreamConfig *resources.UpstreamConfig
 }
 
 func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*exploreConfig, error) {
+	opts, optsErr := cnquery_config.ReadConfig()
+	if optsErr != nil {
+		log.Fatal().Err(optsErr).Msg("could not load configuration")
+	}
+	config.DisplayUsedConfig()
+
+	// display activated features
+	if len(opts.Features) > 0 {
+		log.Info().Strs("features", opts.Features).Msg("user activated features")
+	}
+
 	conf := exploreConfig{
-		Features:       cnquery.DefaultFeatures,
+		Features:       opts.GetFeatures(),
 		IsIncognito:    viper.GetBool("incognito"),
 		DoRecord:       viper.GetBool("record"),
 		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
@@ -400,11 +419,38 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 		return nil, errors.Wrap(err, "could not load configuration")
 	}
 
-	// TODO: DETECT CI/CD
-	// TODO: SERVICE CREDENTIALS
+	// detect CI/CD runs and read labels from runtime and apply them to all assets in the inventory
+	runtimeEnv := execruntime.Detect()
+	if opts.AutoDetectCICDCategory && runtimeEnv.IsAutomatedEnv() || opts.Category == "cicd" {
+		log.Info().Msg("detected ci-cd environment")
+		// NOTE: we only apply those runtime environment labels for CI/CD runs to ensure other assets from the
+		// inventory are not touched, we may consider to add the data to the flagAsset
+		if runtimeEnv != nil {
+			runtimeLabels := runtimeEnv.Labels()
+			conf.Inventory.ApplyLabels(runtimeLabels)
+		}
+		conf.Inventory.ApplyCategory(asset.AssetCategory_CATEGORY_CICD)
+	}
+
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount != nil {
+		log.Info().Msg("using service account credentials")
+		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+
+		conf.UpstreamConfig = &resources.UpstreamConfig{
+			SpaceMrn:    opts.GetParentMrn(),
+			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			Plugins:     []ranger.ClientPlugin{certAuth},
+		}
+	}
 
 	if len(conf.QueryPackPaths) > 0 && !conf.IsIncognito {
 		log.Warn().Msg("Scanning with local bundles will switch into --incognito mode by default. Your results will not be sent upstream.")
+		conf.IsIncognito = true
+	}
+
+	if serviceAccount == nil && !conf.IsIncognito {
+		log.Warn().Msg("No credentials provided. Switching to --incogito mode.")
 		conf.IsIncognito = true
 	}
 

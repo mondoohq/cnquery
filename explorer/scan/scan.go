@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
-//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. scan.proto
+//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. cnquery_explorer_scan.proto
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
