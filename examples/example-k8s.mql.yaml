@@ -1,0 +1,16 @@
+packs:
+  - uid: kubernetes-pod-security-info
+    filters:
+      - asset.platform == "k8s-pod"
+    queries:
+      - title: Gather Pods Security Context
+        uid: k8s-pods-security-context
+        query: |
+          k8s.pod {
+            initContainers {
+              securityContext
+            }
+            containers {
+              securityContext
+            }
+          }

@@ -2,7 +2,7 @@ packs:
 - uid: linux-mixed-queries
   context: os.linux
   filters:
-  - asset.family.contains("linux")
+  - asset.family.contains("unix")
 
   queries:
   - title: Find all SSH packages that are installed
