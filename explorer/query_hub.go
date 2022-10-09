@@ -3,12 +3,17 @@ package explorer
 import (
 	"context"
 	"errors"
+	"os"
+
+	"go.mondoo.com/ranger-rpc"
 
 	"github.com/gogo/status"
 	"go.mondoo.com/cnquery/logger"
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 )
+
+const defaultQueryHubUrl = "https://hub.api.mondoo.com"
 
 var tracer = otel.Tracer("go.mondoo.com/cnquery/explorer")
 
@@ -204,6 +209,28 @@ func (s *LocalServices) DeleteQueryPack(ctx context.Context, in *Mrn) (*Empty, e
 	}
 
 	return globalEmpty, s.DataLake.DeleteQueryPack(ctx, in.Mrn)
+}
+
+// DefaultPacks retrieves a list of default packs for a given asset
+func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) (*URLs, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "no filters provided")
+	}
+
+	if s.Upstream != nil {
+		return s.Upstream.DefaultPacks(ctx, req)
+	}
+
+	queryHubURL := os.Getenv("QUERYHUB_URL")
+	if queryHubURL == "" {
+		queryHubURL = defaultQueryHubUrl
+	}
+
+	client, err := NewQueryHubClient(queryHubURL, ranger.DefaultHttpClient())
+	if err != nil {
+		return nil, err
+	}
+	return client.DefaultPacks(ctx, req)
 }
 
 // HELPER METHODS

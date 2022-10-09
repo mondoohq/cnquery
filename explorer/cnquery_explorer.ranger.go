@@ -26,6 +26,7 @@ type QueryHub interface {
 	GetQueryPack(context.Context, *Mrn) (*QueryPack, error)
 	GetFilters(context.Context, *Mrn) (*Mqueries, error)
 	List(context.Context, *ListReq) (*QueryPacks, error)
+	DefaultPacks(context.Context, *DefaultPacksReq) (*URLs, error)
 }
 
 // client implementation
@@ -89,6 +90,11 @@ func (c *QueryHubClient) List(ctx context.Context, in *ListReq) (*QueryPacks, er
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/List"}, ""), in, out)
 	return out, err
 }
+func (c *QueryHubClient) DefaultPacks(ctx context.Context, in *DefaultPacksReq) (*URLs, error) {
+	out := new(URLs)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/DefaultPacks"}, ""), in, out)
+	return out, err
+}
 
 // server implementation
 
@@ -119,6 +125,7 @@ func NewQueryHubServer(handler QueryHub, opts ...QueryHubServerOption) http.Hand
 			"GetQueryPack":    srv.GetQueryPack,
 			"GetFilters":      srv.GetFilters,
 			"List":            srv.List,
+			"DefaultPacks":    srv.DefaultPacks,
 		},
 	}
 	return ranger.NewRPCServer(&service)
@@ -296,6 +303,30 @@ func (p *QueryHubServer) List(ctx context.Context, reqBytes *[]byte) (pb.Message
 		return nil, err
 	}
 	return p.handler.List(ctx, &req)
+}
+func (p *QueryHubServer) DefaultPacks(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req DefaultPacksReq
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.DefaultPacks(ctx, &req)
 }
 
 // service interface definition

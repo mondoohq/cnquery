@@ -24,6 +24,10 @@ func ReadConfig() (*CliConfig, error) {
 type CliConfig struct {
 	// inherit common config
 	CommonCliConfig `mapstructure:",squash"`
+
+	// Asset Category
+	Category               string `json:"category,omitempty" mapstructure:"category"`
+	AutoDetectCICDCategory bool   `json:"detect-cicd,omitempty" mapstructure:"detect-cicd"`
 }
 
 type CommonCliConfig struct {

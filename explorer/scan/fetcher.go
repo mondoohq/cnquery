@@ -1,0 +1,88 @@
+package scan
+
+import (
+	"context"
+	"io"
+	"net/http"
+
+	"github.com/google/uuid"
+
+	"github.com/pkg/errors"
+	"go.mondoo.com/cnquery/explorer"
+)
+
+type fetcher struct {
+	cache map[string]*explorer.Bundle
+}
+
+func newFetcher() *fetcher {
+	return &fetcher{
+		cache: map[string]*explorer.Bundle{},
+	}
+}
+
+func (f *fetcher) fetchBundles(ctx context.Context, urls ...string) (*explorer.Bundle, error) {
+	var res *explorer.Bundle = &explorer.Bundle{}
+
+	for i := range urls {
+		url := urls[i]
+		if cur, ok := f.cache[url]; ok {
+			res.AddBundle(cur)
+			continue
+		}
+
+		cur, err := f.fetchBundle(url)
+		if err != nil {
+			return nil, err
+		}
+
+		// TODO: we should only set this if we are running incognito
+		if cur.OwnerMrn == "" {
+			cur.OwnerMrn = "//local.cnquery.io/run/" + uuid.New().String()
+		}
+
+		// need to generate MRNs for everything
+		if _, err := cur.Compile(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to compile fetched bundle")
+		}
+
+		if err = res.AddBundle(cur); err != nil {
+			return nil, errors.Wrap(err, "failed to add fetched bundle")
+		}
+	}
+
+	return res, nil
+}
+
+func (f *fetcher) fetchBundle(url string) (*explorer.Bundle, error) {
+	client := http.Client{
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			r.URL.Opaque = r.URL.Path
+			return nil
+		},
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to set up request to fetch bundle")
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; cnquery/1.0; +http://www.mondoo.com)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New("failed to fetch policy bundle from " + url + ": " + resp.Status)
+	}
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return explorer.BundleFromYAML(raw)
+}
