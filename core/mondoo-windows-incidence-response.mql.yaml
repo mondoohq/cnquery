@@ -1,0 +1,17 @@
+packs:
+  - uid: mondoo-windows-incident-response
+    filters:
+      - asset.platform == "windows"
+    queries:
+      - uid: mondoo-windows-installed-hotfixes
+        title: Retrieve information about installed hotfixes
+        query: windows.hotfixes { hotfixId installedOn }
+      - uid: mondoo-windows-uptime
+        title: Retrieve operating system uptime
+        query: os.uptime
+      - uid: mondoo-windows-installed-packages
+        title: Retrieve list about installed packages
+        query: packages.list { * }
+      - uid: mondoo-windows-running-services
+        title: Retrieve list of running services
+        query: services.list { * }

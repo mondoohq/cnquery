@@ -1,0 +1,32 @@
+packs:
+  - uid: mondoo-linux-incident-response
+    filters:
+      - asset.family.contains("linux")
+    queries:
+      - uid: mondoo-linux-installed-kernel
+        title: Retrieve information about installed Linux kernels
+        query: kernel.installed
+      - uid: mondoo-linux-kernel-info
+        title: Retrieve information about the running Linux kernel
+        query: kernel.info
+      - uid: mondoo-linux-kernel-modules
+        title: Retrieve information about Linux kernel modules
+        query: kernel.modules { name loaded }
+      - uid: mondoo-linux-processes
+        title: Retrieve information about running processes
+        query: processes.list { pid  command }
+      - uid: mondoo-linux-mounts
+        title: Retrieves list of mounted devices
+        query: mount.list { * } 
+      - uid: mondoo-linux-listening-ports
+        title: Retrieves list of all listening ports
+        query: ports.listening { * }
+      - uid: mondoo-linux-uptime
+        title: Retrieve operating system uptime
+        query: os.uptime
+      - uid: mondoo-linux-installed-packages
+        title: Retrieve list about installed packages
+        query: packages.list { * }
+      - uid: mondoo-linux-running-services
+        title: Retrieve list of running services
+        query: services.list { * }

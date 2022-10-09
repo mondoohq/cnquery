@@ -1,0 +1,29 @@
+packs:
+  - uid: mondoo-macos-incident-response
+    filters:
+      - asset.platform == "macos"
+    queries:
+      - uid: mondoo-macos-kernel-info
+        title: Retrieve information about the running macOS kernel
+        query: kernel.info["version"]
+      - uid: mondoo-macos-kernel-modules
+        title: Retrieve information about macOS kernel modules
+        query: kernel.modules { name loaded }
+      - uid: mondoo-macos-processes
+        title: Retrieve information about running processes
+        query: processes.list { pid  command }
+      - uid: mondoo-macos-mounts
+        title: Retrieves list of mounted devices
+        query: mount.list { * } 
+      - uid: mondoo-macos-uptime
+        title: Retrieve operating system uptime
+        query: os.uptime
+      - uid: mondoo-macos-installed-packages
+        title: Retrieve list about installed packages
+        query: packages.list { * }
+      - uid: mondoo-macos-running-services
+        title: Retrieve list of running services
+        query: services.list { * }
+      - uid: mondoo-macos-alf-extensions
+        title: Retrieves the exceptions for the Application Layer Firewall in OSX
+        query: macos.alf.exceptions
