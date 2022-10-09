@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	DiscoveryAll          = "all"
 	DiscoveryRepository   = "repository"
 	DiscoveryUser         = "user"
 	DiscoveryOrganization = "organization"
@@ -26,7 +25,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryRepository, DiscoveryUser}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryRepository, DiscoveryUser}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -57,7 +56,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 
 	switch pf.Name {
 	case "github-repo":
-		if pCfg.IncludesDiscoveryTarget(DiscoveryAll) ||
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
 			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 			pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
 			name := defaultName
@@ -77,7 +76,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 		}
 	case "github-user":
-		if pCfg.IncludesDiscoveryTarget(DiscoveryAll) ||
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
 			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 			pCfg.IncludesDiscoveryTarget(DiscoveryUser) {
 			name := defaultName
@@ -97,7 +96,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 		}
 	case "github-org":
-		if pCfg.IncludesDiscoveryTarget(DiscoveryAll) ||
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
 			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 			pCfg.IncludesDiscoveryTarget(DiscoveryOrganization) {
 			name := defaultName
@@ -116,7 +115,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 		}
 
-		if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
 			org, err := p.Organization()
 			if err != nil {
 				return nil, err

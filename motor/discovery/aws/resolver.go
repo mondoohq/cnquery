@@ -15,10 +15,11 @@ import (
 )
 
 const (
-	DiscoveryAll       = "all"
 	DiscoveryAccounts  = "accounts"
 	DiscoveryInstances = "instances"
-	DiscoverySSM       = "ssm"
+	// deprecated: use DiscoverySSMInstances instead
+	DiscoverySSM          = "ssm"
+	DiscoverySSMInstances = "ssm-instances"
 )
 
 type Resolver struct{}
@@ -28,7 +29,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -65,7 +66,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	var resolvedRoot *asset.Asset
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) ||
 		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoveryAccounts) {
 		name := root.Name
@@ -91,7 +92,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 	instancesPlatformIdsMap := map[string]*asset.Asset{}
 	// discover ssm instances
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) {
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) || tc.IncludesDiscoveryTarget(DiscoverySSMInstances) {
 		// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
 		s, err := NewSSMManagedInstancesDiscovery(provider.Config())
 		if err != nil {
@@ -112,7 +113,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 	// discover ec2 instances
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		r, err := NewEc2Discovery(provider.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")

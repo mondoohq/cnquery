@@ -12,16 +12,12 @@ import (
 
 type Resolver struct{}
 
-const (
-	DiscoveryAll = "all"
-)
-
 func (r *Resolver) Name() string {
 	return "Network Resolver"
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, conf *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {

@@ -20,7 +20,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, DiscoveryGroup}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryGroup}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {

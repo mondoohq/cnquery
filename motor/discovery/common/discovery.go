@@ -1,3 +1,6 @@
 package common
 
-const DiscoveryAuto = "auto"
+const (
+	DiscoveryAuto = "auto"
+	DiscoveryAll  = "all"
+)

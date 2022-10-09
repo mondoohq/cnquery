@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	DiscoveryAll          = "all"
 	DiscoveryApi          = "api"
 	DiscoveryInstances    = "instances"
 	DiscoveryHostMachines = "host-machines"
@@ -30,7 +29,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryInstances, DiscoveryHostMachines}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -54,7 +53,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		return nil, err
 	}
 
-	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) ||
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
 		pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		pCfg.IncludesDiscoveryTarget(DiscoveryApi) {
 		// add asset for the api itself
@@ -85,7 +84,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	client := trans.Client()
 	discoveryClient := New(client)
 
-	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryHostMachines) {
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryHostMachines) {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -111,7 +110,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		}
 	}
 
-	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryInstances) {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines(pCfg)
 		if err != nil {

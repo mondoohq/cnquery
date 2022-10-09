@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	DiscoveryAll              = "all"
 	DiscoveryContainerRunning = "container"
 	DiscoveryContainerImages  = "container-images"
 )
@@ -28,7 +27,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryContainerRunning, DiscoveryContainerImages}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -205,7 +204,7 @@ func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) 
 	assetList := []*asset.Asset{}
 
 	// discover running container: container
-	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err
@@ -221,7 +220,7 @@ func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) 
 	}
 
 	// discover container images: container-images
-	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerImages) {
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerImages) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err

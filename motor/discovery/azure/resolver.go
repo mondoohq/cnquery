@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	DiscoveryAll           = "all"
 	DiscoverySubscriptions = "subscriptions"
 	DiscoveryInstances     = "instances"
 )
@@ -25,7 +24,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions, DiscoveryInstances}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions, DiscoveryInstances}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -77,7 +76,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) ||
 		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
 		tc.IncludesDiscoveryTarget(DiscoverySubscriptions) {
 		name := root.Name
@@ -103,7 +102,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	// get all compute instances
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		r, err := NewCompute(subscriptionID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize azure compute discovery")
