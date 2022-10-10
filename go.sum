@@ -237,8 +237,8 @@ github.com/aws/aws-sdk-go-v2/service/autoscaling v1.23.16 h1:cp30gVVAbZfeDod6UJG
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.23.16/go.mod h1:hHTMeJt6CQwFdmS19RK1LsDscus8c25Ve8KiYRhsISg=
 github.com/aws/aws-sdk-go-v2/service/backup v1.17.9 h1:MuOocIwjHn4xHfOPGnjHs/1IrfjChESIhr2mbZMRYtc=
 github.com/aws/aws-sdk-go-v2/service/backup v1.17.9/go.mod h1:7wibi2KeZ1PUrLlxFHOSBKBmmrQBCXJSOUg5GoKa2OM=
-github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.18.1 h1:Q8EfidXIfYA13XLkY9yRX9gPI0lnS/+S7K43bZdoQOg=
-github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.18.1/go.mod h1:ie2MjsIIl3B504HezWdwXAgvBJGBpz360cckbkhiyRk=
+github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.18.2 h1:41Vb4xqg9XZ9TES2e6PB+PuctUSVJLS84l1/jYIykU4=
+github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.18.2/go.mod h1:ie2MjsIIl3B504HezWdwXAgvBJGBpz360cckbkhiyRk=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.21.6 h1:Mwb2A5ygEijjkxgM3hVEiWSHwdH82nkyU2wgP4u/Hxk=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.21.6/go.mod h1:CCrqOzLQ6d1+zauyTah8o50m9dQu0NS/kaC0heWCu0c=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.15.20 h1:yPyXdrZaB4SW+pn2CmqyAbhuqGM4Pv4fsMhLOt8cOj8=
