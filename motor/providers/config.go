@@ -95,3 +95,17 @@ func (cfg *Config) IncludesDiscoveryTarget(target string) bool {
 
 	return stringx.Contains(cfg.Discover.Targets, target)
 }
+
+func (cfg *Config) IncludesOneOfDiscoveryTarget(targets ...string) bool {
+	if cfg.Discover == nil {
+		return false
+	}
+
+	for i := range targets {
+		if stringx.Contains(cfg.Discover.Targets, targets[i]) {
+			return true
+		}
+	}
+
+	return false
+}

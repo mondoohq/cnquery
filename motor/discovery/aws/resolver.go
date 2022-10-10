@@ -66,9 +66,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	var resolvedRoot *asset.Asset
-	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-		tc.IncludesDiscoveryTarget(DiscoveryAccounts) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryAccounts) {
 		name := root.Name
 		if name == "" {
 			name = AssembleIntegrationName(alias, info.ID)
@@ -92,7 +90,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 	instancesPlatformIdsMap := map[string]*asset.Asset{}
 	// discover ssm instances
-	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) || tc.IncludesDiscoveryTarget(DiscoverySSMInstances) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoverySSM, DiscoverySSMInstances) {
 		// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
 		s, err := NewSSMManagedInstancesDiscovery(provider.Config())
 		if err != nil {
@@ -113,7 +111,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 	// discover ec2 instances
-	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
 		r, err := NewEc2Discovery(provider.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")

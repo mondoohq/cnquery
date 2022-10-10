@@ -47,7 +47,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	var assets []*asset.Asset
-	if tc.IncludesDiscoveryTarget(common.DiscoveryAuto) || tc.IncludesDiscoveryTarget(DiscoveryGroup) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryGroup) {
 		name := root.Name
 		if name == "" {
 			grp, err := trans.Group()

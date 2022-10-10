@@ -17,7 +17,7 @@ func (k *GcpResolver) Name() string {
 }
 
 func (r *GcpResolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, common.DiscoveryAuto, DiscoveryProjects, DiscoveryInstances}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
 }
 
 func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {

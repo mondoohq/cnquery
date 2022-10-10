@@ -204,7 +204,7 @@ func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) 
 	assetList := []*asset.Asset{}
 
 	// discover running container: container
-	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerRunning) {
+	if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryContainerRunning) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err
@@ -220,7 +220,7 @@ func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) 
 	}
 
 	// discover container images: container-images
-	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryContainerImages) {
+	if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryContainerImages) {
 		ded, err := NewDockerEngineDiscovery()
 		if err != nil {
 			return nil, err

@@ -76,9 +76,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-		tc.IncludesDiscoveryTarget(DiscoverySubscriptions) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions) {
 		name := root.Name
 		if name == "" {
 			subName := subscriptionID
@@ -102,7 +100,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	// get all compute instances
-	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
 		r, err := NewCompute(subscriptionID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize azure compute discovery")

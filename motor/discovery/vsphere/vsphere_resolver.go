@@ -53,9 +53,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		return nil, err
 	}
 
-	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
-		pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-		pCfg.IncludesDiscoveryTarget(DiscoveryApi) {
+	if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryApi) {
 		// add asset for the api itself
 		info := trans.Info()
 		assetObj := &asset.Asset{
@@ -84,7 +82,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	client := trans.Client()
 	discoveryClient := New(client)
 
-	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryHostMachines) {
+	if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryHostMachines) {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -110,7 +108,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		}
 	}
 
-	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines(pCfg)
 		if err != nil {
