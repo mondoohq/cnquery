@@ -123,7 +123,7 @@ require (
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.5.0
-	github.com/spf13/viper v1.12.0
+	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
