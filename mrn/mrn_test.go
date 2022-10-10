@@ -46,3 +46,16 @@ func TestEquals(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, mrn.Equals(fullResourceName))
 }
+
+func TestMrnToPropertyName(t *testing.T) {
+	mrn, err := NewMRN("//policy.api.mondoo.app/bundle/M%2FVSHZaChL8=/queries/sshdCiphers")
+	require.NoError(t, err)
+
+	res, err := mrn.ResourceID("queries")
+	require.NoError(t, err)
+	assert.Equal(t, "sshdCiphers", res)
+
+	res, err = mrn.ResourceID("nothere")
+	assert.Error(t, err)
+	assert.Equal(t, "", res)
+}
