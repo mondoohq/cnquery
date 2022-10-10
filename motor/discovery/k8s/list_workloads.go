@@ -110,7 +110,7 @@ func ListWorkloads[T runtime.Object](
 	workloads := []T{}
 
 	if len(resFilter) > 0 {
-		// If there is a resources filter we should only retrieve the daemonsets that are in the filter.
+		// If there is a resources filter we should only retrieve the workloads that are in the filter.
 		if len(resFilter[workloadType]) == 0 {
 			return []*asset.Asset{}, nil
 		}
