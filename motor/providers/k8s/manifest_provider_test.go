@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
 )
 
@@ -45,4 +46,17 @@ func TestManifestFiles(t *testing.T) {
 			assert.Equal(t, 0, len(initContainers))
 		})
 	}
+}
+
+func TestManifestFileProvider(t *testing.T) {
+	t.Run("k8s manifest provider", func(t *testing.T) {
+		manifestFile := "./resources/testdata/pod.yaml"
+		transport, err := newManifestProvider("", "", WithManifestFile(manifestFile))
+		require.NoError(t, err)
+		require.NotNil(t, transport)
+		assert.Equal(t, "kubernetes", transport.PlatformInfo().Name)
+		assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
+		assert.Equal(t, providers.Kind_KIND_CODE, transport.PlatformInfo().Kind)
+		assert.Contains(t, transport.PlatformInfo().Family, "kubernetes")
+	})
 }
