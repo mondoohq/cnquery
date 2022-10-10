@@ -4,14 +4,15 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/ms365/ms365report"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
 const (
-	OptionTenantID   = "tenantId"
-	OptionClientID   = "clientId"
+	OptionTenantID   = "tenant-id"
+	OptionClientID   = "client-id"
 	OptionDataReport = "mondoo-ms365-datareport"
 )
 
@@ -27,8 +28,7 @@ var (
 // Microsoft is working on some Powershell features that may make it happen.
 //
 // For authentication we need a tenant id, client id (appid), and a certificate and an optional password
-// mondoo scan -t ms365:// -i certificate --password password --option clientId --option tenantId
-// mondoo scan -t ms365:// --password clientSecret --option clientId --option tenantId
+// mondoo scan -t ms365:// --certificate-path certificate --certificate-secret password --client-id CLIENT_ID --tenant-id TENNANT_ID
 //
 // [How to recognize differences between delegated and application permissions](https://docs.microsoft.com/en-us/azure/active-directory/develop/delegated-and-app-perms)
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
@@ -39,12 +39,32 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	}
 
 	if len(pCfg.Credentials) != 1 || pCfg.Credentials[0] == nil {
-		return nil, errors.New("ms365 provider requires a credentials file, pass json via -i option")
+		return nil, errors.New("ms365 provider requires a credentials file, pass json via --certificate-path option")
+	}
+
+	tenantId := pCfg.Options[OptionTenantID]
+	clientId := pCfg.Options[OptionClientID]
+
+	// deprecated options for backward compatibility with older inventory files
+	if tenantId == "" {
+		tid, ok := pCfg.Options["tenantId"]
+		if ok {
+			log.Warn().Str("tenantId", tid).Msg("tenantId is deprecated, use tenant-id instead")
+		}
+		tenantId = tid
+	}
+
+	if clientId == "" {
+		cid, ok := pCfg.Options["clientId"]
+		if ok {
+			log.Warn().Str("clientId", cid).Msg("clientId is deprecated, use client-id instead")
+		}
+		clientId = cid
 	}
 
 	p := &Provider{
-		tenantID: pCfg.Options[OptionTenantID],
-		clientID: pCfg.Options[OptionClientID],
+		tenantID: tenantId,
+		clientID: clientId,
 		// TODO: we want to remove the data report with a proper implementation
 		powershellDataReportFile: pCfg.Options[OptionDataReport],
 		opts:                     pCfg.Options,
@@ -60,7 +80,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	}
 
 	if len(p.tenantID) == 0 {
-		return nil, errors.New("ms365 backend requires a tenantID")
+		return nil, errors.New("ms365 backend requires a tenant-id")
 	}
 
 	// map the roles that we request

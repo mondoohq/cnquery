@@ -5,6 +5,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -17,18 +18,41 @@ func New(cfg *providers.Config) (*Provider, error) {
 	if cfg.Backend != providers.ProviderType_AZURE {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
+	if cfg.Options == nil {
+		return nil, errors.New("azure provider requires options")
+	}
 
-	if cfg.Options == nil || len(cfg.Options["subscriptionID"]) == 0 {
+	tenantId := cfg.Options["tenant-id"]
+
+	// deprecated options for backward compatibility with older inventory files
+	if tenantId == "" {
+		tid, ok := cfg.Options["tenantId"]
+		if ok {
+			log.Warn().Str("tenantId", tid).Msg("tenantId is deprecated, use tenant-id instead")
+		}
+		tenantId = tid
+	}
+
+	subscriptionId := cfg.Options["subscription-id"]
+	if subscriptionId == "" {
+		sid, ok := cfg.Options["subscriptionId"]
+		if ok {
+			log.Warn().Str("subscriptionId", sid).Msg("subscriptionId is deprecated, use subscription-id instead")
+		}
+		subscriptionId = sid
+	}
+
+	if subscriptionId == "" {
 		return nil, errors.New("azure provider requires a subscriptionID")
 	}
 
-	if cfg.Options == nil || len(cfg.Options["tenantID"]) == 0 {
+	if tenantId == "" {
 		return nil, errors.New("azure provider requires a tenantID")
 	}
 
 	return &Provider{
-		subscriptionID: cfg.Options["subscriptionID"],
-		tenantID:       cfg.Options["tenantID"],
+		subscriptionID: subscriptionId,
+		tenantID:       tenantId,
 		opts:           cfg.Options,
 	}, nil
 }

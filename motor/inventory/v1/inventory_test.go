@@ -21,24 +21,123 @@ func TestInventoryParser(t *testing.T) {
 }
 
 func TestPreprocess(t *testing.T) {
-	inventory, err := InventoryFromFile("./testdata/inventory.yaml")
-	require.NoError(t, err)
+	t.Run("preprocess empty inventory", func(t *testing.T) {
+		v1inventory := &Inventory{}
+		err := v1inventory.PreProcess()
+		require.NoError(t, err)
+	})
 
-	// extract credentials into credential section
-	err = inventory.PreProcess()
-	require.NoError(t, err)
+	t.Run("normal inventory", func(t *testing.T) {
+		inventory, err := InventoryFromFile("./testdata/inventory.yaml")
+		require.NoError(t, err)
 
-	// ensure that all assets have a valid secret reference
-	err = inventory.Validate()
-	require.NoError(t, err)
+		// extract credentials into credential section
+		err = inventory.PreProcess()
+		require.NoError(t, err)
 
-	// activate to debug the pre-process output
-	//// write output for debugging, so that we can easily compare the result
-	//data, err := inventory.ToYAML()
-	//require.NoError(t, err)
-	//
-	//err = ioutil.WriteFile("./testdata/inventory.parsed.yml", data, 0o700)
-	//require.NoError(t, err)
+		// ensure that all assets have a valid secret reference
+		err = inventory.Validate()
+		require.NoError(t, err)
+
+		// activate to debug the pre-process output
+		//// write output for debugging, so that we can easily compare the result
+		//data, err := inventory.ToYAML()
+		//require.NoError(t, err)
+		//
+		//err = ioutil.WriteFile("./testdata/inventory.parsed.yml", data, 0o700)
+		//require.NoError(t, err)
+	})
+
+	t.Run("idempotent preprocess", func(t *testing.T) {
+		v1inventory, err := InventoryFromFile("./testdata/k8s_mount.yaml")
+		require.NoError(t, err)
+
+		err = v1inventory.PreProcess()
+		require.NoError(t, err)
+
+		err = v1inventory.PreProcess()
+		require.NoError(t, err)
+	})
+
+	t.Run("preprocess private key", func(t *testing.T) {
+		v1inventory := &Inventory{
+			Spec: &InventorySpec{
+				Assets: []*asset.Asset{
+					{
+						Name: "test",
+						Connections: []*providers.Config{
+							{
+								Backend: providers.ProviderType_SSH,
+								Credentials: []*vault.Credential{
+									{
+										PrivateKey: "./testdata/private_key_01",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := v1inventory.PreProcess()
+		require.NoError(t, err)
+		secretid := v1inventory.Spec.Assets[0].Connections[0].Credentials[0].SecretId
+		assert.Equal(t, vault.CredentialType_private_key, v1inventory.Spec.Credentials[secretid].Type)
+	})
+
+	t.Run("preprocess pkcs12 credential with loading from file", func(t *testing.T) {
+		v1inventory := &Inventory{
+			Spec: &InventorySpec{
+				Assets: []*asset.Asset{
+					{
+						Name: "test",
+						Connections: []*providers.Config{
+							{
+								Backend: providers.ProviderType_MS365,
+								Credentials: []*vault.Credential{
+									{
+										Type:           vault.CredentialType_pkcs12,
+										PrivateKeyPath: "./testdata/private_key_01",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := v1inventory.PreProcess()
+		require.NoError(t, err)
+		secretid := v1inventory.Spec.Assets[0].Connections[0].Credentials[0].SecretId
+		assert.Equal(t, vault.CredentialType_pkcs12, v1inventory.Spec.Credentials[secretid].Type)
+	})
+
+	t.Run("preprocess pkcs12 credential with loading from file", func(t *testing.T) {
+		v1inventory := &Inventory{
+			Spec: &InventorySpec{
+				Assets: []*asset.Asset{
+					{
+						Name: "test",
+						Connections: []*providers.Config{
+							{
+								Backend: providers.ProviderType_MS365,
+								Credentials: []*vault.Credential{
+									{
+										Type:       vault.CredentialType_pkcs12,
+										PrivateKey: "secretdata",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := v1inventory.PreProcess()
+		require.NoError(t, err)
+		secretid := v1inventory.Spec.Assets[0].Connections[0].Credentials[0].SecretId
+		assert.Equal(t, vault.CredentialType_pkcs12, v1inventory.Spec.Credentials[secretid].Type)
+	})
 }
 
 func TestParseGCPInventory(t *testing.T) {
@@ -151,17 +250,6 @@ func TestMarkInsecure(t *testing.T) {
 			assert.True(t, a.Connections[j].Insecure, a.Name)
 		}
 	}
-}
-
-func TestIdempotentPreProcess(t *testing.T) {
-	v1inventory, err := InventoryFromFile("./testdata/k8s_mount.yaml")
-	require.NoError(t, err)
-
-	err = v1inventory.PreProcess()
-	require.NoError(t, err)
-
-	err = v1inventory.PreProcess()
-	require.NoError(t, err)
 }
 
 func findAsset(assets []*asset.Asset, id string) *asset.Asset {
