@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	DiscoveryAll          = "all"
+	DiscoveryApi          = "api"
 	DiscoveryInstances    = "instances"
 	DiscoveryHostMachines = "host-machines"
 )
@@ -29,7 +29,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -53,34 +53,38 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		return nil, err
 	}
 
-	// add asset for the api itself
-	info := trans.Info()
-	assetObj := &asset.Asset{
-		Name:        fmt.Sprintf("%s (%s)", pCfg.Host, info.Name),
-		Platform:    pf,
-		Connections: []*providers.Config{pCfg}, // pass-in the current config
-		Labels: map[string]string{
-			"vsphere.vmware.com/name": info.Name,
-			"vsphere.vmware.com/uuid": info.InstanceUuid,
-		},
-	}
-	fingerprint, err := motorid.IdentifyPlatform(m.Provider, pf, nil)
-	if err != nil {
-		return nil, err
-	}
-	assetObj.PlatformIds = fingerprint.PlatformIDs
-	if fingerprint.Name != "" {
-		assetObj.Name = fingerprint.Name
-	}
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
+		pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+		pCfg.IncludesDiscoveryTarget(DiscoveryApi) {
+		// add asset for the api itself
+		info := trans.Info()
+		assetObj := &asset.Asset{
+			Name:        fmt.Sprintf("%s (%s)", pCfg.Host, info.Name),
+			Platform:    pf,
+			Connections: []*providers.Config{pCfg}, // pass-in the current config
+			Labels: map[string]string{
+				"vsphere.vmware.com/name": info.Name,
+				"vsphere.vmware.com/uuid": info.InstanceUuid,
+			},
+		}
+		fingerprint, err := motorid.IdentifyPlatform(m.Provider, pf, nil)
+		if err != nil {
+			return nil, err
+		}
+		assetObj.PlatformIds = fingerprint.PlatformIDs
+		if fingerprint.Name != "" {
+			assetObj.Name = fingerprint.Name
+		}
 
-	log.Debug().Strs("identifier", assetObj.PlatformIds).Msg("motor connection")
+		log.Debug().Strs("identifier", assetObj.PlatformIds).Msg("motor connection")
 
-	resolved = append(resolved, assetObj)
+		resolved = append(resolved, assetObj)
+	}
 
 	client := trans.Client()
 	discoveryClient := New(client)
 
-	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryHostMachines) {
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryHostMachines) {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
@@ -106,7 +110,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		}
 	}
 
-	if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryInstances) {
 		// resolve vms
 		vms, err := discoveryClient.ListVirtualMachines(pCfg)
 		if err != nil {

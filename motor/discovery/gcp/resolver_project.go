@@ -18,7 +18,7 @@ func (k *GcpProjectResolver) Name() string {
 }
 
 func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryInstances}
+	return []string{DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
 }
 
 func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -47,15 +47,19 @@ func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.Credential
 
 	project := tc.Options["project"]
 
-	resolved = append(resolved, &asset.Asset{
-		PlatformIds: []string{identifier},
-		Name:        "GCP project " + project,
-		Platform:    pf,
-		Connections: []*providers.Config{tc}, // pass-in the current config
-		Labels: map[string]string{
-			common.ParentId: project,
-		},
-	})
+	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(DiscoveryProjects) {
+		resolved = append(resolved, &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        "GCP project " + project,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+			Labels: map[string]string{
+				common.ParentId: project,
+			},
+		})
+	}
 
 	// discover compute instances
 	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {

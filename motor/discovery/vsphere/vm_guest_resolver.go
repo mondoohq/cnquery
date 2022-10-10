@@ -20,7 +20,7 @@ func (k *VMGuestResolver) Name() string {
 }
 
 func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
-	return []string{}
+	return []string{common.DiscoveryAuto}
 }
 
 func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {

@@ -15,9 +15,11 @@ import (
 )
 
 const (
-	DiscoveryAll       = "all"
+	DiscoveryAccounts  = "accounts"
 	DiscoveryInstances = "instances"
-	DiscoverySSM       = "ssm"
+	// deprecated: use DiscoverySSMInstances instead
+	DiscoverySSM          = "ssm"
+	DiscoverySSMInstances = "ssm-instances"
 )
 
 type Resolver struct{}
@@ -27,7 +29,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryInstances, DiscoverySSM}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -63,19 +65,24 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		alias = info.Aliases[0]
 	}
 
-	name := root.Name
-	if name == "" {
-		name = AssembleIntegrationName(alias, info.ID)
-	}
+	var resolvedRoot *asset.Asset
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) ||
+		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+		tc.IncludesDiscoveryTarget(DiscoveryAccounts) {
+		name := root.Name
+		if name == "" {
+			name = AssembleIntegrationName(alias, info.ID)
+		}
 
-	resolvedRoot := &asset.Asset{
-		PlatformIds: []string{identifier},
-		Name:        name,
-		Platform:    pf,
-		Connections: []*providers.Config{tc}, // pass-in the current config
-		State:       asset.State_STATE_ONLINE,
+		resolvedRoot = &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+			State:       asset.State_STATE_ONLINE,
+		}
+		resolved = append(resolved, resolvedRoot)
 	}
-	resolved = append(resolved, resolvedRoot)
 
 	// filter assets
 	discoverFilter := map[string]string{}
@@ -85,7 +92,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 	instancesPlatformIdsMap := map[string]*asset.Asset{}
 	// discover ssm instances
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) {
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoverySSM) || tc.IncludesDiscoveryTarget(DiscoverySSMInstances) {
 		// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
 		s, err := NewSSMManagedInstancesDiscovery(provider.Config())
 		if err != nil {
@@ -98,13 +105,15 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 		log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 		for i := range assetList {
-			assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
+			if resolvedRoot != nil {
+				assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
+			}
 			log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
 			instancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
 		}
 	}
 	// discover ec2 instances
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
 		r, err := NewEc2Discovery(provider.Config())
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
@@ -120,7 +129,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("instances", len(assetList)).Bool("insecure", r.Insecure).Msg("completed instance search")
 		for i := range assetList {
 			a := assetList[i]
-			a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			if resolvedRoot != nil {
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			}
 			log.Debug().Str("name", a.Name).Msg("resolved ec2 instance")
 			id := a.PlatformIds[0]
 			existing, ok := instancesPlatformIdsMap[id]

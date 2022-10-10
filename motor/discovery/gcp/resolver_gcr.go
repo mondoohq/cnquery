@@ -16,7 +16,7 @@ func (r *GcrResolver) Name() string {
 }
 
 func (r *GcrResolver) AvailableDiscoveryTargets() []string {
-	return []string{}
+	return []string{common.DiscoveryAuto}
 }
 
 func (r *GcrResolver) Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {

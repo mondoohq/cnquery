@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	DiscoveryAll        = "all"
-	DiscoveryRepository = "repository"
+	DiscoveryRepository   = "repository"
+	DiscoveryUser         = "user"
+	DiscoveryOrganization = "organization"
 )
 
 type Resolver struct{}
@@ -24,7 +25,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryRepository}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryRepository, DiscoveryUser}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -55,54 +56,66 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 
 	switch pf.Name {
 	case "github-repo":
-		name := defaultName
-		if name == "" {
-			repo, _ := p.Repository()
-			if repo != nil && repo.GetOwner() != nil {
-				name = repo.GetOwner().GetLogin() + "/" + repo.GetName()
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
+			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+			pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
+			name := defaultName
+			if name == "" {
+				repo, _ := p.Repository()
+				if repo != nil && repo.GetOwner() != nil {
+					name = repo.GetOwner().GetLogin() + "/" + repo.GetName()
+				}
 			}
-		}
 
-		list = append(list, &asset.Asset{
-			PlatformIds: []string{identifier},
-			Name:        name,
-			Platform:    pf,
-			Connections: []*providers.Config{pCfg}, // pass-in the current config
-			State:       asset.State_STATE_ONLINE,
-		})
+			list = append(list, &asset.Asset{
+				PlatformIds: []string{identifier},
+				Name:        name,
+				Platform:    pf,
+				Connections: []*providers.Config{pCfg}, // pass-in the current config
+				State:       asset.State_STATE_ONLINE,
+			})
+		}
 	case "github-user":
-		name := defaultName
-		if name == "" {
-			user, _ := p.User()
-			if user != nil {
-				name = user.GetName()
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
+			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+			pCfg.IncludesDiscoveryTarget(DiscoveryUser) {
+			name := defaultName
+			if name == "" {
+				user, _ := p.User()
+				if user != nil {
+					name = user.GetName()
+				}
 			}
-		}
 
-		list = append(list, &asset.Asset{
-			PlatformIds: []string{identifier},
-			Name:        name,
-			Platform:    pf,
-			Connections: []*providers.Config{pCfg}, // pass-in the current config
-			State:       asset.State_STATE_ONLINE,
-		})
+			list = append(list, &asset.Asset{
+				PlatformIds: []string{identifier},
+				Name:        name,
+				Platform:    pf,
+				Connections: []*providers.Config{pCfg}, // pass-in the current config
+				State:       asset.State_STATE_ONLINE,
+			})
+		}
 	case "github-org":
-		name := defaultName
-		if name == "" {
-			org, _ := p.Organization()
-			if org != nil {
-				name = org.GetName()
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
+			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
+			pCfg.IncludesDiscoveryTarget(DiscoveryOrganization) {
+			name := defaultName
+			if name == "" {
+				org, _ := p.Organization()
+				if org != nil {
+					name = org.GetName()
+				}
 			}
+			list = append(list, &asset.Asset{
+				PlatformIds: []string{identifier},
+				Name:        name,
+				Platform:    pf,
+				Connections: []*providers.Config{pCfg}, // pass-in the current config
+				State:       asset.State_STATE_ONLINE,
+			})
 		}
-		list = append(list, &asset.Asset{
-			PlatformIds: []string{identifier},
-			Name:        name,
-			Platform:    pf,
-			Connections: []*providers.Config{pCfg}, // pass-in the current config
-			State:       asset.State_STATE_ONLINE,
-		})
 
-		if pCfg.IncludesDiscoveryTarget(DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
+		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
 			org, err := p.Organization()
 			if err != nil {
 				return nil, err
