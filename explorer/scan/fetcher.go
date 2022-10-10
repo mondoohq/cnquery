@@ -5,8 +5,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/explorer"
 )
@@ -34,11 +32,6 @@ func (f *fetcher) fetchBundles(ctx context.Context, urls ...string) (*explorer.B
 		cur, err := f.fetchBundle(url)
 		if err != nil {
 			return nil, err
-		}
-
-		// TODO: we should only set this if we are running incognito
-		if cur.OwnerMrn == "" {
-			cur.OwnerMrn = "//local.cnquery.io/run/" + uuid.New().String()
 		}
 
 		// need to generate MRNs for everything
