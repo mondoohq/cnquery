@@ -15,7 +15,9 @@ func ProjectNameFromPath(file string) string {
 		if fi.IsDir() {
 			name = fi.Name()
 		} else {
-			name = path.Base(path.Dir(file))
+			name = filepath.Base(fi.Name())
+			extension := filepath.Ext(name)
+			name = strings.TrimSuffix(name, extension)
 		}
 	} else {
 		// it is not a local file, so we try to be a bit smart
