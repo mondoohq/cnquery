@@ -29,7 +29,6 @@ func TestManifestFiles(t *testing.T) {
 			transport, err := newManifestProvider("", testCase.kind, WithManifestFile(manifestFile))
 			require.NoError(t, err)
 			require.NotNil(t, transport)
-			assert.Equal(t, "kubernetes", transport.PlatformInfo().Name)
 			res, err := transport.Resources(testCase.kind, "mondoo", "default")
 			require.NoError(t, err)
 			assert.Equal(t, "mondoo", res.Name)
