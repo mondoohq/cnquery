@@ -44,8 +44,8 @@ func ListPodImages(p k8s.KubernetesProvider, namespaceFilter []string, od *k8s.P
 		}
 
 		for j := range pods {
-			od.Add(&pods[j])
-			podImages := uniqueImagesForPod(pods[j], credsStore)
+			od.Add(pods[j])
+			podImages := uniqueImagesForPod(*pods[j], credsStore)
 			runningImages = mergeMaps(runningImages, podImages)
 		}
 	}

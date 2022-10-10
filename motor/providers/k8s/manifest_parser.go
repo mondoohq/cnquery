@@ -90,7 +90,7 @@ func (t *manifestParser) Pod(namespace string, name string) (*v1.Pod, error) {
 	return foundPod, nil
 }
 
-func (t *manifestParser) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
+func (t *manifestParser) Pods(namespace v1.Namespace) ([]*v1.Pod, error) {
 	result, err := t.Resources("pods.v1.", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (t *manifestParser) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 		pods = append(pods, *pod)
 	}
 
-	return pods, nil
+	return sliceToPtrSlice(pods), nil
 }
 
 func (t *manifestParser) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
@@ -131,7 +131,7 @@ func (t *manifestParser) Deployment(namespace string, name string) (*appsv1.Depl
 	return foundDeployment, nil
 }
 
-func (t *manifestParser) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
+func (t *manifestParser) Deployments(namespace v1.Namespace) ([]*appsv1.Deployment, error) {
 	result, err := t.Resources("deployments.v1.apps", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (t *manifestParser) Deployments(namespace v1.Namespace) ([]appsv1.Deploymen
 		deployments = append(deployments, *deployment)
 	}
 
-	return deployments, nil
+	return sliceToPtrSlice(deployments), nil
 }
 
 func (t *manifestParser) resourceIndex() (*resources.ApiResourceIndex, error) {
@@ -220,7 +220,7 @@ func (t *manifestParser) CronJob(namespace string, name string) (*batchv1.CronJo
 	return foundCronJob, nil
 }
 
-func (t *manifestParser) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
+func (t *manifestParser) CronJobs(namespace v1.Namespace) ([]*batchv1.CronJob, error) {
 	result, err := t.Resources("cronjobs.v1.batch", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -238,7 +238,7 @@ func (t *manifestParser) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, er
 		cronJobs = append(cronJobs, *cronJob)
 	}
 
-	return cronJobs, nil
+	return sliceToPtrSlice(cronJobs), nil
 }
 
 func (t *manifestParser) StatefulSet(namespace string, name string) (*appsv1.StatefulSet, error) {
@@ -261,7 +261,7 @@ func (t *manifestParser) StatefulSet(namespace string, name string) (*appsv1.Sta
 	return foundStatefulSet, nil
 }
 
-func (t *manifestParser) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
+func (t *manifestParser) StatefulSets(namespace v1.Namespace) ([]*appsv1.StatefulSet, error) {
 	result, err := t.Resources("statefulsets.v1.apps", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -279,7 +279,7 @@ func (t *manifestParser) StatefulSets(namespace v1.Namespace) ([]appsv1.Stateful
 		statefulSets = append(statefulSets, *statefulSet)
 	}
 
-	return statefulSets, nil
+	return sliceToPtrSlice(statefulSets), nil
 }
 
 func (t *manifestParser) Job(namespace string, name string) (*batchv1.Job, error) {
@@ -302,7 +302,7 @@ func (t *manifestParser) Job(namespace string, name string) (*batchv1.Job, error
 	return foundJob, nil
 }
 
-func (t *manifestParser) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
+func (t *manifestParser) Jobs(namespace v1.Namespace) ([]*batchv1.Job, error) {
 	result, err := t.Resources("jobs.v1.batch", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -320,7 +320,7 @@ func (t *manifestParser) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
 		jobs = append(jobs, *job)
 	}
 
-	return jobs, nil
+	return sliceToPtrSlice(jobs), nil
 }
 
 func (t *manifestParser) ReplicaSet(namespace string, name string) (*appsv1.ReplicaSet, error) {
@@ -343,7 +343,7 @@ func (t *manifestParser) ReplicaSet(namespace string, name string) (*appsv1.Repl
 	return foundReplicaSet, nil
 }
 
-func (t *manifestParser) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
+func (t *manifestParser) ReplicaSets(namespace v1.Namespace) ([]*appsv1.ReplicaSet, error) {
 	result, err := t.Resources("replicasets.v1.apps", "", namespace.GetNamespace())
 	if err != nil {
 		return nil, err
@@ -361,7 +361,7 @@ func (t *manifestParser) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSe
 		replicaSets = append(replicaSets, *replicaSet)
 	}
 
-	return replicaSets, nil
+	return sliceToPtrSlice(replicaSets), nil
 }
 
 func (t *manifestParser) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
@@ -384,7 +384,7 @@ func (t *manifestParser) DaemonSet(namespace string, name string) (*appsv1.Daemo
 	return foundDaemonSet, nil
 }
 
-func (t *manifestParser) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
+func (t *manifestParser) DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error) {
 	// iterate over all resources and extract the daemonsets
 
 	result, err := t.Resources("daemonsets.v1.apps", "", namespace.GetNamespace())
@@ -404,7 +404,7 @@ func (t *manifestParser) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet,
 		daemonsets = append(daemonsets, *daemonset)
 	}
 
-	return daemonsets, nil
+	return sliceToPtrSlice(daemonsets), nil
 }
 
 func (t *manifestParser) Secret(namespace, name string) (*v1.Secret, error) {

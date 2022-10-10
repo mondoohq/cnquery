@@ -281,7 +281,7 @@ func (t *apiProvider) Namespaces() ([]v1.Namespace, error) {
 	return list.Items, err
 }
 
-func (t *apiProvider) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
+func (t *apiProvider) Pods(namespace v1.Namespace) ([]*v1.Pod, error) {
 	ctx := context.Background()
 	list, err := t.clientset.CoreV1().Pods(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -291,7 +291,7 @@ func (t *apiProvider) Pods(namespace v1.Namespace) ([]v1.Pod, error) {
 	for i := range list.Items {
 		list.Items[i].SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Pod"))
 	}
-	return list.Items, err
+	return sliceToPtrSlice(list.Items), err
 }
 
 func (t *apiProvider) Pod(namespace, name string) (*v1.Pod, error) {
@@ -305,7 +305,7 @@ func (t *apiProvider) Pod(namespace, name string) (*v1.Pod, error) {
 	return pod, err
 }
 
-func (t *apiProvider) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error) {
+func (t *apiProvider) CronJobs(namespace v1.Namespace) ([]*batchv1.CronJob, error) {
 	ctx := context.Background()
 	list, err := t.clientset.BatchV1().CronJobs(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -315,7 +315,8 @@ func (t *apiProvider) CronJobs(namespace v1.Namespace) ([]batchv1.CronJob, error
 	for i := range list.Items {
 		list.Items[i].SetGroupVersionKind(batchv1.SchemeGroupVersion.WithKind("CronJob"))
 	}
-	return list.Items, err
+
+	return sliceToPtrSlice(list.Items), err
 }
 
 func (t *apiProvider) CronJob(namespace, name string) (*batchv1.CronJob, error) {
@@ -329,7 +330,7 @@ func (t *apiProvider) CronJob(namespace, name string) (*batchv1.CronJob, error) 
 	return cronjob, err
 }
 
-func (t *apiProvider) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet, error) {
+func (t *apiProvider) StatefulSets(namespace v1.Namespace) ([]*appsv1.StatefulSet, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().StatefulSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -339,7 +340,7 @@ func (t *apiProvider) StatefulSets(namespace v1.Namespace) ([]appsv1.StatefulSet
 	for i := range list.Items {
 		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("StatefulSet"))
 	}
-	return list.Items, err
+	return sliceToPtrSlice(list.Items), err
 }
 
 func (t *apiProvider) StatefulSet(namespace, name string) (*appsv1.StatefulSet, error) {
@@ -353,7 +354,7 @@ func (t *apiProvider) StatefulSet(namespace, name string) (*appsv1.StatefulSet, 
 	return statefulset, err
 }
 
-func (t *apiProvider) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, error) {
+func (t *apiProvider) Deployments(namespace v1.Namespace) ([]*appsv1.Deployment, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().Deployments(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -363,7 +364,7 @@ func (t *apiProvider) Deployments(namespace v1.Namespace) ([]appsv1.Deployment, 
 	for i := range list.Items {
 		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("Deployment"))
 	}
-	return list.Items, err
+	return sliceToPtrSlice(list.Items), err
 }
 
 func (t *apiProvider) Deployment(namespace, name string) (*appsv1.Deployment, error) {
@@ -377,7 +378,7 @@ func (t *apiProvider) Deployment(namespace, name string) (*appsv1.Deployment, er
 	return deployment, err
 }
 
-func (t *apiProvider) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
+func (t *apiProvider) Jobs(namespace v1.Namespace) ([]*batchv1.Job, error) {
 	ctx := context.Background()
 	list, err := t.clientset.BatchV1().Jobs(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -387,7 +388,7 @@ func (t *apiProvider) Jobs(namespace v1.Namespace) ([]batchv1.Job, error) {
 	for i := range list.Items {
 		list.Items[i].SetGroupVersionKind(batchv1.SchemeGroupVersion.WithKind("Job"))
 	}
-	return list.Items, err
+	return sliceToPtrSlice(list.Items), err
 }
 
 func (t *apiProvider) Job(namespace, name string) (*batchv1.Job, error) {
@@ -401,7 +402,7 @@ func (t *apiProvider) Job(namespace, name string) (*batchv1.Job, error) {
 	return job, err
 }
 
-func (t *apiProvider) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, error) {
+func (t *apiProvider) ReplicaSets(namespace v1.Namespace) ([]*appsv1.ReplicaSet, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().ReplicaSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -411,7 +412,7 @@ func (t *apiProvider) ReplicaSets(namespace v1.Namespace) ([]appsv1.ReplicaSet, 
 	for i := range list.Items {
 		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("ReplicaSet"))
 	}
-	return list.Items, err
+	return sliceToPtrSlice(list.Items), err
 }
 
 func (t *apiProvider) ReplicaSet(namespace, name string) (*appsv1.ReplicaSet, error) {
@@ -425,7 +426,7 @@ func (t *apiProvider) ReplicaSet(namespace, name string) (*appsv1.ReplicaSet, er
 	return replicaset, err
 }
 
-func (t *apiProvider) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, error) {
+func (t *apiProvider) DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error) {
 	ctx := context.Background()
 	list, err := t.clientset.AppsV1().DaemonSets(namespace.Name).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -435,7 +436,7 @@ func (t *apiProvider) DaemonSets(namespace v1.Namespace) ([]appsv1.DaemonSet, er
 	for i := range list.Items {
 		list.Items[i].SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("DaemonSet"))
 	}
-	return list.Items, err
+	return sliceToPtrSlice(list.Items), err
 }
 
 func (t *apiProvider) DaemonSet(namespace, name string) (*appsv1.DaemonSet, error) {

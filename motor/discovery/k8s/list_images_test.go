@@ -28,7 +28,7 @@ func TestListPodImage(t *testing.T) {
 	p.EXPECT().Namespaces().Return(nss, nil)
 
 	// Seed pods
-	pods1 := []corev1.Pod{
+	pods1 := []*corev1.Pod{
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "nginx", Namespace: nss[0].Name},
 			Spec: corev1.PodSpec{
@@ -43,7 +43,7 @@ func TestListPodImage(t *testing.T) {
 		},
 	}
 
-	pods2 := []corev1.Pod{
+	pods2 := []*corev1.Pod{
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "kube-proxy", Namespace: nss[1].Name},
 			Spec: corev1.PodSpec{
@@ -104,7 +104,7 @@ func TestListPodImage_FromStatus(t *testing.T) {
 	p.EXPECT().Namespaces().Return(nss, nil)
 
 	// Seed pods
-	pods1 := []corev1.Pod{
+	pods1 := []*corev1.Pod{
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "nginx", Namespace: nss[0].Name},
 			Spec: corev1.PodSpec{
@@ -135,7 +135,7 @@ func TestListPodImage_FromStatus(t *testing.T) {
 		},
 	}
 
-	pods2 := []corev1.Pod{
+	pods2 := []*corev1.Pod{
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "kube-proxy", Namespace: nss[1].Name},
 			Spec: corev1.PodSpec{
