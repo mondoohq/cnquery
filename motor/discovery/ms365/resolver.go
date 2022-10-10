@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 
-const DiscoveryTenant = "tenant"
+const DiscoveryTenant = "tenants"
 
 type Resolver struct{}
 
@@ -49,7 +49,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 		return nil, err
 	}
 
-	if cc.IncludesDiscoveryTarget(common.DiscoveryAuto) || cc.IncludesDiscoveryTarget(DiscoveryTenant) {
+	if cc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryTenant) {
 		resolved = append(resolved, &asset.Asset{
 			PlatformIds: []string{identifier},
 			Name:        "Microsoft 365 tenant " + provider.TenantID(),

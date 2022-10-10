@@ -18,7 +18,7 @@ func (k *GcpProjectResolver) Name() string {
 }
 
 func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
-	return []string{DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
 }
 
 func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -47,9 +47,7 @@ func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.Credential
 
 	project := tc.Options["project"]
 
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-		tc.IncludesDiscoveryTarget(DiscoveryProjects) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects) {
 		resolved = append(resolved, &asset.Asset{
 			PlatformIds: []string{identifier},
 			Name:        "GCP project " + project,
@@ -62,7 +60,7 @@ func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.Credential
 	}
 
 	// discover compute instances
-	if tc.IncludesDiscoveryTarget(DiscoveryAll) || tc.IncludesDiscoveryTarget(DiscoveryInstances) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
 		client, err := provider.Client(compute.ComputeReadonlyScope)
 		if err != nil {
 			return nil, errors.Wrap(err, "use `gcloud auth application-default login` to authenticate locally")
