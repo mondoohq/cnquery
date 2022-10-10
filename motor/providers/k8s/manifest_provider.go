@@ -94,13 +94,14 @@ func (t *manifestProvider) PlatformInfo() *platform.Platform {
 	return &platform.Platform{
 		Name:    "kubernetes",
 		Title:   "Kubernetes Manifest",
-		Kind:    providers.Kind_KIND_CODE,
+		Kind:    t.Kind(),
+		Family:  []string{"kubernetes"},
 		Runtime: t.Runtime(),
 	}
 }
 
 func (t *manifestProvider) Kind() providers.Kind {
-	return providers.Kind_KIND_API
+	return providers.Kind_KIND_CODE
 }
 
 func (t *manifestProvider) Runtime() string {
