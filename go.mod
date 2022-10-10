@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.15.18
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.23.16
 	github.com/aws/aws-sdk-go-v2/service/backup v1.17.9
-	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.15.20
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.19.17
@@ -43,10 +43,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.22.10
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.14.18
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.18.19
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.18.20
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.16.10
 	github.com/aws/aws-sdk-go-v2/service/emr v1.20.11
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.15.9
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.15.10
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.19
 	github.com/aws/aws-sdk-go-v2/service/kms v1.18.11
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.24.6
@@ -117,13 +117,13 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
 	github.com/pkg/term v1.2.0-beta.2
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/cobra v1.5.0
-	github.com/spf13/viper v1.12.0
+	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
