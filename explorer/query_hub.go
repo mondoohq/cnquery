@@ -25,10 +25,6 @@ func (s *LocalServices) ValidateBundle(ctx context.Context, bundle *Bundle) (*Em
 
 // SetBundle stores a bundle of query packs and queries in this marketplace
 func (s *LocalServices) SetBundle(ctx context.Context, bundle *Bundle) (*Empty, error) {
-	if len(bundle.OwnerMrn) == 0 {
-		return globalEmpty, status.Error(codes.InvalidArgument, "owner MRN is required")
-	}
-
 	bundlemap, err := bundle.Compile(ctx)
 	if err != nil {
 		return globalEmpty, err
@@ -49,10 +45,6 @@ func (s *LocalServices) PreparePack(ctx context.Context, querypack *QueryPack) (
 
 	if querypack == nil || len(querypack.Mrn) == 0 {
 		return nil, nil, status.Error(codes.InvalidArgument, "mrn is required")
-	}
-
-	if len(querypack.OwnerMrn) == 0 {
-		return nil, nil, status.Error(codes.InvalidArgument, "owner mrn is required")
 	}
 
 	// store all queries

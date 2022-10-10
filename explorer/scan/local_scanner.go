@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gogo/status"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -252,11 +251,6 @@ func (s *localAssetScanner) prepareAsset() error {
 
 	if len(s.job.Bundle.Packs) == 0 {
 		return errors.New("bundle doesn't contain any query packs")
-	}
-
-	// TODO: we should only set this if we are running incognito
-	if s.job.Bundle.OwnerMrn == "" {
-		s.job.Bundle.OwnerMrn = "//local.cnspec.io/run/" + uuid.New().String()
 	}
 
 	// FIXME: we do not currently respect bundle filters!
