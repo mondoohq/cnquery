@@ -243,13 +243,13 @@ func (t *apiProvider) PlatformInfo() *platform.Platform {
 	}
 
 	return &platform.Platform{
-		Name:    "kubernetes",
-		Title:   "Kubernetes",
+		Name:    "k8s-cluster",
+		Title:   "Kubernetes Cluster",
 		Release: release,
 		Version: release,
 		Build:   build,
 		Arch:    arch,
-		Family:  []string{"kubernetes"},
+		Family:  []string{"k8s"},
 		Kind:    providers.Kind_KIND_API,
 		Runtime: providers.RUNTIME_KUBERNETES_CLUSTER,
 	}

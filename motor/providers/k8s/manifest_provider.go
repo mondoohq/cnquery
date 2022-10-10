@@ -92,10 +92,10 @@ func (t *manifestProvider) PlatformInfo() *platform.Platform {
 	}
 
 	return &platform.Platform{
-		Name:    "kubernetes",
+		Name:    "k8s-cluster",
 		Title:   "Kubernetes Manifest",
 		Kind:    t.Kind(),
-		Family:  []string{"kubernetes"},
+		Family:  []string{"k8s"},
 		Runtime: t.Runtime(),
 	}
 }
