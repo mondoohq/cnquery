@@ -5,12 +5,11 @@ import (
 	"errors"
 	"os"
 
-	"go.mondoo.com/ranger-rpc"
-
-	"github.com/gogo/status"
 	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/ranger-rpc"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 	"go.opentelemetry.io/otel"
-	"google.golang.org/grpc/codes"
 )
 
 const defaultQueryHubUrl = "https://hub.api.mondoo.com"

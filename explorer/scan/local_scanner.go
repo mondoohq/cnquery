@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/status"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -24,7 +23,8 @@ import (
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
-	"google.golang.org/grpc/codes"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 )
 
 type LocalScanner struct {
