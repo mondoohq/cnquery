@@ -5,10 +5,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gogo/status"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 )
 
