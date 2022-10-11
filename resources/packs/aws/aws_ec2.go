@@ -732,10 +732,11 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 					"name", core.ToString(instance.KeyName),
 				)
 				if err != nil {
-					return nil, err
+					log.Error().Err(err).Msg(fmt.Sprintf("unable to retrieve ec2 instance keypair with name %s in region %s", core.ToString(instance.KeyName), regionVal))
+				} else {
+					mqlKp := mqlKeyPair.(AwsEc2Keypair)
+					args = append(args, "keypair", mqlKp)
 				}
-				mqlKp := mqlKeyPair.(AwsEc2Keypair)
-				args = append(args, "keypair", mqlKp)
 			}
 
 			mqlEc2Instance, err := s.MotorRuntime.CreateResource("aws.ec2.instance", args...)
