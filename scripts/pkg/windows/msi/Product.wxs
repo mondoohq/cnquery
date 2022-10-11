@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Mondoo cnquery" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Mondoo, Inc." UpgradeCode="04369b8d-8d84-4ccf-a235-b28e3e61fdca">
+    <Package
+      Description="Cloud-Native Asset Inventory Framework"
+      InstallerVersion="200"
+      Compressed="yes"
+      InstallScope="perMachine"
+    />
+    <Property Id="ARPHELPLINK" Value="https://github.com/mondoohq/cnquery" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="cnquery" />
+      </Directory>
+    </Directory>
+
+    <Feature Id="CnqueryFeature" Title="cnquery" Level="1">
+      <Component Directory="INSTALLDIR">
+        <File Name="cnquery.exe" />
+        <Environment Id="Path" Action="set" Name="PATH" Part="last" System="yes" Value="INSTALLDIR"/>
+      </Component>
+    </Feature>
+
+    <WixVariable Id="WixUIBannerBmp" Value="WixUIBannerBmp.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="WixUIDialogBmp.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+    <Icon Id="AppIcon.exe" SourceFile="favicon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.exe" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+    </UI>
+  </Product>
+
+</Wix>
