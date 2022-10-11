@@ -5,6 +5,7 @@
 package k8s
 
 import (
+	"regexp"
 	"strings"
 
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -66,6 +67,8 @@ func mergeFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string
 // The list of flags is taken from
 // https://github.com/kubernetes/kubernetes/blob/release-1.25/cmd/kubelet/app/options/options.go
 func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string]interface{}) error {
+	evictionRegex := regexp.MustCompile(`^(.+)[<>=]+([\d]+[A-Za-z%]*)$`)
+
 	if _, ok := flags["enable-server"]; ok {
 		kubeletConfig["enableServer"] = flags["enable-server"]
 	}
@@ -89,8 +92,8 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 	}
 	if _, ok := flags["manifest-url-header"]; ok {
 		urlHeaders := map[string]string{}
-		for _, urlHeader := range strings.Split(flags["manifest-url-header"].(string), ",") {
-			urlHeaderSplit := strings.Split(urlHeader, "=")
+		for _, urlHeader := range strings.Split(flags["	"].(string), ",") {
+			urlHeaderSplit := strings.Split(urlHeader, ":")
 			urlHeaders[urlHeaderSplit[0]] = urlHeaderSplit[1]
 		}
 		data, err := core.JsonToDict(urlHeaders)
@@ -109,41 +112,80 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 		kubeletConfig["readOnlyPort"] = flags["read-only-port"]
 	}
 	if _, ok := flags["anonymous-auth"]; ok {
-		auth := kubeletConfig["authentication"].(map[string]interface{})
-		anon := auth["anonymous"].(map[string]interface{})
+		auth := map[string]interface{}{}
+		if _, ok := kubeletConfig["authentication"]; ok {
+			auth = kubeletConfig["authentication"].(map[string]interface{})
+		}
+		anon := map[string]interface{}{}
+		if _, ok := auth["anonymous"]; ok {
+			anon = auth["anonymous"].(map[string]interface{})
+		}
 		anon["enabled"] = flags["anonymous-auth"]
 	}
 	if _, ok := flags["authentication-token-webhook"]; ok {
-		auth := kubeletConfig["authentication"].(map[string]interface{})
-		webhook := auth["webhook"].(map[string]interface{})
+		auth := map[string]interface{}{}
+		if _, ok := kubeletConfig["authentication"]; ok {
+			auth = kubeletConfig["authentication"].(map[string]interface{})
+		}
+		webhook := map[string]interface{}{}
+		if _, ok := auth["webhook"]; ok {
+			webhook = auth["webhook"].(map[string]interface{})
+		}
 		webhook["enabled"] = flags["authentication-token-webhook"]
 	}
 	if _, ok := flags["authentication-token-webhook-cache-ttl"]; ok {
-		auth := kubeletConfig["authentication"].(map[string]interface{})
-		webhook := auth["webhook"].(map[string]interface{})
+		auth := map[string]interface{}{}
+		if _, ok := kubeletConfig["authentication"]; ok {
+			auth = kubeletConfig["authentication"].(map[string]interface{})
+		}
+		webhook := map[string]interface{}{}
+		if _, ok := auth["webhook"]; ok {
+			webhook = auth["webhook"].(map[string]interface{})
+		}
 		webhook["cacheTTL"] = flags["authentication-token-webhook-cache-ttl"].(string)
 		kubeletConfig["authentication"] = auth
 	}
 	if _, ok := flags["client-ca-file"]; ok {
-		authz := kubeletConfig["authorization"].(map[string]interface{})
-		x509 := authz["x509"].(map[string]interface{})
+		authz := map[string]interface{}{}
+		if _, ok := kubeletConfig["authorization"]; ok {
+			authz = kubeletConfig["authorization"].(map[string]interface{})
+		}
+		x509 := map[string]interface{}{}
+		if _, ok := authz["x509"]; ok {
+			x509 = authz["x509"].(map[string]interface{})
+		}
 		x509["clientCAFile"] = flags["client-ca-file"]
 		kubeletConfig["authorization"] = authz
 	}
 	if _, ok := flags["authorization-mode"]; ok {
-		authz := kubeletConfig["authorization"].(map[string]interface{})
+		authz := map[string]interface{}{}
+		if _, ok := kubeletConfig["authorization"]; ok {
+			authz = kubeletConfig["authorization"].(map[string]interface{})
+		}
 		authz["mode"] = flags["authorization-mode"]
 		kubeletConfig["authorization"] = authz
 	}
 	if _, ok := flags["authorization-webhook-cache-authorized-ttl"]; ok {
-		authz := kubeletConfig["authorization"].(map[string]interface{})
-		webhook := authz["webhook"].(map[string]interface{})
+		authz := map[string]interface{}{}
+		if _, ok := kubeletConfig["authorization"]; ok {
+			authz = kubeletConfig["authorization"].(map[string]interface{})
+		}
+		webhook := map[string]interface{}{}
+		if _, ok := authz["webhook"]; ok {
+			webhook = authz["webhook"].(map[string]interface{})
+		}
 		webhook["cacheAuthorizedTTL"] = flags["authorization-webhook-cache-authorized-ttl"]
 		kubeletConfig["authorization"] = authz
 	}
 	if _, ok := flags["authorization-webhook-cache-unauthorized-ttl"]; ok {
-		authz := kubeletConfig["authorization"].(map[string]interface{})
-		webhook := authz["webhook"].(map[string]interface{})
+		authz := map[string]interface{}{}
+		if _, ok := kubeletConfig["authorization"]; ok {
+			authz = kubeletConfig["authorization"].(map[string]interface{})
+		}
+		webhook := map[string]interface{}{}
+		if _, ok := authz["webhook"]; ok {
+			webhook = authz["webhook"].(map[string]interface{})
+		}
 		webhook["cacheUnauthorizedTTL"] = flags["authorization-webhook-cache-unauthorized-ttl"]
 		kubeletConfig["authorization"] = authz
 	}
@@ -362,8 +404,11 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 	if _, ok := flags["eviction-hard"]; ok {
 		evictions := map[string]string{}
 		for _, eviction := range strings.Split(flags["eviction-hard"].(string), ",") {
-			evictionSplit := strings.Split(eviction, "=")
-			evictions[evictionSplit[0]] = evictionSplit[1]
+			m := evictionRegex.FindStringSubmatch(eviction)
+			if len(m) == 0 {
+				continue
+			}
+			evictions[m[1]] = m[2]
 		}
 		data, err := core.JsonToDict(evictions)
 		if err != nil {
@@ -374,8 +419,11 @@ func mergeDeprecatedFlagsIntoConfig(kubeletConfig map[string]interface{}, flags 
 	if _, ok := flags["eviction-soft"]; ok {
 		evictions := map[string]string{}
 		for _, eviction := range strings.Split(flags["eviction-soft"].(string), ",") {
-			evictionSplit := strings.Split(eviction, "=")
-			evictions[evictionSplit[0]] = evictionSplit[1]
+			m := evictionRegex.FindStringSubmatch(eviction)
+			if len(m) == 0 {
+				continue
+			}
+			evictions[m[1]] = m[2]
 		}
 		data, err := core.JsonToDict(evictions)
 		if err != nil {

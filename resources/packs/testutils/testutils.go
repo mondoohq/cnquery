@@ -201,6 +201,10 @@ func KubeletMock() *motor.Motor {
 	return Mock("../k8s/testdata/kubelet.toml")
 }
 
+func KubeletAKSMock() *motor.Motor {
+	return Mock("../k8s/testdata/kubelet-aks.toml")
+}
+
 func WindowsMock() *motor.Motor {
 	return Mock("../testdata/windows.toml")
 }
