@@ -36,7 +36,7 @@ If `go` is not installed or an older version exists, follow instructions on [the
     make cnquery/install
     ```
 
-### Develop cnquery, provider or resources
+## Developing cnquery, providers or resources
 
 Whenever you change resources, providers, or protos, you must generate files for the compiler. To do this, make sure you have the necessary tools installed (such as protobuf):
 
@@ -52,7 +52,7 @@ make cnquery/generate
 
 This generates and updates all required files for the build. At this point you can `make cnquery/install` again as outlined above.
 
-## Contributing
+## Contributing Changes
 
 ### Marking PRs with Emojis
 
