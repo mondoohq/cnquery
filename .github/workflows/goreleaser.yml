@@ -70,5 +70,5 @@ jobs:
         run: |
           cp scripts/rpmmacros ~/.rpmmacros
           export GPG_TTY=$(tty)
-          ls -lR
+          ls -l dist/*.rpm
           rpmsign --addsign dist/*.rpm
