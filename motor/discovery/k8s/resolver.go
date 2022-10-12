@@ -87,6 +87,23 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
+	clusterNamespaces, err := p.Namespaces()
+	if err != nil {
+		return nil, err
+	}
+	for _, ns := range namespacesFilter {
+		found := false
+		for _, clusterNs := range clusterNamespaces {
+			if clusterNs.Name == ns {
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Warn().Msgf("namespace %q not found in cluster", ns)
+		}
+	}
+
 	clusterIdentifier, err := p.Identifier()
 	if err != nil {
 		return nil, err
