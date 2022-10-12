@@ -60,7 +60,11 @@ jobs:
           echo "${{ secrets.GPG_PASSPHRASE }}" > passphrase
           echo "${{ secrets.GPG_PUBKEY }}" > mondoo_gpg2_pub.gpg
           echo "${{ secrets.GPG_PUBKEY }}" | gpg --import --no-tty --batch --yes
-          echo "${{ secrets.GPG_KEY }}" | gpg --import --passphrase-file passphrase --allow-secret-key-import --pinentry-mode loopback --no-tty --batch --yes
+          echo "${{ secrets.GPG_SECKEY }}" | gpg --import --passphrase-file passphrase --allow-secret-key-import --pinentry-mode loopback --no-tty --batch --yes
+          echo "allow-preset-passphrase" > ~/.gnupg/gpg-agent.conf
+          # Find keygrip with 'gpg --list-secret-keys --with-keygrip'
+          gpg-connect-agent RELOADAGENT /bye
+          echo "${{secrets.GPG_PASSPHRASE}}" | /usr/lib/gnupg2/gpg-preset-passphrase --preset "${{secrets.GPG_KEYGRIP}}"
           rpm --import mondoo_gpg2_pub.gpg
       - name: Sign RPMs
         run: |
