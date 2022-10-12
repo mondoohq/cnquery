@@ -1,18 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
-    <id>mondoo.cnquery</id>
+    <id>cnquery</id>
     <version>6.19.0</version>
     <packageSourceUrl>https://github.com/mondoohq/cnquery</packageSourceUrl>
     <owners>Mondoo</owners>
 
-    <title>cnquery (Install)</title>
+    <title>Mondoo cnquery</title>
     <authors>Mondoo</authors>
     <projectUrl>https://github.com/mondoohq/cnquery</projectUrl>
     <!--<iconUrl>http://cdn.rawgit.com/__REPLACE_YOUR_REPO__/master/icons/cnquery.png</iconUrl>-->
-    <copyright>2022</copyright>
-    <licenseUrl>https://github.com/mondoohq/cnquery/blob/main/LICENSE</licenseUrl>
+    <copyright>2022 Mondoo, Inc</copyright>
+    <licenseUrl>https://www.mozilla.org/en-US/MPL/2.0/</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <docsUrl>https://mondoo.com/docs</docsUrl>
     <bugTrackerUrl>https://github.com/mondoohq/cnquery/issues</bugTrackerUrl>
