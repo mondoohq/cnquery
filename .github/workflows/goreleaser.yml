@@ -72,3 +72,5 @@ jobs:
           export GPG_TTY=$(tty)
           ls -l dist/*.rpm
           rpmsign --addsign dist/*.rpm
+          # Check package data and signatures
+          rpm -qpi dist/*.rpm
