@@ -1,6 +1,6 @@
 # cnquery
 
-Cloud-Native Asset Inventory Framework
+**Open source, cloud-native asset inventory and discovery**
 
 `cnquery` is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
