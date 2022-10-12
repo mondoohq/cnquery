@@ -214,11 +214,6 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		return []string{}, cobra.ShellCompDirectiveNoFileComp
 	},
 	CommonFlags: func(cmd *cobra.Command) {
-		// FIXME: remove in v7.0 vv
-		// we are moving over to the new scan syntax
-		cmd.Flags().StringP("connection", "t", "", "set the method used to connect to the asset. supported connections are 'local://', 'docker://' and 'ssh://'")
-		// ^^
-
 		// inventories for multi-asset scan
 		cmd.Flags().String("inventory-file", "", "path to inventory file")
 		cmd.Flags().String("inventory", "", "inventory file")
@@ -302,36 +297,6 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 			fmt.Println("Available output formats: " + reporter.AllFormats())
 			os.Exit(0)
 		}
-
-		// if users supply an inventory, we want to continue with it and move forward
-		hasInventory := false
-		if x, _ := cmd.Flags().GetString("inventory-file"); x != "" {
-			hasInventory = true
-		}
-		if x, _ := cmd.Flags().GetString("inventory-ansible"); x != "" {
-			hasInventory = true
-		}
-		if x, _ := cmd.Flags().GetString("inventory-domainlist"); x != "" {
-			hasInventory = true
-		}
-
-		// FIXME: remove in v7.0 vv
-		// We are still supporting the --connection flag throughout v6.x and will remove
-		// it after. Remember to migrate the zero-state here
-		connection, _ := cmd.Flags().GetString("connection")
-		// Since we support the fallback for --connection, we check if it was provided
-		// first before we print the help in case no subcommand was called
-		if connection == "" && !hasInventory {
-			cmd.Help()
-			fmt.Print(`
-Please run one of the subcommands to specify the target system. For example:
-
-    $ cnquery explore local
-
-`)
-			os.Exit(1)
-		}
-		// ^^
 	},
 	Run: func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) {
 		conf, err := getCobraScanConfig(cmd, args, provider, assetType)
