@@ -405,7 +405,6 @@ func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, 
 		},
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().Bool("all-namespaces", false, "DEPRECATED: list the resources across all namespaces.")
 	cmd.Flags().String("namespace", "", "target a kubernetes namespace")
 	cmd.Flags().String("context", "", "target a kubernetes context")
 	return cmd

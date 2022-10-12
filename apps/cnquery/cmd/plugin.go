@@ -166,7 +166,7 @@ func renderJson(code *llx.CodeBundle, results map[string]*llx.RawResult, out sha
 	}
 
 	// since we iterate over checksums, we run into the situation that this could be a slice
-	// eg. cnquery run k8s --all-namespaces --query "platform { name } k8s.pod.name" --json
+	// eg. cnquery run k8s --query "platform { name } k8s.pod.name" --json
 
 	renderError := func(err error) {
 		data, jErr := json.Marshal(struct {
