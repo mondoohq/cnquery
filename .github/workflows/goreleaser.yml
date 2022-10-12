@@ -40,8 +40,10 @@ jobs:
       - name: "Write RPM Signing Cert"
         run: |
           gpgkey="$(mktemp -t gpgkey.XXX)"
-          echo ${{ secrets.GPG_SECKEY }} > "$gpgkey"
+          base64 -d <<<"$GPG_KEY" > "$gpgkey"
           echo "GPG_KEY_PATH=$gpgkey" >> $GITHUB_ENV
+        env:
+          GPG_KEY: '${{ secrets.GPG_KEY}}'
       - name: "Write Windows Signing Cert"
         run: |
           cert="$(mktemp -t cert.XXX)"
