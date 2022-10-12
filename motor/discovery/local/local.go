@@ -95,14 +95,16 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	assetList := []*asset.Asset{assetObj}
 
 	// search for container assets on local machine
-	engineAssets, err := docker_engine.DiscoverDockerEngineAssets(tc)
-	if err != nil {
-		return nil, err
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, docker_engine.DiscoveryContainerRunning, docker_engine.DiscoveryContainerImages) {
+		engineAssets, err := docker_engine.DiscoverDockerEngineAssets(tc)
+		if err != nil {
+			return nil, err
+		}
+		for _, a := range engineAssets {
+			a.RelatedAssets = append(a.RelatedAssets, assetObj)
+		}
+		assetList = append(assetList, engineAssets...)
 	}
-	for _, a := range engineAssets {
-		a.RelatedAssets = append(a.RelatedAssets, assetObj)
-	}
-	assetList = append(assetList, engineAssets...)
 
 	return assetList, nil
 }
