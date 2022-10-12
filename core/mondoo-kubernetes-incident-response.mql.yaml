@@ -7,6 +7,23 @@ packs:
         title: Gather Kubernetes Cluster Version
         query: |
           k8s.serverVersion
+      - uid: role-bindings-with-cluster-admin-permissions
+        title: Gather Role Bindings with cluster-admin Permissions
+        query: |
+          k8s.rolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
+            name
+            namespace
+            subjects
+            roleRef
+          }
+      - uid: clusterrole-bindings-with-cluster-admin-permissions
+        title: Gather ClusterRole Bindings with cluster-admin Permissions
+        query: |
+          k8s.clusterrolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
+            name
+            subjects
+            roleRef
+          }
   - uid: mondoo-kubernetes-pods-incident-response
     filters:
       - asset.platform == "k8s-pod"
@@ -27,6 +44,27 @@ packs:
         query: |
           k8s.pod { 
             name
+            namespace
+            containers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
+            podSpec["nodeName"]
+          }
+      - uid: k8s-cronjobs
+        title: Gather CronJobs
+        query: |
+          k8s.cronjob { 
+            name
+            namespace
             containers { 
               image 
               containerImage { 
