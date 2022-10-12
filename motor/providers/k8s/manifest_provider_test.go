@@ -54,9 +54,9 @@ func TestManifestFileProvider(t *testing.T) {
 		transport, err := newManifestProvider("", "", WithManifestFile(manifestFile))
 		require.NoError(t, err)
 		require.NotNil(t, transport)
-		assert.Equal(t, "kubernetes", transport.PlatformInfo().Name)
+		assert.Equal(t, "k8s-cluster", transport.PlatformInfo().Name)
 		assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
 		assert.Equal(t, providers.Kind_KIND_CODE, transport.PlatformInfo().Kind)
-		assert.Contains(t, transport.PlatformInfo().Family, "kubernetes")
+		assert.Contains(t, transport.PlatformInfo().Family, "k8s")
 	})
 }
