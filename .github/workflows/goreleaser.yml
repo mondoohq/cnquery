@@ -37,6 +37,11 @@ jobs:
           secrets: |-
             code_sign_cert_b64:mondoo-base-infra/mondoo_code_sign_certificate_pfx_b64
             code_sign_cert_challenge:mondoo-base-infra/mondoo_code_sign_challenge
+      - name: "Write RPM Signing Cert"
+        run: |
+          gpgkey="$(mktemp -t gpgkey.XXX)"
+          echo ${{ secrets.GPG_SECKEY }} > "$gpgkey"
+          echo "GPG_KEY_PATH=$gpgkey" >> $GITHUB_ENV
       - name: "Write Windows Signing Cert"
         run: |
           cert="$(mktemp -t cert.XXX)"
@@ -53,3 +58,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
+          NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
