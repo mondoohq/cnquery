@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/config"
@@ -141,4 +142,13 @@ func sysInfoHeader(sysInfo *sysinfo.SystemInfo, features cnquery.Features) range
 	h.Set(HttpHeaderClientFeatures, features.Encode())
 	h.Set(HttpHeaderPlatformID, sysInfo.PlatformId)
 	return scope.NewCustomHeaderRangerPlugin(h)
+}
+
+func GenerateMarkdown(dir string) error {
+	rootCmd.DisableAutoGenTag = true
+
+	// We need to remove our fancy logo from the markdown output,
+	// since it messes with the formatting.
+	rootCmd.Long = rootCmdDesc
+	return doc.GenMarkdownTree(rootCmd, dir)
 }

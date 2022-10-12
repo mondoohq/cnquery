@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -36,5 +37,8 @@ func AllFormats() string {
 			res = append(res, k)
 		}
 	}
+
+	// ensure the order is always the same
+	sort.Strings(res)
 	return strings.Join(res, ", ")
 }
