@@ -56,9 +56,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 
 	switch pf.Name {
 	case "github-repo":
-		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
-			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-			pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
+		if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryRepository) {
 			name := defaultName
 			if name == "" {
 				repo, _ := p.Repository()
@@ -76,9 +74,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 		}
 	case "github-user":
-		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
-			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-			pCfg.IncludesDiscoveryTarget(DiscoveryUser) {
+		if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryUser) {
 			name := defaultName
 			if name == "" {
 				user, _ := p.User()
