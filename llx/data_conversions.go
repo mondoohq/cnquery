@@ -64,7 +64,7 @@ func init() {
 
 func dict2primitive(value interface{}) (*Primitive, error) {
 	if value == nil {
-		return nil, nil
+		return NilPrimitive, nil
 	}
 
 	switch x := value.(type) {
@@ -202,10 +202,6 @@ func dict2result(value interface{}, typ types.Type) (*Primitive, error) {
 		return nil, err
 	}
 
-	if prim == nil {
-		return &Primitive{Type: string(types.Dict)}, nil
-	}
-
 	raw, err := proto.MarshalOptions{Deterministic: true}.Marshal(prim)
 	if err != nil {
 		return nil, err
@@ -331,9 +327,13 @@ func function2result(value interface{}, typ types.Type) (*Primitive, error) {
 
 func raw2primitive(value interface{}, typ types.Type) (*Primitive, error) {
 	if value == nil {
-		return &Primitive{
-			Type: string(typ),
-		}, nil
+		// there are only few types whose value is allowed to be nil
+		switch typ {
+		case types.Unset:
+			return UnsetPrimitive, nil
+		default:
+			return NilPrimitive, nil
+		}
 	}
 
 	utyp := typ.Underlying()
@@ -472,54 +472,49 @@ func pnil2raw(p *Primitive) *RawData {
 }
 
 func pbool2raw(p *Primitive) *RawData {
-	if p.IsNil() {
+	if len(p.Value) == 0 {
 		return &RawData{
-			Type: types.Type(p.Type),
+			Type:  types.Type(p.Type),
+			Value: false,
 		}
 	}
 	return BoolData(bytes2bool(p.Value))
 }
 
 func pint2raw(p *Primitive) *RawData {
-	if p.IsNil() {
+	if len(p.Value) == 0 {
 		return &RawData{
-			Type: types.Type(p.Type),
+			Type:  types.Type(p.Type),
+			Value: int64(0),
 		}
 	}
 	return IntData(bytes2int(p.Value))
 }
 
 func pfloat2raw(p *Primitive) *RawData {
-	if p.IsNil() {
+	if len(p.Value) == 0 {
 		return &RawData{
-			Type: types.Type(p.Type),
+			Type:  types.Type(p.Type),
+			Value: float64(0),
 		}
 	}
 	return FloatData(bytes2float(p.Value))
 }
 
 func pstring2raw(p *Primitive) *RawData {
-	if p.IsNil() {
-		return &RawData{
-			Type: types.Type(p.Type),
-		}
-	}
 	return StringData(string(p.Value))
 }
 
 func pregex2raw(p *Primitive) *RawData {
-	if p.IsNil() {
-		return &RawData{
-			Type: types.Type(p.Type),
-		}
-	}
 	return RegexData(string(p.Value))
 }
 
 func ptime2raw(p *Primitive) *RawData {
-	if p.IsNil() {
+	if len(p.Value) == 0 {
+		t := time.Unix(0, 0)
 		return &RawData{
-			Type: types.Type(p.Type),
+			Type:  types.Type(p.Type),
+			Value: &t,
 		}
 	}
 	return TimeData(bytes2time(p.Value))
@@ -527,10 +522,13 @@ func ptime2raw(p *Primitive) *RawData {
 
 func pdict2raw(p *Primitive) *RawData {
 	if p.Value == nil {
-		return &RawData{Type: types.Dict}
+		return &RawData{
+			Type:  types.Dict,
+			Value: nil,
+		}
 	}
 
-	res := Primitive{}
+	res := Primitive{} // unmarshal placeholder
 	err := proto.Unmarshal(p.Value, &res)
 	if err != nil {
 		return &RawData{Error: err, Type: types.Dict}
@@ -541,7 +539,13 @@ func pdict2raw(p *Primitive) *RawData {
 }
 
 func pscore2raw(p *Primitive) *RawData {
-	return &RawData{Value: p.Value, Error: nil, Type: types.Score}
+	if len(p.Value) == 0 {
+		return &RawData{
+			Value: int64(0),
+			Type:  types.Score,
+		}
+	}
+	return &RawData{Value: p.Value, Type: types.Score}
 }
 
 func pblock2rawV2(p *Primitive) *RawData {
@@ -555,6 +559,9 @@ func parray2raw(p *Primitive) *RawData {
 	// during the execution of the code. This function is really only applicable
 	// much later when you try to just get to the values of the returned data.
 	d, _, err := args2resourceargsV2(nil, 0, p.Array)
+	if d == nil {
+		d = []interface{}{}
+	}
 	return &RawData{Value: d, Error: err, Type: types.Type(p.Type)}
 }
 
@@ -574,6 +581,7 @@ func presource2raw(p *Primitive) *RawData {
 }
 
 func pfunction2raw(p *Primitive) *RawData {
+	// note: function pointers can never have a value that is nil
 	rv := bytes2int(p.Value)
 	if rv>>32 != 0 {
 		return &RawData{Value: uint64(bytes2int(p.Value)), Type: types.Type(p.Type)}
@@ -583,6 +591,7 @@ func pfunction2raw(p *Primitive) *RawData {
 }
 
 func pref2raw(p *Primitive) *RawData {
+	// note: refs can never have a value that is nil
 	rv := bytes2int(p.Value)
 	if rv>>32 != 0 {
 		return &RawData{Value: uint64(bytes2int(p.Value)), Type: types.Type(p.Type)}
@@ -591,6 +600,9 @@ func pref2raw(p *Primitive) *RawData {
 	}
 }
 
+// Tries to resolve primitives; returns refs if they don't exist yet.
+// Returns errors and ref=0 if there was an error.
+// Note: Returned array can be nil.
 func args2resourceargsV2(b *blockExecutor, ref uint64, args []*Primitive) ([]interface{}, uint64, error) {
 	if args == nil {
 		return []interface{}{}, 0, nil
@@ -621,6 +633,8 @@ func args2resourceargsV2(b *blockExecutor, ref uint64, args []*Primitive) ([]int
 	return res, 0, nil
 }
 
+// Converts a map of primitives into a map of go data (no type info).
+// Return map is never nil.
 func primitive2mapV2(m map[string]*Primitive) (map[string]interface{}, error) {
 	if m == nil {
 		return map[string]interface{}{}, nil
@@ -641,6 +655,8 @@ func primitive2mapV2(m map[string]*Primitive) (map[string]interface{}, error) {
 	return res, nil
 }
 
+// Converts a map of primitives into a map of RawData (to preserve type-info).
+// Return map is never nil.
 func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]interface{}, error) {
 	if m == nil {
 		return map[string]interface{}{}, nil

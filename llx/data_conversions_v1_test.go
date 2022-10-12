@@ -195,75 +195,87 @@ func TestCastResult(t *testing.T) {
 		})
 	})
 
-	t.Run("from null", func(t *testing.T) {
+	t.Run("null-RawResults", func(t *testing.T) {
 		testCases := []struct {
 			Type types.Type
 		}{
-			{
-				Type: types.String,
-			},
-			{
-				Type: types.Int,
-			},
-			{
-				Type: types.Float,
-			},
-			{
-				Type: types.Block,
-			},
-			{
-				Type: types.Array(types.String),
-			},
-			{
-				Type: types.Map(types.String, types.String),
-			},
+			{Type: types.String},
+			{Type: types.Int},
+			{Type: types.Float},
+			{Type: types.Block},
+			{Type: types.Array(types.String)},
+			{Type: types.Map(types.String, types.String)},
 		}
 
 		for _, tc := range testCases {
-			t.Run(tc.Type.Label(), func(t *testing.T) {
-				rawData := &RawData{
-					Type: types.Nil,
-				}
-				rawResult := &RawResult{Data: rawData, CodeID: "fakeid"}
+			t.Run(tc.Type.Label()+" with type casting 📸", func(t *testing.T) {
+				rawResult := &RawResult{Data: &RawData{Type: types.Nil}, CodeID: "fakeid"}
 				casted := rawResult.CastResult(tc.Type)
-				// converting back to RawResult loses the type. This note
-				// is just calling out the way things are, not the way things
-				// have to be
 				require.Empty(t, casted.Error)
 				require.Equal(t, tc.Type.Label(), types.Type(casted.Data.Type).Label())
-				require.True(t, casted.Data.IsNil())
+				require.True(t, !casted.Data.IsNil())
+			})
+
+			t.Run(tc.Type.Label()+" without casting 📵", func(t *testing.T) {
+				rawResult := &RawResult{Data: &RawData{Type: tc.Type}, CodeID: "fakeid"}
+				res := rawResult.Result()
+				require.Empty(t, res.Error)
+				require.Equal(t, tc.Type.Label(), types.Type(res.Data.Type).Label())
+				require.True(t, !res.Data.IsNil())
+			})
+
+			t.Run(tc.Type.Label()+" convert RawResult => Result => RawResult creates non-nil values", func(t *testing.T) {
+				rawResult := &RawResult{Data: &RawData{Type: tc.Type}, CodeID: "fakeid"}
+				res := rawResult.Result().RawResultV2()
+				require.NotNil(t, res.Data.Value)
 			})
 		}
 	})
 }
 
 func TestResultFromNilConversion(t *testing.T) {
-	t.Run("basic types", func(t *testing.T) {
-		tests := []*Primitive{
+	t.Run("nil-Primitive => RawData => Result is non-nil", func(t *testing.T) {
+		zeroTime := time.Unix(0, 0)
+		tests := []struct {
+			Primitive *Primitive
+			Data      []byte
+		}{
 			{
-				Type: string(types.Bool),
+				NilPrimitive,
+				nil,
 			},
 			{
-				Type: string(types.Int),
+				&Primitive{Type: string(types.Bool)},
+				BoolPrimitive(false).Value,
 			},
 			{
-				Type: string(types.Float),
+				&Primitive{Type: string(types.Int)},
+				IntPrimitive(0).Value,
 			},
 			{
-				Type: string(types.String),
+				&Primitive{Type: string(types.Float)},
+				FloatPrimitive(0).Value,
 			},
-			NilPrimitive,
 			{
-				Type: string(types.Time),
+				&Primitive{Type: string(types.String)},
+				StringPrimitive("").Value,
+			},
+			{
+				&Primitive{Type: string(types.Regex)},
+				StringPrimitive("").Value,
+			},
+			{
+				&Primitive{Type: string(types.Time)},
+				TimePrimitive(&zeroTime).Value,
 			},
 		}
 
 		for i := range tests {
-			rawData := tests[i].RawData()
-			result := rawData.Result()
-
-			assert.Equal(t, tests[i].Type, result.GetData().GetType())
-			assert.Nil(t, result.GetData().GetValue())
+			t.Run(types.Type(tests[i].Primitive.Type).Label(), func(t *testing.T) {
+				result := tests[i].Primitive.RawData().Result()
+				assert.Equal(t, tests[i].Primitive.Type, result.GetData().GetType())
+				assert.Equal(t, tests[i].Data, result.GetData().GetValue())
+			})
 		}
 	})
 

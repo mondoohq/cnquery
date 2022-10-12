@@ -400,7 +400,9 @@ func (p *Primitive) Size() int {
 }
 
 // IsNil returns true if a primitive is nil. A primitive is nil if it's type is nil,
-// or if it has no associated value
+// or if it has no associated value. The exception is the string type. If an empty
+// bytes field is serialized (for example for an empty string), that field is nil.
 func (p *Primitive) IsNil() bool {
-	return p == nil || p.Type == string(types.Nil) || (p.Value == nil && p.Map == nil && p.Array == nil)
+	return p == nil ||
+		p.Type == string(types.Nil)
 }

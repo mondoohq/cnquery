@@ -38,7 +38,7 @@ func (b *Block) AddChunk(code *CodeV2, blockRef uint64, c *Chunk) {
 func (b *Block) AddArgumentPlaceholder(code *CodeV2, blockRef uint64, typ types.Type, checksum string) {
 	b.AddChunk(code, blockRef, &Chunk{
 		Call:      Chunk_PRIMITIVE,
-		Primitive: &Primitive{Type: string(typ)},
+		Primitive: &Primitive{Type: string(typ)}, // placeholder
 	})
 	code.Checksums[b.TailRef(blockRef)] = checksum
 	b.Parameters++
