@@ -35,7 +35,7 @@ func compileWhere(c *compiler, typ types.Type, ref uint64, id string, call *pars
 		return types.Nil, errors.New("called '" + id + "' without a function block")
 	}
 
-	argExpectation := llx.FunctionPrimitiveV2(blockRef)
+	argExpectation := llx.FunctionPrimitive(blockRef)
 
 	// if we have a standalone body in the where clause, then we need to check if
 	// it's a value, in which case we need to compare the array value to it
@@ -107,7 +107,7 @@ func compileArrayDuplicates(c *compiler, typ types.Type, ref uint64, id string, 
 		if blockRef == 0 {
 			return types.Nil, errors.New("called '" + id + "' without a function block")
 		}
-		argExpectation := llx.FunctionPrimitiveV2(blockRef)
+		argExpectation := llx.FunctionPrimitive(blockRef)
 
 		if standalone {
 			return typ, errors.New("called duplicates with a field name on an invalid type")
@@ -455,7 +455,7 @@ func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *p
 	if blockRef == 0 {
 		return types.Nil, errors.New("called '" + id + "' without a function block")
 	}
-	argExpectation := llx.FunctionPrimitiveV2(blockRef)
+	argExpectation := llx.FunctionPrimitive(blockRef)
 
 	block := c.Result.CodeV2.Block(blockRef)
 	if len(block.Entrypoints) != 1 {

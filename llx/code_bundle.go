@@ -1,43 +1,22 @@
 package llx
 
-func (x *CodeBundle) IsV2() bool {
-	return x.CodeV2 != nil
-}
-
 func (x *CodeBundle) FilterResults(results map[string]*RawResult) map[string]*RawResult {
 	filteredResults := map[string]*RawResult{}
 
-	if x.IsV2() {
-		for i := range x.CodeV2.Checksums {
-			checksum := x.CodeV2.Checksums[i]
+	for i := range x.CodeV2.Checksums {
+		checksum := x.CodeV2.Checksums[i]
 
-			res := results[checksum]
-			if res != nil {
-				filteredResults[checksum] = res
-			}
-		}
-	} else {
-		for i := range x.DeprecatedV5Code.Checksums {
-			checksum := x.DeprecatedV5Code.Checksums[i]
-
-			res := results[checksum]
-			if res != nil {
-				filteredResults[checksum] = res
-			}
+		res := results[checksum]
+		if res != nil {
+			filteredResults[checksum] = res
 		}
 	}
 
 	return filteredResults
 }
 
-func Results2Assessment(bundle *CodeBundle, results map[string]*RawResult, useV2Code bool) *Assessment {
-	if useV2Code {
-		return Results2AssessmentLookupV2(bundle, func(s string) (*RawResult, bool) {
-			r := results[s]
-			return r, r != nil
-		})
-	}
-	return Results2AssessmentLookupV1(bundle, func(s string) (*RawResult, bool) {
+func Results2Assessment(bundle *CodeBundle, results map[string]*RawResult) *Assessment {
+	return Results2AssessmentLookupV2(bundle, func(s string) (*RawResult, bool) {
 		r := results[s]
 		return r, r != nil
 	})
@@ -89,44 +68,26 @@ func Results2AssessmentLookupV2(bundle *CodeBundle, f func(s string) (*RawResult
 }
 
 // CodepointChecksums returns the entrypoint- and datapoint-checksums
-func (x *CodeBundle) CodepointChecksums(useV2Code bool) []string {
+func (x *CodeBundle) CodepointChecksums() []string {
 	return append(
-		x.EntrypointChecksums(useV2Code),
-		x.DatapointChecksums(useV2Code)...)
+		x.EntrypointChecksums(),
+		x.DatapointChecksums()...)
 }
 
 // EntrypointChecksums returns the checksums for all entrypoints
-func (x *CodeBundle) EntrypointChecksums(useV2Code bool) []string {
-	var checksums []string
-	if useV2Code {
-		// TODO (jaym): double check with dom this is the way to get entrypoints
-		checksums = make([]string, len(x.CodeV2.Blocks[0].Entrypoints))
-		for i, ref := range x.CodeV2.Blocks[0].Entrypoints {
-			checksums[i] = x.CodeV2.Checksums[ref]
-		}
-	} else {
-		checksums = make([]string, len(x.DeprecatedV5Code.Entrypoints))
-		for i, ref := range x.DeprecatedV5Code.Entrypoints {
-			checksums[i] = x.DeprecatedV5Code.Checksums[ref]
-		}
+func (x *CodeBundle) EntrypointChecksums() []string {
+	checksums := make([]string, len(x.CodeV2.Blocks[0].Entrypoints))
+	for i, ref := range x.CodeV2.Blocks[0].Entrypoints {
+		checksums[i] = x.CodeV2.Checksums[ref]
 	}
 	return checksums
 }
 
 // DatapointChecksums returns the checksums for all datapoints
-func (x *CodeBundle) DatapointChecksums(useV2Code bool) []string {
-	var checksums []string
-	if useV2Code {
-		// TODO (jaym): double check with dom this is the way to get entrypoints
-		checksums = make([]string, len(x.CodeV2.Blocks[0].Datapoints))
-		for i, ref := range x.CodeV2.Blocks[0].Datapoints {
-			checksums[i] = x.CodeV2.Checksums[ref]
-		}
-	} else {
-		checksums = make([]string, len(x.DeprecatedV5Code.Datapoints))
-		for i, ref := range x.DeprecatedV5Code.Datapoints {
-			checksums[i] = x.DeprecatedV5Code.Checksums[ref]
-		}
+func (x *CodeBundle) DatapointChecksums() []string {
+	checksums := make([]string, len(x.CodeV2.Blocks[0].Datapoints))
+	for i, ref := range x.CodeV2.Blocks[0].Datapoints {
+		checksums[i] = x.CodeV2.Checksums[ref]
 	}
 	return checksums
 }

@@ -159,7 +159,7 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(listRef),
-		llx.FunctionPrimitiveV2(blockRef),
+		llx.FunctionPrimitive(blockRef),
 	}
 	for _, v := range blockDeps {
 		if c.isInMyBlock(v) {
@@ -227,7 +227,7 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(listRef),
-		llx.FunctionPrimitiveV2(blockRef),
+		llx.FunctionPrimitive(blockRef),
 	}
 	for _, v := range blockDeps {
 		if c.isInMyBlock(v) {

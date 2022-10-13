@@ -48,11 +48,7 @@ var Invariants = InvariantList{
 		ShortName:   "code is not nil",
 		Description: `Make sure any compiled code is never just nil`,
 		Checker: func(cb *llx.CodeBundle) bool {
-			if cb.IsV2() {
-				return cb.CodeV2 != nil
-			} else {
-				return cb.DeprecatedV5Code != nil
-			}
+			return cb.CodeV2 != nil
 		},
 	},
 	{
@@ -74,11 +70,7 @@ var Invariants = InvariantList{
 			"https://gitlab.com/mondoolabs/mondoo/-/issues/716",
 		},
 		Checker: func(cb *llx.CodeBundle) bool {
-			if cb.IsV2() {
-				return checkReturnEntrypointsV2(cb.CodeV2)
-			} else {
-				return checkReturnEntrypointsV1(cb.DeprecatedV5Code)
-			}
+			return checkReturnEntrypointsV2(cb.CodeV2)
 		},
 	},
 }

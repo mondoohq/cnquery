@@ -482,3 +482,49 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 
 	return &res
 }
+
+// ComparableLabel takes any arbitrary label and returns the
+// operation as a printable string and true if it is a comparable, otherwise "" and false.
+func ComparableLabel(label string) (string, bool) {
+	if label == "" {
+		return "", false
+	}
+
+	x := label[0:1]
+	if _, ok := comparableOperations[x]; ok {
+		return x, true
+	}
+	if len(label) == 1 {
+		return "", false
+	}
+
+	x = label[0:2]
+	if _, ok := comparableOperations[x]; ok {
+		return x, true
+	}
+
+	return "", false
+}
+
+var comparableOperations = map[string]struct{}{
+	"==": {},
+	"!=": {},
+	">":  {},
+	"<":  {},
+	">=": {},
+	"<=": {},
+	"&&": {},
+	"||": {},
+}
+
+func (c *Chunk) isStatic() bool {
+	if c.Call != Chunk_PRIMITIVE {
+		return false
+	}
+
+	if types.Type(c.Primitive.Type) == types.Ref {
+		return false
+	}
+
+	return true
+}

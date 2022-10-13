@@ -102,8 +102,7 @@ func (c *BufferedCollector) SinkData(results []*llx.RawResult) {
 }
 
 type ResultCollector struct {
-	assetMrn  string
-	useV2Code bool
+	assetMrn string
 }
 
 func (c *ResultCollector) toResult(rr *llx.RawResult) *llx.Result {

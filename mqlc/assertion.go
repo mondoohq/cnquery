@@ -208,7 +208,7 @@ func compileListAssertionMsg(c *compiler, typ types.Type, allRef uint64, failedR
 		c.Result.CodeV2.Assertions[assertionRef+2] = assertionMsg
 
 		args := []*llx.Primitive{
-			llx.FunctionPrimitiveV2(blockCompiler.blockRef),
+			llx.FunctionPrimitive(blockCompiler.blockRef),
 		}
 		for _, v := range blockCompiler.blockDeps {
 			if c.isInMyBlock(v) {

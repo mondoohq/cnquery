@@ -324,7 +324,7 @@ func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult,
 }
 
 func (s *Shell) PrintResults(code *llx.CodeBundle, results map[string]*llx.RawResult) {
-	printedResult := s.Theme.PolicyPrinter.Results(code, results, s.features.IsActive(cnquery.PiperCode))
+	printedResult := s.Theme.PolicyPrinter.Results(code, results)
 	fmt.Fprint(s.out, "\r")
 	fmt.Fprintln(s.out, printedResult)
 }

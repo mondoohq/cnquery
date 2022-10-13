@@ -406,12 +406,14 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_MS365:
 		connection.Backend = providerType
 
-		// data report is deprecated in v6 and should be removed asap
+		// FIXME: DEPRECATED in v6 vv
+		// remove datareport from the list of supported options
 		if x, err := cmd.Flags().GetString("datareport"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --datareport values")
 		} else if x != "" {
 			connection.Options["mondoo-ms365-datareport"] = x
 		}
+		// ^^
 
 		if tenantId, err := cmd.Flags().GetString("tenant-id"); err == nil {
 			connection.Options["tenant-id"] = tenantId

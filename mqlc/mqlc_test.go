@@ -17,7 +17,7 @@ import (
 
 var (
 	schema   = resource_info.Registry.Schema()
-	features = cnquery.Features{byte(cnquery.PiperCode)}
+	features = cnquery.Features{}
 )
 
 func init() {
@@ -131,7 +131,7 @@ func TestCompiler_Buggy(t *testing.T) {
 			{Id: "{}", Call: llx.Chunk_FUNCTION, Function: &llx.Function{
 				Type:    string(types.Block),
 				Binding: (1 << 32) | 1,
-				Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 			}},
 		}, nil},
 		{"# ..\nmondoo { \n# ..\nversion\n# ..\n}\n# ..", []*llx.Chunk{
@@ -139,7 +139,7 @@ func TestCompiler_Buggy(t *testing.T) {
 			{Call: llx.Chunk_FUNCTION, Id: "{}", Function: &llx.Function{
 				Type:    string(types.Block),
 				Binding: (1 << 32) | 1,
-				Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 			}},
 		}, nil},
 		{`users.list[]`, nil, errors.New("missing value inside of `[]` at <source>:1:12")},
@@ -149,7 +149,7 @@ func TestCompiler_Buggy(t *testing.T) {
 				Type: string(types.Block),
 				Args: []*llx.Primitive{
 					llx.BoolPrimitive(true),
-					llx.FunctionPrimitiveV2(2 << 32),
+					llx.FunctionPrimitive(2 << 32),
 					llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 				},
 			}},
@@ -159,9 +159,9 @@ func TestCompiler_Buggy(t *testing.T) {
 				Type: string(types.Int),
 				Args: []*llx.Primitive{
 					llx.BoolPrimitive(true),
-					llx.FunctionPrimitiveV2(2 << 32),
+					llx.FunctionPrimitive(2 << 32),
 					llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-					llx.FunctionPrimitiveV2(3 << 32),
+					llx.FunctionPrimitive(3 << 32),
 					llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 				},
 			}},
@@ -448,12 +448,12 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 				llx.BoolPrimitive(false),
-				llx.FunctionPrimitiveV2(3 << 32),
+				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-				llx.FunctionPrimitiveV2(4 << 32),
+				llx.FunctionPrimitive(4 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[0])
@@ -499,9 +499,9 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-				llx.FunctionPrimitiveV2(3 << 32),
+				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
@@ -523,9 +523,9 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitiveV2(4 << 32),
+				llx.FunctionPrimitive(4 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-				llx.FunctionPrimitiveV2(5 << 32),
+				llx.FunctionPrimitive(5 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[2].Chunks[0])
@@ -553,9 +553,9 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-				llx.FunctionPrimitiveV2(3 << 32),
+				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
@@ -585,9 +585,9 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-				llx.FunctionPrimitiveV2(3 << 32),
+				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
@@ -623,7 +623,7 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 3),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[3])
@@ -642,9 +642,9 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-				llx.FunctionPrimitiveV2(3 << 32),
+				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
@@ -666,12 +666,12 @@ func TestCompiler_If(t *testing.T) {
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitiveV2(3 << 32),
+				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
-				llx.FunctionPrimitiveV2(4 << 32),
+				llx.FunctionPrimitive(4 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{}, types.Ref),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
@@ -697,7 +697,7 @@ func TestCompiler_Switch(t *testing.T) {
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(1),
 				llx.RefPrimitiveV2((1 << 32) | 2),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{
 					// TODO(jaym): this shouldn't be needed. Its already
 					// a dependency of the switch, and thus implicitly
@@ -705,7 +705,7 @@ func TestCompiler_Switch(t *testing.T) {
 					llx.RefPrimitiveV2((1 << 32) | 1),
 				}, types.Ref),
 				llx.BoolPrimitive(true),
-				llx.FunctionPrimitiveV2(3 << 32),
+				llx.FunctionPrimitive(3 << 32),
 				llx.ArrayPrimitive([]*llx.Primitive{
 					// TODO: this shouldn't be needed
 					llx.RefPrimitiveV2((1 << 32) | 1),
@@ -762,7 +762,7 @@ func TestCompiler_ArrayWhereStatic(t *testing.T) {
 			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
 
@@ -786,7 +786,7 @@ func TestCompiler_ArrayContains(t *testing.T) {
 			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
 
@@ -820,7 +820,7 @@ func TestCompiler_ArrayOne(t *testing.T) {
 			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
 
@@ -848,7 +848,7 @@ func TestCompiler_ArrayAll(t *testing.T) {
 			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 1),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[1])
 
@@ -959,7 +959,7 @@ func TestCompiler_ResourceFieldGlob(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
 			Binding: (1 << 32) | 1,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 
@@ -997,7 +997,7 @@ func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
 			Binding: (1 << 32) | 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
 		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 
@@ -1129,7 +1129,7 @@ func TestCompiler_Block(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
 			Binding: (1 << 32) | 1,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 
@@ -1154,7 +1154,7 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
 			Binding: (1 << 32) | 1,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assert.Equal(t, []uint64{(1 << 32) | 2}, res.CodeV2.Entrypoints())
 
@@ -1177,7 +1177,7 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
 			Binding: (1 << 32) | 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
 		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 
@@ -1211,7 +1211,7 @@ func TestCompiler_BlockWithSelf(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
 			Binding: (1 << 32) | 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
 		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 
@@ -1278,7 +1278,7 @@ func TestCompiler_CallWithResource(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
 			Binding: (1 << 32) | 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
 		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
 
@@ -1311,7 +1311,7 @@ func TestCompiler_List(t *testing.T) {
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Array(types.Block)),
 			Binding: (1 << 32) | 2,
-			Args:    []*llx.Primitive{llx.FunctionPrimitiveV2(2 << 32)},
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
 		assert.Equal(t, 3, len(res.CodeV2.Blocks[0].Chunks))
 
@@ -1345,7 +1345,7 @@ func TestCompiler_ResourceWhere(t *testing.T) {
 			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 2),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[2])
 
@@ -1372,7 +1372,7 @@ func TestCompiler_ResourceContains(t *testing.T) {
 			Binding: (1 << 32) | 1,
 			Args: []*llx.Primitive{
 				llx.RefPrimitiveV2((1 << 32) | 2),
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[2])
 		assertFunction(t, "list", &llx.Function{

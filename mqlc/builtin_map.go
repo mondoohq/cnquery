@@ -48,7 +48,7 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 		return typ, err
 	}
 
-	argExpectation := llx.FunctionPrimitiveV2(blockCompiler.blockRef)
+	argExpectation := llx.FunctionPrimitive(blockCompiler.blockRef)
 
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(ref),

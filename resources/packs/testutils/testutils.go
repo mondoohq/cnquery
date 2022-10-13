@@ -48,20 +48,6 @@ func getEnvFeatures() cnquery.Features {
 	return fts
 }
 
-func OnlyV1(t *testing.T) {
-	t.Helper()
-	if Features.IsActive(cnquery.PiperCode) {
-		t.SkipNow()
-	}
-}
-
-func OnlyPiper(t *testing.T) {
-	t.Helper()
-	if !Features.IsActive(cnquery.PiperCode) {
-		t.SkipNow()
-	}
-}
-
 func mockTransport(filepath string) (*motor.Motor, error) {
 	trans, err := mock.NewFromTomlFile(filepath)
 	if err != nil {
@@ -109,58 +95,28 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	lastQueryResult := &llx.RawResult{}
 	results := make([]*llx.RawResult, 0, len(resultMap)+1)
 
-	if Features.IsActive(cnquery.PiperCode) {
-		refs := make([]uint64, 0, len(bundle.CodeV2.Checksums))
-		for _, datapointArr := range [][]uint64{bundle.CodeV2.Datapoints(), bundle.CodeV2.Entrypoints()} {
-			refs = append(refs, datapointArr...)
-		}
+	refs := make([]uint64, 0, len(bundle.CodeV2.Checksums))
+	for _, datapointArr := range [][]uint64{bundle.CodeV2.Datapoints(), bundle.CodeV2.Entrypoints()} {
+		refs = append(refs, datapointArr...)
+	}
 
-		sort.Slice(refs, func(i, j int) bool {
-			return refs[i] < refs[j]
-		})
+	sort.Slice(refs, func(i, j int) bool {
+		return refs[i] < refs[j]
+	})
 
-		for idx, ref := range refs {
-			checksum := bundle.CodeV2.Checksums[ref]
-			if d, ok := resultMap[checksum]; ok {
-				results = append(results, d)
-				if idx+1 == len(refs) {
-					lastQueryResult.CodeID = d.CodeID
-					if d.Data.Error != nil {
-						lastQueryResult.Data = &llx.RawData{
-							Error: d.Data.Error,
-						}
-					} else {
-						success, valid := d.Data.IsSuccess()
-						lastQueryResult.Data = llx.BoolData(success && valid)
+	for idx, ref := range refs {
+		checksum := bundle.CodeV2.Checksums[ref]
+		if d, ok := resultMap[checksum]; ok {
+			results = append(results, d)
+			if idx+1 == len(refs) {
+				lastQueryResult.CodeID = d.CodeID
+				if d.Data.Error != nil {
+					lastQueryResult.Data = &llx.RawData{
+						Error: d.Data.Error,
 					}
-				}
-			}
-		}
-
-	} else {
-		refs := make([]int, 0, len(bundle.DeprecatedV5Code.Checksums))
-		for _, datapointArr := range [][]int32{bundle.DeprecatedV5Code.Datapoints, bundle.DeprecatedV5Code.Entrypoints} {
-			for _, v := range datapointArr {
-				refs = append(refs, int(v))
-			}
-		}
-
-		sort.Ints(refs)
-
-		for idx, ref := range refs {
-			checksum := bundle.DeprecatedV5Code.Checksums[int32(ref)]
-			if d, ok := resultMap[checksum]; ok {
-				results = append(results, d)
-				if idx+1 == len(refs) {
-					lastQueryResult.CodeID = d.CodeID
-					if d.Data.Error != nil {
-						lastQueryResult.Data = &llx.RawData{
-							Error: d.Data.Error,
-						}
-					} else {
-						valid, success := d.Data.IsSuccess()
-						lastQueryResult.Data = llx.BoolData(valid && success)
-					}
+				} else {
+					success, valid := d.Data.IsSuccess()
+					lastQueryResult.Data = llx.BoolData(success && valid)
 				}
 			}
 		}
