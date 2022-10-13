@@ -1,6 +1,6 @@
 # cnquery-packs
 
-This project contains query packs used with [`cnquery`](https://github.com/mondoohq/cnspec). We've organized them into these directories:
+This project contains query packs used with [`cnquery`](https://github.com/mondoohq/cnquery). We've organized them into these directories:
 
 - [core](core) - Core packs contain baseline queries such as incidence response probes for different targets. Core query packs are maintained by Mondoo and have strict quality requirements.
 - [extra](extra) - Extra packs are are a mix of community- and Mondoo-maintained queries that are outside Mondoo's core support tier.
