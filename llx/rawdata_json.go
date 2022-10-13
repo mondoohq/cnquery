@@ -402,8 +402,22 @@ func rawDataJSON(typ types.Type, data interface{}, codeID string, bundle *CodeBu
 	}
 }
 
+func JSONerror(err error) []byte {
+	return []byte("{\"error\":" + string2json(err.Error()) + "}")
+}
+
 func (r *RawData) JSON(codeID string, bundle *CodeBundle) []byte {
+	if r.Value == nil && r.Error != nil {
+		return JSONerror(r.Error)
+	}
+
 	var res bytes.Buffer
 	rawDataJSON(r.Type, r.Value, codeID, bundle, &res)
 	return res.Bytes()
+}
+
+func (r *RawData) JSONfield(codeID string, bundle *CodeBundle) []byte {
+	label := label(codeID, bundle, true)
+	value := r.JSON(codeID, bundle)
+	return []byte(string2json(label) + ":" + string(value))
 }
