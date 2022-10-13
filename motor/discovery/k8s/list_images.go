@@ -22,7 +22,7 @@ const dockerPullablePrefix = "docker-pullable://"
 
 // ListPodImages lits all container images for the pods in the cluster. Only unique container images are returned.
 // Uniqueness is determined based on the container digests.
-func ListPodImages(p k8s.KubernetesProvider, namespaceFilter []string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
+func ListPodImages(p k8s.KubernetesProvider, namespaceFilter string, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
 	namespaces, err := p.Namespaces()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not list kubernetes namespaces")
@@ -33,8 +33,8 @@ func ListPodImages(p k8s.KubernetesProvider, namespaceFilter []string, od *k8s.P
 	credsStore := NewCredsStore(p)
 	for i := range namespaces {
 		namespace := namespaces[i]
-		if !isIncluded(namespace.Name, namespaceFilter) {
-			log.Debug().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
+		if namespace.Name != namespaceFilter {
+			log.Debug().Str("namespace", namespace.Name).Str("filter", namespaceFilter).Msg("namespace not included")
 			continue
 		}
 

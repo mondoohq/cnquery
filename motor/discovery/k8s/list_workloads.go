@@ -18,7 +18,7 @@ func ListCronJobs(
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
@@ -29,7 +29,7 @@ func ListDaemonSets(
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
@@ -41,7 +41,7 @@ func ListDeployments(
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
@@ -53,7 +53,7 @@ func ListJobs(
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
@@ -65,7 +65,7 @@ func ListPods(
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
@@ -77,7 +77,7 @@ func ListReplicaSets(
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
@@ -89,7 +89,7 @@ func ListStatefulSets(
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
@@ -100,7 +100,7 @@ func ListWorkloads[T runtime.Object](
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,
-	namespaceFilter []string,
+	namespaceFilter string,
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 	workloadType string,
@@ -131,8 +131,8 @@ func ListWorkloads[T runtime.Object](
 
 		for i := range namespaces {
 			namespace := namespaces[i]
-			if !isIncluded(namespace.Name, namespaceFilter) {
-				log.Debug().Str("namespace", namespace.Name).Strs("filter", namespaceFilter).Msg("namespace not included")
+			if namespace.Name != namespaceFilter {
+				log.Debug().Str("namespace", namespace.Name).Str("filter", namespaceFilter).Msg("namespace not included")
 				continue
 			}
 
