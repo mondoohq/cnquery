@@ -33,7 +33,7 @@ func ListPodImages(p k8s.KubernetesProvider, namespaceFilter string, od *k8s.Pla
 	credsStore := NewCredsStore(p)
 	for i := range namespaces {
 		namespace := namespaces[i]
-		if namespace.Name != namespaceFilter {
+		if namespaceFilter != "" && namespace.Name != namespaceFilter {
 			log.Debug().Str("namespace", namespace.Name).Str("filter", namespaceFilter).Msg("namespace not included")
 			continue
 		}
