@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
@@ -168,31 +167,15 @@ func renderJson(code *llx.CodeBundle, results map[string]*llx.RawResult, out sha
 	// since we iterate over checksums, we run into the situation that this could be a slice
 	// eg. cnquery run k8s --query "platform { name } k8s.pod.name" --json
 
-	renderError := func(err error) {
-		data, jErr := json.Marshal(struct {
-			Error string `json:"error"`
-		}{Error: err.Error()})
-		if jErr == nil {
-			out.Write(data)
-		} else {
-			// this should never happen :-)
-			log.Warn().Err(err).Send()
-		}
-	}
-
-	if len(checksums) > 1 {
-		out.WriteString("[")
-	}
+	out.WriteString("{")
 
 	for j, checksum := range checksums {
 		result := results[checksum]
 		if result == nil {
-			renderError(errors.New("cannot find result for this query"))
-		} else if result.Data.Error != nil {
-			renderError(result.Data.Error)
+			llx.JSONerror(errors.New("cannot find result for this query"))
 		} else {
-			jsonData := result.Data.JSON(checksum, code)
-			out.Write(append(jsonData, '\n'))
+			jsonData := result.Data.JSONfield(checksum, code)
+			out.Write(jsonData)
 		}
 
 		if len(checksums) != j+1 {
@@ -200,8 +183,7 @@ func renderJson(code *llx.CodeBundle, results map[string]*llx.RawResult, out sha
 		}
 	}
 
-	if len(checksums) > 1 {
-		out.WriteString("]")
-	}
+	out.WriteString("}")
+
 	return nil
 }
