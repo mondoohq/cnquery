@@ -74,7 +74,7 @@ func TestListNodesAKS(t *testing.T) {
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
 
 	pCfg := &providers.Config{}
-	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier, nil)
+	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier)
 	require.NoError(t, err)
 	require.Len(t, assets, 1)
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)
@@ -156,7 +156,7 @@ func TestListNodesGKE(t *testing.T) {
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
 
 	pCfg := &providers.Config{}
-	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier, nil)
+	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier)
 	require.NoError(t, err)
 	require.Len(t, assets, 1)
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)
@@ -231,7 +231,7 @@ func TestListNodesEKS(t *testing.T) {
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
 
 	pCfg := &providers.Config{}
-	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier, nil)
+	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier)
 	require.NoError(t, err)
 	require.Len(t, assets, 1)
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)
@@ -297,7 +297,7 @@ func TestListNodesK3S(t *testing.T) {
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
 
 	pCfg := &providers.Config{}
-	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier, nil)
+	assets, relInfo, err := ListNodes(p, pCfg, clusterIdentifier)
 	require.NoError(t, err)
 	require.Len(t, assets, 1)
 	require.Equal(t, "Kubernetes Node", assets[0].Platform.Title)

@@ -79,7 +79,7 @@ func TestListPodImage(t *testing.T) {
 
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListPodImages(p, nil, ownershipDir)
+	assets, err := ListPodImages(p, "", ownershipDir)
 	assert.NoError(t, err)
 
 	var assetNames []string
@@ -183,7 +183,7 @@ func TestListPodImage_FromStatus(t *testing.T) {
 
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListPodImages(p, nil, ownershipDir)
+	assets, err := ListPodImages(p, "", ownershipDir)
 	assert.NoError(t, err)
 
 	var assetNames []string
