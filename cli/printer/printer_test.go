@@ -47,20 +47,6 @@ func getEnvFeatures() cnquery.Features {
 	return fts
 }
 
-func onlyV1(t *testing.T) {
-	t.Helper()
-	if features.IsActive(cnquery.PiperCode) {
-		t.SkipNow()
-	}
-}
-
-func onlyPiper(t *testing.T) {
-	t.Helper()
-	if !features.IsActive(cnquery.PiperCode) {
-		t.SkipNow()
-	}
-}
-
 func executionContext() (*resources.Schema, *resources.Runtime) {
 	transport, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
 	if err != nil {
@@ -117,7 +103,7 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 
 			for idx, id := range keys {
 				result, _ := results[id]
-				s = DefaultPrinter.Result(result, bundle, true)
+				s = DefaultPrinter.Result(result, bundle)
 				assert.Equal(t, cur.results[idx], s)
 			}
 		})
@@ -135,7 +121,7 @@ func runAssessmentTests(t *testing.T, tests []assessmentTest) {
 		t.Run(cur.code, func(t *testing.T) {
 			bundle, resultsMap := testQuery(t, cur.code)
 
-			raw := DefaultPrinter.Results(bundle, resultsMap, features.IsActive(cnquery.PiperCode))
+			raw := DefaultPrinter.Results(bundle, resultsMap)
 			assert.Equal(t, cur.result, raw)
 		})
 	}
@@ -191,69 +177,6 @@ func TestPrinter(t *testing.T) {
 					"]",
 			},
 		},
-	})
-}
-
-func TestPrinter_v1(t *testing.T) {
-	onlyV1(t)
-	runSimpleTests(t, []simpleTest{
-		{
-			"mondoo { version }",
-			"entrypoints: [2]\n" +
-				"1: mondoo \n" +
-				"2: {} bind: 1 type:block (=> 1)\n" +
-				"\n" +
-				"== function 1\n" +
-				"entrypoints: [2]\n" +
-				"1: mondoo id = context\n" +
-				"2: version bind: 1 type:string\n",
-			[]string{
-				"mondoo: {\n" +
-					"  version: \"unstable\"\n" +
-					"}",
-			},
-		},
-		{
-			"mondoo { _.version }",
-			"entrypoints: [2]\n" +
-				"1: mondoo \n" +
-				"2: {} bind: 1 type:block (=> 1)\n" +
-				"\n" +
-				"== function 1\n" +
-				"entrypoints: [2]\n" +
-				"1: mondoo id = context\n" +
-				"2: version bind: 1 type:string\n",
-			[]string{
-				"mondoo: {\n" +
-					"  version: \"unstable\"\n" +
-					"}",
-			},
-		},
-		{
-			"[1].where( _ > 0 )",
-			"entrypoints: [2]\n" +
-				"1: [\n" +
-				"  0: 1\n" +
-				"]\n" +
-				"2: where bind: 1 type:[]int (ref1, => 1)\n" +
-				"\n" +
-				"== function 1\n" +
-				"entrypoints: [2]\n" +
-				"1: _\n" +
-				"2: >\005 bind: 1 type:bool (0)\n",
-			[]string{
-				"where: [\n" +
-					"  0: 1\n" +
-					"]",
-			},
-		},
-	})
-}
-
-func TestPrinter_piper(t *testing.T) {
-	onlyPiper(t)
-
-	runSimpleTests(t, []simpleTest{
 		{
 			"mondoo { version }",
 			"-> block 1\n   entrypoints: [<1,2>]\n   1: mondoo \n   2: {} bind: <1,1> type:block (=> <2,0>)\n-> block 2\n   entrypoints: [<2,2>]\n   1: mondoo id = context\n   2: version bind: <2,1> type:string\n",

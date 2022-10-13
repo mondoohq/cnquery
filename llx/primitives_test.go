@@ -48,11 +48,6 @@ func TestPrimitiveTime(t *testing.T) {
 	assert.Equal(t, NilPrimitive, TimePrimitive(nil))
 }
 
-func TestPrimitiveRef(t *testing.T) {
-	a := &Primitive{Type: string(types.Ref), Value: []byte{0xf6, 0x01}}
-	assert.Equal(t, a, RefPrimitiveV1(123))
-}
-
 func TestPrimitiveArray(t *testing.T) {
 	a := &Primitive{Type: string(types.Array(types.Int)), Array: []*Primitive{IntPrimitive(123)}}
 	assert.Equal(t, a, ArrayPrimitive([]*Primitive{IntPrimitive(123)}, types.Int))

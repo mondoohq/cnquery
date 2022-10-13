@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"go.mondoo.com/cnquery/resources/packs/testutils"
@@ -864,7 +863,8 @@ func TestArray(t *testing.T) {
 		},
 		{
 			"[1,2] + [3]",
-			0, []interface{}{int64(1), int64(2), int64(3)},
+			0,
+			[]interface{}{int64(1), int64(2), int64(3)},
 		},
 	})
 }
@@ -937,35 +937,6 @@ func TestResource_Filters(t *testing.T) {
 			0,
 			[]interface{}{},
 		},
-	})
-}
-
-func TestResource_Filters_v1(t *testing.T) {
-	testutils.OnlyV1(t)
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			`users.where(name == 'root').list {
-				uid == 0
-				gid == 0
-			}`,
-			0,
-			[]interface{}{
-				map[string]interface{}{
-					"__t": llx.BoolTrue,
-					"__s": llx.BoolTrue,
-					"BamDDGp87sNG0hVjpmEAPEjF6fZmdA6j3nDinlgr/y5xK3KaLgulyscoeEEaEASm2RkRXifnWj3ZbF0OZBF6XA==": llx.BoolTrue,
-					"ytOUfV4UyOjY0C6HKzQ8GcA/hshrh2ahRySNG41RbFt3TNNf+6gBuHvs2hGTNDPUZR/oN8WH0QFIYYm/Vj3pGQ==": llx.BoolTrue,
-				},
-			},
-		},
-	})
-}
-
-func TestResource_Filters_piper(t *testing.T) {
-	testutils.OnlyPiper(t)
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			`users.where(name == 'root').list {
 				uid == 0
@@ -1064,41 +1035,7 @@ func TestResource_Map(t *testing.T) {
 	})
 }
 
-func TestResource_duplicateFields_v1(t *testing.T) {
-	testutils.OnlyV1(t)
-
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			"users.list.duplicates(uid) { uid }",
-			0,
-			[]interface{}{
-				map[string]interface{}{
-					"__t": llx.BoolTrue,
-					"__s": llx.NilData,
-					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
-						Type:  "\x05",
-						Value: int64(1000),
-						Error: nil,
-					},
-				},
-				map[string]interface{}{
-					"__t": llx.BoolTrue,
-					"__s": llx.NilData,
-					"sYZO9ps0Y4tx2p0TkrAn73WTQx83QIQu70uPtNukYNnVAzaer3Pf6xe7vAplB+cAgPbteXzizlUioUMnNJr5sg==": &llx.RawData{
-						Type:  "\x05",
-						Value: int64(1000),
-						Error: nil,
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestResource_duplicateFields_piper(t *testing.T) {
-	testutils.OnlyPiper(t)
-
+func TestResource_duplicateFields(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
@@ -1174,7 +1111,8 @@ func TestDict_Methods_Map(t *testing.T) {
 		},
 		{
 			p + "params['int-array']",
-			0, []interface{}{float64(1), float64(2), float64(3)},
+			0,
+			[]interface{}{float64(1), float64(2), float64(3)},
 		},
 		{
 			p + "params['hello'] + ' world'",
@@ -1278,11 +1216,8 @@ func TestBrokenQueryExecution(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	bundle, err := x.Compile("'asdf'.contains('asdf') == true")
 	require.NoError(t, err)
-	if testutils.Features.IsActive(cnquery.PiperCode) {
-		bundle.CodeV2.Blocks[0].Chunks[1].Id = "fakecontains"
-	} else {
-		bundle.DeprecatedV5Code.Code[1].Id = "fakecontains"
-	}
+	bundle.CodeV2.Blocks[0].Chunks[1].Id = "fakecontains"
+
 	results := x.TestMqlc(t, bundle, nil)
 	require.Len(t, results, 3)
 	require.Error(t, results[0].Data.Error)

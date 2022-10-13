@@ -25,8 +25,7 @@ func (m *Mquery) Compile(props map[string]*llx.Primitive) (*llx.CodeBundle, erro
 
 	schema := info.Registry.Schema()
 
-	v2Code, err := mqlc.Compile(m.Query, schema,
-		cnquery.Features{byte(cnquery.PiperCode)}, props)
+	v2Code, err := mqlc.Compile(m.Query, schema, cnquery.Features{}, props)
 	if err != nil {
 		return nil, err
 	}
@@ -96,30 +95,18 @@ func (m *Mquery) refreshChecksumAndType(props map[string]*llx.Primitive) (*llx.C
 
 	// TODO: record multiple entrypoints and types
 	// TODO(jaym): is it possible that the 2 could produce different types
-	if bundle.DeprecatedV5Code != nil {
-		if len(bundle.DeprecatedV5Code.Entrypoints) == 1 {
-			ep := bundle.DeprecatedV5Code.Entrypoints[0]
-			chunk := bundle.DeprecatedV5Code.Code[ep-1]
-			typ := chunk.Type()
-			m.Type = string(typ)
-		} else {
-			m.Type = string(types.Any)
-		}
+	if entrypoints := bundle.CodeV2.Entrypoints(); len(entrypoints) == 1 {
+		ep := entrypoints[0]
+		chunk := bundle.CodeV2.Chunk(ep)
+		typ := chunk.Type()
+		m.Type = string(typ)
 	} else {
-		if entrypoints := bundle.CodeV2.Entrypoints(); len(entrypoints) == 1 {
-			ep := entrypoints[0]
-			chunk := bundle.CodeV2.Chunk(ep)
-			typ := chunk.Type()
-			m.Type = string(typ)
-		} else {
-			m.Type = string(types.Any)
-		}
+		m.Type = string(types.Any)
 	}
 
 	c := checksums.New.
 		Add(m.Query).
 		Add(m.CodeId).
-		Add(bundle.DeprecatedV5Code.GetId()).
 		Add(m.Mrn).
 		Add(m.Type).
 		Add(m.Title).Add("v2")

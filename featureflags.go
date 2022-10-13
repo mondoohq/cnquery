@@ -36,14 +36,14 @@ const (
 	//         dependent queries and overrides, they create the same resolved
 	//         plan. Cannot be used with old resolver at the same time for asset.
 	// start:  v3.x, available at v4.x, default at v5.x
-	// end:    v6.0
+	// end:    v6.0 => default now, no need to set it anymore
 	MassQueries Feature = iota + 1
 
 	// PiperCode feature flag
 	// desc:   Allows MQL to use variable references across blocks. Fully changes
 	//         the compiled code.
 	// start:  v5.x
-	// end:    v7.0
+	// end:    v7.0 => default now, no need to set it anymore
 	PiperCode
 
 	// BoolAssertions feature flag

@@ -12,7 +12,6 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
-	v1 "go.mondoo.com/cnquery/mqlc/v1"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
 	"go.mondoo.com/cnquery/types"
@@ -264,7 +263,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		resultType = types.Block
 	}
 
-	args := []*llx.Primitive{llx.FunctionPrimitiveV2(fref)}
+	args := []*llx.Primitive{llx.FunctionPrimitive(fref)}
 	for _, v := range blockDeps {
 		if c.isInMyBlock(v) {
 			args = append(args, llx.RefPrimitiveV2(v))
@@ -334,7 +333,7 @@ func (c *compiler) compileIfBlock(expressions []*parser.Expression, chunk *llx.C
 
 	// the last chunk in this case is the `if` function call
 	chunk.Function.Args = append(chunk.Function.Args,
-		llx.FunctionPrimitiveV2(blockCompiler.blockRef),
+		llx.FunctionPrimitive(blockCompiler.blockRef),
 		llx.ArrayPrimitive(depArgs, types.Ref),
 	)
 
@@ -463,7 +462,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		}
 
 		chunk.Function.Args = append(chunk.Function.Args,
-			llx.FunctionPrimitiveV2(blockCompiler.blockRef),
+			llx.FunctionPrimitive(blockCompiler.blockRef),
 			llx.ArrayPrimitive(depArgs, types.Ref),
 		)
 
@@ -1554,26 +1553,13 @@ func compile(input string, schema *resources.Schema, props map[string]*llx.Primi
 }
 
 func Compile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	if features.IsActive(cnquery.PiperCode) {
-		res, err := compile(input, schema, props)
-		if err != nil {
-			return res, err
-		}
-
-		if res.CodeV2 == nil || res.CodeV2.Id == "" {
-			return res, errors.New("failed to compile: received an unspecified empty code structure")
-		}
-
-		return res, nil
-	}
-
-	res, err := v1.Compile(input, schema, props)
+	res, err := compile(input, schema, props)
 	if err != nil {
 		return res, err
 	}
 
-	if res.DeprecatedV5Code == nil || res.DeprecatedV5Code.Id == "" {
-		return res, errors.New("failed to compile: received an unspecified empty code structure (v1)")
+	if res.CodeV2 == nil || res.CodeV2.Id == "" {
+		return res, errors.New("failed to compile: received an unspecified empty code structure")
 	}
 
 	return res, nil

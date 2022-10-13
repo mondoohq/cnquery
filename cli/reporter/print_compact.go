@@ -130,18 +130,18 @@ func (r *defaultReporter) printAssetQueries(assetMrn string, queries []*explorer
 		}
 
 		subRes := map[string]*llx.RawResult{}
-		sums := equery.Code.EntrypointChecksums(true)
+		sums := equery.Code.EntrypointChecksums()
 		for j := range sums {
 			sum := sums[j]
 			subRes[sum] = results[sum]
 		}
-		sums = equery.Code.DatapointChecksums(true)
+		sums = equery.Code.DatapointChecksums()
 		for j := range sums {
 			sum := sums[j]
 			subRes[sum] = results[sum]
 		}
 
-		result := r.Reporter.Printer.Results(equery.Code, subRes, true)
+		result := r.Reporter.Printer.Results(equery.Code, subRes)
 		if result == "" {
 			return
 		}

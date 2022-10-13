@@ -312,16 +312,8 @@ func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
 	v, ok := value.(uint64)
 	if ok {
-		return FunctionPrimitiveV2(v), nil
+		return FunctionPrimitive(v), nil
 	}
-
-	// FIXME: DEPRECATED replace/remove in v7.0 vv
-	v1, ok := value.(int32)
-	if ok {
-		return FunctionPrimitiveV1(v1), nil
-	}
-	// ^^
-
 	return nil, errInvalidConversion(value, typ)
 }
 
@@ -433,8 +425,6 @@ func (r *RawResult) CastResult(t types.Type) *Result {
 
 // Result converts the raw result into a proto-compliant data structure that
 // can be sent over the wire. See RawData.Result()
-// FIXME: DEPRECATED replace/merge in v7.0 vv
-// we only introduced the difference between V2/V1 when transitioning the code
 func (r *RawResult) Result() *Result {
 	res := r.Data.Result()
 	res.CodeId = r.CodeID

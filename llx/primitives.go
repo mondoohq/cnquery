@@ -131,14 +131,6 @@ func CvssScorePrimitive(vector string) *Primitive {
 }
 
 // RefPrimitive creates a primitive from an int value
-func RefPrimitiveV1(v int32) *Primitive {
-	return &Primitive{
-		Type:  string(types.Ref),
-		Value: int2bytes(int64(v)),
-	}
-}
-
-// RefPrimitive creates a primitive from an int value
 func RefPrimitiveV2(v uint64) *Primitive {
 	return &Primitive{
 		Type:  string(types.Ref),
@@ -172,7 +164,7 @@ func FunctionPrimitiveV1(v int32) *Primitive {
 }
 
 // FunctionPrimitive points to a function in the call stack
-func FunctionPrimitiveV2(v uint64) *Primitive {
+func FunctionPrimitive(v uint64) *Primitive {
 	return &Primitive{
 		// TODO: function signature
 		Type:  string(types.Function(0, nil)),

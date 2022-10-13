@@ -69,7 +69,7 @@ func RunFilterQueries(
 	res := []*explorer.Mquery{}
 	for i := range bundles {
 		bundle := bundles[i]
-		entrypoints := bundle.EntrypointChecksums(true)
+		entrypoints := bundle.EntrypointChecksums()
 
 		allTrue := true
 		for j := range entrypoints {
@@ -99,11 +99,11 @@ func (e *instance) runCode(bundles []*llx.CodeBundle, timeout time.Duration) err
 	for i := range bundles {
 		bundle := bundles[i]
 
-		checksums := bundle.DatapointChecksums(true)
+		checksums := bundle.DatapointChecksums()
 		for j := range checksums {
 			e.datapointTracker[checksums[j]] = struct{}{}
 		}
-		checksums = bundle.EntrypointChecksums(true)
+		checksums = bundle.EntrypointChecksums()
 		for j := range checksums {
 			e.datapointTracker[checksums[j]] = struct{}{}
 		}

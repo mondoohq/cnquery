@@ -74,7 +74,6 @@ const (
 type ExecutionQueryNodeData struct {
 	queryID    string
 	codeBundle *llx.CodeBundle
-	useV2Code  bool
 
 	invalidated        bool
 	requiredProperties map[string]*executionQueryProperty
@@ -183,7 +182,6 @@ func (d *ExecutionQueryNodeData) updateRunState() {
 // DatapointNodeData is the data for queries of type DatapointNodeType.
 type DatapointNodeData struct {
 	expectedType *string
-	useV2Code    bool
 	isReported   bool
 	invalidated  bool
 	res          *llx.RawResult
