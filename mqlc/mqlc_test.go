@@ -1526,6 +1526,13 @@ func TestSuggestions(t *testing.T) {
 	}
 }
 
+func TestImplicitSuggestion(t *testing.T) {
+	res, _ := Compile("sshd.", schema, features, nil)
+	require.NotEmpty(t, res.Suggestions)
+
+	assert.Equal(t, "SSH server configuration", res.Suggestions[0].Title)
+}
+
 func TestCompiler_Error(t *testing.T) {
 	t.Run("unknown term", func(t *testing.T) {
 		_, err := Compile("sshd.config.params == enabled", schema, features, nil)
