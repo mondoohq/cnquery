@@ -132,7 +132,7 @@ There are so many things `cnquery` can do! Gather information about your fleet, 
 
 Explore:
 
-- The Query Hub
+- [Query Packs](https://github.com/mondoohq/cnquery-packs)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL resource packs](https://mondoo.com/docs/references/mql/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
