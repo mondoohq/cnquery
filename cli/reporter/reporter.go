@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/theme/colors"
 	"go.mondoo.com/cnquery/explorer"
+	"go.mondoo.com/cnquery/shared"
 )
 
 type Reporter struct {
@@ -62,8 +63,9 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 			data:      data,
 		}
 		return rr.print()
-	// case JSON:
-	// 	res, err = data.ToJSON()
+	case JSON:
+		w := shared.IOWriter{Writer: out}
+		return ReportCollectionToJSON(data, &w)
 	// case CSV:
 	// 	res, err = data.ToCsv()
 	default:
