@@ -155,6 +155,15 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 			if !child.HasEmptyInit() {
 				continue
 			}
+
+			// implicit resources don't have their own metadata, so we grab it from
+			// the resource itself
+			res[k] = llx.Documentation{
+				Field: k,
+				Title: child.Title,
+				Desc:  child.Desc,
+			}
+			continue
 		}
 
 		res[k] = llx.Documentation{
