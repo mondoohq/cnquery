@@ -38,6 +38,10 @@ func Results2AssessmentV2(bundle *CodeBundle, results map[string]*RawResult) *As
 func Results2AssessmentLookupV2(bundle *CodeBundle, f func(s string) (*RawResult, bool)) *Assessment {
 	code := bundle.CodeV2
 
+	if code == nil {
+		return nil
+	}
+
 	res := Assessment{
 		Success:  true,
 		Checksum: code.Id,
