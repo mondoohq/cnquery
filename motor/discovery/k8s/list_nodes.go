@@ -15,7 +15,7 @@ import (
 )
 
 // ListNodes lits all nodes in the cluster.
-func ListNodes(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string, namespaceFilter []string) ([]*asset.Asset, []nodeRelationshipInfo, error) {
+func ListNodes(p k8s.KubernetesProvider, connection *providers.Config, clusterIdentifier string) ([]*asset.Asset, []nodeRelationshipInfo, error) {
 	nodes, err := p.Nodes()
 	if err != nil {
 		return nil, nil, err

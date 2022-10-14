@@ -64,7 +64,7 @@ type K8sResourceIdentifier struct {
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	features := cnquery.GetFeatures(ctx)
 	resolved := []*asset.Asset{}
-	namespacesFilter := []string{}
+	namespacesFilter := ""
 
 	var k8sctlConfig *kubectl.KubectlConfig
 	localProvider, err := local.New()
@@ -78,13 +78,28 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	namespace := tc.Options["namespace"]
 	if len(namespace) > 0 {
 		log.Info().Msgf("namespace filter has been set to %q", namespace)
-		namespacesFilter = append(namespacesFilter, namespace)
+		namespacesFilter = namespace
 	}
 
-	log.Debug().Strs("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
+	log.Debug().Str("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 	p, err := k8s.New(ctx, tc)
 	if err != nil {
 		return nil, err
+	}
+
+	clusterNamespaces, err := p.Namespaces()
+	if err != nil {
+		return nil, err
+	}
+	foundNamespace := false
+	for _, clusterNs := range clusterNamespaces {
+		if clusterNs.Name == namespacesFilter {
+			foundNamespace = true
+			break
+		}
+	}
+	if !foundNamespace {
+		log.Warn().Msgf("namespace %q not found in cluster", namespacesFilter)
 	}
 
 	clusterIdentifier, err := p.Identifier()
@@ -149,7 +164,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 		if features.IsActive(cnquery.K8sNodeDiscovery) {
 			// nodes are only added as related assets because we have no policies to scan them
-			nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier, namespacesFilter)
+			nodes, nodeRelationshipInfos, err := ListNodes(p, tc, clusterIdentifier)
 			if err == nil && len(nodes) > 0 {
 				ri := nodeRelationshipInfos[0]
 				if ri.cloudAccountAsset != nil {
@@ -189,7 +204,7 @@ func (r *Resolver) InitCtx(ctx context.Context) context.Context {
 func addSeparateAssets(
 	tc *providers.Config,
 	p k8s.KubernetesProvider,
-	namespacesFilter []string,
+	namespacesFilter string,
 	resourcesFilter map[string][]K8sResourceIdentifier,
 	clusterIdentifier string,
 	od *k8s.PlatformIdOwnershipDirectory,
@@ -199,7 +214,7 @@ func addSeparateAssets(
 	// discover deployments
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryDeployments) {
 		// fetch deployment information
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for deployments")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for deployments")
 		connection := tc.Clone()
 		deployments, err := ListDeployments(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
@@ -212,7 +227,7 @@ func addSeparateAssets(
 	// discover k8s pods
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryPods) {
 		// fetch pod information
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for pods")
 		connection := tc.Clone()
 		pods, err := ListPods(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
@@ -225,7 +240,7 @@ func addSeparateAssets(
 	// discover k8s pod images
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryContainerImages) {
 		// fetch pod information
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for pods images")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for pods images")
 		containerimages, err := ListPodImages(p, namespacesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods images")
@@ -236,7 +251,7 @@ func addSeparateAssets(
 
 	// discovery k8s daemonsets
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryDaemonSets) {
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for daemonsets")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for daemonsets")
 		connection := tc.Clone()
 		daemonsets, err := ListDaemonSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
@@ -248,7 +263,7 @@ func addSeparateAssets(
 
 	// discover cronjobs
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryCronJobs) {
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for cronjobs")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for cronjobs")
 		connection := tc.Clone()
 		cronjobs, err := ListCronJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
@@ -260,7 +275,7 @@ func addSeparateAssets(
 
 	// discover jobs
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryJobs, DiscoveryJobs) {
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for jobs")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for jobs")
 		connection := tc.Clone()
 		jobs, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
@@ -272,7 +287,7 @@ func addSeparateAssets(
 
 	// discover statefulsets
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryStatefulSets) {
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for statefulsets")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for statefulsets")
 		connection := tc.Clone()
 		statefulsets, err := ListStatefulSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
@@ -284,7 +299,7 @@ func addSeparateAssets(
 
 	// discover replicasets
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryReplicaSets) {
-		log.Debug().Strs("namespace", namespacesFilter).Msg("search for replicasets")
+		log.Debug().Str("namespace", namespacesFilter).Msg("search for replicasets")
 		connection := tc.Clone()
 		replicasets, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
 		if err != nil {
