@@ -621,11 +621,14 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 						if err != nil {
 							return nil, false, err
 						}
+						if exp == nil {
+							return nil, false, errors.New("missing expression after `case` statement")
+						}
 						if err = exp.processOperators(); err != nil {
 							return nil, false, err
 						}
 						if exp == nil || (exp.Operand == nil && exp.Operations == nil) {
-							return nil, false, errors.New("expected expression in `case` statement")
+							return nil, false, errors.New("missing expression after `case` statement")
 						}
 						res.Block = append(res.Block, exp)
 					} else {

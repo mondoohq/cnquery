@@ -172,6 +172,7 @@ func TestCompiler_Buggy(t *testing.T) {
 		{`parse.date()`, []*llx.Chunk{
 			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("missing arguments to parse date")},
+		{`switch(mondoo) { case`, nil, errors.New("missing expression after `case` statement")},
 	}
 
 	for _, v := range data {
