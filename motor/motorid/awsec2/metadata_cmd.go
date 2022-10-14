@@ -14,7 +14,7 @@ import (
 
 const (
 	identityUrl                   = "http://169.254.169.254/latest/dynamic/instance-identity/document"
-	metadataIdentityScriptWindows = "Invoke-RestMethod -URI http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing | ConvertTo-Json"
+	metadataIdentityScriptWindows = "Invoke-RestMethod -TimeoutSec 1 -URI http://169.254.169.254/latest/dynamic/instance-identity/document -UseBasicParsing | ConvertTo-Json"
 )
 
 func NewCommandInstanceMetadata(provider os.OperatingSystemProvider, pf *platform.Platform) *CommandInstanceMetadata {
