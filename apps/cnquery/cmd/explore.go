@@ -215,47 +215,47 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 	},
 	CommonFlags: func(cmd *cobra.Command) {
 		// inventories for multi-asset scan
-		cmd.Flags().String("inventory-file", "", "path to inventory file")
-		cmd.Flags().Bool("inventory-ansible", false, "set inventory format to ansible")
-		cmd.Flags().Bool("inventory-domainlist", false, "set inventory format to domain list")
+		cmd.Flags().String("inventory-file", "", "Set the path to inventory file")
+		cmd.Flags().Bool("inventory-ansible", false, "Set the inventory format to Ansible")
+		cmd.Flags().Bool("inventory-domainlist", false, "Set the inventory format to domain list")
 
 		// bundles, packs & incognito mode
-		cmd.Flags().Bool("incognito", false, "incognito mode. do not report scan results to the Mondoo platform.")
-		cmd.Flags().StringSlice("querypack", nil, "list of query packs to be executed (requires incognito mode), multiple query packs can be specified")
-		cmd.Flags().StringSliceP("querypack-bundle", "f", nil, "path to local query pack file")
+		cmd.Flags().Bool("incognito", false, "Run in incognito mode. Do not report scan results to the Mondoo platform.")
+		cmd.Flags().StringSlice("querypack", nil, "Set the query packs to be executed (requires incognito mode), multiple query packs can be specified")
+		cmd.Flags().StringSliceP("querypack-bundle", "f", nil, "Path to local query pack file")
 		// flag completion command
 		cmd.RegisterFlagCompletionFunc("querypack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			return getQueryPacksForCompletion(), cobra.ShellCompDirectiveDefault
 		})
 
 		// individual asset flags
-		cmd.Flags().StringP("password", "p", "", "password e.g. for ssh/winrm")
-		cmd.Flags().Bool("ask-pass", false, "ask for connection password")
-		cmd.Flags().StringP("identity-file", "i", "", "selects a file from which the identity (private key) for public key authentication is read")
-		cmd.Flags().String("id-detector", "", "user-override for platform id detection mechanism, supported are "+strings.Join(providers.AvailablePlatformIdDetector(), ", "))
+		cmd.Flags().StringP("password", "p", "", "Password e.g. for ssh/winrm")
+		cmd.Flags().Bool("ask-pass", false, "Ask for connection password")
+		cmd.Flags().StringP("identity-file", "i", "", "Select a file from which the identity (private key) for public key authentication is read")
+		cmd.Flags().String("id-detector", "", "User-override for platform id detection mechanism, supported are "+strings.Join(providers.AvailablePlatformIdDetector(), ", "))
 
-		cmd.Flags().String("path", "", "path to a local file or directory that the connection should use")
-		cmd.Flags().StringToString("option", nil, "addition connection options, multiple options can be passed in via --option key=value")
-		cmd.Flags().String("discover", common.DiscoveryAuto, "enable the discovery of nested assets. Supported are 'all|auto|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
-		cmd.Flags().StringToString("discover-filter", nil, "additional filter for asset discovery")
-		cmd.Flags().StringToString("annotation", nil, "add an annotation to the asset") // user-added, editable
+		cmd.Flags().String("path", "", "Path to a local file or directory that the connection should use")
+		cmd.Flags().StringToString("option", nil, "Additional connection options, multiple options can be passed in via --option key=value")
+		cmd.Flags().String("discover", common.DiscoveryAuto, "Enable the discovery of nested assets. Supported are 'all|auto|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
+		cmd.Flags().StringToString("discover-filter", nil, "Additional filter for asset discovery")
+		cmd.Flags().StringToString("annotation", nil, "Add an annotation to the asset") // user-added, editable
 
 		// global asset flags
-		cmd.Flags().Bool("insecure", false, "disable TLS/SSL checks or SSH hostkey config")
-		cmd.Flags().Bool("sudo", false, "run with sudo")
-		cmd.Flags().Bool("record", false, "record backend calls")
+		cmd.Flags().Bool("insecure", false, "Disable TLS/SSL checks or SSH hostkey config")
+		cmd.Flags().Bool("sudo", false, "Elevate privileges using sudo")
+		cmd.Flags().Bool("record", false, "Record all backend calls")
 		cmd.Flags().MarkHidden("record")
 
 		// v6 should make detect-cicd and category flag public, default for "detect-cicd" should switch to true
-		cmd.Flags().Bool("detect-cicd", true, "attempt to detect CI/CD environments and sets the asset category to 'cicd' if detected")
-		cmd.Flags().String("category", "fleet", "sets the category for the assets 'fleet|cicd'")
+		cmd.Flags().Bool("detect-cicd", true, "Attempt to detect CI/CD environments and sets the asset category to 'cicd' if detected")
+		cmd.Flags().String("category", "fleet", "Sets the category for the assets 'fleet|cicd'")
 		cmd.Flags().MarkHidden("category")
 
 		// output rendering
-		cmd.Flags().StringP("output", "o", "compact", "set output format: "+reporter.AllFormats())
-		cmd.Flags().BoolP("json", "j", false, "set output to JSON (shorthand)")
-		cmd.Flags().Bool("no-pager", false, "disable interactive scan output pagination")
-		cmd.Flags().String("pager", "", "enable scan output pagination with custom pagination command. default is 'less -R'")
+		cmd.Flags().StringP("output", "o", "compact", "Set output format: "+reporter.AllFormats())
+		cmd.Flags().BoolP("json", "j", false, "Set output to JSON (shorthand)")
+		cmd.Flags().Bool("no-pager", false, "Disable interactive scan output pagination")
+		cmd.Flags().String("pager", "", "Enable scan output pagination with custom pagination command. default is 'less -R'")
 	},
 	CommonPreRun: func(cmd *cobra.Command, args []string) {
 		// multiple assets mapping
