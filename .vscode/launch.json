@@ -58,7 +58,7 @@
         "explore",
         "local",
         "-f",
-        "./examples/example.mql.yaml"
+        "./examples/example.unix.mql.yaml"
       ],
     }
   ]

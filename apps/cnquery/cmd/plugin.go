@@ -8,8 +8,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/cli/printer"
+	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/shell"
-	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery"
@@ -141,7 +141,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		if conf.Format != "json" {
 			sh.PrintResults(code, results)
 		} else {
-			renderJson(code, results, out)
+			reporter.BundleResultsToJSON(code, results, out)
 			if len(filteredAssets) != i+1 {
 				out.WriteString(",")
 			}
@@ -152,38 +152,6 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	if conf.Format == "json" {
 		out.WriteString("]")
 	}
-
-	return nil
-}
-
-func renderJson(code *llx.CodeBundle, results map[string]*llx.RawResult, out shared.OutputHelper) error {
-	var checksums []string
-	eps := code.CodeV2.Entrypoints()
-	checksums = make([]string, len(eps))
-	for i, ref := range eps {
-		checksums[i] = code.CodeV2.Checksums[ref]
-	}
-
-	// since we iterate over checksums, we run into the situation that this could be a slice
-	// eg. cnquery run k8s --query "platform { name } k8s.pod.name" --json
-
-	out.WriteString("{")
-
-	for j, checksum := range checksums {
-		result := results[checksum]
-		if result == nil {
-			llx.JSONerror(errors.New("cannot find result for this query"))
-		} else {
-			jsonData := result.Data.JSONfield(checksum, code)
-			out.Write(jsonData)
-		}
-
-		if len(checksums) != j+1 {
-			out.WriteString(",")
-		}
-	}
-
-	out.WriteString("}")
 
 	return nil
 }
