@@ -3,9 +3,7 @@ package explorer
 type ResolvedVersion string
 
 const (
-	PreMassResolved ResolvedVersion = "v0"
-	MassResolved    ResolvedVersion = "v1"
-	V2Code          ResolvedVersion = "v2"
+	V2Code ResolvedVersion = "v2"
 )
 
 var globalEmpty = &Empty{}
