@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 
 	vrs "github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -123,6 +124,29 @@ func (c *compiler) newBlockCompiler(binding *variable) compiler {
 	}
 }
 
+func findFuzzy(name string, names []string) fuzzy.Ranks {
+	suggested := fuzzy.RankFind(name, names)
+
+	sort.SliceStable(suggested, func(i, j int) bool {
+		a := suggested[i]
+		b := suggested[j]
+		ha := strings.HasPrefix(a.Target, name)
+		hb := strings.HasPrefix(b.Target, name)
+		if ha && hb {
+			return a.Distance < b.Distance
+		}
+		if ha {
+			return true
+		}
+		if hb {
+			return false
+		}
+		return a.Distance < b.Distance
+	})
+
+	return suggested
+}
+
 func addResourceSuggestions(resourceInfos map[string]*resources.ResourceInfo, name string, res *llx.CodeBundle) {
 	names := make([]string, len(resourceInfos))
 	i := 0
@@ -131,11 +155,12 @@ func addResourceSuggestions(resourceInfos map[string]*resources.ResourceInfo, na
 		i++
 	}
 
-	suggestedNames := fuzzy.Find(name, names)
-	res.Suggestions = make([]*llx.Documentation, len(suggestedNames))
+	suggested := findFuzzy(name, names)
+
+	res.Suggestions = make([]*llx.Documentation, len(suggested))
 	var info *resources.ResourceInfo
-	for i := range suggestedNames {
-		field := suggestedNames[i]
+	for i := range suggested {
+		field := suggested[i].Target
 		info = resourceInfos[field]
 		if info != nil {
 			res.Suggestions[i] = &llx.Documentation{
@@ -149,8 +174,6 @@ func addResourceSuggestions(resourceInfos map[string]*resources.ResourceInfo, na
 			}
 		}
 	}
-
-	sort.SliceStable(res.Suggestions, func(i, j int) bool { return res.Suggestions[i].Field < res.Suggestions[j].Field })
 }
 
 func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, res *llx.CodeBundle) {
@@ -161,14 +184,13 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 		i++
 	}
 
-	suggestedNames := fuzzy.Find(fieldName, names)
-	res.Suggestions = make([]*llx.Documentation, len(suggestedNames))
-	for i := range suggestedNames {
-		info := fields[suggestedNames[i]]
+	suggested := findFuzzy(fieldName, names)
+
+	res.Suggestions = make([]*llx.Documentation, len(suggested))
+	for i := range suggested {
+		info := fields[suggested[i].Target]
 		res.Suggestions[i] = &info
 	}
-
-	sort.SliceStable(res.Suggestions, func(i, j int) bool { return res.Suggestions[i].Field < res.Suggestions[j].Field })
 }
 
 // func (c *compiler) addAccessor(call *Call, typ types.Type) types.Type {
