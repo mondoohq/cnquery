@@ -133,7 +133,8 @@ func findFuzzy(name string, names []string) fuzzy.Ranks {
 		ha := strings.HasPrefix(a.Target, name)
 		hb := strings.HasPrefix(b.Target, name)
 		if ha && hb {
-			return a.Distance < b.Distance
+			// here it's just going by order, because it has the prefix
+			return a.Target < b.Target
 		}
 		if ha {
 			return true
@@ -141,6 +142,7 @@ func findFuzzy(name string, names []string) fuzzy.Ranks {
 		if hb {
 			return false
 		}
+		// unlike here where we sort by fuzzy distance
 		return a.Distance < b.Distance
 	})
 
