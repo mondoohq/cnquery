@@ -19,9 +19,9 @@ import (
 
 func init() {
 	rootCmd.AddCommand(registerCmd)
-	registerCmd.Flags().StringP("token", "t", "", "client registration token")
-	registerCmd.Flags().String("name", "", "agent name")
-	registerCmd.Flags().String("api-endpoint", "", "mondoo api endpoint")
+	registerCmd.Flags().StringP("token", "t", "", "Set a client registration token")
+	registerCmd.Flags().String("name", "", "Set agent name")
+	registerCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint")
 }
 
 var registerCmd = &cobra.Command{

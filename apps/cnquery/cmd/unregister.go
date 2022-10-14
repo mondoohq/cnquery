@@ -17,7 +17,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(unregisterCmd)
-	unregisterCmd.Flags().Bool("force", false, "force new registration")
+	unregisterCmd.Flags().Bool("force", false, "Force registration")
 }
 
 var unregisterCmd = &cobra.Command{
