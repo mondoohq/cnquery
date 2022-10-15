@@ -32,178 +32,179 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(exploreCmd)
+	rootCmd.AddCommand(scanCmd)
 }
 
-var exploreCmd = builder.NewProviderCommand(builder.CommandOpts{
-	Use:   "explore",
-	Short: "Explore assets with one or more query packs",
+var scanCmd = builder.NewProviderCommand(builder.CommandOpts{
+	Use:     "scan",
+	Aliases: []string{"explore"},
+	Short:   "Scans assets with one or more query packs",
 	Long: `
-This command explores an asset given a query pack. For example, you can explore
+This command scans an asset given a query pack. For example, you can scan
 the local system with its pre-configured query pack:
 
-    $ cnquery explore local
+    $ cnquery scan local
 
 To manually configure a query pack, use this:
 
-    $ cnquery explore local -f bundle.mql.yaml --incognito
+    $ cnquery scan local -f bundle.mql.yaml --incognito
 
 	`,
 	Docs: builder.CommandsDocs{
 		Entries: map[string]builder.CommandDocsEntry{
 			"local": {
-				Short: "Explore a local target",
+				Short: "Scan a local target",
 			},
 			"mock": {
-				Short: "Explore a mock target (a simulated asset)",
-				Long: `Explore a mock target, i.e. a simulated asset, whose data was recorded beforehand.
+				Short: "Scan a mock target (a simulated asset)",
+				Long: `Scan a mock target, i.e. a simulated asset, whose data was recorded beforehand.
 Provide the recording with mock data as an argument:
 
-    cnquery explore container ubuntu:latest --record
-    cnquery explore mock recording-20220519173543.toml
+    cnquery scan container ubuntu:latest --record
+    cnquery scan mock recording-20220519173543.toml
 `,
 			},
 			"vagrant": {
-				Short: "Explore a Vagrant host",
+				Short: "Scan a Vagrant host",
 			},
 			"terraform": {
-				Short: "Explore all Terraform files in a path (.tf files)",
+				Short: "Scan all Terraform files in a path (.tf files)",
 			},
 			"ssh": {
-				Short: "Explore a SSH target",
+				Short: "Scan a SSH target",
 			},
 			"winrm": {
-				Short: "Explore a WinRM target",
+				Short: "Scan a WinRM target",
 			},
 			"container": {
-				Short: "Explore a container, an image, or a registry",
-				Long: `Explore a container, a container image, or a container registry. By default
+				Short: "Scan a container, an image, or a registry",
+				Long: `Scan a container, a container image, or a container registry. By default
 we will try to auto-detect the container or image from the provided ID, even
 if it's not the full ID:
 
-    cnquery explore container b62b276baab6
-    cnquery explore container b62
-    cnquery explore container ubuntu:latest
+    cnquery scan container b62b276baab6
+    cnquery scan container b62
+    cnquery scan container ubuntu:latest
 
 You can also explicitly request the scan of an image or a container registry:
 
-    cnquery explore container image ubuntu:20.04
-    cnquery explore container registry harbor.yourdomain.com/project/repository
+    cnquery scan container image ubuntu:20.04
+    cnquery scan container registry harbor.yourdomain.com/project/repository
 `,
 			},
 			"container-image": {
-				Short: "Explore a container image",
+				Short: "Scan a container image",
 			},
 			"container-registry": {
-				Short: "Explore a container registry",
-				Long: `Explore a container registry. Supports more parameters for different registries:
+				Short: "Scan a container registry",
+				Long: `Scan a container registry. Supports more parameters for different registries:
 
-    cnquery explore container registry harbor.yourdomain.com/project/repository
-    cnquery explore container registry yourname.azurecr.io
-    cnquery explore container registry 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
+    cnquery scan container registry harbor.yourdomain.com/project/repository
+    cnquery scan container registry yourname.azurecr.io
+    cnquery scan container registry 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
 `,
 			},
 			"docker": {
-				Short: "Explore a Docker container or image",
-				Long: `Explore a Docker container or image by automatically detecting the provided ID.
+				Short: "Scan a Docker container or image",
+				Long: `Scan a Docker container or image by automatically detecting the provided ID.
 You can also specify a subcommand to narrow the scan to containers or images.
 
-    cnquery explore docker b62b276baab6
+    cnquery scan docker b62b276baab6
 
-    cnquery explore docker container b62b
-    cnquery explore docker image ubuntu:latest
+    cnquery scan docker container b62b
+    cnquery scan docker image ubuntu:latest
 `,
 			},
 			"docker-container": {
-				Short: "Explore a Docker container",
-				Long: `Explore a Docker container. Can be specified as the container ID (e.g. b62b276baab6)
+				Short: "Scan a Docker container",
+				Long: `Scan a Docker container. Can be specified as the container ID (e.g. b62b276baab6)
 or container name (e.g. elated_poincare).`,
 			},
 			"docker-image": {
-				Short: "Explore a Docker image",
-				Long: `Explore a Docker image. Can be specified as the image ID (e.g. b6f507652425)
+				Short: "Scan a Docker image",
+				Long: `Scan a Docker image. Can be specified as the image ID (e.g. b6f507652425)
 or the image name (e.g. ubuntu:latest).`,
 			},
 			"kubernetes": {
-				Short: "Explore a Kubernetes cluster",
+				Short: "Scan a Kubernetes cluster",
 			},
 			"aws": {
-				Short: "Explore an AWS account or instance",
-				Long: `Explore an AWS account or EC2 instance. It will use your local AWS configuration
+				Short: "Scan an AWS account or instance",
+				Long: `Scan an AWS account or EC2 instance. It will use your local AWS configuration
 for the account scan. See the subcommands to scan EC2 instances.`,
 			},
 			"aws-ec2": {
-				Short: "Explore an AWS instance using one of the available connectors",
+				Short: "Scan an AWS instance using one of the available connectors",
 			},
 			"aws-ec2-connect": {
-				Short: "Explore an AWS instance using EC2 Instance Connect",
+				Short: "Scan an AWS instance using EC2 Instance Connect",
 			},
 			"aws-ec2-ebs-instance": {
-				Short: "Explore an AWS instance using an EBS volume scan (requires AWS host)",
-				Long: `Explore an AWS instance using an EBS volume scan. This requires that the
+				Short: "Scan an AWS instance using an EBS volume scan (requires AWS host)",
+				Long: `Scan an AWS instance using an EBS volume scan. This requires that the
 scan be executed on an instance that is running inside of AWS.`,
 			},
 			"aws-ec2-ebs-volume": {
-				Short: "Explore a specific AWS volume using the EBS volume scan functionality (requires AWS host)",
-				Long: `Explore a specific AWS volume using an EBS volume scan. This requires that the
+				Short: "Scan a specific AWS volume using the EBS volume scan functionality (requires AWS host)",
+				Long: `Scan a specific AWS volume using an EBS volume scan. This requires that the
 scan be executed on an instance that is running inside of AWS.`,
 			},
 			"aws-ec2-ebs-snapshot": {
-				Short: "Explore a specific AWS snapshot using the EBS volume scan functionality (requires AWS host)",
-				Long: `Explore a specific AWS snapshot using an EBS volume scan. This requires that the
+				Short: "Scan a specific AWS snapshot using the EBS volume scan functionality (requires AWS host)",
+				Long: `Scan a specific AWS snapshot using an EBS volume scan. This requires that the
 scan be executed on an instance that is running inside of AWS.`,
 			},
 			"aws-ec2-ssm": {
-				Short: "Explore an AWS instance using the AWS Systems Manager to connect",
+				Short: "Scan an AWS instance using the AWS Systems Manager to connect",
 			},
 			"azure": {
-				Short: "Explore a Microsoft Azure account or instance",
-				Long: `Explore a Microsoft Azure account or instance. It will use your local Azure
+				Short: "Scan a Microsoft Azure account or instance",
+				Long: `Scan a Microsoft Azure account or instance. It will use your local Azure
 configuration for the account scan. To scan your Azure compute, you need to
 configure your Azure credentials and have SSH access to your instances.`,
 			},
 			"gcp": {
-				Short: "Explore a Google Cloud Platform (GCP) account",
+				Short: "Scan a Google Cloud Platform (GCP) account",
 			},
 			"gcp-gcr": {
-				Short: "Explore a Google Container Registry (GCR)",
+				Short: "Scan a Google Container Registry (GCR)",
 			},
 			"vsphere": {
-				Short: "Explore a VMware vSphere API endpoint",
+				Short: "Scan a VMware vSphere API endpoint",
 			},
 			"vsphere-vm": {
-				Short: "Explore a VMware vSphere VM",
+				Short: "Scan a VMware vSphere VM",
 			},
 			"github": {
-				Short: "Explore a GitHub organization or repository",
+				Short: "Scan a GitHub organization or repository",
 			},
 			"github-org": {
-				Short: "Explore a GitHub organization",
+				Short: "Scan a GitHub organization",
 			},
 			"github-repo": {
-				Short: "Explore a GitHub repository",
+				Short: "Scan a GitHub repository",
 			},
 			"gitlab": {
-				Short: "Explore a GitLab group",
+				Short: "Scan a GitLab group",
 			},
 			"ms365": {
-				Short: "Explore a Microsoft 365 endpoint",
+				Short: "Scan a Microsoft 365 endpoint",
 				Long: `
 Here is an example run for Microsoft 365:
 
-    $ cnquery explore ms365 --tenant-id {tennant id} --client-id {client id} --client-secret {client secret}
+    $ cnquery scan ms365 --tenant-id {tennant id} --client-id {client id} --client-secret {client secret}
 
 This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
-    $ cnquery explore ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
-    $ cnquery explore ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
+    $ cnquery scan ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
+    $ cnquery scan ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
 `,
 			},
 			"host": {
-				Short: "Explore a host endpoint",
+				Short: "Scan a host endpoint",
 			},
 			"arista": {
-				Short: "Explore an Arista endpoint",
+				Short: "Scan an Arista endpoint",
 			},
 		},
 	},
@@ -315,7 +316,7 @@ func getQueryPacksForCompletion() []string {
 	return querypackList
 }
 
-type exploreConfig struct {
+type scanConfig struct {
 	Features       cnquery.Features
 	Inventory      *v1.Inventory
 	Output         string
@@ -329,7 +330,7 @@ type exploreConfig struct {
 	UpstreamConfig *resources.UpstreamConfig
 }
 
-func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*exploreConfig, error) {
+func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*scanConfig, error) {
 	opts, optsErr := cnquery_config.ReadConfig()
 	if optsErr != nil {
 		log.Fatal().Err(optsErr).Msg("could not load configuration")
@@ -341,7 +342,7 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 		log.Info().Strs("features", opts.Features).Msg("user activated features")
 	}
 
-	conf := exploreConfig{
+	conf := scanConfig{
 		Features:       opts.GetFeatures(),
 		IsIncognito:    viper.GetBool("incognito"),
 		DoRecord:       viper.GetBool("record"),
@@ -428,7 +429,7 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	return &conf, nil
 }
 
-func (c *exploreConfig) loadBundles() error {
+func (c *scanConfig) loadBundles() error {
 	if c.IsIncognito {
 		if len(c.QueryPackPaths) == 0 {
 			return nil
@@ -446,7 +447,7 @@ func (c *exploreConfig) loadBundles() error {
 	return errors.New("Cannot yet resolve query packs other than incognito")
 }
 
-func RunScan(config *exploreConfig) *explorer.ReportCollection {
+func RunScan(config *scanConfig) *explorer.ReportCollection {
 	scanner := scan.NewLocalScanner()
 
 	ctx := cnquery.SetFeatures(context.Background(), config.Features)
@@ -466,7 +467,7 @@ func RunScan(config *exploreConfig) *explorer.ReportCollection {
 	return reports
 }
 
-func printReports(report *explorer.ReportCollection, conf *exploreConfig, cmd *cobra.Command) {
+func printReports(report *explorer.ReportCollection, conf *scanConfig, cmd *cobra.Command) {
 	// print the output using the specified output format
 	r, err := reporter.New(conf.Output)
 	if err != nil {
