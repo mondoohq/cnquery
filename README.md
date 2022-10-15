@@ -9,7 +9,7 @@
 cnquery run local -c "packages.installed { name version }"
 
 # execute a query pack on a Docker image and print results as json
-cnquery explore docker 14119a -f pack.mql.yaml -j
+cnquery scan docker 14119a -f pack.mql.yaml -j
 
 # open an interactive shell to an aws account
 cnquery shell aws
@@ -77,7 +77,7 @@ You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other ap
 You can combine multiple queries into query packs, which can run together. `cnquery` comes with query packs out of the box for most systems. You can simply run:
 
 ```bash
-cnquery explore local
+cnquery scan local
 ```
 
 Without specifying anything else, `cnquery` tries to find and run the default query pack for the given system.
@@ -85,19 +85,19 @@ Without specifying anything else, `cnquery` tries to find and run the default qu
 You can specify a query pack that you want to run. Use the `--pack` argument:
 
 ```bash
-cnquery explore local --pack incident-response
+cnquery scan local --pack incident-response
 ```
 
 You can also choose just one query from a query pack. Specify the query ID with the query pack:
 
 ```bash
-cnquery explore local --pack incident-response --query-id sth-01
+cnquery scan local --pack incident-response --query-id sth-01
 ```
 
 Custom query packs let you bundle queries to meet your specific needs. You can find a simple query pack example in `examples/simple.mql.yaml`. To run it:
 
 ```bash
-cnquery explore local -f examples/simple.mql.yaml
+cnquery scan local -f examples/simple.mql.yaml
 ```
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
@@ -117,7 +117,7 @@ cnquery auth login
 Once set up, you can collect your asset's data:
 
 ```bash
-cnquery explore local
+cnquery scan local
 ```
 
 To add custom query packs, you can upload them:
