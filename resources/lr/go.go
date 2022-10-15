@@ -78,11 +78,13 @@ func (b *goBuilder) goResource(r *Resource) error {
 			args = &FieldArgs{}
 		}
 
+		// FIXME: DEPRECATED, remove in v8.0 vv
 		field := &BasicField{
 			ID:   "list",
 			Args: args,
 			Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{t}}}},
 		}
+		// ^^
 
 		r.Body.Fields = append(r.Body.Fields, &Field{BasicField: field})
 	}

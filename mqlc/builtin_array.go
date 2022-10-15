@@ -27,25 +27,26 @@ func compileWhere(c *compiler, typ types.Type, ref uint64, id string, call *pars
 		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
 	}
 
-	blockRef, blockDeps, standalone, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref)
 	if err != nil {
 		return types.Nil, err
 	}
-	if blockRef == 0 {
+	if refs.block == 0 {
 		return types.Nil, errors.New("called '" + id + "' without a function block")
 	}
+	ref = refs.binding
 
-	argExpectation := llx.FunctionPrimitive(blockRef)
+	argExpectation := llx.FunctionPrimitive(refs.block)
 
 	// if we have a standalone body in the where clause, then we need to check if
 	// it's a value, in which case we need to compare the array value to it
-	if standalone {
-		block := c.Result.CodeV2.Block(blockRef)
+	if refs.isStandalone {
+		block := c.Result.CodeV2.Block(refs.block)
 
 		if block == nil {
 			return types.Nil, err
 		}
-		blockValueRef := block.TailRef(blockRef)
+		blockValueRef := block.TailRef(refs.block)
 
 		blockTyp := c.Result.CodeV2.DereferencedBlockType(block)
 		childType := typ.Child()
@@ -58,29 +59,29 @@ func compileWhere(c *compiler, typ types.Type, ref uint64, id string, call *pars
 			}
 		}
 
-		block.AddChunk(c.Result.CodeV2, blockRef, &llx.Chunk{
+		block.AddChunk(c.Result.CodeV2, refs.block, &llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
 			Id:   chunkId,
 			Function: &llx.Function{
 				Type:    string(types.Bool),
-				Binding: blockRef | 1,
+				Binding: refs.block | 1,
 				Args:    []*llx.Primitive{llx.RefPrimitiveV2(blockValueRef)},
 			},
 		})
 
-		block.Entrypoints = []uint64{block.TailRef(blockRef)}
+		block.Entrypoints = []uint64{block.TailRef(refs.block)}
 	}
 
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(ref),
 		argExpectation,
 	}
-	for _, v := range blockDeps {
+	for _, v := range refs.deps {
 		if c.isInMyBlock(v) {
 			args = append(args, llx.RefPrimitiveV2(v))
 		}
 	}
-	c.blockDeps = append(c.blockDeps, blockDeps...)
+	c.blockDeps = append(c.blockDeps, refs.deps...)
 
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
@@ -100,16 +101,17 @@ func compileArrayDuplicates(c *compiler, typ types.Type, ref uint64, id string, 
 	} else if call != nil && len(call.Function) == 1 {
 		arg := call.Function[0]
 
-		blockRef, blockDeps, standalone, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
+		refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref)
 		if err != nil {
 			return types.Nil, err
 		}
-		if blockRef == 0 {
+		if refs.block == 0 {
 			return types.Nil, errors.New("called '" + id + "' without a function block")
 		}
-		argExpectation := llx.FunctionPrimitive(blockRef)
+		ref = refs.binding
+		argExpectation := llx.FunctionPrimitive(refs.block)
 
-		if standalone {
+		if refs.isStandalone {
 			return typ, errors.New("called duplicates with a field name on an invalid type")
 		}
 
@@ -118,12 +120,12 @@ func compileArrayDuplicates(c *compiler, typ types.Type, ref uint64, id string, 
 			argExpectation,
 		}
 
-		for _, v := range blockDeps {
+		for _, v := range refs.deps {
 			if c.isInMyBlock(v) {
 				args = append(args, llx.RefPrimitiveV2(v))
 			}
 		}
-		c.blockDeps = append(c.blockDeps, blockDeps...)
+		c.blockDeps = append(c.blockDeps, refs.deps...)
 
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
@@ -448,16 +450,17 @@ func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *p
 		return types.Nil, errors.New("called '" + id + "' with a named parameter, which is not supported")
 	}
 
-	blockRef, blockDeps, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ)
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, typ, ref)
 	if err != nil {
 		return types.Nil, err
 	}
-	if blockRef == 0 {
+	if refs.block == 0 {
 		return types.Nil, errors.New("called '" + id + "' without a function block")
 	}
-	argExpectation := llx.FunctionPrimitive(blockRef)
+	ref = refs.binding
+	argExpectation := llx.FunctionPrimitive(refs.block)
 
-	block := c.Result.CodeV2.Block(blockRef)
+	block := c.Result.CodeV2.Block(refs.block)
 	if len(block.Entrypoints) != 1 {
 		return types.Nil, errors.New("called '" + id + "' with a bad function block, you can only return 1 value")
 	}
@@ -467,12 +470,12 @@ func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *p
 		llx.RefPrimitiveV2(ref),
 		argExpectation,
 	}
-	for _, v := range blockDeps {
+	for _, v := range refs.deps {
 		if c.isInMyBlock(v) {
 			args = append(args, llx.RefPrimitiveV2(v))
 		}
 	}
-	c.blockDeps = append(c.blockDeps, blockDeps...)
+	c.blockDeps = append(c.blockDeps, refs.deps...)
 
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,

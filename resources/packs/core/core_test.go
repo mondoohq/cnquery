@@ -916,8 +916,15 @@ func TestMap(t *testing.T) {
 	})
 }
 
-func TestResource_Filters(t *testing.T) {
+func TestListResource(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
+
+	t.Run("list resource by default returns the list", func(t *testing.T) {
+		res := x.TestQuery(t, "users")
+		assert.NotEmpty(t, res)
+		assert.Len(t, res[0].Data.Value, 5)
+	})
+
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			"users.where(name == 'root').length",
@@ -952,10 +959,14 @@ func TestResource_Filters(t *testing.T) {
 				},
 			},
 		},
+		{
+			"users.map(name)",
+			0, []interface{}([]interface{}{"root", "chris", "christopher", "chris", "bin"}),
+		},
 	})
 }
 
-func TestResource_Contains(t *testing.T) {
+func TestListResource_Assertions(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
@@ -966,12 +977,6 @@ func TestResource_Contains(t *testing.T) {
 			"users.where(uid < 100).contains(name == 'root')",
 			1, true,
 		},
-	})
-}
-
-func TestResource_All(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			"users.all(uid >= 0)",
 			1, true,
@@ -980,12 +985,6 @@ func TestResource_All(t *testing.T) {
 			"users.where(uid < 100).all(uid >= 0)",
 			1, true,
 		},
-	})
-}
-
-func TestResource_Any(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			"users.any(uid < 100)",
 			1, true,
@@ -994,12 +993,6 @@ func TestResource_Any(t *testing.T) {
 			"users.where(uid < 100).any(uid < 50)",
 			1, true,
 		},
-	})
-}
-
-func TestResource_One(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			"users.one(uid == 0)",
 			1, true,
@@ -1008,12 +1001,6 @@ func TestResource_One(t *testing.T) {
 			"users.where(uid < 100).one(uid == 0)",
 			1, true,
 		},
-	})
-}
-
-func TestResource_None(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			"users.none(uid == 99999)",
 			1, true,
@@ -1025,21 +1012,11 @@ func TestResource_None(t *testing.T) {
 	})
 }
 
-func TestResource_Map(t *testing.T) {
-	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			"users.map(name)",
-			0, []interface{}([]interface{}{"root", "chris", "christopher", "chris", "bin"}),
-		},
-	})
-}
-
 func TestResource_duplicateFields(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
-			"users.list.duplicates(uid) { uid }",
+			"users.duplicates(uid) { uid }",
 			0,
 			[]interface{}{
 				map[string]interface{}{
