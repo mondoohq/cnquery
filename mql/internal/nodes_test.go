@@ -218,7 +218,7 @@ func TestExecutionQueryNode(t *testing.T) {
 			runState:           notReadyQueryNotReady,
 			runQueue:           q,
 			codeBundle: &llx.CodeBundle{
-				DeprecatedV5Code: &llx.CodeV1{
+				CodeV2: &llx.CodeV2{
 					Id: "testqueryid",
 				},
 			},
@@ -267,7 +267,7 @@ func TestExecutionQueryNode(t *testing.T) {
 			select {
 			case item := <-q:
 				require.NotNil(t, item.codeBundle)
-				assert.Equal(t, "testqueryid", item.codeBundle.DeprecatedV5Code.Id)
+				assert.Equal(t, "testqueryid", item.codeBundle.CodeV2.Id)
 				assert.Contains(t, item.props, "prop1")
 			default:
 				assert.Fail(t, "expected something to be executed")
