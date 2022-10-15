@@ -70,8 +70,8 @@ func (print *Printer) assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 	var codeID string
 	if bundle.CodeV2 != nil {
 		codeID = bundle.CodeV2.Id
-	} else if bundle.DeprecatedV5Code != nil {
-		codeID = bundle.DeprecatedV5Code.Id
+	} else {
+		return "error: no code id"
 	}
 
 	nextIndent := indent + "  "
