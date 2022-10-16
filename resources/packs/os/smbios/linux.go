@@ -1,7 +1,7 @@
 package smbios
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +26,11 @@ func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 	root := "/sys/class/dmi/id/"
 
 	wErr := afs.Walk(root, func(path string, info os.FileInfo, fErr error) error {
+		if fErr != nil {
+			// we skip files that we cannot access
+			return filepath.SkipDir
+		}
+
 		if info.IsDir() && path != root {
 			return filepath.SkipDir
 		}
@@ -80,7 +85,7 @@ func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 				return err
 			}
 			defer f.Close()
-			data, err := ioutil.ReadAll(f)
+			data, err := io.ReadAll(f)
 			if err != nil {
 				return err
 			}
