@@ -3,7 +3,7 @@ syntax = "proto3";
 import "motor/asset/asset.proto";
 import "motor/vault/vault.proto";
 
-package mondoo.motor.inventory.v1;
+package cnquery.motor.inventory.v1;
 option go_package = "go.mondoo.com/cnquery/motor/inventory/v1";
 
 // NOTE: the k8s types are apache 2 licenced and copied from
@@ -132,8 +132,8 @@ message Inventory {
 }
 
 message InventorySpec {
-  repeated mondoo.motor.asset.v1.Asset assets = 1;
-  map<string, mondoo.motor.vault.v1.Credential> credentials = 2;
+  repeated cnquery.motor.asset.v1.Asset assets = 1;
+  map<string, cnquery.motor.vault.v1.Credential> credentials = 2;
   VaultConfiguration vault = 3;
   string credential_query = 4;
 }

@@ -3,7 +3,7 @@ syntax = "proto3";
 import "motor/platform/platform.proto";
 import "motor/providers/provider.proto";
 
-package mondoo.motor.asset.v1;
+package cnquery.motor.asset.v1;
 option go_package = "go.mondoo.com/cnquery/motor/asset";
 
 enum State {
@@ -45,10 +45,10 @@ message Asset {
   // asset state
   State state = 5;
 
-  mondoo.motor.platform.v1.Platform platform = 6;
+  cnquery.motor.platform.v1.Platform platform = 6;
 
   // key is a lower case string of connection type
-  repeated mondoo.motor.providers.v1.Config connections = 17;
+  repeated cnquery.motor.providers.v1.Config connections = 17;
 
   // labeled assets can be searched by labels
   map<string, string> labels = 18;
