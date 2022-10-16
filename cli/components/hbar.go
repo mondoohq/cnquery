@@ -19,5 +19,5 @@ func Hbar(len uint32, percent float32) string {
 	if segments == 0 {
 		return ""
 	}
-	return strings.Repeat("█", int(segments)) + " "
+	return strings.Repeat("█", int(segments))
 }
