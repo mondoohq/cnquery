@@ -121,14 +121,16 @@ func GatherPlatformIDs(provider providers.Instance, pf *platform.Platform, idDet
 		hostname, hostErr := hostname.Hostname(osProvider, pf)
 		if hostErr == nil && len(hostname) > 0 {
 			identifier = "//platformid.api.mondoo.app/hostname/" + hostname
+			return []string{identifier}, nil, hostErr
 		}
-		return []string{identifier}, nil, hostErr
+		return nil, nil, nil
 	case isOSProvider && idDetector == providers.MachineIdDetector:
 		guid, hostErr := machineid.MachineId(osProvider, pf)
 		if hostErr == nil && len(guid) > 0 {
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
+			return []string{identifier}, nil, hostErr
 		}
-		return []string{identifier}, nil, hostErr
+		return nil, nil, nil
 	case isOSProvider && idDetector == providers.AWSEc2Detector:
 		metadata, err := awsec2.Resolve(osProvider, pf)
 		if err != nil {
@@ -138,11 +140,16 @@ func GatherPlatformIDs(provider providers.Instance, pf *platform.Platform, idDet
 		if err != nil {
 			return nil, nil, err
 		}
-		return []string{ident.InstanceID}, []string{ident.AccountID}, nil
-
+		if ident.InstanceID != "" {
+			return []string{ident.InstanceID}, []string{ident.AccountID}, nil
+		}
+		return nil, nil, nil
 	case isOSProvider && idDetector == providers.CloudDetector:
 		identifier, relatedIdentifiers := clouddetect.Detect(osProvider, pf)
-		return []string{identifier}, relatedIdentifiers, nil
+		if identifier != "" {
+			return []string{identifier}, relatedIdentifiers, nil
+		}
+		return nil, nil, nil
 	case isOSProvider && idDetector == providers.SshHostKey:
 		identifier, err := sshhostkey.Detect(osProvider, pf)
 		if err != nil {
