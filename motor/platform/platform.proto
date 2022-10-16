@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "motor/providers/provider.proto";
 
-package mondoo.motor.platform.v1;
+package cnquery.motor.platform.v1;
 option go_package = "go.mondoo.com/cnquery/motor/platform";
 
 message Platform {
@@ -15,7 +15,7 @@ message Platform {
   string build = 6;
   string version = 7;
 
-  mondoo.motor.providers.v1.Kind kind = 20;
+  cnquery.motor.providers.v1.Kind kind = 20;
   string runtime = 21;
   map<string, string> labels = 22;
 }

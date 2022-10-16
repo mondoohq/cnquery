@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "motor/vault/vault.proto";
 
-package mondoo.motor.providers.v1;
+package cnquery.motor.providers.v1;
 option go_package = "go.mondoo.com/cnquery/motor/providers";
 
 enum ProviderType {
@@ -66,7 +66,7 @@ message Config {
   string path = 4;
 
   // credentials available for this provider configuration
-  repeated mondoo.motor.vault.v1.Credential credentials = 11;
+  repeated cnquery.motor.vault.v1.Credential credentials = 11;
 
   bool insecure = 8;  // disable ssl/tls checks
   Sudo sudo = 21;

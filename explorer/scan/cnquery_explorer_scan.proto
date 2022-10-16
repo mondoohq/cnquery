@@ -7,7 +7,7 @@ import "motor/inventory/v1/inventory.proto";
 import "explorer/cnquery_explorer.proto";
 
 message Job {
-  mondoo.motor.inventory.v1.Inventory inventory = 1;
+  cnquery.motor.inventory.v1.Inventory inventory = 1;
   cnquery.explorer.Bundle bundle = 2;
   
   bool do_record = 20;

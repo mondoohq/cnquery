@@ -8,7 +8,7 @@ message RunQueryConfig {
   string command = 1;
   uint32 callback_server = 2;
 
-  mondoo.motor.inventory.v1.Inventory inventory = 3;
+  cnquery.motor.inventory.v1.Inventory inventory = 3;
   bytes features = 4;
 
   bool do_parse = 5;
