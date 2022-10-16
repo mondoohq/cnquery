@@ -61,7 +61,7 @@ func Results2AssessmentLookupV2(bundle *CodeBundle, f func(s string) (*RawResult
 			res.Success = false
 		}
 
-		res.IsAssertion = cur.IsAssertion
+		res.IsAssertion = res.IsAssertion || cur.IsAssertion
 	}
 
 	if !res.IsAssertion {
