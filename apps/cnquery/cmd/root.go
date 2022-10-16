@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -144,11 +146,29 @@ func sysInfoHeader(sysInfo *sysinfo.SystemInfo, features cnquery.Features) range
 	return scope.NewCustomHeaderRangerPlugin(h)
 }
 
+var reMdName = regexp.MustCompile(`/([^/]+)\.md$`)
+
 func GenerateMarkdown(dir string) error {
 	rootCmd.DisableAutoGenTag = true
 
 	// We need to remove our fancy logo from the markdown output,
 	// since it messes with the formatting.
 	rootCmd.Long = rootCmdDesc
-	return doc.GenMarkdownTree(rootCmd, dir)
+	err := doc.GenMarkdownTreeCustom(rootCmd, dir, func(s string) string {
+		titles := reMdName.FindStringSubmatch(s)
+		if len(titles) == 0 {
+			return ""
+		}
+		title := strings.ReplaceAll(titles[1], "_", " ")
+
+		return "---\n" +
+			"id: " + titles[1] + "\n" +
+			"title: " + title + "\n" +
+			"---\n\n"
+	}, func(s string) string { return s })
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
