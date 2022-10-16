@@ -643,26 +643,26 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 	return nil, 0, err
 }
 
-type rscIface interface {
+type resourceInterface interface {
 	MqlResource() *resources.Resource
 }
 
 func (b *blockExecutor) createResource(name string, binding uint64, f *Function, ref uint64) (*RawData, uint64, error) {
-	rt := b.ctx.runtime
+	runtime := b.ctx.runtime
 	if binding != 0 {
 		res, dref, err := b.resolveRef(binding, ref)
 		if dref != 0 || err != nil {
 			return res, dref, err
 		}
-		mqlResource := res.Value.(rscIface).MqlResource()
-		rt = mqlResource.MotorRuntime
+		mqlResource := res.Value.(resourceInterface).MqlResource()
+		runtime = mqlResource.MotorRuntime
 	}
 	args, rref, err := args2resourceargsV2(b, ref, f.Args)
 	if err != nil || rref != 0 {
 		return nil, rref, err
 	}
 
-	resource, err := rt.CreateResource(name, args...)
+	resource, err := runtime.CreateResource(name, args...)
 	if err != nil {
 		// in case it's not something that requires later loading, store the error
 		// so that consecutive steps can retrieve it cached

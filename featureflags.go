@@ -69,9 +69,9 @@ const (
 
 // FeaturesValue is a map from feature name to feature flag
 var FeaturesValue = map[string]Feature{
-	MassQueries.String():    MassQueries,
-	PiperCode.String():      PiperCode,
-	BoolAssertions.String(): BoolAssertions,
+	MassQueries.String():     MassQueries,
+	PiperCode.String():       PiperCode,
+	BoolAssertions.String():  BoolAssertions,
 	MQLAssetContext.String(): MQLAssetContext,
 }
 

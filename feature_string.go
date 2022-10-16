@@ -17,7 +17,7 @@ func _() {
 
 const _Feature_name = "MassQueriesPiperCodeBoolAssertionsK8sNodeDiscoveryMQLAssetContext"
 
-var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 66}
+var _Feature_index = [...]uint8{0, 11, 20, 34, 50, 65}
 
 func (i Feature) String() string {
 	i -= 1

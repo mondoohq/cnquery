@@ -7,7 +7,6 @@ package resources
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -136,23 +135,19 @@ func (ctx *Registry) ensureResourceChain(name string, isPrivate, isAlias bool) {
 
 func mergeResourceInfoPartial(a *ResourceCls, b *ResourceInfo) error {
 	if a.Id != b.Id {
-		return fmt.Errorf("could not merge resources %s and %s",
-			a.Id, b.Id)
+		return errors.New("could not merge resources because IDs don't match: " + a.Id + ", " + b.Id)
 	}
 
 	if a.Name != b.Name {
-		return fmt.Errorf("could not merge resources %s and %s because names differ",
-			a.Id, b.Id)
+		return errors.New("could not merge resources because names differ: " + a.Id + ", " + b.Id)
 	}
 
 	if a.ListType != b.ListType {
-		return fmt.Errorf("could not merge resources %s and %s because list type does not match",
-			a.Id, b.Id)
+		return errors.New("could not merge resources because list type doesn't match: " + a.Id + ", " + b.Id)
 	}
 
 	if a.Private != b.Private {
-		return fmt.Errorf("could not merge resources %s and %s because private modifier does not match",
-			a.Id, b.Id)
+		return errors.New("could not merge resources because mismatched private modifier: " + a.Id + ", " + b.Id)
 	}
 
 	if a.Title == "" {

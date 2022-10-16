@@ -1186,7 +1186,7 @@ func TestCompiler_EmbeddedResource_ImplicitResource_Block(t *testing.T) {
 			Type:    string(types.Block),
 			Binding: 1<<32 | 4,
 			Args: []*llx.Primitive{
-				llx.FunctionPrimitiveV2(2 << 32),
+				llx.FunctionPrimitive(2 << 32),
 			},
 		}, res.CodeV2.Blocks[0].Chunks[4])
 	})
