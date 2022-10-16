@@ -19,6 +19,15 @@ func (b *Block) TailRef(blockRef uint64) uint64 {
 	return absRef(blockRef, b.ChunkIndex())
 }
 
+func (b *Block) ReplaceEntrypoint(old uint64, nu uint64) {
+	for i := range b.Entrypoints {
+		if b.Entrypoints[i] == old {
+			b.Entrypoints[i] = nu
+			return
+		}
+	}
+}
+
 // LastChunk is the last chunk in the list or nil
 func (b *Block) LastChunk() *Chunk {
 	max := len(b.Chunks)

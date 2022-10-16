@@ -22,6 +22,14 @@ func (c *Chunk) Type() types.Type {
 		return types.Type(c.Primitive.Type)
 	}
 
+	// Chunks that don't have a function call but do have an ID are resources.
+	// They are bound globally (because otherwise they'd have a function) and
+	// they are not primitive (we eliminate those above). They could still be
+	// global non-functions, but we need to investigate that case.
+	if c.Id != "" {
+		return types.Resource(c.Id)
+	}
+
 	return types.Any
 }
 

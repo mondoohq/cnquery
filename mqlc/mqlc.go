@@ -247,9 +247,9 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		if x.Operand != nil && x.Operand.Value != nil && x.Operand.Value.Ident != nil && *(x.Operand.Value.Ident) == "*" {
 			var fields map[string]llx.Documentation
 			if typ.IsArray() {
-				fields = availableGlobFields(c, typ.Child())
+				fields = availableGlobFields(c, typ.Child(), false)
 			} else {
-				fields = availableGlobFields(c, typ)
+				fields = availableGlobFields(c, typ, true)
 			}
 
 			fieldNames := make([]string, len(fields))
@@ -272,11 +272,11 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		}
 	}
 
-	fref, blockDeps, _, err := c.blockExpressions(expressions, typ)
+	refs, err := c.blockExpressions(expressions, typ, bindingRef)
 	if err != nil {
 		return types.Nil, err
 	}
-	if fref == 0 {
+	if refs.block == 0 {
 		return typ, nil
 	}
 
@@ -287,20 +287,20 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		resultType = types.Block
 	}
 
-	args := []*llx.Primitive{llx.FunctionPrimitive(fref)}
-	for _, v := range blockDeps {
+	args := []*llx.Primitive{llx.FunctionPrimitive(refs.block)}
+	for _, v := range refs.deps {
 		if c.isInMyBlock(v) {
 			args = append(args, llx.RefPrimitiveV2(v))
 		}
 	}
-	c.blockDeps = append(c.blockDeps, blockDeps...)
+	c.blockDeps = append(c.blockDeps, refs.deps...)
 
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "{}",
 		Function: &llx.Function{
 			Type:    string(resultType),
-			Binding: bindingRef,
+			Binding: refs.binding,
 			Args:    args,
 		},
 	})
@@ -517,14 +517,23 @@ func (c *compiler) compileUnboundBlock(expressions []*parser.Expression, chunk *
 	}
 }
 
-// evaluates the given expressions on a non-array resource
+type blockRefs struct {
+	// reference to the block that was created
+	block uint64
+	// references to all dependencies of the block
+	deps []uint64
+	// if it's a standalone bloc
+	isStandalone bool
+	// any changes to binding that might have occured during the block compilation
+	binding uint64
+}
+
+// evaluates the given expressions on a non-array resource (eg: no `[]int` nor `groups`)
 // and creates a function, whose reference is returned
-func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type) (uint64, []uint64, bool, error) {
-	// binding := &variable{ref: c.tailRef(), typ: typ}
-	ogRef := c.tailRef()
+func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type, binding uint64) (blockRefs, error) {
 	blockCompiler := c.newBlockCompiler(nil)
 	blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
-		blockCompiler.blockRef, typ, blockCompiler.Result.CodeV2.Checksums[ogRef])
+		blockCompiler.blockRef, typ, blockCompiler.Result.CodeV2.Checksums[binding])
 	v := variable{
 		ref: blockCompiler.blockRef | 1,
 		typ: typ,
@@ -534,25 +543,96 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 
 	err := blockCompiler.compileExpressions(expressions)
 	if err != nil {
-		return 0, nil, false, err
+
+		// FIXME: DEPRECATED, remove in v8.0 vv
+		// We are introducing this workaround to make old list block calls possible
+		// after introducing the new mechanism. I.e. in the new paradigm you
+		// only write `users { * }` to get all children. But in the previous mode
+		// we supported `users { list }`. Support this ladder example with a brute-
+		// force approach here. This entire handling can be removed once we hit v8.
+		tailChunk := c.Result.CodeV2.Chunk(binding)
+		if tailChunk.Id == "list" && tailChunk.Function != nil && tailChunk.Function.Binding != 0 {
+			// pop off the last block if the compiler created it
+			if blockCompiler.blockRef != 0 {
+				c.Result.CodeV2.Blocks = c.Result.CodeV2.Blocks[0 : len(c.Result.CodeV2.Blocks)-1]
+			}
+			// pop off the list call
+			nuRef := tailChunk.Function.Binding
+			nuRefChunk := c.Result.CodeV2.Chunk(nuRef)
+			nuTyp := nuRefChunk.Type()
+			c.Result.CodeV2.Block(binding).PopChunk(c.Result.CodeV2, binding)
+
+			blockCompiler := c.newBlockCompiler(nil)
+			blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
+				blockCompiler.blockRef, nuTyp, blockCompiler.Result.CodeV2.Checksums[nuRef])
+			v := variable{
+				ref: blockCompiler.blockRef | 1,
+				typ: nuTyp,
+			}
+			blockCompiler.vars.add("_", v)
+			blockCompiler.Binding = &v
+			retryErr := blockCompiler.compileExpressions(expressions)
+			if retryErr != nil {
+				return blockRefs{}, err
+			}
+
+			blockCompiler.updateEntrypoints(false)
+			childType := tailChunk.Type().Label()
+			log.Warn().Msg("deprecated call: Blocks on list resources now only affect child elements. " +
+				"You are trying to call a block on '" + nuRefChunk.Id + "' with fields that do not exist in its child elements " +
+				"(i.e. in " + childType + ").")
+			return blockRefs{
+				block:        blockCompiler.blockRef,
+				deps:         blockCompiler.blockDeps,
+				isStandalone: blockCompiler.standalone,
+				binding:      nuRef,
+			}, nil
+		} else {
+			// ^^  (and retain the part inside the else clause)
+
+			return blockRefs{}, err
+		}
 	}
 	blockCompiler.updateEntrypoints(false)
 
-	return blockCompiler.blockRef, blockCompiler.blockDeps, blockCompiler.standalone, nil
+	return blockRefs{
+		block:        blockCompiler.blockRef,
+		deps:         blockCompiler.blockDeps,
+		isStandalone: blockCompiler.standalone,
+		binding:      binding,
+	}, nil
 }
 
 // blockExpressions evaluates the given expressions as if called by a block and
 // returns the compiled function reference
-func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type) (uint64, []uint64, bool, error) {
+func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.Type, binding uint64) (blockRefs, error) {
 	if len(expressions) == 0 {
-		return 0, nil, false, nil
+		return blockRefs{}, nil
 	}
 
 	if typ.IsArray() {
-		return c.blockOnResource(expressions, typ.Child())
+		return c.blockOnResource(expressions, typ.Child(), binding)
 	}
 
-	return c.blockOnResource(expressions, typ)
+	// when calling a block {} on an array resource, we expand it to all its list
+	// items and apply the block to those only
+	if typ.IsResource() {
+		info := c.Schema.Resources[typ.ResourceName()]
+		if info != nil && info.ListType != "" {
+			typ = types.Type(info.ListType)
+			c.addChunk(&llx.Chunk{
+				Call: llx.Chunk_FUNCTION,
+				Id:   "list",
+				Function: &llx.Function{
+					Binding: binding,
+					Type:    string(types.Array(typ)),
+				},
+			})
+			binding = c.tailRef()
+		}
+	}
+
+	return c.blockOnResource(expressions, typ, binding)
 }
 
 // Returns the singular return type of the given block.
@@ -928,11 +1008,21 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 			if nextCall.Accessor != nil {
 				// turn accessor into a regular function and call that
 				fCall := &parser.Call{Function: []*parser.Arg{{Value: nextCall.Accessor}}}
+
 				// accessors are aways builtin functions
 				h, _ := builtinFunction(callBinding.typ.Underlying(), "[]")
+
 				if h == nil {
-					return nil, types.Nil, errors.New("cannot find '[]' function on type " + callBinding.typ.Label())
+					// this is the case when we deal with special resources that expand
+					// this type of builtin function
+					var bind *variable
+					h, bind, err = c.compileImplicitBuiltin(callBinding.typ, "[]")
+					if err != nil {
+						return nil, types.Nil, errors.New("cannot find '[]' function on type " + callBinding.typ.Label())
+					}
+					callBinding = bind
 				}
+
 				typ, err = c.compileBuiltinFunction(h, "[]", callBinding, fCall)
 				if err != nil {
 					return nil, types.Nil, err
@@ -1171,12 +1261,23 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		if call.Accessor != nil {
 			// turn accessor into a regular function and call that
 			fCall := &parser.Call{Function: []*parser.Arg{{Value: call.Accessor}}}
+			relBinding := &variable{typ: typ, ref: ref}
+
 			// accessors are aways builtin functions
 			h, _ := builtinFunction(typ.Underlying(), "[]")
+
 			if h == nil {
-				return nil, errors.New("cannot find '[]' function on type " + typ.Label())
+				// this is the case when we deal with special resources that expand
+				// this type of builtin function
+				var bind *variable
+				h, bind, err = c.compileImplicitBuiltin(typ, "[]")
+				if err != nil {
+					return nil, errors.New("cannot find '[]' function on type " + typ.Label())
+				}
+				relBinding = bind
 			}
-			typ, err = c.compileBuiltinFunction(h, "[]", &variable{typ: typ, ref: ref}, fCall)
+
+			typ, err = c.compileBuiltinFunction(h, "[]", relBinding, fCall)
 			if err != nil {
 				return nil, err
 			}
@@ -1387,6 +1488,50 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 	return nil
 }
 
+func (c *compiler) postCompile() {
+	code := c.Result.CodeV2
+	eps := code.Entrypoints()
+	for _, ref := range eps {
+		chunk := code.Chunk(ref)
+
+		c.expandListResource(chunk, ref)
+	}
+}
+
+func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) {
+	if chunk.Call != llx.Chunk_FUNCTION {
+		return
+	}
+
+	var resourceName string
+	if chunk.Function == nil {
+		resourceName = chunk.Id
+	} else {
+		t := types.Type(chunk.Function.Type)
+		if !t.IsResource() {
+			return
+		}
+		resourceName = t.ResourceName()
+	}
+
+	info := c.Schema.Resources[resourceName]
+	if info == nil || info.ListType == "" {
+		return
+	}
+
+	block := c.Result.CodeV2.Block(ref)
+	block.AddChunk(c.Result.CodeV2, ref, &llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "list",
+		Function: &llx.Function{
+			Binding: ref,
+			Type:    string(types.Array(types.Type(info.ListType))),
+		},
+	})
+	ep := block.TailRef(ref)
+	block.ReplaceEntrypoint(ref, ep)
+}
+
 func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 	// BUG (jaym): collectRefDatapoints prevents us from collecting datapoints.
 	// Collecting datapoints for blocks didnt work correctly until 6.7.0.
@@ -1469,6 +1614,7 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 		return err
 	}
 
+	c.postCompile()
 	c.Result.CodeV2.UpdateID()
 	c.updateEntrypoints(true)
 	return nil

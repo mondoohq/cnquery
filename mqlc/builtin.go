@@ -142,6 +142,42 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	return nil, errors.New("cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
+// Compile calls to builtin type handlers, that aren't mapped via builtin
+// functions above. Typically only used if we need to go deeper into the given
+// type to figure out what to do. For example: list resources are just
+// resource types, so we can't tell if there are builtin functions without
+// detecting that we are looking at a list resource.
+func (c *compiler) compileImplicitBuiltin(typ types.Type, id string) (*compileHandler, *variable, error) {
+	if !typ.IsResource() {
+		return nil, nil, nil
+	}
+
+	r := typ.ResourceName()
+	resource := c.Schema.Resources[r]
+	if resource == nil || resource.ListType == "" {
+		return nil, nil, nil
+	}
+
+	ch, ok := builtinFunctions[types.ArrayLike][id]
+	if !ok {
+		return nil, nil, nil
+	}
+
+	resType := types.Array(types.Type(resource.ListType))
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "list",
+		Function: &llx.Function{
+			Type:    string(resType),
+			Binding: c.tailRef(),
+		},
+	})
+	return &ch, &variable{
+		typ: resType,
+		ref: c.tailRef(),
+	}, nil
+}
+
 func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[string]llx.Documentation {
 	res := map[string]llx.Documentation{}
 	for k, v := range resourceInfo.Fields {
@@ -176,7 +212,9 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 	return res
 }
 
-func availableGlobFields(c *compiler, typ types.Type) map[string]llx.Documentation {
+// Glob {*} all fields for a given type. Note, that this descends into
+// list elements of array resources if permitted.
+func availableGlobFields(c *compiler, typ types.Type, descend bool) map[string]llx.Documentation {
 	var res map[string]llx.Documentation
 
 	if !typ.IsResource() {
@@ -184,6 +222,13 @@ func availableGlobFields(c *compiler, typ types.Type) map[string]llx.Documentati
 	}
 
 	resourceInfo := c.Schema.Resources[typ.ResourceName()]
+	if descend && resourceInfo.ListType != "" {
+		base := types.Type(resourceInfo.ListType).ResourceName()
+		if info, ok := c.Schema.Resources[base]; ok {
+			resourceInfo = info
+		}
+	}
+
 	return publicFieldsInfo(c, resourceInfo)
 }
 

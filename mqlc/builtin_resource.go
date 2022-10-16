@@ -141,13 +141,14 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
 	}
 
-	blockRef, blockDeps, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref)
 	if err != nil {
 		return types.Nil, err
 	}
-	if blockRef == 0 {
+	if refs.block == 0 {
 		return types.Nil, errors.New("called '" + id + "' clause without a function block")
 	}
+	ref = refs.binding
 
 	resourceRef := c.tailRef()
 
@@ -159,14 +160,14 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(listRef),
-		llx.FunctionPrimitive(blockRef),
+		llx.FunctionPrimitive(refs.block),
 	}
-	for _, v := range blockDeps {
+	for _, v := range refs.deps {
 		if c.isInMyBlock(v) {
 			args = append(args, llx.RefPrimitiveV2(v))
 		}
 	}
-	c.blockDeps = append(c.blockDeps, blockDeps...)
+	c.blockDeps = append(c.blockDeps, refs.deps...)
 
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
@@ -204,15 +205,16 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 		return types.Nil, errors.New("called '" + id + "' function with a named parameter, which is not supported")
 	}
 
-	blockRef, blockDeps, _, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)))
+	refs, err := c.blockExpressions([]*parser.Expression{arg.Value}, types.Array(types.Type(resource.ListType)), ref)
 	if err != nil {
 		return types.Nil, err
 	}
-	if blockRef == 0 {
+	if refs.block == 0 {
 		return types.Nil, errors.New("called '" + id + "' clause without a function block")
 	}
+	ref = refs.binding
 
-	mappedType, err := c.blockType(blockRef)
+	mappedType, err := c.blockType(refs.block)
 	if err != nil {
 		return types.Nil, errors.New("called '" + id + "' with a bad function block, types don't match: " + err.Error())
 	}
@@ -227,14 +229,14 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 
 	args := []*llx.Primitive{
 		llx.RefPrimitiveV2(listRef),
-		llx.FunctionPrimitive(blockRef),
+		llx.FunctionPrimitive(refs.block),
 	}
-	for _, v := range blockDeps {
+	for _, v := range refs.deps {
 		if c.isInMyBlock(v) {
 			args = append(args, llx.RefPrimitiveV2(v))
 		}
 	}
-	c.blockDeps = append(c.blockDeps, blockDeps...)
+	c.blockDeps = append(c.blockDeps, refs.deps...)
 
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,

@@ -916,7 +916,42 @@ func TestCompiler_ResourceMapLength(t *testing.T) {
 	})
 }
 
-func TestCompiler_ResourceArrayAccessor(t *testing.T) {
+func TestCompiler_ArrayResource(t *testing.T) {
+	var cmd string
+
+	cmd = "packages[123]"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			assertFunction(t, "list", &llx.Function{
+				Binding: (1 << 32) | 1,
+				Args:    nil,
+				Type:    string(types.Array(types.Resource("package"))),
+			}, res.CodeV2.Blocks[0].Chunks[1])
+			assertFunction(t, "[]", &llx.Function{
+				Binding: (1 << 32) | 2,
+				Args:    []*llx.Primitive{llx.IntPrimitive(123)},
+				Type:    string(types.Resource("package")),
+			}, res.CodeV2.Blocks[0].Chunks[2])
+		})
+	})
+
+	cmd = "packages.length"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			assertFunction(t, "list", &llx.Function{
+				Binding: (1 << 32) | 1,
+				Args:    nil,
+				Type:    string(types.Array(types.Resource("package"))),
+			}, res.CodeV2.Blocks[0].Chunks[1])
+			assertFunction(t, "length", &llx.Function{
+				Binding: (1 << 32) | 1,
+				Args:    []*llx.Primitive{llx.RefPrimitiveV2((1 << 32) | 2)},
+				Type:    string(types.Int),
+			}, res.CodeV2.Blocks[0].Chunks[2])
+		})
+	})
+
+	// FIXME: DEPRECATED, remove in v8.0 vv
 	compileT(t, "packages.list[123]", func(res *llx.CodeBundle) {
 		assertFunction(t, "[]", &llx.Function{
 			Binding: (1 << 32) | 2,
@@ -924,29 +959,18 @@ func TestCompiler_ResourceArrayAccessor(t *testing.T) {
 			Type:    string(types.Resource("package")),
 		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
-}
 
-func TestCompiler_ResourceArrayLength(t *testing.T) {
 	compileT(t, "packages.list.length", func(res *llx.CodeBundle) {
-		assertFunction(t, "length", &llx.Function{
-			Binding: (1 << 32) | 2,
-			Type:    string(types.Int),
-		}, res.CodeV2.Blocks[0].Chunks[2])
-	})
-}
-
-func TestCompiler_ResourceArrayImplicitLength(t *testing.T) {
-	compileT(t, "packages.length", func(res *llx.CodeBundle) {
 		assertFunction(t, "list", &llx.Function{
 			Binding: (1 << 32) | 1,
 			Type:    string(types.Array(types.Resource("package"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "length", &llx.Function{
-			Binding: (1 << 32) | 1,
-			Args:    []*llx.Primitive{llx.RefPrimitiveV2((1 << 32) | 2)},
+			Binding: (1 << 32) | 2,
 			Type:    string(types.Int),
 		}, res.CodeV2.Blocks[0].Chunks[2])
 	})
+	// ^^
 }
 
 func TestCompiler_ResourceFieldGlob(t *testing.T) {
@@ -989,14 +1013,14 @@ func TestCompiler_ResourceFieldGlob(t *testing.T) {
 }
 
 func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
-	compileT(t, "groups.list { * }", func(res *llx.CodeBundle) {
+	compileT(t, "groups { * }", func(res *llx.CodeBundle) {
 		assertFunction(t, "groups", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
-			Type:    string(types.Array(types.Resource("group"))),
 			Binding: (1 << 32) | 1,
+			Type:    string(types.Array(types.Resource("group"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    string(types.Array(types.Block)),
+			Type:    string(types.Block),
 			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
@@ -1270,14 +1294,14 @@ func TestCompiler_StringContainsWithInt(t *testing.T) {
 }
 
 func TestCompiler_CallWithResource(t *testing.T) {
-	compileT(t, "users.list { file(home) }", func(res *llx.CodeBundle) {
+	compileT(t, "users { file(home) }", func(res *llx.CodeBundle) {
 		assertFunction(t, "users", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
-			Type:    string(types.Array(types.Resource("user"))),
 			Binding: (1 << 32) | 1,
+			Type:    string(types.Array(types.Resource("user"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    string(types.Array(types.Block)),
+			Type:    string(types.Block),
 			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
@@ -1303,14 +1327,14 @@ func TestCompiler_CallWithResource(t *testing.T) {
 }
 
 func TestCompiler_List(t *testing.T) {
-	compileT(t, "packages.list { name }", func(res *llx.CodeBundle) {
+	compileT(t, "packages { name }", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
-			Type:    string(types.Array(types.Resource("package"))),
 			Binding: (1 << 32) | 1,
+			Type:    string(types.Array(types.Resource("package"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    string(types.Array(types.Block)),
+			Type:    string(types.Block),
 			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
@@ -1330,7 +1354,12 @@ func TestCompiler_List(t *testing.T) {
 func TestCompiler_ResourceEmptyWhere(t *testing.T) {
 	compileT(t, "packages.where()", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
-		assert.Equal(t, 1, len(res.CodeV2.Blocks[0].Chunks))
+		assert.Len(t, res.CodeV2.Blocks[0].Chunks, 2)
+		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
+		assertFunction(t, "list", &llx.Function{
+			Binding: (1 << 32) | 1,
+			Type:    string(types.Array(types.Resource("package"))),
+		}, res.CodeV2.Blocks[0].Chunks[1])
 	})
 }
 
