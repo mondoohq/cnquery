@@ -68,12 +68,12 @@ func InitTester(motor *motor.Motor, registry *resources.Registry) *tester {
 }
 
 func (ctx *tester) Compile(query string) (*llx.CodeBundle, error) {
-	return mqlc.Compile(query, ctx.runtime.Registry.Schema(), Features, nil)
+	return mqlc.Compile(query, nil, mqlc.NewConfig(ctx.runtime.Registry.Schema(), Features))
 }
 
 func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
-	bundle, err := mqlc.Compile(query, ctx.runtime.Registry.Schema(), Features, props)
+	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.runtime.Registry.Schema(), Features))
 	if err != nil {
 		t.Fatal("failed to compile code: " + err.Error())
 	}

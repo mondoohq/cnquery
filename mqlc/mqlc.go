@@ -56,8 +56,21 @@ func (vm *varmap) len() int {
 	return len(vm.vars)
 }
 
+type compilerConfig struct {
+	Schema          *resources.Schema
+	UseAssetContext bool
+}
+
+func NewConfig(schema *resources.Schema, features cnquery.Features) compilerConfig {
+	return compilerConfig{
+		Schema:          schema,
+		UseAssetContext: features.IsActive(cnquery.MQLAssetContext),
+	}
+}
+
 type compiler struct {
-	Schema    *resources.Schema
+	compilerConfig
+
 	Result    *llx.CodeBundle
 	Binding   *variable
 	vars      *varmap
@@ -76,8 +89,6 @@ type compiler struct {
 
 	// helps chaining of builtin calls like `if (..) else if (..) else ..`
 	prevID string
-
-	features cnquery.Features
 }
 
 func (c *compiler) isInMyBlock(ref uint64) bool {
@@ -114,17 +125,16 @@ func (c *compiler) newBlockCompiler(binding *variable) compiler {
 	}
 
 	return compiler{
-		Schema:     c.Schema,
-		Result:     c.Result,
-		Binding:    binding,
-		blockDeps:  blockDeps,
-		vars:       newvarmap(ref, c.vars),
-		parent:     c,
-		block:      block,
-		blockRef:   ref,
-		props:      c.props,
-		standalone: true,
-		features:   c.features,
+		compilerConfig: c.compilerConfig,
+		Result:         c.Result,
+		Binding:        binding,
+		blockDeps:      blockDeps,
+		vars:           newvarmap(ref, c.vars),
+		parent:         c,
+		block:          block,
+		blockRef:       ref,
+		props:          c.props,
+		standalone:     true,
 	}
 }
 
@@ -892,7 +902,7 @@ func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string)
 // example: user { name } , where name is compiled bound to the user
 // it will return false if it cannot bind the identifier
 func (c *compiler) compileBoundIdentifier(id string, binding *variable, call *parser.Call) (bool, types.Type, error) {
-	if c.features.IsActive(cnquery.MQLAssetContext) {
+	if c.UseAssetContext {
 		return c.compileBoundIdentifierWithMqlCtx(id, binding, call)
 	} else {
 		return c.compileBoundIdentifierWithoutMqlCtx(id, binding, call)
@@ -1790,8 +1800,8 @@ func getMinMondooVersion(current string, resource string, field string) string {
 }
 
 // CompileAST with a schema into a chunky code
-func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx.Primitive, features cnquery.Features) (*llx.CodeBundle, error) {
-	if schema == nil {
+func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf compilerConfig) (*llx.CodeBundle, error) {
+	if conf.Schema == nil {
 		return nil, errors.New("mqlc> please provide a schema to compile this code")
 	}
 
@@ -1814,22 +1824,21 @@ func CompileAST(ast *parser.AST, schema *resources.Schema, props map[string]*llx
 	}
 
 	c := compiler{
-		Schema:     schema,
-		Result:     codeBundle,
-		vars:       newvarmap(1<<32, nil),
-		parent:     nil,
-		blockRef:   1 << 32,
-		block:      codeBundle.CodeV2.Blocks[0],
-		props:      props,
-		standalone: true,
-		features:   features,
+		compilerConfig: conf,
+		Result:         codeBundle,
+		vars:           newvarmap(1<<32, nil),
+		parent:         nil,
+		blockRef:       1 << 32,
+		block:          codeBundle.CodeV2.Blocks[0],
+		props:          props,
+		standalone:     true,
 	}
 
 	return c.Result, c.CompileParsed(ast)
 }
 
 // Compile a code piece against a schema into chunky code
-func compile(input string, schema *resources.Schema, props map[string]*llx.Primitive, features cnquery.Features) (*llx.CodeBundle, error) {
+func compile(input string, props map[string]*llx.Primitive, conf compilerConfig) (*llx.CodeBundle, error) {
 	// remove leading whitespace; we are re-using this later on
 	input = Dedent(input)
 
@@ -1842,16 +1851,16 @@ func compile(input string, schema *resources.Schema, props map[string]*llx.Primi
 	// we want to get any compiler suggestions for auto-complete / fixing it.
 	// That said, we must return an error either way.
 	if err != nil {
-		res, _ := CompileAST(ast, schema, props, features)
+		res, _ := CompileAST(ast, props, conf)
 		return res, err
 	}
 
-	res, err := CompileAST(ast, schema, props, features)
+	res, err := CompileAST(ast, props, conf)
 	if err != nil {
 		return res, err
 	}
 
-	err = UpdateLabels(res.CodeV2, res.Labels, schema)
+	err = UpdateLabels(res.CodeV2, res.Labels, conf.Schema)
 	if err != nil {
 		return res, err
 	}
@@ -1868,8 +1877,11 @@ func compile(input string, schema *resources.Schema, props map[string]*llx.Primi
 	return res, nil
 }
 
-func Compile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	res, err := compile(input, schema, props, features)
+func Compile(input string, props map[string]*llx.Primitive, conf compilerConfig) (*llx.CodeBundle, error) {
+	// Note: we do not check the conf because it will get checked by the
+	// first CompileAST call. Do not use it earlier or add a check.
+
+	res, err := compile(input, props, conf)
 	if err != nil {
 		return res, err
 	}
@@ -1882,8 +1894,8 @@ func Compile(input string, schema *resources.Schema, features cnquery.Features, 
 }
 
 // MustCompile a code piece that should not fail (otherwise panic)
-func MustCompile(input string, schema *resources.Schema, features cnquery.Features, props map[string]*llx.Primitive) *llx.CodeBundle {
-	res, err := Compile(input, schema, features, props)
+func MustCompile(input string, conf compilerConfig, props map[string]*llx.Primitive) *llx.CodeBundle {
+	res, err := Compile(input, props, conf)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to compile")
 	}

@@ -16,8 +16,11 @@ import (
 )
 
 var (
-	schema   = resource_info.Registry.Schema()
 	features = cnquery.Features{}
+	conf     = NewConfig(
+		resource_info.Registry.Schema(),
+		features,
+	)
 )
 
 func init() {
@@ -25,7 +28,7 @@ func init() {
 }
 
 func compileProps(t *testing.T, s string, props map[string]*llx.Primitive, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema, features, props)
+	res, err := Compile(s, props, conf)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NoError(t, Invariants.Check(res))
@@ -42,9 +45,9 @@ func compileT(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 }
 
 func compileCtx(t *testing.T, s string, f func(res *llx.CodeBundle)) {
-	newFeatures := cnquery.Features{byte(cnquery.MQLAssetContext)}
-	newFeatures = append(newFeatures, features...)
-	res, err := Compile(s, schema, newFeatures, nil)
+	nuConf := conf
+	nuConf.UseAssetContext = true
+	res, err := Compile(s, nil, nuConf)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NoError(t, Invariants.Check(res))
@@ -57,7 +60,7 @@ func compileCtx(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 }
 
 func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema, features, nil)
+	res, err := Compile(s, nil, conf)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Nil(t, res.Suggestions)
@@ -66,7 +69,7 @@ func compileEmpty(t *testing.T, s string, f func(res *llx.CodeBundle)) {
 }
 
 func compileErroneous(t *testing.T, s string, expectedError error, f func(res *llx.CodeBundle)) {
-	res, err := Compile(s, schema, features, nil)
+	res, err := Compile(s, nil, conf)
 
 	if err != nil && expectedError != nil {
 		assert.Equal(t, expectedError.Error(), err.Error())
@@ -1567,9 +1570,9 @@ func TestChecksums(t *testing.T) {
 
 		for i := range dupes {
 			t.Run(dupes[i].qa+" != "+dupes[i].qb, func(t *testing.T) {
-				a, err := Compile(dupes[i].qa, schema, features, nil)
+				a, err := Compile(dupes[i].qa, nil, conf)
 				assert.NoError(t, err)
-				b, err := Compile(dupes[i].qb, schema, features, nil)
+				b, err := Compile(dupes[i].qb, nil, conf)
 				assert.NoError(t, err)
 				assert.NotEqual(t, a.CodeV2.Id, b.CodeV2.Id)
 			})
@@ -1578,9 +1581,9 @@ func TestChecksums(t *testing.T) {
 }
 
 func TestChecksums_block(t *testing.T) {
-	a, err := Compile("mondoo { version == 'a'}", schema, features, nil)
+	a, err := Compile("mondoo { version == 'a'}", nil, conf)
 	assert.NoError(t, err)
-	b, err := Compile("mondoo { version == 'b' version == 'a'}", schema, features, nil)
+	b, err := Compile("mondoo { version == 'b' version == 'a'}", nil, conf)
 	assert.NoError(t, err)
 	// make sure the checksum for the block calls are different
 	assert.NotEqual(t, a.CodeV2.Checksums[4294967298], b.CodeV2.Checksums[4294967298])
@@ -1661,10 +1664,9 @@ func TestSuggestions(t *testing.T) {
 	for i := range tests {
 		cur := tests[i]
 		t.Run(cur.code, func(t *testing.T) {
-			newFeatures := cnquery.Features{}
-			newFeatures = append(newFeatures, cur.requiredFeatures...)
-			newFeatures = append(newFeatures, features...)
-			res, err := Compile(cur.code, schema, newFeatures, nil)
+			nuConf := NewConfig(conf.Schema,
+				append(features, cur.requiredFeatures...))
+			res, err := Compile(cur.code, nil, nuConf)
 			assert.Empty(t, res.CodeV2.Entrypoints())
 			assert.Equal(t, cur.err.Error(), err.Error())
 
@@ -1679,7 +1681,7 @@ func TestSuggestions(t *testing.T) {
 }
 
 func TestImplicitSuggestion(t *testing.T) {
-	res, _ := Compile("sshd.", schema, features, nil)
+	res, _ := Compile("sshd.", nil, conf)
 	require.NotEmpty(t, res.Suggestions)
 
 	assert.Equal(t, "SSH server configuration", res.Suggestions[0].Title)
@@ -1687,7 +1689,7 @@ func TestImplicitSuggestion(t *testing.T) {
 
 func TestCompiler_Error(t *testing.T) {
 	t.Run("unknown term", func(t *testing.T) {
-		_, err := Compile("sshd.config.params == enabled", schema, features, nil)
+		_, err := Compile("sshd.config.params == enabled", nil, conf)
 		// assert.Nil(t, res)
 		assert.EqualError(t, err, "failed to compile: cannot find resource for identifier 'enabled'")
 	})
