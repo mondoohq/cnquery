@@ -1,5 +1,7 @@
 packs:
   - uid: mondoo-kubernetes-cluster-incident-response
+    name: Mondoo Kubernetes Cluster Incident Response
+    is_public: true
     filters:
       - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
     queries:
@@ -25,6 +27,8 @@ packs:
             roleRef
           }
   - uid: mondoo-kubernetes-pods-incident-response
+    name: Mondoo Kubernetes Pods Incident Response
+    is_public: true
     filters:
       - asset.platform == "k8s-pod"
     queries:
