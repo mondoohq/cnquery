@@ -4,6 +4,7 @@ package cnquery.explorer;
 option go_package = "go.mondoo.com/cnquery/explorer";
 
 import "llx/llx.proto";
+import "motor/asset/asset.proto";
 
 message Bundle {
   string owner_mrn = 1; 
@@ -178,6 +179,8 @@ service QueryConductor {
   rpc Resolve(ResolveReq) returns (ResolvedPack) {}
   rpc StoreResults(StoreResultsReq) returns (Empty) {}
   rpc GetReport(EntityDataRequest) returns (Report) {}
+
+  rpc SynchronizeAssets(SynchronizeAssetsReq) returns (SynchronizeAssetsResp) {}
 }
 
 // Assign a number of packs to an asset. All of these are identified by MRN.
@@ -262,3 +265,19 @@ message BundleMutationDelta {
   string owner_mrn = 1;
   map<string,AssignmentDelta> deltas = 2;
 }
+
+message SynchronizeAssetsReq {
+  string space_mrn = 1;
+  repeated cnquery.motor.asset.v1.Asset list = 2;
+}
+
+message SynchronizeAssetsRespAssetDetail {
+  string platform_mrn = 1;
+  string asset_mrn = 2;
+  string url = 3;
+}
+
+message SynchronizeAssetsResp {
+  map<string, SynchronizeAssetsRespAssetDetail> details = 1;
+}
+
