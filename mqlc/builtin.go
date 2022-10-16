@@ -142,6 +142,11 @@ func builtinFunction(typ types.Type, id string) (*compileHandler, error) {
 	return nil, errors.New("cannot find function '" + id + "' for type '" + typ.Label() + "' during compile")
 }
 
+// Compile calls to builtin type handlers, that aren't mapped via builtin
+// functions above. Typically only used if we need to go deeper into the given
+// type to figure out what to do. For example: list resources are just
+// resource types, so we can't tell if there are builtin functions without
+// detecting that we are looking at a list resource.
 func (c *compiler) compileImplicitBuiltin(typ types.Type, id string) (*compileHandler, *variable, error) {
 	if !typ.IsResource() {
 		return nil, nil, nil

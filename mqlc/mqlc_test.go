@@ -1017,7 +1017,7 @@ func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
 		assertFunction(t, "groups", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Binding: (1 << 32) | 1,
-			Type:    string(types.Resource("group")),
+			Type:    string(types.Array(types.Resource("group"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
@@ -1298,7 +1298,7 @@ func TestCompiler_CallWithResource(t *testing.T) {
 		assertFunction(t, "users", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Binding: (1 << 32) | 1,
-			Type:    string(types.Resource("user")),
+			Type:    string(types.Array(types.Resource("user"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
@@ -1331,7 +1331,7 @@ func TestCompiler_List(t *testing.T) {
 		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Binding: (1 << 32) | 1,
-			Type:    string(types.Resource("package")),
+			Type:    string(types.Array(types.Resource("package"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
 			Type:    string(types.Block),
@@ -1354,7 +1354,12 @@ func TestCompiler_List(t *testing.T) {
 func TestCompiler_ResourceEmptyWhere(t *testing.T) {
 	compileT(t, "packages.where()", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
-		assert.Equal(t, 1, len(res.CodeV2.Blocks[0].Chunks))
+		assert.Len(t, res.CodeV2.Blocks[0].Chunks, 2)
+		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
+		assertFunction(t, "list", &llx.Function{
+			Binding: (1 << 32) | 1,
+			Type:    string(types.Array(types.Resource("package"))),
+		}, res.CodeV2.Blocks[0].Chunks[1])
 	})
 }
 

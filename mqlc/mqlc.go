@@ -531,11 +531,9 @@ type blockRefs struct {
 // evaluates the given expressions on a non-array resource (eg: no `[]int` nor `groups`)
 // and creates a function, whose reference is returned
 func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.Type, binding uint64) (blockRefs, error) {
-	ogRef := c.tailRef()
-
 	blockCompiler := c.newBlockCompiler(nil)
 	blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
-		blockCompiler.blockRef, typ, blockCompiler.Result.CodeV2.Checksums[ogRef])
+		blockCompiler.blockRef, typ, blockCompiler.Result.CodeV2.Checksums[binding])
 	v := variable{
 		ref: blockCompiler.blockRef | 1,
 		typ: typ,
@@ -545,7 +543,55 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 
 	err := blockCompiler.compileExpressions(expressions)
 	if err != nil {
-		return blockRefs{}, err
+
+		// FIXME: DEPRECATED, remove in v8.0 vv
+		// We are introducing this workaround to make old list block calls possible
+		// after introducing the new mechanism. I.e. in the new paradigm you
+		// only write `users { * }` to get all children. But in the previous mode
+		// we supported `users { list }`. Support this ladder example with a brute-
+		// force approach here. This entire handling can be removed once we hit v8.
+		tailChunk := c.Result.CodeV2.Chunk(binding)
+		if tailChunk.Id == "list" && tailChunk.Function != nil && tailChunk.Function.Binding != 0 {
+			// pop off the last block if the compiler created it
+			if blockCompiler.blockRef != 0 {
+				c.Result.CodeV2.Blocks = c.Result.CodeV2.Blocks[0 : len(c.Result.CodeV2.Blocks)-1]
+			}
+			// pop off the list call
+			nuRef := tailChunk.Function.Binding
+			nuRefChunk := c.Result.CodeV2.Chunk(nuRef)
+			nuTyp := nuRefChunk.Type()
+			c.Result.CodeV2.Block(binding).PopChunk(c.Result.CodeV2, binding)
+
+			blockCompiler := c.newBlockCompiler(nil)
+			blockCompiler.block.AddArgumentPlaceholder(blockCompiler.Result.CodeV2,
+				blockCompiler.blockRef, nuTyp, blockCompiler.Result.CodeV2.Checksums[nuRef])
+			v := variable{
+				ref: blockCompiler.blockRef | 1,
+				typ: nuTyp,
+			}
+			blockCompiler.vars.add("_", v)
+			blockCompiler.Binding = &v
+			retryErr := blockCompiler.compileExpressions(expressions)
+			if retryErr != nil {
+				return blockRefs{}, err
+			}
+
+			blockCompiler.updateEntrypoints(false)
+			childType := tailChunk.Type().Label()
+			log.Warn().Msg("deprecated call: Blocks on list resources now only affect child elements. " +
+				"You are trying to call a block on '" + nuRefChunk.Id + "' with fields that do not exist in its child elements " +
+				"(i.e. in " + childType + ").")
+			return blockRefs{
+				block:        blockCompiler.blockRef,
+				deps:         blockCompiler.blockDeps,
+				isStandalone: blockCompiler.standalone,
+				binding:      nuRef,
+			}, nil
+		} else {
+			// ^^  (and retain the part inside the else clause)
+
+			return blockRefs{}, err
+		}
 	}
 	blockCompiler.updateEntrypoints(false)
 
@@ -573,15 +619,15 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 	if typ.IsResource() {
 		info := c.Schema.Resources[typ.ResourceName()]
 		if info != nil && info.ListType != "" {
+			typ = types.Type(info.ListType)
 			c.addChunk(&llx.Chunk{
 				Call: llx.Chunk_FUNCTION,
 				Id:   "list",
 				Function: &llx.Function{
 					Binding: binding,
-					Type:    info.ListType,
+					Type:    string(types.Array(typ)),
 				},
 			})
-			typ = types.Type(info.ListType)
 			binding = c.tailRef()
 		}
 	}
@@ -1479,6 +1525,7 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) {
 		Id:   "list",
 		Function: &llx.Function{
 			Binding: ref,
+			Type:    string(types.Array(types.Type(info.ListType))),
 		},
 	})
 	ep := block.TailRef(ref)

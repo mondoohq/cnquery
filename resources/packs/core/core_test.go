@@ -925,6 +925,14 @@ func TestListResource(t *testing.T) {
 		assert.Len(t, res[0].Data.Value, 5)
 	})
 
+	// FIXME: DEPRECATED, remove in v8.0 vv
+	t.Run("support deprecated block call with list and other fields", func(t *testing.T) {
+		res := x.TestQuery(t, "ports { listening list }")
+		assert.NotEmpty(t, res)
+		assert.NotEmpty(t, res[0].Data.Value)
+	})
+	// ^^
+
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			"users.where(name == 'root').length",
@@ -1016,7 +1024,7 @@ func TestResource_duplicateFields(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
-			"users.duplicates(uid) { uid }",
+			"users.list.duplicates(uid) { uid }",
 			0,
 			[]interface{}{
 				map[string]interface{}{
