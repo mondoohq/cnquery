@@ -68,4 +68,7 @@ message Asset {
   repeated Asset related_assets = 33;
 
   string managed_by = 34;
+
+  // optional url that can be used to access the asset via a browser
+  string url = 35;
 }
