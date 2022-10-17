@@ -40,7 +40,7 @@ func Init(rootCmd *cobra.Command) {
 	AppFs = afero.NewOsFs()
 	Features = getFeatures()
 	// persistent flags are global for the application
-	rootCmd.PersistentFlags().StringVar(&UserProvidedPath, "config", "", "Set config file path (default is $HOME/.config/mondoo/mondoo.yml)")
+	rootCmd.PersistentFlags().StringVar(&UserProvidedPath, "config", "", "Set config file path (default $HOME/.config/mondoo/mondoo.yml)")
 }
 
 func getFeatures() cnquery.Features {
