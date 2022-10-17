@@ -13,7 +13,7 @@ in your primary resource function:
 
 func (s *mqlAwsEc2) PRIMARY_RESOURCE_FUNCTION() ([]interface{}, error) {
 	res := []interface{}{}
-	poolOfJobs := jobpool.CreatePool(FUNCTION THAT ACUTALLY CALLS AWS, 5)
+	poolOfJobs := jobpool.CreatePool(FUNCTION THAT ACTUALLY CALLS AWS, 5)
 	poolOfJobs.Run()
 
 	// check for errors

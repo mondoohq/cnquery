@@ -230,7 +230,7 @@ func (s *mqlAws) Vpcs() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vpcs")
 		if !ok {
-			return nil, errors.New("\"aws\" calculated \"vpcs\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws\" calculated \"vpcs\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vpcs")
 	}
@@ -253,7 +253,7 @@ func (s *mqlAws) Regions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("regions")
 		if !ok {
-			return nil, errors.New("\"aws\" calculated \"regions\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws\" calculated \"regions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "regions")
 	}
@@ -411,7 +411,7 @@ func (s *mqlAwsAccessAnalyzer) Analyzers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("analyzers")
 		if !ok {
-			return nil, errors.New("\"aws.accessAnalyzer\" calculated \"analyzers\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.accessAnalyzer\" calculated \"analyzers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "analyzers")
 	}
@@ -814,7 +814,7 @@ func (s *mqlAwsAccount) Id() (string, error) {
 		}
 		res, ok = s.Cache.Load("id")
 		if !ok {
-			return "", errors.New("\"aws.account\" calculated \"id\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.account\" calculated \"id\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "id")
 	}
@@ -837,7 +837,7 @@ func (s *mqlAwsAccount) Aliases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("aliases")
 		if !ok {
-			return nil, errors.New("\"aws.account\" calculated \"aliases\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.account\" calculated \"aliases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "aliases")
 	}
@@ -860,7 +860,7 @@ func (s *mqlAwsAccount) Organization() (AwsOrganization, error) {
 		}
 		res, ok = s.Cache.Load("organization")
 		if !ok {
-			return nil, errors.New("\"aws.account\" calculated \"organization\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.account\" calculated \"organization\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "organization")
 	}
@@ -1247,7 +1247,7 @@ func (s *mqlAwsEfs) Filesystems() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("filesystems")
 		if !ok {
-			return nil, errors.New("\"aws.efs\" calculated \"filesystems\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.efs\" calculated \"filesystems\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "filesystems")
 	}
@@ -1533,7 +1533,7 @@ func (s *mqlAwsEfsFilesystem) KmsKey() (AwsKmsKey, error) {
 		}
 		res, ok = s.Cache.Load("kmsKey")
 		if !ok {
-			return nil, errors.New("\"aws.efs.filesystem\" calculated \"kmsKey\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.efs.filesystem\" calculated \"kmsKey\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "kmsKey")
 	}
@@ -1556,7 +1556,7 @@ func (s *mqlAwsEfsFilesystem) BackupPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("backupPolicy")
 		if !ok {
-			return nil, errors.New("\"aws.efs.filesystem\" calculated \"backupPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.efs.filesystem\" calculated \"backupPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "backupPolicy")
 	}
@@ -1839,7 +1839,7 @@ func (s *mqlAwsIam) Users() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("users")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"users\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"users\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "users")
 	}
@@ -1862,7 +1862,7 @@ func (s *mqlAwsIam) Roles() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("roles")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"roles\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"roles\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "roles")
 	}
@@ -1885,7 +1885,7 @@ func (s *mqlAwsIam) Groups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("groups")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"groups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"groups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "groups")
 	}
@@ -1908,7 +1908,7 @@ func (s *mqlAwsIam) Policies() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("policies")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"policies\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"policies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "policies")
 	}
@@ -1931,7 +1931,7 @@ func (s *mqlAwsIam) AttachedPolicies() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attachedPolicies")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"attachedPolicies\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"attachedPolicies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attachedPolicies")
 	}
@@ -1954,7 +1954,7 @@ func (s *mqlAwsIam) CredentialReport() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("credentialReport")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"credentialReport\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"credentialReport\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "credentialReport")
 	}
@@ -1977,7 +1977,7 @@ func (s *mqlAwsIam) AccountPasswordPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("accountPasswordPolicy")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"accountPasswordPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"accountPasswordPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accountPasswordPolicy")
 	}
@@ -2000,7 +2000,7 @@ func (s *mqlAwsIam) AccountSummary() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("accountSummary")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"accountSummary\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"accountSummary\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accountSummary")
 	}
@@ -2023,7 +2023,7 @@ func (s *mqlAwsIam) VirtualMfaDevices() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("virtualMfaDevices")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"virtualMfaDevices\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"virtualMfaDevices\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "virtualMfaDevices")
 	}
@@ -2046,7 +2046,7 @@ func (s *mqlAwsIam) ServerCertificates() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("serverCertificates")
 		if !ok {
-			return nil, errors.New("\"aws.iam\" calculated \"serverCertificates\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam\" calculated \"serverCertificates\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "serverCertificates")
 	}
@@ -2548,7 +2548,7 @@ func (s *mqlAwsIamUsercredentialreportentry) Arn() (string, error) {
 		}
 		res, ok = s.Cache.Load("arn")
 		if !ok {
-			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"arn\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"arn\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "arn")
 	}
@@ -2571,7 +2571,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey1Active() (bool, error) {
 		}
 		res, ok = s.Cache.Load("accessKey1Active")
 		if !ok {
-			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1Active\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1Active\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey1Active")
 	}
@@ -2594,7 +2594,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey1LastRotated() (*time.Time
 		}
 		res, ok = s.Cache.Load("accessKey1LastRotated")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastRotated\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastRotated\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey1LastRotated")
 	}
@@ -2617,7 +2617,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey1LastUsedDate() (*time.Tim
 		}
 		res, ok = s.Cache.Load("accessKey1LastUsedDate")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastUsedDate\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastUsedDate\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey1LastUsedDate")
 	}
@@ -2640,7 +2640,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey1LastUsedRegion() (string,
 		}
 		res, ok = s.Cache.Load("accessKey1LastUsedRegion")
 		if !ok {
-			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastUsedRegion\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastUsedRegion\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey1LastUsedRegion")
 	}
@@ -2663,7 +2663,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey1LastUsedService() (string
 		}
 		res, ok = s.Cache.Load("accessKey1LastUsedService")
 		if !ok {
-			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastUsedService\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey1LastUsedService\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey1LastUsedService")
 	}
@@ -2686,7 +2686,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey2Active() (bool, error) {
 		}
 		res, ok = s.Cache.Load("accessKey2Active")
 		if !ok {
-			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2Active\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2Active\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey2Active")
 	}
@@ -2709,7 +2709,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey2LastRotated() (*time.Time
 		}
 		res, ok = s.Cache.Load("accessKey2LastRotated")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastRotated\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastRotated\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey2LastRotated")
 	}
@@ -2732,7 +2732,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey2LastUsedDate() (*time.Tim
 		}
 		res, ok = s.Cache.Load("accessKey2LastUsedDate")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastUsedDate\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastUsedDate\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey2LastUsedDate")
 	}
@@ -2755,7 +2755,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey2LastUsedRegion() (string,
 		}
 		res, ok = s.Cache.Load("accessKey2LastUsedRegion")
 		if !ok {
-			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastUsedRegion\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastUsedRegion\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey2LastUsedRegion")
 	}
@@ -2778,7 +2778,7 @@ func (s *mqlAwsIamUsercredentialreportentry) AccessKey2LastUsedService() (string
 		}
 		res, ok = s.Cache.Load("accessKey2LastUsedService")
 		if !ok {
-			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastUsedService\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.usercredentialreportentry\" calculated \"accessKey2LastUsedService\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKey2LastUsedService")
 	}
@@ -2801,7 +2801,7 @@ func (s *mqlAwsIamUsercredentialreportentry) Cert1Active() (bool, error) {
 		}
 		res, ok = s.Cache.Load("cert1Active")
 		if !ok {
-			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert1Active\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert1Active\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "cert1Active")
 	}
@@ -2824,7 +2824,7 @@ func (s *mqlAwsIamUsercredentialreportentry) Cert1LastRotated() (*time.Time, err
 		}
 		res, ok = s.Cache.Load("cert1LastRotated")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert1LastRotated\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert1LastRotated\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "cert1LastRotated")
 	}
@@ -2847,7 +2847,7 @@ func (s *mqlAwsIamUsercredentialreportentry) Cert2Active() (bool, error) {
 		}
 		res, ok = s.Cache.Load("cert2Active")
 		if !ok {
-			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert2Active\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert2Active\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "cert2Active")
 	}
@@ -2870,7 +2870,7 @@ func (s *mqlAwsIamUsercredentialreportentry) Cert2LastRotated() (*time.Time, err
 		}
 		res, ok = s.Cache.Load("cert2LastRotated")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert2LastRotated\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"cert2LastRotated\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "cert2LastRotated")
 	}
@@ -2893,7 +2893,7 @@ func (s *mqlAwsIamUsercredentialreportentry) MfaActive() (bool, error) {
 		}
 		res, ok = s.Cache.Load("mfaActive")
 		if !ok {
-			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"mfaActive\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"mfaActive\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "mfaActive")
 	}
@@ -2916,7 +2916,7 @@ func (s *mqlAwsIamUsercredentialreportentry) PasswordEnabled() (bool, error) {
 		}
 		res, ok = s.Cache.Load("passwordEnabled")
 		if !ok {
-			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordEnabled\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordEnabled\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "passwordEnabled")
 	}
@@ -2939,7 +2939,7 @@ func (s *mqlAwsIamUsercredentialreportentry) PasswordLastChanged() (*time.Time, 
 		}
 		res, ok = s.Cache.Load("passwordLastChanged")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordLastChanged\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordLastChanged\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "passwordLastChanged")
 	}
@@ -2962,7 +2962,7 @@ func (s *mqlAwsIamUsercredentialreportentry) PasswordLastUsed() (*time.Time, err
 		}
 		res, ok = s.Cache.Load("passwordLastUsed")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordLastUsed\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordLastUsed\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "passwordLastUsed")
 	}
@@ -2985,7 +2985,7 @@ func (s *mqlAwsIamUsercredentialreportentry) PasswordNextRotation() (*time.Time,
 		}
 		res, ok = s.Cache.Load("passwordNextRotation")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordNextRotation\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"passwordNextRotation\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "passwordNextRotation")
 	}
@@ -3008,7 +3008,7 @@ func (s *mqlAwsIamUsercredentialreportentry) User() (AwsIamUser, error) {
 		}
 		res, ok = s.Cache.Load("user")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"user\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"user\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "user")
 	}
@@ -3031,7 +3031,7 @@ func (s *mqlAwsIamUsercredentialreportentry) UserCreationTime() (*time.Time, err
 		}
 		res, ok = s.Cache.Load("userCreationTime")
 		if !ok {
-			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"userCreationTime\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.usercredentialreportentry\" calculated \"userCreationTime\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "userCreationTime")
 	}
@@ -3714,7 +3714,7 @@ func (s *mqlAwsIamUser) Policies() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("policies")
 		if !ok {
-			return nil, errors.New("\"aws.iam.user\" calculated \"policies\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.user\" calculated \"policies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "policies")
 	}
@@ -3737,7 +3737,7 @@ func (s *mqlAwsIamUser) AttachedPolicies() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attachedPolicies")
 		if !ok {
-			return nil, errors.New("\"aws.iam.user\" calculated \"attachedPolicies\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.user\" calculated \"attachedPolicies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attachedPolicies")
 	}
@@ -3760,7 +3760,7 @@ func (s *mqlAwsIamUser) Groups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("groups")
 		if !ok {
-			return nil, errors.New("\"aws.iam.user\" calculated \"groups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.user\" calculated \"groups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "groups")
 	}
@@ -3783,7 +3783,7 @@ func (s *mqlAwsIamUser) AccessKeys() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("accessKeys")
 		if !ok {
-			return nil, errors.New("\"aws.iam.user\" calculated \"accessKeys\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.user\" calculated \"accessKeys\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accessKeys")
 	}
@@ -4120,7 +4120,7 @@ func (s *mqlAwsIamPolicy) Id() (string, error) {
 		}
 		res, ok = s.Cache.Load("id")
 		if !ok {
-			return "", errors.New("\"aws.iam.policy\" calculated \"id\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.policy\" calculated \"id\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "id")
 	}
@@ -4143,7 +4143,7 @@ func (s *mqlAwsIamPolicy) Name() (string, error) {
 		}
 		res, ok = s.Cache.Load("name")
 		if !ok {
-			return "", errors.New("\"aws.iam.policy\" calculated \"name\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.policy\" calculated \"name\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "name")
 	}
@@ -4166,7 +4166,7 @@ func (s *mqlAwsIamPolicy) Description() (string, error) {
 		}
 		res, ok = s.Cache.Load("description")
 		if !ok {
-			return "", errors.New("\"aws.iam.policy\" calculated \"description\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.policy\" calculated \"description\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "description")
 	}
@@ -4189,7 +4189,7 @@ func (s *mqlAwsIamPolicy) IsAttachable() (bool, error) {
 		}
 		res, ok = s.Cache.Load("isAttachable")
 		if !ok {
-			return false, errors.New("\"aws.iam.policy\" calculated \"isAttachable\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.iam.policy\" calculated \"isAttachable\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "isAttachable")
 	}
@@ -4212,7 +4212,7 @@ func (s *mqlAwsIamPolicy) AttachmentCount() (int64, error) {
 		}
 		res, ok = s.Cache.Load("attachmentCount")
 		if !ok {
-			return 0, errors.New("\"aws.iam.policy\" calculated \"attachmentCount\" but didnt find its value in cache.")
+			return 0, errors.New("\"aws.iam.policy\" calculated \"attachmentCount\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attachmentCount")
 	}
@@ -4235,7 +4235,7 @@ func (s *mqlAwsIamPolicy) CreateDate() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("createDate")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policy\" calculated \"createDate\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policy\" calculated \"createDate\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "createDate")
 	}
@@ -4258,7 +4258,7 @@ func (s *mqlAwsIamPolicy) UpdateDate() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("updateDate")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policy\" calculated \"updateDate\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policy\" calculated \"updateDate\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "updateDate")
 	}
@@ -4281,7 +4281,7 @@ func (s *mqlAwsIamPolicy) Scope() (string, error) {
 		}
 		res, ok = s.Cache.Load("scope")
 		if !ok {
-			return "", errors.New("\"aws.iam.policy\" calculated \"scope\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.iam.policy\" calculated \"scope\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "scope")
 	}
@@ -4304,7 +4304,7 @@ func (s *mqlAwsIamPolicy) Versions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versions")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policy\" calculated \"versions\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policy\" calculated \"versions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versions")
 	}
@@ -4327,7 +4327,7 @@ func (s *mqlAwsIamPolicy) DefaultVersion() (AwsIamPolicyversion, error) {
 		}
 		res, ok = s.Cache.Load("defaultVersion")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policy\" calculated \"defaultVersion\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policy\" calculated \"defaultVersion\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "defaultVersion")
 	}
@@ -4350,7 +4350,7 @@ func (s *mqlAwsIamPolicy) AttachedUsers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attachedUsers")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policy\" calculated \"attachedUsers\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policy\" calculated \"attachedUsers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attachedUsers")
 	}
@@ -4373,7 +4373,7 @@ func (s *mqlAwsIamPolicy) AttachedRoles() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attachedRoles")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policy\" calculated \"attachedRoles\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policy\" calculated \"attachedRoles\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attachedRoles")
 	}
@@ -4396,7 +4396,7 @@ func (s *mqlAwsIamPolicy) AttachedGroups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attachedGroups")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policy\" calculated \"attachedGroups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policy\" calculated \"attachedGroups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attachedGroups")
 	}
@@ -4827,7 +4827,7 @@ func (s *mqlAwsIamPolicyversion) Document() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("document")
 		if !ok {
-			return nil, errors.New("\"aws.iam.policyversion\" calculated \"document\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.iam.policyversion\" calculated \"document\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "document")
 	}
@@ -5719,7 +5719,7 @@ func (s *mqlAwsSagemaker) Endpoints() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("endpoints")
 		if !ok {
-			return nil, errors.New("\"aws.sagemaker\" calculated \"endpoints\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.sagemaker\" calculated \"endpoints\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "endpoints")
 	}
@@ -5742,7 +5742,7 @@ func (s *mqlAwsSagemaker) NotebookInstances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("notebookInstances")
 		if !ok {
-			return nil, errors.New("\"aws.sagemaker\" calculated \"notebookInstances\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.sagemaker\" calculated \"notebookInstances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "notebookInstances")
 	}
@@ -5979,7 +5979,7 @@ func (s *mqlAwsSagemakerNotebookinstance) Details() (AwsSagemakerNotebookinstanc
 		}
 		res, ok = s.Cache.Load("details")
 		if !ok {
-			return nil, errors.New("\"aws.sagemaker.notebookinstance\" calculated \"details\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.sagemaker.notebookinstance\" calculated \"details\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "details")
 	}
@@ -6423,7 +6423,7 @@ func (s *mqlAwsSagemakerEndpoint) Config() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("config")
 		if !ok {
-			return nil, errors.New("\"aws.sagemaker.endpoint\" calculated \"config\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.sagemaker.endpoint\" calculated \"config\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "config")
 	}
@@ -6605,7 +6605,7 @@ func (s *mqlAwsSns) Topics() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("topics")
 		if !ok {
-			return nil, errors.New("\"aws.sns\" calculated \"topics\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.sns\" calculated \"topics\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "topics")
 	}
@@ -6832,7 +6832,7 @@ func (s *mqlAwsSnsTopic) Subscriptions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("subscriptions")
 		if !ok {
-			return nil, errors.New("\"aws.sns.topic\" calculated \"subscriptions\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.sns.topic\" calculated \"subscriptions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "subscriptions")
 	}
@@ -6855,7 +6855,7 @@ func (s *mqlAwsSnsTopic) Attributes() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attributes")
 		if !ok {
-			return nil, errors.New("\"aws.sns.topic\" calculated \"attributes\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.sns.topic\" calculated \"attributes\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attributes")
 	}
@@ -7188,7 +7188,7 @@ func (s *mqlAwsEs) Domains() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("domains")
 		if !ok {
-			return nil, errors.New("\"aws.es\" calculated \"domains\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.es\" calculated \"domains\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "domains")
 	}
@@ -7642,7 +7642,7 @@ func (s *mqlAwsAcm) Certificates() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("certificates")
 		if !ok {
-			return nil, errors.New("\"aws.acm\" calculated \"certificates\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.acm\" calculated \"certificates\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "certificates")
 	}
@@ -8000,7 +8000,7 @@ func (s *mqlAwsAcmCertificate) Certificate() (core.Certificate, error) {
 		}
 		res, ok = s.Cache.Load("certificate")
 		if !ok {
-			return nil, errors.New("\"aws.acm.certificate\" calculated \"certificate\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.acm.certificate\" calculated \"certificate\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "certificate")
 	}
@@ -8174,7 +8174,7 @@ func (s *mqlAwsAutoscaling) Groups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("groups")
 		if !ok {
-			return nil, errors.New("\"aws.autoscaling\" calculated \"groups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.autoscaling\" calculated \"groups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "groups")
 	}
@@ -8568,7 +8568,7 @@ func (s *mqlAwsElb) ClassicLoadBalancers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("classicLoadBalancers")
 		if !ok {
-			return nil, errors.New("\"aws.elb\" calculated \"classicLoadBalancers\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.elb\" calculated \"classicLoadBalancers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "classicLoadBalancers")
 	}
@@ -8591,7 +8591,7 @@ func (s *mqlAwsElb) LoadBalancers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("loadBalancers")
 		if !ok {
-			return nil, errors.New("\"aws.elb\" calculated \"loadBalancers\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.elb\" calculated \"loadBalancers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "loadBalancers")
 	}
@@ -8837,7 +8837,7 @@ func (s *mqlAwsElbLoadbalancer) ListenerDescriptions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("listenerDescriptions")
 		if !ok {
-			return nil, errors.New("\"aws.elb.loadbalancer\" calculated \"listenerDescriptions\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.elb.loadbalancer\" calculated \"listenerDescriptions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "listenerDescriptions")
 	}
@@ -8892,7 +8892,7 @@ func (s *mqlAwsElbLoadbalancer) Attributes() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attributes")
 		if !ok {
-			return nil, errors.New("\"aws.elb.loadbalancer\" calculated \"attributes\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.elb.loadbalancer\" calculated \"attributes\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attributes")
 	}
@@ -9058,7 +9058,7 @@ func (s *mqlAwsCodebuild) Projects() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("projects")
 		if !ok {
-			return nil, errors.New("\"aws.codebuild\" calculated \"projects\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.codebuild\" calculated \"projects\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "projects")
 	}
@@ -9512,7 +9512,7 @@ func (s *mqlAwsGuardduty) Detectors() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("detectors")
 		if !ok {
-			return nil, errors.New("\"aws.guardduty\" calculated \"detectors\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.guardduty\" calculated \"detectors\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "detectors")
 	}
@@ -9774,7 +9774,7 @@ func (s *mqlAwsGuarddutyDetector) UnarchivedFindings() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("unarchivedFindings")
 		if !ok {
-			return nil, errors.New("\"aws.guardduty.detector\" calculated \"unarchivedFindings\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.guardduty.detector\" calculated \"unarchivedFindings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "unarchivedFindings")
 	}
@@ -9924,7 +9924,7 @@ func (s *mqlAwsSecurityhub) Hubs() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("hubs")
 		if !ok {
-			return nil, errors.New("\"aws.securityhub\" calculated \"hubs\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.securityhub\" calculated \"hubs\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "hubs")
 	}
@@ -10219,7 +10219,7 @@ func (s *mqlAwsSecretsmanager) Secrets() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("secrets")
 		if !ok {
-			return nil, errors.New("\"aws.secretsmanager\" calculated \"secrets\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.secretsmanager\" calculated \"secrets\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "secrets")
 	}
@@ -10574,7 +10574,7 @@ func (s *mqlAwsEmr) Clusters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("clusters")
 		if !ok {
-			return nil, errors.New("\"aws.emr\" calculated \"clusters\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.emr\" calculated \"clusters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "clusters")
 	}
@@ -10879,7 +10879,7 @@ func (s *mqlAwsEmrCluster) MasterInstances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("masterInstances")
 		if !ok {
-			return nil, errors.New("\"aws.emr.cluster\" calculated \"masterInstances\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.emr.cluster\" calculated \"masterInstances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "masterInstances")
 	}
@@ -11085,7 +11085,7 @@ func (s *mqlAwsCloudwatch) LogGroups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("logGroups")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch\" calculated \"logGroups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch\" calculated \"logGroups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "logGroups")
 	}
@@ -11108,7 +11108,7 @@ func (s *mqlAwsCloudwatch) Alarms() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("alarms")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch\" calculated \"alarms\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch\" calculated \"alarms\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "alarms")
 	}
@@ -11131,7 +11131,7 @@ func (s *mqlAwsCloudwatch) Metrics() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("metrics")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch\" calculated \"metrics\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch\" calculated \"metrics\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "metrics")
 	}
@@ -11817,7 +11817,7 @@ func (s *mqlAwsCloudwatchMetric) Alarms() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("alarms")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch.metric\" calculated \"alarms\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch.metric\" calculated \"alarms\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "alarms")
 	}
@@ -11840,7 +11840,7 @@ func (s *mqlAwsCloudwatchMetric) Dimensions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("dimensions")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch.metric\" calculated \"dimensions\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch.metric\" calculated \"dimensions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "dimensions")
 	}
@@ -11863,7 +11863,7 @@ func (s *mqlAwsCloudwatchMetric) Statistics() (AwsCloudwatchMetricstatistics, er
 		}
 		res, ok = s.Cache.Load("statistics")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch.metric\" calculated \"statistics\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch.metric\" calculated \"statistics\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "statistics")
 	}
@@ -12824,7 +12824,7 @@ func (s *mqlAwsCloudwatchLoggroup) MetricsFilters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("metricsFilters")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch.loggroup\" calculated \"metricsFilters\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch.loggroup\" calculated \"metricsFilters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "metricsFilters")
 	}
@@ -12847,7 +12847,7 @@ func (s *mqlAwsCloudwatchLoggroup) KmsKey() (AwsKmsKey, error) {
 		}
 		res, ok = s.Cache.Load("kmsKey")
 		if !ok {
-			return nil, errors.New("\"aws.cloudwatch.loggroup\" calculated \"kmsKey\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudwatch.loggroup\" calculated \"kmsKey\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "kmsKey")
 	}
@@ -13222,7 +13222,7 @@ func (s *mqlAwsCloudtrail) Trails() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("trails")
 		if !ok {
-			return nil, errors.New("\"aws.cloudtrail\" calculated \"trails\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudtrail\" calculated \"trails\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "trails")
 	}
@@ -13539,7 +13539,7 @@ func (s *mqlAwsCloudtrailTrail) KmsKey() (AwsKmsKey, error) {
 		}
 		res, ok = s.Cache.Load("kmsKey")
 		if !ok {
-			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"kmsKey\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"kmsKey\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "kmsKey")
 	}
@@ -13626,7 +13626,7 @@ func (s *mqlAwsCloudtrailTrail) S3bucket() (AwsS3Bucket, error) {
 		}
 		res, ok = s.Cache.Load("s3bucket")
 		if !ok {
-			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"s3bucket\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"s3bucket\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "s3bucket")
 	}
@@ -13665,7 +13665,7 @@ func (s *mqlAwsCloudtrailTrail) Status() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("status")
 		if !ok {
-			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"status\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"status\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "status")
 	}
@@ -13688,7 +13688,7 @@ func (s *mqlAwsCloudtrailTrail) LogGroup() (AwsCloudwatchLoggroup, error) {
 		}
 		res, ok = s.Cache.Load("logGroup")
 		if !ok {
-			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"logGroup\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"logGroup\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "logGroup")
 	}
@@ -13727,7 +13727,7 @@ func (s *mqlAwsCloudtrailTrail) EventSelectors() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("eventSelectors")
 		if !ok {
-			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"eventSelectors\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.cloudtrail.trail\" calculated \"eventSelectors\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "eventSelectors")
 	}
@@ -13967,7 +13967,7 @@ func (s *mqlAwsKms) Keys() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("keys")
 		if !ok {
-			return nil, errors.New("\"aws.kms\" calculated \"keys\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.kms\" calculated \"keys\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keys")
 	}
@@ -14210,7 +14210,7 @@ func (s *mqlAwsKmsKey) KeyRotationEnabled() (bool, error) {
 		}
 		res, ok = s.Cache.Load("keyRotationEnabled")
 		if !ok {
-			return false, errors.New("\"aws.kms.key\" calculated \"keyRotationEnabled\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.kms.key\" calculated \"keyRotationEnabled\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keyRotationEnabled")
 	}
@@ -14233,7 +14233,7 @@ func (s *mqlAwsKmsKey) Metadata() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("metadata")
 		if !ok {
-			return nil, errors.New("\"aws.kms.key\" calculated \"metadata\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.kms.key\" calculated \"metadata\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "metadata")
 	}
@@ -14397,7 +14397,7 @@ func (s *mqlAwsS3) Buckets() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("buckets")
 		if !ok {
-			return nil, errors.New("\"aws.s3\" calculated \"buckets\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3\" calculated \"buckets\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "buckets")
 	}
@@ -14539,7 +14539,7 @@ func (s *mqlAwsS3control) AccountPublicAccessBlock() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("accountPublicAccessBlock")
 		if !ok {
-			return nil, errors.New("\"aws.s3control\" calculated \"accountPublicAccessBlock\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3control\" calculated \"accountPublicAccessBlock\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accountPublicAccessBlock")
 	}
@@ -14874,7 +14874,7 @@ func (s *mqlAwsS3Bucket) Policy() (AwsS3BucketPolicy, error) {
 		}
 		res, ok = s.Cache.Load("policy")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"policy\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"policy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "policy")
 	}
@@ -14897,7 +14897,7 @@ func (s *mqlAwsS3Bucket) Tags() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("tags")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"tags\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"tags\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "tags")
 	}
@@ -14920,7 +14920,7 @@ func (s *mqlAwsS3Bucket) Acl() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("acl")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"acl\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"acl\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "acl")
 	}
@@ -14943,7 +14943,7 @@ func (s *mqlAwsS3Bucket) Owner() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("owner")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"owner\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"owner\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "owner")
 	}
@@ -14966,7 +14966,7 @@ func (s *mqlAwsS3Bucket) Public() (bool, error) {
 		}
 		res, ok = s.Cache.Load("public")
 		if !ok {
-			return false, errors.New("\"aws.s3.bucket\" calculated \"public\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.s3.bucket\" calculated \"public\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "public")
 	}
@@ -14989,7 +14989,7 @@ func (s *mqlAwsS3Bucket) Cors() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("cors")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"cors\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"cors\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "cors")
 	}
@@ -15012,7 +15012,7 @@ func (s *mqlAwsS3Bucket) Location() (string, error) {
 		}
 		res, ok = s.Cache.Load("location")
 		if !ok {
-			return "", errors.New("\"aws.s3.bucket\" calculated \"location\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.s3.bucket\" calculated \"location\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "location")
 	}
@@ -15035,7 +15035,7 @@ func (s *mqlAwsS3Bucket) Versioning() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versioning")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"versioning\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"versioning\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versioning")
 	}
@@ -15058,7 +15058,7 @@ func (s *mqlAwsS3Bucket) Logging() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("logging")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"logging\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"logging\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "logging")
 	}
@@ -15081,7 +15081,7 @@ func (s *mqlAwsS3Bucket) StaticWebsiteHosting() (map[string]interface{}, error) 
 		}
 		res, ok = s.Cache.Load("staticWebsiteHosting")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"staticWebsiteHosting\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"staticWebsiteHosting\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "staticWebsiteHosting")
 	}
@@ -15104,7 +15104,7 @@ func (s *mqlAwsS3Bucket) DefaultLock() (string, error) {
 		}
 		res, ok = s.Cache.Load("defaultLock")
 		if !ok {
-			return "", errors.New("\"aws.s3.bucket\" calculated \"defaultLock\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.s3.bucket\" calculated \"defaultLock\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "defaultLock")
 	}
@@ -15127,7 +15127,7 @@ func (s *mqlAwsS3Bucket) Replication() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("replication")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"replication\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"replication\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "replication")
 	}
@@ -15150,7 +15150,7 @@ func (s *mqlAwsS3Bucket) Encryption() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("encryption")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"encryption\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"encryption\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "encryption")
 	}
@@ -15173,7 +15173,7 @@ func (s *mqlAwsS3Bucket) PublicAccessBlock() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("publicAccessBlock")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket\" calculated \"publicAccessBlock\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket\" calculated \"publicAccessBlock\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "publicAccessBlock")
 	}
@@ -16104,7 +16104,7 @@ func (s *mqlAwsS3BucketPolicy) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"aws.s3.bucket.policy\" calculated \"version\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.s3.bucket.policy\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -16127,7 +16127,7 @@ func (s *mqlAwsS3BucketPolicy) Id() (string, error) {
 		}
 		res, ok = s.Cache.Load("id")
 		if !ok {
-			return "", errors.New("\"aws.s3.bucket.policy\" calculated \"id\" but didnt find its value in cache.")
+			return "", errors.New("\"aws.s3.bucket.policy\" calculated \"id\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "id")
 	}
@@ -16150,7 +16150,7 @@ func (s *mqlAwsS3BucketPolicy) Statements() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("statements")
 		if !ok {
-			return nil, errors.New("\"aws.s3.bucket.policy\" calculated \"statements\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.s3.bucket.policy\" calculated \"statements\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "statements")
 	}
@@ -16355,7 +16355,7 @@ func (s *mqlAwsApplicationAutoscaling) ScalableTargets() ([]interface{}, error) 
 		}
 		res, ok = s.Cache.Load("scalableTargets")
 		if !ok {
-			return nil, errors.New("\"aws.applicationAutoscaling\" calculated \"scalableTargets\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.applicationAutoscaling\" calculated \"scalableTargets\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "scalableTargets")
 	}
@@ -16772,7 +16772,7 @@ func (s *mqlAwsBackup) Vaults() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vaults")
 		if !ok {
-			return nil, errors.New("\"aws.backup\" calculated \"vaults\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.backup\" calculated \"vaults\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vaults")
 	}
@@ -16969,7 +16969,7 @@ func (s *mqlAwsBackupVault) RecoveryPoints() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("recoveryPoints")
 		if !ok {
-			return nil, errors.New("\"aws.backup.vault\" calculated \"recoveryPoints\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.backup.vault\" calculated \"recoveryPoints\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "recoveryPoints")
 	}
@@ -17505,7 +17505,7 @@ func (s *mqlAwsDynamodb) Backups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("backups")
 		if !ok {
-			return nil, errors.New("\"aws.dynamodb\" calculated \"backups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dynamodb\" calculated \"backups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "backups")
 	}
@@ -17528,7 +17528,7 @@ func (s *mqlAwsDynamodb) GlobalTables() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("globalTables")
 		if !ok {
-			return nil, errors.New("\"aws.dynamodb\" calculated \"globalTables\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dynamodb\" calculated \"globalTables\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "globalTables")
 	}
@@ -17551,7 +17551,7 @@ func (s *mqlAwsDynamodb) Tables() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("tables")
 		if !ok {
-			return nil, errors.New("\"aws.dynamodb\" calculated \"tables\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dynamodb\" calculated \"tables\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "tables")
 	}
@@ -17574,7 +17574,7 @@ func (s *mqlAwsDynamodb) Limits() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("limits")
 		if !ok {
-			return nil, errors.New("\"aws.dynamodb\" calculated \"limits\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dynamodb\" calculated \"limits\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "limits")
 	}
@@ -18104,7 +18104,7 @@ func (s *mqlAwsDynamodbGlobaltable) ReplicaSettings() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("replicaSettings")
 		if !ok {
-			return nil, errors.New("\"aws.dynamodb.globaltable\" calculated \"replicaSettings\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dynamodb.globaltable\" calculated \"replicaSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "replicaSettings")
 	}
@@ -18396,7 +18396,7 @@ func (s *mqlAwsDynamodbTable) Backups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("backups")
 		if !ok {
-			return nil, errors.New("\"aws.dynamodb.table\" calculated \"backups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dynamodb.table\" calculated \"backups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "backups")
 	}
@@ -18451,7 +18451,7 @@ func (s *mqlAwsDynamodbTable) ContinuousBackups() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("continuousBackups")
 		if !ok {
-			return nil, errors.New("\"aws.dynamodb.table\" calculated \"continuousBackups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dynamodb.table\" calculated \"continuousBackups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "continuousBackups")
 	}
@@ -18646,7 +18646,7 @@ func (s *mqlAwsRds) DbInstances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("dbInstances")
 		if !ok {
-			return nil, errors.New("\"aws.rds\" calculated \"dbInstances\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.rds\" calculated \"dbInstances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "dbInstances")
 	}
@@ -18669,7 +18669,7 @@ func (s *mqlAwsRds) DbClusters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("dbClusters")
 		if !ok {
-			return nil, errors.New("\"aws.rds\" calculated \"dbClusters\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.rds\" calculated \"dbClusters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "dbClusters")
 	}
@@ -18950,7 +18950,7 @@ func (s *mqlAwsRdsDbcluster) Snapshots() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("snapshots")
 		if !ok {
-			return nil, errors.New("\"aws.rds.dbcluster\" calculated \"snapshots\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.rds.dbcluster\" calculated \"snapshots\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "snapshots")
 	}
@@ -19233,7 +19233,7 @@ func (s *mqlAwsRdsSnapshot) Attributes() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attributes")
 		if !ok {
-			return nil, errors.New("\"aws.rds.snapshot\" calculated \"attributes\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.rds.snapshot\" calculated \"attributes\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attributes")
 	}
@@ -19729,7 +19729,7 @@ func (s *mqlAwsRdsDbinstance) Snapshots() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("snapshots")
 		if !ok {
-			return nil, errors.New("\"aws.rds.dbinstance\" calculated \"snapshots\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.rds.dbinstance\" calculated \"snapshots\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "snapshots")
 	}
@@ -20129,7 +20129,7 @@ func (s *mqlAwsElasticache) Clusters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("clusters")
 		if !ok {
-			return nil, errors.New("\"aws.elasticache\" calculated \"clusters\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.elasticache\" calculated \"clusters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "clusters")
 	}
@@ -20271,7 +20271,7 @@ func (s *mqlAwsRedshift) Clusters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("clusters")
 		if !ok {
-			return nil, errors.New("\"aws.redshift\" calculated \"clusters\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.redshift\" calculated \"clusters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "clusters")
 	}
@@ -20665,7 +20665,7 @@ func (s *mqlAwsRedshiftCluster) Parameters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("parameters")
 		if !ok {
-			return nil, errors.New("\"aws.redshift.cluster\" calculated \"parameters\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.redshift.cluster\" calculated \"parameters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "parameters")
 	}
@@ -20688,7 +20688,7 @@ func (s *mqlAwsRedshiftCluster) Logging() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("logging")
 		if !ok {
-			return nil, errors.New("\"aws.redshift.cluster\" calculated \"logging\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.redshift.cluster\" calculated \"logging\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "logging")
 	}
@@ -20932,7 +20932,7 @@ func (s *mqlAwsDms) ReplicationInstances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("replicationInstances")
 		if !ok {
-			return nil, errors.New("\"aws.dms\" calculated \"replicationInstances\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.dms\" calculated \"replicationInstances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "replicationInstances")
 	}
@@ -21074,7 +21074,7 @@ func (s *mqlAwsApigateway) RestApis() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("restApis")
 		if !ok {
-			return nil, errors.New("\"aws.apigateway\" calculated \"restApis\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.apigateway\" calculated \"restApis\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "restApis")
 	}
@@ -21379,7 +21379,7 @@ func (s *mqlAwsApigatewayRestapi) Stages() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("stages")
 		if !ok {
-			return nil, errors.New("\"aws.apigateway.restapi\" calculated \"stages\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.apigateway.restapi\" calculated \"stages\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "stages")
 	}
@@ -21840,7 +21840,7 @@ func (s *mqlAwsLambda) Functions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("functions")
 		if !ok {
-			return nil, errors.New("\"aws.lambda\" calculated \"functions\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.lambda\" calculated \"functions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "functions")
 	}
@@ -22094,7 +22094,7 @@ func (s *mqlAwsLambdaFunction) Concurrency() (int64, error) {
 		}
 		res, ok = s.Cache.Load("concurrency")
 		if !ok {
-			return 0, errors.New("\"aws.lambda.function\" calculated \"concurrency\" but didnt find its value in cache.")
+			return 0, errors.New("\"aws.lambda.function\" calculated \"concurrency\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "concurrency")
 	}
@@ -22133,7 +22133,7 @@ func (s *mqlAwsLambdaFunction) Policy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("policy")
 		if !ok {
-			return nil, errors.New("\"aws.lambda.function\" calculated \"policy\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.lambda.function\" calculated \"policy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "policy")
 	}
@@ -22423,7 +22423,7 @@ func (s *mqlAwsEc2) SecurityGroups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("securityGroups")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"securityGroups\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"securityGroups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "securityGroups")
 	}
@@ -22446,7 +22446,7 @@ func (s *mqlAwsEc2) Instances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("instances")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"instances\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"instances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "instances")
 	}
@@ -22469,7 +22469,7 @@ func (s *mqlAwsEc2) EbsEncryptionByDefault() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("ebsEncryptionByDefault")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"ebsEncryptionByDefault\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"ebsEncryptionByDefault\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ebsEncryptionByDefault")
 	}
@@ -22492,7 +22492,7 @@ func (s *mqlAwsEc2) Volumes() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("volumes")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"volumes\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"volumes\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "volumes")
 	}
@@ -22515,7 +22515,7 @@ func (s *mqlAwsEc2) Snapshots() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("snapshots")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"snapshots\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"snapshots\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "snapshots")
 	}
@@ -22538,7 +22538,7 @@ func (s *mqlAwsEc2) InternetGateways() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("internetGateways")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"internetGateways\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"internetGateways\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "internetGateways")
 	}
@@ -22561,7 +22561,7 @@ func (s *mqlAwsEc2) VpnConnections() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vpnConnections")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"vpnConnections\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"vpnConnections\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vpnConnections")
 	}
@@ -22584,7 +22584,7 @@ func (s *mqlAwsEc2) NetworkAcls() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("networkAcls")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"networkAcls\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"networkAcls\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "networkAcls")
 	}
@@ -22607,7 +22607,7 @@ func (s *mqlAwsEc2) Keypairs() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("keypairs")
 		if !ok {
-			return nil, errors.New("\"aws.ec2\" calculated \"keypairs\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2\" calculated \"keypairs\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keypairs")
 	}
@@ -22960,7 +22960,7 @@ func (s *mqlAwsEc2Networkacl) Entries() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("entries")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.networkacl\" calculated \"entries\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.networkacl\" calculated \"entries\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "entries")
 	}
@@ -23175,7 +23175,7 @@ func (s *mqlAwsEc2NetworkaclEntry) PortRange() (AwsEc2NetworkaclEntryPortrange, 
 		}
 		res, ok = s.Cache.Load("portRange")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.networkacl.entry\" calculated \"portRange\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.networkacl.entry\" calculated \"portRange\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "portRange")
 	}
@@ -24160,7 +24160,7 @@ func (s *mqlAwsEc2Snapshot) CreateVolumePermission() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("createVolumePermission")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.snapshot\" calculated \"createVolumePermission\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.snapshot\" calculated \"createVolumePermission\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "createVolumePermission")
 	}
@@ -25068,7 +25068,7 @@ func (s *mqlAwsEc2Instance) Ssm() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("ssm")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.instance\" calculated \"ssm\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.instance\" calculated \"ssm\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ssm")
 	}
@@ -25091,7 +25091,7 @@ func (s *mqlAwsEc2Instance) Vpc() (AwsVpc, error) {
 		}
 		res, ok = s.Cache.Load("vpc")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.instance\" calculated \"vpc\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.instance\" calculated \"vpc\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vpc")
 	}
@@ -25130,7 +25130,7 @@ func (s *mqlAwsEc2Instance) PatchState() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("patchState")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.instance\" calculated \"patchState\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.instance\" calculated \"patchState\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "patchState")
 	}
@@ -25217,7 +25217,7 @@ func (s *mqlAwsEc2Instance) InstanceStatus() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("instanceStatus")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.instance\" calculated \"instanceStatus\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.instance\" calculated \"instanceStatus\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "instanceStatus")
 	}
@@ -25384,7 +25384,7 @@ func (s *mqlAwsEc2Instance) Keypair() (AwsEc2Keypair, error) {
 		}
 		res, ok = s.Cache.Load("keypair")
 		if !ok {
-			return nil, errors.New("\"aws.ec2.instance\" calculated \"keypair\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.ec2.instance\" calculated \"keypair\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keypair")
 	}
@@ -26574,7 +26574,7 @@ func (s *mqlAwsVpc) FlowLogs() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("flowLogs")
 		if !ok {
-			return nil, errors.New("\"aws.vpc\" calculated \"flowLogs\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.vpc\" calculated \"flowLogs\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "flowLogs")
 	}
@@ -26597,7 +26597,7 @@ func (s *mqlAwsVpc) RouteTables() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("routeTables")
 		if !ok {
-			return nil, errors.New("\"aws.vpc\" calculated \"routeTables\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.vpc\" calculated \"routeTables\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "routeTables")
 	}
@@ -27439,7 +27439,7 @@ func (s *mqlAwsEc2Securitygroup) IsAttachedToNetworkInterface() (bool, error) {
 		}
 		res, ok = s.Cache.Load("isAttachedToNetworkInterface")
 		if !ok {
-			return false, errors.New("\"aws.ec2.securitygroup\" calculated \"isAttachedToNetworkInterface\" but didnt find its value in cache.")
+			return false, errors.New("\"aws.ec2.securitygroup\" calculated \"isAttachedToNetworkInterface\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "isAttachedToNetworkInterface")
 	}
@@ -27881,7 +27881,7 @@ func (s *mqlAwsConfig) Recorders() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("recorders")
 		if !ok {
-			return nil, errors.New("\"aws.config\" calculated \"recorders\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.config\" calculated \"recorders\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "recorders")
 	}
@@ -27904,7 +27904,7 @@ func (s *mqlAwsConfig) Rules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("rules")
 		if !ok {
-			return nil, errors.New("\"aws.config\" calculated \"rules\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.config\" calculated \"rules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "rules")
 	}
@@ -28548,7 +28548,7 @@ func (s *mqlAwsEks) Clusters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("clusters")
 		if !ok {
-			return nil, errors.New("\"aws.eks\" calculated \"clusters\" but didnt find its value in cache.")
+			return nil, errors.New("\"aws.eks\" calculated \"clusters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "clusters")
 	}

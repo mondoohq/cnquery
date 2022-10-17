@@ -152,7 +152,7 @@ func (s *mqlVsphere) About() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("about")
 		if !ok {
-			return nil, errors.New("\"vsphere\" calculated \"about\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere\" calculated \"about\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "about")
 	}
@@ -175,7 +175,7 @@ func (s *mqlVsphere) Licenses() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("licenses")
 		if !ok {
-			return nil, errors.New("\"vsphere\" calculated \"licenses\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere\" calculated \"licenses\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "licenses")
 	}
@@ -198,7 +198,7 @@ func (s *mqlVsphere) Datacenters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("datacenters")
 		if !ok {
-			return nil, errors.New("\"vsphere\" calculated \"datacenters\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere\" calculated \"datacenters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "datacenters")
 	}
@@ -564,7 +564,7 @@ func (s *mqlEsxi) Host() (VsphereHost, error) {
 		}
 		res, ok = s.Cache.Load("host")
 		if !ok {
-			return nil, errors.New("\"esxi\" calculated \"host\" but didnt find its value in cache.")
+			return nil, errors.New("\"esxi\" calculated \"host\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "host")
 	}
@@ -587,7 +587,7 @@ func (s *mqlEsxi) Vm() (VsphereVm, error) {
 		}
 		res, ok = s.Cache.Load("vm")
 		if !ok {
-			return nil, errors.New("\"esxi\" calculated \"vm\" but didnt find its value in cache.")
+			return nil, errors.New("\"esxi\" calculated \"vm\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vm")
 	}
@@ -846,7 +846,7 @@ func (s *mqlVsphereDatacenter) Hosts() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("hosts")
 		if !ok {
-			return nil, errors.New("\"vsphere.datacenter\" calculated \"hosts\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.datacenter\" calculated \"hosts\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "hosts")
 	}
@@ -869,7 +869,7 @@ func (s *mqlVsphereDatacenter) Vms() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vms")
 		if !ok {
-			return nil, errors.New("\"vsphere.datacenter\" calculated \"vms\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.datacenter\" calculated \"vms\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vms")
 	}
@@ -892,7 +892,7 @@ func (s *mqlVsphereDatacenter) Clusters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("clusters")
 		if !ok {
-			return nil, errors.New("\"vsphere.datacenter\" calculated \"clusters\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.datacenter\" calculated \"clusters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "clusters")
 	}
@@ -1183,7 +1183,7 @@ func (s *mqlVsphereCluster) Hosts() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("hosts")
 		if !ok {
-			return nil, errors.New("\"vsphere.cluster\" calculated \"hosts\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.cluster\" calculated \"hosts\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "hosts")
 	}
@@ -1552,7 +1552,7 @@ func (s *mqlVsphereHost) StandardSwitch() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("standardSwitch")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"standardSwitch\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"standardSwitch\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "standardSwitch")
 	}
@@ -1575,7 +1575,7 @@ func (s *mqlVsphereHost) DistributedSwitch() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("distributedSwitch")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"distributedSwitch\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"distributedSwitch\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "distributedSwitch")
 	}
@@ -1598,7 +1598,7 @@ func (s *mqlVsphereHost) Adapters() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("adapters")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"adapters\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"adapters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "adapters")
 	}
@@ -1621,7 +1621,7 @@ func (s *mqlVsphereHost) Vmknics() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vmknics")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"vmknics\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"vmknics\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vmknics")
 	}
@@ -1644,7 +1644,7 @@ func (s *mqlVsphereHost) Packages() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("packages")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"packages\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"packages\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "packages")
 	}
@@ -1667,7 +1667,7 @@ func (s *mqlVsphereHost) AcceptanceLevel() (string, error) {
 		}
 		res, ok = s.Cache.Load("acceptanceLevel")
 		if !ok {
-			return "", errors.New("\"vsphere.host\" calculated \"acceptanceLevel\" but didnt find its value in cache.")
+			return "", errors.New("\"vsphere.host\" calculated \"acceptanceLevel\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "acceptanceLevel")
 	}
@@ -1690,7 +1690,7 @@ func (s *mqlVsphereHost) KernelModules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("kernelModules")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"kernelModules\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"kernelModules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "kernelModules")
 	}
@@ -1713,7 +1713,7 @@ func (s *mqlVsphereHost) AdvancedSettings() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("advancedSettings")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"advancedSettings\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"advancedSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "advancedSettings")
 	}
@@ -1736,7 +1736,7 @@ func (s *mqlVsphereHost) Services() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("services")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"services\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"services\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "services")
 	}
@@ -1759,7 +1759,7 @@ func (s *mqlVsphereHost) Timezone() (EsxiTimezone, error) {
 		}
 		res, ok = s.Cache.Load("timezone")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"timezone\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"timezone\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "timezone")
 	}
@@ -1782,7 +1782,7 @@ func (s *mqlVsphereHost) Ntp() (EsxiNtpconfig, error) {
 		}
 		res, ok = s.Cache.Load("ntp")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"ntp\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"ntp\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ntp")
 	}
@@ -1805,7 +1805,7 @@ func (s *mqlVsphereHost) Snmp() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("snmp")
 		if !ok {
-			return nil, errors.New("\"vsphere.host\" calculated \"snmp\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.host\" calculated \"snmp\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "snmp")
 	}
@@ -2242,7 +2242,7 @@ func (s *mqlVsphereVm) AdvancedSettings() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("advancedSettings")
 		if !ok {
-			return nil, errors.New("\"vsphere.vm\" calculated \"advancedSettings\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.vm\" calculated \"advancedSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "advancedSettings")
 	}
@@ -2474,7 +2474,7 @@ func (s *mqlVsphereVswitchStandard) FailoverPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("failoverPolicy")
 		if !ok {
-			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"failoverPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"failoverPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "failoverPolicy")
 	}
@@ -2497,7 +2497,7 @@ func (s *mqlVsphereVswitchStandard) SecurityPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("securityPolicy")
 		if !ok {
-			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"securityPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"securityPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "securityPolicy")
 	}
@@ -2520,7 +2520,7 @@ func (s *mqlVsphereVswitchStandard) ShapingPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("shapingPolicy")
 		if !ok {
-			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"shapingPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"shapingPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "shapingPolicy")
 	}
@@ -2543,7 +2543,7 @@ func (s *mqlVsphereVswitchStandard) Uplinks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("uplinks")
 		if !ok {
-			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"uplinks\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.vswitch.standard\" calculated \"uplinks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "uplinks")
 	}
@@ -2792,7 +2792,7 @@ func (s *mqlVsphereVswitchDvs) Uplinks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("uplinks")
 		if !ok {
-			return nil, errors.New("\"vsphere.vswitch.dvs\" calculated \"uplinks\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.vswitch.dvs\" calculated \"uplinks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "uplinks")
 	}
@@ -3005,7 +3005,7 @@ func (s *mqlVsphereVmnic) Details() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("details")
 		if !ok {
-			return nil, errors.New("\"vsphere.vmnic\" calculated \"details\" but didnt find its value in cache.")
+			return nil, errors.New("\"vsphere.vmnic\" calculated \"details\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "details")
 	}
@@ -3476,7 +3476,7 @@ func (s *mqlEsxiCommand) Result() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("result")
 		if !ok {
-			return nil, errors.New("\"esxi.command\" calculated \"result\" but didnt find its value in cache.")
+			return nil, errors.New("\"esxi.command\" calculated \"result\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "result")
 	}
