@@ -28,7 +28,7 @@ var (
 // Microsoft is working on some Powershell features that may make it happen.
 //
 // For authentication we need a tenant id, client id (appid), and a certificate and an optional password
-// mondoo scan -t ms365:// --certificate-path certificate --certificate-secret password --client-id CLIENT_ID --tenant-id TENNANT_ID
+// mondoo scan -t ms365:// --certificate-path certificate --certificate-secret password --client-id CLIENT_ID --tenant-id TENANT_ID
 //
 // [How to recognize differences between delegated and application permissions](https://docs.microsoft.com/en-us/azure/active-directory/develop/delegated-and-app-perms)
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)

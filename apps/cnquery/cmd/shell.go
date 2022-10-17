@@ -108,7 +108,7 @@ You can also explicitly connect to an image or a container registry:
 `,
 			},
 			"container-image": {
-				Short: "Connec to a container image",
+				Short: "Connect to a container image",
 			},
 			"container-registry": {
 				Short: "Connect to a container registry",
@@ -207,12 +207,12 @@ configure your Azure credentials and have SSH access to your instances.`,
 				Long: `
 This command opens a shell to a Microsoft 365 tenant:
 
-    $ cnquery shell ms365 --tenant-id {tennant id} --client-id {client id} --client-secret {client secret}
+    $ cnquery shell ms365 --tenant-id {tenant id} --client-id {client id} --client-secret {client secret}
 
 This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
-    $ cnquery shell ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
-    $ cnquery shell ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
+    $ cnquery shell ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
+    $ cnquery shell ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
 `,
 			},
 			"host": {

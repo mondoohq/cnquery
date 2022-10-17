@@ -192,12 +192,12 @@ configure your Azure credentials and have SSH access to your instances.`,
 				Long: `
 Here is an example run for Microsoft 365:
 
-    $ cnquery scan ms365 --tenant-id {tennant id} --client-id {client id} --client-secret {client secret}
+    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --client-secret {client secret}
 
 This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
-    $ cnquery scan ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
-    $ cnquery scan ms365 --tenant-id {tennant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
+    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
+    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
 `,
 			},
 			"host": {
