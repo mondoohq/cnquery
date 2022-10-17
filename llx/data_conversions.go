@@ -350,12 +350,15 @@ func (r *RawData) Result() *Result {
 	// with the type information so it can be processed by the server
 	if r.Error != nil {
 		errorMsg = r.Error.Error()
-	}
 
-	if r.Value == nil {
-		return &Result{
-			Data:  &Primitive{Type: string(r.Type)},
-			Error: errorMsg,
+		// if the value is nil, we don't want to loose the type information,
+		// so we return it early before raw2primitive has a chance to change the
+		// type to nil
+		if r.Value == nil {
+			return &Result{
+				Data:  &Primitive{Type: string(r.Type)},
+				Error: errorMsg,
+			}
 		}
 	}
 
