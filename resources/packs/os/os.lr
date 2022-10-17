@@ -3,6 +3,26 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/os"
 
+alias os.base.command = command
+alias os.base.find = files.find
+alias os.base.user = core.user
+alias os.base.group = core.group
+alias os.base.file = core.file
+alias os.base.time = core.time
+alias os.base.packages = core.packages
+alias os.base.platform = core.platform
+alias os.base.platform.virtualization = core.platform.virtualization
+alias os.base.platform.advisories = core.platform.advisories
+alias os.base.service = service
+alias os.base.services = services
+alias os.unix.sshd = sshd
+alias os.unix.ntp = ntp.conf
+alias os.unix.rsyslog = rsyslog.conf
+alias os.unix.lsblk = lsblk
+alias os.unix.mount = mount
+alias os.unix.shadow = shadow
+alias os.linux.yum = yum
+
 // Results of running a command on the system
 command {
   init(command string)
@@ -182,6 +202,39 @@ machine.chassis {
   assetTag string
 }
 
+os.base {
+  embed machine
+
+  // Pretty Hostname on Linux / Device name on Windows
+  name() string
+  // ENV variable contents
+  env() map[string]string
+  // PATH variable contents
+  path() []string
+  // Current uptime
+  uptime() time
+  // List of available OS updates
+  updates() []os.update
+  // Indicates if a reboot is pending
+  rebootpending() bool
+  // Hostname for this OS
+  hostname() string
+
+  groups() core.groups
+  users() core.users
+}
+
+os.unix {
+  embed os.base as base
+}
+
+os.linux {
+  embed os.unix as unix
+
+  iptables() iptables
+  ip6tables() ip6tables
+}
+
 // Operating system information
 os {
   // Pretty Hostname on Linux / Device name on Windows
@@ -272,6 +325,8 @@ docker.image {
 
 // Docker container
 docker.container {
+  embed os.linux as os
+
   // Container ID
   id string
   // Container Command

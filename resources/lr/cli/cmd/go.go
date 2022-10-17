@@ -23,7 +23,7 @@ var goCmd = &cobra.Command{
 			return os.ReadFile(path)
 		})
 		if err != nil {
-			log.Error().Err(err)
+			log.Error().Err(err).Msg("failed to resolve")
 			return
 		}
 

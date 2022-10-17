@@ -212,6 +212,8 @@ resources:
       imageid: {}
       labels: {}
       names: {}
+      os:
+        min_mondoo_version: 6.19.0
       state: {}
       status: {}
     min_mondoo_version: 5.15.0
@@ -489,6 +491,54 @@ resources:
       servers: {}
       settings: {}
     min_mondoo_version: 5.15.0
+  os:
+    fields:
+      env: {}
+      hostname: {}
+      machineid: {}
+      name: {}
+      path: {}
+      rebootpending: {}
+      updates: {}
+      uptime: {}
+    min_mondoo_version: 6.19.0
+  os.base:
+    fields:
+      env: {}
+      groups: {}
+      hostname: {}
+      machine: {}
+      name: {}
+      path: {}
+      rebootpending: {}
+      updates: {}
+      uptime: {}
+      users: {}
+    min_mondoo_version: 6.19.0
+  os.linux:
+    fields:
+      ip6tables: {}
+      iptables: {}
+      unix: {}
+    min_mondoo_version: 6.19.0
+  os.rootCertificates:
+    fields:
+      content: {}
+      files: {}
+      list: {}
+    min_mondoo_version: 6.19.0
+  os.unix:
+    fields:
+      base: {}
+    min_mondoo_version: 6.19.0
+  os.update:
+    fields:
+      category: {}
+      format: {}
+      name: {}
+      restart: {}
+      severity: {}
+    min_mondoo_version: 6.19.0
   pam.conf:
     fields:
       content: {}

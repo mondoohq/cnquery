@@ -295,6 +295,7 @@ func (s *Shell) handleExit() {
 
 // Close is called when the shell is closed and calls the onCloseHandler
 func (s *Shell) Close() {
+	s.Runtime.Close()
 	// run onClose handler if set
 	if s.onCloseHandler != nil {
 		s.onCloseHandler()

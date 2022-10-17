@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -134,13 +133,11 @@ type Observers struct {
 	list        CallbacksList
 	reverseList *types.StringToStrings
 	hooks       *Hooks
-	motor       *motor.Motor
 }
 
 // NewObservers creates an observers instance
-func NewObservers(motor *motor.Motor) *Observers {
+func NewObservers() *Observers {
 	return &Observers{
-		motor:       motor,
 		hooks:       &Hooks{},
 		reverseList: &types.StringToStrings{},
 	}

@@ -9,6 +9,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 // NewResource creates the base class for a new resource
@@ -72,11 +74,12 @@ type UpstreamConfig struct {
 
 // Runtime of all initialized resources
 type Runtime struct {
+	Motor          *motor.Motor
 	Registry       *Registry
 	cache          *Cache
 	Observers      *Observers
-	Motor          *motor.Motor
 	UpstreamConfig *UpstreamConfig
+	children       []*Runtime
 }
 
 // NewRuntime creates a new runtime from a registry and motor backend
@@ -90,9 +93,10 @@ func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 
 	return &Runtime{
 		Registry:  registry,
-		Observers: NewObservers(motor),
+		Observers: NewObservers(),
 		Motor:     motor,
 		cache:     &Cache{},
+		children:  []*Runtime{},
 	}
 }
 
@@ -120,6 +124,20 @@ func args2map(args []interface{}) (*Args, error) {
 	return &res, nil
 }
 
+func (ctx *Runtime) cloneWithMotor(motor *motor.Motor) *Runtime {
+	if motor == nil {
+		panic("cannot initialize a MQL runtime without a motor")
+	}
+
+	return &Runtime{
+		Registry:  ctx.Registry,
+		Observers: ctx.Observers,
+		Motor:     motor,
+		cache:     &Cache{},
+		children:  []*Runtime{},
+	}
+}
+
 func (ctx *Runtime) createMockResource(name string, cls *ResourceCls) (ResourceType, error) {
 	res := MockResource{
 		StaticFields: cls.Fields,
@@ -131,11 +149,28 @@ func (ctx *Runtime) createMockResource(name string, cls *ResourceCls) (ResourceT
 	return res, nil
 }
 
+func (ctx *Runtime) lookupResource(name string) (*ResourceCls, error) {
+	for {
+		r := ctx.Registry.Resources[name]
+		if r == nil {
+			return nil, errors.New("cannot find resource '" + name + "'")
+		} else if r.Factory != nil {
+			return r, nil
+		} else if r.Name != name {
+			// A resource was given an alias. Look up through aliases
+			name = r.Name
+		} else {
+			// We found a resource with a factory
+			return nil, errors.New("cannot find resource resource factory for '" + name + "'")
+		}
+	}
+}
+
 // CreateResourceWithID creates a new resource instance and force it to have a certain ID
 func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interface{}) (ResourceType, error) {
-	r, ok := ctx.Registry.Resources[name]
-	if !ok {
-		return nil, errors.New("cannot find resource '" + name + "'")
+	r, err := ctx.lookupResource(name)
+	if err != nil {
+		return nil, err
 	}
 
 	argsMap, err := args2map(args)
@@ -184,6 +219,33 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 // CreateResource creates a new resource instance taking its name + args
 func (ctx *Runtime) CreateResource(name string, args ...interface{}) (ResourceType, error) {
 	return ctx.CreateResourceWithID(name, "", args...)
+}
+
+// CreateResourceWithAssetContext will create the Resource. If the asset "a" and provider "p" match
+// what "ctx" already holds, we do not need to create a new Runtime and can attach it directly to the
+// new resource. Otherwise, a new runtime is created, where the asset and provider are changed.
+// We probably also need to do something about ctx.UpstreamConfig
+func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, p providers.Instance, args ...interface{}) (ResourceType, error) {
+	if p == nil {
+		p = ctx.Motor.Provider
+	}
+	if a == nil {
+		a = ctx.Motor.GetAsset()
+	}
+	nextCtx := ctx
+	// TODO:
+	// If we create a new motor, but p is shared, bad things may happen
+	// when closing the motor
+	m, err := motor.New(p)
+	if err != nil {
+		return nil, err
+	}
+
+	m.SetAsset(a)
+	newCtx := ctx.cloneWithMotor(m)
+	nextCtx.children = append(nextCtx.children, newCtx)
+	nextCtx = newCtx
+	return nextCtx.CreateResourceWithID(name, "", args...)
 }
 
 // GetRawResource resource instance by name and id
@@ -394,4 +456,11 @@ func (ctx *Runtime) Trigger(r ResourceType, field string) error {
 	}
 
 	return r.Compute(field)
+}
+
+func (r *Runtime) Close() {
+	for _, c := range r.children {
+		c.Close()
+	}
+	r.Motor.Close()
 }

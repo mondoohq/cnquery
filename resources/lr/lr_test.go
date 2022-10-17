@@ -59,7 +59,8 @@ func TestParse(t *testing.T) {
 					BasicField: &BasicField{
 						ID:   "field",
 						Args: nil,
-						Type: Type{SimpleType: &SimpleType{"type"}}},
+						Type: Type{SimpleType: &SimpleType{"type"}},
+					},
 					Comments: []string{"// field docs..."},
 				},
 			}
@@ -74,8 +75,10 @@ func TestParse(t *testing.T) {
 					BasicField: &BasicField{
 						ID:   "field",
 						Args: nil,
-						Type: Type{ListType: &ListType{Type{SimpleType: &SimpleType{"type"}}}}},
-				}}
+						Type: Type{ListType: &ListType{Type{SimpleType: &SimpleType{"type"}}}},
+					},
+				},
+			}
 			assert.Equal(t, "name", res.Resources[0].ID)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
 		})
@@ -87,7 +90,8 @@ func TestParse(t *testing.T) {
 				{
 					BasicField: &BasicField{ID: "field", Args: nil, Type: Type{
 						MapType: &MapType{SimpleType{"a"}, Type{SimpleType: &SimpleType{"b"}}},
-					}}},
+					}},
+				},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
@@ -97,7 +101,8 @@ func TestParse(t *testing.T) {
 	t.Run("resource with a dependent field, no args", func(t *testing.T) {
 		parse(t, "name {\nfield() type\n}", func(res *LR) {
 			f := []*Field{
-				{BasicField: &BasicField{ID: "field", Args: &FieldArgs{}, Type: Type{SimpleType: &SimpleType{"type"}}}}}
+				{BasicField: &BasicField{ID: "field", Args: &FieldArgs{}, Type: Type{SimpleType: &SimpleType{"type"}}}},
+			}
 			assert.Equal(t, "name", res.Resources[0].ID)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
 		})
@@ -122,7 +127,8 @@ func TestParse(t *testing.T) {
 					Args: []TypedArg{
 						{ID: "one", Type: Type{SimpleType: &SimpleType{"int"}}},
 						{ID: "two", Type: Type{SimpleType: &SimpleType{"string"}}, Optional: true},
-					}}},
+					},
+				}},
 			}
 			assert.Equal(t, "name", res.Resources[0].ID)
 			assert.Equal(t, f, res.Resources[0].Body.Fields)
@@ -164,7 +170,7 @@ func TestParse(t *testing.T) {
 		embed os.any
 	}`, func(res *LR) {
 			fields := []*Field{
-				{Embeddable: &Embeddable{Type: "os.any"}},
+				{BasicField: &BasicField{isEmbedded: true, ID: "os", Type: Type{SimpleType: &SimpleType{Type: "os.any"}}, Args: &FieldArgs{}}},
 			}
 
 			assert.Equal(t, "name.no", res.Resources[0].ID)
@@ -178,9 +184,8 @@ func TestParse(t *testing.T) {
 	private name.no {
 		embed os.any as testx
 	}`, func(res *LR) {
-			alias := "testx"
 			fields := []*Field{
-				{Embeddable: &Embeddable{Type: "os.any", Alias: &alias}},
+				{BasicField: &BasicField{isEmbedded: true, ID: "testx", Type: Type{SimpleType: &SimpleType{Type: "os.any"}}, Args: &FieldArgs{}}},
 			}
 
 			assert.Equal(t, "name.no", res.Resources[0].ID)
@@ -203,14 +208,16 @@ func TestParse(t *testing.T) {
 					{ID: "i2", Type: Type{MapType: &MapType{SimpleType{"int"}, Type{SimpleType: &SimpleType{"int"}}}}},
 				}}},
 				{BasicField: &BasicField{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}}}},
-				{BasicField: &BasicField{
-					ID:   "call",
-					Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{"int"}}}},
-					Args: &FieldArgs{
-						List: []SimpleType{{"resource.field"}},
-					}},
+				{
+					BasicField: &BasicField{
+						ID:   "call",
+						Type: Type{ListType: &ListType{Type: Type{SimpleType: &SimpleType{"int"}}}},
+						Args: &FieldArgs{
+							List: []SimpleType{{"resource.field"}},
+						},
+					},
 				},
-				{Embeddable: &Embeddable{Type: "os.any"}},
+				{BasicField: &BasicField{isEmbedded: true, ID: "os", Type: Type{SimpleType: &SimpleType{Type: "os.any"}}, Args: &FieldArgs{}}},
 			}
 
 			assert.Equal(t, "name.no", res.Resources[0].ID)

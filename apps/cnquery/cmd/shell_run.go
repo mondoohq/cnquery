@@ -90,9 +90,6 @@ func StartShell(conf *ShellConfig) error {
 	onCloseHandler := func() {
 		// store tracked commands and files
 		storeRecording(m)
-
-		// close backend connection
-		m.Close()
 	}
 
 	shellOptions := []shell.ShellOption{}

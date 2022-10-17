@@ -6,7 +6,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/providers/container"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/cmd"
 	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
@@ -129,4 +131,20 @@ func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 		providers.HostnameDetector,
 		providers.CloudDetector,
 	}
+}
+
+func (p *Provider) NewDockerContainerProvider(containerId string) (*asset.Asset, container.ContainerProvider, error) {
+	cp, err := container.NewDockerEngineContainer(&providers.Config{
+		Host: containerId,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	platformId, err := cp.Identifier()
+	if err != nil {
+		return nil, nil, err
+	}
+	return &asset.Asset{
+		PlatformIds: []string{platformId},
+	}, cp, nil
 }
