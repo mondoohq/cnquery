@@ -75,10 +75,10 @@ func ReadTfVarsFromFile(filename string, terraformVars map[string]*hcl.Attribute
 			return err
 		}
 
-		// we ignore the diagnositics information here
+		// we ignore the diagnostics information here
 		variableFile, _ := hclsyntax.ParseConfig(src, filename, hcl.Pos{Line: 1, Column: 1})
 
-		// NOTE: we ignore the diagnositics info
+		// NOTE: we ignore the diagnostics info
 		attrs, _ := variableFile.Body.JustAttributes()
 		for k := range attrs {
 			v := attrs[k]

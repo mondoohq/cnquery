@@ -388,7 +388,7 @@ func (b *goBuilder) goFieldAccessor(r *Resource, f *BasicField) {
 		}
 		res, ok = s.Cache.Load("%s")
 		if !ok {
-			return %s, errors.New("\"%s\" calculated \"%s\" but didnt find its value in cache.")
+			return %s, errors.New("\"%s\" calculated \"%s\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "%s")`,
 			f.goName(), f.Type.goZeroValue(),

@@ -845,7 +845,7 @@ func (s *mqlGithub) Repositories() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("repositories")
 		if !ok {
-			return nil, errors.New("\"github\" calculated \"repositories\" but didnt find its value in cache.")
+			return nil, errors.New("\"github\" calculated \"repositories\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "repositories")
 	}
@@ -868,7 +868,7 @@ func (s *mqlGithub) User() (GithubUser, error) {
 		}
 		res, ok = s.Cache.Load("user")
 		if !ok {
-			return nil, errors.New("\"github\" calculated \"user\" but didnt find its value in cache.")
+			return nil, errors.New("\"github\" calculated \"user\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "user")
 	}
@@ -1900,7 +1900,7 @@ func (s *mqlGithubOrganization) Owners() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("owners")
 		if !ok {
-			return nil, errors.New("\"github.organization\" calculated \"owners\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.organization\" calculated \"owners\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "owners")
 	}
@@ -1923,7 +1923,7 @@ func (s *mqlGithubOrganization) Members() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("members")
 		if !ok {
-			return nil, errors.New("\"github.organization\" calculated \"members\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.organization\" calculated \"members\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "members")
 	}
@@ -1946,7 +1946,7 @@ func (s *mqlGithubOrganization) Teams() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("teams")
 		if !ok {
-			return nil, errors.New("\"github.organization\" calculated \"teams\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.organization\" calculated \"teams\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "teams")
 	}
@@ -1969,7 +1969,7 @@ func (s *mqlGithubOrganization) Repositories() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("repositories")
 		if !ok {
-			return nil, errors.New("\"github.organization\" calculated \"repositories\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.organization\" calculated \"repositories\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "repositories")
 	}
@@ -1992,7 +1992,7 @@ func (s *mqlGithubOrganization) Installations() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("installations")
 		if !ok {
-			return nil, errors.New("\"github.organization\" calculated \"installations\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.organization\" calculated \"installations\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "installations")
 	}
@@ -2015,7 +2015,7 @@ func (s *mqlGithubOrganization) Webhooks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("webhooks")
 		if !ok {
-			return nil, errors.New("\"github.organization\" calculated \"webhooks\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.organization\" calculated \"webhooks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "webhooks")
 	}
@@ -2038,7 +2038,7 @@ func (s *mqlGithubOrganization) Packages() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("packages")
 		if !ok {
-			return nil, errors.New("\"github.organization\" calculated \"packages\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.organization\" calculated \"packages\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "packages")
 	}
@@ -2894,7 +2894,7 @@ func (s *mqlGithubTeam) Members() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("members")
 		if !ok {
-			return nil, errors.New("\"github.team\" calculated \"members\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.team\" calculated \"members\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "members")
 	}
@@ -2917,7 +2917,7 @@ func (s *mqlGithubTeam) Repositories() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("repositories")
 		if !ok {
-			return nil, errors.New("\"github.team\" calculated \"repositories\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.team\" calculated \"repositories\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "repositories")
 	}
@@ -3511,7 +3511,7 @@ func (s *mqlGithubPackage) Repository() (GithubRepository, error) {
 		}
 		res, ok = s.Cache.Load("repository")
 		if !ok {
-			return nil, errors.New("\"github.package\" calculated \"repository\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.package\" calculated \"repository\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "repository")
 	}
@@ -4277,7 +4277,7 @@ func (s *mqlGithubRepository) OpenMergeRequests() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("openMergeRequests")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"openMergeRequests\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"openMergeRequests\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "openMergeRequests")
 	}
@@ -4300,7 +4300,7 @@ func (s *mqlGithubRepository) Branches() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("branches")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"branches\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"branches\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "branches")
 	}
@@ -4339,7 +4339,7 @@ func (s *mqlGithubRepository) Commits() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("commits")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"commits\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"commits\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "commits")
 	}
@@ -4362,7 +4362,7 @@ func (s *mqlGithubRepository) Contributors() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("contributors")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"contributors\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"contributors\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "contributors")
 	}
@@ -4385,7 +4385,7 @@ func (s *mqlGithubRepository) Collaborators() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("collaborators")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"collaborators\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"collaborators\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "collaborators")
 	}
@@ -4408,7 +4408,7 @@ func (s *mqlGithubRepository) Files() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("files")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"files\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"files\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "files")
 	}
@@ -4431,7 +4431,7 @@ func (s *mqlGithubRepository) Releases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("releases")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"releases\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"releases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "releases")
 	}
@@ -4470,7 +4470,7 @@ func (s *mqlGithubRepository) Webhooks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("webhooks")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"webhooks\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"webhooks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "webhooks")
 	}
@@ -4493,7 +4493,7 @@ func (s *mqlGithubRepository) Workflows() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("workflows")
 		if !ok {
-			return nil, errors.New("\"github.repository\" calculated \"workflows\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.repository\" calculated \"workflows\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "workflows")
 	}
@@ -4975,7 +4975,7 @@ func (s *mqlGithubFile) Files() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("files")
 		if !ok {
-			return nil, errors.New("\"github.file\" calculated \"files\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.file\" calculated \"files\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "files")
 	}
@@ -5030,7 +5030,7 @@ func (s *mqlGithubFile) Content() (string, error) {
 		}
 		res, ok = s.Cache.Load("content")
 		if !ok {
-			return "", errors.New("\"github.file\" calculated \"content\" but didnt find its value in cache.")
+			return "", errors.New("\"github.file\" calculated \"content\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "content")
 	}
@@ -5864,7 +5864,7 @@ func (s *mqlGithubWorkflow) File() (GithubFile, error) {
 		}
 		res, ok = s.Cache.Load("file")
 		if !ok {
-			return nil, errors.New("\"github.workflow\" calculated \"file\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.workflow\" calculated \"file\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "file")
 	}
@@ -5887,7 +5887,7 @@ func (s *mqlGithubWorkflow) Configuration() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"github.workflow\" calculated \"configuration\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.workflow\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -6188,7 +6188,7 @@ func (s *mqlGithubBranch) ProtectionRules() (GithubBranchprotection, error) {
 		}
 		res, ok = s.Cache.Load("protectionRules")
 		if !ok {
-			return nil, errors.New("\"github.branch\" calculated \"protectionRules\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.branch\" calculated \"protectionRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "protectionRules")
 	}
@@ -7390,7 +7390,7 @@ func (s *mqlGithubMergeRequest) Commits() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("commits")
 		if !ok {
-			return nil, errors.New("\"github.mergeRequest\" calculated \"commits\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.mergeRequest\" calculated \"commits\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "commits")
 	}
@@ -7413,7 +7413,7 @@ func (s *mqlGithubMergeRequest) Reviews() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("reviews")
 		if !ok {
-			return nil, errors.New("\"github.mergeRequest\" calculated \"reviews\" but didnt find its value in cache.")
+			return nil, errors.New("\"github.mergeRequest\" calculated \"reviews\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "reviews")
 	}

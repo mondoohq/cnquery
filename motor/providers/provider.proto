@@ -81,7 +81,7 @@ message Config {
   Kind kind = 24;
   string runtime = 25;
 
-  // configuration to uniquly identify an specific asset for multi-asset api connection
+  // configuration to uniquely identify an specific asset for multi-asset api connection
   string platform_id = 26;
 }
 

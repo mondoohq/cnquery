@@ -171,7 +171,7 @@ func (s *mqlMsgraphBeta) Organizations() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("organizations")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"organizations\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta\" calculated \"organizations\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "organizations")
 	}
@@ -194,7 +194,7 @@ func (s *mqlMsgraphBeta) Users() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("users")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"users\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta\" calculated \"users\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "users")
 	}
@@ -217,7 +217,7 @@ func (s *mqlMsgraphBeta) Domains() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("domains")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"domains\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta\" calculated \"domains\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "domains")
 	}
@@ -240,7 +240,7 @@ func (s *mqlMsgraphBeta) Applications() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("applications")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"applications\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta\" calculated \"applications\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "applications")
 	}
@@ -263,7 +263,7 @@ func (s *mqlMsgraphBeta) Settings() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("settings")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"settings\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta\" calculated \"settings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "settings")
 	}
@@ -1299,7 +1299,7 @@ func (s *mqlMsgraphBetaUser) Settings() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("settings")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.user\" calculated \"settings\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.user\" calculated \"settings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "settings")
 	}
@@ -1790,7 +1790,7 @@ func (s *mqlMsgraphBetaDomain) ServiceConfigurationRecords() ([]interface{}, err
 		}
 		res, ok = s.Cache.Load("serviceConfigurationRecords")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.domain\" calculated \"serviceConfigurationRecords\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.domain\" calculated \"serviceConfigurationRecords\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "serviceConfigurationRecords")
 	}
@@ -2569,7 +2569,7 @@ func (s *mqlMsgraphBetaSecurity) SecureScores() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("secureScores")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.security\" calculated \"secureScores\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.security\" calculated \"secureScores\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "secureScores")
 	}
@@ -2592,7 +2592,7 @@ func (s *mqlMsgraphBetaSecurity) LatestSecureScores() (MsgraphBetaSecuritySecuri
 		}
 		res, ok = s.Cache.Load("latestSecureScores")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.security\" calculated \"latestSecureScores\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.security\" calculated \"latestSecureScores\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "latestSecureScores")
 	}
@@ -3200,7 +3200,7 @@ func (s *mqlMsgraphBetaPolicies) AuthorizationPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("authorizationPolicy")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"authorizationPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.policies\" calculated \"authorizationPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "authorizationPolicy")
 	}
@@ -3223,7 +3223,7 @@ func (s *mqlMsgraphBetaPolicies) IdentitySecurityDefaultsEnforcementPolicy() (in
 		}
 		res, ok = s.Cache.Load("identitySecurityDefaultsEnforcementPolicy")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"identitySecurityDefaultsEnforcementPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.policies\" calculated \"identitySecurityDefaultsEnforcementPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "identitySecurityDefaultsEnforcementPolicy")
 	}
@@ -3246,7 +3246,7 @@ func (s *mqlMsgraphBetaPolicies) AdminConsentRequestPolicy() (interface{}, error
 		}
 		res, ok = s.Cache.Load("adminConsentRequestPolicy")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"adminConsentRequestPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.policies\" calculated \"adminConsentRequestPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "adminConsentRequestPolicy")
 	}
@@ -3269,7 +3269,7 @@ func (s *mqlMsgraphBetaPolicies) PermissionGrantPolicies() ([]interface{}, error
 		}
 		res, ok = s.Cache.Load("permissionGrantPolicies")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"permissionGrantPolicies\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.policies\" calculated \"permissionGrantPolicies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "permissionGrantPolicies")
 	}
@@ -3459,7 +3459,7 @@ func (s *mqlMsgraphBetaRolemanagement) RoleDefinitions() ([]interface{}, error) 
 		}
 		res, ok = s.Cache.Load("roleDefinitions")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.rolemanagement\" calculated \"roleDefinitions\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.rolemanagement\" calculated \"roleDefinitions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "roleDefinitions")
 	}
@@ -3824,7 +3824,7 @@ func (s *mqlMsgraphBetaRolemanagementRoledefinition) Assignments() ([]interface{
 		}
 		res, ok = s.Cache.Load("assignments")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.rolemanagement.roledefinition\" calculated \"assignments\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.rolemanagement.roledefinition\" calculated \"assignments\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "assignments")
 	}
@@ -4204,7 +4204,7 @@ func (s *mqlMsgraphBetaDevicemanagement) DeviceConfigurations() ([]interface{}, 
 		}
 		res, ok = s.Cache.Load("deviceConfigurations")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.devicemanagement\" calculated \"deviceConfigurations\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.devicemanagement\" calculated \"deviceConfigurations\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "deviceConfigurations")
 	}
@@ -4227,7 +4227,7 @@ func (s *mqlMsgraphBetaDevicemanagement) DeviceCompliancePolicies() ([]interface
 		}
 		res, ok = s.Cache.Load("deviceCompliancePolicies")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.devicemanagement\" calculated \"deviceCompliancePolicies\" but didnt find its value in cache.")
+			return nil, errors.New("\"msgraph.beta.devicemanagement\" calculated \"deviceCompliancePolicies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "deviceCompliancePolicies")
 	}

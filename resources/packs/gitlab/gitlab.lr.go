@@ -295,7 +295,7 @@ func (s *mqlGitlabGroup) Projects() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("projects")
 		if !ok {
-			return nil, errors.New("\"gitlab.group\" calculated \"projects\" but didnt find its value in cache.")
+			return nil, errors.New("\"gitlab.group\" calculated \"projects\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "projects")
 	}

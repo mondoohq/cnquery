@@ -1534,7 +1534,7 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) {
 
 func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 	// BUG (jaym): collectRefDatapoints prevents us from collecting datapoints.
-	// Collecting datapoints for blocks didnt work correctly until 6.7.0.
+	// Collecting datapoints for blocks didn't work correctly until 6.7.0.
 	// See https://gitlab.com/mondoolabs/mondoo/-/merge_requests/2639
 	// We can fix this after some time has passed. If we fix it too soon
 	// people will start having their queries fail if a falsy datapoint

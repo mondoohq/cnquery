@@ -57,7 +57,7 @@ func (t *Provider) GetFsInfo() (*fsInfo, error) {
 	}
 	var fsInfo *fsInfo
 	if t.opts[NoSetup] == "true" {
-		// this means we didnt attach the volume to the instance
+		// this means we didn't attach the volume to the instance
 		// so we need to make a best effort guess
 		return getUnnamedBlockEntry(blockEntries)
 	}

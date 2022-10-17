@@ -200,7 +200,7 @@ func (s *mqlAzuread) Users() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("users")
 		if !ok {
-			return nil, errors.New("\"azuread\" calculated \"users\" but didnt find its value in cache.")
+			return nil, errors.New("\"azuread\" calculated \"users\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "users")
 	}
@@ -223,7 +223,7 @@ func (s *mqlAzuread) Groups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("groups")
 		if !ok {
-			return nil, errors.New("\"azuread\" calculated \"groups\" but didnt find its value in cache.")
+			return nil, errors.New("\"azuread\" calculated \"groups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "groups")
 	}
@@ -246,7 +246,7 @@ func (s *mqlAzuread) Domains() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("domains")
 		if !ok {
-			return nil, errors.New("\"azuread\" calculated \"domains\" but didnt find its value in cache.")
+			return nil, errors.New("\"azuread\" calculated \"domains\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "domains")
 	}
@@ -269,7 +269,7 @@ func (s *mqlAzuread) Applications() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("applications")
 		if !ok {
-			return nil, errors.New("\"azuread\" calculated \"applications\" but didnt find its value in cache.")
+			return nil, errors.New("\"azuread\" calculated \"applications\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "applications")
 	}
@@ -292,7 +292,7 @@ func (s *mqlAzuread) ServicePrincipals() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servicePrincipals")
 		if !ok {
-			return nil, errors.New("\"azuread\" calculated \"servicePrincipals\" but didnt find its value in cache.")
+			return nil, errors.New("\"azuread\" calculated \"servicePrincipals\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servicePrincipals")
 	}
@@ -1144,7 +1144,7 @@ func (s *mqlAzureadGroup) Members() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("members")
 		if !ok {
-			return nil, errors.New("\"azuread.group\" calculated \"members\" but didnt find its value in cache.")
+			return nil, errors.New("\"azuread.group\" calculated \"members\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "members")
 	}
@@ -1791,7 +1791,7 @@ func (s *mqlAzurerm) Resources() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("resources")
 		if !ok {
-			return nil, errors.New("\"azurerm\" calculated \"resources\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm\" calculated \"resources\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "resources")
 	}
@@ -2425,7 +2425,7 @@ func (s *mqlAzurermCompute) Vms() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vms")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute\" calculated \"vms\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.compute\" calculated \"vms\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vms")
 	}
@@ -2448,7 +2448,7 @@ func (s *mqlAzurermCompute) Disks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("disks")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute\" calculated \"disks\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.compute\" calculated \"disks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "disks")
 	}
@@ -2791,7 +2791,7 @@ func (s *mqlAzurermComputeVm) Extensions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("extensions")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute.vm\" calculated \"extensions\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.compute.vm\" calculated \"extensions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "extensions")
 	}
@@ -2814,7 +2814,7 @@ func (s *mqlAzurermComputeVm) OsDisk() (AzurermComputeDisk, error) {
 		}
 		res, ok = s.Cache.Load("osDisk")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute.vm\" calculated \"osDisk\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.compute.vm\" calculated \"osDisk\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "osDisk")
 	}
@@ -2837,7 +2837,7 @@ func (s *mqlAzurermComputeVm) DataDisks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("dataDisks")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute.vm\" calculated \"dataDisks\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.compute.vm\" calculated \"dataDisks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "dataDisks")
 	}
@@ -3434,7 +3434,7 @@ func (s *mqlAzurermNetwork) Interfaces() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("interfaces")
 		if !ok {
-			return nil, errors.New("\"azurerm.network\" calculated \"interfaces\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.network\" calculated \"interfaces\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "interfaces")
 	}
@@ -3457,7 +3457,7 @@ func (s *mqlAzurermNetwork) SecurityGroups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("securityGroups")
 		if !ok {
-			return nil, errors.New("\"azurerm.network\" calculated \"securityGroups\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.network\" calculated \"securityGroups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "securityGroups")
 	}
@@ -3480,7 +3480,7 @@ func (s *mqlAzurermNetwork) Watchers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("watchers")
 		if !ok {
-			return nil, errors.New("\"azurerm.network\" calculated \"watchers\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.network\" calculated \"watchers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "watchers")
 	}
@@ -3849,7 +3849,7 @@ func (s *mqlAzurermNetworkInterface) Vm() (AzurermComputeVm, error) {
 		}
 		res, ok = s.Cache.Load("vm")
 		if !ok {
-			return nil, errors.New("\"azurerm.network.interface\" calculated \"vm\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.network.interface\" calculated \"vm\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vm")
 	}
@@ -4944,7 +4944,7 @@ func (s *mqlAzurermStorage) Accounts() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("accounts")
 		if !ok {
-			return nil, errors.New("\"azurerm.storage\" calculated \"accounts\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.storage\" calculated \"accounts\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accounts")
 	}
@@ -5346,7 +5346,7 @@ func (s *mqlAzurermStorageAccount) Containers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("containers")
 		if !ok {
-			return nil, errors.New("\"azurerm.storage.account\" calculated \"containers\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.storage.account\" calculated \"containers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "containers")
 	}
@@ -5758,7 +5758,7 @@ func (s *mqlAzurermWeb) Apps() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("apps")
 		if !ok {
-			return nil, errors.New("\"azurerm.web\" calculated \"apps\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web\" calculated \"apps\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "apps")
 	}
@@ -5781,7 +5781,7 @@ func (s *mqlAzurermWeb) AvailableRuntimes() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("availableRuntimes")
 		if !ok {
-			return nil, errors.New("\"azurerm.web\" calculated \"availableRuntimes\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web\" calculated \"availableRuntimes\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "availableRuntimes")
 	}
@@ -6207,7 +6207,7 @@ func (s *mqlAzurermWebAppsite) Configuration() (AzurermWebAppsiteconfig, error) 
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"configuration\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web.appsite\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -6230,7 +6230,7 @@ func (s *mqlAzurermWebAppsite) AuthenticationSettings() (AzurermWebAppsiteauthse
 		}
 		res, ok = s.Cache.Load("authenticationSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"authenticationSettings\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web.appsite\" calculated \"authenticationSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "authenticationSettings")
 	}
@@ -6253,7 +6253,7 @@ func (s *mqlAzurermWebAppsite) Metadata() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("metadata")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"metadata\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web.appsite\" calculated \"metadata\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "metadata")
 	}
@@ -6276,7 +6276,7 @@ func (s *mqlAzurermWebAppsite) ApplicationSettings() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("applicationSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"applicationSettings\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web.appsite\" calculated \"applicationSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "applicationSettings")
 	}
@@ -6299,7 +6299,7 @@ func (s *mqlAzurermWebAppsite) ConnectionSettings() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("connectionSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"connectionSettings\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web.appsite\" calculated \"connectionSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "connectionSettings")
 	}
@@ -6322,7 +6322,7 @@ func (s *mqlAzurermWebAppsite) Stack() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("stack")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"stack\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.web.appsite\" calculated \"stack\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "stack")
 	}
@@ -7046,7 +7046,7 @@ func (s *mqlAzurermSql) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql\" calculated \"servers\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -7409,7 +7409,7 @@ func (s *mqlAzurermSqlServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"databases\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -7432,7 +7432,7 @@ func (s *mqlAzurermSqlServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"firewallRules\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -7455,7 +7455,7 @@ func (s *mqlAzurermSqlServer) AzureAdAdministrators() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("azureAdAdministrators")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"azureAdAdministrators\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.server\" calculated \"azureAdAdministrators\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "azureAdAdministrators")
 	}
@@ -7478,7 +7478,7 @@ func (s *mqlAzurermSqlServer) ConnectionPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("connectionPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"connectionPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.server\" calculated \"connectionPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "connectionPolicy")
 	}
@@ -7501,7 +7501,7 @@ func (s *mqlAzurermSqlServer) AuditingPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("auditingPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"auditingPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.server\" calculated \"auditingPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "auditingPolicy")
 	}
@@ -7524,7 +7524,7 @@ func (s *mqlAzurermSqlServer) SecurityAlertPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("securityAlertPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"securityAlertPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.server\" calculated \"securityAlertPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "securityAlertPolicy")
 	}
@@ -7547,7 +7547,7 @@ func (s *mqlAzurermSqlServer) EncryptionProtector() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("encryptionProtector")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"encryptionProtector\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.server\" calculated \"encryptionProtector\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "encryptionProtector")
 	}
@@ -8928,7 +8928,7 @@ func (s *mqlAzurermSqlDatabase) TransparentDataEncryption() (interface{}, error)
 		}
 		res, ok = s.Cache.Load("transparentDataEncryption")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"transparentDataEncryption\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"transparentDataEncryption\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "transparentDataEncryption")
 	}
@@ -8951,7 +8951,7 @@ func (s *mqlAzurermSqlDatabase) Advisor() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("advisor")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"advisor\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"advisor\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "advisor")
 	}
@@ -8974,7 +8974,7 @@ func (s *mqlAzurermSqlDatabase) ThreadDetectionPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("threadDetectionPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"threadDetectionPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"threadDetectionPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "threadDetectionPolicy")
 	}
@@ -8997,7 +8997,7 @@ func (s *mqlAzurermSqlDatabase) ConnectionPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("connectionPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"connectionPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"connectionPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "connectionPolicy")
 	}
@@ -9020,7 +9020,7 @@ func (s *mqlAzurermSqlDatabase) AuditingPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("auditingPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"auditingPolicy\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"auditingPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "auditingPolicy")
 	}
@@ -9043,7 +9043,7 @@ func (s *mqlAzurermSqlDatabase) Usage() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("usage")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"usage\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"usage\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "usage")
 	}
@@ -9654,7 +9654,7 @@ func (s *mqlAzurermPostgresql) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql\" calculated \"servers\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.postgresql\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -9981,7 +9981,7 @@ func (s *mqlAzurermPostgresqlServer) Configuration() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"configuration\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -10004,7 +10004,7 @@ func (s *mqlAzurermPostgresqlServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"databases\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -10027,7 +10027,7 @@ func (s *mqlAzurermPostgresqlServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"firewallRules\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -10456,7 +10456,7 @@ func (s *mqlAzurermMysql) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql\" calculated \"servers\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mysql\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -10783,7 +10783,7 @@ func (s *mqlAzurermMysqlServer) Configuration() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql.server\" calculated \"configuration\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mysql.server\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -10806,7 +10806,7 @@ func (s *mqlAzurermMysqlServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql.server\" calculated \"databases\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mysql.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -10829,7 +10829,7 @@ func (s *mqlAzurermMysqlServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql.server\" calculated \"firewallRules\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mysql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -11258,7 +11258,7 @@ func (s *mqlAzurermMariadb) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb\" calculated \"servers\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mariadb\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -11585,7 +11585,7 @@ func (s *mqlAzurermMariadbServer) Configuration() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"configuration\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -11608,7 +11608,7 @@ func (s *mqlAzurermMariadbServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"databases\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -11631,7 +11631,7 @@ func (s *mqlAzurermMariadbServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"firewallRules\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -12666,7 +12666,7 @@ func (s *mqlAzurermKeyvault) Vaults() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vaults")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault\" calculated \"vaults\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault\" calculated \"vaults\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vaults")
 	}
@@ -12992,7 +12992,7 @@ func (s *mqlAzurermKeyvaultVault) VaultUri() (string, error) {
 		}
 		res, ok = s.Cache.Load("vaultUri")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.vault\" calculated \"vaultUri\" but didnt find its value in cache.")
+			return "", errors.New("\"azurerm.keyvault.vault\" calculated \"vaultUri\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vaultUri")
 	}
@@ -13015,7 +13015,7 @@ func (s *mqlAzurermKeyvaultVault) Properties() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("properties")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"properties\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"properties\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "properties")
 	}
@@ -13038,7 +13038,7 @@ func (s *mqlAzurermKeyvaultVault) Keys() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("keys")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"keys\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"keys\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keys")
 	}
@@ -13061,7 +13061,7 @@ func (s *mqlAzurermKeyvaultVault) Certificates() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("certificates")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"certificates\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"certificates\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "certificates")
 	}
@@ -13084,7 +13084,7 @@ func (s *mqlAzurermKeyvaultVault) Secrets() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("secrets")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"secrets\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"secrets\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "secrets")
 	}
@@ -13107,7 +13107,7 @@ func (s *mqlAzurermKeyvaultVault) DiagnosticSettings() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("diagnosticSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"diagnosticSettings\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"diagnosticSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "diagnosticSettings")
 	}
@@ -13608,7 +13608,7 @@ func (s *mqlAzurermKeyvaultKey) KeyName() (string, error) {
 		}
 		res, ok = s.Cache.Load("keyName")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.key\" calculated \"keyName\" but didnt find its value in cache.")
+			return "", errors.New("\"azurerm.keyvault.key\" calculated \"keyName\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keyName")
 	}
@@ -13631,7 +13631,7 @@ func (s *mqlAzurermKeyvaultKey) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.key\" calculated \"version\" but didnt find its value in cache.")
+			return "", errors.New("\"azurerm.keyvault.key\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -13654,7 +13654,7 @@ func (s *mqlAzurermKeyvaultKey) Versions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versions")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.key\" calculated \"versions\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.key\" calculated \"versions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versions")
 	}
@@ -14115,7 +14115,7 @@ func (s *mqlAzurermKeyvaultCertificate) CertName() (string, error) {
 		}
 		res, ok = s.Cache.Load("certName")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.certificate\" calculated \"certName\" but didnt find its value in cache.")
+			return "", errors.New("\"azurerm.keyvault.certificate\" calculated \"certName\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "certName")
 	}
@@ -14138,7 +14138,7 @@ func (s *mqlAzurermKeyvaultCertificate) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.certificate\" calculated \"version\" but didnt find its value in cache.")
+			return "", errors.New("\"azurerm.keyvault.certificate\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -14161,7 +14161,7 @@ func (s *mqlAzurermKeyvaultCertificate) Versions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versions")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.certificate\" calculated \"versions\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.certificate\" calculated \"versions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versions")
 	}
@@ -14622,7 +14622,7 @@ func (s *mqlAzurermKeyvaultSecret) SecretName() (string, error) {
 		}
 		res, ok = s.Cache.Load("secretName")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.secret\" calculated \"secretName\" but didnt find its value in cache.")
+			return "", errors.New("\"azurerm.keyvault.secret\" calculated \"secretName\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "secretName")
 	}
@@ -14645,7 +14645,7 @@ func (s *mqlAzurermKeyvaultSecret) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.secret\" calculated \"version\" but didnt find its value in cache.")
+			return "", errors.New("\"azurerm.keyvault.secret\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -14668,7 +14668,7 @@ func (s *mqlAzurermKeyvaultSecret) Versions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versions")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.secret\" calculated \"versions\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.keyvault.secret\" calculated \"versions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versions")
 	}
@@ -14860,7 +14860,7 @@ func (s *mqlAzurermMonitor) LogProfiles() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("logProfiles")
 		if !ok {
-			return nil, errors.New("\"azurerm.monitor\" calculated \"logProfiles\" but didnt find its value in cache.")
+			return nil, errors.New("\"azurerm.monitor\" calculated \"logProfiles\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "logProfiles")
 	}

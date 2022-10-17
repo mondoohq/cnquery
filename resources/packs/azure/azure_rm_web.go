@@ -124,8 +124,8 @@ func (a *mqlAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	// - behaves completely different for linux and windows
 	// - even for windows, its output is different for different runtimes
 	// - versions are unreliable, on linux it includes only maintained runtimes 🎉 on windows it behaves different for each runtime
-	// - some entries have minor versions, some dont, on linux all major version include at least one minor version
-	// - some devs at microsoft seem to be unsure if node.js is supported for windows, this api show all version even unmainted ones, the ui does not support nodejs for windows at all
+	// - some entries have minor versions, some don't, on linux all major version include at least one minor version
+	// - some devs at microsoft seem to be unsure if node.js is supported for windows, this api show all version even unmaintained ones, the ui does not support nodejs for windows at all
 	stacks, err := client.GetAvailableStacks(ctx, "windows")
 	if err != nil {
 		return nil, err
@@ -484,7 +484,7 @@ func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	// read confguration into go struct
+	// read configuration into go struct
 	configProperties, err := config.Properties()
 	if err != nil {
 		return nil, err

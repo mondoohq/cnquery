@@ -242,7 +242,7 @@ type Config struct {
 	// additional platform information, passed-through
 	Kind    Kind   `protobuf:"varint,24,opt,name=kind,proto3,enum=cnquery.motor.providers.v1.Kind" json:"kind,omitempty"`
 	Runtime string `protobuf:"bytes,25,opt,name=runtime,proto3" json:"runtime,omitempty"`
-	// configuration to uniquly identify an specific asset for multi-asset api connection
+	// configuration to uniquely identify an specific asset for multi-asset api connection
 	PlatformId string `protobuf:"bytes,26,opt,name=platform_id,json=platformId,proto3" json:"platform_id,omitempty"`
 }
 

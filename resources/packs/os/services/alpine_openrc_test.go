@@ -54,7 +54,7 @@ func TestManagerAlpineContainer(t *testing.T) {
 
 	assert.Contains(t, serviceList, &Service{
 		Name:      "agetty",
-		Running:   true, // here this service is acutally running
+		Running:   true, // here this service is actually running
 		Enabled:   true,
 		Installed: true,
 		Type:      "openrc",

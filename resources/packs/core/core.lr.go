@@ -214,7 +214,7 @@ func (s *mqlMondoo) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"mondoo\" calculated \"version\" but didnt find its value in cache.")
+			return "", errors.New("\"mondoo\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -237,7 +237,7 @@ func (s *mqlMondoo) Build() (string, error) {
 		}
 		res, ok = s.Cache.Load("build")
 		if !ok {
-			return "", errors.New("\"mondoo\" calculated \"build\" but didnt find its value in cache.")
+			return "", errors.New("\"mondoo\" calculated \"build\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "build")
 	}
@@ -260,7 +260,7 @@ func (s *mqlMondoo) Resources() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("resources")
 		if !ok {
-			return nil, errors.New("\"mondoo\" calculated \"resources\" but didnt find its value in cache.")
+			return nil, errors.New("\"mondoo\" calculated \"resources\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "resources")
 	}
@@ -283,7 +283,7 @@ func (s *mqlMondoo) JobEnvironment() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("jobEnvironment")
 		if !ok {
-			return nil, errors.New("\"mondoo\" calculated \"jobEnvironment\" but didnt find its value in cache.")
+			return nil, errors.New("\"mondoo\" calculated \"jobEnvironment\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "jobEnvironment")
 	}
@@ -306,7 +306,7 @@ func (s *mqlMondoo) Capabilities() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("capabilities")
 		if !ok {
-			return nil, errors.New("\"mondoo\" calculated \"capabilities\" but didnt find its value in cache.")
+			return nil, errors.New("\"mondoo\" calculated \"capabilities\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "capabilities")
 	}
@@ -329,7 +329,7 @@ func (s *mqlMondoo) Nulllist() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("nulllist")
 		if !ok {
-			return nil, errors.New("\"mondoo\" calculated \"nulllist\" but didnt find its value in cache.")
+			return nil, errors.New("\"mondoo\" calculated \"nulllist\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "nulllist")
 	}
@@ -606,7 +606,7 @@ func (s *mqlMondooEol) Date() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("date")
 		if !ok {
-			return nil, errors.New("\"mondoo.eol\" calculated \"date\" but didnt find its value in cache.")
+			return nil, errors.New("\"mondoo.eol\" calculated \"date\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "date")
 	}
@@ -752,7 +752,7 @@ func (s *mqlMondooAsset) PlatformIDs() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("platformIDs")
 		if !ok {
-			return nil, errors.New("\"mondoo.asset\" calculated \"platformIDs\" but didnt find its value in cache.")
+			return nil, errors.New("\"mondoo.asset\" calculated \"platformIDs\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "platformIDs")
 	}
@@ -1059,7 +1059,7 @@ func (s *mqlAsset) Ids() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("ids")
 		if !ok {
-			return nil, errors.New("\"asset\" calculated \"ids\" but didnt find its value in cache.")
+			return nil, errors.New("\"asset\" calculated \"ids\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ids")
 	}
@@ -1242,7 +1242,7 @@ func (s *mqlAsset) VulnerabilityReport() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vulnerabilityReport")
 		if !ok {
-			return nil, errors.New("\"asset\" calculated \"vulnerabilityReport\" but didnt find its value in cache.")
+			return nil, errors.New("\"asset\" calculated \"vulnerabilityReport\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vulnerabilityReport")
 	}
@@ -1585,7 +1585,7 @@ func (s *mqlFile) Exists() (bool, error) {
 		}
 		res, ok = s.Cache.Load("exists")
 		if !ok {
-			return false, errors.New("\"file\" calculated \"exists\" but didnt find its value in cache.")
+			return false, errors.New("\"file\" calculated \"exists\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "exists")
 	}
@@ -1608,7 +1608,7 @@ func (s *mqlFile) Permissions() (FilePermissions, error) {
 		}
 		res, ok = s.Cache.Load("permissions")
 		if !ok {
-			return nil, errors.New("\"file\" calculated \"permissions\" but didnt find its value in cache.")
+			return nil, errors.New("\"file\" calculated \"permissions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "permissions")
 	}
@@ -1631,7 +1631,7 @@ func (s *mqlFile) Size() (int64, error) {
 		}
 		res, ok = s.Cache.Load("size")
 		if !ok {
-			return 0, errors.New("\"file\" calculated \"size\" but didnt find its value in cache.")
+			return 0, errors.New("\"file\" calculated \"size\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "size")
 	}
@@ -1654,7 +1654,7 @@ func (s *mqlFile) User() (User, error) {
 		}
 		res, ok = s.Cache.Load("user")
 		if !ok {
-			return nil, errors.New("\"file\" calculated \"user\" but didnt find its value in cache.")
+			return nil, errors.New("\"file\" calculated \"user\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "user")
 	}
@@ -1677,7 +1677,7 @@ func (s *mqlFile) Group() (Group, error) {
 		}
 		res, ok = s.Cache.Load("group")
 		if !ok {
-			return nil, errors.New("\"file\" calculated \"group\" but didnt find its value in cache.")
+			return nil, errors.New("\"file\" calculated \"group\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "group")
 	}
@@ -1700,7 +1700,7 @@ func (s *mqlFile) Empty() (bool, error) {
 		}
 		res, ok = s.Cache.Load("empty")
 		if !ok {
-			return false, errors.New("\"file\" calculated \"empty\" but didnt find its value in cache.")
+			return false, errors.New("\"file\" calculated \"empty\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "empty")
 	}
@@ -2790,7 +2790,7 @@ func (s *mqlUser) Authorizedkeys() (Authorizedkeys, error) {
 		}
 		res, ok = s.Cache.Load("authorizedkeys")
 		if !ok {
-			return nil, errors.New("\"user\" calculated \"authorizedkeys\" but didnt find its value in cache.")
+			return nil, errors.New("\"user\" calculated \"authorizedkeys\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "authorizedkeys")
 	}
@@ -2813,7 +2813,7 @@ func (s *mqlUser) Sshkeys() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("sshkeys")
 		if !ok {
-			return nil, errors.New("\"user\" calculated \"sshkeys\" but didnt find its value in cache.")
+			return nil, errors.New("\"user\" calculated \"sshkeys\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "sshkeys")
 	}
@@ -2836,7 +2836,7 @@ func (s *mqlUser) Group() (Group, error) {
 		}
 		res, ok = s.Cache.Load("group")
 		if !ok {
-			return nil, errors.New("\"user\" calculated \"group\" but didnt find its value in cache.")
+			return nil, errors.New("\"user\" calculated \"group\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "group")
 	}
@@ -3024,7 +3024,7 @@ func (s *mqlUsers) List() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("list")
 		if !ok {
-			return nil, errors.New("\"users\" calculated \"list\" but didnt find its value in cache.")
+			return nil, errors.New("\"users\" calculated \"list\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "list")
 	}
@@ -3232,7 +3232,7 @@ func (s *mqlAuthorizedkeys) File() (File, error) {
 		}
 		res, ok = s.Cache.Load("file")
 		if !ok {
-			return nil, errors.New("\"authorizedkeys\" calculated \"file\" but didnt find its value in cache.")
+			return nil, errors.New("\"authorizedkeys\" calculated \"file\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "file")
 	}
@@ -3562,7 +3562,7 @@ func (s *mqlAuthorizedkeysEntry) Label() (string, error) {
 		}
 		res, ok = s.Cache.Load("label")
 		if !ok {
-			return "", errors.New("\"authorizedkeys.entry\" calculated \"label\" but didnt find its value in cache.")
+			return "", errors.New("\"authorizedkeys.entry\" calculated \"label\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "label")
 	}
@@ -3585,7 +3585,7 @@ func (s *mqlAuthorizedkeysEntry) Options() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("options")
 		if !ok {
-			return nil, errors.New("\"authorizedkeys.entry\" calculated \"options\" but didnt find its value in cache.")
+			return nil, errors.New("\"authorizedkeys.entry\" calculated \"options\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "options")
 	}
@@ -3859,7 +3859,7 @@ func (s *mqlGroup) Members() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("members")
 		if !ok {
-			return nil, errors.New("\"group\" calculated \"members\" but didnt find its value in cache.")
+			return nil, errors.New("\"group\" calculated \"members\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "members")
 	}
@@ -4007,7 +4007,7 @@ func (s *mqlGroups) List() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("list")
 		if !ok {
-			return nil, errors.New("\"groups\" calculated \"list\" but didnt find its value in cache.")
+			return nil, errors.New("\"groups\" calculated \"list\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "list")
 	}
@@ -4297,7 +4297,7 @@ func (s *mqlTime) Now() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("now")
 		if !ok {
-			return nil, errors.New("\"time\" calculated \"now\" but didnt find its value in cache.")
+			return nil, errors.New("\"time\" calculated \"now\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "now")
 	}
@@ -4320,7 +4320,7 @@ func (s *mqlTime) Second() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("second")
 		if !ok {
-			return nil, errors.New("\"time\" calculated \"second\" but didnt find its value in cache.")
+			return nil, errors.New("\"time\" calculated \"second\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "second")
 	}
@@ -4343,7 +4343,7 @@ func (s *mqlTime) Minute() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("minute")
 		if !ok {
-			return nil, errors.New("\"time\" calculated \"minute\" but didnt find its value in cache.")
+			return nil, errors.New("\"time\" calculated \"minute\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "minute")
 	}
@@ -4366,7 +4366,7 @@ func (s *mqlTime) Hour() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("hour")
 		if !ok {
-			return nil, errors.New("\"time\" calculated \"hour\" but didnt find its value in cache.")
+			return nil, errors.New("\"time\" calculated \"hour\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "hour")
 	}
@@ -4389,7 +4389,7 @@ func (s *mqlTime) Day() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("day")
 		if !ok {
-			return nil, errors.New("\"time\" calculated \"day\" but didnt find its value in cache.")
+			return nil, errors.New("\"time\" calculated \"day\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "day")
 	}
@@ -4412,7 +4412,7 @@ func (s *mqlTime) Today() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("today")
 		if !ok {
-			return nil, errors.New("\"time\" calculated \"today\" but didnt find its value in cache.")
+			return nil, errors.New("\"time\" calculated \"today\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "today")
 	}
@@ -4435,7 +4435,7 @@ func (s *mqlTime) Tomorrow() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("tomorrow")
 		if !ok {
-			return nil, errors.New("\"time\" calculated \"tomorrow\" but didnt find its value in cache.")
+			return nil, errors.New("\"time\" calculated \"tomorrow\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "tomorrow")
 	}
@@ -4745,7 +4745,7 @@ func (s *mqlRegex) Ipv4() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("ipv4")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"ipv4\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"ipv4\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ipv4")
 	}
@@ -4768,7 +4768,7 @@ func (s *mqlRegex) Ipv6() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("ipv6")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"ipv6\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"ipv6\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ipv6")
 	}
@@ -4791,7 +4791,7 @@ func (s *mqlRegex) Url() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("url")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"url\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"url\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "url")
 	}
@@ -4814,7 +4814,7 @@ func (s *mqlRegex) Email() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("email")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"email\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"email\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "email")
 	}
@@ -4837,7 +4837,7 @@ func (s *mqlRegex) Mac() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("mac")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"mac\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"mac\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "mac")
 	}
@@ -4860,7 +4860,7 @@ func (s *mqlRegex) Uuid() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("uuid")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"uuid\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"uuid\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "uuid")
 	}
@@ -4883,7 +4883,7 @@ func (s *mqlRegex) Emoji() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("emoji")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"emoji\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"emoji\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "emoji")
 	}
@@ -4906,7 +4906,7 @@ func (s *mqlRegex) Semver() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("semver")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"semver\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"semver\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "semver")
 	}
@@ -4929,7 +4929,7 @@ func (s *mqlRegex) CreditCard() (Regex, error) {
 		}
 		res, ok = s.Cache.Load("creditCard")
 		if !ok {
-			return nil, errors.New("\"regex\" calculated \"creditCard\" but didnt find its value in cache.")
+			return nil, errors.New("\"regex\" calculated \"creditCard\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "creditCard")
 	}
@@ -5260,7 +5260,7 @@ func (s *mqlParseIni) Delimiter() (string, error) {
 		}
 		res, ok = s.Cache.Load("delimiter")
 		if !ok {
-			return "", errors.New("\"parse.ini\" calculated \"delimiter\" but didnt find its value in cache.")
+			return "", errors.New("\"parse.ini\" calculated \"delimiter\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "delimiter")
 	}
@@ -5283,7 +5283,7 @@ func (s *mqlParseIni) File() (File, error) {
 		}
 		res, ok = s.Cache.Load("file")
 		if !ok {
-			return nil, errors.New("\"parse.ini\" calculated \"file\" but didnt find its value in cache.")
+			return nil, errors.New("\"parse.ini\" calculated \"file\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "file")
 	}
@@ -5595,7 +5595,7 @@ func (s *mqlParseJson) File() (File, error) {
 		}
 		res, ok = s.Cache.Load("file")
 		if !ok {
-			return nil, errors.New("\"parse.json\" calculated \"file\" but didnt find its value in cache.")
+			return nil, errors.New("\"parse.json\" calculated \"file\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "file")
 	}
@@ -5846,7 +5846,7 @@ func (s *mqlParsePlist) File() (File, error) {
 		}
 		res, ok = s.Cache.Load("file")
 		if !ok {
-			return nil, errors.New("\"parse.plist\" calculated \"file\" but didnt find its value in cache.")
+			return nil, errors.New("\"parse.plist\" calculated \"file\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "file")
 	}
@@ -6097,7 +6097,7 @@ func (s *mqlParseYaml) File() (File, error) {
 		}
 		res, ok = s.Cache.Load("file")
 		if !ok {
-			return nil, errors.New("\"parse.yaml\" calculated \"file\" but didnt find its value in cache.")
+			return nil, errors.New("\"parse.yaml\" calculated \"file\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "file")
 	}
@@ -6641,7 +6641,7 @@ func (s *mqlPlatform) VulnerabilityReport() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vulnerabilityReport")
 		if !ok {
-			return nil, errors.New("\"platform\" calculated \"vulnerabilityReport\" but didnt find its value in cache.")
+			return nil, errors.New("\"platform\" calculated \"vulnerabilityReport\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vulnerabilityReport")
 	}
@@ -6823,7 +6823,7 @@ func (s *mqlPlatformVirtualization) IsContainer() (bool, error) {
 		}
 		res, ok = s.Cache.Load("isContainer")
 		if !ok {
-			return false, errors.New("\"platform.virtualization\" calculated \"isContainer\" but didnt find its value in cache.")
+			return false, errors.New("\"platform.virtualization\" calculated \"isContainer\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "isContainer")
 	}
@@ -7175,7 +7175,7 @@ func (s *mqlPlatformAdvisories) Cvss() (AuditCvss, error) {
 		}
 		res, ok = s.Cache.Load("cvss")
 		if !ok {
-			return nil, errors.New("\"platform.advisories\" calculated \"cvss\" but didnt find its value in cache.")
+			return nil, errors.New("\"platform.advisories\" calculated \"cvss\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "cvss")
 	}
@@ -7198,7 +7198,7 @@ func (s *mqlPlatformAdvisories) Stats() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("stats")
 		if !ok {
-			return nil, errors.New("\"platform.advisories\" calculated \"stats\" but didnt find its value in cache.")
+			return nil, errors.New("\"platform.advisories\" calculated \"stats\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "stats")
 	}
@@ -7221,7 +7221,7 @@ func (s *mqlPlatformAdvisories) List() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("list")
 		if !ok {
-			return nil, errors.New("\"platform.advisories\" calculated \"list\" but didnt find its value in cache.")
+			return nil, errors.New("\"platform.advisories\" calculated \"list\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "list")
 	}
@@ -7413,7 +7413,7 @@ func (s *mqlPlatformCves) Cvss() (AuditCvss, error) {
 		}
 		res, ok = s.Cache.Load("cvss")
 		if !ok {
-			return nil, errors.New("\"platform.cves\" calculated \"cvss\" but didnt find its value in cache.")
+			return nil, errors.New("\"platform.cves\" calculated \"cvss\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "cvss")
 	}
@@ -7436,7 +7436,7 @@ func (s *mqlPlatformCves) Stats() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("stats")
 		if !ok {
-			return nil, errors.New("\"platform.cves\" calculated \"stats\" but didnt find its value in cache.")
+			return nil, errors.New("\"platform.cves\" calculated \"stats\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "stats")
 	}
@@ -7459,7 +7459,7 @@ func (s *mqlPlatformCves) List() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("list")
 		if !ok {
-			return nil, errors.New("\"platform.cves\" calculated \"list\" but didnt find its value in cache.")
+			return nil, errors.New("\"platform.cves\" calculated \"list\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "list")
 	}
@@ -8485,7 +8485,7 @@ func (s *mqlProcess) State() (string, error) {
 		}
 		res, ok = s.Cache.Load("state")
 		if !ok {
-			return "", errors.New("\"process\" calculated \"state\" but didnt find its value in cache.")
+			return "", errors.New("\"process\" calculated \"state\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "state")
 	}
@@ -8508,7 +8508,7 @@ func (s *mqlProcess) Executable() (string, error) {
 		}
 		res, ok = s.Cache.Load("executable")
 		if !ok {
-			return "", errors.New("\"process\" calculated \"executable\" but didnt find its value in cache.")
+			return "", errors.New("\"process\" calculated \"executable\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "executable")
 	}
@@ -8531,7 +8531,7 @@ func (s *mqlProcess) Command() (string, error) {
 		}
 		res, ok = s.Cache.Load("command")
 		if !ok {
-			return "", errors.New("\"process\" calculated \"command\" but didnt find its value in cache.")
+			return "", errors.New("\"process\" calculated \"command\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "command")
 	}
@@ -8554,7 +8554,7 @@ func (s *mqlProcess) Flags() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("flags")
 		if !ok {
-			return nil, errors.New("\"process\" calculated \"flags\" but didnt find its value in cache.")
+			return nil, errors.New("\"process\" calculated \"flags\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "flags")
 	}
@@ -8746,7 +8746,7 @@ func (s *mqlProcesses) List() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("list")
 		if !ok {
-			return nil, errors.New("\"processes\" calculated \"list\" but didnt find its value in cache.")
+			return nil, errors.New("\"processes\" calculated \"list\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "list")
 	}
@@ -9230,7 +9230,7 @@ func (s *mqlPorts) Listening() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("listening")
 		if !ok {
-			return nil, errors.New("\"ports\" calculated \"listening\" but didnt find its value in cache.")
+			return nil, errors.New("\"ports\" calculated \"listening\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "listening")
 	}
@@ -9253,7 +9253,7 @@ func (s *mqlPorts) List() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("list")
 		if !ok {
-			return nil, errors.New("\"ports\" calculated \"list\" but didnt find its value in cache.")
+			return nil, errors.New("\"ports\" calculated \"list\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "list")
 	}
@@ -10395,7 +10395,7 @@ func (s *mqlDns) Params() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("params")
 		if !ok {
-			return nil, errors.New("\"dns\" calculated \"params\" but didnt find its value in cache.")
+			return nil, errors.New("\"dns\" calculated \"params\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "params")
 	}
@@ -11327,7 +11327,7 @@ func (s *mqlDnsDkimRecord) Valid() (bool, error) {
 		}
 		res, ok = s.Cache.Load("valid")
 		if !ok {
-			return false, errors.New("\"dns.dkimRecord\" calculated \"valid\" but didnt find its value in cache.")
+			return false, errors.New("\"dns.dkimRecord\" calculated \"valid\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "valid")
 	}
@@ -11542,7 +11542,7 @@ func (s *mqlYamlPath) Result() (string, error) {
 		}
 		res, ok = s.Cache.Load("result")
 		if !ok {
-			return "", errors.New("\"yaml.path\" calculated \"result\" but didnt find its value in cache.")
+			return "", errors.New("\"yaml.path\" calculated \"result\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "result")
 	}
@@ -11754,7 +11754,7 @@ func (s *mqlParseCertificates) File() (File, error) {
 		}
 		res, ok = s.Cache.Load("file")
 		if !ok {
-			return nil, errors.New("\"parse.certificates\" calculated \"file\" but didnt find its value in cache.")
+			return nil, errors.New("\"parse.certificates\" calculated \"file\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "file")
 	}
@@ -12871,7 +12871,7 @@ func (s *mqlCertificate) Fingerprints() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("fingerprints")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"fingerprints\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"fingerprints\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "fingerprints")
 	}
@@ -12894,7 +12894,7 @@ func (s *mqlCertificate) Serial() (string, error) {
 		}
 		res, ok = s.Cache.Load("serial")
 		if !ok {
-			return "", errors.New("\"certificate\" calculated \"serial\" but didnt find its value in cache.")
+			return "", errors.New("\"certificate\" calculated \"serial\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "serial")
 	}
@@ -12917,7 +12917,7 @@ func (s *mqlCertificate) SubjectKeyID() (string, error) {
 		}
 		res, ok = s.Cache.Load("subjectKeyID")
 		if !ok {
-			return "", errors.New("\"certificate\" calculated \"subjectKeyID\" but didnt find its value in cache.")
+			return "", errors.New("\"certificate\" calculated \"subjectKeyID\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "subjectKeyID")
 	}
@@ -12940,7 +12940,7 @@ func (s *mqlCertificate) AuthorityKeyID() (string, error) {
 		}
 		res, ok = s.Cache.Load("authorityKeyID")
 		if !ok {
-			return "", errors.New("\"certificate\" calculated \"authorityKeyID\" but didnt find its value in cache.")
+			return "", errors.New("\"certificate\" calculated \"authorityKeyID\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "authorityKeyID")
 	}
@@ -12963,7 +12963,7 @@ func (s *mqlCertificate) Subject() (PkixName, error) {
 		}
 		res, ok = s.Cache.Load("subject")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"subject\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"subject\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "subject")
 	}
@@ -12986,7 +12986,7 @@ func (s *mqlCertificate) Issuer() (PkixName, error) {
 		}
 		res, ok = s.Cache.Load("issuer")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"issuer\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"issuer\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "issuer")
 	}
@@ -13009,7 +13009,7 @@ func (s *mqlCertificate) Version() (int64, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return 0, errors.New("\"certificate\" calculated \"version\" but didnt find its value in cache.")
+			return 0, errors.New("\"certificate\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -13032,7 +13032,7 @@ func (s *mqlCertificate) NotBefore() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("notBefore")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"notBefore\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"notBefore\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "notBefore")
 	}
@@ -13055,7 +13055,7 @@ func (s *mqlCertificate) NotAfter() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("notAfter")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"notAfter\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"notAfter\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "notAfter")
 	}
@@ -13078,7 +13078,7 @@ func (s *mqlCertificate) ExpiresIn() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("expiresIn")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"expiresIn\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"expiresIn\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "expiresIn")
 	}
@@ -13101,7 +13101,7 @@ func (s *mqlCertificate) Signature() (string, error) {
 		}
 		res, ok = s.Cache.Load("signature")
 		if !ok {
-			return "", errors.New("\"certificate\" calculated \"signature\" but didnt find its value in cache.")
+			return "", errors.New("\"certificate\" calculated \"signature\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "signature")
 	}
@@ -13124,7 +13124,7 @@ func (s *mqlCertificate) SigningAlgorithm() (string, error) {
 		}
 		res, ok = s.Cache.Load("signingAlgorithm")
 		if !ok {
-			return "", errors.New("\"certificate\" calculated \"signingAlgorithm\" but didnt find its value in cache.")
+			return "", errors.New("\"certificate\" calculated \"signingAlgorithm\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "signingAlgorithm")
 	}
@@ -13147,7 +13147,7 @@ func (s *mqlCertificate) IsCA() (bool, error) {
 		}
 		res, ok = s.Cache.Load("isCA")
 		if !ok {
-			return false, errors.New("\"certificate\" calculated \"isCA\" but didnt find its value in cache.")
+			return false, errors.New("\"certificate\" calculated \"isCA\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "isCA")
 	}
@@ -13170,7 +13170,7 @@ func (s *mqlCertificate) KeyUsage() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("keyUsage")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"keyUsage\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"keyUsage\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keyUsage")
 	}
@@ -13193,7 +13193,7 @@ func (s *mqlCertificate) ExtendedKeyUsage() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("extendedKeyUsage")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"extendedKeyUsage\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"extendedKeyUsage\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "extendedKeyUsage")
 	}
@@ -13216,7 +13216,7 @@ func (s *mqlCertificate) Extensions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("extensions")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"extensions\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"extensions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "extensions")
 	}
@@ -13239,7 +13239,7 @@ func (s *mqlCertificate) PolicyIdentifier() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("policyIdentifier")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"policyIdentifier\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"policyIdentifier\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "policyIdentifier")
 	}
@@ -13262,7 +13262,7 @@ func (s *mqlCertificate) CrlDistributionPoints() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("crlDistributionPoints")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"crlDistributionPoints\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"crlDistributionPoints\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "crlDistributionPoints")
 	}
@@ -13285,7 +13285,7 @@ func (s *mqlCertificate) OcspServer() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("ocspServer")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"ocspServer\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"ocspServer\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ocspServer")
 	}
@@ -13308,7 +13308,7 @@ func (s *mqlCertificate) IssuingCertificateUrl() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("issuingCertificateUrl")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"issuingCertificateUrl\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"issuingCertificateUrl\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "issuingCertificateUrl")
 	}
@@ -13331,7 +13331,7 @@ func (s *mqlCertificate) IsRevoked() (bool, error) {
 		}
 		res, ok = s.Cache.Load("isRevoked")
 		if !ok {
-			return false, errors.New("\"certificate\" calculated \"isRevoked\" but didnt find its value in cache.")
+			return false, errors.New("\"certificate\" calculated \"isRevoked\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "isRevoked")
 	}
@@ -13354,7 +13354,7 @@ func (s *mqlCertificate) RevokedAt() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("revokedAt")
 		if !ok {
-			return nil, errors.New("\"certificate\" calculated \"revokedAt\" but didnt find its value in cache.")
+			return nil, errors.New("\"certificate\" calculated \"revokedAt\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "revokedAt")
 	}
@@ -13377,7 +13377,7 @@ func (s *mqlCertificate) IsVerified() (bool, error) {
 		}
 		res, ok = s.Cache.Load("isVerified")
 		if !ok {
-			return false, errors.New("\"certificate\" calculated \"isVerified\" but didnt find its value in cache.")
+			return false, errors.New("\"certificate\" calculated \"isVerified\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "isVerified")
 	}
@@ -13909,7 +13909,7 @@ func (s *mqlPrivatekey) Path() (string, error) {
 		}
 		res, ok = s.Cache.Load("path")
 		if !ok {
-			return "", errors.New("\"privatekey\" calculated \"path\" but didnt find its value in cache.")
+			return "", errors.New("\"privatekey\" calculated \"path\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "path")
 	}
@@ -13932,7 +13932,7 @@ func (s *mqlPrivatekey) Encrypted() (bool, error) {
 		}
 		res, ok = s.Cache.Load("encrypted")
 		if !ok {
-			return false, errors.New("\"privatekey\" calculated \"encrypted\" but didnt find its value in cache.")
+			return false, errors.New("\"privatekey\" calculated \"encrypted\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "encrypted")
 	}
@@ -14101,7 +14101,7 @@ func (s *mqlIpmi) DeviceID() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("deviceID")
 		if !ok {
-			return nil, errors.New("\"ipmi\" calculated \"deviceID\" but didnt find its value in cache.")
+			return nil, errors.New("\"ipmi\" calculated \"deviceID\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "deviceID")
 	}
@@ -14124,7 +14124,7 @@ func (s *mqlIpmi) Guid() (string, error) {
 		}
 		res, ok = s.Cache.Load("guid")
 		if !ok {
-			return "", errors.New("\"ipmi\" calculated \"guid\" but didnt find its value in cache.")
+			return "", errors.New("\"ipmi\" calculated \"guid\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "guid")
 	}
@@ -14291,7 +14291,7 @@ func (s *mqlIpmiChassis) Status() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("status")
 		if !ok {
-			return nil, errors.New("\"ipmi.chassis\" calculated \"status\" but didnt find its value in cache.")
+			return nil, errors.New("\"ipmi.chassis\" calculated \"status\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "status")
 	}
@@ -14314,7 +14314,7 @@ func (s *mqlIpmiChassis) SystemBootOptions() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("systemBootOptions")
 		if !ok {
-			return nil, errors.New("\"ipmi.chassis\" calculated \"systemBootOptions\" but didnt find its value in cache.")
+			return nil, errors.New("\"ipmi.chassis\" calculated \"systemBootOptions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "systemBootOptions")
 	}
@@ -14526,7 +14526,7 @@ func (s *mqlUuid) Urn() (string, error) {
 		}
 		res, ok = s.Cache.Load("urn")
 		if !ok {
-			return "", errors.New("\"uuid\" calculated \"urn\" but didnt find its value in cache.")
+			return "", errors.New("\"uuid\" calculated \"urn\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "urn")
 	}
@@ -14549,7 +14549,7 @@ func (s *mqlUuid) Version() (int64, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return 0, errors.New("\"uuid\" calculated \"version\" but didnt find its value in cache.")
+			return 0, errors.New("\"uuid\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -14572,7 +14572,7 @@ func (s *mqlUuid) Variant() (string, error) {
 		}
 		res, ok = s.Cache.Load("variant")
 		if !ok {
-			return "", errors.New("\"uuid\" calculated \"variant\" but didnt find its value in cache.")
+			return "", errors.New("\"uuid\" calculated \"variant\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "variant")
 	}
@@ -14748,7 +14748,7 @@ func (s *mqlSocketstats) OpenPorts() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("openPorts")
 		if !ok {
-			return nil, errors.New("\"socketstats\" calculated \"openPorts\" but didnt find its value in cache.")
+			return nil, errors.New("\"socketstats\" calculated \"openPorts\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "openPorts")
 	}
@@ -14926,7 +14926,7 @@ func (s *mqlKernel) Info() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("info")
 		if !ok {
-			return nil, errors.New("\"kernel\" calculated \"info\" but didnt find its value in cache.")
+			return nil, errors.New("\"kernel\" calculated \"info\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "info")
 	}
@@ -14949,7 +14949,7 @@ func (s *mqlKernel) Parameters() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("parameters")
 		if !ok {
-			return nil, errors.New("\"kernel\" calculated \"parameters\" but didnt find its value in cache.")
+			return nil, errors.New("\"kernel\" calculated \"parameters\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "parameters")
 	}
@@ -14972,7 +14972,7 @@ func (s *mqlKernel) Modules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("modules")
 		if !ok {
-			return nil, errors.New("\"kernel\" calculated \"modules\" but didnt find its value in cache.")
+			return nil, errors.New("\"kernel\" calculated \"modules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "modules")
 	}
@@ -14995,7 +14995,7 @@ func (s *mqlKernel) Installed() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("installed")
 		if !ok {
-			return nil, errors.New("\"kernel\" calculated \"installed\" but didnt find its value in cache.")
+			return nil, errors.New("\"kernel\" calculated \"installed\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "installed")
 	}
@@ -15579,7 +15579,7 @@ func (s *mqlPackage) Status() (string, error) {
 		}
 		res, ok = s.Cache.Load("status")
 		if !ok {
-			return "", errors.New("\"package\" calculated \"status\" but didnt find its value in cache.")
+			return "", errors.New("\"package\" calculated \"status\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "status")
 	}
@@ -15618,7 +15618,7 @@ func (s *mqlPackage) Origin() (string, error) {
 		}
 		res, ok = s.Cache.Load("origin")
 		if !ok {
-			return "", errors.New("\"package\" calculated \"origin\" but didnt find its value in cache.")
+			return "", errors.New("\"package\" calculated \"origin\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "origin")
 	}
@@ -15673,7 +15673,7 @@ func (s *mqlPackage) Outdated() (bool, error) {
 		}
 		res, ok = s.Cache.Load("outdated")
 		if !ok {
-			return false, errors.New("\"package\" calculated \"outdated\" but didnt find its value in cache.")
+			return false, errors.New("\"package\" calculated \"outdated\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "outdated")
 	}
@@ -15863,7 +15863,7 @@ func (s *mqlPackages) List() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("list")
 		if !ok {
-			return nil, errors.New("\"packages\" calculated \"list\" but didnt find its value in cache.")
+			return nil, errors.New("\"packages\" calculated \"list\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "list")
 	}

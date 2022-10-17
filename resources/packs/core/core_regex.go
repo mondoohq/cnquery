@@ -37,8 +37,11 @@ func (p *mqlRegex) GetUrl() (string, error) {
 //     is discouraged (and it kind of matches all kinds of things). Useful
 //     for e.g. email regex
 const reLDHLabel = "([0-9][a-zA-Z]|[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]|[a-zA-Z][0-9]|[a-zA-Z]{1,2})"
-const reUrlDomain = reLDHLabel + "(\\." + reLDHLabel + ")+"
-const reNoTldHostname = reLDHLabel + "(\\." + reLDHLabel + ")*"
+
+const (
+	reUrlDomain     = reLDHLabel + "(\\." + reLDHLabel + ")+"
+	reNoTldHostname = reLDHLabel + "(\\." + reLDHLabel + ")*"
+)
 
 var rexUrlDomain = regexp.MustCompile(reUrlDomain)
 
@@ -77,7 +80,7 @@ func (p *mqlRegex) GetDomain() (string, error) {
 //	Weird: dtext may be empty, which is very weird. Implementing it with
 //	this constraint in place, but it may need review.
 //
-//	Additionally: it's not in these RFCs, but the domain is further resricted
+//	Additionally: it's not in these RFCs, but the domain is further restricted
 //	by https://datatracker.ietf.org/doc/html/rfc3696. It is also not a domain
 //	name in the context of DNS, see these clarifications:
 //	- https://www.rfc-editor.org/rfc/rfc2181#section-11
@@ -96,15 +99,18 @@ func (p *mqlRegex) GetDomain() (string, error) {
 //
 // TODO: IPv4 + IPv6 domains, comments
 const reAtextAscii = "[a-z0-9!#$%&'*+-/=?^_`{|}~]"
-const reUtf8NonAscii = "[\\xC0-\\xDF][\\x80-\\xBF]|[\\xE0-\\xEF][\\x80-\\xBF]{2}|[\\xF0-\\xF7][\\x80-\\xBF]{3}"
-const reQtextAscii = "[ !#-\\[\\]-~]"
-const reQtext = "\"(" + reQtextAscii + "|" + reUtf8NonAscii + "){1,63}\""
-const reAtext = "(" + reAtextAscii + "|" + reUtf8NonAscii + "){1,63}"
-const reDotAtom = reAtext + "(\\." + reAtext + ")*"
-const reEmailLocal = "(" + reQtext + "|" + reDotAtom + ")"
-const dText = "[!-Z^-~]"
-const reDomainLiteral = "\\[" + dText + "{0,255}\\]"
-const reEmailDomain = "(" + reNoTldHostname + "|" + reDomainLiteral + ")"
+
+const (
+	reUtf8NonAscii  = "[\\xC0-\\xDF][\\x80-\\xBF]|[\\xE0-\\xEF][\\x80-\\xBF]{2}|[\\xF0-\\xF7][\\x80-\\xBF]{3}"
+	reQtextAscii    = "[ !#-\\[\\]-~]"
+	reQtext         = "\"(" + reQtextAscii + "|" + reUtf8NonAscii + "){1,63}\""
+	reAtext         = "(" + reAtextAscii + "|" + reUtf8NonAscii + "){1,63}"
+	reDotAtom       = reAtext + "(\\." + reAtext + ")*"
+	reEmailLocal    = "(" + reQtext + "|" + reDotAtom + ")"
+	dText           = "[!-Z^-~]"
+	reDomainLiteral = "\\[" + dText + "{0,255}\\]"
+	reEmailDomain   = "(" + reNoTldHostname + "|" + reDomainLiteral + ")"
+)
 
 const reEmail = reEmailLocal + "@" + reEmailDomain
 

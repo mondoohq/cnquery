@@ -202,7 +202,7 @@ func (s *mqlTerraform) Files() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("files")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"files\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"files\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "files")
 	}
@@ -225,7 +225,7 @@ func (s *mqlTerraform) Tfvars() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("tfvars")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"tfvars\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"tfvars\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "tfvars")
 	}
@@ -248,7 +248,7 @@ func (s *mqlTerraform) Modules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("modules")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"modules\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"modules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "modules")
 	}
@@ -271,7 +271,7 @@ func (s *mqlTerraform) Blocks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("blocks")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"blocks\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"blocks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "blocks")
 	}
@@ -294,7 +294,7 @@ func (s *mqlTerraform) Providers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("providers")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"providers\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"providers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "providers")
 	}
@@ -317,7 +317,7 @@ func (s *mqlTerraform) Datasources() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("datasources")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"datasources\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"datasources\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "datasources")
 	}
@@ -340,7 +340,7 @@ func (s *mqlTerraform) Resources() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("resources")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"resources\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"resources\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "resources")
 	}
@@ -363,7 +363,7 @@ func (s *mqlTerraform) Variables() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("variables")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"variables\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"variables\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "variables")
 	}
@@ -386,7 +386,7 @@ func (s *mqlTerraform) Outputs() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("outputs")
 		if !ok {
-			return nil, errors.New("\"terraform\" calculated \"outputs\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform\" calculated \"outputs\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "outputs")
 	}
@@ -683,7 +683,7 @@ func (s *mqlTerraformFile) Blocks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("blocks")
 		if !ok {
-			return nil, errors.New("\"terraform.file\" calculated \"blocks\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.file\" calculated \"blocks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "blocks")
 	}
@@ -1142,7 +1142,7 @@ func (s *mqlTerraformBlock) NameLabel() (string, error) {
 		}
 		res, ok = s.Cache.Load("nameLabel")
 		if !ok {
-			return "", errors.New("\"terraform.block\" calculated \"nameLabel\" but didnt find its value in cache.")
+			return "", errors.New("\"terraform.block\" calculated \"nameLabel\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "nameLabel")
 	}
@@ -1213,7 +1213,7 @@ func (s *mqlTerraformBlock) Arguments() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("arguments")
 		if !ok {
-			return nil, errors.New("\"terraform.block\" calculated \"arguments\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.block\" calculated \"arguments\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "arguments")
 	}
@@ -1236,7 +1236,7 @@ func (s *mqlTerraformBlock) Attributes() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("attributes")
 		if !ok {
-			return nil, errors.New("\"terraform.block\" calculated \"attributes\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.block\" calculated \"attributes\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "attributes")
 	}
@@ -1259,7 +1259,7 @@ func (s *mqlTerraformBlock) Blocks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("blocks")
 		if !ok {
-			return nil, errors.New("\"terraform.block\" calculated \"blocks\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.block\" calculated \"blocks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "blocks")
 	}
@@ -1941,7 +1941,7 @@ func (s *mqlTerraformState) Outputs() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("outputs")
 		if !ok {
-			return nil, errors.New("\"terraform.state\" calculated \"outputs\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state\" calculated \"outputs\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "outputs")
 	}
@@ -1964,7 +1964,7 @@ func (s *mqlTerraformState) RootModule() (TerraformStateModule, error) {
 		}
 		res, ok = s.Cache.Load("rootModule")
 		if !ok {
-			return nil, errors.New("\"terraform.state\" calculated \"rootModule\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state\" calculated \"rootModule\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "rootModule")
 	}
@@ -1987,7 +1987,7 @@ func (s *mqlTerraformState) Modules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("modules")
 		if !ok {
-			return nil, errors.New("\"terraform.state\" calculated \"modules\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state\" calculated \"modules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "modules")
 	}
@@ -2010,7 +2010,7 @@ func (s *mqlTerraformState) Resources() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("resources")
 		if !ok {
-			return nil, errors.New("\"terraform.state\" calculated \"resources\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state\" calculated \"resources\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "resources")
 	}
@@ -2277,7 +2277,7 @@ func (s *mqlTerraformStateOutput) Value() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("value")
 		if !ok {
-			return nil, errors.New("\"terraform.state.output\" calculated \"value\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state.output\" calculated \"value\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "value")
 	}
@@ -2300,7 +2300,7 @@ func (s *mqlTerraformStateOutput) Type() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("type")
 		if !ok {
-			return nil, errors.New("\"terraform.state.output\" calculated \"type\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state.output\" calculated \"type\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "type")
 	}
@@ -2507,7 +2507,7 @@ func (s *mqlTerraformStateModule) Resources() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("resources")
 		if !ok {
-			return nil, errors.New("\"terraform.state.module\" calculated \"resources\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state.module\" calculated \"resources\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "resources")
 	}
@@ -2530,7 +2530,7 @@ func (s *mqlTerraformStateModule) ChildModules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("childModules")
 		if !ok {
-			return nil, errors.New("\"terraform.state.module\" calculated \"childModules\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.state.module\" calculated \"childModules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "childModules")
 	}
@@ -3147,7 +3147,7 @@ func (s *mqlTerraformPlan) ResourceChanges() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("resourceChanges")
 		if !ok {
-			return nil, errors.New("\"terraform.plan\" calculated \"resourceChanges\" but didnt find its value in cache.")
+			return nil, errors.New("\"terraform.plan\" calculated \"resourceChanges\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "resourceChanges")
 	}

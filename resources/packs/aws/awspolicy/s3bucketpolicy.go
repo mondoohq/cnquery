@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Threre are two policy versions available:
+// There are two policy versions available:
 // - `2012-10-17` this is the current version of the policy language
 // - `2008-10-17` an earlier version of the policy language
 //
@@ -20,8 +20,8 @@ type S3BucketPolicy struct {
 	Statements []S3BucketPolicyStatement `json:"Statement"`
 }
 
-// the policy statement includes many different aspects including the Not* elements, they are used to exlclude
-// things from the previous inlcude, see https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_s3_deny-except-bucket.html
+// the policy statement includes many different aspects including the Not* elements, they are used to exclude
+// things from the previous include, see https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_s3_deny-except-bucket.html
 type S3BucketPolicyStatement struct {
 	Sid          string                       `json:"Sid,omitempty"`          // statement ID, optional
 	Effect       string                       `json:"Effect"`                 // `Allow` or `Deny`
@@ -86,7 +86,7 @@ func (v *Principal) UnmarshalJSON(b []byte) error {
 	switch v := raw.(type) {
 	case string:
 		p = map[string][]string{
-			"AWS": []string{v},
+			"AWS": {v},
 		}
 	case map[string]interface{}:
 		p = map[string][]string{}
