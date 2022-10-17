@@ -116,7 +116,10 @@ func TestLabels(t *testing.T) {
 			"users.list[0]",
 			&llx.Labels{
 				Labels: map[string]string{
-					"TxBWFcRsfJWnLkUQy4pJkosddFcGzQ9MGz7LyR6IhzC9CrFjA6CZhTx73gj/pcyGG9HZwW3wMwUvnokVnkZqYA==": "users.list[0]",
+					"IWmJEZKJxco/zD8JR+g8Lqmw49kbCYWSsxQm3QBFf0D0xhVqK8ukpiHhF0TCcDYLm/SrnvpWCnUelRJhqahnZw==": "users.list[0]",
+					"MCqGdk4puEdBb/fxS3qDqAV/8gv3DIxFT+InTY7+JcySIzGMDzq8L1t2C8W6qh4z8GI3MvR6ZQ64bVQl0f2Xww==": "uid",
+					"T4APLiU1zCnhKjG6cI0dADH4zDmV9qAZ7cwqmY4oUX3iVUDa4VLSotQ3whx+FRFbhaHkg8GI6cyEpN/nyT2jkQ==": "gid",
+					"lq0/cF0a/88fFC/0iEmNVILRf68BM92KtITqSh/WSb+UD1QtnydjwcBpC7IW9CSRXekh74bHSm88taykkFx77w==": "name",
 				},
 			},
 		},

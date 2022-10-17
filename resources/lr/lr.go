@@ -65,6 +65,7 @@ type Resource struct {
 	Comments  []string       `{ @Comment }`
 	IsPrivate bool           `@"private"?`
 	ID        string         `@Ident { @'.' @Ident }`
+	Defaults  string         ` ( '@' "defaults" '(' @String ')' )? `
 	ListType  *SimplListType `[ '{' [ @@ ]`
 	Body      *ResourceDef   `@@ '}' ]`
 	title     string

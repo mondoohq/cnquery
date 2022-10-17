@@ -1,7 +1,7 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/core"
 
 // Provide contextual info about Mondoo Client and environment
-mondoo {
+mondoo @defaults("version") {
   // Version of mondoo the client is running
   version() string
   // The build of the mondoo client (e.g. production, development)
@@ -126,7 +126,7 @@ private file.permissions {
 }
 
 // User on this system
-user {
+user @defaults("name uid gid") {
   // User ID
   uid int
   // User's Group ID

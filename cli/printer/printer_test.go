@@ -203,6 +203,26 @@ func TestPrinter(t *testing.T) {
 			"-> block 1\n   entrypoints: [<1,2>]\n   1: 3\n   2: if bind: <0,0> type:block (true, => <2,0>, [\n     0: ref<1,1>\n   ])\n-> block 2\n   entrypoints: [<2,2>]\n   1: ref<1,1>\n   2: ==\x05 bind: <1,1> type:bool (3)\n",
 			[]string{"if: {\n   == 3: true\n}"},
 		},
+		{
+			"mondoo",
+			"", // ignore
+			[]string{
+				"mondoo: mondoo version=\"unstable\"",
+			},
+		},
+		{
+			"users",
+			"", // ignore
+			[]string{
+				"users.list: [\n" +
+					"  user name=\"root\" uid=0 gid=0\n" +
+					"  user name=\"chris\" uid=1000 gid=1001\n" +
+					"  user name=\"christopher\" uid=1000 gid=1001\n" +
+					"  user name=\"chris\" uid=1002 gid=1003\n" +
+					"  user name=\"bin\" uid=1 gid=1\n" +
+					"]",
+			},
+		},
 	})
 }
 
@@ -298,7 +318,7 @@ func TestPrinter_Buggy(t *testing.T) {
 			"mondoo",
 			"", // ignore
 			[]string{
-				"mondoo: mondoo id = mondoo",
+				"mondoo: mondoo version=\"unstable\"",
 			},
 		},
 	})

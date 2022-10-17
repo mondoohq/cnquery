@@ -1020,6 +1020,15 @@ func TestListResource_Assertions(t *testing.T) {
 	})
 }
 
+func TestResource_Default(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
+	res := x.TestQuery(t, "mondoo")
+	require.NotEmpty(t, res)
+	vals := res[0].Data.Value.(map[string]interface{})
+	require.NotNil(t, vals)
+	require.Equal(t, llx.StringData("unstable"), vals["J4anmJ+mXJX380Qslh563U7Bs5d6fiD2ghVxV9knAU0iy/P+IVNZsDhBbCmbpJch3Tm0NliAMiaY47lmw887Jw=="])
+}
+
 func TestResource_duplicateFields(t *testing.T) {
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	x.TestSimple(t, []testutils.SimpleTest{
