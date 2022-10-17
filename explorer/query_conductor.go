@@ -260,3 +260,7 @@ func (s *LocalServices) StoreResults(ctx context.Context, req *StoreResultsReq) 
 func (s *LocalServices) GetReport(ctx context.Context, req *EntityDataRequest) (*Report, error) {
 	return s.DataLake.GetReport(ctx, req.EntityMrn, req.DataMrn)
 }
+
+func (s *LocalServices) SynchronizeAssets(context.Context, *SynchronizeAssetsReq) (*SynchronizeAssetsResp, error) {
+	return nil, status.Error(codes.Unimplemented, "not implemented")
+}
