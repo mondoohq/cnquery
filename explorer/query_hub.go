@@ -29,7 +29,7 @@ func (s *LocalServices) SetBundle(ctx context.Context, bundle *Bundle) (*Empty, 
 		return globalEmpty, err
 	}
 
-	if err := s.setAllQueryPacks(ctx, bundlemap); err != nil {
+	if err := s.setBundleFromMap(ctx, bundlemap); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +88,7 @@ func (s *LocalServices) setPack(ctx context.Context, querypack *QueryPack) error
 	return nil
 }
 
-func (s *LocalServices) setAllQueryPacks(ctx context.Context, bundle *BundleMap) error {
+func (s *LocalServices) setBundleFromMap(ctx context.Context, bundle *BundleMap) error {
 	logCtx := logger.FromContext(ctx)
 
 	var err error
@@ -140,7 +140,7 @@ func (s *LocalServices) GetQueryPack(ctx context.Context, in *Mrn) (*QueryPack, 
 	}
 
 	// try upstream; once it's cached, try again
-	_, err = s.cacheUpstreamQueryPack(ctx, in.Mrn)
+	_, err = s.cacheUpstreamQueryPackBundle(ctx, in.Mrn)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,15 @@ func (s *LocalServices) GetBundle(ctx context.Context, in *Mrn) (*Bundle, error)
 		return nil, status.Error(codes.InvalidArgument, "mrn is required")
 	}
 
-	return s.DataLake.GetBundle(ctx, in.Mrn)
+	b, err := s.DataLake.GetBundle(ctx, in.Mrn)
+	if err == nil {
+		return b, nil
+	}
+	if s.Upstream == nil {
+		return nil, err
+	}
+	// try upstream
+	return s.cacheUpstreamQueryPackBundle(ctx, in.Mrn)
 }
 
 // GetFilters retrieves the asset filter queries for a given query pack
@@ -227,26 +235,49 @@ func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) 
 // HELPER METHODS
 // =================
 
-// cacheUpstreamQueryPack by storing a copy of the upstream pack in this db
+// cacheUpstreamQueryPackBundle by storing a copy of the upstream pack in this db
 // Note: upstream has to be defined
-func (s *LocalServices) cacheUpstreamQueryPack(ctx context.Context, mrn string) (*QueryPack, error) {
+func (s *LocalServices) cacheUpstreamQueryPackBundle(ctx context.Context, mrn string) (*Bundle, error) {
 	logCtx := logger.FromContext(ctx)
 	if s.Upstream == nil {
 		return nil, errors.New("failed to retrieve upstream query pack " + mrn + " since upstream is not defined")
 	}
 
 	logCtx.Debug().Str("querypack", mrn).Msg("query.hub> fetch query pack from upstream")
-	querypack, err := s.Upstream.GetQueryPack(ctx, &Mrn{Mrn: mrn})
+	bundle, err := s.Upstream.GetBundle(ctx, &Mrn{Mrn: mrn})
 	if err != nil {
 		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to retrieve query pack from upstream")
 		return nil, errors.New("failed to retrieve upstream query pack " + mrn + ": " + err.Error())
 	}
 
-	if err = s.setPack(ctx, querypack); err != nil {
+	bundleMap := bundle.ToMap()
+	if err = s.setBundleFromMap(ctx, bundleMap); err != nil {
 		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to set query pack retrieved from upstream")
 		return nil, err
 	}
 
+	// we need to assign the bundles to the asset
+	querypackMrns := []string{}
+	for k := range bundleMap.Packs {
+		querypackMrns = append(querypackMrns, k)
+	}
+
+	// assign a query pack locally
+	deltas := map[string]*AssignmentDelta{}
+	for i := range querypackMrns {
+		packMrn := querypackMrns[i]
+		deltas[packMrn] = &AssignmentDelta{
+			Mrn:    packMrn,
+			Action: AssignmentDelta_ADD,
+		}
+	}
+
+	s.DataLake.EnsureAsset(ctx, mrn)
+	_, err = s.DataLake.MutateBundle(ctx, &BundleMutationDelta{
+		OwnerMrn: mrn,
+		Deltas:   deltas,
+	}, true)
+
 	logCtx.Debug().Str("querypack", mrn).Msg("query.hub> fetched bundle from upstream")
-	return querypack, nil
+	return bundle, nil
 }

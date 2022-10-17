@@ -300,7 +300,11 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 			log.Fatal().Err(err).Msg("failed to resolve query packs")
 		}
 
-		report := RunScan(conf)
+		report, err := RunScan(conf)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to run scan")
+		}
+
 		printReports(report, conf, cmd)
 	},
 })
@@ -349,7 +353,6 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
 		QueryPackNames: viper.GetStringSlice("querypack"),
 	}
-	config.DisplayUsedConfig()
 
 	// if users want to get more information on available output options,
 	// print them before executing the scan
@@ -444,15 +447,29 @@ func (c *scanConfig) loadBundles() error {
 		return nil
 	}
 
-	return errors.New("Cannot yet resolve query packs other than incognito")
+	return nil
 }
 
-func RunScan(config *scanConfig) *explorer.ReportCollection {
-	scanner := scan.NewLocalScanner()
+func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
+	opts := []scan.ScannerOption{}
+	if config.UpstreamConfig != nil {
+		opts = append(opts, scan.WithUpstream(config.UpstreamConfig.ApiEndpoint, config.UpstreamConfig.SpaceMrn, config.UpstreamConfig.Plugins))
+	}
 
+	scanner := scan.NewLocalScanner(opts...)
 	ctx := cnquery.SetFeatures(context.Background(), config.Features)
 
-	reports, err := scanner.RunIncognito(
+	if config.IsIncognito {
+		return scanner.RunIncognito(
+			ctx,
+			&scan.Job{
+				DoRecord:         config.DoRecord,
+				Inventory:        config.Inventory,
+				Bundle:           config.Bundle,
+				QueryPackFilters: config.QueryPackNames,
+			})
+	}
+	return scanner.Run(
 		ctx,
 		&scan.Job{
 			DoRecord:         config.DoRecord,
@@ -460,11 +477,6 @@ func RunScan(config *scanConfig) *explorer.ReportCollection {
 			Bundle:           config.Bundle,
 			QueryPackFilters: config.QueryPackNames,
 		})
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to run scan")
-	}
-
-	return reports
 }
 
 func printReports(report *explorer.ReportCollection, conf *scanConfig, cmd *cobra.Command) {

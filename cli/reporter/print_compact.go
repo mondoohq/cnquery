@@ -24,6 +24,11 @@ type defaultReporter struct {
 }
 
 func (r *defaultReporter) print() error {
+	// catch case where the scan was not successful and no bundle was fetched from server
+	if r.data == nil || r.data.Bundle == nil {
+		return nil
+	}
+
 	r.bundle = r.data.Bundle.ToMap()
 
 	if !r.isSummary {

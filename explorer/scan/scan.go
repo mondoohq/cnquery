@@ -19,6 +19,7 @@ func init() {
 
 type AssetJob struct {
 	DoRecord         bool
+	Incognito        bool
 	Asset            *asset.Asset
 	Bundle           *explorer.Bundle
 	QueryPackFilters []string
