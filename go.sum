@@ -358,8 +358,9 @@ github.com/charmbracelet/bubbletea v0.21.0/go.mod h1:GgmJMec61d08zXsOhqRC/AiOx4K
 github.com/charmbracelet/bubbletea v0.22.1 h1:z66q0LWdJNOWEH9zadiAIXp2GN1AWrwNXU8obVY9X24=
 github.com/charmbracelet/bubbletea v0.22.1/go.mod h1:8/7hVvbPN6ZZPkczLiB8YpLkLJ0n7DMho5Wvfd2X1C0=
 github.com/charmbracelet/harmonica v0.2.0/go.mod h1:KSri/1RMQOZLbw7AHqgcBycp8pgJnQMYYT8QZRqZ1Ao=
-github.com/charmbracelet/lipgloss v0.5.0 h1:lulQHuVeodSgDez+3rGiuxlPVXSnhth442DATR2/8t8=
 github.com/charmbracelet/lipgloss v0.5.0/go.mod h1:EZLha/HbzEt7cYqdFPovlqy5FZPj0xFhg5SaqxScmgs=
+github.com/charmbracelet/lipgloss v0.6.0 h1:1StyZB9vBSOyuZxQUcUwGr17JmojPNm87inij9N3wJY=
+github.com/charmbracelet/lipgloss v0.6.0/go.mod h1:tHh2wr34xcHjC2HCXIlGSG1jaDF0S0atAUvBMP6Ppuk=
 github.com/chavacava/garif v0.0.0-20210405164556-e8a0a408d6af/go.mod h1:Qjyv4H3//PWVzTeCezG2b9IRn6myJxJSr4TD/xo6ojU=
 github.com/chavacava/garif v0.0.0-20220630083739-93517212f375 h1:E7LT642ysztPWE0dfz43cWOvMiF42DyTRC+eZIaO4yI=
 github.com/chavacava/garif v0.0.0-20220630083739-93517212f375/go.mod h1:4m1Rv7xfuwWPNKXlThldNuJvutYM6J95wNuuVmn55To=

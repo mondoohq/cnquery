@@ -65,7 +65,7 @@ require (
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/charmbracelet/bubbles v0.14.0
 	github.com/charmbracelet/bubbletea v0.22.1
-	github.com/charmbracelet/lipgloss v0.5.0
+	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/cockroachdb/errors v1.9.0
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/docker/cli v20.10.17+incompatible
