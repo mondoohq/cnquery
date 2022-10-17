@@ -89,7 +89,7 @@ if it's not the full ID:
 You can also explicitly request the scan of an image or a container registry:
 
     cnquery scan container image ubuntu:20.04
-    cnquery scan container registry harbor.yourdomain.com/project/repository
+    cnquery scan container registry harbor.lunalectric.com/project/repository
 `,
 			},
 			"container-image": {
@@ -99,7 +99,7 @@ You can also explicitly request the scan of an image or a container registry:
 				Short: "Scan a container registry",
 				Long: `Scan a container registry. Supports more parameters for different registries:
 
-    cnquery scan container registry harbor.yourdomain.com/project/repository
+    cnquery scan container registry harbor.lunalectric.com/project/repository
     cnquery scan container registry yourname.azurecr.io
     cnquery scan container registry 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
 `,

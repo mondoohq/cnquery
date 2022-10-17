@@ -104,7 +104,7 @@ if it's not the full ID:
 You can also explicitly connect to an image or a container registry:
 
     cnquery shell container image ubuntu:20.04
-    cnquery shell container registry harbor.yourdomain.com/project/repository
+    cnquery shell container registry harbor.lunalectric.com/project/repository
 `,
 			},
 			"container-image": {
@@ -114,7 +114,7 @@ You can also explicitly connect to an image or a container registry:
 				Short: "Connect to a container registry",
 				Long: `Connect to a container registry. Supports more parameters for different registries:
 
-    cnquery shell container registry harbor.yourdomain.com/project/repository
+    cnquery shell container registry harbor.lunalectric.com/project/repository
     cnquery shell container registry yourname.azurecr.io
     cnquery shell container registry 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
 `,
