@@ -1649,29 +1649,31 @@ func (c *compiler) postCompile() {
 	for _, ref := range eps {
 		chunk := code.Chunk(ref)
 
-		c.expandListResource(chunk, ref)
+		if chunk.Call != llx.Chunk_FUNCTION {
+			continue
+		}
+
+		var info *resources.ResourceInfo
+		info, ref = c.expandListResource(chunk, ref)
+		c.expandResourceFields(chunk, ref, info)
 	}
 }
 
-func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) {
-	if chunk.Call != llx.Chunk_FUNCTION {
-		return
-	}
-
+func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*resources.ResourceInfo, uint64) {
 	var resourceName string
 	if chunk.Function == nil {
 		resourceName = chunk.Id
 	} else {
 		t := types.Type(chunk.Function.Type)
 		if !t.IsResource() {
-			return
+			return nil, ref
 		}
 		resourceName = t.ResourceName()
 	}
 
 	info := c.Schema.Resources[resourceName]
 	if info == nil || info.ListType == "" {
-		return
+		return info, ref
 	}
 
 	block := c.Result.CodeV2.Block(ref)
@@ -1685,6 +1687,59 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) {
 	})
 	ep := block.TailRef(ref)
 	block.ReplaceEntrypoint(ref, ep)
+
+	childInfo := c.Schema.Resources[types.Type(info.ListType).ResourceName()]
+	return childInfo, ep
+}
+
+func (c *compiler) expandResourceFields(chunk *llx.Chunk, ref uint64, info *resources.ResourceInfo) {
+	if info == nil {
+		return
+	}
+
+	if info.Defaults == "" {
+		return
+	}
+
+	ast, err := parser.Parse(info.Defaults)
+	if ast == nil || len(ast.Expressions) == 0 {
+		log.Error().Err(err).Msg("failed to parse defaults for " + info.Name)
+		return
+	}
+
+	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to compile default for " + info.Name)
+	}
+
+	args := []*llx.Primitive{llx.FunctionPrimitive(refs.block)}
+	// for _, v := range refs.deps {
+	// 	if c.isInMyBlock(v) {
+	// 		args = append(args, llx.RefPrimitiveV2(v))
+	// 	}
+	// }
+	// c.blockDeps = append(c.blockDeps, refs.deps...)
+
+	if len(refs.deps) != 0 {
+		log.Warn().Msg("defaults somehow included external dependencies for resource " + info.Name)
+	}
+
+	resultType := types.Block
+	block := c.Result.CodeV2.Block(ref)
+	block.AddChunk(c.Result.CodeV2, ref, &llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "{}",
+		Function: &llx.Function{
+			Type:    string(resultType),
+			Binding: refs.binding,
+			Args:    args,
+		},
+	})
+	ep := block.TailRef(ref)
+	block.ReplaceEntrypoint(ref, ep)
+	ref = ep
+
+	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
 }
 
 func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
@@ -1821,6 +1876,7 @@ func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf compilerC
 		Props:            map[string]string{},
 		Version:          cnquery.APIVersion(),
 		MinMondooVersion: "",
+		AutoExpand:       map[string]uint64{},
 	}
 
 	c := compiler{

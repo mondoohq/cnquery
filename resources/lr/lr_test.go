@@ -41,6 +41,17 @@ func TestParse(t *testing.T) {
 		})
 	})
 
+	t.Run("defaults", func(t *testing.T) {
+		parse(t, "name @defaults(\"id group=group.name\")", func(res *LR) {
+			assert.Equal(t, []*Resource{
+				{
+					ID:       "name",
+					Defaults: "id group=group.name",
+				},
+			}, res.Resources)
+		})
+	})
+
 	t.Run("resource with a static field", func(t *testing.T) {
 		parse(t, `
 		// resource-docs

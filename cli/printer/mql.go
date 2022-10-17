@@ -440,9 +440,82 @@ func isCodeBlock(codeID string, bundle *llx.CodeBundle) bool {
 	return ok
 }
 
+func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.CodeBundle, indent string) string {
+	var res strings.Builder
+
+	if arr, ok := data.([]interface{}); ok {
+		if len(arr) == 0 {
+			return "[]"
+		}
+
+		prefix := "  "
+		res.WriteString("[\n")
+		for i := range arr {
+			c := print.autoExpand(blockRef, arr[i], bundle, prefix)
+			res.WriteString(prefix)
+			res.WriteString(c)
+			res.WriteByte('\n')
+		}
+		res.WriteString(indent + "]")
+		return res.String()
+	}
+
+	m, ok := data.(map[string]interface{})
+	if !ok {
+		return "data is not a map to auto-expand"
+	}
+
+	block := bundle.CodeV2.Block(blockRef)
+	var name string
+
+	self, ok := m["_"].(*llx.RawData)
+	if ok {
+		name = self.Type.ResourceName()
+	} else if block != nil {
+		// We end up here when we deal with array resources. In that case,
+		// the block's first element is typed as an individual resource, so we can
+		// use that.
+		typ := block.Chunks[0].Type()
+		name = typ.ResourceName()
+	}
+	if name == "" {
+		name = "<unknown>"
+	}
+
+	res.WriteString(name)
+
+	if block != nil {
+		// important to process them in this order
+		for _, ref := range block.Entrypoints {
+			checksum := bundle.CodeV2.Checksums[ref]
+			v, ok := m[checksum]
+			if !ok {
+				continue
+			}
+			vv, ok := v.(*llx.RawData)
+			if !ok {
+				continue
+			}
+
+			label := bundle.Labels.Labels[checksum]
+			val := print.Data(vv.Type, vv.Value, checksum, bundle, "")
+			res.WriteByte(' ')
+			res.WriteString(label)
+			res.WriteByte('=')
+			res.WriteString(val)
+		}
+	}
+
+	return res.String()
+}
+
 func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bundle *llx.CodeBundle, indent string) string {
 	if typ.IsEmpty() {
 		return "no data available"
+	}
+
+	if blockRef, ok := bundle.AutoExpand[codeID]; ok {
+		return print.autoExpand(blockRef, data, bundle, indent)
 	}
 
 	switch typ.Underlying() {

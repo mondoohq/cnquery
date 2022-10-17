@@ -100,6 +100,7 @@ message CodeBundle {
   string version = 20;
   string min_mondoo_version = 22;
   map<string,AssertionMessage> assertions = 23;
+  map<string,uint64> auto_expand = 24; // name + ref to the block of data
 }
 
 message Result {

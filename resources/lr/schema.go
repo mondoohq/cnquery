@@ -109,13 +109,14 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 	}
 
 	res := &resources.ResourceInfo{
-		Id:      r.ID,
-		Name:    r.ID,
-		Title:   r.title,
-		Desc:    r.desc,
-		Init:    init,
-		Private: r.IsPrivate,
-		Fields:  fields,
+		Id:       r.ID,
+		Name:     r.ID,
+		Title:    r.title,
+		Desc:     r.desc,
+		Init:     init,
+		Private:  r.IsPrivate,
+		Fields:   fields,
+		Defaults: r.Defaults,
 	}
 
 	if r.ListType != nil {

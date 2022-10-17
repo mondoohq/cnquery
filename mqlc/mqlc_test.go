@@ -128,21 +128,21 @@ func TestCompiler_Buggy(t *testing.T) {
 		res  []*llx.Chunk
 		err  error
 	}{
-		{`mondoo mondoo`, []*llx.Chunk{
-			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
-			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		{`parse parse`, []*llx.Chunk{
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, nil},
-		{`mondoo # mondoo`, []*llx.Chunk{
-			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		{`parse # mondoo`, []*llx.Chunk{
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, nil},
-		{`mondoo }`, []*llx.Chunk{
-			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		{`parse }`, []*llx.Chunk{
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("mismatched symbol '}' at the end of expression")},
-		{`mondoo ]`, []*llx.Chunk{
-			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		{`parse ]`, []*llx.Chunk{
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("mismatched symbol ']' at the end of expression")},
-		{`mondoo )`, []*llx.Chunk{
-			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
+		{`parse )`, []*llx.Chunk{
+			{Id: "parse", Call: llx.Chunk_FUNCTION},
 		}, errors.New("mismatched symbol ')' at the end of expression")},
 		{`mondoo { version }`, []*llx.Chunk{
 			{Id: "mondoo", Call: llx.Chunk_FUNCTION},
@@ -934,6 +934,64 @@ func TestCompiler_ResourceMapLength(t *testing.T) {
 	})
 }
 
+func TestCompiler_ResourceExpansion(t *testing.T) {
+	var cmd string
+
+	cmd = "mondoo"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
+			assertFunction(t, "{}", &llx.Function{
+				Binding: (1 << 32) | 1,
+				Type:    string(types.Block),
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
+			}, res.CodeV2.Blocks[0].Chunks[1])
+
+			assertFunction(t, "version", &llx.Function{
+				Binding: (2 << 32) | 1,
+				Type:    string(types.String),
+			}, res.CodeV2.Blocks[1].Chunks[1])
+
+			assert.Equal(t, map[string]uint64{res.CodeV2.Checksums[1<<32|2]: 2 << 32}, res.AutoExpand)
+			assert.Equal(t, []uint64{1<<32 | 2}, res.CodeV2.Blocks[0].Entrypoints)
+		})
+	})
+
+	cmd = "users"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			assertFunction(t, "users", nil, res.CodeV2.Blocks[0].Chunks[0])
+			assertFunction(t, "list", &llx.Function{
+				Binding: (1 << 32) | 1,
+				Args:    nil,
+				Type:    string(types.Array(types.Resource("user"))),
+			}, res.CodeV2.Blocks[0].Chunks[1])
+			assertFunction(t, "{}", &llx.Function{
+				Binding: (1 << 32) | 2,
+				Type:    string(types.Block),
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
+			}, res.CodeV2.Blocks[0].Chunks[2])
+
+			assertFunction(t, "name", &llx.Function{
+				Binding: (2 << 32) | 1,
+				Type:    string(types.String),
+			}, res.CodeV2.Blocks[1].Chunks[1])
+			assertFunction(t, "uid", &llx.Function{
+				Binding: (2 << 32) | 1,
+				Type:    string(types.Int),
+			}, res.CodeV2.Blocks[1].Chunks[2])
+			assertFunction(t, "gid", &llx.Function{
+				Binding: (2 << 32) | 1,
+				Type:    string(types.Int),
+			}, res.CodeV2.Blocks[1].Chunks[3])
+
+			assert.Equal(t, map[string]uint64{res.CodeV2.Checksums[1<<32|3]: 2 << 32}, res.AutoExpand)
+			assert.Equal(t, []uint64{1<<32 | 3}, res.CodeV2.Blocks[0].Entrypoints)
+			assert.Equal(t, []uint64{2<<32 | 2, 2<<32 | 3, 2<<32 | 4}, res.CodeV2.Blocks[1].Entrypoints)
+		})
+	})
+}
+
 func TestCompiler_ArrayResource(t *testing.T) {
 	var cmd string
 
@@ -1247,8 +1305,8 @@ func TestCompiler_ExpectEq(t *testing.T) {
 }
 
 func TestCompiler_EmptyBlock(t *testing.T) {
-	compileT(t, "mondoo { }", func(res *llx.CodeBundle) {
-		assertFunction(t, "mondoo", nil, res.CodeV2.Blocks[0].Chunks[0])
+	compileT(t, "parse { }", func(res *llx.CodeBundle) {
+		assertFunction(t, "parse", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assert.Equal(t, 1, len(res.CodeV2.Blocks[0].Chunks))
 		assert.Len(t, res.CodeV2.Blocks, 1)
 	})
