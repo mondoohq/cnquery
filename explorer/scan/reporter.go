@@ -22,11 +22,11 @@ type AggregateReporter struct {
 	assets       map[string]*explorer.Asset
 	assetReports map[string]*explorer.Report
 	assetErrors  map[string]error
-	resolved     map[string]*explorer.ResolvedPack
 	bundle       *explorer.Bundle
+	resolved     map[string]*explorer.ResolvedPack
 }
 
-func NewAggregateReporter(bundle *explorer.Bundle, assetList []*asset.Asset) *AggregateReporter {
+func NewAggregateReporter(assetList []*asset.Asset) *AggregateReporter {
 	assets := make(map[string]*explorer.Asset, len(assetList))
 	for i := range assetList {
 		cur := assetList[i]
@@ -41,7 +41,6 @@ func NewAggregateReporter(bundle *explorer.Bundle, assetList []*asset.Asset) *Ag
 		assetReports: map[string]*explorer.Report{},
 		assetErrors:  map[string]error{},
 		resolved:     map[string]*explorer.ResolvedPack{},
-		bundle:       bundle,
 	}
 }
 

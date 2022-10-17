@@ -84,7 +84,18 @@ func (s *LocalServices) Unassign(ctx context.Context, assignment *Assignment) (*
 // Resolve executable bits for an asset (via asset filters)
 func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*ResolvedPack, error) {
 	if s.Upstream != nil && !s.Incognito {
-		return s.Upstream.Resolve(ctx, req)
+		res, err := s.Upstream.Resolve(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.DataLake.SetResolvedPack(req.EntityMrn, res.FiltersChecksum, res)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.DataLake.SetAssetResolvedPack(ctx, req.EntityMrn, res, V2Code)
+		return res, err
 	}
 
 	bundle, err := s.DataLake.GetBundle(ctx, req.EntityMrn)

@@ -23,6 +23,7 @@ import (
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
+	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -30,12 +31,56 @@ import (
 type LocalScanner struct {
 	ctx     context.Context
 	fetcher *fetcher
+
+	// for remote connectivity
+	apiEndpoint string
+	spaceMrn    string
+	plugins     []ranger.ClientPlugin
 }
 
-func NewLocalScanner() *LocalScanner {
-	return &LocalScanner{
+type ScannerOption func(*LocalScanner)
+
+func WithUpstream(apiEndpoint string, spaceMrn string, plugins []ranger.ClientPlugin) func(s *LocalScanner) {
+	return func(s *LocalScanner) {
+		s.apiEndpoint = apiEndpoint
+		s.plugins = plugins
+		s.spaceMrn = spaceMrn
+	}
+}
+
+func NewLocalScanner(opts ...ScannerOption) *LocalScanner {
+	ls := &LocalScanner{
 		fetcher: newFetcher(),
 	}
+
+	for i := range opts {
+		opts[i](ls)
+	}
+
+	return ls
+}
+
+func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportCollection, error) {
+	if job == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "missing scan job")
+	}
+
+	if job.Inventory == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "missing inventory")
+	}
+
+	if ctx == nil {
+		return nil, errors.New("no context provided to run job with local scanner")
+	}
+
+	dctx := discovery.InitCtx(ctx)
+
+	reports, _, err := s.distributeJob(job, dctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return reports, nil
 }
 
 func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.ReportCollection, error) {
@@ -53,7 +98,7 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 
 	dctx := discovery.InitCtx(ctx)
 
-	reports, _, err := s.distributeJob(job, dctx)
+	reports, _, err := s.distributeJob(job, dctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +106,7 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 	return reports, nil
 }
 
-func (s *LocalScanner) distributeJob(job *Job, ctx context.Context) (*explorer.ReportCollection, bool, error) {
+func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, incognito bool) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 	im, err := inventory.New(inventory.WithInventory(job.Inventory))
 	if err != nil {
@@ -81,21 +126,51 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context) (*explorer.R
 		return nil, false, errors.New("could not find an asset that we can connect to")
 	}
 
-	// ensure we have non-empty asset MRNs
-	for i := range assetList {
-		cur := assetList[i]
-		if cur.Mrn == "" && cur.Id == "" {
-			randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
-			x, err := mrn.NewMRN(randID)
-			if err != nil {
-				return nil, false, errors.Wrap(err, "failed to generate a random asset MRN")
+	// sync assets
+	if s.apiEndpoint != "" && !incognito {
+		log.Info().Msg("synchronize assets")
+		upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins)
+		if err != nil {
+			return nil, false, err
+		}
+		resp, err := upstream.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
+			SpaceMrn: s.spaceMrn,
+			List:     assetList,
+		})
+		if err != nil {
+			return nil, false, err
+		}
+		log.Info().Int("assets", len(resp.Details)).Msg("got assets details")
+		platformAssetMapping := make(map[string]*explorer.SynchronizeAssetsRespAssetDetail)
+		for i := range resp.Details {
+			log.Debug().Str("platform-mrn", resp.Details[i].PlatformMrn).Str("asset", resp.Details[i].AssetMrn).Msg("asset mapping")
+			platformAssetMapping[resp.Details[i].PlatformMrn] = resp.Details[i]
+		}
+
+		// attach the asset details to the assets list
+		for i := range assetList {
+			log.Debug().Str("asset", assetList[i].Name).Strs("platform-ids", assetList[i].PlatformIds).Msg("update asset")
+			platformMrn := assetList[i].PlatformIds[0]
+			assetList[i].Mrn = platformAssetMapping[platformMrn].AssetMrn
+			assetList[i].Url = platformAssetMapping[platformMrn].Url
+		}
+	} else {
+		// ensure we have non-empty asset MRNs
+		for i := range assetList {
+			cur := assetList[i]
+			if cur.Mrn == "" && cur.Id == "" {
+				randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
+				x, err := mrn.NewMRN(randID)
+				if err != nil {
+					return nil, false, errors.Wrap(err, "failed to generate a random asset MRN")
+				}
+				cur.Mrn = x.String()
 			}
-			cur.Mrn = x.String()
 		}
 	}
 
-	reporter := NewAggregateReporter(job.Bundle, assetList)
-
+	// plan scan jobs
+	reporter := NewAggregateReporter(assetList)
 	job.Bundle.FilterQueryPacks(job.QueryPackFilters)
 
 	for i := range assetList {
@@ -106,12 +181,13 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context) (*explorer.R
 		select {
 		case <-ctx.Done():
 			log.Warn().Msg("request context has been canceled")
-			return reporter.Reports(), false, reporter.Error()
+			return reporter.Reports(), false, nil
 		default:
 		}
 
 		s.RunAssetJob(&AssetJob{
 			DoRecord:         job.DoRecord,
+			Incognito:        incognito,
 			Asset:            asset,
 			Bundle:           job.Bundle,
 			QueryPackFilters: job.QueryPackFilters,
@@ -121,7 +197,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context) (*explorer.R
 		})
 	}
 
-	return reporter.Reports(), true, reporter.Error()
+	return reporter.Reports(), true, nil
 }
 
 func (s *LocalScanner) RunAssetJob(job *AssetJob) {
@@ -164,6 +240,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 			job.connection = m
 			results, err := s.runMotorizedAsset(job)
 			if err != nil {
+				log.Warn().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
 				job.Reporter.AddScanError(job.Asset, err)
 				return
 			}
@@ -178,8 +255,13 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 	var scanErr error
 
 	runtimeErr := inmemory.WithDb(func(db *inmemory.Db, services *explorer.LocalServices) error {
-		if services.Upstream != nil {
-			panic("cannot work with upstream yet")
+		if s.apiEndpoint != "" && !job.Incognito {
+			log.Debug().Msg("using API endpoint " + s.apiEndpoint)
+			upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins)
+			if err != nil {
+				return err
+			}
+			services.Upstream = upstream
 		}
 
 		registry := all.Registry
@@ -229,17 +311,18 @@ func (s *localAssetScanner) run() (*AssetReport, error) {
 	}
 
 	res, err := s.runQueryPack()
-	if err != nil {
-		return nil, err
-	}
-
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("scan complete")
-	return res, nil
+	return res, err
 }
 
 func (s *localAssetScanner) prepareAsset() error {
 	var hub explorer.QueryHub = s.services
 	var conductor explorer.QueryConductor = s.services
+
+	// if we are using upstream we get the bundle from there
+	if !s.job.Incognito {
+		return nil
+	}
 
 	if err := s.ensureBundle(); err != nil {
 		return err
@@ -374,6 +457,12 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 		return nil, err
 	}
 
+	ar := &AssetReport{
+		Mrn:      s.job.Asset.Mrn,
+		Bundle:   assetBundle,
+		Resolved: resolvedPack,
+	}
+
 	log.Debug().Str("asset", s.job.Asset.Mrn).Msg("generate report")
 	report, err := conductor.GetReport(s.job.Ctx, &explorer.EntityDataRequest{
 		// NOTE: we assign packs to the asset before we execute the tests,
@@ -382,15 +471,15 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 		DataMrn:   s.job.Asset.Mrn,
 	})
 	if err != nil {
-		return nil, err
+		ar.Report = &explorer.Report{
+			EntityMrn: s.job.Asset.Mrn,
+			PackMrn:   s.job.Asset.Mrn,
+		}
+		return ar, err
 	}
 
-	return &AssetReport{
-		Mrn:      s.job.Asset.Mrn,
-		Bundle:   assetBundle,
-		Report:   report,
-		Resolved: resolvedPack,
-	}, nil
+	ar.Report = report
+	return ar, nil
 }
 
 // FilterQueries returns all queries whose result is truthy
