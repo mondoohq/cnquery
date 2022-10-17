@@ -68,7 +68,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/cockroachdb/errors v1.9.0
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
-	github.com/docker/cli v20.10.17+incompatible
+	github.com/docker/cli v20.10.19+incompatible
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.2.0+incompatible
