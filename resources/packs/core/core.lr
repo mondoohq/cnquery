@@ -725,7 +725,7 @@ kernel.module {
 }
 
 // Package on the platform or OS
-package {
+package @defaults("name version") {
   init(name string)
 
   // Name of the package
