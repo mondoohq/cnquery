@@ -145,7 +145,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	if tc.IncludesDiscoveryTarget(common.DiscoveryAuto) {
-		log.Info().Msg("discovery option auto is used. This will detect the assets: cluster, cronjobs, pods, statefulsets, deployments, replicasets, daemonsets")
+		log.Info().Msg("discovery option auto is used. This will detect the assets: cluster, jobs, cronjobs, pods, statefulsets, deployments, replicasets, daemonsets")
 	}
 
 	// Only discover cluster and nodes if there are no resource filters. For CI/CD do not
@@ -276,7 +276,7 @@ func addSeparateAssets(
 	}
 
 	// discover jobs
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryJobs, DiscoveryJobs) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryJobs, DiscoveryJobs) {
 		log.Debug().Str("namespace", namespacesFilter).Msg("search for jobs")
 		connection := tc.Clone()
 		jobs, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
