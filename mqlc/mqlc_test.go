@@ -990,6 +990,30 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 			assert.Equal(t, []uint64{2<<32 | 2, 2<<32 | 3, 2<<32 | 4}, res.CodeV2.Blocks[1].Entrypoints)
 		})
 	})
+
+	cmd = "pam.conf.entries['.']"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			assertFunction(t, "[]", &llx.Function{
+				Binding: (1 << 32) | 2,
+				Args: []*llx.Primitive{{
+					Type:  string(types.String),
+					Value: []byte("."),
+				}},
+				Type: string(types.Array(types.Resource("pam.conf.serviceEntry"))),
+			}, res.CodeV2.Blocks[0].Chunks[2])
+			assertFunction(t, "{}", &llx.Function{
+				Binding: (1 << 32) | 3,
+				Type:    string(types.Block),
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
+			}, res.CodeV2.Blocks[0].Chunks[3])
+
+			assertFunction(t, "service", &llx.Function{
+				Binding: (2 << 32) | 1,
+				Type:    string(types.String),
+			}, res.CodeV2.Blocks[1].Chunks[1])
+		})
+	})
 }
 
 func TestCompiler_ArrayResource(t *testing.T) {

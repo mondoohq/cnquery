@@ -79,7 +79,7 @@ pam.conf {
   entries(files) map[string][]pam.conf.serviceEntry
 }
 
-private pam.conf.serviceEntry {
+private pam.conf.serviceEntry @defaults("service module") {
   // Service file that entry is from
   service string
   // Line number in service file - used for ID

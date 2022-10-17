@@ -1661,15 +1661,12 @@ func (c *compiler) postCompile() {
 
 func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*resources.ResourceInfo, uint64) {
 	var resourceName string
-	if chunk.Function == nil {
-		resourceName = chunk.Id
-	} else {
-		t := types.Type(chunk.Function.Type)
-		if !t.IsResource() {
-			return nil, ref
-		}
-		resourceName = t.ResourceName()
+
+	// initial resources
+	if chunk.Function != nil {
+		return nil, ref
 	}
+	resourceName = chunk.Id
 
 	info := c.Schema.Resources[resourceName]
 	if info == nil || info.ListType == "" {
@@ -1694,7 +1691,19 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*resources.
 
 func (c *compiler) expandResourceFields(chunk *llx.Chunk, ref uint64, info *resources.ResourceInfo) {
 	if info == nil {
-		return
+		// try to detect it
+		t := types.Type(chunk.Function.Type)
+		if t.IsResource() {
+			info = c.Schema.Resources[t.ResourceName()]
+		} else if t.IsArray() {
+			child := t.Child()
+			if child.IsResource() {
+				info = c.Schema.Resources[child.ResourceName()]
+			}
+		}
+		if info == nil {
+			return
+		}
 	}
 
 	if info.Defaults == "" {
