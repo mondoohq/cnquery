@@ -757,7 +757,7 @@ type CodeBundle struct {
 	Version          string                       `protobuf:"bytes,20,opt,name=version,proto3" json:"version,omitempty"`
 	MinMondooVersion string                       `protobuf:"bytes,22,opt,name=min_mondoo_version,json=minMondooVersion,proto3" json:"min_mondoo_version,omitempty"`
 	Assertions       map[string]*AssertionMessage `protobuf:"bytes,23,rep,name=assertions,proto3" json:"assertions,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	AutoExpand       map[string]uint64            `protobuf:"bytes,24,rep,name=auto_expand,json=autoExpand,proto3" json:"auto_expand,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"` // name + ref
+	AutoExpand       map[string]uint64            `protobuf:"bytes,24,rep,name=auto_expand,json=autoExpand,proto3" json:"auto_expand,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"` // name + ref to the block of data
 }
 
 func (x *CodeBundle) Reset() {
