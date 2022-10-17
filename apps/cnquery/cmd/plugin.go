@@ -63,7 +63,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	}
 
 	if conf.DoAst {
-		b, err := mqlc.Compile(conf.Command, info.Registry.Schema(), conf.Features, nil)
+		b, err := mqlc.Compile(conf.Command, nil, mqlc.NewConfig(info.Registry.Schema(), conf.Features))
 		if err != nil {
 			return errors.Wrap(err, "failed to compile command")
 		}

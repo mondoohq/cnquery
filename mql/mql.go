@@ -33,7 +33,7 @@ func (e *Executor) Exec(query string, props map[string]*llx.Primitive) (*llx.Raw
 }
 
 func Exec(query string, runtime *resources.Runtime, features cnquery.Features, props map[string]*llx.Primitive) (*llx.RawData, error) {
-	bundle, err := mqlc.Compile(query, runtime.Registry.Schema(), features, props)
+	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(runtime.Registry.Schema(), features))
 	if err != nil {
 		return nil, errors.New("failed to compile: " + err.Error())
 	}

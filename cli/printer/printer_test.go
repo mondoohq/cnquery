@@ -65,7 +65,7 @@ func executionContext() (*resources.Schema, *resources.Runtime) {
 
 func testQuery(t *testing.T, query string) (*llx.CodeBundle, map[string]*llx.RawResult) {
 	schema, runtime := executionContext()
-	codeBundle, err := mqlc.Compile(query, schema, features, nil)
+	codeBundle, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
 	require.NoError(t, err)
 
 	results, err := mql.ExecuteCode(schema, runtime, codeBundle, nil, features)

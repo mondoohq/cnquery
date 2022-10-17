@@ -37,7 +37,7 @@ func (c *Completer) CompletePrompt(doc prompt.Document) []prompt.Suggest {
 	}
 	query += doc.TextBeforeCursor()
 
-	bundle, _ := mqlc.Compile(query, c.schema, c.features, nil)
+	bundle, _ := mqlc.Compile(query, nil, mqlc.NewConfig(c.schema, c.features))
 	if bundle == nil || len(bundle.Suggestions) == 0 {
 		return []prompt.Suggest{}
 	}

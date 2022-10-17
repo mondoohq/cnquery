@@ -238,7 +238,7 @@ func (s *Shell) execQuery(cmd string) {
 	// the shell and we only deal with one query at a time, with the
 	// compiler being rather fast, the additional time is negligible
 	// and may not be worth coding around.
-	code, err := mqlc.Compile(s.query, s.Schema, s.features, nil)
+	code, err := mqlc.Compile(s.query, nil, mqlc.NewConfig(s.Schema, s.features))
 	if err != nil {
 		if e, ok := err.(*parser.ErrIncomplete); ok {
 			s.isMultiline = true
@@ -306,7 +306,7 @@ func (s *Shell) Close() {
 func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult, error) {
 	s.resetPrintCache()
 
-	code, err := mqlc.Compile(cmd, s.Schema, s.features, nil)
+	code, err := mqlc.Compile(cmd, nil, mqlc.NewConfig(s.Schema, s.features))
 	if err != nil {
 		fmt.Fprintln(s.out, s.Theme.Error("failed to compile: "+err.Error()))
 
