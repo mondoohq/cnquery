@@ -23,15 +23,15 @@ func init() {
 
 var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 	Use:   "run",
-	Short: "Run a MQL query",
-	Long:  `Run a MQL query on the CLI and displays its results.`,
+	Short: "Run a Mondoo Query Language (MQL) query",
+	Long:  `Run a Mondoo Query Language (MQL) query on the CLI and displays its results.`,
 	CommonFlags: func(cmd *cobra.Command) {
 		cmd.Flags().Bool("parse", false, "Parse the query and return the logical structure")
 		cmd.Flags().Bool("ast", false, "Parse the query and return the Abstract Syntax Tree (AST)")
 		cmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure")
-		cmd.Flags().String("query", "", "MQL query to be executed")
+		cmd.Flags().String("query", "", "Mondoo Query Language (MQL) query to be executed")
 		cmd.Flags().MarkHidden("query")
-		cmd.Flags().StringP("command", "c", "", "MQL query to be executed")
+		cmd.Flags().StringP("command", "c", "", "Mondoo Query Language (MQL) query to be executed")
 
 		cmd.Flags().StringP("password", "p", "", "Connection password e.g. for ssh/winrm")
 		cmd.Flags().Bool("ask-pass", false, "Prompt for connection password")

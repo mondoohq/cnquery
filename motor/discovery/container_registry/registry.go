@@ -120,8 +120,8 @@ func (a *DockerRegistryImages) ListRegistry(registry string) ([]*asset.Asset, er
 // ListRepository tries to fetch all details about a specific repository
 // index.docker.io/mondoo
 // index.docker.io/mondoo/client
-// harbor.yourdomain.com/library
-// harbor.yourdomain.com/library/ubuntu
+// harbor.lunalectric.com/library
+// harbor.lunalectric.com/library/ubuntu
 func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
