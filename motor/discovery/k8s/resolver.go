@@ -144,15 +144,17 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
+	if tc.IncludesDiscoveryTarget(common.DiscoveryAuto) {
+		log.Info().Msg("discovery option auto is used. This will detect the assets: cluster, jobs, cronjobs, pods, statefulsets, deployments, replicasets, daemonsets")
+	}
+
 	// Only discover cluster and nodes if there are no resource filters. For CI/CD do not
 	// discover the cluster asset at all. In that case that would be the admission review resource
 	// for which we only care if we have explicitly enabled discovery for it.
 	var clusterAsset *asset.Asset
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	if tc.IncludesDiscoveryTarget(common.DiscoveryAll) ||
-		tc.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-		tc.IncludesDiscoveryTarget(DiscoveryClusters) &&
-			len(resourcesFilter) == 0 && root.Category != asset.AssetCategory_CATEGORY_CICD {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryClusters) &&
+		len(resourcesFilter) == 0 && root.Category != asset.AssetCategory_CATEGORY_CICD {
 		clusterAsset = &asset.Asset{
 			PlatformIds: []string{clusterIdentifier},
 			Name:        clusterName,
@@ -274,7 +276,7 @@ func addSeparateAssets(
 	}
 
 	// discover jobs
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryJobs, DiscoveryJobs) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryJobs, DiscoveryJobs) {
 		log.Debug().Str("namespace", namespacesFilter).Msg("search for jobs")
 		connection := tc.Clone()
 		jobs, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
