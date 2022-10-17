@@ -256,7 +256,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		cmd.Flags().StringP("output", "o", "compact", "Set output format: "+reporter.AllFormats())
 		cmd.Flags().BoolP("json", "j", false, "Set output to JSON (shorthand)")
 		cmd.Flags().Bool("no-pager", false, "Disable interactive scan output pagination")
-		cmd.Flags().String("pager", "", "Enable scan output pagination with custom pagination command. default is 'less -R'")
+		cmd.Flags().String("pager", "", "Enable scan output pagination with custom pagination command (default 'less -R')")
 	},
 	CommonPreRun: func(cmd *cobra.Command, args []string) {
 		// multiple assets mapping
