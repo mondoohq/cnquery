@@ -4121,7 +4121,7 @@ func (s *mqlOsBase) Machine() (resources.ResourceType, error) {
 		}
 		res, ok = s.Cache.Load("machine")
 		if !ok {
-			return nil, errors.New("\"os.base\" calculated \"machine\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.base\" calculated \"machine\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "machine")
 	}
@@ -4144,7 +4144,7 @@ func (s *mqlOsBase) Name() (string, error) {
 		}
 		res, ok = s.Cache.Load("name")
 		if !ok {
-			return "", errors.New("\"os.base\" calculated \"name\" but didnt find its value in cache.")
+			return "", errors.New("\"os.base\" calculated \"name\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "name")
 	}
@@ -4167,7 +4167,7 @@ func (s *mqlOsBase) Env() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("env")
 		if !ok {
-			return nil, errors.New("\"os.base\" calculated \"env\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.base\" calculated \"env\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "env")
 	}
@@ -4190,7 +4190,7 @@ func (s *mqlOsBase) Path() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("path")
 		if !ok {
-			return nil, errors.New("\"os.base\" calculated \"path\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.base\" calculated \"path\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "path")
 	}
@@ -4213,7 +4213,7 @@ func (s *mqlOsBase) Uptime() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("uptime")
 		if !ok {
-			return nil, errors.New("\"os.base\" calculated \"uptime\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.base\" calculated \"uptime\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "uptime")
 	}
@@ -4236,7 +4236,7 @@ func (s *mqlOsBase) Updates() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("updates")
 		if !ok {
-			return nil, errors.New("\"os.base\" calculated \"updates\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.base\" calculated \"updates\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "updates")
 	}
@@ -4259,7 +4259,7 @@ func (s *mqlOsBase) Rebootpending() (bool, error) {
 		}
 		res, ok = s.Cache.Load("rebootpending")
 		if !ok {
-			return false, errors.New("\"os.base\" calculated \"rebootpending\" but didnt find its value in cache.")
+			return false, errors.New("\"os.base\" calculated \"rebootpending\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "rebootpending")
 	}
@@ -4282,7 +4282,7 @@ func (s *mqlOsBase) Hostname() (string, error) {
 		}
 		res, ok = s.Cache.Load("hostname")
 		if !ok {
-			return "", errors.New("\"os.base\" calculated \"hostname\" but didnt find its value in cache.")
+			return "", errors.New("\"os.base\" calculated \"hostname\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "hostname")
 	}
@@ -4305,7 +4305,7 @@ func (s *mqlOsBase) Groups() (core.Groups, error) {
 		}
 		res, ok = s.Cache.Load("groups")
 		if !ok {
-			return nil, errors.New("\"os.base\" calculated \"groups\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.base\" calculated \"groups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "groups")
 	}
@@ -4328,7 +4328,7 @@ func (s *mqlOsBase) Users() (core.Users, error) {
 		}
 		res, ok = s.Cache.Load("users")
 		if !ok {
-			return nil, errors.New("\"os.base\" calculated \"users\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.base\" calculated \"users\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "users")
 	}
@@ -4614,7 +4614,7 @@ func (s *mqlOsUnix) Base() (resources.ResourceType, error) {
 		}
 		res, ok = s.Cache.Load("base")
 		if !ok {
-			return nil, errors.New("\"os.unix\" calculated \"base\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.unix\" calculated \"base\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "base")
 	}
@@ -4774,7 +4774,7 @@ func (s *mqlOsLinux) Unix() (resources.ResourceType, error) {
 		}
 		res, ok = s.Cache.Load("unix")
 		if !ok {
-			return nil, errors.New("\"os.linux\" calculated \"unix\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.linux\" calculated \"unix\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "unix")
 	}
@@ -4797,7 +4797,7 @@ func (s *mqlOsLinux) Iptables() (Iptables, error) {
 		}
 		res, ok = s.Cache.Load("iptables")
 		if !ok {
-			return nil, errors.New("\"os.linux\" calculated \"iptables\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.linux\" calculated \"iptables\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "iptables")
 	}
@@ -4820,7 +4820,7 @@ func (s *mqlOsLinux) Ip6tables() (Ip6tables, error) {
 		}
 		res, ok = s.Cache.Load("ip6tables")
 		if !ok {
-			return nil, errors.New("\"os.linux\" calculated \"ip6tables\" but didnt find its value in cache.")
+			return nil, errors.New("\"os.linux\" calculated \"ip6tables\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "ip6tables")
 	}
@@ -7056,7 +7056,7 @@ func (s *mqlDockerContainer) Os() (resources.ResourceType, error) {
 		}
 		res, ok = s.Cache.Load("os")
 		if !ok {
-			return nil, errors.New("\"docker.container\" calculated \"os\" but didnt find its value in cache.")
+			return nil, errors.New("\"docker.container\" calculated \"os\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "os")
 	}

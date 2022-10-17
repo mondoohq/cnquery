@@ -1518,7 +1518,7 @@ func TestCompiler_List(t *testing.T) {
 func TestCompiler_ResourceEmptyWhere(t *testing.T) {
 	compileT(t, "packages.where()", func(res *llx.CodeBundle) {
 		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
-		assert.Len(t, res.CodeV2.Blocks[0].Chunks, 2)
+		assert.Len(t, res.CodeV2.Blocks[0].Chunks, 3)
 		assertFunction(t, "packages", nil, res.CodeV2.Blocks[0].Chunks[0])
 		assertFunction(t, "list", &llx.Function{
 			Binding: (1 << 32) | 1,
