@@ -188,9 +188,13 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 	}
 	// add AWS metadata labels
 	asset.Labels = addAWSMetadataLabels(asset.Labels, ec2InstanceToBasicInstanceInfo(instance, region, account))
-
+	if label, ok := asset.Labels[ImportedFromAWSTagKeyPrefix+AWSNameLabel]; ok {
+		asset.Name = label
+	}
 	return asset
 }
+
+const AWSNameLabel = "Name"
 
 type awsec2id struct {
 	Account  string
