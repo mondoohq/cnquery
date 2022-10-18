@@ -3,7 +3,7 @@ import "../core/core.lr"
 option go_package = "go.mondoo.com/cnquery/resources/packs/aws"
 
 // AWS Resource
-aws {
+aws @defaults("account.id") {
   // List of `aws.vpc` objects representing all VPCs in the account across all enabled regions
   vpcs() []aws.vpc
   // List of all enabled regions in the account
@@ -17,7 +17,7 @@ aws.accessAnalyzer {
 }
 
 // AWS Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
-private aws.accessanalyzer.analyzer {
+private aws.accessanalyzer.analyzer @defaults("arn status") {
   // ARN for the analyzer
   arn string
   // name for the analyzer
@@ -31,7 +31,7 @@ private aws.accessanalyzer.analyzer {
 }
 
 // AWS account resource
-aws.account {
+aws.account @defaults("id") {
   // Account Id
   id() string
   // Account Aliases
@@ -40,6 +40,7 @@ aws.account {
   organization() aws.organization
 }
 
+// AWS organization resource
 aws.organization {
   // arn of the organization
   arn string
@@ -58,7 +59,7 @@ aws.efs {
 }
 
 // AWS Elastic File System (EFS) Filesystem
-private aws.efs.filesystem {
+private aws.efs.filesystem @defaults("name arn") {
   // name of the filesystem
   name string
   // id of the filesystem
@@ -102,7 +103,7 @@ aws.iam {
 }
 
 // Entry in AWS IAM credential report
-aws.iam.usercredentialreportentry {
+aws.iam.usercredentialreportentry @defaults("arn") {
   init(properties map[string]string)
   // properties on the iam user credential report
   properties map[string]string
@@ -160,7 +161,7 @@ aws.iam.usercredentialreportentry {
 }
 
 // AWS IAM User
-aws.iam.user {
+aws.iam.user @defaults("arn") {
   // arn of the iam user 
   arn string
   // id of the iam user
@@ -184,7 +185,7 @@ aws.iam.user {
 }
 
 // AWS IAM Policy
-aws.iam.policy {
+aws.iam.policy @defaults("arn") {
   // ARN of the policy
   arn string
   // id of the policy
@@ -216,7 +217,7 @@ aws.iam.policy {
 }
 
 // AWS IAM Policy Version
-aws.iam.policyversion {
+aws.iam.policyversion @defaults("arn") {
   // ARN of the policy version
   arn string
   // version id
@@ -230,7 +231,7 @@ aws.iam.policyversion {
 }
 
 // AWS IAM Role
-aws.iam.role {
+aws.iam.role @defaults("arn") {
   // ARN of the role
   arn string
   // id of the role
@@ -246,7 +247,7 @@ aws.iam.role {
 }
 
 // AWS IAM Group
-aws.iam.group {
+aws.iam.group @defaults("arn") {
   // ARN of the group
   arn string
   // id of the group
@@ -260,7 +261,7 @@ aws.iam.group {
 }
 
 // AWS IAM Virtual MFA Device
-private aws.iam.virtualmfadevice {
+private aws.iam.virtualmfadevice @defaults("serialNumber") {
   // serial number for the mfa device
   serialNumber string
   // time when the mfa device was enabled
@@ -278,7 +279,7 @@ aws.sagemaker {
 }
 
 // AWS SageMaker Notebook Instance
-private aws.sagemaker.notebookinstance {
+private aws.sagemaker.notebookinstance @defaults("arn") {
   // ARN for the notebook instance
   arn string
   // name of the notebook instance
@@ -292,7 +293,7 @@ private aws.sagemaker.notebookinstance {
 }
 
 // AWS SageMaker Notebook Instance Details
-private aws.sagemaker.notebookinstance.details {
+private aws.sagemaker.notebookinstance.details @defaults("arn") {
   // ARN for the notebook instance
   arn string
   // KMS key used to encrypt data
@@ -301,7 +302,7 @@ private aws.sagemaker.notebookinstance.details {
   directInternetAccess string
 }
 
-private aws.sagemaker.endpoint {
+private aws.sagemaker.endpoint @defaults("arn") {
   // ARN for the endpoint
   arn string
   // name of the endpoint
@@ -321,7 +322,7 @@ aws.sns {
 }
 
 // AWS SNS Topic
-private aws.sns.topic {
+private aws.sns.topic @defaults("arn") {
   // SNS topic ARN
   arn string
   // region where the sns topic exists
@@ -335,7 +336,7 @@ private aws.sns.topic {
 }
 
 // AWS SNS Subscription
-private aws.sns.subscription {
+private aws.sns.subscription @defaults("arn") {
   // ARN of the subscription
   arn string
   // protocol value for the subscription
@@ -349,7 +350,7 @@ aws.es {
 }
 
 // Amazon Elasticsearch Service
-private aws.es.domain {
+private aws.es.domain @defaults("arn") {
   // ARN for the Elasticsearch domain
   arn string
   // denotes whether encryption at rest is enabled
@@ -373,7 +374,7 @@ aws.acm {
 }
 
 // AWS Certificate Manager Certificate resource provides an object representing an individual ACM certificate
-private aws.acm.certificate {
+private aws.acm.certificate @defaults("arn") {
   // ARN for the certificate
   arn string
   // time before which the certificate is not valid
@@ -401,7 +402,7 @@ aws.autoscaling {
 }
 
 // AWS Auto Scaling Group
-private aws.autoscaling.group {
+private aws.autoscaling.group @defaults("arn") {
   // arn for the autoscaling group
   arn string
   // name of the group
@@ -423,7 +424,7 @@ aws.elb {
 }
 
 // AWS Elastic Load Balancing Load Balancer
-private aws.elb.loadbalancer {
+private aws.elb.loadbalancer @defaults("arn") {
   // ARN for the load balancer
   arn string
   // dns name for the load balancer
@@ -445,7 +446,7 @@ aws.codebuild {
 }
 
 // AWS CodeBuild Project
-private aws.codebuild.project {
+private aws.codebuild.project @defaults("arn") {
   // ARN for the project
   arn string
   // description of the project
@@ -469,7 +470,7 @@ aws.guardduty {
 }
 
 // Amazon GuardDuty Detector
-private aws.guardduty.detector {
+private aws.guardduty.detector @defaults("id region") {
   // unique id for the detector
   id string
   // region for the detector
@@ -489,7 +490,7 @@ aws.securityhub {
 }
 
 // AWS Security Hub
-private aws.securityhub.hub {
+private aws.securityhub.hub @defaults("arn") {
   // ARN for the security hub
   arn string
   // date and time when the hub was enabled
@@ -503,7 +504,7 @@ aws.secretsmanager {
 }
 
 // Secret in AWS Secrets Manager
-private aws.secretsmanager.secret {
+private aws.secretsmanager.secret @defaults("arn") {
   // ARN for the secret
   arn string
   // denotes whether rotation is enabled for the secret
@@ -521,7 +522,7 @@ aws.emr {
 }
 
 // Amazon EMR Cluster
-private aws.emr.cluster {
+private aws.emr.cluster @defaults("arn") {
   // ARN for the cluster
   arn string
   // name of the cluster
@@ -551,7 +552,7 @@ aws.cloudwatch {
 }
 
 // AWS CloudWatch Alarms
-private aws.cloudwatch.metricsalarm {
+private aws.cloudwatch.metricsalarm @defaults("arn") {
   // arn for the metric alarm
   arn string
   // metric name associated with the alarm
@@ -575,7 +576,7 @@ private aws.cloudwatch.metricsalarm {
 }
 
 // AWS CloudWatch Metric
-private aws.cloudwatch.metric {
+private aws.cloudwatch.metric @defaults("name region") {
   // name of the metric
   name string
   // namespace for the metric
@@ -591,7 +592,7 @@ private aws.cloudwatch.metric {
 }
 
 // AWS CloudWatch Metric Dimension
-aws.cloudwatch.metricdimension {
+aws.cloudwatch.metricdimension @defaults("name value") {
   // Name of the dimension
   name string
   // Value of the dimension
@@ -599,7 +600,7 @@ aws.cloudwatch.metricdimension {
 }
 
 // AWS CloudWatch Metric Statistics
-aws.cloudwatch.metricstatistics {
+aws.cloudwatch.metricstatistics @defaults("name region") {
   init(namespace string, region string, name string)
   // Namespace for the metric
   namespace string
@@ -614,7 +615,7 @@ aws.cloudwatch.metricstatistics {
 }
 
 // AWS CloudWatch Metric Datapoint
-private aws.cloudwatch.metric.datapoint {
+private aws.cloudwatch.metric.datapoint @defaults("id") {
   // unique identifier for the datapoint
   id string
   // Timestamp of the metric datapoint
@@ -633,7 +634,7 @@ private aws.cloudwatch.metric.datapoint {
 
 
 // AWS CloudWatch Log Groups
-private aws.cloudwatch.loggroup {
+private aws.cloudwatch.loggroup @defaults("arn") {
   // ARN of the log group
   arn string
   // name of the log group
@@ -645,7 +646,7 @@ private aws.cloudwatch.loggroup {
 }
 
 // AWS CloudWatch Log Group Metrics Filter
-private aws.cloudwatch.loggroup.metricsfilter {
+private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
   // unique id for the metric
   id string
   // filter name associated with metric
@@ -663,7 +664,7 @@ aws.cloudtrail {
 }
 
 // AWS CloudTrail Trail
-private aws.cloudtrail.trail {
+private aws.cloudtrail.trail @defaults("arn") {
   // ARN of the trail
   arn string
   // name of the trail
@@ -701,7 +702,7 @@ aws.kms {
 }
 
 // AWS KMS Key
-private aws.kms.key {
+private aws.kms.key @defaults("arn") {
   // unique identifier for the key
   id string
   // arn of the key
@@ -728,7 +729,7 @@ aws.s3control {
 }
 
 // AWS S3 Bucket
-private aws.s3.bucket {
+private aws.s3.bucket @defaults("arn") {
   // arn of the bucket
   arn string
   // name of the bucket
@@ -766,7 +767,7 @@ private aws.s3.bucket {
 }
 
 // AWS S3 Bucket Grant
-private aws.s3.bucket.grant {
+private aws.s3.bucket.grant @defaults("name permission") {
   // id of the bucket grant
   id string
   // name for the bucket grant
@@ -778,7 +779,7 @@ private aws.s3.bucket.grant {
 }
 
 // AWS S3 Bucket CORS Rule
-private aws.s3.bucket.corsrule {
+private aws.s3.bucket.corsrule @defaults("name") {
   // name of the rule
   name string
   // List of allowed headers
@@ -794,7 +795,7 @@ private aws.s3.bucket.corsrule {
 }
 
 // AWS S3 Bucket Policy
-private aws.s3.bucket.policy {
+private aws.s3.bucket.policy @defaults("name version") {
   // name for the policy
   name string
   // document for the policy
@@ -808,7 +809,7 @@ private aws.s3.bucket.policy {
 }
 
 // AWS Application Autoscaling
-aws.applicationAutoscaling {
+aws.applicationAutoscaling @defaults("namespace") {
   init(namespace string)
   // service namespace to query for application autoscaling
   namespace string
@@ -816,7 +817,7 @@ aws.applicationAutoscaling {
   scalableTargets() []aws.applicationautoscaling.target
 }
 
-private aws.applicationautoscaling.target {
+private aws.applicationautoscaling.target @defaults("arn") {
   // namespace for the target
   namespace string
   // arn of the autoscaling target
@@ -837,7 +838,7 @@ aws.backup {
   vaults() []aws.backup.vault
 }
 
-private aws.backup.vault {
+private aws.backup.vault @defaults("arn") {
   // arn of the vault
   arn string
   // name of the vault
@@ -846,7 +847,7 @@ private aws.backup.vault {
   recoveryPoints() []aws.backup.vaultRecoveryPoint
 }
 
-private aws.backup.vaultRecoveryPoint {
+private aws.backup.vaultRecoveryPoint @defaults("arn") {
   // arn of the recovery point
   arn string
   // resource type for the recovery point, e.g. "EFS" or "DynamoDB"
@@ -880,7 +881,7 @@ aws.dynamodb {
 }
 
 // AWS DynamoDB Limits
-private aws.dynamodb.limit {
+private aws.dynamodb.limit @defaults("arn") {
   // ARN representing the account + region where the limit applies 
   arn string
   // region where the limits apply
@@ -896,7 +897,7 @@ private aws.dynamodb.limit {
 }
 
 // AWS DynamoDB Global Table
-private aws.dynamodb.globaltable {
+private aws.dynamodb.globaltable @defaults("arn") {
   // ARN for the global table
   arn string
   // table name
@@ -908,7 +909,7 @@ private aws.dynamodb.globaltable {
 }
 
 // AWS DynamoDB Table
-private aws.dynamodb.table {
+private aws.dynamodb.table @defaults("arn") {
   // ARN for the table
   arn string
   // table name
@@ -936,7 +937,7 @@ aws.rds {
 }
 
 // AWS RDS Cluster
-private aws.rds.dbcluster {
+private aws.rds.dbcluster @defaults("arn") {
   // ARN for the db cluster
   arn string
   // region where the db cluster exists
@@ -952,7 +953,7 @@ private aws.rds.dbcluster {
 }
 
 // AWS RDS Snapshot
-private aws.rds.snapshot {
+private aws.rds.snapshot @defaults("arn") {
   // ARN of the snapshot
   arn string
   // id of the snapshot
@@ -972,7 +973,7 @@ private aws.rds.snapshot {
 }
 
 // AWS RDS Database Instance
-private aws.rds.dbinstance {
+private aws.rds.dbinstance @defaults("arn") {
   // ARN for the db instance
   arn string
   // name of the db instance
@@ -1024,7 +1025,7 @@ aws.redshift {
 }
 
 // AWS Redshift Cluster
-private aws.redshift.cluster {
+private aws.redshift.cluster @defaults("arn") {
   // ARN for the cluster
   arn string
   // denotes whether or not the cluster is encrypted
@@ -1065,7 +1066,7 @@ aws.apigateway {
 }
 
 // Amazon API Gateway REST API resource provides an object representing an individual configured API Gateway REST API
-private aws.apigateway.restapi {
+private aws.apigateway.restapi @defaults("arn") {
   // ARN for the rest api
   arn string
   // unique id for the rest api
@@ -1085,7 +1086,7 @@ private aws.apigateway.restapi {
 }
 
 // Amazon API Gateway REST API resource provides an object representing an individual stage configured on an API Gateway
-private aws.apigateway.stage {
+private aws.apigateway.stage @defaults("arn") {
   // ARN for the rest api stage
   arn string
   // name for the stage
@@ -1107,7 +1108,7 @@ aws.lambda {
 }
 
 // AWS Lambda Function
-private aws.lambda.function {
+private aws.lambda.function @defaults("arn") {
   // arn of the function
   arn string
   // name of the function
@@ -1149,7 +1150,7 @@ aws.ec2 {
 }
 
 // AWS EC2 Network ACL
-private aws.ec2.networkacl {
+private aws.ec2.networkacl @defaults("arn") {
   // ARN for the network ACL
   arn string
   // ID for the network ACL 
@@ -1183,7 +1184,7 @@ private aws.ec2.networkacl.entry.portrange {
 }
 
 // Amazon EC2 VPN Connection
-private aws.ec2.vpnconnection {
+private aws.ec2.vpnconnection @defaults("arn") {
   // ARN for the vpn connection
   arn string
   // List of telemetry data for the vpn
@@ -1198,7 +1199,7 @@ private aws.ec2.vgwtelemetry {
 }
 
 // Amazon EC2 internet gateway for use with a VPC
-private aws.ec2.internetgateway {
+private aws.ec2.internetgateway @defaults("arn") {
   // ARN for the gateway
   arn string
   // id for the gateway
@@ -1208,7 +1209,7 @@ private aws.ec2.internetgateway {
 }
 
 // AWS EC2 Snapshot
-private aws.ec2.snapshot {
+private aws.ec2.snapshot @defaults("arn") {
   // arn for the snapshot
   arn string
   // id for the snapshot
@@ -1226,7 +1227,7 @@ private aws.ec2.snapshot {
 }
 
 // AWS EC2 Volume
-private aws.ec2.volume {
+private aws.ec2.volume @defaults("arn") {
   // ARN for the ec2 volume
   arn string
   // id of the ec2 volume
@@ -1248,7 +1249,7 @@ private aws.ec2.volume {
 }
 
 // AWS EC2 Instance
-private aws.ec2.instance {
+private aws.ec2.instance @defaults("arn state") {
   // arn for the instance
   arn string
   // instance id for the instance
@@ -1299,7 +1300,7 @@ private aws.ec2.instance {
   keypair() aws.ec2.keypair
 }
 
-private aws.ec2.keypair {
+private aws.ec2.keypair @defaults("arn name") {
   // arn of the keypair
   arn string
   // fingerprint for the keypair
@@ -1315,7 +1316,7 @@ private aws.ec2.keypair {
 }
 
 // AWS EC2 Image
-private aws.ec2.image {
+private aws.ec2.image @defaults("arn") {
   // ARN for the AMI
   arn string
   // id of the image
@@ -1343,7 +1344,7 @@ private aws.ec2.instance.device {
 }
 
 // AWS Virtual Private Cloud (VPC) resource
-private aws.vpc {
+private aws.vpc @defaults("arn isDefault") {
   // arn of the vpc
   arn string
   // id of the vpc
@@ -1363,7 +1364,7 @@ private aws.vpc {
 }
 
 // Amazon Virtual Private Cloud (VPC) Flow Log
-private aws.vpc.flowlog {
+private aws.vpc.flowlog @defaults("id region status") {
   // unique id of the flowlog
   id string
   // vpc the flowlog exists in
@@ -1377,7 +1378,7 @@ private aws.vpc.flowlog {
 }
 
 // Amazon Virtual Private Cloud (VPC) Route Table
-private aws.vpc.routetable {
+private aws.vpc.routetable @defaults("id") {
   // unique id of the route table
   id string
   // a list of route descriptions
@@ -1385,7 +1386,7 @@ private aws.vpc.routetable {
 }
 
 // AWS EC2 Security Group
-private aws.ec2.securitygroup {
+private aws.ec2.securitygroup @defaults("arn") {
   // security group arn
   arn string
   // security group id
@@ -1409,7 +1410,7 @@ private aws.ec2.securitygroup {
 }
 
 // AWS EC2 Security Group IP Permission
-private aws.ec2.securitygroup.ippermission {
+private aws.ec2.securitygroup.ippermission @defaults("id") {
   // unique id for the ip permission
   id string
   // start of port range for tcp/udp protocols
@@ -1433,7 +1434,7 @@ aws.config {
 }
 
 // AWS Config Rule
-private aws.config.rule {
+private aws.config.rule @defaults("arn state") {
   // ARN for the config rule
   arn string
   // state of the rule
@@ -1443,7 +1444,7 @@ private aws.config.rule {
 }
 
 // AWS Config Recorder
-private aws.config.recorder {
+private aws.config.recorder @defaults("name region") {
   // name of the recorder
   name string
   // arn of the IAM role used to describe the AWS resources associated with the account
@@ -1466,7 +1467,7 @@ aws.eks {
 }
 
 // Amazon EKS cluster
-private aws.eks.cluster {
+private aws.eks.cluster @defaults("arn version status") {
   // name of the cluster
   name string
   // arn of the cluster
