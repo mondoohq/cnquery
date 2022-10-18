@@ -193,10 +193,10 @@ func (typ Type) Key() Type {
 	return Type(typ[1])
 }
 
-// ResourceName return the name of a resource
+// ResourceName return the name of a resource. Has to be a resource type,
+// otherwise this call panics.
 func (typ Type) ResourceName() string {
-	switch typ[0] {
-	case byteResource:
+	if typ[0] == byteResource {
 		return string(typ[1:])
 	}
 	panic("cannot determine type name of " + typ.Label())
@@ -250,36 +250,34 @@ func (typ Type) Label() string {
 	return h(typ[1:])
 }
 
-var (
-	// Equal provides a set of function for a range of types to test if 2 values
-	// of that type are equal
-	Equal = map[Type]func(interface{}, interface{}) bool{
-		Bool: func(left, right interface{}) bool {
-			return left.(bool) == right.(bool)
-		},
-		Int: func(left, right interface{}) bool {
-			return left.(int64) == right.(int64)
-		},
-		Float: func(left, right interface{}) bool {
-			return left.(float64) == right.(float64)
-		},
-		String: func(left, right interface{}) bool {
-			return left.(string) == right.(string)
-		},
-		Regex: func(left, right interface{}) bool {
-			return left.(string) == right.(string)
-		},
-		Time: func(left, right interface{}) bool {
-			l := left.(*time.Time)
-			r := right.(*time.Time)
-			if l == nil || r == nil {
-				return false
-			}
-			return l.Equal(*r)
-		},
-		// types.Dict: func(left, right interface{}) bool {},
-		Score: func(left, right interface{}) bool {
-			return left.(int32) == right.(int32)
-		},
-	}
-)
+// Equal provides a set of function for a range of types to test if 2 values
+// of that type are equal
+var Equal = map[Type]func(interface{}, interface{}) bool{
+	Bool: func(left, right interface{}) bool {
+		return left.(bool) == right.(bool)
+	},
+	Int: func(left, right interface{}) bool {
+		return left.(int64) == right.(int64)
+	},
+	Float: func(left, right interface{}) bool {
+		return left.(float64) == right.(float64)
+	},
+	String: func(left, right interface{}) bool {
+		return left.(string) == right.(string)
+	},
+	Regex: func(left, right interface{}) bool {
+		return left.(string) == right.(string)
+	},
+	Time: func(left, right interface{}) bool {
+		l := left.(*time.Time)
+		r := right.(*time.Time)
+		if l == nil || r == nil {
+			return false
+		}
+		return l.Equal(*r)
+	},
+	// types.Dict: func(left, right interface{}) bool {},
+	Score: func(left, right interface{}) bool {
+		return left.(int32) == right.(int32)
+	},
+}
