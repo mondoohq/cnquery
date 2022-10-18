@@ -34,4 +34,5 @@ jobs:
           protoc --version
           make prep
           make cnquery/generate
-          git diff --exit-code *.go 
+          git diff --exit-code *.go
+          git diff --exit-code resources/packs/**/*.lr.json
