@@ -249,6 +249,23 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 // 	return typ
 // }
 
+func blockCallType(typ types.Type, schema *resources.Schema) types.Type {
+	if typ.IsArray() {
+		return types.Array(types.Block)
+	}
+
+	if !typ.IsResource() {
+		return types.Block
+	}
+
+	info := schema.Resources[typ.ResourceName()]
+	if info != nil && info.ListType != "" {
+		return types.Array(types.Block)
+	}
+
+	return types.Block
+}
+
 // compileBlock on a context
 func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type, bindingRef uint64) (types.Type, error) {
 	// For resource, users may indicate to query all fields. It also works for list of resources.
@@ -294,13 +311,6 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 		return typ, nil
 	}
 
-	var resultType types.Type
-	if typ.IsArray() {
-		resultType = types.Array(types.Block)
-	} else {
-		resultType = types.Block
-	}
-
 	args := []*llx.Primitive{llx.FunctionPrimitive(refs.block)}
 	for _, v := range refs.deps {
 		if c.isInMyBlock(v) {
@@ -309,6 +319,7 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 	}
 	c.blockDeps = append(c.blockDeps, refs.deps...)
 
+	resultType := blockCallType(typ, c.Schema)
 	c.addChunk(&llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "{}",
@@ -1645,16 +1656,20 @@ func (c *compiler) compileExpressions(expressions []*parser.Expression) error {
 
 func (c *compiler) postCompile() {
 	code := c.Result.CodeV2
-	eps := code.Entrypoints()
-	for _, ref := range eps {
-		chunk := code.Chunk(ref)
+	for i := range code.Blocks {
+		block := code.Blocks[i]
+		eps := block.Entrypoints
 
-		if chunk.Call != llx.Chunk_FUNCTION {
-			continue
+		for _, ref := range eps {
+			chunk := code.Chunk(ref)
+
+			if chunk.Call != llx.Chunk_FUNCTION {
+				continue
+			}
+
+			chunk, typ, ref := c.expandListResource(chunk, ref)
+			c.expandResourceFields(chunk, typ, ref)
 		}
-
-		chunk, typ, ref := c.expandListResource(chunk, ref)
-		c.expandResourceFields(chunk, typ, ref)
 	}
 }
 

@@ -991,6 +991,43 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 		})
 	})
 
+	cmd = "users { group }"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			require.Len(t, res.CodeV2.Blocks, 3)
+
+			assertFunction(t, "{}", &llx.Function{
+				Binding: (1 << 32) | 2,
+				Type:    string(types.Array(types.Block)),
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
+			}, res.CodeV2.Blocks[0].Chunks[2])
+
+			assertFunction(t, "group", &llx.Function{
+				Binding: (2 << 32) | 1,
+				Type:    string(types.Resource("group")),
+			}, res.CodeV2.Blocks[1].Chunks[1])
+			assertFunction(t, "{}", &llx.Function{
+				Binding: (2 << 32) | 2,
+				Type:    string(types.Block),
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(3 << 32)},
+			}, res.CodeV2.Blocks[1].Chunks[2])
+
+			assertFunction(t, "name", &llx.Function{
+				Binding: (3 << 32) | 1,
+				Type:    string(types.String),
+			}, res.CodeV2.Blocks[2].Chunks[1])
+			assertFunction(t, "gid", &llx.Function{
+				Binding: (3 << 32) | 1,
+				Type:    string(types.Int),
+			}, res.CodeV2.Blocks[2].Chunks[2])
+
+			assert.Equal(t, map[string]uint64{res.CodeV2.Checksums[2<<32|3]: 3 << 32}, res.AutoExpand)
+			assert.Equal(t, []uint64{1<<32 | 3}, res.CodeV2.Blocks[0].Entrypoints)
+			assert.Equal(t, []uint64{2<<32 | 3}, res.CodeV2.Blocks[1].Entrypoints)
+			assert.Equal(t, []uint64{3<<32 | 2, 3<<32 | 3}, res.CodeV2.Blocks[2].Entrypoints)
+		})
+	})
+
 	cmd = "pam.conf.entries['.']"
 	t.Run(cmd, func(t *testing.T) {
 		compileT(t, cmd, func(res *llx.CodeBundle) {

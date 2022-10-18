@@ -174,7 +174,7 @@ authorizedkeys.entry {
 }
 
 // Group on this system
-group {
+group @defaults("name gid") {
   init(id string)
   // Group ID
   gid int
