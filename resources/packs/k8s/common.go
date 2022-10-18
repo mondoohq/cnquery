@@ -164,6 +164,9 @@ func objIdFromK8sObj(o metav1.Object, objT metav1.Type) string {
 
 func objIdFromFields(kind, namespace, name string) string {
 	// Kind is usually capitalized. Make it all lower case for readability
+	if namespace == "" {
+		return fmt.Sprintf("%s:%s", strings.ToLower(kind), name)
+	}
 	return fmt.Sprintf("%s:%s:%s", strings.ToLower(kind), namespace, name)
 }
 
