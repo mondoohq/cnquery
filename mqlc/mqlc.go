@@ -1654,39 +1654,40 @@ func (c *compiler) postCompile() {
 		}
 
 		var info *resources.ResourceInfo
-		info, ref = c.expandListResource(chunk, ref)
+		info, chunk, ref = c.expandListResource(chunk, ref)
 		c.expandResourceFields(chunk, ref, info)
 	}
 }
 
-func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*resources.ResourceInfo, uint64) {
+func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*resources.ResourceInfo, *llx.Chunk, uint64) {
 	var resourceName string
 
 	// initial resources
 	if chunk.Function != nil {
-		return nil, ref
+		return nil, chunk, ref
 	}
 	resourceName = chunk.Id
 
 	info := c.Schema.Resources[resourceName]
 	if info == nil || info.ListType == "" {
-		return info, ref
+		return info, chunk, ref
 	}
 
 	block := c.Result.CodeV2.Block(ref)
-	block.AddChunk(c.Result.CodeV2, ref, &llx.Chunk{
+	newChunk := &llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "list",
 		Function: &llx.Function{
 			Binding: ref,
 			Type:    string(types.Array(types.Type(info.ListType))),
 		},
-	})
+	}
+	block.AddChunk(c.Result.CodeV2, ref, newChunk)
 	ep := block.TailRef(ref)
 	block.ReplaceEntrypoint(ref, ep)
 
 	childInfo := c.Schema.Resources[types.Type(info.ListType).ResourceName()]
-	return childInfo, ep
+	return childInfo, newChunk, ep
 }
 
 func (c *compiler) expandResourceFields(chunk *llx.Chunk, ref uint64, info *resources.ResourceInfo) {
@@ -1734,6 +1735,10 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, ref uint64, info *reso
 	}
 
 	resultType := types.Block
+
+	if len(chunk.GetFunction().GetType()) > 0 && types.Type(chunk.Function.Type).IsArray() {
+		resultType = types.Array(types.Block)
+	}
 	block := c.Result.CodeV2.Block(ref)
 	block.AddChunk(c.Result.CodeV2, ref, &llx.Chunk{
 		Call: llx.Chunk_FUNCTION,

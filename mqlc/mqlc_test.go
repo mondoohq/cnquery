@@ -968,7 +968,7 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 			}, res.CodeV2.Blocks[0].Chunks[1])
 			assertFunction(t, "{}", &llx.Function{
 				Binding: (1 << 32) | 2,
-				Type:    string(types.Block),
+				Type:    string(types.Array(types.Block)),
 				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 			}, res.CodeV2.Blocks[0].Chunks[2])
 
@@ -1004,7 +1004,7 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 			}, res.CodeV2.Blocks[0].Chunks[2])
 			assertFunction(t, "{}", &llx.Function{
 				Binding: (1 << 32) | 3,
-				Type:    string(types.Block),
+				Type:    string(types.Array(types.Block)),
 				Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 			}, res.CodeV2.Blocks[0].Chunks[3])
 
