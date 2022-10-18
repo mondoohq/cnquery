@@ -99,12 +99,12 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/masterzen/winrm v0.0.0-20220513085036-69f69afcd9e9
 	github.com/mattn/go-isatty v0.0.16
-	github.com/microsoft/kiota-abstractions-go v0.8.2
+	github.com/microsoft/kiota-abstractions-go v0.12.0
 	github.com/microsoft/kiota-authentication-azure-go v0.3.1
-	github.com/microsoft/kiota-serialization-json-go v0.5.5
+	github.com/microsoft/kiota-serialization-json-go v0.7.2
 	github.com/microsoft/kiota-serialization-text-go v0.4.1
 	github.com/microsoftgraph/msgraph-beta-sdk-go v0.24.0
-	github.com/microsoftgraph/msgraph-sdk-go-core v0.24.0
+	github.com/microsoftgraph/msgraph-sdk-go-core v0.30.0
 	github.com/miekg/dns v1.1.50
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -214,7 +214,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/charithe/durationcheck v0.0.9 // indirect
 	github.com/chavacava/garif v0.0.0-20220630083739-93517212f375 // indirect
-	github.com/cjlapao/common-go v0.0.25 // indirect
+	github.com/cjlapao/common-go v0.0.27 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/console v1.0.3 // indirect
@@ -351,7 +351,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
 	github.com/mgechev/revive v1.2.3 // indirect
-	github.com/microsoft/kiota-http-go v0.5.2 // indirect
+	github.com/microsoft/kiota-http-go v0.9.0 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
