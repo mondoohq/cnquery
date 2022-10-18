@@ -1,4 +1,4 @@
-package platform
+package detector
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 )
 
 func TestMajorMinorParser(t *testing.T) {
-
 	data := []struct {
 		release string
 		major   string

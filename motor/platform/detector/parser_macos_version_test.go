@@ -1,11 +1,11 @@
-package platform_test
+package detector_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform/detector"
 )
 
 func TestDarwinRelease(t *testing.T) {
@@ -14,7 +14,7 @@ ProductVersion:	10.13.2
 BuildVersion:	17C88
 	`
 
-	m, err := platform.ParseDarwinRelease(swVers)
+	m, err := detector.ParseDarwinRelease(swVers)
 	require.NoError(t, err)
 
 	assert.Equal(t, "Mac OS X", m["ProductName"], "ProductName should be parsed properly")
@@ -23,7 +23,6 @@ BuildVersion:	17C88
 }
 
 func TestMacOsSystemVersion(t *testing.T) {
-
 	systemVersion := `
 	<?xml version="1.0" encoding="UTF-8"?>
 	<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -43,7 +42,7 @@ func TestMacOsSystemVersion(t *testing.T) {
 	</plist>
 	`
 
-	m, err := platform.ParseMacOSSystemVersion(systemVersion)
+	m, err := detector.ParseMacOSSystemVersion(systemVersion)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "17C88", m["ProductBuildVersion"], "ProductBuildVersion should be parsed properly")

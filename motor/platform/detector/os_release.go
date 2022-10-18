@@ -1,4 +1,4 @@
-package platform
+package detector
 
 import (
 	"io/ioutil"

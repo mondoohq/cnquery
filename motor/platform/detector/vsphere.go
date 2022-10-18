@@ -1,16 +1,17 @@
-package platform
+package detector
 
 import (
 	"errors"
 
+	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
-	vsphere_transport "go.mondoo.com/cnquery/motor/providers/vsphere"
+	vsphere_provider "go.mondoo.com/cnquery/motor/providers/vsphere"
 )
 
-func VspherePlatform(t *vsphere.Provider, identifier string) (*Platform, error) {
-	if vsphere_transport.IsVsphereResourceID(identifier) {
-		moid, err := vsphere_transport.ParseVsphereResourceID(identifier)
+func VspherePlatform(t *vsphere.Provider, identifier string) (*platform.Platform, error) {
+	if vsphere_provider.IsVsphereResourceID(identifier) {
+		moid, err := vsphere_provider.ParseVsphereResourceID(identifier)
 		if err != nil {
 			return nil, err
 		}
@@ -27,14 +28,14 @@ func VspherePlatform(t *vsphere.Provider, identifier string) (*Platform, error) 
 			esxi_version := ""
 			esxi_build := ""
 			// we do not abort in case of error because the simulator does not support esxi interface for the host
-			ver, err := vsphere_transport.EsxiVersion(host)
+			ver, err := vsphere_provider.EsxiVersion(host)
 			if err == nil {
 				esxi_version = ver.Version
 				esxi_build = ver.Build
 			}
 
 			// host
-			return &Platform{
+			return &platform.Platform{
 				Name:    "vmware-esxi",
 				Title:   "VMware ESXi",
 				Release: esxi_version,
@@ -47,7 +48,7 @@ func VspherePlatform(t *vsphere.Provider, identifier string) (*Platform, error) 
 		case "VirtualMachine":
 			// TODO: we should detect more details here
 			// vm
-			return &Platform{
+			return &platform.Platform{
 				Runtime: providers.RUNTIME_VSPHERE_VM,
 				Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
 			}, nil
@@ -57,7 +58,7 @@ func VspherePlatform(t *vsphere.Provider, identifier string) (*Platform, error) 
 	}
 
 	info := t.Info()
-	return &Platform{
+	return &platform.Platform{
 		Name:    "vmware-vsphere",
 		Title:   info.FullName,
 		Release: info.Version,

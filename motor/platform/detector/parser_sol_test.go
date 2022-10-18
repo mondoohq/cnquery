@@ -1,11 +1,12 @@
-package platform_test
+package detector_test
 
 import (
 	"testing"
 
+	"go.mondoo.com/cnquery/motor/platform/detector"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/platform"
 )
 
 func TestOpenSolaris2009Release(t *testing.T) {
@@ -16,7 +17,7 @@ func TestOpenSolaris2009Release(t *testing.T) {
                           Assembled 07 May 2009
 `
 
-	r, err := platform.ParseSolarisRelease(input)
+	r, err := detector.ParseSolarisRelease(input)
 	require.NoError(t, err)
 
 	assert.Equal(t, "opensolaris", r.ID)
@@ -31,7 +32,7 @@ func TestSolaris11Release(t *testing.T) {
 					   Assembled 04 November 2010
 `
 
-	r, err := platform.ParseSolarisRelease(input)
+	r, err := detector.ParseSolarisRelease(input)
 	require.NoError(t, err)
 
 	assert.Equal(t, "solaris", r.ID)
@@ -49,7 +50,7 @@ func TestSolaris10Release(t *testing.T) {
                 Solaris 10 10/09 (Update 8) Patch Bundle applied.
 `
 
-	r, err := platform.ParseSolarisRelease(input)
+	r, err := detector.ParseSolarisRelease(input)
 	require.NoError(t, err)
 
 	assert.Equal(t, "solaris", r.ID)

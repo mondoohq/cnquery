@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/motorid"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
@@ -97,7 +97,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			ht.Options = host.Annotations
 			host.Connections = append(host.Connections, ht)
 
-			pf, err := platform.VspherePlatform(trans, host.PlatformIds[0])
+			pf, err := detector.VspherePlatform(trans, host.PlatformIds[0])
 			if err == nil {
 				host.Platform = pf
 			} else {
@@ -119,7 +119,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		for i := range vms {
 			vm := vms[i]
 
-			pf, err := platform.VspherePlatform(trans, vm.PlatformIds[0])
+			pf, err := detector.VspherePlatform(trans, vm.PlatformIds[0])
 			if err == nil {
 				vm.Platform = pf
 			} else {
