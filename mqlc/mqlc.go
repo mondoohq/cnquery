@@ -1653,61 +1653,51 @@ func (c *compiler) postCompile() {
 			continue
 		}
 
-		var info *resources.ResourceInfo
-		info, chunk, ref = c.expandListResource(chunk, ref)
-		c.expandResourceFields(chunk, ref, info)
+		chunk, typ, ref := c.expandListResource(chunk, ref)
+		c.expandResourceFields(chunk, typ, ref)
 	}
 }
 
-func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*resources.ResourceInfo, *llx.Chunk, uint64) {
-	var resourceName string
-
-	// initial resources
-	if chunk.Function != nil {
-		return nil, chunk, ref
+func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk, types.Type, uint64) {
+	typ := chunk.Type()
+	if !typ.IsResource() {
+		return chunk, typ, ref
 	}
-	resourceName = chunk.Id
 
-	info := c.Schema.Resources[resourceName]
+	info := c.Schema.Resources[typ.ResourceName()]
 	if info == nil || info.ListType == "" {
-		return info, chunk, ref
+		return chunk, typ, ref
 	}
 
 	block := c.Result.CodeV2.Block(ref)
+	newType := types.Array(types.Type(info.ListType))
 	newChunk := &llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
 		Id:   "list",
 		Function: &llx.Function{
 			Binding: ref,
-			Type:    string(types.Array(types.Type(info.ListType))),
+			Type:    string(newType),
 		},
 	}
 	block.AddChunk(c.Result.CodeV2, ref, newChunk)
-	ep := block.TailRef(ref)
-	block.ReplaceEntrypoint(ref, ep)
+	newRef := block.TailRef(ref)
+	block.ReplaceEntrypoint(ref, newRef)
 
-	childInfo := c.Schema.Resources[types.Type(info.ListType).ResourceName()]
-	return childInfo, newChunk, ep
+	return newChunk, newType, newRef
 }
 
-func (c *compiler) expandResourceFields(chunk *llx.Chunk, ref uint64, info *resources.ResourceInfo) {
-	if info == nil {
-		// try to detect it
-		t := types.Type(chunk.Function.Type)
-		if t.IsResource() {
-			info = c.Schema.Resources[t.ResourceName()]
-		} else if t.IsArray() {
-			child := t.Child()
-			if child.IsResource() {
-				info = c.Schema.Resources[child.ResourceName()]
-			}
-		}
-		if info == nil {
-			return
-		}
+func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) {
+	resultType := types.Block
+	if typ.IsArray() {
+		resultType = types.Array(types.Block)
+		typ = typ.Child()
+	}
+	if !typ.IsResource() {
+		return
 	}
 
-	if info.Defaults == "" {
+	info := c.Schema.Resources[typ.ResourceName()]
+	if info == nil || info.Defaults == "" {
 		return
 	}
 
@@ -1721,24 +1711,11 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, ref uint64, info *reso
 	if err != nil {
 		log.Error().Err(err).Msg("failed to compile default for " + info.Name)
 	}
-
-	args := []*llx.Primitive{llx.FunctionPrimitive(refs.block)}
-	// for _, v := range refs.deps {
-	// 	if c.isInMyBlock(v) {
-	// 		args = append(args, llx.RefPrimitiveV2(v))
-	// 	}
-	// }
-	// c.blockDeps = append(c.blockDeps, refs.deps...)
-
 	if len(refs.deps) != 0 {
 		log.Warn().Msg("defaults somehow included external dependencies for resource " + info.Name)
 	}
 
-	resultType := types.Block
-
-	if len(chunk.GetFunction().GetType()) > 0 && types.Type(chunk.Function.Type).IsArray() {
-		resultType = types.Array(types.Block)
-	}
+	args := []*llx.Primitive{llx.FunctionPrimitive(refs.block)}
 	block := c.Result.CodeV2.Block(ref)
 	block.AddChunk(c.Result.CodeV2, ref, &llx.Chunk{
 		Call: llx.Chunk_FUNCTION,
