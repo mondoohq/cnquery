@@ -32,7 +32,7 @@ mondoo.asset {
 }
 
 // General asset information
-asset {
+asset @defaults("name platform version") {
   // Human readable name of the asset
   name string
   // All identifiers for this asset
@@ -286,7 +286,7 @@ parse.yaml {
 }
 
 // Common platform information (OS, API, Service)
-platform {
+platform @defaults("name version") {
   // Name of the platform
   name string
   // Human-readable name of the platform
@@ -328,7 +328,7 @@ platform.virtualization {
 }
 
 // information about the platform end-of-life
-platform.eol {
+platform.eol @defaults("date") {
   // Documentation URL
   docsUrl string
   // Product URL
