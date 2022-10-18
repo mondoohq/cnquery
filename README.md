@@ -137,6 +137,8 @@ Explore:
 - [MQL resource packs](https://mondoo.com/docs/references/mql/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
 
+## Join the community!
+
 Our goal is to become the API for your entire infrastructure. Join our [community](https://github.com/orgs/mondoohq/discussions) today and let’s grow it together!
 
 ## Development
