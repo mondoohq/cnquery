@@ -639,7 +639,7 @@ func githubProviderOrganizationCmd(commonCmdFlags commonFlagsFn, preRun commonPr
 		},
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "GitHub access tokens")
+	cmd.Flags().String("token", "", "GitHub personal access tokens")
 	return cmd
 }
 
@@ -658,7 +658,7 @@ func githubProviderRepositoryCmd(commonCmdFlags commonFlagsFn, preRun commonPreR
 		},
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "GitHub access tokens")
+	cmd.Flags().String("token", "", "GitHub personal access token")
 	return cmd
 }
 
@@ -680,7 +680,7 @@ func gitlabProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runF
 	commonCmdFlags(cmd)
 	cmd.Flags().String("group", "", "a GitLab group to scan")
 	cmd.MarkFlagRequired("group")
-	cmd.Flags().String("token", "", "GitHub access tokens")
+	cmd.Flags().String("token", "", "GitLab personal access token")
 	return cmd
 }
 
