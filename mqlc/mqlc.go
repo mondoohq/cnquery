@@ -1667,21 +1667,30 @@ func (c *compiler) postCompile() {
 				continue
 			}
 
-			chunk, typ, ref := c.expandListResource(chunk, ref)
-			c.expandResourceFields(chunk, typ, ref)
+			typ := chunk.Type()
+
+			// we try the different expansions; anything that hits tells us we are done
+			if c.expandListAssertions(chunk, typ, ref) {
+				continue
+			}
+			if c.expandListResource(chunk, typ, ref) {
+				continue
+			}
+			if _, ok := c.expandResourceFields(chunk, typ, ref); ok {
+				continue
+			}
 		}
 	}
 }
 
-func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk, types.Type, uint64) {
-	typ := chunk.Type()
+func (c *compiler) expandListResource(chunk *llx.Chunk, typ types.Type, ref uint64) bool {
 	if !typ.IsResource() {
-		return chunk, typ, ref
+		return false
 	}
 
 	info := c.Schema.Resources[typ.ResourceName()]
 	if info == nil || info.ListType == "" {
-		return chunk, typ, ref
+		return false
 	}
 
 	block := c.Result.CodeV2.Block(ref)
@@ -1698,28 +1707,59 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk,
 	newRef := block.TailRef(ref)
 	block.ReplaceEntrypoint(ref, newRef)
 
-	return newChunk, newType, newRef
+	c.expandResourceFields(newChunk, newType, newRef)
+	return true
 }
 
-func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) {
+func (c *compiler) expandListAssertions(chunk *llx.Chunk, typ types.Type, ref uint64) bool {
+	switch chunk.Id {
+	case "$all", "$one", "$any", "$none":
+	default:
+		return false
+	}
+
+	if chunk.Function == nil {
+		return false
+	}
+
+	ref = chunk.Function.Binding
+	chunk = c.Result.CodeV2.Chunk(ref)
+	typ = chunk.Type()
+
+	nuRef, ok := c.expandResourceFields(chunk, typ, ref)
+	if !ok {
+		return true
+	}
+
+	block := c.Result.CodeV2.Block(ref)
+	// At compile time the list calls do not create datapoints yet, this is
+	// done at the end of the entire process when entrypoints are updated.
+	// However, we need to insert a datapoint here since we need it for the
+	// expanded resource.
+	block.Datapoints = append(block.Datapoints, nuRef)
+
+	return true
+}
+
+func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) (uint64, bool) {
 	resultType := types.Block
 	if typ.IsArray() {
 		resultType = types.Array(types.Block)
 		typ = typ.Child()
 	}
 	if !typ.IsResource() {
-		return
+		return ref, false
 	}
 
 	info := c.Schema.Resources[typ.ResourceName()]
 	if info == nil || info.Defaults == "" {
-		return
+		return ref, false
 	}
 
 	ast, err := parser.Parse(info.Defaults)
 	if ast == nil || len(ast.Expressions) == 0 {
 		log.Error().Err(err).Msg("failed to parse defaults for " + info.Name)
-		return
+		return ref, false
 	}
 
 	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref)
@@ -1741,11 +1781,14 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 			Args:    args,
 		},
 	})
-	ep := block.TailRef(ref)
-	block.ReplaceEntrypoint(ref, ep)
-	ref = ep
+
+	nuRef := block.TailRef(ref)
+	block.ReplaceEntrypoint(ref, nuRef)
+	ref = nuRef
 
 	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
+
+	return ref, true
 }
 
 func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
@@ -1800,12 +1843,13 @@ func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 	}
 
 	datapoints := map[uint64]struct{}{}
+
 	// 3. resolve operators
 	for ref := range entrypoints {
-		dps := code.RefDatapoints(ref)
+		dps := c.Result.RefDatapoints(ref)
 		if dps != nil {
-			for i := range dps {
-				datapoints[dps[i]] = struct{}{}
+			for _, dp := range dps {
+				datapoints[dp] = struct{}{}
 			}
 		}
 	}
