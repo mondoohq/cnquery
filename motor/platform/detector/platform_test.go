@@ -1,7 +1,9 @@
-package platform
+package detector
 
 import (
 	"testing"
+
+	"go.mondoo.com/cnquery/motor/platform"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -41,11 +43,11 @@ func TestIsFamily(t *testing.T) {
 		Expected bool
 	}{
 		{
-			Val:      IsFamily("redhat", FAMILY_LINUX),
+			Val:      IsFamily("redhat", platform.FAMILY_LINUX),
 			Expected: true,
 		},
 		{
-			Val:      IsFamily("redhat", FAMILY_UNIX),
+			Val:      IsFamily("redhat", platform.FAMILY_UNIX),
 			Expected: true,
 		},
 		{
@@ -53,7 +55,7 @@ func TestIsFamily(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Val:      IsFamily("centos", FAMILY_LINUX),
+			Val:      IsFamily("centos", platform.FAMILY_LINUX),
 			Expected: true,
 		},
 		{
@@ -69,11 +71,11 @@ func TestIsFamily(t *testing.T) {
 
 func TestPrettyTitle(t *testing.T) {
 	test := []struct {
-		Platform *Platform
+		Platform *platform.Platform
 		Expected string
 	}{
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Kali GNU/Linux Rolling",
 				Version: "2019.4",
 				Family:  []string{"linux", "unix", "os"},
@@ -81,7 +83,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Kali GNU/Linux Rolling",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Red Hat Enterprise Linux",
 				Runtime: providers.RUNTIME_AWS_EC2,
 				Version: "7",
@@ -90,7 +92,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Red Hat Enterprise Linux, AWS EC2 Instance",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Red Hat Enterprise Linux",
 				Kind:    providers.Kind_KIND_API,
 				Version: "7",
@@ -99,7 +101,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Red Hat Enterprise Linux",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Red Hat Enterprise Linux",
 				Kind:    providers.Kind_KIND_BARE_METAL,
 				Version: "7",
@@ -108,7 +110,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Red Hat Enterprise Linux, bare metal",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Red Hat Enterprise Linux 8",
 				Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
 				Version: "8",
@@ -117,7 +119,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Red Hat Enterprise Linux 8, Container Image",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Amazon Web Services 8",
 				Runtime: providers.RUNTIME_AWS,
 				Kind:    providers.Kind_KIND_API,
@@ -126,7 +128,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Amazon Web Services 8",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Test Deployment",
 				Runtime: providers.RUNTIME_KUBERNETES_CLUSTER,
 				Family:  []string{"k8s-workload", "k8s"},
@@ -134,7 +136,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Test Deployment, Kubernetes Cluster",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "Test Deployment",
 				Runtime: providers.RUNTIME_KUBERNETES_MANIFEST,
 				Family:  []string{"k8s-workload", "k8s"},
@@ -142,7 +144,7 @@ func TestPrettyTitle(t *testing.T) {
 			Expected: "Test Deployment, Kubernetes Manifest File",
 		},
 		{
-			Platform: &Platform{
+			Platform: &platform.Platform{
 				Title:   "k8s test cluster",
 				Runtime: providers.RUNTIME_KUBERNETES,
 				Family:  []string{"k8s"},

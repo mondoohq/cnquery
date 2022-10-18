@@ -1,4 +1,4 @@
-package platform
+package detector
 
 import (
 	"encoding/xml"
@@ -30,13 +30,12 @@ type PropertyList struct {
 func ParseMacOSSystemVersion(content string) (map[string]string, error) {
 	v := PropertyList{}
 	err := xml.Unmarshal([]byte(content), &v)
-
 	if err != nil {
 		return nil, err
 	}
 
 	m := make(map[string]string)
-	for i, _ := range v.Dict.Keys {
+	for i := range v.Dict.Keys {
 		m[v.Dict.Keys[i]] = v.Dict.Values[i]
 	}
 	return m, nil

@@ -1,4 +1,4 @@
-package platform
+package detector
 
 import (
 	"fmt"
@@ -15,7 +15,6 @@ type SolarisRelease struct {
 var solarisVersionRegex = regexp.MustCompile(`^\s+((?:[\w]\s*)*Solaris)\s([\w\d.]+)`)
 
 func ParseSolarisRelease(content string) (*SolarisRelease, error) {
-
 	m := solarisVersionRegex.FindStringSubmatch(content)
 	if len(m) < 2 {
 		return nil, fmt.Errorf("could not parse solaris version: %s", content)

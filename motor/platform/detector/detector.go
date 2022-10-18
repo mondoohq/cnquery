@@ -39,9 +39,9 @@ func (d *Detector) resolveOS(p os.OperatingSystemProvider) (*platform.Platform, 
 	// NOTE: on windows, powershell calls are expensive therefore we want to shortcut the detection mechanism
 	local, ok := p.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
-		return platform.WindowsFamily.Resolve(local)
+		return WindowsFamily.Resolve(local)
 	} else {
-		return platform.OperatingSystems.Resolve(p)
+		return OperatingSystems.Resolve(p)
 	}
 }
 
@@ -62,7 +62,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 		if err != nil {
 			return nil, err
 		}
-		return platform.VspherePlatform(pt, identifier)
+		return VspherePlatform(pt, identifier)
 	case *arista.Provider:
 		v, err := pt.GetVersion()
 		if err != nil {

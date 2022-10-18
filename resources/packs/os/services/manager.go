@@ -4,10 +4,9 @@ import (
 	"errors"
 	"regexp"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/platform/detector"
+	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 type Service struct {
@@ -67,7 +66,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		osm = ResolveSystemdServiceManager(osProvider)
 	// NOTE: we need to check fedora before rhel family, since its also rhel family
 	case pf.Name == "fedora":
-		rv := platform.ParseOsVersion(pf.Version)
+		rv := detector.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
 			return nil, errors.New("unknown fedora version: " + pf.Version)
@@ -80,7 +79,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.IsFamily("redhat"):
-		rv := platform.ParseOsVersion(pf.Version)
+		rv := detector.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
 			return nil, errors.New("unknown redhat version: " + pf.Version)
@@ -91,7 +90,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.Name == "ubuntu" || pf.Name == "linuxmint" || pf.Name == "pop":
-		rv := platform.ParseOsVersion(pf.Version)
+		rv := detector.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
 			return nil, errors.New("unknown ubuntu version: " + pf.Version)
@@ -103,7 +102,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 			osm = ResolveSystemdServiceManager(osProvider)
 		}
 	case pf.Name == "debian":
-		rv := platform.ParseOsVersion(pf.Version)
+		rv := detector.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
 			return nil, errors.New("unknown debian version: " + pf.Version)
@@ -117,7 +116,7 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 	case pf.Name == "suse-microos": // it is suse family but uses a different version scheme
 		osm = ResolveSystemdServiceManager(osProvider)
 	case pf.IsFamily("suse"):
-		rv := platform.ParseOsVersion(pf.Version)
+		rv := detector.ParseOsVersion(pf.Version)
 		v, err := rv.MajorAtoi()
 		if err != nil {
 			return nil, errors.New("unknown suse version: " + pf.Version)

@@ -205,6 +205,14 @@ explorer/generate:
 
 #   🏗 Binary / Build   #
 
+.PHONY: cnquery/build/linux
+cnquery/build/linux:
+	GOOS=linux go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+
+.PHONY: cnquery/build/windows
+cnquery/build/windows:
+	GOOS=windows go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+
 .PHONY: cnquery/install
 cnquery/install:
 	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/cnquery/cnquery.go

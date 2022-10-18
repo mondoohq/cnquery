@@ -1,12 +1,13 @@
-package platform
+package detector
 
 import (
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/tar"
 )
 
-type detect func(r *PlatformResolver, pf *Platform, p os.OperatingSystemProvider) (bool, error)
+type detect func(r *PlatformResolver, pf *platform.Platform, p os.OperatingSystemProvider) (bool, error)
 
 type PlatformResolver struct {
 	Name     string
@@ -15,9 +16,9 @@ type PlatformResolver struct {
 	Detect   detect
 }
 
-func (r *PlatformResolver) Resolve(p os.OperatingSystemProvider) (*Platform, bool) {
+func (r *PlatformResolver) Resolve(p os.OperatingSystemProvider) (*platform.Platform, bool) {
 	// prepare detect info object
-	di := &Platform{}
+	di := &platform.Platform{}
 	di.Family = make([]string, 0)
 
 	// start recursive platform resolution
@@ -44,7 +45,7 @@ func (r *PlatformResolver) Resolve(p os.OperatingSystemProvider) (*Platform, boo
 // Resolve tries to find recursively all
 // platforms until a leaf (operating systems) detect
 // mechanism is returning true
-func (r *PlatformResolver) resolvePlatform(pf *Platform, p os.OperatingSystemProvider) (*Platform, bool) {
+func (r *PlatformResolver) resolvePlatform(pf *platform.Platform, p os.OperatingSystemProvider) (*platform.Platform, bool) {
 	detected, err := r.Detect(r, pf, p)
 	if err != nil {
 		return pf, false

@@ -1,13 +1,11 @@
-package platform
+package detector
 
 import (
 	"fmt"
 	"regexp"
 )
 
-var (
-	EsxiReleaseRegex = regexp.MustCompile(`^VMware ESXi\s(.*)\s*$`)
-)
+var EsxiReleaseRegex = regexp.MustCompile(`^VMware ESXi\s(.*)\s*$`)
 
 func ParseEsxiRelease(content string) (string, error) {
 	m := EsxiReleaseRegex.FindStringSubmatch(content)
