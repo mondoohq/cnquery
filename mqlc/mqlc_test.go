@@ -1157,7 +1157,7 @@ func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
 			Type:    string(types.Array(types.Resource("group"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    string(types.Block),
+			Type:    string(types.Array(types.Block)),
 			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
@@ -1182,7 +1182,12 @@ func TestCompiler_ArrayResourceFieldGlob(t *testing.T) {
 			Type:    string(types.String),
 			Binding: (2 << 32) | 1,
 		}, res.CodeV2.Blocks[1].Chunks[4])
-		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3, (2 << 32) | 4, (2 << 32) | 5},
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Array(types.Block)),
+			Binding: (2 << 32) | 3,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(3 << 32)},
+		}, res.CodeV2.Blocks[1].Chunks[5])
+		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 6, (2 << 32) | 4, (2 << 32) | 5},
 			res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
@@ -1526,7 +1531,7 @@ func TestCompiler_CallWithResource(t *testing.T) {
 			Type:    string(types.Array(types.Resource("user"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    string(types.Block),
+			Type:    string(types.Array(types.Block)),
 			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])
@@ -1559,7 +1564,7 @@ func TestCompiler_List(t *testing.T) {
 			Type:    string(types.Array(types.Resource("package"))),
 		}, res.CodeV2.Blocks[0].Chunks[1])
 		assertFunction(t, "{}", &llx.Function{
-			Type:    string(types.Block),
+			Type:    string(types.Array(types.Block)),
 			Binding: (1 << 32) | 2,
 			Args:    []*llx.Primitive{llx.FunctionPrimitive(2 << 32)},
 		}, res.CodeV2.Blocks[0].Chunks[2])

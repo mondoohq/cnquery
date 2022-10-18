@@ -106,7 +106,10 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	}
 
 	if len(arr) == 0 {
-		return bind, 0, nil
+		return &RawData{
+			Type:  arrayBlockType,
+			Value: []interface{}{},
+		}, 0, nil
 	}
 
 	prim := chunk.Function.Args[0]
@@ -568,9 +571,9 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 			arr[k] = v
 		}
 
-		//to track values of fields
+		// to track values of fields
 		existing := make(map[int]interface{})
-		//to track index of duplicate resources
+		// to track index of duplicate resources
 		duplicateIndices := []int{}
 		var found bool
 		var added bool
@@ -580,9 +583,9 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 			for j, v := range existing {
 				if equalFunc(left, v) {
 					found = true
-					//Track the index so that we can get the whole resource
+					// Track the index so that we can get the whole resource
 					duplicateIndices = append(duplicateIndices, i)
-					//check if j was already added to our list of indices
+					// check if j was already added to our list of indices
 					for di := range duplicateIndices {
 						if j == duplicateIndices[di] {
 							added = true
@@ -595,13 +598,13 @@ func arrayFieldDuplicatesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 				}
 			}
 
-			//value not found so we add it to list of things to check for dupes
+			// value not found so we add it to list of things to check for dupes
 			if !found {
 				existing[i] = left
 			}
 		}
 
-		//Once we collect duplicate indices, make a list of resources
+		// Once we collect duplicate indices, make a list of resources
 		for i := range duplicateIndices {
 			idx := duplicateIndices[i]
 			resList = append(resList, list[idx])
