@@ -75,32 +75,33 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	namespace := tc.Options["namespace"]
-	if len(namespace) > 0 {
-		log.Info().Msgf("namespace filter has been set to %q", namespace)
-		namespacesFilter = namespace
-	}
-
-	log.Debug().Str("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 	p, err := k8s.New(ctx, tc)
 	if err != nil {
 		return nil, err
 	}
 
-	clusterNamespaces, err := p.Namespaces()
-	if err != nil {
-		return nil, err
-	}
-	foundNamespace := false
-	for _, clusterNs := range clusterNamespaces {
-		if clusterNs.Name == namespacesFilter {
-			foundNamespace = true
-			break
+	namespace := tc.Options["namespace"]
+	if len(namespace) > 0 {
+		log.Info().Msgf("namespace filter has been set to %q", namespace)
+		namespacesFilter = namespace
+
+		clusterNamespaces, err := p.Namespaces()
+		if err != nil {
+			return nil, err
+		}
+		foundNamespace := false
+		for _, clusterNs := range clusterNamespaces {
+			if clusterNs.Name == namespacesFilter {
+				foundNamespace = true
+				break
+			}
+		}
+		if !foundNamespace {
+			log.Warn().Msgf("namespace %q not found in cluster", namespacesFilter)
 		}
 	}
-	if !foundNamespace {
-		log.Warn().Msgf("namespace %q not found in cluster", namespacesFilter)
-	}
+
+	log.Debug().Str("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
 
 	clusterIdentifier, err := p.Identifier()
 	if err != nil {
