@@ -2,9 +2,11 @@ package scan
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
@@ -268,6 +270,13 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 		schema := registry.Schema()
 		runtime := resources.NewRuntime(registry, job.connection)
 
+		var progressListener progress.Progress
+		if isatty.IsTerminal(os.Stdout.Fd()) {
+			progressListener = progress.New(job.Asset.Mrn, job.Asset.Name)
+		} else {
+			progressListener = progress.Noop{}
+		}
+
 		scanner := &localAssetScanner{
 			db:       db,
 			services: services,
@@ -276,7 +285,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 			Registry: registry,
 			Schema:   schema,
 			Runtime:  runtime,
-			Progress: progress.New(job.Asset.Mrn, job.Asset.Name),
+			Progress: progressListener,
 		}
 		res, scanErr = scanner.run()
 		return scanErr
