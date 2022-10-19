@@ -17,7 +17,7 @@ import (
 func (a *mqlAwsApplicationAutoscaling) id() (string, error) {
 	n, err := a.Namespace()
 	if err != nil {
-		return "", errors.Wrap(err, "namespace required")
+		return "", errors.Wrap(err, "namespace required. please provide an aws service as argument. valid values: [comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, elasticache]")
 	}
 	return "aws.applicationAutoscaling." + n, nil
 }
