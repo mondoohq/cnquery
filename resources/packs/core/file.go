@@ -350,3 +350,7 @@ func (l *mqlFilePermissions) id() (string, error) {
 
 	return string(res), nil
 }
+
+func (l *mqlFilePermissions) GetString() (string, error) {
+	return l.Id, nil
+}

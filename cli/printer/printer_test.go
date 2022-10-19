@@ -243,13 +243,13 @@ func TestPrinter_Assessment(t *testing.T) {
 		},
 		{
 			// mixed use: assertion and working data field
-			"mondoo.build == 1; user(name: 'root').authorizedkeys.file",
+			"mondoo.build == 1; sshd.config",
 			strings.Join([]string{
-				"[failed] mondoo.build == 1; user(name: 'root').authorizedkeys.file",
+				"[failed] mondoo.build == 1; sshd.config",
 				"  [failed] mondoo.build == 1",
 				"    expected: == 1",
 				"    actual:   \"development\"",
-				"  [ok] value: file id = /root/.ssh/authorized_keys",
+				"  [ok] value: sshd.config id = /etc/ssh/sshd_config",
 				"",
 			}, "\n"),
 		},
