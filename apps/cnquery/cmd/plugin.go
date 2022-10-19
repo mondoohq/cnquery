@@ -17,7 +17,7 @@ import (
 	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
-	"go.mondoo.com/cnquery/resources/packs/os/info"
+	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/shared"
 	"go.mondoo.com/cnquery/shared/proto"
 )

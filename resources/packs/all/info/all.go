@@ -18,7 +18,7 @@ import (
 	coreInfo "go.mondoo.com/cnquery/resources/packs/core/info"
 	gcpInfo "go.mondoo.com/cnquery/resources/packs/gcp/info"
 	githubInfo "go.mondoo.com/cnquery/resources/packs/github/info"
-	gitlabInfo "go.mondoo.com/cnquery/resources/packs/github/info"
+	gitlabInfo "go.mondoo.com/cnquery/resources/packs/gitlab/info"
 	k8sInfo "go.mondoo.com/cnquery/resources/packs/k8s/info"
 	ms365Info "go.mondoo.com/cnquery/resources/packs/ms365/info"
 	osInfo "go.mondoo.com/cnquery/resources/packs/os/info"
