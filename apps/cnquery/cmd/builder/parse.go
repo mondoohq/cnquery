@@ -53,6 +53,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	username := ""
 	password, _ := cmd.Flags().GetString("password")
 	identityFile, _ := cmd.Flags().GetString("identity-file")
+	sudo, _ := cmd.Flags().GetBool("sudo")
 
 	// parse options
 	optionData, err := cmd.Flags().GetStringToString("option")
@@ -110,6 +111,9 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			return nil
 		} else {
 			connection.Backend = providerType
+			connection.Sudo = &providers.Sudo{
+				Active: sudo,
+			}
 		}
 	case providers.ProviderType_MOCK:
 		connection.Backend = providerType
@@ -141,6 +145,10 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		connection.Port = target.Port
 		connection.Path = target.Path
 		username = target.Username
+
+		connection.Sudo = &providers.Sudo{
+			Active: sudo,
+		}
 
 		switch assetType {
 		case Ec2InstanceConnectAssetType:
