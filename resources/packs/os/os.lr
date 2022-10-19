@@ -278,7 +278,7 @@ os.rootCertificates {
 }
 
 // Service on this system
-service {
+service @defaults("name running enabled type") {
   init(name string)
   // Name of this service
   name string

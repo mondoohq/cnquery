@@ -65,7 +65,7 @@ asset @defaults("name platform version") {
 }
 
 // File on the system
-file {
+file @defaults("path size permissions.string") {
   init(path string)
   // Location of the file on the system
   path string
@@ -90,7 +90,7 @@ file {
 }
 
 // Access permissions for a given file
-private file.permissions {
+private file.permissions @defaults("string") {
   // Raw POSIX mode for the permissions
   mode int
   // Indicator if this file is readable by its owner
@@ -123,6 +123,8 @@ private file.permissions {
   isFile bool
   // whether the file is a symlink
   isSymlink bool
+  // a simple printed string version of the permissions
+  string() string
 }
 
 // User on this system
@@ -164,7 +166,7 @@ authorizedkeys {
 }
 
 // SSH authorized keys entry
-authorizedkeys.entry {
+authorizedkeys.entry @defaults("key") {
   line int
   type string
   key string
@@ -402,7 +404,7 @@ private audit.cve {
 }
 
 // Process on this system
-process {
+process @defaults("executable pid state") {
   init(pid int)
   // PID (process ID)
   pid int
@@ -422,7 +424,7 @@ processes {
 }
 
 // TCP/IP port on the system
-port {
+port @defaults("port protocol address process.executable") {
   // Protocol of this port
   protocol string
   // Port number
@@ -449,7 +451,7 @@ ports {
 }
 
 // Socket
-socket {
+socket @defaults("protocol port address") {
   // Protocol for this socket
   protocol string
   // Port number
@@ -459,7 +461,7 @@ socket {
 }
 
 // TLS
-tls {
+tls @defaults("domainName") {
   init(target string)
   // Socket of this connection
   socket socket
@@ -480,7 +482,7 @@ tls {
 }
 
 // Domain name
-domainName {
+domainName @defaults("fqdn") {
   init(fqdn string)
   fqdn string
   // effectiveTLDPlusOne returns the effective top level domain plus one more label
@@ -494,7 +496,7 @@ domainName {
 }
 
 // DNS resource
-dns {
+dns @defaults("fqdn") {
   init(fqdn string)
   fqdn string
   // Params is a list of all parameters for DNS fqdn
@@ -508,7 +510,7 @@ dns {
 }
 
 // DNS record
-dns.record {
+dns.record @defaults("name type") {
   // DNS name
   name string
   // Time-To-Live (TTL) in seconds
@@ -522,14 +524,14 @@ dns.record {
 }
 
 // DNS MX record
-dns.mxRecord {
+dns.mxRecord @defaults("domainName") {
   name string
   preference int
   domainName string
 }
 
 // DKIM public key representation as defined in RFC 6376
-dns.dkimRecord {
+dns.dkimRecord @defaults("dnsTxt") {
   // DNS Text Representation
   dnsTxt string
   // DKIM Selector Domain
@@ -569,7 +571,7 @@ parse.certificates {
 }
 
 // x509 certificate PKIX name
-pkix.name {
+pkix.name @defaults("id dn commonName") {
   id string
   // Distinguished Name Qualifier
   dn string
@@ -605,7 +607,7 @@ pkix.extension {
 }
 
 // x509 certificate resource
-certificate {
+certificate @defaults("serial subject.commonName subject.dn") {
   // PEM content
   pem string
   // Certificate Fingerprints
@@ -682,7 +684,7 @@ ipmi.chassis {
 }
 
 // UUIDs based on RFC 4122 and DCE 1.1
-uuid {
+uuid @defaults("value") {
   init(value string)
   // Canonical string representation xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   value string
@@ -713,7 +715,7 @@ kernel {
 }
 
 // System kernel module information
-kernel.module {
+kernel.module @defaults("name loaded") {
   init(name string)
 
   // Name of the kernel module

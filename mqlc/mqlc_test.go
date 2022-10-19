@@ -1144,7 +1144,12 @@ func TestCompiler_ResourceFieldGlob(t *testing.T) {
 			Type:    string(types.Map(types.String, types.Array(types.String))),
 			Binding: (2 << 32) | 1,
 		}, res.CodeV2.Blocks[1].Chunks[4])
-		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3, (2 << 32) | 4, (2 << 32) | 5},
+		assertFunction(t, "{}", &llx.Function{
+			Type:    string(types.Array(types.Block)),
+			Binding: (2 << 32) | 4,
+			Args:    []*llx.Primitive{llx.FunctionPrimitive(3 << 32)},
+		}, res.CodeV2.Blocks[1].Chunks[5])
+		assert.Equal(t, []uint64{(2 << 32) | 2, (2 << 32) | 3, (2 << 32) | 6, (2 << 32) | 5},
 			res.CodeV2.Blocks[1].Entrypoints)
 	})
 }
