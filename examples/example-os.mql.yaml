@@ -8,13 +8,11 @@ packs:
   - title: Find all SSH packages that are installed
     query: |
       packages.
-        where(name == /ssh/).
-        list
+        where(name == /ssh/)
   - title: Get SSH services
     query: |
       services.
-        where(name == /ssh/).
-        list
+        where(name == /ssh/)
   - title: All the SSH config
     query: |
       sshd.config.params

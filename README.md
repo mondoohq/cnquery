@@ -4,9 +4,13 @@
 
 `cnquery` is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
+![cnquery run example](docs/gif/cnquery-run.gif)
+
+Here are a few more examples:
+
 ```bash
 # run a query and print the output
-cnquery run local -c "packages.installed { name version }"
+cnquery run local -c "ports.listening { port process }"
 
 # execute a query pack on a Docker image and print results as json
 cnquery scan docker 14119a -f pack.mql.yaml -j
@@ -97,8 +101,10 @@ cnquery scan local --pack incident-response --query-id sth-01
 Custom query packs let you bundle queries to meet your specific needs. You can find a simple query pack example in `examples/simple.mql.yaml`. To run it:
 
 ```bash
-cnquery scan local -f examples/simple.mql.yaml
+cnquery scan local -f examples/example-os.mql.yaml
 ```
+
+![](docs/gif/cnquery-scan.gif)
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
 
