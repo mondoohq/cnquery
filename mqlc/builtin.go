@@ -200,9 +200,11 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 		if v.IsImplicitResource {
 			name := types.Type(v.Type).ResourceName()
 			child := c.Schema.Resources[name]
-			if !child.HasEmptyInit() {
-				continue
-			}
+			/*
+				if !child.HasEmptyInit() {
+					continue
+				}
+			*/
 
 			// implicit resources don't have their own metadata, so we grab it from
 			// the resource itself
