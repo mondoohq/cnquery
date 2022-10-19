@@ -37,7 +37,7 @@ func New(tc *providers.Config) (*Provider, error) {
 	}
 
 	if token == "" {
-		return nil, errors.New("you need to provide GitLab token")
+		return nil, errors.New("you need to provide GitLab token e.g. via GITLAB_TOKEN env")
 	}
 
 	client, err := gitlab.NewClient(token)

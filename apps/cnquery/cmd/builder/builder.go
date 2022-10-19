@@ -91,8 +91,6 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	awsEc2.AddCommand(awsEc2Connect)
 
 	awsEc2EbsCmd := awsEc2EbsProviderCmd(commonCmdFlags, preRun, runFn, docs)
-	awsEc2.AddCommand(awsEc2EbsCmd)
-
 	awsEc2EbsVolumeCmd := awsEc2EbsVolumeProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	awsEc2EbsCmd.AddCommand(awsEc2EbsVolumeCmd)
 	awsEc2EbsSnapshotCmd := awsEc2EbsSnapshotProviderCmd(commonCmdFlags, preRun, runFn, docs)
@@ -674,7 +672,7 @@ func gitlabProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runF
 			preRun(cmd, args)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GITHUB, DefaultAssetType) // TODO: does not indicate individual assets
+			runFn(cmd, args, providers.ProviderType_GITLAB, DefaultAssetType) // TODO: does not indicate individual assets
 		},
 	}
 	commonCmdFlags(cmd)
