@@ -64,7 +64,9 @@ type K8sResourceIdentifier struct {
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	features := cnquery.GetFeatures(ctx)
 	resolved := []*asset.Asset{}
-	nsFilter := NamespaceFilterOpts{}
+	nsFilter := NamespaceFilterOpts{
+		include: []string{},
+	}
 
 	var k8sctlConfig *kubectl.KubectlConfig
 	localProvider, err := local.New()
@@ -80,34 +82,45 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	namespace := tc.Options["namespace"]
-	if len(namespace) > 0 {
-		log.Info().Msgf("namespace filter has been set to %q", namespace)
-		nsFilter.include = []string{namespace}
+	// if --namespace and --namespaces-include were both specified, just combine them into a single
+	// list of Namespaces to allow resources from
+	namespaceOpt := tc.Options["namespace"]
+	if len(namespaceOpt) > 0 {
+		log.Info().Msgf("namespace filter has been set to %q", namespaceOpt)
+		nsFilter.include = append(nsFilter.include, namespaceOpt)
 
-		clusterNamespaces, err := p.Namespaces()
-		if err != nil {
-			return nil, err
-		}
+	}
+
+	includeNamespaces := tc.Options["namespaces-include"]
+	if len(includeNamespaces) > 0 {
+		nsFilter.include = append(nsFilter.include, strings.Split(includeNamespaces, ",")...)
+	}
+
+	// Put a Warn() message if a Namespace that doesn't exist was part of the
+	// list of Namespaces to include
+	clusterNamespaces, err := p.Namespaces()
+	if err != nil {
+		return nil, err
+	}
+	for _, ns := range nsFilter.include {
 		foundNamespace := false
 		for _, clusterNs := range clusterNamespaces {
-			if clusterNs.Name == namespace {
+			if clusterNs.Name == ns {
 				foundNamespace = true
 				break
 			}
 		}
 		if !foundNamespace {
-			log.Warn().Msgf("namespace %q not found in cluster", namespace)
+			log.Warn().Msgf("namespace %q not found in cluster", ns)
 		}
 	}
 
-	log.Debug().Str("namespaceFilter", namespace).Msg("resolve k8s assets")
-
-	skipNamespaces := tc.Options["skip-namespaces"]
-	if len(skipNamespaces) > 0 {
-		nsFilter.ignore = strings.Split(skipNamespaces, ",")
-		log.Info().Msgf("ignoring resources in namespaces: %s", nsFilter.ignore)
+	excludeNamespaces := tc.Options["namespaces-exclude"]
+	if len(excludeNamespaces) > 0 {
+		nsFilter.ignore = strings.Split(excludeNamespaces, ",")
 	}
+
+	log.Debug().Strs("namespacesIncludeFilter", nsFilter.include).Strs("namespacesExcludeFilter", nsFilter.ignore).Msg("resolve k8s assets")
 
 	clusterIdentifier, err := p.Identifier()
 	if err != nil {

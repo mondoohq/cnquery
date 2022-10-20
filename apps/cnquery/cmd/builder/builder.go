@@ -395,7 +395,8 @@ func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, 
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
 			viper.BindPFlag("namespace", cmd.Flags().Lookup("namespace"))
-			viper.BindPFlag("skip-namespaces", cmd.Flags().Lookup("skip-namespaces"))
+			viper.BindPFlag("namespaces-exclude", cmd.Flags().Lookup("namespaces-exclude"))
+			viper.BindPFlag("namespaces-include", cmd.Flags().Lookup("namespaces-include"))
 			viper.BindPFlag("context", cmd.Flags().Lookup("context"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -408,7 +409,8 @@ func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, 
 	commonCmdFlags(cmd)
 	cmd.Flags().String("namespace", "", "filter kubernetes objects by namespace")
 	cmd.Flags().String("context", "", "target a kubernetes context")
-	cmd.Flags().String("skip-namespaces", "", "filter out kubernetes objects in the matching namespaces")
+	cmd.Flags().String("namespaces-exclude", "", "filter out kubernetes objects in the matching namespaces")
+	cmd.Flags().String("namespaces-include", "", "only include kubernetes object in the matching namespaces")
 	return cmd
 }
 
