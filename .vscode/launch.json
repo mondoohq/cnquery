@@ -49,16 +49,16 @@
       ],
     },
     {
-      "name": "cnquery-explore-file",
+      "name": "cnquery-scan-file",
       "type": "go",
       "request": "launch",
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "cwd": "${workspaceRoot}/",
       "args": [
-        "explore",
+        "scan",
         "local",
         "-f",
-        "./examples/example.unix.mql.yaml"
+        "./examples/example-os.mql.yaml"
       ],
     }
   ]
