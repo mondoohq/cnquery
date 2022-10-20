@@ -1550,3 +1550,85 @@ func TestListStatefulSets_Filter(t *testing.T) {
 	assert.ElementsMatch(t, []string{"k8s", "k8s-workload"}, assets[0].Platform.Family)
 	assert.Equal(t, statefulsets[0].Namespace, assets[0].Labels["k8s.mondoo.com/namespace"])
 }
+
+func TestListFiltering(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	p := k8s.NewMockKubernetesProvider(mockCtrl)
+
+	// Seed namespaces
+	nss := []corev1.Namespace{
+		{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "kube-system"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "other-namespace"}},
+	}
+	p.EXPECT().Namespaces().Return(nss, nil).AnyTimes()
+
+	// Seed pods
+	defaultNamespacePods := []*corev1.Pod{
+		{
+			TypeMeta:   metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "nginx", Namespace: nss[0].Name},
+		},
+		{
+			TypeMeta:   metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "nginx2", Namespace: nss[0].Name},
+		},
+	}
+
+	kubeSystemPods := []*corev1.Pod{
+		{
+			TypeMeta:   metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "kube-proxy", Namespace: nss[1].Name},
+		},
+	}
+
+	otherNamespacePods := []*corev1.Pod{
+		{
+			TypeMeta:   metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "some-workload", Namespace: nss[2].Name},
+		},
+		{
+			TypeMeta:   metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "some-workload2", Namespace: nss[2].Name},
+		},
+		{
+			TypeMeta:   metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+			ObjectMeta: metav1.ObjectMeta{Name: "some-workload3", Namespace: nss[2].Name},
+		},
+	}
+	p.EXPECT().Pods(nss[0]).Return(defaultNamespacePods, nil).AnyTimes()
+	p.EXPECT().Pods(nss[1]).Return(kubeSystemPods, nil).AnyTimes()
+	p.EXPECT().Pods(nss[2]).Return(otherNamespacePods, nil).AnyTimes()
+	p.EXPECT().Runtime().Return("k8s-cluster").AnyTimes()
+
+	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
+	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
+	pCfg := &providers.Config{}
+
+	// List with no filtering
+	assets, err := ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
+	require.NoError(t, err)
+	assert.Equal(t, 6, len(assets), "expected all Pods to be found when no filter specified")
+
+	// List only 'kube-system'
+	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{include: []string{nss[1].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(assets), "expected only 1 Pod to be returned")
+
+	// List 'kube-system' and 'other-namespace'
+	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{include: []string{nss[1].Name, nss[2].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
+	require.NoError(t, err)
+	assert.Equal(t, 4, len(assets), "expected only 1 Pod to be returned")
+
+	// Exclude kube-system
+	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{ignore: []string{nss[1].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
+	require.NoError(t, err)
+	assert.Equal(t, 5, len(assets), "expected only 1 Pod to be returned")
+
+	// Include and exclude list should behave like only include list
+	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{include: []string{nss[1].Name}, ignore: []string{nss[1].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(assets), "expected only 1 Pod to be returned")
+}
