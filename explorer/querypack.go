@@ -17,7 +17,7 @@ func (p *QueryPack) InvalidateAllChecksums() {
 // RefreshMRN computes a MRN from the UID or validates the existing MRN.
 // Both of these need to fit the ownerMRN. It also removes the UID.
 func (p *QueryPack) RefreshMRN(ownerMRN string) error {
-	nu, err := RefreshMRN(ownerMRN, p.Mrn, "query pack", p.Uid)
+	nu, err := RefreshMRN(ownerMRN, p.Mrn, "querypack", p.Uid)
 	if err != nil {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
 		return errors.Wrap(err, "failed to refresh mrn for query "+p.Name)

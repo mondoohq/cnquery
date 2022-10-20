@@ -74,7 +74,7 @@ You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other ap
 
 ## Query packs
 
-You can combine multiple queries into query packs, which can run together. `cnquery` comes with query packs out of the box for most systems. You can simply run:
+You can combine multiple queries into query packs, which can run together. `cnquery` comes with default [query packs](https://github.com/mondoohq/cnquery-packs) out of the box for most systems. You can simply run:
 
 ```bash
 cnquery scan
@@ -106,11 +106,11 @@ Like all other commands, you can specify different providers like `k8s`, `aws`, 
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
 
-## Distributing cnqueries across your fleet
+## Private Query Packs 
 
-You can share query packs across your fleet using the Query Hub.
+Distributing cnqueries across your fleet
 
-The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
+You can share query packs across your fleet using the Mondoo's Query Hub. The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
 
 To use the Query Hub:
 
@@ -118,7 +118,7 @@ To use the Query Hub:
 cnquery auth login
 ```
 
-Once set up, you can collect your asset's data (for example `aws`):
+Once set up, activate the Pack's and you can collect your asset's data (for example `aws`):
 
 ```bash
 cnquery scan aws
@@ -127,7 +127,7 @@ cnquery scan aws
 To add custom query packs, you can upload them:
 
 ```bash
-cnquery pack upload mypack.mql.yaml
+cnquery bundle upload mypack.mql.yaml
 ```
 
 ## Supported Targets
