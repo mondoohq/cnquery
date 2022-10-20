@@ -2,12 +2,14 @@ package awsinstanceconnect
 
 import (
 	"context"
+	"net"
 
 	"github.com/cockroachdb/errors"
 	"github.com/sethvargo/go-password/password"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect"
 	"go.mondoo.com/cnquery/motor/providers/ssh/keypair"
 )
@@ -21,18 +23,31 @@ func New(cfg aws.Config) *generator {
 }
 
 type InstanceCredentials struct {
+	InstanceId      string
 	KeyPair         *keypair.SSH
 	PublicDnsName   string
 	PrivateDnsName  string
 	PublicIpAddress string
 }
 
-func (c *generator) GenerateCredentials(instanceID string, user string) (*InstanceCredentials, error) {
+// Note: target can either be the IP (ipv4) address or the instance id of the machine
+func (c *generator) GenerateCredentials(target string, user string) (*InstanceCredentials, error) {
 	ctx := context.Background()
 	ec2srv := ec2.NewFromConfig(c.cfg)
-	resp, err := ec2srv.DescribeInstances(ctx, &ec2.DescribeInstancesInput{
-		InstanceIds: []string{instanceID},
-	})
+	input := &ec2.DescribeInstancesInput{}
+	ip := net.ParseIP(target)
+	if ip != nil && ip.To4() != nil {
+		filter := "ip-address"
+		input.Filters = []ec2types.Filter{
+			{
+				Name:   &filter,
+				Values: []string{target},
+			},
+		}
+	} else {
+		input.InstanceIds = []string{target}
+	}
+	resp, err := ec2srv.DescribeInstances(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +94,10 @@ func (c *generator) GenerateCredentials(instanceID string, user string) (*Instan
 
 	if instance.PublicIpAddress != nil {
 		ic.PublicIpAddress = *instance.PublicIpAddress
+	}
+
+	if instance.InstanceId != nil {
+		ic.InstanceId = *instance.InstanceId
 	}
 
 	return ic, nil
