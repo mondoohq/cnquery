@@ -115,7 +115,7 @@ The Query Hub creates a secure, private environment in your account that stores 
 To use the Query Hub:
 
 ```bash
-cnquery auth login
+cnquery login --token TOKEN
 ```
 
 Once set up, you can collect your asset's data (for example `aws`):

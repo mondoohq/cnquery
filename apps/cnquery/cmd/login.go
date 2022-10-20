@@ -18,25 +18,26 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(registerCmd)
-	registerCmd.Flags().StringP("token", "t", "", "Set a client registration token")
-	registerCmd.Flags().String("name", "", "Set asset name")
-	registerCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint")
+	rootCmd.AddCommand(loginCmd)
+	loginCmd.Flags().StringP("token", "t", "", "Set a client registration token")
+	loginCmd.Flags().String("name", "", "Set asset name")
+	loginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint")
 }
 
-var registerCmd = &cobra.Command{
-	Use:   "register",
-	Short: "Register with Mondoo Platform",
+var loginCmd = &cobra.Command{
+	Use:     "login",
+	Aliases: []string{"register"},
+	Short:   "Register with Mondoo Platform",
 	Long: `
-This command registers with Mondoo Platform by using a registration token. To pass in the token, use 
+Log in to Mondoo platform by using a registration token. To pass in the token, use 
 the '--token' flag.
 
 You can generate a new registration token via the Mondoo Dashboard
 https://console.mondoo.com -> Space -> Settings -> Registration Token. Copy the token and pass it in 
 as the '--token' argument.
 
-Every client remains registered until you explicitly unregister it. You can
-unregister via Mondoo Platform, or by using 'unregister' subcommand.
+Every client remains logged in until you explicitly log out. You can
+log out by using 'lgoout' subcommand.
 	`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("api_endpoint", cmd.Flags().Lookup("api-endpoint"))
@@ -86,9 +87,7 @@ func register(token string) {
 			}
 		}
 
-		log.Info().Msg("start managed client registration")
-
-		// register client
+		// gather service account
 		plugins := []ranger.ClientPlugin{}
 		plugins = append(plugins, defaultPlugins...)
 		plugins = append(plugins, statictoken.NewRangerPlugin(token))
@@ -120,7 +119,7 @@ func register(token string) {
 			},
 		})
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to register client")
+			log.Fatal().Err(err).Msg("failed to log in client")
 		}
 
 		log.Debug().Msg("store configuration")
@@ -147,8 +146,8 @@ func register(token string) {
 		config.DisplayUsedConfig()
 
 		if opts.AgentMrn != "" {
-			// nothing todo, already registered
-			log.Info().Msg("client is already registered, skipping registration")
+			// already authenticated
+			log.Info().Msg("client is already logged in, skip")
 			credential = opts.GetServiceCredential()
 		} else {
 			credential = opts.GetServiceCredential()
@@ -164,7 +163,7 @@ func register(token string) {
 
 			client, err := upstream.NewAgentManagerClient(apiEndpoint, ranger.DefaultHttpClient(), plugins...)
 			if err != nil {
-				log.Fatal().Err(err).Msg("could not connect to mondoo platform")
+				log.Fatal().Err(err).Msg("could not connect to Mondoo Platform")
 			}
 
 			name := viper.GetString("name")
@@ -188,7 +187,7 @@ func register(token string) {
 				},
 			})
 			if err != nil {
-				log.Fatal().Err(err).Msg("failed to register client")
+				log.Fatal().Err(err).Msg("failed to log in client")
 			}
 
 			// update configuration file, api-endpoint is set automatically
@@ -220,5 +219,5 @@ func register(token string) {
 		log.Fatal().Msg(err.Error())
 	}
 
-	log.Info().Msgf("client %s is registered successfully", viper.Get("agent_mrn"))
+	log.Info().Msgf("client %s has logged in successfully", viper.Get("agent_mrn"))
 }
