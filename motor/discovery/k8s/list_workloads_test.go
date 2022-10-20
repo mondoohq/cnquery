@@ -134,7 +134,7 @@ func TestListCronJobs(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListCronJobs(p, pCfg, clusterIdentifier, "", make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err := ListCronJobs(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -248,7 +248,7 @@ func TestListCronJobs_Filter(t *testing.T) {
 			{Type: "cronjob", Name: cronjobs[0].Name, Namespace: cronjobs[0].Namespace},
 		},
 	}
-	assets, err := ListCronJobs(p, pCfg, clusterIdentifier, "", resFilter, ownershipDir)
+	assets, err := ListCronJobs(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, resFilter, ownershipDir)
 	require.NoError(t, err)
 
 	var assetNames []string
@@ -368,7 +368,7 @@ func TestListDaemonsets(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, "", make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -462,7 +462,7 @@ func TestListDaemonsets_Filter(t *testing.T) {
 			{Type: "daemonset", Name: daemonsets[0].Name, Namespace: daemonsets[0].Namespace},
 		},
 	}
-	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, "", resFilter, ownershipDir)
+	assets, err := ListDaemonSets(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, resFilter, ownershipDir)
 	require.NoError(t, err)
 
 	var assetNames []string
@@ -575,7 +575,7 @@ func TestListDeployments(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListDeployments(p, pCfg, clusterIdentifier, "", make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err := ListDeployments(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -669,7 +669,7 @@ func TestListDeployments_Filter(t *testing.T) {
 			{Type: "deployment", Name: deployments[0].Name, Namespace: deployments[0].Namespace},
 		},
 	}
-	assets, err := ListDeployments(p, pCfg, clusterIdentifier, "", resFilter, ownershipDir)
+	assets, err := ListDeployments(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, resFilter, ownershipDir)
 	require.NoError(t, err)
 
 	var assetNames []string
@@ -793,7 +793,7 @@ func TestListJobs(t *testing.T) {
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
 	ownershipDir.Add(&parent)
-	assets, err := ListJobs(p, pCfg, clusterIdentifier, "", make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err := ListJobs(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -897,7 +897,7 @@ func TestListJobs_Filter(t *testing.T) {
 			{Type: "job", Name: jobs[0].Name, Namespace: jobs[0].Namespace},
 		},
 	}
-	assets, err := ListJobs(p, pCfg, clusterIdentifier, "", resFilter, ownershipDir)
+	assets, err := ListJobs(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, resFilter, ownershipDir)
 	require.NoError(t, err)
 
 	var assetNames []string
@@ -1001,7 +1001,7 @@ func TestListPods(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListPods(p, pCfg, clusterIdentifier, "", make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err := ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -1086,7 +1086,7 @@ func TestListPods_Filter(t *testing.T) {
 			{Type: "pod", Name: pods[0].Name, Namespace: pods[0].Namespace},
 		},
 	}
-	assets, err := ListPods(p, pCfg, clusterIdentifier, "", resFilter, ownershipDir)
+	assets, err := ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, resFilter, ownershipDir)
 	require.NoError(t, err)
 	var assetNames []string
 	for _, a := range assets {
@@ -1202,7 +1202,7 @@ func TestListReplicaSets(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListReplicaSets(p, pCfg, clusterIdentifier, "", make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err := ListReplicaSets(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -1296,7 +1296,7 @@ func TestListReplicaSets_Filter(t *testing.T) {
 			{Type: "replicaset", Name: replicaSets[0].Name, Namespace: replicaSets[0].Namespace},
 		},
 	}
-	assets, err := ListReplicaSets(p, pCfg, clusterIdentifier, "", resFilter, ownershipDir)
+	assets, err := ListReplicaSets(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, resFilter, ownershipDir)
 	require.NoError(t, err)
 
 	var assetNames []string
@@ -1426,7 +1426,7 @@ func TestListStatefulSets(t *testing.T) {
 
 	pCfg := &providers.Config{}
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
-	assets, err := ListStatefulSets(p, pCfg, clusterIdentifier, "", make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err := ListStatefulSets(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
@@ -1530,7 +1530,7 @@ func TestListStatefulSets_Filter(t *testing.T) {
 			{Type: "statefulset", Name: statefulsets[0].Name, Namespace: statefulsets[0].Namespace},
 		},
 	}
-	assets, err := ListStatefulSets(p, pCfg, clusterIdentifier, "", resFilter, ownershipDir)
+	assets, err := ListStatefulSets(p, pCfg, clusterIdentifier, NamespaceFilterOpts{}, resFilter, ownershipDir)
 	require.NoError(t, err)
 
 	var assetNames []string
