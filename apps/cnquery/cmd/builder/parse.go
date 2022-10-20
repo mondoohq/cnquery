@@ -231,6 +231,12 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		} else if namespace != "" {
 			connection.Options["namespace"] = namespace
 		}
+
+		if skipNamespaces, err := cmd.Flags().GetString("skip-namespaces"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --skip-namespaces values")
+		} else if skipNamespaces != "" {
+			connection.Options["skip-namespaces"] = skipNamespaces
+		}
 	case providers.ProviderType_AWS:
 		connection.Backend = providerType
 		if profile, err := cmd.Flags().GetString("profile"); err != nil {
