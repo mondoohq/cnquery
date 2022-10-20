@@ -9,6 +9,7 @@ import (
 	"github.com/muesli/termenv"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/stringx"
 )
 
@@ -154,12 +155,17 @@ func (r *defaultReporter) printAssetQueries(assetMrn string, queries []*explorer
 			result = stringx.MaxLines(10, result)
 		}
 
-		// TODO: only in long version + needs styling
-		// r.out.Write([]byte(query.Query))
-		// r.out.Write([]byte{'\n'})
+		title := query.Title
+		if title == "" {
+			title, _ = mrn.GetResource(query.Mrn, "queries")
+		}
+		if title != "" {
+			title += ":\n"
+		}
 
+		r.out.Write([]byte(title))
 		r.out.Write([]byte(result))
-		r.out.Write([]byte{'\n'})
+		r.out.Write([]byte("\n\n"))
 	}
 	r.out.Write([]byte("\n"))
 }
