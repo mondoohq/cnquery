@@ -166,7 +166,12 @@ func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
 
 func (t *Provider) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
 	log.Info().Msg("find recent snapshot")
-	res, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx,
+	return FindRecentSnapshotForVolume(ctx, v, t.scannerRegionEc2svc)
+}
+
+func FindRecentSnapshotForVolume(ctx context.Context, v VolumeId, svc *ec2.Client) (bool, SnapshotId, error) {
+	log.Info().Msg("find recent snapshot")
+	res, err := svc.DescribeSnapshots(ctx,
 		&ec2.DescribeSnapshotsInput{Filters: []types.Filter{
 			{Name: aws.String("volume-id"), Values: []string{v.Id}},
 		}})
@@ -185,7 +190,7 @@ func (t *Provider) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) 
 			for snapState != types.SnapshotStateCompleted {
 				log.Info().Interface("state", snapState).Msg("waiting for snapshot copy completion; sleeping 10 seconds")
 				time.Sleep(10 * time.Second)
-				snaps, err := t.scannerRegionEc2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{s.Id}})
+				snaps, err := svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{s.Id}})
 				if err != nil {
 					var ae smithy.APIError
 					if errors.As(err, &ae) {
