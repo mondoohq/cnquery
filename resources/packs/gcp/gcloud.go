@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -293,58 +294,68 @@ func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
 
 	projectName := provider.ResourceID()
 
-	// TODO: iterate over all instances
-	// TODO: harmonize instance list with discovery?, at least borrow the parallel execution
-	instances, err := computeSvc.Instances.List(projectName, "us-central1-a").Do()
+	var wg sync.WaitGroup
+	zones, err := computeSvc.Zones.List(projectName).Do()
 	if err != nil {
 		return nil, err
 	}
-
 	res := []interface{}{}
+	wg.Add(len(zones.Items))
+	mux := &sync.Mutex{}
 
-	for i := range instances.Items {
-		instance := instances.Items[i]
+	// TODO:harmonize instance list with discovery?
+	for _, z := range zones.Items {
+		go func(svc *compute.Service, project string, zoneName string) {
+			instances, err := computeSvc.Instances.List(projectName, zoneName).Do()
+			if err == nil {
+				mux.Lock()
+				for i := range instances.Items {
+					instance := instances.Items[i]
 
-		metadata := map[string]string{}
-		for m := range instance.Metadata.Items {
-			item := instance.Metadata.Items[m]
-			metadata[item.Key] = core.ToString(item.Value)
-		}
+					metadata := map[string]string{}
+					for m := range instance.Metadata.Items {
+						item := instance.Metadata.Items[m]
+						metadata[item.Key] = core.ToString(item.Value)
+					}
 
-		mqlServiceAccounts := []interface{}{}
-		for i := range instance.ServiceAccounts {
-			sa := instance.ServiceAccounts[i]
+					mqlServiceAccounts := []interface{}{}
+					for i := range instance.ServiceAccounts {
+						sa := instance.ServiceAccounts[i]
 
-			mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.compute.serviceaccount",
-				"email", sa.Email,
-				"scopes", core.StrSliceToInterface(sa.Scopes),
-			)
-			if err != nil {
-				return nil, err
+						mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.compute.serviceaccount",
+							"email", sa.Email,
+							"scopes", core.StrSliceToInterface(sa.Scopes),
+						)
+						if err == nil {
+							mqlServiceAccounts = append(mqlServiceAccounts, mqlServiceaccount)
+						}
+					}
+
+					mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.compute.instance",
+						"id", strconv.FormatUint(instance.Id, 10),
+						"name", instance.Name,
+						"cpuPlatform", instance.CpuPlatform,
+						"deletionProtection", instance.DeletionProtection,
+						"description", instance.Description,
+						"hostname", instance.Hostname,
+						"labels", core.StrMapToInterface(instance.Labels),
+						"status", instance.Status,
+						"statusMessage", instance.StatusMessage,
+						"tags", core.StrSliceToInterface(instance.Tags.Items),
+						"metadata", core.StrMapToInterface(metadata),
+						"serviceAccounts", mqlServiceAccounts,
+					)
+					if err == nil {
+						res = append(res, mqlInstance)
+					}
+				}
+				mux.Unlock()
 			}
-			mqlServiceAccounts = append(mqlServiceAccounts, mqlServiceaccount)
-		}
-
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.compute.instance",
-			"id", strconv.FormatUint(instance.Id, 10),
-			"name", instance.Name,
-			"cpuPlatform", instance.CpuPlatform,
-			"deletionProtection", instance.DeletionProtection,
-			"description", instance.Description,
-			"hostname", instance.Hostname,
-			"labels", core.StrMapToInterface(instance.Labels),
-			"status", instance.Status,
-			"statusMessage", instance.StatusMessage,
-			"tags", core.StrSliceToInterface(instance.Tags.Items),
-			"metadata", core.StrMapToInterface(metadata),
-			"serviceAccounts", mqlServiceAccounts,
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlInstance)
+			wg.Done()
+		}(computeSvc, projectName, z.Name)
 	}
 
+	wg.Wait()
 	return res, nil
 }
 
