@@ -175,7 +175,8 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			// prepare websocket connection and bind it to a free local port
 			localIp := "localhost"
 			remotePort := "22"
-
+			// NOTE: for SSM we always target the instance id
+			pCfg.Host = creds.InstanceId
 			localPort, err := awsssmsession.GetAvailablePort()
 			if err != nil {
 				return nil, nil, errors.New("could not find an available port to start the ssm proxy")
