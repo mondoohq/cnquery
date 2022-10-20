@@ -884,6 +884,51 @@ func timeMinusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) 
 	})
 }
 
+func timePlusTimeV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Time, func(left interface{}, right interface{}) *RawData {
+		l := left.(*time.Time)
+		r := right.(*time.Time)
+		if l == nil || r == nil {
+			return &RawData{Type: types.Time}
+		}
+
+		if *r == NeverPastTime {
+			return NeverFuturePrimitive.RawData()
+		}
+		if *r == NeverFutureTime {
+			return NeverPastPrimitive.RawData()
+		}
+		if *l == NeverPastTime {
+			return NeverPastPrimitive.RawData()
+		}
+		if *l == NeverFutureTime {
+			return NeverFuturePrimitive.RawData()
+		}
+
+		lt := l.Unix()
+		rt := r.Unix()
+
+		// the breakpoint for time and duration is the unix time of zero
+		bothDuration := false
+		if lt < 0 {
+			lt = TimeToDuration(l)
+			if rt < 0 {
+				bothDuration = true
+			}
+		}
+		if rt < 0 {
+			rt = TimeToDuration(r)
+		}
+
+		sum := lt + rt
+		if bothDuration {
+			return TimeData(DurationToTime(sum))
+		}
+
+		return TimeData(time.Unix(sum, 0))
+	})
+}
+
 func opTimeTimesInt(left interface{}, right interface{}) *RawData {
 	l := left.(*time.Time)
 	if l == nil {

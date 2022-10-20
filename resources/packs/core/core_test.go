@@ -648,6 +648,18 @@ func TestTime_Methods(t *testing.T) {
 			0, duration(9),
 		},
 		{
+			"2*time.hour + 1*time.hour",
+			0, duration(3 * 60 * 60),
+		},
+		{
+			"time.today + 1*time.day",
+			0, &tomorrow,
+		},
+		{
+			"2*time.hour - 1*time.hour",
+			0, duration(60 * 60),
+		},
+		{
 			"3 * time.second",
 			0, duration(3),
 		},

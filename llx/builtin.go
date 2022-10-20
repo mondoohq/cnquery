@@ -385,6 +385,7 @@ func init() {
 			string("&&" + types.MapLike):   {f: timeAndMapV2, Label: "&&"},
 			string("||" + types.MapLike):   {f: timeOrMapV2, Label: "||"},
 			string("-" + types.Time):       {f: timeMinusTimeV2, Label: "-"},
+			string("+" + types.Time):       {f: timePlusTimeV2, Label: "+"},
 			string("*" + types.Int):        {f: timeTimesIntV2, Label: "*", Typ: types.Time},
 			string("*" + types.Float):      {f: timeTimesFloatV2, Label: "*", Typ: types.Time},
 			string("*" + types.Dict):       {f: timeTimesDictV2, Label: "*", Typ: types.Time},
