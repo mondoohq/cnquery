@@ -298,11 +298,18 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			awsec2ebs.NoSetup: noSetup,
 		}
 	case providers.ProviderType_AWS_SSM_RUN_COMMAND:
+		target, err := parseTarget(args[0])
+		if err != nil {
+			log.Error().Err(err).Msg("cannot parse target")
+		}
+		connection.Host = target.Hostname
+		username = target.Username
 		connection.Backend = providers.ProviderType_SSH // TODO: allow the usage the provider type here
 		connection.Credentials = append(connection.Credentials, &vault.Credential{
 			Type: vault.CredentialType_aws_ec2_ssm_session,
 			User: username,
 		})
+
 	case providers.ProviderType_AZURE:
 		connection.Backend = providerType
 		if subscription, err := cmd.Flags().GetString("subscription"); err != nil {
