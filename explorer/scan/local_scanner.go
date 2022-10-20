@@ -77,7 +77,14 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 
 	dctx := discovery.InitCtx(ctx)
 
-	reports, _, err := s.distributeJob(job, dctx, false)
+	upstreamConfig := resources.UpstreamConfig{
+		SpaceMrn:    s.spaceMrn,
+		ApiEndpoint: s.apiEndpoint,
+		Incognito:   false,
+		Plugins:     s.plugins,
+	}
+
+	reports, _, err := s.distributeJob(job, dctx, upstreamConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +107,11 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 
 	dctx := discovery.InitCtx(ctx)
 
-	reports, _, err := s.distributeJob(job, dctx, true)
+	upstreamConfig := resources.UpstreamConfig{
+		Incognito: true,
+	}
+
+	reports, _, err := s.distributeJob(job, dctx, upstreamConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +119,7 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 	return reports, nil
 }
 
-func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, incognito bool) (*explorer.ReportCollection, bool, error) {
+func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 	im, err := inventory.New(inventory.WithInventory(job.Inventory))
 	if err != nil {
@@ -129,7 +140,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, incognito bo
 	}
 
 	// sync assets
-	if s.apiEndpoint != "" && !incognito {
+	if upstreamConfig.ApiEndpoint != "" && !upstreamConfig.Incognito {
 		log.Info().Msg("synchronize assets")
 		upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins)
 		if err != nil {
@@ -189,7 +200,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, incognito bo
 
 		s.RunAssetJob(&AssetJob{
 			DoRecord:         job.DoRecord,
-			Incognito:        incognito,
+			UpstremConfig:    upstreamConfig,
 			Asset:            asset,
 			Bundle:           job.Bundle,
 			QueryPackFilters: job.QueryPackFilters,
@@ -238,7 +249,6 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 					// resyncAssets = append(resyncAssets, assetEntry)
 				}
 			}
-
 			job.connection = m
 			results, err := s.runMotorizedAsset(job)
 			if err != nil {
@@ -257,7 +267,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 	var scanErr error
 
 	runtimeErr := inmemory.WithDb(func(db *inmemory.Db, services *explorer.LocalServices) error {
-		if s.apiEndpoint != "" && !job.Incognito {
+		if job.UpstremConfig.ApiEndpoint != "" && !job.UpstremConfig.Incognito {
 			log.Debug().Msg("using API endpoint " + s.apiEndpoint)
 			upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins)
 			if err != nil {
@@ -269,6 +279,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 		registry := all.Registry
 		schema := registry.Schema()
 		runtime := resources.NewRuntime(registry, job.connection)
+		runtime.UpstreamConfig = &job.UpstremConfig
 
 		var progressListener progress.Progress
 		if isatty.IsTerminal(os.Stdout.Fd()) {
@@ -329,7 +340,7 @@ func (s *localAssetScanner) prepareAsset() error {
 	var conductor explorer.QueryConductor = s.services
 
 	// if we are using upstream we get the bundle from there
-	if !s.job.Incognito {
+	if !s.job.UpstremConfig.Incognito {
 		return nil
 	}
 

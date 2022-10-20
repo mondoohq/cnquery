@@ -66,7 +66,6 @@ func (c *Cache) Delete(key string) { c.Map.Delete(key) }
 type UpstreamConfig struct {
 	AssetMrn    string
 	SpaceMrn    string
-	Collector   string
 	ApiEndpoint string
 	Plugins     []ranger.ClientPlugin
 	Incognito   bool
