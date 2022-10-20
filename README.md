@@ -10,7 +10,7 @@ Here are a few more examples:
 
 ```bash
 # run a query and print the output
-cnquery run local -c "ports.listening { port process }"
+cnquery run -c "ports.listening { port process }"
 
 # execute a query pack on a Docker image and print results as json
 cnquery scan docker 14119a -f pack.mql.yaml -j
@@ -35,7 +35,7 @@ If you prefer a package, find it on [GitHub releases](https://github.com/mondooh
 The easiest way to explore `cnquery` is to use our interactive shell, which has auto-complete to guide you:
 
 ```bash
-cnquery shell local
+cnquery shell
 ```
 
 Once inside the shell, you can enter MQL queries like this:
@@ -48,6 +48,8 @@ To learn more, use the `help` command.
 
 To exit, either press CTRL + D or type `exit`.
 
+You can run the shell against local and remote targets, like `k8s`, `aws`, `docker`, and many more. Run `--help` to see a full list of supported providers.
+
 ## Run simple queries
 
 To run standalone queries in your shell, use the `run` command:
@@ -59,13 +61,7 @@ cnquery run <TARGET> -c <QUERY>
 For example, this runs a query against your local system:
 
 ```bash
-cnquery run local -c "services.list { name running }"
-```
-
-For a list of supported targets, use the `help` command:
-
-```bash
-cnquery help run
+cnquery run -c "services.list { name running }"
 ```
 
 For automation, it is often helpful to convert the output to JSON. Use `-j` or `--json`:
@@ -81,7 +77,7 @@ You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other ap
 You can combine multiple queries into query packs, which can run together. `cnquery` comes with query packs out of the box for most systems. You can simply run:
 
 ```bash
-cnquery scan local
+cnquery scan
 ```
 
 Without specifying anything else, `cnquery` tries to find and run the default query pack for the given system.
@@ -89,20 +85,22 @@ Without specifying anything else, `cnquery` tries to find and run the default qu
 You can specify a query pack that you want to run. Use the `--pack` argument:
 
 ```bash
-cnquery scan local --pack incident-response
+cnquery scan --pack incident-response
 ```
 
 You can also choose just one query from a query pack. Specify the query ID with the query pack:
 
 ```bash
-cnquery scan local --pack incident-response --query-id sth-01
+cnquery scan --pack incident-response --query-id sth-01
 ```
 
 Custom query packs let you bundle queries to meet your specific needs. You can find a simple query pack example in `examples/simple.mql.yaml`. To run it:
 
 ```bash
-cnquery scan local -f examples/example-os.mql.yaml
+cnquery scan -f examples/example-os.mql.yaml
 ```
+
+Like all other commands, you can specify different providers like `k8s`, `aws`, `docker`, and many more. Run `--help` to see the full list of supported providers.
 
 ![](docs/gif/cnquery-scan.gif)
 
@@ -120,10 +118,10 @@ To use the Query Hub:
 cnquery auth login
 ```
 
-Once set up, you can collect your asset's data:
+Once set up, you can collect your asset's data (for example `aws`):
 
 ```bash
-cnquery scan local
+cnquery scan aws
 ```
 
 To add custom query packs, you can upload them:

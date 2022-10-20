@@ -3,6 +3,7 @@ package builder
 import (
 	"os"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -47,7 +48,8 @@ func NewProviderCommand(opts CommandOpts) *cobra.Command {
 		},
 		ValidArgsFunction: opts.ValidArgsFunction,
 		Run: func(cmd *cobra.Command, args []string) {
-			opts.Run(cmd, args, providers.ProviderType_LOCAL_OS, UnknownAssetType)
+			log.Info().Str("provider", "local").Msg("no provider specified, using defaults.\n  Use --help for a list of available providers.")
+			opts.Run(cmd, args, providers.ProviderType_LOCAL_OS, DefaultAssetType)
 		},
 	}
 	opts.CommonFlags(cmd)
