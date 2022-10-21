@@ -1,5 +1,13 @@
 # cnquery
 
+```
+  ___ _ __   __ _ _   _  ___ _ __ _   _ 
+ / __| '_ \ / _` | | | |/ _ \ '__| | | |
+| (__| | | | (_| | |_| |  __/ |  | |_| |
+ \___|_| |_|\__, |\__,_|\___|_|   \__, |
+  mondoo™      |_|                |___/ 
+```
+
 **Open source, cloud-native asset inventory and discovery**
 
 `cnquery` is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
@@ -61,13 +69,13 @@ cnquery run <TARGET> -c <QUERY>
 For example, this runs a query against your local system:
 
 ```bash
-cnquery run -c "services.list { name running }"
+cnquery run -c "services { name running }"
 ```
 
 For automation, it is often helpful to convert the output to JSON. Use `-j` or `--json`:
 
 ```bash
-cnquery run local -c "services.list{*}" -j
+cnquery run local -c "services { * }" -j
 ```
 
 You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other applications.
