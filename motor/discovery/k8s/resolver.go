@@ -82,16 +82,19 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	// if --namespace and --namespaces-include were both specified, just combine them into a single
+	// if --namespace and --namespaces were both specified, just combine them into a single
 	// list of Namespaces to allow resources from
+
+	// FIXME: DEPRECATED, remove in v8.0 vv
 	namespaceOpt := tc.Options["namespace"]
 	if len(namespaceOpt) > 0 {
 		log.Info().Msgf("namespace filter has been set to %q", namespaceOpt)
 		nsFilter.include = append(nsFilter.include, namespaceOpt)
 
 	}
+	// ^^
 
-	includeNamespaces := tc.Options["namespaces-include"]
+	includeNamespaces := tc.Options["namespaces"]
 	if len(includeNamespaces) > 0 {
 		nsFilter.include = append(nsFilter.include, strings.Split(includeNamespaces, ",")...)
 	}
