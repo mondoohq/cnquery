@@ -162,10 +162,10 @@ resources:
     fields: {}
     min_mondoo_version: 5.15.0
     snippets:
-    - query: auditpol.list { inclusionsetting exclusionsetting  subcategory }
+    - query: auditpol { inclusionsetting exclusionsetting subcategory }
       title: List all audit policies
     - query: |
-        auditpol.where(subcategory == 'Sensitive Privilege Use').list {
+        auditpol.where(subcategory == 'Sensitive Privilege Use') {
           inclusionsetting == 'Success and Failure'
         }
       title: Check a specific auditpol configuration
@@ -463,7 +463,7 @@ resources:
     - query: mount.one( path == "/" )
       title: Ensure the mountpoint exists
     - query: |
-        mount.where( path == "/" ).list {
+        mount.where( path == "/" ) {
           device == '/dev/mapper/vg00-lv_root'
           fstype == 'xfs'
           options['rw'] != null

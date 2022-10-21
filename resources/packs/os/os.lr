@@ -351,7 +351,7 @@ auditpol {
 }
 
 // Windows audit policy
-auditpol.entry {
+auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
   // Machine name
   machinename string
   // Policy Target
@@ -414,7 +414,7 @@ mount {
 }
 
 // Unix mount point
-mount.point {
+mount.point @defaults("device path fstype") {
   init(path string)
   // Device
   device string
