@@ -331,7 +331,7 @@ var ResourceDocs = docs.LrDocs{
 			Snippets: []docs.LrDocsSnippet{
 				{
 					Title: "Display all users and their UID",
-					Query: "users.list { uid name }",
+					Query: "users { uid name }",
 				},
 				{
 					Title: "Ensure user exists",
@@ -343,7 +343,7 @@ var ResourceDocs = docs.LrDocs{
 				},
 				{
 					Title: "Search for a specific SID and check for its values",
-					Query: "users.where( sid == /S-1-5-21-\\d+-\\d+-\\d+-501/ ).list {\n  name != \"Guest\"\n}\n",
+					Query: "users.where( sid == /S-1-5-21-\\d+-\\d+-\\d+-501/ ) {\n  name != \"Guest\"\n}\n",
 				},
 			},
 		},
@@ -458,11 +458,11 @@ var ResourceDocs = docs.LrDocs{
 			}, Snippets: []docs.LrDocsSnippet{
 				{
 					Title: "Parse Certificates from target file system",
-					Query: "parse.certificates('/etc/ssl/cert.pem').list { issuer.dn }",
+					Query: "parse.certificates('/etc/ssl/cert.pem') { issuer.dn }",
 				},
 				{
 					Title: "Parse Certificates from content",
-					Query: "parse.certificates(content: 'PEM CONTENT').list { issuer.dn }",
+					Query: "parse.certificates(content: 'PEM CONTENT') { issuer.dn }",
 				},
 			},
 		},
@@ -1238,7 +1238,7 @@ var ResourceDocs = docs.LrDocs{
 			Snippets: []docs.LrDocsSnippet{
 				{
 					Title: "Ensure the user is not part of group",
-					Query: "groups.where(name == 'wheel').list { members.all( name != 'username') }",
+					Query: "groups.where(name == 'wheel') { members.all( name != 'username') }",
 				},
 			},
 		},
