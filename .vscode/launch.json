@@ -35,6 +35,18 @@
       ],
     },
     {
+      "name": "cnquery-run-k8s-pod",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "args": [
+        "run",
+        "k8s",
+        "-c",
+        "k8s.pod(name: 'passing-pod-yaml', namespace: 'test-vanish'){ name }"
+      ],
+    },
+    {
       "name": "cnquery-run-admission",
       "type": "go",
       "request": "launch",
