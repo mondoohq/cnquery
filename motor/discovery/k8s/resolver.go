@@ -120,10 +120,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 	excludeNamespaces := tc.Options["namespaces-exclude"]
 	if len(excludeNamespaces) > 0 {
-		nsFilter.ignore = strings.Split(excludeNamespaces, ",")
+		nsFilter.exclude = strings.Split(excludeNamespaces, ",")
 	}
 
-	log.Debug().Strs("namespacesIncludeFilter", nsFilter.include).Strs("namespacesExcludeFilter", nsFilter.ignore).Msg("resolve k8s assets")
+	log.Debug().Strs("namespacesIncludeFilter", nsFilter.include).Strs("namespacesExcludeFilter", nsFilter.exclude).Msg("resolve k8s assets")
 
 	clusterIdentifier, err := p.Identifier()
 	if err != nil {

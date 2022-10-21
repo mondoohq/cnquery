@@ -1623,12 +1623,12 @@ func TestListFiltering(t *testing.T) {
 	assert.Equal(t, 4, len(assets), "expected only 1 Pod to be returned")
 
 	// Exclude kube-system
-	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{ignore: []string{nss[1].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{exclude: []string{nss[1].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	assert.Equal(t, 5, len(assets), "expected only 1 Pod to be returned")
 
 	// Include and exclude list should behave like only include list
-	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{include: []string{nss[1].Name}, ignore: []string{nss[1].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
+	assets, err = ListPods(p, pCfg, clusterIdentifier, NamespaceFilterOpts{include: []string{nss[1].Name}, exclude: []string{nss[1].Name}}, make(map[string][]K8sResourceIdentifier), ownershipDir)
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(assets), "expected only 1 Pod to be returned")
 }

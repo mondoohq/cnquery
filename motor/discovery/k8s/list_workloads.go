@@ -15,7 +15,7 @@ import (
 
 type NamespaceFilterOpts struct {
 	include []string
-	ignore  []string
+	exclude []string
 }
 
 // ListCronJobs list all cronjobs in the cluster.
@@ -184,7 +184,7 @@ func skipNamespace(namespace v1.Namespace, filter NamespaceFilterOpts) bool {
 
 	// if nothing explictly meant to be included, then check whether
 	// it should be excluded
-	for _, ns := range filter.ignore {
+	for _, ns := range filter.exclude {
 		if namespace.Name == ns {
 			return true
 		}
