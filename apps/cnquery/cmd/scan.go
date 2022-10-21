@@ -222,7 +222,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
 		// bundles, packs & incognito mode
 		cmd.Flags().Bool("incognito", false, "Run in incognito mode. Do not report scan results to the Mondoo platform.")
-		cmd.Flags().StringSlice("querypack", nil, "Set the query packs to be executed (requires incognito mode), multiple query packs can be specified")
+		cmd.Flags().StringSlice("querypack", nil, "Set the query packs to be executed (requires querypack-bundle). Multiple UIDs can be specified")
 		cmd.Flags().StringSliceP("querypack-bundle", "f", nil, "Path to local query pack file")
 		// flag completion command
 		cmd.RegisterFlagCompletionFunc("querypack", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -351,7 +351,7 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 		IsIncognito:    viper.GetBool("incognito"),
 		DoRecord:       viper.GetBool("record"),
 		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
-		QueryPackNames: viper.GetStringSlice("querypack"),
+		QueryPackNames: viper.GetStringSlice("querypacks"),
 	}
 
 	// if users want to get more information on available output options,

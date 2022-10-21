@@ -275,9 +275,10 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 // If a given query pack has a MRN set (but no UID) it will try to get the UID from the MRN
 // and also filter by that criteria.
 // If the list of IDs is empty this function doesn't do anything.
-func (p *Bundle) FilterQueryPacks(IDs []string) {
+// If all packs in the bundles were filtered out, return true.
+func (p *Bundle) FilterQueryPacks(IDs []string) bool {
 	if len(IDs) == 0 {
-		return
+		return false
 	}
 
 	valid := make(map[string]struct{}, len(IDs))
@@ -310,6 +311,11 @@ func (p *Bundle) FilterQueryPacks(IDs []string) {
 	}
 
 	p.Packs = res
+
+	if len(res) == 0 {
+		return true
+	}
+	return false
 }
 
 // Makes sure every query in the bundle and every query pack has a UID set,
