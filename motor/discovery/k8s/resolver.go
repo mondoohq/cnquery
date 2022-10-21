@@ -200,7 +200,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	additionalAssets, err := addSeparateAssets(tc, p, nsFilter, resourcesFilter, clusterIdentifier, ownershipDir)
+	additionalAssets, err := addSeparateAssets(tc, p, nsFilter, resourcesFilter, clusterIdentifier, ownershipDir, features)
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +233,7 @@ func addSeparateAssets(
 	resourcesFilter map[string][]K8sResourceIdentifier,
 	clusterIdentifier string,
 	od *k8s.PlatformIdOwnershipDirectory,
+	features cnquery.Features,
 ) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
@@ -364,7 +365,7 @@ func addSeparateAssets(
 				// from the ownerReference field
 				if platformEntry, ok := od.GetKubernetesObjectData(ownerPlatformId); ok {
 					platformData, err := createPlatformData(platformEntry.Kind, providers.RUNTIME_KUBERNETES_CLUSTER)
-					if err != nil {
+					if err != nil || (!features.IsActive(cnquery.K8sNodeDiscovery) && platformData.Name == "k8s-node") {
 						continue
 					}
 					a.RelatedAssets = append(a.RelatedAssets, &asset.Asset{
