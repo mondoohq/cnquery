@@ -111,7 +111,10 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 	labels["docker.io/tags"] = strings.Join(res.RepoTags, ",")
 	labels["docker.io/digests"] = strings.Join(res.RepoDigests, ",")
 
-	ii.Name = containerid.ShortContainerImageID(res.ID)
+	if len(res.RepoTags) > 0 {
+		ii.Name = res.RepoTags[0] + "@"
+	}
+	ii.Name = ii.Name + containerid.ShortContainerImageID(res.ID)
 	ii.ID = res.ID
 	ii.Labels = labels
 	ii.PlatformID = containerid.MondooContainerImageID(res.ID)
