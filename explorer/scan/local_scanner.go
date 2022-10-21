@@ -202,7 +202,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 
 		s.RunAssetJob(&AssetJob{
 			DoRecord:         job.DoRecord,
-			UpstremConfig:    upstreamConfig,
+			UpstreamConfig:   upstreamConfig,
 			Asset:            asset,
 			Bundle:           job.Bundle,
 			QueryPackFilters: job.QueryPackFilters,
@@ -269,7 +269,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 	var scanErr error
 
 	runtimeErr := inmemory.WithDb(func(db *inmemory.Db, services *explorer.LocalServices) error {
-		if job.UpstremConfig.ApiEndpoint != "" && !job.UpstremConfig.Incognito {
+		if job.UpstreamConfig.ApiEndpoint != "" && !job.UpstreamConfig.Incognito {
 			log.Debug().Msg("using API endpoint " + s.apiEndpoint)
 			upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins)
 			if err != nil {
@@ -281,7 +281,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 		registry := all.Registry
 		schema := registry.Schema()
 		runtime := resources.NewRuntime(registry, job.connection)
-		runtime.UpstreamConfig = &job.UpstremConfig
+		runtime.UpstreamConfig = &job.UpstreamConfig
 
 		var progressListener progress.Progress
 		if isatty.IsTerminal(os.Stdout.Fd()) {
@@ -342,7 +342,7 @@ func (s *localAssetScanner) prepareAsset() error {
 	var conductor explorer.QueryConductor = s.services
 
 	// if we are using upstream we get the bundle from there
-	if !s.job.UpstremConfig.Incognito {
+	if !s.job.UpstreamConfig.Incognito {
 		return nil
 	}
 

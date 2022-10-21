@@ -20,7 +20,7 @@ func init() {
 
 type AssetJob struct {
 	DoRecord         bool
-	UpstremConfig    resources.UpstreamConfig
+	UpstreamConfig   resources.UpstreamConfig
 	Asset            *asset.Asset
 	Bundle           *explorer.Bundle
 	QueryPackFilters []string
