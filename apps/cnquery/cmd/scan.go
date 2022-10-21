@@ -402,7 +402,6 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	if serviceAccount != nil {
 		log.Info().Msg("using service account credentials")
 		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
-
 		conf.UpstreamConfig = &resources.UpstreamConfig{
 			SpaceMrn:    opts.GetParentMrn(),
 			ApiEndpoint: opts.UpstreamApiEndpoint(),
