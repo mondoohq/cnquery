@@ -100,7 +100,7 @@ k8s.kubelet {
 }
 
 // Kubernetes Namespace
-k8s.namespace {
+k8s.namespace @defaults("name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -114,7 +114,7 @@ k8s.namespace {
 }
 
 // Kubernetes Pod
-k8s.pod {
+k8s.pod @defaults("namespace name created"){
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -222,7 +222,7 @@ private k8s.initContainer {
 }
 
 // Kubernetes Deployment
-k8s.deployment {
+k8s.deployment @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -252,7 +252,7 @@ k8s.deployment {
 }
 
 // Kubernetes DaemonSet
-k8s.daemonset {
+k8s.daemonset @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -282,7 +282,7 @@ k8s.daemonset {
 }
 
 // Kubernetes StatefulSet
-k8s.statefulset {
+k8s.statefulset @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -312,7 +312,7 @@ k8s.statefulset {
 }
 
 // Kubernetes ReplicaSet
-k8s.replicaset {
+k8s.replicaset @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -342,7 +342,7 @@ k8s.replicaset {
 }
 
 // Kubernetes Job
-k8s.job {
+k8s.job @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -372,7 +372,7 @@ k8s.job {
 }
 
 // Kubernetes CronJob
-k8s.cronjob {
+k8s.cronjob @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -402,7 +402,7 @@ k8s.cronjob {
 }
 
 // Kubernetes Secret
-k8s.secret {
+k8s.secret @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -454,7 +454,7 @@ k8s.podsecuritypolicy {
 }
 
 // Kubernetes ConfigMap
-k8s.configmap {
+k8s.configmap @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -480,7 +480,7 @@ k8s.configmap {
 }
 
 // Kubernetes Service
-k8s.service {
+k8s.service @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -506,7 +506,7 @@ k8s.service {
 }
 
 // Kubernetes Network Policy
-k8s.networkpolicy {
+k8s.networkpolicy @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -532,7 +532,7 @@ k8s.networkpolicy {
 }
 
 // Kubernetes Service Account
-k8s.serviceaccount {
+k8s.serviceaccount @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
