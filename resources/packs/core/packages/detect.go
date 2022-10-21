@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
 func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
@@ -35,8 +35,8 @@ func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
 	return packages, availableList, nil
 }
 
-func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*vadvisor.Package {
-	apiPkgs := []*vadvisor.Package{}
+func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*mvd.Package {
+	apiPkgs := []*mvd.Package{}
 
 	for _, d := range pkgs {
 
@@ -46,7 +46,7 @@ func ConvertParserPackages(pkgs []Package, updates map[string]PackageUpdate) []*
 			available = update.Available
 		}
 
-		apiPkgs = append(apiPkgs, &vadvisor.Package{
+		apiPkgs = append(apiPkgs, &mvd.Package{
 			Name:      d.Name,
 			Version:   d.Version,
 			Available: available,

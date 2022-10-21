@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -33,7 +33,7 @@ func (a *mqlAsset) GetVulnerabilityReport() (interface{}, error) {
 	// asset.exploits can all share the results
 	cachedReport, ok := mqlAsset.MqlResource().Cache.Load("_report")
 	if ok {
-		report := cachedReport.Data.(*vadvisor.VulnReport)
+		report := cachedReport.Data.(*mvd.VulnReport)
 		return report, nil
 	}
 
@@ -44,7 +44,7 @@ func (a *mqlAsset) GetVulnerabilityReport() (interface{}, error) {
 		return nil, err
 	}
 
-	apiPackages := []*vadvisor.Package{}
+	apiPackages := []*mvd.Package{}
 	kernelVersion := ""
 
 	// collect pacakges if the asset supports gathering files
@@ -69,7 +69,7 @@ func (a *mqlAsset) GetVulnerabilityReport() (interface{}, error) {
 			format, _ := pkg.Format()
 			origin, _ := pkg.Origin()
 
-			apiPackages = append(apiPackages, &vadvisor.Package{
+			apiPackages = append(apiPackages, &mvd.Package{
 				Name:    name,
 				Version: version,
 				Arch:    arch,
@@ -96,7 +96,7 @@ func (a *mqlAsset) GetVulnerabilityReport() (interface{}, error) {
 		}
 	}
 
-	scanjob := &vadvisor.AnalyseAssetRequest{
+	scanjob := &mvd.AnalyseAssetRequest{
 		Platform:      convertAssetPlatform2VulnPlatform(platformObj),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,

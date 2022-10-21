@@ -9,7 +9,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -55,11 +55,11 @@ func convertMqlPlatform2ApiPlatform(pf Platform) *platform.Platform {
 // convertPlatform2VulnPlatform converts the motor platform.Platform to the
 // platform object we use for vulnerability data
 // TODO: we need to harmonize the platform objects
-func convertPlatform2VulnPlatform(pf *platform.Platform) *vadvisor.Platform {
+func convertPlatform2VulnPlatform(pf *platform.Platform) *mvd.Platform {
 	if pf == nil {
 		return nil
 	}
-	return &vadvisor.Platform{
+	return &mvd.Platform{
 		Name:    pf.Name,
 		Release: pf.Version,
 		Build:   pf.Build,

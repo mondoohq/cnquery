@@ -1,4 +1,4 @@
-package vadvisor
+package mvd
 
 import (
 	"strings"

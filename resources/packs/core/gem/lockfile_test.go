@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/resources/packs/core/gem"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
 func TestGemfileLockParser(t *testing.T) {
@@ -19,14 +19,14 @@ func TestGemfileLockParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 230, len(pkgs))
 
-	assert.Contains(t, pkgs, &vadvisor.Package{
+	assert.Contains(t, pkgs, &mvd.Package{
 		Name:      "actioncable",
 		Version:   "6.0.0.beta3",
 		Format:    "gem",
 		Namespace: "gem",
 	})
 
-	assert.Contains(t, pkgs, &vadvisor.Package{
+	assert.Contains(t, pkgs, &mvd.Package{
 		Name:      "zeitwerk",
 		Version:   "2.0.0",
 		Format:    "gem",

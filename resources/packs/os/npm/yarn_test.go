@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
 	"go.mondoo.com/cnquery/resources/packs/os/npm"
+	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
 func TestYarnParser(t *testing.T) {
@@ -19,14 +19,14 @@ func TestYarnParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 99, len(pkgs))
 
-	assert.Contains(t, pkgs, &vadvisor.Package{
+	assert.Contains(t, pkgs, &mvd.Package{
 		Name:      "has",
 		Version:   "1.0.3",
 		Format:    "npm",
 		Namespace: "nodejs",
 	})
 
-	assert.Contains(t, pkgs, &vadvisor.Package{
+	assert.Contains(t, pkgs, &mvd.Package{
 		Name:      "iconv-lite",
 		Version:   "0.4.24",
 		Format:    "npm",

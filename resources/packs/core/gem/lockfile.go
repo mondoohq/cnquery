@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
 var (
@@ -19,8 +19,8 @@ var (
 	DEPENDENCIES = "DEPENDENCIES"
 )
 
-func ParseGemfileLock(r io.Reader) ([]*vadvisor.Package, error) {
-	pkgs := []*vadvisor.Package{}
+func ParseGemfileLock(r io.Reader) ([]*mvd.Package, error) {
+	pkgs := []*mvd.Package{}
 	state := "INIT"
 
 	scanner := bufio.NewScanner(r)
@@ -42,7 +42,7 @@ func ParseGemfileLock(r io.Reader) ([]*vadvisor.Package, error) {
 		}
 
 		var err error
-		var pkg *vadvisor.Package
+		var pkg *mvd.Package
 		switch state {
 		case GIT:
 			fallthrough
@@ -66,7 +66,7 @@ func ParseGemfileLock(r io.Reader) ([]*vadvisor.Package, error) {
 	return pkgs, nil
 }
 
-func parseSpecLine(line string) (*vadvisor.Package, error) {
+func parseSpecLine(line string) (*mvd.Package, error) {
 	// ignore everthing with 2 leading spaces, we do not need that info
 	whitespace := LeadingSpaces(line)
 	// We do not need to scan whitespace = 6 since those are just dependencies
@@ -77,7 +77,7 @@ func parseSpecLine(line string) (*vadvisor.Package, error) {
 			return nil, err
 		}
 
-		return &vadvisor.Package{
+		return &mvd.Package{
 			Name:      name,
 			Version:   version,
 			Format:    "gem",

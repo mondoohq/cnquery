@@ -11,8 +11,8 @@ import (
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor/cvss"
+	"go.mondoo.com/cnquery/upstream/mvd"
+	"go.mondoo.com/cnquery/upstream/mvd/cvss"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -36,8 +36,8 @@ func getKernelVersion(kernel Kernel) string {
 	return val.(string)
 }
 
-func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugin, httpClient *http.Client) (*vadvisor.AdvisoryScannerClient, error) {
-	sa, err := vadvisor.NewAdvisoryScannerClient(mondooapi, httpClient)
+func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugin, httpClient *http.Client) (*mvd.AdvisoryScannerClient, error) {
+	sa, err := mvd.NewAdvisoryScannerClient(mondooapi, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 	// platform.exploits can all share the results
 	cachedReport, ok := mqlPlatform.MqlResource().Cache.Load("_report")
 	if ok {
-		report := cachedReport.Data.(*vadvisor.VulnReport)
+		report := cachedReport.Data.(*mvd.VulnReport)
 		return report, nil
 	}
 
@@ -81,7 +81,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 		return nil, err
 	}
 
-	apiPackages := []*vadvisor.Package{}
+	apiPackages := []*mvd.Package{}
 	kernelVersion := ""
 
 	// collect pacakges if the platform supports gathering files
@@ -106,7 +106,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 			format, _ := pkg.Format()
 			origin, _ := pkg.Origin()
 
-			apiPackages = append(apiPackages, &vadvisor.Package{
+			apiPackages = append(apiPackages, &mvd.Package{
 				Name:    name,
 				Version: version,
 				Arch:    arch,
@@ -123,7 +123,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 		}
 	}
 
-	scanjob := &vadvisor.AnalyseAssetRequest{
+	scanjob := &mvd.AnalyseAssetRequest{
 		Platform:      convertPlatform2VulnPlatform(platformObj),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
@@ -139,7 +139,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 	return JsonToDict(report)
 }
 
-func getAdvisoryReport(r *resources.Runtime) (*vadvisor.VulnReport, error) {
+func getAdvisoryReport(r *resources.Runtime) (*mvd.VulnReport, error) {
 	obj, err := r.CreateResource("platform")
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func getAdvisoryReport(r *resources.Runtime) (*vadvisor.VulnReport, error) {
 		return nil, err
 	}
 
-	var vulnReport vadvisor.VulnReport
+	var vulnReport mvd.VulnReport
 	cfg := &mapstructure.DecoderConfig{
 		Metadata: nil,
 		Result:   &vulnReport,

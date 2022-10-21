@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
 type ComposerPackage struct {
@@ -20,7 +20,7 @@ type ComposerLock struct {
 	DevPackages []ComposerPackage `json:"packages-dev"`
 }
 
-func ParseComposerLock(r io.Reader) ([]*vadvisor.Package, error) {
+func ParseComposerLock(r io.Reader) ([]*mvd.Package, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -32,12 +32,12 @@ func ParseComposerLock(r io.Reader) ([]*vadvisor.Package, error) {
 		return nil, err
 	}
 
-	entries := []*vadvisor.Package{}
+	entries := []*mvd.Package{}
 
 	// add dependencies
 	for i := range composerLock.Packages {
 		pkg := composerLock.Packages[i]
-		entries = append(entries, &vadvisor.Package{
+		entries = append(entries, &mvd.Package{
 			Name:      pkg.Name,
 			Version:   pkg.Version,
 			Format:    "php",
