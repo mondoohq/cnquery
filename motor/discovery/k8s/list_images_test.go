@@ -3,6 +3,8 @@ package k8s
 import (
 	"testing"
 
+	"go.mondoo.com/cnquery/motor/motorid/containerid"
+
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -69,12 +71,12 @@ func TestListPodImage(t *testing.T) {
 
 	imgDigest := desc.Digest.String()
 	repoName := ref.Context().Name()
-	imageUrl := repoName + "@" + imgDigest
+	imageUrl := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
 
 	expectedAssetNames := []string{
 		imageUrl,
-		"k8s.gcr.io/kube-scheduler@sha256:32308abe86f7415611ca86ee79dd0a73e74ebecb2f9e3eb85fc3a8e62f03d0e7",
-		"k8s.gcr.io/kube-proxy@sha256:def87f007b49d50693aed83d4703d0e56c69ae286154b1c7a20cd1b3a320cf7c",
+		"k8s.gcr.io/kube-scheduler@32308abe86f7",
+		"k8s.gcr.io/kube-proxy@def87f007b49",
 	}
 
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"
@@ -176,9 +178,9 @@ func TestListPodImage_FromStatus(t *testing.T) {
 	p.EXPECT().Pods(nss[1]).Return(pods2, nil)
 
 	expectedAssetNames := []string{
-		"index.docker.io/library/nginx@sha256:f335d7436887b39393409261603fb248e0c385ec18997d866dd44f7e9b621096",
-		"k8s.gcr.io/kube-scheduler@sha256:32308abe86f7415611ca86ee79dd0a73e74ebecb2f9e3eb85fc3a8e62f03d0e7",
-		"k8s.gcr.io/kube-proxy@sha256:def87f007b49d50693aed83d4703d0e56c69ae286154b1c7a20cd1b3a320cf7c",
+		"index.docker.io/library/nginx@f335d7436887",
+		"k8s.gcr.io/kube-scheduler@32308abe86f7",
+		"k8s.gcr.io/kube-proxy@def87f007b49",
 	}
 
 	clusterIdentifier := "//platformid.api.mondoo.app/runtime/k8s/uid/e26043bb-8669-48a2-b684-b1e132198cdc"

@@ -181,10 +181,11 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 	imgDigest := desc.Digest.String()
 	repoName := ref.Context().Name()
 	imgTag := ref.Context().Tag(ref.Identifier()).Name()
+	name := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
 		PlatformIds: []string{containerid.MondooContainerImageID(imgDigest)},
-		Name:        imageUrl,
+		Name:        name,
 		Platform: &platform.Platform{
 			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
 			Runtime: providers.RUNTIME_DOCKER_REGISTRY,
