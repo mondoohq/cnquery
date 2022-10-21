@@ -226,10 +226,24 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			connection.Options["path"] = filepath
 		}
 
+		// FIXME: DEPRECATED, remove in v8.0 vv
 		if namespace, err := cmd.Flags().GetString("namespace"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --namespace values")
 		} else if namespace != "" {
 			connection.Options["namespace"] = namespace
+		}
+		// ^^
+
+		if excludeNamespaces, err := cmd.Flags().GetString("namespaces-exclude"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --namespaces-exclude values")
+		} else if excludeNamespaces != "" {
+			connection.Options["namespaces-exclude"] = excludeNamespaces
+		}
+
+		if includeNamespaces, err := cmd.Flags().GetString("namespaces"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --namespaces values")
+		} else if includeNamespaces != "" {
+			connection.Options["namespaces"] = includeNamespaces
 		}
 	case providers.ProviderType_AWS:
 		connection.Backend = providerType

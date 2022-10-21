@@ -64,7 +64,9 @@ type K8sResourceIdentifier struct {
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	features := cnquery.GetFeatures(ctx)
 	resolved := []*asset.Asset{}
-	namespacesFilter := ""
+	nsFilter := NamespaceFilterOpts{
+		include: []string{},
+	}
 
 	var k8sctlConfig *kubectl.KubectlConfig
 	localProvider, err := local.New()
@@ -80,28 +82,48 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
-	namespace := tc.Options["namespace"]
-	if len(namespace) > 0 {
-		log.Info().Msgf("namespace filter has been set to %q", namespace)
-		namespacesFilter = namespace
+	// if --namespace and --namespaces were both specified, just combine them into a single
+	// list of Namespaces to allow resources from
 
-		clusterNamespaces, err := p.Namespaces()
-		if err != nil {
-			return nil, err
-		}
+	// FIXME: DEPRECATED, remove in v8.0 vv
+	namespaceOpt := tc.Options["namespace"]
+	if len(namespaceOpt) > 0 {
+		log.Info().Msgf("namespace filter has been set to %q", namespaceOpt)
+		nsFilter.include = append(nsFilter.include, namespaceOpt)
+
+	}
+	// ^^
+
+	includeNamespaces := tc.Options["namespaces"]
+	if len(includeNamespaces) > 0 {
+		nsFilter.include = append(nsFilter.include, strings.Split(includeNamespaces, ",")...)
+	}
+
+	// Put a Warn() message if a Namespace that doesn't exist was part of the
+	// list of Namespaces to include
+	clusterNamespaces, err := p.Namespaces()
+	if err != nil {
+		return nil, err
+	}
+	for _, ns := range nsFilter.include {
 		foundNamespace := false
 		for _, clusterNs := range clusterNamespaces {
-			if clusterNs.Name == namespacesFilter {
+			if clusterNs.Name == ns {
 				foundNamespace = true
 				break
 			}
 		}
 		if !foundNamespace {
-			log.Warn().Msgf("namespace %q not found in cluster", namespacesFilter)
+			log.Warn().Msgf("namespace %q not found in cluster", ns)
 		}
 	}
 
-	log.Debug().Str("namespaceFilter", namespacesFilter).Msg("resolve k8s assets")
+	excludeNamespaces := tc.Options["namespaces-exclude"]
+	if len(excludeNamespaces) > 0 {
+		nsFilter.exclude = strings.Split(excludeNamespaces, ",")
+	}
+
+	log.Debug().Strs("namespacesIncludeFilter", nsFilter.include).Strs("namespacesExcludeFilter", nsFilter.exclude).Msg("resolve k8s assets")
 
 	clusterIdentifier, err := p.Identifier()
 	if err != nil {
@@ -178,7 +200,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	additionalAssets, err := addSeparateAssets(tc, p, namespacesFilter, resourcesFilter, clusterIdentifier, ownershipDir)
+	additionalAssets, err := addSeparateAssets(tc, p, nsFilter, resourcesFilter, clusterIdentifier, ownershipDir)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +229,7 @@ func (r *Resolver) InitCtx(ctx context.Context) context.Context {
 func addSeparateAssets(
 	tc *providers.Config,
 	p k8s.KubernetesProvider,
-	namespacesFilter string,
+	nsFilter NamespaceFilterOpts,
 	resourcesFilter map[string][]K8sResourceIdentifier,
 	clusterIdentifier string,
 	od *k8s.PlatformIdOwnershipDirectory,
@@ -217,9 +239,9 @@ func addSeparateAssets(
 	// discover deployments
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryDeployments) {
 		// fetch deployment information
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for deployments")
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for deployments")
 		connection := tc.Clone()
-		deployments, err := ListDeployments(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
+		deployments, err := ListDeployments(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s deployments")
 			return nil, err
@@ -230,9 +252,9 @@ func addSeparateAssets(
 	// discover k8s pods
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryPods) {
 		// fetch pod information
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for pods")
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for pods")
 		connection := tc.Clone()
-		pods, err := ListPods(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
+		pods, err := ListPods(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods")
 			return nil, err
@@ -243,8 +265,8 @@ func addSeparateAssets(
 	// discover k8s pod images
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryContainerImages) {
 		// fetch pod information
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for pods images")
-		containerimages, err := ListPodImages(p, namespacesFilter, od)
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for pods images")
+		containerimages, err := ListPodImages(p, nsFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s pods images")
 			return nil, err
@@ -254,9 +276,9 @@ func addSeparateAssets(
 
 	// discovery k8s daemonsets
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryDaemonSets) {
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for daemonsets")
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for daemonsets")
 		connection := tc.Clone()
-		daemonsets, err := ListDaemonSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
+		daemonsets, err := ListDaemonSets(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s daemonsets")
 			return nil, err
@@ -266,9 +288,9 @@ func addSeparateAssets(
 
 	// discover cronjobs
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryCronJobs) {
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for cronjobs")
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for cronjobs")
 		connection := tc.Clone()
-		cronjobs, err := ListCronJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
+		cronjobs, err := ListCronJobs(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s cronjobs")
 			return nil, err
@@ -278,9 +300,9 @@ func addSeparateAssets(
 
 	// discover jobs
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryJobs, DiscoveryJobs) {
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for jobs")
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for jobs")
 		connection := tc.Clone()
-		jobs, err := ListJobs(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
+		jobs, err := ListJobs(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s jobs")
 			return nil, err
@@ -290,9 +312,9 @@ func addSeparateAssets(
 
 	// discover statefulsets
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryStatefulSets) {
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for statefulsets")
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for statefulsets")
 		connection := tc.Clone()
-		statefulsets, err := ListStatefulSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
+		statefulsets, err := ListStatefulSets(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s statefulsets")
 			return nil, err
@@ -302,9 +324,9 @@ func addSeparateAssets(
 
 	// discover replicasets
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryReplicaSets) {
-		log.Debug().Str("namespace", namespacesFilter).Msg("search for replicasets")
+		log.Debug().Strs("namespace", nsFilter.include).Msg("search for replicasets")
 		connection := tc.Clone()
-		replicasets, err := ListReplicaSets(p, connection, clusterIdentifier, namespacesFilter, resourcesFilter, od)
+		replicasets, err := ListReplicaSets(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
 		if err != nil {
 			log.Error().Err(err).Msg("could not fetch k8s replicasets")
 			return nil, err
