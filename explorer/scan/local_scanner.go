@@ -184,7 +184,9 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 
 	// plan scan jobs
 	reporter := NewAggregateReporter(assetList)
-	job.Bundle.FilterQueryPacks(job.QueryPackFilters)
+	if job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
+		return nil, false, errors.New("All available packs filtered out. Nothing to do.")
+	}
 
 	for i := range assetList {
 		asset := assetList[i]
