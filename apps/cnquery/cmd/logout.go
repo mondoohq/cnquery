@@ -16,13 +16,14 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(unregisterCmd)
-	unregisterCmd.Flags().Bool("force", false, "Force registration")
+	rootCmd.AddCommand(logoutCmd)
+	logoutCmd.Flags().Bool("force", false, "Force re-authentication")
 }
 
-var unregisterCmd = &cobra.Command{
-	Use:   "unregister",
-	Short: "Unregister from Mondoo Platform",
+var logoutCmd = &cobra.Command{
+	Use:     "logout",
+	Aliases: []string{"unregister"},
+	Short:   "Log out from Mondoo Platform",
 	Long: `
 This process also initiates a revocation of the client's service account to ensure
 the credentials cannot be used in future anymore.
