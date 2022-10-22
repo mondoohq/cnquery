@@ -26,6 +26,7 @@ func init() {
 	packBundlesCmd.AddCommand(queryPackValidateCmd)
 
 	// bundle add
+	queryPackUploadCmd.Flags().String("pack-version", "", "Override the version of each pack in the bundle")
 	packBundlesCmd.AddCommand(queryPackUploadCmd)
 
 	rootCmd.AddCommand(packBundlesCmd)
@@ -135,7 +136,6 @@ var queryPackUploadCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))
-		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		opts, optsErr := cnquery_config.ReadConfig()
