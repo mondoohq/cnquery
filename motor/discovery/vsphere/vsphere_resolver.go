@@ -82,7 +82,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	client := trans.Client()
 	discoveryClient := New(client)
 
-	if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryHostMachines) {
+	if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryHostMachines) {
 		// resolve esxi hosts
 		hosts, err := discoveryClient.ListEsxiHosts()
 		if err != nil {
