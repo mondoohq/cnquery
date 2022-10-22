@@ -1,4 +1,6 @@
-package vadvisor
+package mvd
+
+//go:generate protoc --proto_path=../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. mvd.proto
 
 // Determine all Cves of all Advisories
 func (r *VulnReport) Cves() []*CVE {

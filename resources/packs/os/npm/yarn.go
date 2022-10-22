@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 	"sigs.k8s.io/yaml"
 )
 
@@ -19,7 +19,7 @@ type YarnLockEntry struct {
 	Dependencies map[string]string
 }
 
-func ParseYarnLock(r io.Reader) ([]*vadvisor.Package, error) {
+func ParseYarnLock(r io.Reader) ([]*mvd.Package, error) {
 	var b bytes.Buffer
 
 	// iterate and convert the format to yaml on the fly
@@ -45,7 +45,7 @@ func ParseYarnLock(r io.Reader) ([]*vadvisor.Package, error) {
 		return nil, err
 	}
 
-	entries := []*vadvisor.Package{}
+	entries := []*mvd.Package{}
 
 	// add all dependencies
 	for k, v := range yarnLock {
@@ -54,7 +54,7 @@ func ParseYarnLock(r io.Reader) ([]*vadvisor.Package, error) {
 			log.Error().Str("name", name).Msg("cannot parse yarn package name")
 			continue
 		}
-		entries = append(entries, &vadvisor.Package{
+		entries = append(entries, &mvd.Package{
 			Name:      name,
 			Version:   v.Version,
 			Format:    "npm",

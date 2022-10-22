@@ -227,6 +227,8 @@ shared/generate:
 	go generate ./shared/proto/.
 	go generate ./upstream/
 	go generate ./upstream/health
+	go generate ./upstream/mvd/cvss
+	go generate ./upstream/mvd
 
 #   ⛹🏽‍ Testing   #
 

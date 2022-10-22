@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
 // PackageJson allows parsing the package json file
@@ -30,8 +30,7 @@ type PackageJsonLock struct {
 	Dependencies map[string]PackageJsonLockEntry `jsonn:"dependencies"`
 }
 
-func ParsePackageJson(r io.Reader) ([]*vadvisor.Package, error) {
-
+func ParsePackageJson(r io.Reader) ([]*mvd.Package, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -43,10 +42,10 @@ func ParsePackageJson(r io.Reader) ([]*vadvisor.Package, error) {
 		return nil, err
 	}
 
-	entries := []*vadvisor.Package{}
+	entries := []*mvd.Package{}
 
 	// add own package
-	entries = append(entries, &vadvisor.Package{
+	entries = append(entries, &mvd.Package{
 		Name:      packageJson.Name,
 		Version:   packageJson.Version,
 		Format:    "npm",
@@ -56,7 +55,7 @@ func ParsePackageJson(r io.Reader) ([]*vadvisor.Package, error) {
 	// add all dependencies
 
 	for k, v := range packageJson.Dependencies {
-		entries = append(entries, &vadvisor.Package{
+		entries = append(entries, &mvd.Package{
 			Name:      k,
 			Version:   v,
 			Format:    "npm",
@@ -67,8 +66,7 @@ func ParsePackageJson(r io.Reader) ([]*vadvisor.Package, error) {
 	return entries, nil
 }
 
-func ParsePackageJsonLock(r io.Reader) ([]*vadvisor.Package, error) {
-
+func ParsePackageJsonLock(r io.Reader) ([]*mvd.Package, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -80,10 +78,10 @@ func ParsePackageJsonLock(r io.Reader) ([]*vadvisor.Package, error) {
 		return nil, err
 	}
 
-	entries := []*vadvisor.Package{}
+	entries := []*mvd.Package{}
 
 	// add own package
-	entries = append(entries, &vadvisor.Package{
+	entries = append(entries, &mvd.Package{
 		Name:      packageJsonLock.Name,
 		Version:   packageJsonLock.Version,
 		Format:    "npm",
@@ -92,7 +90,7 @@ func ParsePackageJsonLock(r io.Reader) ([]*vadvisor.Package, error) {
 
 	// add all dependencies
 	for k, v := range packageJsonLock.Dependencies {
-		entries = append(entries, &vadvisor.Package{
+		entries = append(entries, &mvd.Package{
 			Name:      k,
 			Version:   v.Version,
 			Format:    "npm",

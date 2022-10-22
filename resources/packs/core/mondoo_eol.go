@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources/packs/core/vadvisor"
+	"go.mondoo.com/cnquery/upstream/mvd"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -18,7 +18,6 @@ func (s *mqlMondooEol) id() (string, error) {
 }
 
 func (p *mqlMondooEol) GetDate() (*time.Time, error) {
-
 	name, _ := p.Product()
 	version, _ := p.Version()
 
@@ -35,7 +34,7 @@ func (p *mqlMondooEol) GetDate() (*time.Time, error) {
 		return nil, err
 	}
 
-	platformEolInfo, err := scannerClient.IsEol(context.Background(), &vadvisor.Platform{
+	platformEolInfo, err := scannerClient.IsEol(context.Background(), &mvd.Platform{
 		Name:    name,
 		Release: version,
 	})

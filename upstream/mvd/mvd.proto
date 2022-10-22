@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-import "vadvisor/cvss/cvss.proto";
+import "cvss/cvss.proto";
 
-package mondoo.vadvisorclient.v1;
-option go_package = "go.mondoo.com/cnquery/resources/packs/core/vadvisor";
+package mondoo.mvd.v1;
+option go_package = "go.mondoo.com/cnquery/upstream/mvde/mvd";
 
 message Platform {
   string name = 1;
@@ -64,7 +64,7 @@ message Advisory {
   repeated FixedPlatform fixedPlatforms = 30;
 
   int32 score = 25;
-  mondoo.vuln.cvss.v1.Cvss worstScore = 31;
+  mondoo.mvd.cvss.v1.Cvss worstScore = 31;
   float vendorscore = 26;
 
   AdvisoryState state = 27;
@@ -151,12 +151,12 @@ message CVE {
   string summary = 3;
 
   float score = 4;
-  mondoo.vuln.cvss.v1.Cvss worstScore = 7;
+  mondoo.mvd.cvss.v1.Cvss worstScore = 7;
 
   bool unscored = 6;
   CveState state = 5;
 
-  repeated mondoo.vuln.cvss.v1.Cvss cvss = 20;
+  repeated mondoo.mvd.cvss.v1.Cvss cvss = 20;
 
   string cwe = 21;
   string published = 22;
