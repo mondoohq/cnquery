@@ -42,8 +42,7 @@ func ReadSSHConfig(cc *providers.Config) *providers.Config {
 		cc.Host = hostname
 	}
 
-	if len(cc.Credentials) == 0 {
-
+	if len(cc.Credentials) == 0 || (len(cc.Credentials) == 1 && cc.Credentials[0].Type == vault.CredentialType_password && len(cc.Credentials[0].Secret) == 0) {
 		user, _ := cfg.Get(host, "User")
 		port, err := cfg.Get(host, "Port")
 		if err == nil {

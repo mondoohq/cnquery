@@ -141,9 +141,6 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if err != nil {
 			log.Error().Err(err).Msg("cannot parse target")
 		}
-		if identityFile == "" && password == "" {
-			log.Warn().Msg("No identity file or password are provided for ssh authentication, use either --identity-file, --ask-pass or --password. Falling back to ssh agent authentication.")
-		}
 		connection.Host = target.Hostname
 		connection.Port = target.Port
 		connection.Path = target.Path
@@ -174,6 +171,10 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 					PrivateKeyPath: identityFile,
 				})
 			}
+		}
+
+		if len(connection.Credentials) == 0 {
+			log.Warn().Msg("no identity file or password are provided for ssh authentication, use either --identity-file, --ask-pass or --password, fall back to ssh agent")
 		}
 	case providers.ProviderType_WINRM:
 		connection.Backend = providerType

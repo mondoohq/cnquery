@@ -129,9 +129,11 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 				signers = append(signers, priv)
 			}
 		case vault.CredentialType_password:
-			// use password auth
-			log.Debug().Msg("enabled ssh password authentication")
-			auths = append(auths, ssh.Password(string(credential.Secret)))
+			// use password auth if the password was set, this is also used when only the username is set
+			if len(credential.Secret) > 0 {
+				log.Debug().Msg("enabled ssh password authentication")
+				auths = append(auths, ssh.Password(string(credential.Secret)))
+			}
 		case vault.CredentialType_ssh_agent:
 			log.Debug().Msg("enabled ssh agent authentication")
 			useAgentAuth()
@@ -229,7 +231,8 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 	}
 
 	// if no credential was provided, fallback to ssh-agent and ssh-config
-	if len(pCfg.Credentials) == 0 {
+	if len(auths) == 0 {
+		log.Debug().Msg("enabled ssh agent authentication")
 		useAgentAuth()
 	}
 

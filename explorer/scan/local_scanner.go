@@ -153,7 +153,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		if err != nil {
 			return nil, false, err
 		}
-		log.Info().Int("assets", len(resp.Details)).Msg("got assets details")
+		log.Debug().Int("assets", len(resp.Details)).Msg("got assets details")
 		platformAssetMapping := make(map[string]*explorer.SynchronizeAssetsRespAssetDetail)
 		for i := range resp.Details {
 			log.Debug().Str("platform-mrn", resp.Details[i].PlatformMrn).Str("asset", resp.Details[i].AssetMrn).Msg("asset mapping")
