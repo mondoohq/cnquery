@@ -359,7 +359,7 @@ private aws.es.domain @defaults("arn") {
   nodeToNodeEncryptionEnabled bool
   // name of the es domain
   name string
-  // endpoint used to submit index and search reqs
+  // endpoint used to submit index and search requests
   endpoint string
   // region where the domain exists
   region string
@@ -1216,7 +1216,7 @@ private aws.ec2.snapshot @defaults("arn") {
   id string
   // region where the snapshot exists
   region string
-  // users/groups that have the permsfor creating volumes from the snapshot
+  // users/groups that have the permissions for creating volumes from the snapshot
   createVolumePermission() []dict
   // id of the volume used to create the snapshot
   volumeId string
