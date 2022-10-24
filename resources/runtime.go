@@ -188,7 +188,7 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 	// with the `Id` field set to look up an existing resource
 	res, err := r.Factory(ctx, argsMap)
 	if err != nil {
-		return nil, errors.New("failed to create resource '" + name + "': " + err.Error())
+		return nil, fmt.Errorf("failed to create resource '%s': %w", name, err)
 	}
 	if res == nil {
 		return nil, errors.New("resource factory produced a nil result for resource '" + name + "'")
