@@ -15,9 +15,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-type K8sObjectNotFound struct{}
+type K8sResourceNotFound struct{}
 
-func (e *K8sObjectNotFound) Error() string {
+func (e *K8sResourceNotFound) Error() string {
 	return "could not find k8s resource"
 }
 
@@ -247,8 +247,8 @@ func initNamespacedResource[T K8sNamespacedObject](
 		}
 	}
 
-	// the error K8sObjectNotFound is checked by cnspec
-	return args, *new(T), &K8sObjectNotFound{}
+	// the error K8sResourceNotFound is checked by cnspec
+	return args, *new(T), &K8sResourceNotFound{}
 }
 
 func initResource[T K8sObject](
@@ -315,5 +315,6 @@ func initResource[T K8sObject](
 		}
 	}
 
-	return nil, *new(T), &K8sObjectNotFound{}
+	// the error K8sResourceNotFound is checked by cnspec
+	return nil, *new(T), &K8sResourceNotFound{}
 }
