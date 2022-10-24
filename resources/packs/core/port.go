@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"go.mondoo.com/cnquery/resources/packs/core/lsof"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 	"go.mondoo.com/cnquery/resources/packs/core/ports"
@@ -29,6 +31,8 @@ func (p *mqlPorts) GetList() ([]interface{}, error) {
 		return p.listLinux()
 	case pf.IsFamily("windows"):
 		return p.listWindows()
+	case pf.IsFamily("darwin"):
+		return p.listMacos()
 	default:
 		return nil, errors.New("could not detect suitable ports manager for platform: " + pf.Name)
 	}
@@ -143,7 +147,7 @@ func (p *mqlPorts) users() (map[int64]User, error) {
 	return userUidMap, nil
 }
 
-func (p *mqlPorts) processes() (map[int64]Process, error) {
+func (p *mqlPorts) processesBySocket() (map[int64]Process, error) {
 	// Prerequisites: processes
 	obj, err := p.MotorRuntime.CreateResource("processes")
 	if err != nil {
@@ -266,7 +270,7 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 		return nil, err
 	}
 
-	processes, err := p.processes()
+	processes, err := p.processesBySocket()
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +288,7 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 	return append(tcpPorts, udpPorts...), nil
 }
 
-func (p *mqlPorts) windows_processes() (map[int64]Process, error) {
+func (p *mqlPorts) processesByPid() (map[int64]Process, error) {
 	// Prerequisites: processes
 	obj, err := p.MotorRuntime.CreateResource("processes")
 	if err != nil {
@@ -308,7 +312,7 @@ func (p *mqlPorts) windows_processes() (map[int64]Process, error) {
 // Windows Implementation
 
 func (p *mqlPorts) listWindows() ([]interface{}, error) {
-	processes, err := p.windows_processes()
+	processes, err := p.processesByPid()
 	if err != nil {
 		return nil, err
 	}
@@ -395,6 +399,94 @@ func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]Process) (
 
 		res = append(res, obj)
 	}
+	return res, nil
+}
+
+// macOS Implementation
+
+// listMacos reads the lsof information of all open files that are tcp sockets
+func (p *mqlPorts) listMacos() ([]interface{}, error) {
+	users, err := p.users()
+	if err != nil {
+		return nil, err
+	}
+
+	processes, err := p.processesByPid()
+	if err != nil {
+		return nil, err
+	}
+
+	osProvider, err := osProvider(p.MotorRuntime.Motor)
+	if err != nil {
+		return nil, err
+	}
+
+	executedCmd, err := osProvider.RunCommand("lsof -nP -i -F")
+	if err != nil {
+		return nil, err
+	}
+
+	lsofProcesses, err := lsof.Parse(executedCmd.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	// iterating over all processes to find the once that have network file descriptors
+	var res []interface{}
+	for i := range lsofProcesses {
+		process := lsofProcesses[i]
+		for j := range process.FileDescriptors {
+			fd := process.FileDescriptors[j]
+			if fd.Type != lsof.FileTypeIPv4 && fd.Type != lsof.FileTypeIPv6 {
+				continue
+			}
+
+			uid, err := strconv.Atoi(process.UID)
+			if err != nil {
+				return nil, err
+			}
+			user := users[int64(uid)]
+
+			pid, err := strconv.Atoi(process.PID)
+			if err != nil {
+				return nil, err
+			}
+			mqlProcess := processes[int64(pid)]
+
+			protocol := "ipv4"
+			if fd.Type == lsof.FileTypeIPv6 {
+				protocol = "ipv6"
+			}
+
+			localAddress, localPort, remoteAddress, remotePort, err := fd.NetworkFile()
+			if err != nil {
+				return nil, err
+			}
+
+			state, ok := TCP_STATES[fd.TcpState()]
+			if !ok {
+				state = "unknown"
+			}
+
+			obj, err := p.MotorRuntime.CreateResource("port",
+				"protocol", protocol,
+				"port", localPort,
+				"address", localAddress,
+				"user", user,
+				"process", mqlProcess,
+				"state", state,
+				"remoteAddress", remoteAddress,
+				"remotePort", remotePort,
+			)
+			if err != nil {
+				log.Error().Err(err).Send()
+				return nil, err
+			}
+
+			res = append(res, obj)
+		}
+	}
+
 	return res, nil
 }
 
