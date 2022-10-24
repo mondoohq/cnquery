@@ -241,7 +241,7 @@ func initNamespacedResource[T K8sNamespacedObject](
 		}
 	}
 
-	// the error K8sResourceNotFound is checked by cnspec
+	// the error ResourceNotFound is checked by cnspec
 	return args, *new(T), &resources.ResourceNotFound{}
 }
 
@@ -309,6 +309,6 @@ func initResource[T K8sObject](
 		}
 	}
 
-	// the error K8sResourceNotFound is checked by cnspec
+	// the error ResourceNotFound is checked by cnspec
 	return nil, *new(T), &resources.ResourceNotFound{}
 }
