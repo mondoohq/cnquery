@@ -7,9 +7,9 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
 
 const (
@@ -118,9 +118,9 @@ type WindowsTotalProcessorTime struct {
 
 func (p WindowsProcess) ToOSProcess() *OSProcess {
 	return &OSProcess{
-		Pid:     p.ID,
-		Command: p.Path,
-		// Uid:     p.UserName,
+		Pid:        p.ID,
+		Command:    p.Path,
+		Executable: p.Name,
 	}
 }
 
@@ -148,8 +148,7 @@ func (wpm *WindowsProcessManager) Name() string {
 }
 
 func (wpm *WindowsProcessManager) List() ([]*OSProcess, error) {
-	// TODO: wrap in powershell
-	c, err := wpm.provider.RunCommand(Ps1GetProcess)
+	c, err := wpm.provider.RunCommand(powershell.Encode(Ps1GetProcess))
 	if err != nil {
 		return nil, fmt.Errorf("processes> could not run command")
 	}
