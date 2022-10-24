@@ -1,5 +1,11 @@
 package resources
 
+type ResourceNotFound struct{}
+
+func (e *ResourceNotFound) Error() string {
+	return "could not find resource"
+}
+
 // ResourceFactory for creating a new resource instance
 type ResourceFactory func(*Runtime, *Args) (interface{}, error)
 

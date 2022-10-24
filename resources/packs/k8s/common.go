@@ -15,12 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-type K8sResourceNotFound struct{}
-
-func (e *K8sResourceNotFound) Error() string {
-	return "could not find k8s resource"
-}
-
 func k8sProvider(t providers.Instance) (k8s_provider.KubernetesProvider, error) {
 	at, ok := t.(k8s_provider.KubernetesProvider)
 	if !ok {
@@ -248,7 +242,7 @@ func initNamespacedResource[T K8sNamespacedObject](
 	}
 
 	// the error K8sResourceNotFound is checked by cnspec
-	return args, *new(T), &K8sResourceNotFound{}
+	return args, *new(T), &resources.ResourceNotFound{}
 }
 
 func initResource[T K8sObject](
@@ -272,7 +266,7 @@ func initResource[T K8sObject](
 	}
 	k8sResource := obj.(K8s)
 
-	resources, err := r(k8sResource)
+	k8sResources, err := r(k8sResource)
 	if err != nil {
 		return nil, *new(T), err
 	}
@@ -308,13 +302,13 @@ func initResource[T K8sObject](
 		return args, *new(T), fmt.Errorf("cannot use resource without specifying id or name")
 	}
 
-	for i := range resources {
-		entry := resources[i].(T)
+	for i := range k8sResources {
+		entry := k8sResources[i].(T)
 		if matchFn(entry) {
 			return nil, entry, nil
 		}
 	}
 
 	// the error K8sResourceNotFound is checked by cnspec
-	return nil, *new(T), &K8sResourceNotFound{}
+	return nil, *new(T), &resources.ResourceNotFound{}
 }
