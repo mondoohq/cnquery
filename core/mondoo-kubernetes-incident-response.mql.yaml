@@ -63,6 +63,12 @@ packs:
             }
             podSpec["nodeName"]
           }
+  - uid: mondoo-kubernetes-cronjobs-incident-response
+    name: Mondoo Kubernetes CronJobs Incident Response
+    is_public: true
+    filters:
+      - asset.platform == "k8s-cronjob"
+    queries:
       - uid: k8s-cronjobs
         title: Gather CronJobs
         query: |
