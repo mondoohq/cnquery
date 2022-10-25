@@ -9,7 +9,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core/processes"
 )
 
-func TestWindowsServiceParser(t *testing.T) {
+func TestWindows2019ServiceParser(t *testing.T) {
 	data, err := os.Open("./testdata/windows2019.json")
 	require.NoError(t, err)
 
@@ -77,6 +77,46 @@ func TestWindowsServiceParser(t *testing.T) {
 		Path:     "c:\\windows\\system32\\cmd.exe",
 	}
 	found = findProcess(procs, 3820)
+	assert.EqualValues(t, expected, found)
+}
+
+func TestWindows2022ServiceParser(t *testing.T) {
+	data, err := os.Open("./testdata/windows2022.json")
+	require.NoError(t, err)
+
+	procs, err := processes.ParseWindowsProcesses(data)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(procs))
+
+	expected := &processes.WindowsProcess{
+		ID:                2628,
+		Name:              "cmd",
+		Description:       "Windows Command Processor",
+		PriorityClass:     32,
+		PM:                4546560,
+		NPM:               5976,
+		CPU:               0.0625,
+		VirtualMemorySize: 63016960,
+		Responding:        true,
+		SessionId:         0,
+		StartTime:         "/Date(1666622681722)/",
+		TotalProcessorTime: processes.WindowsTotalProcessorTime{
+			Ticks:             625000,
+			Days:              0,
+			Hours:             0,
+			Milliseconds:      62,
+			Minutes:           0,
+			Seconds:           0,
+			TotalDays:         7.2337962962962959e-07,
+			TotalHours:        1.7361111111111111e-05,
+			TotalMilliseconds: 62.5,
+			TotalMinutes:      0.0010416666666666667,
+			TotalSeconds:      0.0625,
+		},
+		UserName: "WIN-E692AR0A0UB\\Administrator",
+		Path:     "c:\\windows\\system32\\cmd.exe",
+	}
+	found := findProcess(procs, 2628)
 	assert.EqualValues(t, expected, found)
 }
 
