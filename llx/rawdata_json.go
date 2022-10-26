@@ -176,7 +176,7 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 		last := len(keys) - 1
 		for i, k := range keys {
 			v := data[k]
-			buf.WriteString("\"" + k + "\":")
+			buf.WriteString(string2json(k) + ":")
 
 			if v == nil {
 				buf.WriteString("null")
@@ -235,7 +235,7 @@ func rawStringMapJSON(typ types.Type, data map[string]interface{}, codeID string
 
 	var err error
 	for i, key := range keys {
-		buf.WriteString("\"" + key + "\":")
+		buf.WriteString(string2json(key) + ":")
 
 		err = rawDataJSON(childType, data[key], codeID, bundle, buf)
 		if err != nil {
@@ -263,7 +263,7 @@ func rawIntMapJSON(typ types.Type, data map[int]interface{}, codeID string, bund
 
 	var err error
 	for i, key := range keys {
-		buf.WriteString("\"" + strconv.Itoa(key) + "\":")
+		buf.WriteString(string2json(strconv.Itoa(key)) + ":")
 
 		err = rawDataJSON(childType, data[key], codeID, bundle, buf)
 		if err != nil {
