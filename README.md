@@ -193,7 +193,7 @@ Explore:
 - [cnspec docs](https://mondoo.com/docs/cnquery/)
 - [Query Packs](https://github.com/mondoohq/cnquery-packs)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
-- [MQL resource packs](https://mondoo.com/docs/references/mql/)
+- [MQL Language Reference](https://mondoo.com/docs/mql/resources/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
 
 ## Join the community!
