@@ -63,6 +63,10 @@ func (k *mqlK8sPod) GetInitContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, InitContainerType)
 }
 
+func (k *mqlK8sPod) GetEphemeralContainers() ([]interface{}, error) {
+	return getContainers(k, k.MotorRuntime, EphemeralContainerType)
+}
+
 func (k *mqlK8sPod) GetContainers() ([]interface{}, error) {
 	return getContainers(k, k.MotorRuntime, ContainerContainerType)
 }

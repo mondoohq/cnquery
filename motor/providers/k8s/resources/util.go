@@ -55,6 +55,26 @@ func GetPodSpec(obj runtime.Object) (*corev1.PodSpec, error) {
 	return podSpec, nil
 }
 
+func GetEphemeralContainers(resource runtime.Object) ([]corev1.Container, error) {
+	podSpec, err := GetPodSpec(resource)
+	if err != nil {
+		return nil, err
+	}
+	containers := []corev1.Container{}
+	if podSpec != nil {
+		for i := range podSpec.EphemeralContainers {
+			// with this conversion, we loose some fields:
+			// https://pkg.go.dev/k8s.io/api/core/v1#EphemeralContainer
+			// https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#ephemeralcontainer-v1-core
+			// but we don't need them for now
+			// from what I can tell, we only loose: targetContainerName
+			v1Container := corev1.Container(podSpec.EphemeralContainers[i].EphemeralContainerCommon)
+			containers = append(containers, v1Container)
+		}
+	}
+	return containers, nil
+}
+
 func GetInitContainers(resource runtime.Object) ([]corev1.Container, error) {
 	podSpec, err := GetPodSpec(resource)
 	if err != nil {

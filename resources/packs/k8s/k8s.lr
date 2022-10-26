@@ -139,6 +139,8 @@ k8s.pod @defaults("namespace name created"){
   manifest dict
   // PodSpec is a description of a pod
   podSpec dict
+  // Ephemeral containers
+  ephemeralContainers() []k8s.ephemeralContainer
   // Init containers
   initContainers() []k8s.initContainer
   // Contained Containers
@@ -203,6 +205,39 @@ private k8s.initContainer {
   args []string
   // Compute Resources required by this container
   resources dict
+  // Pod volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // volumeDevices is the list of block devices to be used by the container
+  volumeDevices []dict
+  // Image pull policy, One of Always, Never, IfNotPresent
+  imagePullPolicy string
+  // Security options the pod should run with
+  securityContext dict
+  // Container's working directory
+  workingDir string
+  // Whether this container should allocate a TTY for itself
+  tty bool
+  // env variables
+  env dict
+  // envFrom settings
+  envFrom dict
+}
+
+// Kubernetes Ephemeral Container
+private k8s.ephemeralContainer {
+  uid string
+  // Name of the container
+  name string
+  // Container image name
+  imageName string
+  // deprecated, use imageName
+  image string
+  // Container image
+  containerImage() os.container.image
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
   // Pod volumes to mount into the container's filesystem
   volumeMounts []dict
   // volumeDevices is the list of block devices to be used by the container
