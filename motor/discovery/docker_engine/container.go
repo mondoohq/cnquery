@@ -70,10 +70,8 @@ func (e *dockerEngineDiscovery) ContainerInfo(name string) (ContainerInfo, error
 
 	// fetch docker specific metadata
 	labels := map[string]string{}
-	labels["mondoo.com/instance"] = cdata.ID
 	labels["docker.io/container-id"] = cdata.ID
 	labels["docker.io/image-name"] = cdata.Image
-	// labels["mondoo.app/image-id"] = cdata.ImageID
 	labels["docker.io/names"] = cName
 
 	ci.Labels = labels
@@ -153,7 +151,6 @@ func (e *dockerEngineDiscovery) ListContainer() ([]*asset.Asset, error) {
 
 		// fetch docker specific metadata
 		labels := map[string]string{}
-		labels["mondoo.com/instance"] = dContainer.ID
 		labels["mondoo.com/image-id"] = dContainer.ImageID
 		labels["docker.io/image-name"] = dContainer.Image
 		labels["docker.io/names"] = name
