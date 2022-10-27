@@ -11,7 +11,7 @@ type podmanClient struct {
 }
 
 func NewPodmanDiscovery() (*podmanClient, error) {
-	conn, err := bindings.NewConnection(context.Background(), "unix://run/podman/podman.sock")
+	conn, err := bindings.NewConnectionWithIdentity(context.Background(), "socket here", "identity", true)
 	if err != nil {
 		return nil, err
 	}

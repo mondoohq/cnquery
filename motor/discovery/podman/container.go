@@ -64,7 +64,7 @@ func (e *podmanClient) ContainerInfo(name string) (ContainerInfo, error) {
 	labels := map[string]string{}
 	labels["mondoo.com/instance"] = cdata.ID
 	labels["docker.io/container-id"] = cdata.ID
-	labels["docker.io/image-name"] = cdata.Image
+	labels["docker.io/image-name"] = cdata.ImageName
 	// labels["mondoo.app/image-id"] = cdata.ImageID
 	labels["docker.io/names"] = cName
 

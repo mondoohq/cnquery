@@ -22,7 +22,6 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/azure"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/discovery/container_registry"
-	"go.mondoo.com/cnquery/motor/discovery/docker_engine"
 	"go.mondoo.com/cnquery/motor/discovery/equinix"
 	"go.mondoo.com/cnquery/motor/discovery/gcp"
 	"go.mondoo.com/cnquery/motor/discovery/github"
@@ -34,6 +33,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/ms365"
 	"go.mondoo.com/cnquery/motor/discovery/network"
 	"go.mondoo.com/cnquery/motor/discovery/os"
+	"go.mondoo.com/cnquery/motor/discovery/podman"
 	"go.mondoo.com/cnquery/motor/discovery/tar"
 	"go.mondoo.com/cnquery/motor/discovery/terraform"
 	"go.mondoo.com/cnquery/motor/discovery/vagrant"
@@ -58,9 +58,9 @@ func init() {
 		providers.ProviderID_LOCAL:              &local.Resolver{},
 		providers.ProviderID_WINRM:              &os.Resolver{},
 		providers.ProviderID_SSH:                &os.Resolver{},
-		providers.ProviderID_DOCKER:             &docker_engine.Resolver{},
-		providers.ProviderID_DOCKER_IMAGE:       &docker_engine.Resolver{},
-		providers.ProviderID_DOCKER_CONTAINER:   &docker_engine.Resolver{},
+		providers.ProviderID_DOCKER:             &podman.Resolver{},
+		providers.ProviderID_DOCKER_IMAGE:       &podman.Resolver{},
+		providers.ProviderID_DOCKER_CONTAINER:   &podman.Resolver{},
 		providers.ProviderID_TAR:                &tar.Resolver{},
 		providers.ProviderID_K8S:                &k8s.Resolver{},
 		providers.ProviderID_GCR:                &gcp.GcrResolver{},
