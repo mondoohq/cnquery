@@ -171,13 +171,11 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Info().Msg("discovery option auto is used. This will detect the assets: cluster, jobs, cronjobs, pods, statefulsets, deployments, replicasets, daemonsets")
 	}
 
-	// Only discover cluster and nodes if there are no resource filters. For CI/CD do not
-	// discover the cluster asset at all. In that case that would be the admission review resource
-	// for which we only care if we have explicitly enabled discovery for it.
+	// Only discover cluster and nodes if there are no resource filters.
 	var clusterAsset *asset.Asset
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryClusters) &&
-		len(resourcesFilter) == 0 && root.Category != asset.AssetCategory_CATEGORY_CICD {
+		len(resourcesFilter) == 0 {
 		clusterAsset = &asset.Asset{
 			PlatformIds: []string{clusterIdentifier},
 			Name:        clusterName,
