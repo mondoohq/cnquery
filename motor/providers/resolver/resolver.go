@@ -34,7 +34,6 @@ import (
 )
 
 var providerDevelopmentStatus = map[providers.ProviderType]string{
-	providers.ProviderType_GITHUB:      "experimental",
 	providers.ProviderType_AWS_EC2_EBS: "experimental",
 }
 

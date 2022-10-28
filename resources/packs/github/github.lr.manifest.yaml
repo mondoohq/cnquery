@@ -210,7 +210,6 @@ resources:
         min_mondoo_version: 6.11.0
       webhooks:
         min_mondoo_version: 6.11.0
-    maturity: experimental
     min_mondoo_version: 5.15.0
   github.package:
     fields:
