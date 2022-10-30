@@ -95,7 +95,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	}
 
 	connection := &providers.Config{
-		Backend: providers.ProviderType_LOCAL_OS, // TODO: need to be set to unknown at this point
+		Backend: providers.ProviderType_UNKNOWN,
 		Discover: &providers.Discovery{
 			Targets: discoverTargets,
 			Filter:  discoveryFilter,

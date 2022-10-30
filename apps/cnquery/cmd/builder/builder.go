@@ -48,6 +48,12 @@ func NewProviderCommand(opts CommandOpts) *cobra.Command {
 		},
 		ValidArgsFunction: opts.ValidArgsFunction,
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				log.Error().Msg("provider " + args[0] + " does not exist")
+				cmd.Help()
+				os.Exit(1)
+			}
+
 			log.Info().Str("provider", "local").Msg("no provider specified, using defaults.\n  Use --help for a list of available providers.")
 			opts.Run(cmd, args, providers.ProviderType_LOCAL_OS, DefaultAssetType)
 		},
