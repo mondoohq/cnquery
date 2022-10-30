@@ -269,6 +269,13 @@ var centos = &PlatformResolver{
 			}
 		}
 
+		// newer rockylinux do not have /etc/centos-release
+		if pf.Name == "rockylinux" {
+			if ok, err := afs.Exists("/etc/rocky-release"); err == nil && ok {
+				return true, nil
+			}
+		}
+
 		// NOTE: CentOS 5 does not have /etc/centos-release
 		// fallback to /etc/centos-release file
 		if ok, err := afs.Exists("/etc/centos-release"); err != nil || !ok {
