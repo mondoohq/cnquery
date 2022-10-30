@@ -14,7 +14,7 @@ content = "Rocky Linux release 8.5 (Green Obsidian)"
 content = "Rocky Linux release 8.5 (Green Obsidian)"
 
 [files."/etc/rocky-release"]
-content = "AlmaLinux release 8.3 Beta (Purple Manul)"
+content = "Rocky Linux release 8.5 (Green Obsidian)"
 
 [files."/etc/os-release"]
 content = """
