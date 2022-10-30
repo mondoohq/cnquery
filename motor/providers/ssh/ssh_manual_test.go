@@ -19,8 +19,8 @@ func TestEc2InstanceConnect(t *testing.T) {
 	user := "ec2-user"
 
 	pCfg := &providers.Config{
-		Type: providers.ProviderType_SSH,
-		Host: instanceID,
+		Backend: providers.ProviderType_SSH,
+		Host:    instanceID,
 		Credentials: []*vault.Credential{{
 			Type: vault.CredentialType_aws_ec2_instance_connect,
 			User: user,
@@ -31,14 +31,14 @@ func TestEc2InstanceConnect(t *testing.T) {
 	err := ssh.VerifyConfig(pCfg)
 	assert.Nil(t, err)
 
-	_, err = ssh.New(endpoint)
+	_, err = ssh.New(pCfg)
 	require.NoError(t, err)
 }
 
 func TestSudoConnect(t *testing.T) {
 	pCfg := &providers.Config{
-		Type: providers.ProviderType_SSH,
-		Host: "192.168.178.26",
+		Backend: providers.ProviderType_SSH,
+		Host:    "192.168.178.83",
 		Credentials: []*vault.Credential{{
 			Type:   vault.CredentialType_password,
 			User:   "chris",
@@ -69,8 +69,8 @@ func TestEc2SSMSession(t *testing.T) {
 	region := "us-east-1"
 
 	pCfg := &providers.Config{
-		Type: providers.ProviderType_SSH,
-		Host: instanceID,
+		Backend: providers.ProviderType_SSH,
+		Host:    instanceID,
 		Credentials: []*vault.Credential{{
 			Type: vault.CredentialType_aws_ec2_ssm_session,
 			User: user,
