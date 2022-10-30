@@ -1,0 +1,200 @@
+packs:
+  - uid: mondoo-incident-response-aws
+    name: Mondoo AWS Incident Response
+    is_public: true
+    docs:
+      desc: |
+        ### Overview
+
+        The Mondoo AWS Incident Response query pack gathers data about AWS services and resources for investigation during a security incident.
+
+        ### Run query pack
+
+        To run this query pack against an AWS account:
+
+        ```bash
+        cnquery scan aws -f mondoo-aws-incident-response.mql.yaml
+        ```
+    filters:
+      - asset.platform == "aws"
+    queries:
+      - uid: mondoo-incident-response-aws-account-id
+        title: Gather AWS account ID
+        query: |
+          aws.account.id
+      - uid: mondoo-incident-response-aws-enabled-regions
+        title: Gather all regions enabled in the AWS account 
+        docs: 
+          desc: |
+            This query gathers a list of all AWS regions enabled in the account
+        query: aws { regions }
+      - uid: mondoo-incident-response-aws-user-info
+        title: Gather data for users with console access
+        docs:
+          desc: |
+            This query gathers data for users with console access. The following fields are gathered:
+
+            ```
+            properties['user'] 
+            passwordLastUsed 
+            passwordLastChanged 
+            mfaActive
+            ```
+        query: |
+          aws.iam.credentialReport.
+            where( passwordEnabled == true ) { 
+              properties['user'] 
+              passwordLastUsed 
+              passwordLastChanged 
+              mfaActive 
+            }
+      - uid: mondoo-incident-response-aws-iam-users-multiple-keys
+        title: Gather data for IAM users with API access
+        docs:
+          desc: |
+            This query gathers all of the IAM users that have API access along with the following fields:
+
+            ```
+            properties['user']
+            accessKey1Active
+            accessKey1LastUsedDate
+            accessKey1LastUsedService
+            accessKey1LastRotated
+            accessKey2Active
+            accessKey2LastUsedDate
+            accessKey2LastUsedService
+            accessKey2LastRotated            
+            ```
+        query: |
+          aws.iam.credentialReport.
+            where( accessKey1Active || accessKey2Active ) { 
+              properties['user']
+              accessKey1Active
+              accessKey1LastUsedDate
+              accessKey1LastUsedService
+              accessKey1LastRotated
+              accessKey2Active
+              accessKey2LastUsedDate
+              accessKey2LastUsedService
+              accessKey2LastRotated
+            }
+      - uid: mondoo-incident-response-aws-iam-administrator-access
+        title: Gather data on IAM Users, Groups, and Roles where AdministratorAccess policy is attached
+        docs:
+          desc: |
+            This query gathers all IAM Users, Groups, and Roles that have the `AdministratorAccess` role attached.
+        query: |
+          aws.iam.attachedPolicies.
+            where( arn == "arn:aws:iam::aws:policy/AdministratorAccess" ) { 
+              attachedUsers 
+              attachedGroups 
+              attachedRoles 
+            }
+      - uid: mondoo-incident-response-aws-iam-full-access
+        title: Gather data on IAM Users, Groups, and Roles where any 'FullAccess' policy is attached
+        docs:
+          desc: |
+            This query gathers all IAM Users, Groups, and Roles that have any one of the AWS FullAccess roles attached.
+        query: |
+          aws.iam.policies.
+            where( name == /FullAccess/i && attachmentCount != 0) { 
+              name
+              createDate
+              updateDate 
+              attachedUsers 
+              attachedGroups 
+              attachedRoles 
+            }
+
+      - uid: mondoo-incident-response-aws-ec2-instances-public-ip
+        title: Gather EC2 instances that have a public IP address
+        docs:
+          desc: |
+            This query gathers all EC2 instances that have a publicIp address attached along with the following fields:
+
+            ```
+            arn 
+            instanceId 
+            region 
+            state
+            vpc.id
+            keypair { 
+              name
+            }
+            securityGroups { 
+              name
+              description
+              ipPermissions {*}
+            }
+            tags
+            ```
+        query: |
+          aws.ec2.instances.
+            where( publicIp != '' ) { 
+              arn 
+              instanceId 
+              region 
+              state
+              vpc.id
+              keypair { 
+                name
+              }
+              securityGroups { 
+                name
+                description
+                ipPermissions {*}
+              }
+              tags
+            }
+      - uid: mondoo-incident-response-aws-ec2-instances-without-tags
+        title: Gather EC2 instances that do not have tags configured
+        docs: 
+          desc: |
+            This query gathers all EC2 instances that do not have tags configured, along with the following fields:
+
+            ```mql
+            instanceId 
+            region
+            keypair { name }
+            image.name
+            image.id
+            state 
+            ```
+        query: |
+          aws.ec2.instances.
+            where( tags.length == 0 ) { 
+              instanceId 
+              region
+              keypair { name }
+              image.name
+              image.id
+              state
+            }
+      - uid: mondoo-incident-response-aws-s3-buckets-public
+        title: Gather all S3 buckets that are public
+        docs:
+          desc: |
+            This query gathers all S3 buckets that are configured with public access, and returns the following fields:
+
+            ```mql
+            arn
+            name
+            location
+            publicAccessBlock
+            encryption
+            tags
+            policy {*} 
+            ```
+        query: |
+          aws.s3.buckets.
+            where( public == true ) {
+              arn
+              name
+              location
+              publicAccessBlock
+              encryption
+              tags
+              policy {*}
+            }
+
+          

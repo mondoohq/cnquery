@@ -1,0 +1,181 @@
+packs:
+  - uid: mondoo-asset-inventory-aws
+    name: Mondoo AWS Asset Inventory
+    is_public: true
+    docs:
+      desc: |
+        The Mondoo AWS Inventory query pack gathers information about AWS accounts for asset inventory.
+    filters:
+      - asset.platform == "aws"
+    queries:
+      - uid: mondoo-asset-inventory-aws-account-id
+        title: Gather AWS account ID
+        query: |
+          aws.account.id
+      - uid: mondoo-asset-inventory-aws-enabled-regions
+        title: Gather all regions enabled in the AWS account 
+        docs: 
+          desc: |
+            This query gathers a list of all AWS regions enabled in the account
+        query: aws { regions }
+      - uid: mondoo-asset-inventory-aws-vpcs
+        title: Gather data on all VPCs
+        docs: 
+          desc: |
+            This query gathers all of the configuration data for AWS VPCs
+        query: aws { vpcs {*} }
+      - uid: mondoo-asset-inventory-aws-iam-users
+        title: Gather data for all IAM users
+        docs:
+          desc: |
+            This query gathers data for all IAM users
+        query: |
+          aws.iam { users {*} }
+      - uid: mondoo-asset-inventory-aws-iam-groups
+        title: Gather data for IAM groups
+        docs:
+          desc: |
+            This query gathers all of the IAM groups.
+        query: |
+          aws.iam { groups {*} }
+      - uid: mondoo-asset-inventory-aws-iam-roles
+        title: Gather data on all IAM Roles.
+        docs:
+          desc: |
+            This query gathers all IAM Roles
+        query: |
+          aws.iam { roles {*} }
+      - uid: mondoo-asset-inventory-aws-iam-policies
+        title: Gather data on all attached IAM Policies
+        docs:
+          desc: |
+            This query gathers all IAM policies that are attached to either a User, Group, or Role.
+        query: |
+          aws.iam.policies.
+            where( attachmentCount > 0 ) { 
+              arn
+              name 
+              attachedGroups
+              attachedRoles
+              attachedUsers
+              scope
+            }
+      - uid: mondoo-asset-inventory-aws-ec2-security-groups
+        title: Gather data on all AWS EC2 Security Groups
+        docs:
+          desc: |
+            This query gathers all AWS EC2 Security Groups
+        query: |
+         aws.ec2.securityGroups {*}
+      - uid: mondoo-asset-inventory-aws-ec2-volumes
+        title: Gather data on all AWS EC2 volumes
+        docs:
+          desc: |
+            This query gathers all AWS EC2 volumes
+        query: |
+         aws.ec2.volumes {*}
+      - uid: mondoo-asset-inventory-aws-ec2-gather-all-data
+        title: Gather the configuration for all EC2 instances
+        query: |
+          aws.ec2.instances {
+            arn
+            instanceId
+            detailedMonitoring
+            region
+            publicIp
+            ssm
+            vpc
+            httpTokens
+            patchState
+            state
+            deviceMappings
+            securityGroups
+            publicDnsName
+            instanceStatus
+            stateReason
+            stateTransitionReason
+            ebsOptimized
+            instanceType
+            tags
+            image
+            launchTime
+            privateIp
+            privateDnsName
+            keypair
+          }
+      - uid: mondoo-asset-inventory-aws-rds-dbclusters-all-data
+        title: Gather the configuration for all RDS Database Clusters
+        query: |
+          aws.rds {
+            dbClusters {
+              arn
+              region
+              id
+              members {*}
+              tags
+            }
+          }
+      - uid: mondoo-asset-inventory-aws-rds-dbinstances-all-data
+        title: Gather the configuration for all RDS Database Instances
+        query: |
+          aws.rds {
+            dbInstances {
+              arn
+              name
+              backupRetentionPeriod
+              storageEncrypted
+              region
+              publiclyAccessible
+              enabledCloudwatchLogsExports
+              deletionProtection
+              multiAZ
+              id
+              enhancedMonitoringResourceArn
+              tags
+              dbInstanceClass
+              dbInstanceIdentifier
+              engine
+              securityGroups {*}
+              status
+            }
+          }
+      - uid: mondoo-asset-inventory-aws-s3-gather-all-data
+        title: Gather the configuration for all S3 buckets
+        query: |
+          aws.s3.buckets {
+            arn
+            name
+            policy
+            tags
+            acl
+            owner
+            public
+            cors
+            location
+            versioning
+            logging
+            staticWebsiteHosting
+            defaultLock
+            replication
+            encryption
+            publicAccessBlock
+            exists
+          }
+      - uid: mondoo-asset-inventory-aws-eks-clusterss
+        title: Gather the configuration for all AWS EKS clusters
+        query: aws.eks { clusters {*} }
+      - uid: mondoo-asset-inventory-aws-lambda
+        title: Gather the configuration for all AWS lambda functions
+        query: aws.lambda { functions {*} }
+      - uid: mondoo-asset-inventory-aws-access-analyzer
+        title: Gather the configuration for all AWS Access Analyzers
+        query: aws.accessAnalyzer { analyzers {*} }
+      - uid: mondoo-asset-inventory-aws-acm-certificates
+        title: Gather the configuration for all AWS Certificate Manager certificates
+        query: aws.acm { certificates {*} }
+      - uid: mondoo-asset-inventory-aws-cloudtrail-trails
+        title: Gather the configuration for all AWS CloudTrail trails
+        query: aws.cloudtrail { trails {*}}
+
+
+          

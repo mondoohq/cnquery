@@ -5,6 +5,12 @@ packs:
     filters:
       - asset.platform == "macos"
     queries:
+      - uid: mondoo-macos-incident-response-platform-info
+        title: Retrieve platform information
+        query: platform { title release arch }
+      - uid: mondoo-macos-incident-response-regular-users
+        title: Retrieve regular users
+        query: users.where( name != /^_/ && shell != /\/usr\/bin\/false/ ) {*}
       - uid: mondoo-macos-kernel-info
         title: Retrieve information about the running macOS kernel
         query: kernel.info["version"]
@@ -29,3 +35,6 @@ packs:
       - uid: mondoo-macos-alf-extensions
         title: Retrieves the exceptions for the Application Layer Firewall in OSX
         query: macos.alf.exceptions
+      - uid: mondoo-macos-check-recommended-updates
+        title: Check for any recommended updates 
+        query: parse.plist('/Library/Preferences/com.apple.SoftwareUpdate.plist').params['RecommendedUpdates']
