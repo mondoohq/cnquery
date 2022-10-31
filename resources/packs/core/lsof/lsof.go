@@ -114,6 +114,9 @@ var networkLoopbackRegexp = regexp.MustCompile(`(.*):(.*)`)
 
 // local and remote Internet addresses of a network file
 func (f *FileDescriptor) NetworkFile() (string, int64, string, int64, error) {
+	if f.Name == "no PCB" { // socket files that do not have a protocol block
+		return "", 0, "", 0, nil
+	}
 	if f.Name == "*:*" {
 		return "*", 0, "*", 0, nil
 	}
@@ -139,6 +142,9 @@ func (f *FileDescriptor) NetworkFile() (string, int64, string, int64, error) {
 
 	// loop-back address [::1]:17223 or *:56863
 	address := networkLoopbackRegexp.FindStringSubmatch(f.Name)
+	if len(address) < 3 {
+		return "", 0, "", 0, errors.New("network name not supported: " + f.Name)
+	}
 	localPort := 0
 	var err error
 	if address[2] != "*" {
