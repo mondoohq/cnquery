@@ -1071,13 +1071,13 @@ macos.systemsetup {
   disableKeyboardWhenEnclosureLockIsEngaged() string
 }
 
-// macOS time machine
+// macOS Time Machine
 macos.timemachine {
   // macOS Time Machine preferences
   preferences() dict
 }
 
-// macOS keychains and Security framework
+// macOS keychains and security framework
 macos.security {
   // Deprecated: Authorization policy database
   authorizationDB() dict
