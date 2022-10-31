@@ -27,7 +27,6 @@ func establishClientConnection(pCfg *providers.Config, hostKeyCallback ssh.HostK
 		return nil, nil, err
 	}
 
-	log.Debug().Int("methods", len(authMethods)).Msg("discovered ssh auth methods")
 	if len(authMethods) == 0 {
 		return nil, nil, errors.New("no authentication method defined")
 	}
@@ -40,6 +39,7 @@ func establishClientConnection(pCfg *providers.Config, hostKeyCallback ssh.HostK
 		}
 	}
 
+	log.Debug().Int("methods", len(authMethods)).Str("user", user).Msg("connect to remote ssh")
 	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", pCfg.Host, pCfg.Port), &ssh.ClientConfig{
 		User:            user,
 		Auth:            authMethods,
