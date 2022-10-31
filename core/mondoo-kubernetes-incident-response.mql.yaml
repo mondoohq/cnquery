@@ -36,6 +36,9 @@ packs:
         title: Gather Pods Security Context
         query: |
           k8s.pod {
+            ephemeralContainers {
+              securityContext
+            }
             initContainers {
               securityContext
             }
@@ -49,7 +52,31 @@ packs:
           k8s.pod { 
             name
             namespace
+            initContainers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
             containers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
+            ephemeralContainers { 
               image 
               containerImage { 
                 name
