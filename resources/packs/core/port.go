@@ -31,7 +31,10 @@ func (p *mqlPorts) GetList() ([]interface{}, error) {
 		return p.listLinux()
 	case pf.IsFamily("windows"):
 		return p.listWindows()
-	case pf.IsFamily("darwin"):
+
+	case pf.IsFamily("darwin") || pf.Name == "freebsd":
+		// both macOS and FreeBSD support lsof
+		// FreeBSD may need an installation via `pkg install sysutils/lsof`
 		return p.listMacos()
 	default:
 		return nil, errors.New("could not detect suitable ports manager for platform: " + pf.Name)
