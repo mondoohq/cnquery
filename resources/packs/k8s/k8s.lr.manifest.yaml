@@ -328,6 +328,8 @@ resources:
         min_mondoo_version: 6.10.0
       initContainers:
         min_mondoo_version: 6.10.0
+      ephemeralContainers:
+        min_mondoo_version: 7.2.0
       kind: {}
       labels: {}
       manifest: {}

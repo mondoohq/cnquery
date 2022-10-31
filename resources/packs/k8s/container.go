@@ -16,6 +16,7 @@ import (
 type ContainerType string
 
 var (
+	EphemeralContainerType ContainerType = "ephemeral"
 	InitContainerType      ContainerType = "init"
 	ContainerContainerType ContainerType = "container"
 )
@@ -26,6 +27,9 @@ func getContainers(
 	var containersFunc func(runtime.Object) ([]corev1.Container, error)
 	resourceType := ""
 	switch containerType {
+	case EphemeralContainerType:
+		containersFunc = k8s_resources.GetEphemeralContainers
+		resourceType = "k8s.ephemeralContainer"
 	case InitContainerType:
 		containersFunc = k8s_resources.GetInitContainers
 		resourceType = "k8s.initContainer"
@@ -102,7 +106,6 @@ func getContainers(
 			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
 			"command", core.StrSliceToInterface(c.Command),
 			"args", core.StrSliceToInterface(c.Args),
-			"resources", resources,
 			"volumeMounts", volumeMounts,
 			"volumeDevices", volumeDevices,
 			"imagePullPolicy", string(c.ImagePullPolicy),
@@ -111,6 +114,10 @@ func getContainers(
 			"tty", c.TTY,
 			"env", env,
 			"envFrom", envFrom,
+		}
+
+		if containerType != EphemeralContainerType {
+			args = append(args, "resources", resources)
 		}
 
 		if containerType == ContainerContainerType {
@@ -134,6 +141,19 @@ func getContainers(
 		resp = append(resp, mqlContainer)
 	}
 	return resp, nil
+}
+
+func (k *mqlK8sEphemeralContainer) id() (string, error) {
+	return k.Uid()
+}
+
+func (k *mqlK8sEphemeralContainer) GetContainerImage() (interface{}, error) {
+	containerImageName, err := k.ImageName()
+	if err != nil {
+		return nil, err
+	}
+
+	return os.NewMqlContainerImage(k.MotorRuntime, containerImageName)
 }
 
 func (k *mqlK8sInitContainer) id() (string, error) {
