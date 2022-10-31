@@ -281,6 +281,10 @@ func (p *Bundle) FilterQueryPacks(IDs []string) bool {
 		return false
 	}
 
+	if p == nil {
+		return true
+	}
+
 	valid := make(map[string]struct{}, len(IDs))
 	for i := range IDs {
 		valid[IDs[i]] = struct{}{}
