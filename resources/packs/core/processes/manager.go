@@ -10,12 +10,13 @@ import (
 )
 
 type OSProcess struct {
-	Pid          int64
-	Command      string
-	Executable   string
-	State        string
-	Uid          int64
-	SocketInodes []int64
+	Pid               int64
+	Command           string
+	Executable        string
+	State             string
+	Uid               int64
+	SocketInodes      []int64
+	SocketInodesError error
 }
 
 type OSProcessManager interface {

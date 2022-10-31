@@ -92,14 +92,15 @@ func (lpm *LinuxProcManager) Process(pid int64) (*OSProcess, error) {
 		return nil, err
 	}
 
-	socketInodes := lpm.procSocketInods(pid, pidPath)
+	socketInodes, socketInodesErr := lpm.procSocketInods(pid, pidPath)
 
 	process := &OSProcess{
-		Pid:          pid,
-		Executable:   status.Executable,
-		State:        status.State,
-		Command:      cmdline,
-		SocketInodes: socketInodes,
+		Pid:               pid,
+		Executable:        status.Executable,
+		State:             status.State,
+		Command:           cmdline,
+		SocketInodes:      socketInodes,
+		SocketInodesError: socketInodesErr,
 	}
 
 	return process, nil

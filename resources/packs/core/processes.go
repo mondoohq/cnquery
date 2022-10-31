@@ -182,6 +182,7 @@ func (p *mqlProcesses) GetList() ([]interface{}, error) {
 	procs := make([]interface{}, len(processes))
 	processesMap := make(map[int64]Process, len(processes))
 	socketsMap := map[int64]Process{}
+	var socketsErr error
 
 	for i := range processes {
 		proc := processes[i]
@@ -200,13 +201,17 @@ func (p *mqlProcesses) GetList() ([]interface{}, error) {
 		procs[i] = process
 		processesMap[proc.Pid] = process
 
+		if proc.SocketInodesError != nil {
+			// TODO: aggregate and deduplicate errors
+			socketsErr = proc.SocketInodesError
+		}
 		for i := range proc.SocketInodes {
 			socketsMap[proc.SocketInodes[i]] = process
 		}
 	}
 
 	p.Cache.Store("_map", &resources.CacheEntry{Data: processesMap})
-	p.Cache.Store("_socketsMap", &resources.CacheEntry{Data: socketsMap})
+	p.Cache.Store("_socketsMap", &resources.CacheEntry{Data: socketsMap, Error: socketsErr})
 
 	// return the processes as new entries
 	return procs, nil
