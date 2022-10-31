@@ -101,16 +101,16 @@ cnquery scan
 
 Without specifying anything else, `cnquery` tries to find and run the default query pack for the given system.
 
-You can specify a query pack that you want to run. Use the `--pack` argument:
+You can specify a query pack that you want to run. Use the `--querypack` argument:
 
 ```bash
-cnquery scan --pack incident-response
+cnquery scan --querypack incident-response
 ```
 
 You can also choose just one query from a query pack. Specify the query ID with the query pack:
 
 ```bash
-cnquery scan --pack incident-response --query-id sth-01
+cnquery scan --querypack incident-response --query-id sth-01
 ```
 
 Custom query packs let you bundle queries to meet your specific needs. You can find a simple query pack example in `examples/simple.mql.yaml`. To run it:
