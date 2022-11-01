@@ -8,7 +8,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core/lsof"
 
 	"github.com/rs/zerolog/log"
@@ -168,12 +170,17 @@ func (p *mqlPorts) processesBySocket() (map[int64]Process, error) {
 		return nil, errors.New("cannot get map of processes (and their sockets)")
 	}
 
-	return c.Data.(map[int64]Process), nil
+	res := c.Data.(map[int64]Process)
+	err = nil
+	if c.Error != nil {
+		err = errors.New("cannot read related processess: " + c.Error.Error())
+	}
+	return res, err
 }
 
 // See:
 // - socket/address parsing: https://wiki.christophchamp.com/index.php?title=Unix_sockets
-func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]User, processes map[int64]Process) ([]interface{}, error) {
+func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]User, getProcess func(int64) *resources.CacheEntry) ([]interface{}, error) {
 	osProvider, err := osProvider(p.MotorRuntime.Motor)
 	if err != nil {
 		return nil, err
@@ -244,15 +251,12 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]Us
 			return nil, errors.New("failed to parse port Inode: " + m[7])
 		}
 
-		// the process may be nil, eg if the inode is 0
-		process := processes[int64(inode)]
-
 		obj, err := p.MotorRuntime.CreateResource("port",
 			"protocol", protocol,
 			"port", int64(port),
 			"address", address,
 			"user", user,
-			"process", process,
+			"process", nil,
 			"state", state,
 			"remoteAddress", remoteAddress,
 			"remotePort", int64(remotePort),
@@ -260,6 +264,8 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]Us
 		if err != nil {
 			return nil, err
 		}
+
+		obj.MqlResource().Cache.Store("process", getProcess(int64(inode)))
 
 		res = append(res, obj)
 	}
@@ -273,17 +279,30 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 		return nil, err
 	}
 
-	processes, err := p.processesBySocket()
+	processes, processErr := p.processesBySocket()
+	getProcess := func(inode int64) *resources.CacheEntry {
+		found, ok := processes[inode]
+		if ok {
+			return &resources.CacheEntry{
+				Valid:     true,
+				Data:      found,
+				Timestamp: time.Now().Unix(),
+			}
+		}
+
+		return &resources.CacheEntry{
+			Valid:     true,
+			Error:     processErr,
+			Timestamp: time.Now().Unix(),
+		}
+	}
+
+	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
 
-	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp", users, processes)
-	if err != nil {
-		return nil, err
-	}
-
-	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp", users, processes)
+	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp", users, getProcess)
 	if err != nil {
 		return nil, err
 	}

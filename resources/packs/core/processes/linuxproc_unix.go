@@ -3,24 +3,32 @@
 package processes
 
 import (
+	"errors"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"syscall"
 )
 
 // Read out all connected sockets
 // we will ignore all FD errors here since we may not have access to everything
-func (lpm *LinuxProcManager) procSocketInods(pid int64, procPidPath string) []int64 {
+func (lpm *LinuxProcManager) procSocketInods(pid int64, procPidPath string) ([]int64, error) {
 	fdDirPath := filepath.Join(procPidPath, "fd")
 
 	fdDir, err := lpm.provider.FS().Open(fdDirPath)
 	if err != nil {
-		return nil
+		if errors.Is(err, os.ErrPermission) {
+			return nil, fs.ErrPermission
+		}
+		return nil, err
 	}
 
 	fds, err := fdDir.Readdirnames(-1)
 	if err != nil {
-		return nil
+		if errors.Is(err, os.ErrPermission) {
+			return nil, fs.ErrPermission
+		}
+		return nil, err
 	}
 
 	var res []int64
@@ -49,5 +57,5 @@ func (lpm *LinuxProcManager) procSocketInods(pid int64, procPidPath string) []in
 		res = append(res, int64(stat_t.Ino))
 	}
 
-	return res
+	return res, nil
 }
