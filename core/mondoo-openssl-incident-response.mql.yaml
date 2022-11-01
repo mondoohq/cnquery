@@ -3,7 +3,7 @@ packs:
     name: Mondoo OpenSSL Incident Response
     is_public: true
     filters:
-      - asset.family.contains("unix")
+      - asset.family.contains("linux")
     queries:
       - uid: mondoo-openssl-platform
         title: Retreive information about the Platform
