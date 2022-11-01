@@ -398,14 +398,17 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 		conf.Inventory.ApplyCategory(asset.AssetCategory_CATEGORY_CICD)
 	}
 
-	serviceAccount := opts.GetServiceCredential()
-	if serviceAccount != nil {
-		log.Info().Msg("using service account credentials")
-		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
-		conf.UpstreamConfig = &resources.UpstreamConfig{
-			SpaceMrn:    opts.GetParentMrn(),
-			ApiEndpoint: opts.UpstreamApiEndpoint(),
-			Plugins:     []ranger.ClientPlugin{certAuth},
+	var serviceAccount *upstream.ServiceAccountCredentials
+	if !conf.IsIncognito {
+		serviceAccount = opts.GetServiceCredential()
+		if serviceAccount != nil {
+			log.Info().Msg("using service account credentials")
+			certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+			conf.UpstreamConfig = &resources.UpstreamConfig{
+				SpaceMrn:    opts.GetParentMrn(),
+				ApiEndpoint: opts.UpstreamApiEndpoint(),
+				Plugins:     []ranger.ClientPlugin{certAuth},
+			}
 		}
 	}
 

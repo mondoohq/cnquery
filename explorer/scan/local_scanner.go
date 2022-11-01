@@ -184,8 +184,10 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 
 	// plan scan jobs
 	reporter := NewAggregateReporter(assetList)
-	if job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
-		return nil, false, errors.New("All available packs filtered out. Nothing to do.")
+	// if a bundle was provided check that it matches the filter, bundles can also be downloaded
+	// later therefore we do not want to stop execution here
+	if job.Bundle != nil && job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
+		return nil, false, errors.New("all available packs filtered out. nothing to do.")
 	}
 
 	for i := range assetList {
@@ -423,6 +425,15 @@ func (s *localAssetScanner) ensureBundle() error {
 	}
 
 	s.job.Bundle, err = s.fetcher.fetchBundles(s.job.Ctx, urls.Urls...)
+	if err != nil {
+		return err
+	}
+
+	// filter bundle by ID
+	if s.job.Bundle.FilterQueryPacks(s.job.QueryPackFilters) {
+		return errors.New("all available packs filtered out. nothing to do.")
+	}
+
 	return err
 }
 
