@@ -17,10 +17,12 @@ packs:
         title: Retrieve list about installed ssl libraries
         query: packages.where(name == /ssl/)
       - uid: mondoo-openssl-listening-ports
-        title: Retrieve list of listening ports
+        title: Retrieve list of listening ports from running systems
         query: |
-          ports.listening { 
-            protocol
-            address
-            port
+          if ( mondoo.capabilities.contains('run-command') ) {
+            ports.listening { 
+              protocol
+              address
+              port
+            }
           }
