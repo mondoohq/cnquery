@@ -429,7 +429,6 @@ func (g *mqlGithubOrganization) GetPackages() ([]interface{}, error) {
 			PackageType: github.String(pkgTypes[i]),
 		})
 		if err != nil {
-			log.Error().Err(err).Msg("unable to get hooks list")
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
@@ -1481,7 +1480,6 @@ func (g *mqlGithubRepository) GetWebhooks() ([]interface{}, error) {
 
 	hooks, _, err := gt.Client().Repositories.ListHooks(context.TODO(), ownerLogin, repoName, &github.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get hooks list")
 		if strings.Contains(err.Error(), "404") {
 			return nil, nil
 		}
@@ -1601,7 +1599,6 @@ func (g *mqlGithubRepository) GetWorkflows() ([]interface{}, error) {
 
 	workflows, _, err := gt.Client().Actions.ListWorkflows(context.Background(), ownerLogin, repoName, &github.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Msg("unable to get hooks list")
 		if strings.Contains(err.Error(), "404") {
 			return nil, nil
 		}
