@@ -285,6 +285,7 @@ func (d *mqlAwsRdsDbcluster) GetSnapshots() ([]interface{}, error) {
 				"region", region,
 				"encrypted", snapshot.StorageEncrypted,
 				"isClusterSnapshot", true,
+				"tags", rdsTagsToMap(snapshot.TagList),
 			)
 			if err != nil {
 				return nil, err
