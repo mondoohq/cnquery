@@ -39,7 +39,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	}
 
 	if len(pCfg.Credentials) != 1 || pCfg.Credentials[0] == nil {
-		return nil, errors.New("ms365 provider requires a credentials file, pass json via --certificate-path option")
+		return nil, errors.New("ms365 provider requires a credentials file, pass path via --certificate-path option")
 	}
 
 	tenantId := pCfg.Options[OptionTenantID]

@@ -5,7 +5,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/compute/mgmt/compute"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/network/mgmt/network"
-	"github.com/Azure/go-autorest/autorest"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -14,49 +14,34 @@ import (
 	azure_transport "go.mondoo.com/cnquery/motor/providers/azure"
 )
 
-type AzureClient struct {
-	Subscription string
-	Authorizer   autorest.Authorizer
-}
-
-func (c *AzureClient) VirtualMachinesClient() compute.VirtualMachinesClient {
-	vmClient := compute.NewVirtualMachinesClient(c.Subscription)
-	vmClient.Authorizer = c.Authorizer
-	return vmClient
-}
-
-func (c *AzureClient) InterfacesClient() network.InterfacesClient {
-	nicClient := network.NewInterfacesClient(c.Subscription)
-	nicClient.Authorizer = c.Authorizer
-	return nicClient
-}
-
-func (c *AzureClient) PublicIPAddressesClient() network.PublicIPAddressesClient {
-	publicIPclient := network.NewPublicIPAddressesClient(c.Subscription)
-	publicIPclient.Authorizer = c.Authorizer
-	return publicIPclient
-}
-
-func NewCompute(subscriptionID string) (*Compute, error) {
-	a, err := azure_transport.GetAuthorizer()
-	if err != nil {
-		return nil, errors.Wrap(err, "could not detect az authentication")
-	}
-
-	ac := &AzureClient{
-		Subscription: subscriptionID,
-		Authorizer:   a,
-	}
-
-	return &Compute{
-		Subscription: subscriptionID,
-		AzureClient:  ac,
-	}, nil
-}
-
 type Compute struct {
 	Subscription string
 	AzureClient  *AzureClient
+}
+
+func NewCompute(client *AzureClient, subscriptionID string) *Compute {
+	return &Compute{
+		Subscription: subscriptionID,
+		AzureClient:  client,
+	}
+}
+
+func (c *Compute) VirtualMachinesClient() compute.VirtualMachinesClient {
+	vmClient := compute.NewVirtualMachinesClient(c.Subscription)
+	vmClient.Authorizer = c.AzureClient.Authorizer
+	return vmClient
+}
+
+func (c *Compute) InterfacesClient() network.InterfacesClient {
+	nicClient := network.NewInterfacesClient(c.Subscription)
+	nicClient.Authorizer = c.AzureClient.Authorizer
+	return nicClient
+}
+
+func (c *Compute) PublicIPAddressesClient() network.PublicIPAddressesClient {
+	publicIPclient := network.NewPublicIPAddressesClient(c.Subscription)
+	publicIPclient.Authorizer = c.AzureClient.Authorizer
+	return publicIPclient
 }
 
 // getPublicIp reads the public ip by using its resource identifier
@@ -72,7 +57,7 @@ func (c *Compute) getPublicIp(ctx context.Context, resourceID string) ([]network
 		return nil, errors.Wrap(err, "invalid network resource")
 	}
 
-	nicClient := c.AzureClient.InterfacesClient()
+	nicClient := c.InterfacesClient()
 	nic, err := nicClient.Get(ctx, resource.ResourceGroup, name, "")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not find network resource")
@@ -103,7 +88,7 @@ func (c *Compute) getPublicIp(ctx context.Context, resourceID string) ([]network
 				return nil, errors.New("invalid network information for resource " + publicIPID)
 			}
 
-			ipClient := c.AzureClient.PublicIPAddressesClient()
+			ipClient := c.PublicIPAddressesClient()
 			ipResp, err := ipClient.Get(ctx, resource.ResourceGroup, ipAddrName, "")
 			if err != nil {
 				return nil, errors.Wrap(err, "invalid network information for resource "+publicIPID)
@@ -118,7 +103,7 @@ func (c *Compute) ListInstances(ctx context.Context) ([]*asset.Asset, error) {
 	assetList := []*asset.Asset{}
 
 	// fetch all instances in resource group
-	vmClient := c.AzureClient.VirtualMachinesClient()
+	vmClient := c.VirtualMachinesClient()
 	res, err := vmClient.ListAll(ctx, "", "")
 	if err != nil {
 		return nil, err

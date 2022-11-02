@@ -330,10 +330,39 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 
 	case providers.ProviderType_AZURE:
 		connection.Backend = providerType
-		if subscription, err := cmd.Flags().GetString("subscription"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --subscription value")
-		} else if subscription != "" {
+		subscription, err := cmd.Flags().GetString("subscription")
+		tenantid, _ := cmd.Flags().GetString("tenant-id")
+		clientid, _ := cmd.Flags().GetString("client-id")
+		clientSecret, _ := cmd.Flags().GetString("client-secret")
+		certificatePath, _ := cmd.Flags().GetString("certificate-path")
+		certificateSecret, _ := cmd.Flags().GetString("certificate-secret")
+		if clientid == "" && (clientSecret == "" || certificatePath == "") {
+			if err != nil {
+				log.Fatal().Err(err).Msg("cannot parse --subscription value")
+			}
+		}
+		if subscription != "" {
 			connection.Options["subscription-id"] = subscription
+		}
+		if tenantid != "" {
+			connection.Options["tenant-id"] = tenantid
+		}
+		if clientid != "" {
+			connection.Options["client-id"] = clientid
+		}
+		if clientSecret != "" {
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type:     vault.CredentialType_password,
+				Password: clientSecret,
+				User:     clientid,
+			})
+		}
+		if certificatePath != "" {
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type:           vault.CredentialType_pkcs12,
+				PrivateKeyPath: certificatePath,
+				Password:       certificateSecret,
+			})
 		}
 	case providers.ProviderType_GCP:
 		connection.Backend = providerType
