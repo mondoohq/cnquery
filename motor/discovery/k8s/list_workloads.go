@@ -3,6 +3,7 @@ package k8s
 import (
 	"fmt"
 
+	"github.com/gobwas/glob"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -136,7 +137,12 @@ func ListWorkloads[T runtime.Object](
 
 		for i := range namespaces {
 			namespace := namespaces[i]
-			if skipNamespace(namespace, nsFilter) {
+			skip, err := skipNamespace(namespace, nsFilter)
+			if err != nil {
+				log.Error().Err(err).Str("namespace", namespace.Name).Msg("error checking whether Namespace should be included or excluded")
+				return nil, err
+			}
+			if skip {
 				log.Debug().Str("namespace", namespace.Name).Msg("ignoring namespace")
 				continue
 			}
@@ -168,27 +174,35 @@ func ListWorkloads[T runtime.Object](
 	return assets, nil
 }
 
-func skipNamespace(namespace v1.Namespace, filter NamespaceFilterOpts) bool {
+func skipNamespace(namespace v1.Namespace, filter NamespaceFilterOpts) (bool, error) {
 	// anything explictly specified in the list of includes means accept only from that list
 	if len(filter.include) > 0 {
 		for _, ns := range filter.include {
-			if namespace.Name == ns {
+			g, err := glob.Compile(ns)
+			if err != nil {
+				return false, err
+			}
+			if g.Match(namespace.Name) {
 				// stop looking, we found our match
-				return false
+				return false, nil
 			}
 		}
 
 		// didn't find it, so it must be skipped
-		return true
+		return true, nil
 	}
 
 	// if nothing explictly meant to be included, then check whether
 	// it should be excluded
 	for _, ns := range filter.exclude {
-		if namespace.Name == ns {
-			return true
+		g, err := glob.Compile(ns)
+		if err != nil {
+			return false, err
+		}
+		if g.Match(namespace.Name) {
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }

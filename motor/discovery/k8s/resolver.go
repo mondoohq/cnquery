@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gobwas/glob"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -107,14 +108,19 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 	for _, ns := range nsFilter.include {
 		foundNamespace := false
+		g, err := glob.Compile(ns)
+		if err != nil {
+			log.Error().Err(err).Str("namespaceFilter", ns).Msg("failed to parse Namespace filter glob")
+			return nil, err
+		}
 		for _, clusterNs := range clusterNamespaces {
-			if clusterNs.Name == ns {
+			if g.Match(clusterNs.Name) {
 				foundNamespace = true
 				break
 			}
 		}
 		if !foundNamespace {
-			log.Warn().Msgf("namespace %q not found in cluster", ns)
+			log.Warn().Msgf("Namespace filter %q did not match any Namespaces in cluster", ns)
 		}
 	}
 
