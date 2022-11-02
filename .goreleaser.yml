@@ -2,6 +2,16 @@
 project_name: cnquery
 env:
   - CGO_ENABLED=0
+sboms:
+- artifacts: binary
+release:
+  prerelease: allow # remove this when we start publishing non-prerelease or set to auto
+  draft: true # allow for manual edits
+  github:
+    owner: sigstore
+    name: cosign
+  footer: |
+    ### Thanks to all contributors!
 builds:
   - id: linux
     main: ./apps/cnquery/cnquery.go
