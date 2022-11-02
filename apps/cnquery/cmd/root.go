@@ -132,17 +132,20 @@ func sysInfoHeader(sysInfo *sysinfo.SystemInfo, features cnquery.Features) range
 	)
 
 	h := http.Header{}
-	h.Set(HttpHeaderUserAgent, scope.XInfoHeader(map[string]string{
+	info := map[string]string{
 		"cnquery": cnquery.Version,
 		"build":   cnquery.Build,
-		"PN":      sysInfo.Platform.Name,
-		"PR":      sysInfo.Platform.Version,
-		"PA":      sysInfo.Platform.Arch,
-		"IP":      sysInfo.IP,
-		"HN":      sysInfo.Hostname,
-	}))
+	}
+	if sysInfo != nil {
+		info["PN"] = sysInfo.Platform.Name
+		info["PR"] = sysInfo.Platform.Version
+		info["PA"] = sysInfo.Platform.Arch
+		info["IP"] = sysInfo.IP
+		info["HN"] = sysInfo.Hostname
+		h.Set(HttpHeaderPlatformID, sysInfo.PlatformId)
+	}
+	h.Set(HttpHeaderUserAgent, scope.XInfoHeader(info))
 	h.Set(HttpHeaderClientFeatures, features.Encode())
-	h.Set(HttpHeaderPlatformID, sysInfo.PlatformId)
 	return scope.NewCustomHeaderRangerPlugin(h)
 }
 

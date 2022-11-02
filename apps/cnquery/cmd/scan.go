@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/cli/execruntime"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
 	"go.mondoo.com/cnquery/cli/reporter"
+	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/explorer/scan"
@@ -402,12 +403,19 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	if !conf.IsIncognito {
 		serviceAccount = opts.GetServiceCredential()
 		if serviceAccount != nil {
-			log.Info().Msg("using service account credentials")
 			certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+			plugins := []ranger.ClientPlugin{certAuth}
+			// determine information about the client
+			sysInfo, err := sysinfo.GatherSystemInfo()
+			if err != nil {
+				log.Warn().Err(err).Msg("could not gather client information")
+			}
+			plugins = append(plugins, defaultRangerPlugins(sysInfo, opts.GetFeatures())...)
+			log.Info().Msg("using service account credentials")
 			conf.UpstreamConfig = &resources.UpstreamConfig{
 				SpaceMrn:    opts.GetParentMrn(),
 				ApiEndpoint: opts.UpstreamApiEndpoint(),
-				Plugins:     []ranger.ClientPlugin{certAuth},
+				Plugins:     plugins,
 			}
 		}
 	}
