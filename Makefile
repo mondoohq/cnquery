@@ -213,6 +213,9 @@ cnquery/build/linux:
 cnquery/build/windows:
 	GOOS=windows go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
 
+cnquery/build/darwin:
+	GOOS=darwin go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+
 .PHONY: cnquery/install
 cnquery/install:
 	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/cnquery/cnquery.go
