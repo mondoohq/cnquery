@@ -205,7 +205,7 @@ machine.chassis {
 os.base {
   embed machine
 
-  // Pretty Hostname on Linux / Device name on Windows
+  // Pretty Hostname on macOS/Linux or device name on Windows
   name() string
   // ENV variable contents
   env() map[string]string
@@ -237,7 +237,7 @@ os.linux {
 
 // Operating system information
 os {
-  // Pretty Hostname on Linux / Device name on Windows
+  // Pretty Hostname on macOS/Linux or device name on Windows
   name() string
   // ENV variable contents
   env() map[string]string
