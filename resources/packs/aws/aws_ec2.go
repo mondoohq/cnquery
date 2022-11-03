@@ -1199,6 +1199,7 @@ func (s *mqlAwsEc2) getSnapshots(provider *aws_provider.Provider) []*jobpool.Job
 						"volumeId", core.ToString(snapshot.VolumeId),
 						"startTime", snapshot.StartTime,
 						"tags", Ec2TagsToMap(snapshot.Tags),
+						"state", string(snapshot.State),
 					)
 					if err != nil {
 						return nil, err
