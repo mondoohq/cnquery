@@ -102,6 +102,8 @@ lr/build:
 	./lr docs json resources/packs/k8s/k8s.lr.manifest.yaml
 	./lr go resources/packs/vsphere/vsphere.lr
 	./lr docs json resources/packs/vsphere/vsphere.lr.manifest.yaml
+	./lr go resources/packs/okta/okta.lr
+	./lr docs json resources/packs/okta/okta.lr.manifest.yaml
 	./lr go resources/mock/mochi.lr
 
 lr/release:

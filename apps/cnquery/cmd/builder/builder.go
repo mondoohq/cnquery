@@ -151,6 +151,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	baseCmd.AddCommand(ms365ProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(hostProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(aristaProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(scanOktaCmd(commonCmdFlags, preRun, runFn, docs))
 }
 
 type CommandsDocs struct {
@@ -754,5 +755,26 @@ func aristaProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runF
 		},
 	}
 	commonCmdFlags(cmd)
+	return cmd
+}
+
+func scanOktaCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "okta",
+		Short: docs.GetShort("okta"),
+		Long:  docs.GetLong("okta"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
+			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_OKTA, DefaultAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("organization", "", "specify the Okta organization to scan")
+	cmd.Flags().String("token", "", "Okta access token")
 	return cmd
 }

@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/gitlab"
 	"go.mondoo.com/cnquery/resources/packs/k8s"
 	"go.mondoo.com/cnquery/resources/packs/ms365"
+	"go.mondoo.com/cnquery/resources/packs/okta"
 	"go.mondoo.com/cnquery/resources/packs/os"
 	"go.mondoo.com/cnquery/resources/packs/terraform"
 	"go.mondoo.com/cnquery/resources/packs/vsphere"
@@ -35,4 +36,5 @@ func init() {
 	Registry.Add(terraform.Registry)
 	Registry.Add(k8s.Registry)
 	Registry.Add(vsphere.Registry)
+	Registry.Add(okta.Registry)
 }

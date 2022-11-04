@@ -462,7 +462,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			connection.Credentials = append(connection.Credentials, &vault.Credential{
 				Type:     vault.CredentialType_password,
 				User:     username,
-				Password: password,
+				Password: x,
 			})
 		}
 	case providers.ProviderType_MS365:
@@ -544,6 +544,24 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			User:     username,
 			Password: password,
 		})
+	case providers.ProviderType_OKTA:
+		connection.Backend = providerType
+
+		if organization, err := cmd.Flags().GetString("organization"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --organization value")
+		} else if organization != "" {
+			connection.Options["organization"] = organization
+		}
+
+		if x, err := cmd.Flags().GetString("token"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --token value")
+		} else if x != "" {
+			log.Info().Str("token", x).Msg("user set token")
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type:     vault.CredentialType_password,
+				Password: x,
+			})
+		}
 	}
 
 	// if username was set but not credentials

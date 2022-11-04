@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"go.mondoo.com/cnquery/motor/providers/okta"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -309,6 +311,15 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 		}
 	case providers.ProviderType_HOST:
 		p, err := network.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(p)
+		if err != nil {
+			return nil, err
+		}
+	case providers.ProviderType_OKTA:
+		p, err := okta.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
