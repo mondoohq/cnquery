@@ -208,7 +208,7 @@ func (k *mqlKernel) GetInfo() (interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
+		return nil, errors.Wrap(err, "could not detect suitable kernel module manager for platform")
 	}
 
 	// retrieve all kernel modules
@@ -224,7 +224,7 @@ func (k *mqlKernel) GetParameters() (map[string]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
+		return nil, errors.Wrap(err, "could not detect suitable kernel module manager for platform")
 	}
 
 	// retrieve all kernel modules
@@ -246,7 +246,7 @@ func (k *mqlKernel) GetModules() ([]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "could not detect suiteable kernel module manager for platform")
+		return nil, errors.Wrap(err, "could not detect suitable kernel module manager for platform")
 	}
 
 	// retrieve all kernel modules

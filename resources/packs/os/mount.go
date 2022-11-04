@@ -16,7 +16,7 @@ func (m *mqlMount) GetList() ([]interface{}, error) {
 	// find suitable mount manager
 	mm, err := mount.ResolveManager(m.MotorRuntime.Motor)
 	if mm == nil || err != nil {
-		return nil, fmt.Errorf("could not detect suiteable mount manager for platform")
+		return nil, fmt.Errorf("could not detect suitable mount manager for platform")
 	}
 
 	// retrieve all system packages
