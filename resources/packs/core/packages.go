@@ -100,7 +100,7 @@ func (p *mqlPackages) GetList() ([]interface{}, error) {
 	// find suitable package manager
 	pm, err := packages.ResolveSystemPkgManager(p.MotorRuntime.Motor)
 	if pm == nil || err != nil {
-		return nil, fmt.Errorf("could not detect suiteable package manager for platform")
+		return nil, fmt.Errorf("could not detect suitable package manager for platform")
 	}
 
 	// retrieve all system packages

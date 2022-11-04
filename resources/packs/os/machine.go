@@ -29,7 +29,7 @@ func getbiosinfo(runtime *resources.Runtime) (*smbios.SmBiosInfo, error) {
 		// find suitable package manager
 		pf, err := runtime.Motor.Platform()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not detect suiteable smbios manager for platform")
+			return nil, errors.Wrap(err, "could not detect suitable smbios manager for platform")
 		}
 
 		osProvider, err := osProvider(runtime.Motor)
@@ -39,7 +39,7 @@ func getbiosinfo(runtime *resources.Runtime) (*smbios.SmBiosInfo, error) {
 
 		pm, err := smbios.ResolveManager(osProvider, pf)
 		if pm == nil || err != nil {
-			return nil, fmt.Errorf("could not detect suiteable smbios manager for platform")
+			return nil, fmt.Errorf("could not detect suitable smbios manager for platform")
 		}
 
 		// retrieve smbios info

@@ -201,7 +201,7 @@ func (p *mqlOs) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
 	um, err := packages.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
 	if um == nil || err != nil {
-		return nil, fmt.Errorf("could not detect suiteable update manager for platform")
+		return nil, fmt.Errorf("could not detect suitable update manager for platform")
 	}
 
 	// retrieve all system updates
@@ -511,7 +511,7 @@ func (p *mqlOsBase) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
 	um, err := packages.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
 	if um == nil || err != nil {
-		return nil, fmt.Errorf("could not detect suiteable update manager for platform")
+		return nil, fmt.Errorf("could not detect suitable update manager for platform")
 	}
 
 	// retrieve all system updates
