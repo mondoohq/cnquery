@@ -177,7 +177,9 @@ func initConfig() {
 	// check if the default config file is available
 	if Path == "" && Source != configSourceBase64 {
 		Path = autodetectConfig()
+	}
 
+	if Source != configSourceBase64 {
 		// we set this here, so that sub commands that rely on writing config, can use the default config
 		viper.SetConfigFile(Path)
 
