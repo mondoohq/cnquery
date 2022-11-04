@@ -129,7 +129,7 @@ These files can also contain multiple query packs for many different target syst
 
 Distributing cnqueries across your fleet
 
-You can share query packs across your fleet using the Mondoo's Query Hub. The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
+You can share query packs across your fleet using Mondoo's Query Hub. The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
 
 To use the Query Hub:
 
@@ -137,7 +137,7 @@ To use the Query Hub:
 cnquery login --token TOKEN
 ```
 
-Once set up, activate the Pack's and you can collect your asset's data (for example `aws`):
+Once set up, activate the packs, and you can collect your asset's data (for example, `aws`):
 
 ```bash
 cnquery scan aws

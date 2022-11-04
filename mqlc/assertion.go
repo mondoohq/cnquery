@@ -132,7 +132,7 @@ func compileAssertionMsg(msg string, c *compiler) (*llx.AssertionMessage, error)
 		code := codes[i]
 
 		// Small helper for assertion messages:
-		// At the moment, the parser can't deliniate if a given `{}` call
+		// At the moment, the parser can't delineate if a given `{}` call
 		// is meant to be a map creation or a block call.
 		//
 		// When it is at the beginning of an operand it is always treated

@@ -377,7 +377,7 @@ func (p *Primitive) Size() int {
 	if typ.IsMap() {
 		// We are under-estimating the real size of maps in memory, because buckets
 		// actually use more room than the calculation below suggests. However,
-		// for the sake of appoximation, it serves well enough.
+		// for the sake of approximation, it serves well enough.
 
 		var res int
 		for k, v := range p.Map {
