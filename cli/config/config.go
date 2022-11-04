@@ -36,6 +36,8 @@ var (
 	Features             cnquery.Features
 )
 
+const configSourceBase64 = "$MONDOO_CONFIG_BASE64"
+
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
 	cobra.OnInitialize(initConfig)
@@ -156,7 +158,7 @@ func initConfig() {
 	Path = strings.TrimSpace(UserProvidedPath)
 	// base 64 config env setting has always precedence
 	if len(os.Getenv("MONDOO_CONFIG_BASE64")) > 0 {
-		Source = "$MONDOO_CONFIG_BASE64"
+		Source = configSourceBase64
 		decodedData, err := base64.StdEncoding.DecodeString(os.Getenv("MONDOO_CONFIG_BASE64"))
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not parse base64 ")
@@ -173,22 +175,24 @@ func initConfig() {
 	}
 
 	// check if the default config file is available
-	if Path == "" {
+	if Path == "" && Source != configSourceBase64 {
 		Path = autodetectConfig()
 	}
 
-	// we set this here, so that sub commands that rely on writing config, can use the default config
-	viper.SetConfigFile(Path)
+	if Source != configSourceBase64 {
+		// we set this here, so that sub commands that rely on writing config, can use the default config
+		viper.SetConfigFile(Path)
 
-	// if the file exists, load it
-	_, err := AppFs.Stat(Path)
-	if err == nil {
-		log.Debug().Str("configfile", viper.ConfigFileUsed()).Msg("try to load local config file")
-		if err := viper.ReadInConfig(); err == nil {
-			LoadedConfig = true
-		} else {
-			LoadedConfig = false
-			log.Error().Err(err).Str("path", Path).Msg("could not read config file")
+		// if the file exists, load it
+		_, err := AppFs.Stat(Path)
+		if err == nil {
+			log.Debug().Str("configfile", viper.ConfigFileUsed()).Msg("try to load local config file")
+			if err := viper.ReadInConfig(); err == nil {
+				LoadedConfig = true
+			} else {
+				LoadedConfig = false
+				log.Error().Err(err).Str("path", Path).Msg("could not read config file")
+			}
 		}
 	}
 
@@ -219,6 +223,8 @@ func DisplayUsedConfig() {
 		log.Warn().Msg("could not load configuration file " + UserProvidedPath)
 	} else if LoadedConfig {
 		log.Info().Msg("loaded configuration from " + viper.ConfigFileUsed() + " using source " + Source)
+	} else if Source == configSourceBase64 {
+		log.Info().Msg("loaded configuration from environment using source " + Source)
 	} else {
 		log.Info().Msg("no configuration file provided")
 	}
