@@ -54,7 +54,7 @@ func NewProviderCommand(opts CommandOpts) *cobra.Command {
 				os.Exit(1)
 			}
 
-			log.Info().Str("provider", "local").Msg("no provider specified, using defaults.\n  Use --help for a list of available providers.")
+			log.Info().Msg("no provider specified, defaulting to local.\n  Use --help for a list of available providers.")
 			opts.Run(cmd, args, providers.ProviderType_LOCAL_OS, DefaultAssetType)
 		},
 	}
