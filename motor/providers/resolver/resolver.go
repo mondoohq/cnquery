@@ -204,6 +204,16 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 		if err != nil {
 			return nil, err
 		}
+	case providers.ProviderType_GOOGLE_WORKSPACE:
+		log.Debug().Msg("connection> load google workspace provider")
+		p, err := google.New(resolvedConfig)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(p)
+		if err != nil {
+			return nil, err
+		}
 	case providers.ProviderType_AZURE:
 		log.Debug().Msg("connection> load azure provider")
 		p, err := azure.New(resolvedConfig)

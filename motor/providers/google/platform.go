@@ -6,6 +6,8 @@ func (t *Provider) Identifier() (string, error) {
 	switch t.ResourceType() {
 	case Project:
 		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + t.id, nil
+	case Workspace:
+		return "//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + t.id, nil
 	default:
 		return "", errors.New("unsupported resource type")
 	}

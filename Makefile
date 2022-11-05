@@ -104,6 +104,8 @@ lr/build:
 	./lr docs json resources/packs/vsphere/vsphere.lr.manifest.yaml
 	./lr go resources/packs/okta/okta.lr
 	./lr docs json resources/packs/okta/okta.lr.manifest.yaml
+	./lr go resources/packs/googleworkspace/googleworkspace.lr
+	./lr docs json resources/packs/googleworkspace/googleworkspace.lr.manifest.yaml
 	./lr go resources/mock/mochi.lr
 
 lr/release:

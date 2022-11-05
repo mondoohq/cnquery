@@ -1,0 +1,194 @@
+option go_package = "go.mondoo.com/cnquery/resources/packs/googleworkspace"
+
+// Google Workspace
+googleworkspace {
+  // Retrieves a list of all organizational units for the Google Workspace account
+  orgUnits() []googleworkspace.orgUnit
+  // Retrieves a list of all users for the Google Workspace account
+  users() []googleworkspace.user
+  // Retrieves a list of domains for the Google Workspace account
+  domains() []googleworkspace.domain
+  // Retrieves a list of all groups for the Google Workspace account
+  groups() []googleworkspace.group
+  // Retrieves a list of all roles for the Google Workspace account
+  roles() []googleworkspace.role
+}
+
+// Google Workspace organizational unit
+private googleworkspace.orgUnit @defaults("name") {
+  // The unique ID of the organizational unit
+  id string
+  // The organizational unit's path name
+  name string
+  // Description of the organizational unit
+  description string
+}
+
+// Google Workspace domain
+private googleworkspace.domain @defaults("domainName") {
+  // The domain name of the customer
+  domainName string
+  // Indicates if the domain is a primary domain
+  isPrimary bool
+  // Indicates the verification state of a domain
+  verified bool
+  // Creation time of the domain
+  creationTime time
+}
+
+// Google Workspace User Accounts
+private googleworkspace.user @defaults("primaryEmail") {
+  // The unique ID for the user
+  id string
+  // The user's last name
+  familyName string
+  // The user's first names
+  givenName string
+  // The user's full name
+  fullName string
+  // The user's primary email address
+  primaryEmail string
+  // Recovery email of the user
+  recoveryEmail string
+  // Recovery phone of the user
+  recoveryPhone string
+  // User accepted the Terms of Service agreement
+  agreedToTerms bool
+  // A list of the user's alias email addresses
+  aliases []string
+  // Indicates if user is suspended
+  suspended bool
+  // The reason a user account is suspended
+  suspensionReason string
+  // Indicates if user is archived
+  archived bool
+  // Indicates a user with super admininistrator privileges
+  isAdmin bool
+  // Is 2-step verification enforced
+  isEnforcedIn2Sv bool
+  // Is enrolled in 2-step verification
+  isEnrolledIn2Sv bool
+  // Indicates if the user's Google mailbox is created
+  isMailboxSetup bool
+  // User's last login time
+  lastLoginTime time
+  //  User's account creation time
+  creationTime time
+  // Retrieves latest report for the user
+  usageReport() googleworkspace.report.usage
+  // Returns the user-issued tokens to 3rd party applications
+  tokens() []googleworkspace.token
+}
+
+// Google Workspace Token
+private googleworkspace.token @defaults("displayText") {
+  // Indicates if the application is registered with Google
+  anonymous bool
+  // The Client ID of the application
+  clientId string
+  // The displayable name of the application token
+  displayText string
+  // Indicates if the token is issued to an installed application
+  nativeApp bool
+  // A list of granted authorization scopes the application
+  scopes []string
+  // The unique ID of the user that issued the token
+  userKey string
+}
+
+// Google Workspace Group
+private googleworkspace.group @defaults("email") {
+  // The unique ID of a group
+  id string
+  // The group's display name
+  name string
+  // The group's email address
+  email string
+  // Purpose of the group
+  description string
+  // A list of a group's alias email addresses
+  aliases []string
+  // The number of users that are direct members of the group
+  directMembersCount int
+  // Indicates if this group was created by an administrator rather than a user
+  adminCreated bool
+  // Retrieve members of the group
+  members() []googleworkspace.member
+  // Group settings
+  settings() dict
+  // Group security settings
+  securitySettings() dict
+}
+
+// Google Workpsace Group Member
+private googleworkspace.member @defaults("email") {
+  // The unique ID of the group member
+  id string
+  // The member's email address
+  email string
+  // Status of member
+  status string
+  // The type of group member
+  type string
+  // Linked user account
+  user() googleworkspace.user
+}
+
+// Google Workspace Role
+private googleworkspace.role @defaults("name") {
+  // ID of the role
+  id int
+  // Name of the role
+  name string
+  // A short description of the role
+  description string
+  // Indicates if this is a pre-defined system role
+  isSystemRole bool
+  // Indicates if the role is a super admin role
+  isSuperAdminRole bool
+  // The set of privileges
+  privileges []dict
+}
+
+// Google Workspace Apps Reports
+googleworkspace.report.apps {
+  drive() []googleworkspace.report.activity
+}
+
+// Google Workspace App Reports Activity
+private googleworkspace.report.activity {
+  id int
+  ipAddress string
+  ownerDomain string
+  actor dict
+  events []dict
+}
+
+// Google Workspace User Usage Reports
+googleworkspace.report.users {
+  []googleworkspace.report.usage
+}
+
+// Google Workspace Usage Report
+private googleworkspace.report.usage {
+  // The unique identifier of the customer's account
+  customerId string
+  // Google Workspace entity ID
+  entityId string
+  // Google Workspace profile identifier
+  profileId string
+  // Entity type
+  type string
+  // Email of user
+  userEmail string
+  // Date of the report
+  date time
+  // Parameter value pairs
+  parameters []dict
+  // Account Settings
+  account() dict
+  // Security Settings
+  security() dict
+  // App Usage
+  appUsage() dict
+}

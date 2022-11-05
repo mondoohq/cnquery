@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/gcp"
 	"go.mondoo.com/cnquery/resources/packs/github"
 	"go.mondoo.com/cnquery/resources/packs/gitlab"
+	"go.mondoo.com/cnquery/resources/packs/googleworkspace"
 	"go.mondoo.com/cnquery/resources/packs/k8s"
 	"go.mondoo.com/cnquery/resources/packs/ms365"
 	"go.mondoo.com/cnquery/resources/packs/okta"
@@ -37,4 +38,5 @@ func init() {
 	Registry.Add(k8s.Registry)
 	Registry.Add(vsphere.Registry)
 	Registry.Add(okta.Registry)
+	Registry.Add(googleworkspace.Registry)
 }

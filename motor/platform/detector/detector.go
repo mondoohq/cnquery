@@ -86,12 +86,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Runtime: providers.RUNTIME_AWS,
 		}, nil
 	case *google.Provider:
-		return &platform.Platform{
-			Name:    "gcp",
-			Title:   "Google Cloud Platform",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: providers.RUNTIME_GCP,
-		}, nil
+		return pt.PlatformInfo()
 	case *azure.Provider:
 		return &platform.Platform{
 			Name:    "azure",

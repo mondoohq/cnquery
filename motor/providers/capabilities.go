@@ -11,7 +11,7 @@ const (
 	Capability_AWS
 	Capability_vSphere
 	Capability_Azure
-	Capability_Gcp
+	Capability_Google
 	Capability_Arista
 	Capability_Microsoft365
 	Capability_Ipmi
@@ -28,7 +28,7 @@ var CapabilityNames = map[Capability]string{
 	Capability_AWS:          "api-aws",
 	Capability_vSphere:      "api-vsphere",
 	Capability_Azure:        "api-azure",
-	Capability_Gcp:          "api-gcp",
+	Capability_Google:       "api-google",
 	Capability_Arista:       "api-arista",
 	Capability_Microsoft365: "api-ms365",
 	Capability_Ipmi:         "api-ipmi",
