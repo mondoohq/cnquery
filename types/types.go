@@ -73,7 +73,7 @@ const (
 	Regex = Type(rune(byteRegex))
 	// Time for date and time
 	Time = Type(rune(byteTime))
-	// Dict for storing hierarchical simple key-value assignemnts
+	// Dict for storing hierarchical simple key-value assignments
 	Dict = Type(rune(byteDict))
 	// Score for evaluations
 	Score = Type(rune(byteScore))
@@ -104,7 +104,7 @@ func (typ Type) IsArray() bool {
 	return typ[0] == byteArray
 }
 
-// Map for an assocation of keys and values
+// Map for an association of keys and values
 func Map(key, value Type) Type {
 	if key != String && key != Int {
 		panic("Unsupported map on key type " + key.Label())

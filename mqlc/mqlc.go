@@ -549,7 +549,7 @@ type blockRefs struct {
 	deps []uint64
 	// if it's a standalone bloc
 	isStandalone bool
-	// any changes to binding that might have occured during the block compilation
+	// any changes to binding that might have occurred during the block compilation
 	binding uint64
 }
 
@@ -1175,7 +1175,7 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 				// turn accessor into a regular function and call that
 				fCall := &parser.Call{Function: []*parser.Arg{{Value: nextCall.Accessor}}}
 
-				// accessors are aways builtin functions
+				// accessors are always builtin functions
 				h, _ := builtinFunction(callBinding.typ.Underlying(), "[]")
 
 				if h == nil {
@@ -1429,7 +1429,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			fCall := &parser.Call{Function: []*parser.Arg{{Value: call.Accessor}}}
 			relBinding := &variable{typ: typ, ref: ref}
 
-			// accessors are aways builtin functions
+			// accessors are always builtin functions
 			h, _ := builtinFunction(typ.Underlying(), "[]")
 
 			if h == nil {
