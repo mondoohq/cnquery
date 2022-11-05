@@ -160,7 +160,7 @@ func (ctx *Runtime) lookupResource(name string) (*ResourceCls, error) {
 			name = r.Name
 		} else {
 			// We found a resource with a factory
-			return nil, errors.New("cannot find resource resource factory for '" + name + "'")
+			return nil, errors.New("cannot find resource factory for '" + name + "'")
 		}
 	}
 }
