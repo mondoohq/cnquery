@@ -55,6 +55,11 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 	// we clone the config here, and replace all credential references with the real references
 	// the clone is important so that credentials are not leaked outside of the function
 	resolvedConfig := proto.Clone(tc).(*providers.Config)
+	// cloning a proto object with an empty map will result in the copied map being nil. make sure to initialize it
+	// to not break providers that check for nil.
+	if resolvedConfig.Options == nil {
+		resolvedConfig.Options = map[string]string{}
+	}
 	resolvedCredentials := []*vault.Credential{}
 	for i := range resolvedConfig.Credentials {
 		credential := resolvedConfig.Credentials[i]

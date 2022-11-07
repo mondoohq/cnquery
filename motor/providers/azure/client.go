@@ -1,27 +1,22 @@
 package azure
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/subscriptions"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/providers/local"
 )
 
-func IsAzInstalled() error {
+func IsAzInstalled() bool {
 	t, err := local.New()
 	if err != nil {
-		return err
+		return false
 	}
 
-	_, err = t.RunCommand("az")
-	if err != nil {
-		return errors.New("could not find az command")
-	}
-	return nil
+	command, err := t.RunCommand("az")
+	return command.ExitStatus == 0 && err == nil
 }
 
 // shells out to `az account show --output json` to determine the default account
@@ -63,17 +58,4 @@ type AzureAccount struct {
 	State           string `json:"state"`
 	Name            string `json:"name"`
 	IsDefault       bool   `json:"isDefault"`
-}
-
-func VerifySubscription(subscriptionId string) (subscriptions.Subscription, error) {
-	authorizer, err := GetAuthorizer()
-	if err != nil {
-		return subscriptions.Subscription{}, err
-	}
-
-	subscriptionsC := subscriptions.NewClient()
-	subscriptionsC.Authorizer = authorizer
-
-	ctx := context.Background()
-	return subscriptionsC.Get(ctx, subscriptionId)
 }
