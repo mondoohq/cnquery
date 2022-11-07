@@ -1,0 +1,119 @@
+packs:
+  - uid: mondoo-incident-response-github-org
+    name: Mondoo GitHub Organization Incident Response
+    is_public: true
+    docs:
+      desc: |
+        ### Overview
+
+        The Mondoo GitHub Organization Incident Response query pack gathers configuration data about GitHub Organizations and the repositories within for investigation during a security incident.
+
+        ### Prerequisites
+
+        To run this query pack, you will need a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) with read access to the GitHub organization you are scanning.
+
+        ### Run query pack
+
+        To run this query pack against a GitHub Organization:
+
+        ```bash
+        export GITHUB_TOKEN=<your personal access token>
+        cnquery scan github org <org_name> -f mondoo-github-org-incident-response.mql.yaml
+        ```
+    filters:
+      - asset.platform == "github-org"
+    queries:
+      - uid: mondoo-incident-response-github-org-name
+        title: Retrieve GitHub Organization Name
+        query: |
+          github.organization.name
+      - uid: mondoo-incident-response-github-org-login
+        title: Retrieve GitHub Organization Login
+        query: |
+          github.organization.login
+      - uid: mondoo-incident-response-github-org-description
+        title: Retrieve GitHub Organization description
+        query: |
+          github.organization.description
+      - uid: mondoo-incident-response-github-org-mfa-status
+        title: Retrieve GitHub Organization MFA status 
+        docs:
+          desc: |
+            This query retrieves the status of whether MFA is required for users of the organization. 
+        query: |
+          github.organization.twoFactorRequirementEnabled  
+      - uid: mondoo-incident-response-github-org-owners
+        title: Retrieve GitHub Organization Owners
+        docs:
+          desc: |
+            This query retrieves all GitHub organization owners. 
+        query: |
+          github.organization.owners.length
+          github.organization { owners { name email login } }
+      - uid: mondoo-incident-response-github-org-members
+        title: Retrieve GitHub Organization Members
+        docs:
+          desc: |
+            This query retrieves all of the members of the GitHub organization. 
+        query: |
+          github.organization.members.length
+          github.organization { 
+            members { 
+              name 
+              company 
+              login 
+              email 
+              id 
+            }
+          }          
+      - uid: mondoo-incident-response-github-org-teams
+        title: Retrieve GitHub Organization Teams
+        docs:
+          desc: |
+            This query retrieves all GitHub organization teams. 
+        query: |
+          github.organization { 
+            teams { 
+              slug 
+              privacy 
+              defaultPermission 
+              members { 
+                login 
+                email 
+                company 
+                name 
+              }
+            }
+          }
+      - uid: mondoo-incident-response-github-private-repos
+        title: Retrieve GitHub Organization private repositories
+        docs: 
+          desc: |
+            This query retrieves all of the repositories within the GitHub organization that are public. The query returns the name of the repo, and returns whether the default branch is [protected](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches) using protection rules. 
+        query: |
+          github.organization.repositories.
+            where( private == false ) { 
+              name 
+              branches.
+                where( isDefault ) { 
+                  protected 
+                }
+            }
+      - uid: mondoo-incident-response-github-packages
+        title: Retrieve GitHub Organization private repositories
+        docs: 
+          desc: |
+            This query retrieves the packages published to GHCR.io.
+        query: |
+          github.organization { 
+            packages { 
+              name 
+              visibility 
+              packageType 
+              owner { 
+                name 
+              }
+            }
+          }
+
+          
