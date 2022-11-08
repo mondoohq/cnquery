@@ -126,7 +126,7 @@ func defaultRangerPlugins(sysInfo *sysinfo.SystemInfo, features cnquery.Features
 
 func sysInfoHeader(sysInfo *sysinfo.SystemInfo, features cnquery.Features) ranger.ClientPlugin {
 	const (
-		HttpHeaderUserAgent      = "User-Client"
+		HttpHeaderUserAgent      = "User-Agent"
 		HttpHeaderClientFeatures = "Mondoo-Features"
 		HttpHeaderPlatformID     = "Mondoo-PlatformID"
 	)
