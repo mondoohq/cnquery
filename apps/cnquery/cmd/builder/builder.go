@@ -381,7 +381,7 @@ func dockerImageProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn,
 		Use:    "image ID",
 		Short:  docs.GetShort("docker-image"),
 		Long:   docs.GetLong("docker-image"),
-		Args:   cobra.ExactArgs(1),
+		Args:   cobra.RangeArgs(1, 2),
 		PreRun: preRun,
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
