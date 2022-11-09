@@ -510,6 +510,47 @@ func (g *mqlTerraformModule) id() (string, error) {
 	return "terraform.module/key/" + k + "/version/" + v, nil
 }
 
+func (g *mqlTerraformModule) GetBlock() (interface{}, error) {
+	key, err := g.Key()
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := terraformProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	files := t.Parser().Files()
+
+	var mqlHclBlock interface{}
+	for k := range files {
+		f := files[k]
+		blocks, err := listHclBlocks(g.MotorRuntime, f.Body, f)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range blocks {
+			b := blocks[i].(TerraformBlock)
+			blockType, err := b.Type()
+			if err != nil {
+				return nil, err
+			}
+			namedlabel, err := b.NameLabel()
+			if err != nil {
+				return nil, err
+			}
+
+			if blockType == "module" && namedlabel == key {
+				mqlHclBlock = b
+			}
+		}
+	}
+
+	return mqlHclBlock, nil
+}
+
 func (g *mqlTerraformSettings) id() (string, error) {
 	return "terraform.settings", nil
 }

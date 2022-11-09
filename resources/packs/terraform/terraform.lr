@@ -62,7 +62,7 @@ terraform.block {
 }
 
 // Terraform Module Block
-terraform.module {
+terraform.module @defaults("key") {
   // Unique identifier for this particular module
   key string
   // Source indicates where the modules was loaded from
@@ -71,6 +71,9 @@ terraform.module {
   version string
   //  Path to the directory where the module is stored
   dir string
+
+  // returns the block including the configuration
+  block() terraform.block
 }
 
 // Terraform Settings
