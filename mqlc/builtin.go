@@ -184,6 +184,10 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 		if v.IsPrivate {
 			continue
 		}
+		if v.IsEmbedded && !c.UseAssetContext {
+			continue
+		}
+
 		if v.IsEmbedded && c.UseAssetContext {
 			name := types.Type(v.Type).ResourceName()
 			child, ok := c.Schema.Resources[name]
