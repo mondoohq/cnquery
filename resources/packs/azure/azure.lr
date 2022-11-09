@@ -19,9 +19,11 @@ azuread.user {
   accountEnabled bool
   mailNickname string
   mail string
-  objectType string
+  // deprecated, no longer used
+  objectType() string
   userType string
-  properties dict
+  // deprecated, no longer used
+  properties() dict
 }
 
 // Azure Active Directory Group
@@ -32,8 +34,10 @@ azuread.group {
   mailEnabled bool
   mailNickname string
   mail string
-  objectType string
-  properties dict
+  // deprecated, no longer used
+  objectType() string
+  // deprecated, no longer used
+  properties() dict
   members() []azuread.user
 }
 
@@ -43,7 +47,8 @@ azuread.domain {
   isVerified bool
   isDefault bool
   authenticationType string
-  properties dict
+  // deprecated, no longer used
+  properties() dict
 }
 
 // Azure Active Directory Application
