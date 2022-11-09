@@ -1782,11 +1782,18 @@ func TestSuggestions(t *testing.T) {
 			nil,
 		},
 		{
-			// embedded
+			// embedded with asset context on
 			"docker.containers[0].hostnam",
 			[]string{"hostname"},
 			errors.New("cannot find field 'hostnam' in docker.container"),
 			cnquery.Features{byte(cnquery.MQLAssetContext)},
+		},
+		{
+			// embedded with asset context off
+			"docker.containers[0].hostnam",
+			[]string{},
+			errors.New("cannot find field 'hostnam' in docker.container"),
+			nil,
 		},
 	}
 
