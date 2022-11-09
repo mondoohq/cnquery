@@ -438,7 +438,7 @@ func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -460,45 +460,38 @@ func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := sql.NewDatabaseUsagesClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
-
-	usage, err := client.ListByDatabase(ctx, resourceID.ResourceGroup, server, database)
+	client, err := sql.NewDatabaseUsagesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := client.NewListByDatabasePager(resourceID.ResourceGroup, server, database, &sql.DatabaseUsagesClientListByDatabaseOptions{})
 	res := []interface{}{}
-
-	if usage.Value == nil {
-		return res, nil
-	}
-
-	list := *usage.Value
-
-	for i := range list {
-		entry := list[i]
-
-		mqlAzureSqlUsage, err := a.MotorRuntime.CreateResource("azurerm.sql.databaseusage",
-			"id", id+"/metrics/"+core.ToString(entry.Name),
-			"name", core.ToString(entry.Name),
-			"resourceName", core.ToString(entry.ResourceName),
-			"displayName", core.ToString(entry.DisplayName),
-			"currentValue", core.ToFloat64(entry.CurrentValue),
-			"limit", core.ToFloat64(entry.Limit),
-			"unit", core.ToString(entry.Unit),
-			"nextResetTime", azureRmTime(entry.NextResetTime),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("could not create MQL resource")
 			return nil, err
 		}
-		res = append(res, mqlAzureSqlUsage)
+		for _, entry := range page.Value {
+			mqlAzureSqlUsage, err := a.MotorRuntime.CreateResource("azurerm.sql.databaseusage",
+				"id", id+"/metrics/"+core.ToString(entry.Name),
+				"name", core.ToString(entry.Name),
+				"resourceName", core.ToString(entry.Name),
+				"displayName", core.ToString(entry.Properties.DisplayName),
+				"currentValue", core.ToFloat64(entry.Properties.CurrentValue),
+				"limit", core.ToFloat64(entry.Properties.Limit),
+				"unit", core.ToString(entry.Properties.Unit),
+			)
+			if err != nil {
+				log.Error().Err(err).Msg("could not create MQL resource")
+				return nil, err
+			}
+			res = append(res, mqlAzureSqlUsage)
+		}
 	}
 
 	return res, nil
@@ -506,6 +499,10 @@ func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 
 func (a *mqlAzurermSqlDatabaseusage) id() (string, error) {
 	return a.Id()
+}
+
+func (a *mqlAzurermSqlDatabaseusage) GetNextResetTime() (interface{}, error) {
+	return nil, errors.New("deprecated, no longer supported")
 }
 
 func (a *mqlAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {

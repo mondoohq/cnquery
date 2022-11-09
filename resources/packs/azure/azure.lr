@@ -340,7 +340,8 @@ azurerm.sql.databaseusage {
   currentValue float
   limit float
   unit string
-  nextResetTime time
+  // deprecated, no longer supported
+  nextResetTime() time
 }
 
 // AzureRM PostgreSQL
