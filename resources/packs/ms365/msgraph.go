@@ -4,15 +4,16 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
+	"github.com/microsoft/kiota-abstractions-go/authentication"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/devicecompliancepolicies"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
 	"go.mondoo.com/cnquery/motor/providers"
 	ms365_provider "go.mondoo.com/cnquery/motor/providers/ms365"
+	"go.mondoo.com/cnquery/motor/providers/ms365/msgraphclient"
+	"go.mondoo.com/cnquery/motor/providers/ms365/msgraphconv"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/resources/packs/ms365/msgraphclient"
-	"go.mondoo.com/cnquery/resources/packs/ms365/msgraphconv"
 )
 
 func ms365Provider(t providers.Instance) (*ms365_provider.Provider, error) {
@@ -806,21 +807,15 @@ func (m *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) id() (string, err
 	return m.Id()
 }
 
-func graphBetaAdapter(t *ms365_provider.Provider) (*msgraphclient.GraphRequestAdapter, error) {
+func graphBetaClient(t *ms365_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
 	auth, err := t.Auth()
-	if err != nil {
-		return nil, errors.Wrap(err, "authentication provider error")
-	}
-
-	adapter, err := msgraphclient.NewGraphRequestAdapter(auth)
 	if err != nil {
 		return nil, err
 	}
-	return adapter, nil
-}
-
-func graphBetaClient(t *ms365_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
-	adapter, err := graphBetaAdapter(t)
+	providerFunc := func() (authentication.AuthenticationProvider, error) {
+		return auth, err
+	}
+	adapter, err := msgraphclient.NewGraphRequestAdapterWithFn(providerFunc)
 	if err != nil {
 		return nil, err
 	}
