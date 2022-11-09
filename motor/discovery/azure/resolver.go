@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/subscriptions"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -42,7 +42,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	defer m.Close()
 	provider, ok := m.Provider.(*azure_provider.Provider)
 	if !ok {
-		return nil, errors.New("could not create azure transport")
+		return nil, errors.New("could not create azure provider")
 	}
 
 	// if no creds, check that the CLI is installed as we are going to use that
@@ -53,12 +53,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	// get an authorizer to use for discovery
-	authorizer, err := provider.Authorizer()
+	// get a token to use for discovery
+	token, err := provider.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
-	azureClient := NewAzureClient(authorizer)
+	azureClient := NewAzureClient(token)
 
 	// we either discover all subs (if no filter is provided) or just verify that the provided one exists
 	var subs []subscriptions.Subscription

@@ -5,7 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/network/mgmt/network"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -21,35 +22,39 @@ func (a *mqlAzurermNetwork) GetInterfaces() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := network.NewInterfacesClient(at.SubscriptionID())
-	client.Authorizer = authorizer
-
-	ifaces, err := client.ListAll(ctx)
+	client, err := network.NewInterfacesClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
 
+	pager := client.NewListAllPager(&network.InterfacesClientListAllOptions{})
 	res := []interface{}{}
-	for i := range ifaces.Values() {
-		iface := ifaces.Values()[i]
-
-		mqlAzure, err := azureIfaceToMql(a.MotorRuntime, iface)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
-	}
+		for _, iface := range page.Value {
+			if iface != nil {
 
+				mqlAzure, err := azureIfaceToMql(a.MotorRuntime, *iface)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlAzure)
+			}
+		}
+	}
 	return res, nil
 }
 
 func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resources.ResourceType, error) {
-	properties, err := core.JsonToDict(iface.InterfacePropertiesFormat)
+	properties, err := core.JsonToDict(iface.Properties)
 	if err != nil {
 		return nil, err
 	}
@@ -72,28 +77,32 @@ func (a *mqlAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := network.NewSecurityGroupsClient(at.SubscriptionID())
-	client.Authorizer = authorizer
-
-	secGroups, err := client.ListAll(ctx)
+	client, err := network.NewSecurityGroupsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
 
+	pager := client.NewListAllPager(&network.SecurityGroupsClientListAllOptions{})
 	res := []interface{}{}
-	for i := range secGroups.Values() {
-		secGroup := secGroups.Values()[i]
-
-		mqlAzure, err := azureSecGroupToMql(a.MotorRuntime, secGroup)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+		for _, secGroup := range page.Value {
+			if secGroup != nil {
+				mqlAzure, err := azureSecGroupToMql(a.MotorRuntime, *secGroup)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlAzure)
+			}
+		}
 	}
 
 	return res, nil
@@ -108,52 +117,53 @@ func azureSecGroupToMql(runtime *resources.Runtime, secGroup network.SecurityGro
 	securityRules := []interface{}{}
 	defaultSecurityRules := []interface{}{}
 	var err error
-	if secGroup.SecurityGroupPropertiesFormat != nil {
+	if secGroup.Properties != nil {
 		// avoid using the azure sdk SecurityGroupPropertiesFormat MarshalJSON
 		var j AzureSecurityGroupPropertiesFormat
-		j = AzureSecurityGroupPropertiesFormat(*secGroup.SecurityGroupPropertiesFormat)
+		j = AzureSecurityGroupPropertiesFormat(*secGroup.Properties)
 
 		properties, err = core.JsonToDict(j)
 		if err != nil {
 			return nil, err
 		}
 
-		if secGroup.SecurityGroupPropertiesFormat.NetworkInterfaces != nil {
-			list := *secGroup.SecurityGroupPropertiesFormat.NetworkInterfaces
-			for i := range list {
-				iface := list[i]
-
-				mqlAzure, err := azureIfaceToMql(runtime, iface)
-				if err != nil {
-					return nil, err
+		if secGroup.Properties.NetworkInterfaces != nil {
+			list := secGroup.Properties.NetworkInterfaces
+			for _, iface := range list {
+				if iface != nil {
+					mqlAzure, err := azureIfaceToMql(runtime, *iface)
+					if err != nil {
+						return nil, err
+					}
+					ifaces = append(ifaces, mqlAzure)
 				}
-				ifaces = append(ifaces, mqlAzure)
 			}
 		}
 
-		if secGroup.SecurityGroupPropertiesFormat.SecurityRules != nil {
-			list := *secGroup.SecurityGroupPropertiesFormat.SecurityRules
-			for i := range list {
-				secRule := list[i]
-
-				mqlAzure, err := azureSecurityRuleToMql(runtime, secRule)
-				if err != nil {
-					return nil, err
+		if secGroup.Properties.SecurityRules != nil {
+			list := secGroup.Properties.SecurityRules
+			for _, secRule := range list {
+				if secRule != nil {
+					mqlAzure, err := azureSecurityRuleToMql(runtime, *secRule)
+					if err != nil {
+						return nil, err
+					}
+					securityRules = append(securityRules, mqlAzure)
 				}
-				securityRules = append(securityRules, mqlAzure)
 			}
 		}
 
-		if secGroup.SecurityGroupPropertiesFormat.DefaultSecurityRules != nil {
-			list := *secGroup.SecurityGroupPropertiesFormat.DefaultSecurityRules
-			for i := range list {
-				secRule := list[i]
+		if secGroup.Properties.DefaultSecurityRules != nil {
+			list := secGroup.Properties.DefaultSecurityRules
+			for _, secRule := range list {
+				if secRule != nil {
+					mqlAzure, err := azureSecurityRuleToMql(runtime, *secRule)
+					if err != nil {
+						return nil, err
+					}
 
-				mqlAzure, err := azureSecurityRuleToMql(runtime, secRule)
-				if err != nil {
-					return nil, err
+					defaultSecurityRules = append(defaultSecurityRules, mqlAzure)
 				}
-				defaultSecurityRules = append(defaultSecurityRules, mqlAzure)
 			}
 		}
 	}
@@ -173,15 +183,15 @@ func azureSecGroupToMql(runtime *resources.Runtime, secGroup network.SecurityGro
 }
 
 func azureSecurityRuleToMql(runtime *resources.Runtime, secRule network.SecurityRule) (resources.ResourceType, error) {
-	properties, err := core.JsonToDict(secRule.SecurityRulePropertiesFormat)
+	properties, err := core.JsonToDict(secRule.Properties)
 	if err != nil {
 		return nil, err
 	}
 
 	destinationPortRange := []interface{}{}
 
-	if secRule.SecurityRulePropertiesFormat != nil && secRule.SecurityRulePropertiesFormat.DestinationPortRange != nil {
-		dPortRange := parseAzureSecurityRulePortRange(*secRule.SecurityRulePropertiesFormat.DestinationPortRange)
+	if secRule.Properties != nil && secRule.Properties.DestinationPortRange != nil {
+		dPortRange := parseAzureSecurityRulePortRange(*secRule.Properties.DestinationPortRange)
 		for i := range dPortRange {
 			destinationPortRange = append(destinationPortRange, map[string]interface{}{
 				"fromPort": dPortRange[i].FromPort,
@@ -242,47 +252,42 @@ func (a *mqlAzurermNetwork) GetWatchers() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := network.NewWatchersClient(at.SubscriptionID())
-	client.Authorizer = authorizer
-
-	watchers, err := client.ListAll(ctx)
+	client, err := network.NewWatchersClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := client.NewListAllPager(&network.WatchersClientListAllOptions{})
 	res := []interface{}{}
-
-	if watchers.Value == nil {
-		return res, nil
-	}
-
-	list := *watchers.Value
-	for i := range list {
-		watcher := list[i]
-
-		properties, err := core.JsonToDict(watcher.WatcherPropertiesFormat)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
+		for _, watcher := range page.Value {
+			properties, err := core.JsonToDict(watcher.Properties)
+			if err != nil {
+				return nil, err
+			}
 
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.network.watcher",
-			"id", core.ToString(watcher.ID),
-			"name", core.ToString(watcher.Name),
-			"location", core.ToString(watcher.Location),
-			"tags", azureTagsToInterface(watcher.Tags),
-			"type", core.ToString(watcher.Type),
-			"etag", core.ToString(watcher.Etag),
-			"properties", properties,
-		)
-		if err != nil {
-			return nil, err
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.network.watcher",
+				"id", core.ToString(watcher.ID),
+				"name", core.ToString(watcher.Name),
+				"location", core.ToString(watcher.Location),
+				"tags", azureTagsToInterface(watcher.Tags),
+				"type", core.ToString(watcher.Type),
+				"etag", core.ToString(watcher.Etag),
+				"properties", properties,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
 		}
-		res = append(res, mqlAzure)
 	}
 
 	return res, nil

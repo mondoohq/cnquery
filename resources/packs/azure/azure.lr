@@ -19,9 +19,11 @@ azuread.user {
   accountEnabled bool
   mailNickname string
   mail string
-  objectType string
+  // deprecated, no longer used
+  objectType() string
   userType string
-  properties dict
+  // deprecated, no longer used
+  properties() dict
 }
 
 // Azure Active Directory Group
@@ -32,8 +34,10 @@ azuread.group {
   mailEnabled bool
   mailNickname string
   mail string
-  objectType string
-  properties dict
+  // deprecated, no longer used
+  objectType() string
+  // deprecated, no longer used
+  properties() dict
   members() []azuread.user
 }
 
@@ -43,7 +47,8 @@ azuread.domain {
   isVerified bool
   isDefault bool
   authenticationType string
-  properties dict
+  // deprecated, no longer used
+  properties() dict
 }
 
 // Azure Active Directory Application
@@ -289,8 +294,10 @@ azurerm.sql.database {
   type string
   collation string
   creationDate time
-  containmentState int
-  currentServiceObjectiveId string
+  // deprecated, no longer used
+  containmentState() int
+  // deprecated, use serviceLevelObjective instead
+  currentServiceObjectiveId() string
   databaseId string
   earliestRestoreDate time
   createMode string
@@ -299,15 +306,18 @@ azurerm.sql.database {
   restorePointInTime time
   recoveryServicesRecoveryPointResourceId string
   edition string
-  maxSizeBytes string
-  requestedServiceObjectiveId string
+  maxSizeBytes int
+  // deprecated, use requestedServiceObjectiveName instead
+  requestedServiceObjectiveId() string
   requestedServiceObjectiveName string
   serviceLevelObjective string
   status string
   elasticPoolName string
   defaultSecondaryLocation string
-  serviceTierAdvisors dict
-  recommendedIndex dict
+  // deprecated, no longer used
+  serviceTierAdvisors() dict
+  // deprecated, use advisor.recommendedActions instead
+  recommendedIndex() dict
   failoverGroupId string
   readScale string
   sampleName string
@@ -315,7 +325,7 @@ azurerm.sql.database {
 
   transparentDataEncryption() dict
   advisor() []dict
-  threadDetectionPolicy() dict
+  threatDetectionPolicy() dict
   connectionPolicy() dict
   auditingPolicy() dict
   usage() []azurerm.sql.databaseusage
@@ -330,7 +340,8 @@ azurerm.sql.databaseusage {
   currentValue float
   limit float
   unit string
-  nextResetTime time
+  // deprecated, no longer supported
+  nextResetTime() time
 }
 
 // AzureRM PostgreSQL

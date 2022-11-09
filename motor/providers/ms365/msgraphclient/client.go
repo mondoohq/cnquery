@@ -5,11 +5,11 @@ import (
 	kioser "github.com/microsoft/kiota-abstractions-go/serialization"
 	kiojson "github.com/microsoft/kiota-serialization-json-go"
 	kiotext "github.com/microsoft/kiota-serialization-text-go"
-
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/domains"
 	domainitem "github.com/microsoftgraph/msgraph-beta-sdk-go/domains/item"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/organization"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/policies"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement"
@@ -62,6 +62,10 @@ func (m *GraphServiceClient) Settings() *settings.SettingsRequestBuilder {
 
 func (m *GraphServiceClient) Organization() *organization.OrganizationRequestBuilder {
 	return organization.NewOrganizationRequestBuilderInternal(m.pathParameters, m.requestAdapter)
+}
+
+func (m *GraphServiceClient) Groups() *groups.GroupsRequestBuilder {
+	return groups.NewGroupsRequestBuilderInternal(m.pathParameters, m.requestAdapter)
 }
 
 func (m *GraphServiceClient) Users() *users.UsersRequestBuilder {

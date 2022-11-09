@@ -1,15 +1,15 @@
 package azure
 
 import (
-	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 )
 
 type AzureClient struct {
-	Authorizer autorest.Authorizer
+	Token azcore.TokenCredential
 }
 
-func NewAzureClient(authorizer autorest.Authorizer) *AzureClient {
+func NewAzureClient(token azcore.TokenCredential) *AzureClient {
 	return &AzureClient{
-		Authorizer: authorizer,
+		Token: token,
 	}
 }

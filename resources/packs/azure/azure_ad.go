@@ -1,16 +1,29 @@
 package azure
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-
-	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/cockroachdb/errors"
+	"github.com/microsoft/kiota-abstractions-go/authentication"
+	a "github.com/microsoft/kiota-authentication-azure-go"
+	azure_provider "go.mondoo.com/cnquery/motor/providers/azure"
+	"go.mondoo.com/cnquery/motor/providers/ms365/msgraphclient"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-var azureGraphAudience = azure.PublicCloud.ResourceIdentifiers.Graph
+func graphBetaClient(t *azure_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
+	auth, err := t.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+	providerFunc := func() (authentication.AuthenticationProvider, error) {
+		return a.NewAzureIdentityAuthenticationProviderWithScopes(auth, msgraphclient.DefaultMSGraphScopes)
+	}
+	adapter, err := msgraphclient.NewGraphRequestAdapterWithFn(providerFunc)
+	if err != nil {
+		return nil, err
+	}
+	graphBetaClient := msgraphclient.NewGraphServiceClient(adapter)
+	return graphBetaClient, nil
+}
 
 func (a *mqlAzuread) id() (string, error) {
 	return "azuread", nil
@@ -22,48 +35,27 @@ func (a *mqlAzuread) GetUsers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	authorizer, err := at.AuthorizerWithAudience(azureGraphAudience)
+	usersClient, err := graphBetaClient(at)
 	if err != nil {
 		return nil, err
 	}
-
-	usersClient := graphrbac.NewUsersClient(at.TenantID())
-	usersClient.Authorizer = authorizer
-
-	ctx := context.Background()
-	userList, err := usersClient.List(ctx, "", "")
+	userList, err := usersClient.Users().Get()
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
-	for i := range userList.Values() {
-		usr := userList.Values()[i]
-
-		properties := make(map[string](interface{}))
-
-		data, err := json.Marshal(usr.AdditionalProperties)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(data), &properties)
-		if err != nil {
-			return nil, err
-		}
-
+	for _, usr := range userList.GetValue() {
 		mqlAzureAdUser, err := a.MotorRuntime.CreateResource("azuread.user",
-			"id", core.ToString(usr.ObjectID),
-			"displayName", core.ToString(usr.DisplayName),
-			"givenName", core.ToString(usr.GivenName),
-			"surname", core.ToString(usr.Surname),
-			"userPrincipalName", core.ToString(usr.UserPrincipalName),
-			"accountEnabled", core.ToBool(usr.AccountEnabled),
-			"mailNickname", core.ToString(usr.MailNickname),
-			"mail", core.ToString(usr.Mail),
-			"objectType", string(usr.ObjectType),
-			"userType", string(usr.UserType),
-			"properties", properties,
+			"id", core.ToString(usr.GetId()),
+			"displayName", core.ToString(usr.GetDisplayName()),
+			"givenName", core.ToString(usr.GetGivenName()),
+			"surname", core.ToString(usr.GetSurname()),
+			"userPrincipalName", core.ToString(usr.GetUserPrincipalName()),
+			"accountEnabled", core.ToBool(usr.GetAccountEnabled()),
+			"mailNickname", core.ToString(usr.GetMailNickname()),
+			"mail", core.ToString(usr.GetMail()),
+			"userType", core.ToString(usr.GetUserType()),
 		)
 		if err != nil {
 			return nil, err
@@ -80,47 +72,24 @@ func (a *mqlAzuread) GetGroups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	authorizer, err := at.AuthorizerWithAudience(azureGraphAudience)
+	groupsClient, err := graphBetaClient(at)
 	if err != nil {
 		return nil, err
 	}
-
-	groupsClient := graphrbac.NewGroupsClient(at.TenantID())
-	groupsClient.Authorizer = authorizer
-
-	ctx := context.Background()
-	grpList, err := groupsClient.List(ctx, "")
+	groupsList, err := groupsClient.Groups().Get()
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
-	for i := range grpList.Values() {
-		grp := grpList.Values()[i]
-
-		properties := make(map[string](interface{}))
-
-		data, err := json.Marshal(grp.AdditionalProperties)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(data), &properties)
-		if err != nil {
-			return nil, err
-		}
-
+	for _, grp := range groupsList.GetValue() {
 		mqlAzureAdGroup, err := a.MotorRuntime.CreateResource("azuread.group",
-			"id", core.ToString(grp.ObjectID),
-			"displayName", core.ToString(grp.DisplayName),
-			"securityEnabled", core.ToBool(grp.SecurityEnabled),
-			"mailEnabled", core.ToBool(grp.MailEnabled),
-			"mailNickname", core.ToString(grp.MailNickname),
-			"mail", core.ToString(grp.Mail),
-			"mailNickname", core.ToString(grp.MailNickname),
-			"mail", core.ToString(grp.Mail),
-			"objectType", string(grp.ObjectType),
-			"properties", properties,
+			"id", core.ToString(grp.GetId()),
+			"displayName", core.ToString(grp.GetDisplayName()),
+			"securityEnabled", core.ToBool(grp.GetSecurityEnabled()),
+			"mailEnabled", core.ToBool(grp.GetMailEnabled()),
+			"mailNickname", core.ToString(grp.GetMailNickname()),
+			"mail", core.ToString(grp.GetMail()),
 		)
 		if err != nil {
 			return nil, err
@@ -137,48 +106,26 @@ func (a *mqlAzuread) GetDomains() ([]interface{}, error) {
 		return nil, err
 	}
 
-	authorizer, err := at.AuthorizerWithAudience(azureGraphAudience)
+	client, err := graphBetaClient(at)
+	if err != nil {
+		return nil, err
+	}
+	domains, err := client.Domains().Get()
 	if err != nil {
 		return nil, err
 	}
 
-	domainClient := graphrbac.NewDomainsClient(at.TenantID())
-	domainClient.Authorizer = authorizer
-
-	ctx := context.Background()
-	domainList, err := domainClient.List(ctx, "")
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
-
-	if domainList.Value == nil {
-		return res, nil
-	}
-
-	list := *domainList.Value
-	for i := range list {
-		domain := list[i]
-
-		properties := make(map[string](interface{}))
-
-		data, err := json.Marshal(domain.AdditionalProperties)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(data), &properties)
-		if err != nil {
-			return nil, err
-		}
-
+	for _, domain := range domains.GetValue() {
 		mqlAzureAdDomain, err := a.MotorRuntime.CreateResource("azuread.domain",
-			"name", core.ToString(domain.Name),
-			"isVerified", core.ToBool(domain.IsVerified),
-			"isDefault", core.ToBool(domain.IsDefault),
-			"authenticationType", core.ToString(domain.AuthenticationType),
-			"properties", properties,
+			"name", core.ToString(domain.GetId()),
+			"isVerified", core.ToBool(domain.GetIsVerified()),
+			"isDefault", core.ToBool(domain.GetIsDefault()),
+			"authenticationType", core.ToString(domain.GetAuthenticationType()),
 		)
 		if err != nil {
 			return nil, err
@@ -201,6 +148,14 @@ func (a *mqlAzureadUser) id() (string, error) {
 	return a.Id()
 }
 
+func (a *mqlAzureadUser) GetObjectType() (interface{}, error) {
+	return nil, errors.New("object type no longer supported")
+}
+
+func (a *mqlAzureadUser) GetProperties() ([]interface{}, error) {
+	return nil, errors.New("properties no longer supported")
+}
+
 func (a *mqlAzureadGroup) id() (string, error) {
 	return a.Id()
 }
@@ -209,8 +164,20 @@ func (a *mqlAzureadGroup) GetMembers() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (a *mqlAzureadGroup) GetObjectType() (interface{}, error) {
+	return nil, errors.New("object type no longer supported")
+}
+
+func (a *mqlAzureadGroup) GetProperties() ([]interface{}, error) {
+	return nil, errors.New("properties no longer supported")
+}
+
 func (a *mqlAzureadDomain) id() (string, error) {
 	return a.Name()
+}
+
+func (a *mqlAzureadDomain) GetProperties() ([]interface{}, error) {
+	return nil, errors.New("properties no longer supported")
 }
 
 func (a *mqlAzureadApplication) id() (string, error) {

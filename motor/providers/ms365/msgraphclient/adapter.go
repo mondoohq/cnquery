@@ -3,6 +3,7 @@ package msgraphclient
 import (
 	nethttp "net/http"
 
+	"github.com/cockroachdb/errors"
 	absauth "github.com/microsoft/kiota-abstractions-go/authentication"
 	absser "github.com/microsoft/kiota-abstractions-go/serialization"
 	core "github.com/microsoftgraph/msgraph-sdk-go-core"
@@ -18,6 +19,10 @@ var clientOptions = core.GraphClientOptions{
 	GraphServiceLibraryVersion: "0.27.0",
 }
 
+const DefaultMSGraphScope = "https://graph.microsoft.com/.default"
+
+var DefaultMSGraphScopes = []string{DefaultMSGraphScope}
+
 // GetDefaultClientOptions returns the default client options used by the GraphRequestAdapterBase and the middleware.
 func GetDefaultClientOptions() core.GraphClientOptions {
 	return clientOptions
@@ -26,6 +31,15 @@ func GetDefaultClientOptions() core.GraphClientOptions {
 // GraphRequestAdapter is the core service used by GraphServiceClient to make requests to Microsoft Graph.
 type GraphRequestAdapter struct {
 	core.GraphRequestAdapterBase
+}
+
+func NewGraphRequestAdapterWithFn(providerFn func() (absauth.AuthenticationProvider, error)) (*GraphRequestAdapter, error) {
+	auth, err := providerFn()
+	if err != nil {
+		return nil, errors.Wrap(err, "authentication provider error")
+	}
+
+	return NewGraphRequestAdapter(auth)
 }
 
 // NewGraphRequestAdapter creates a new GraphRequestAdapter with the given parameters
