@@ -1,10 +1,6 @@
 package azure
 
 import (
-	"time"
-
-	"github.com/Azure/go-autorest/autorest/date"
-	"github.com/gofrs/uuid"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -18,28 +14,4 @@ func azureTagsToInterface(data map[string]*string) map[string]interface{} {
 		labels[key] = core.ToString(data[key])
 	}
 	return labels
-}
-
-func azureRmTime(d *date.Time) *time.Time {
-	if d == nil {
-		return nil
-	}
-	return &d.Time
-}
-
-func azureRmUnixTime(d *date.UnixTime) *time.Time {
-	if d == nil {
-		return nil
-	}
-
-	// cast
-	stamp := time.Time(*d)
-	return &stamp
-}
-
-func uuidToString(u *uuid.UUID) string {
-	if u == nil {
-		return ""
-	}
-	return u.String()
 }
