@@ -2,18 +2,24 @@ package azure
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"regexp"
 
-	keyvault_vault "github.com/Azure/azure-sdk-for-go/profiles/latest/keyvault/mgmt/keyvault"
-	keyvault7 "github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azcertificates"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys"
+	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
+	keyvault "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 // type AzureStorageAccountProperties keyvault_vault.KeyPermissions
-
+// NOTE: the resourcemanager keyvault sdk lacks some functionality/fields for secrets, keys, certs.
+// NOTE: instead we use the keyvault/az(certificates/keys/secrets) modules even though they are still in beta.
+// NOTE: lets track https://github.com/Azure/azure-sdk-for-go/issues/19412 and see if there's any guidance there once its solved
 func (a *mqlAzurermKeyvault) id() (string, error) {
 	return "azure.keyvault", nil
 }
@@ -25,37 +31,38 @@ func (a *mqlAzurermKeyvault) GetVaults() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := keyvault_vault.NewVaultsClient(at.SubscriptionID())
-	client.Authorizer = authorizer
-
-	vaults, err := client.List(ctx, nil)
+	client, err := keyvault.NewVaultsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := client.NewListPager(&keyvault.VaultsClientListOptions{})
 	res := []interface{}{}
-	for i := range vaults.Values() {
-		entry := vaults.Values()[i]
 
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.vault",
-			"id", core.ToString(entry.ID),
-			// TODO: temproray
-			"vaultName", core.ToString(entry.Name),
-			"location", core.ToString(entry.Location),
-			"type", core.ToString(entry.Type),
-			"tags", azureTagsToInterface(entry.Tags),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+		for _, entry := range page.Value {
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.vault",
+				"id", core.ToString(entry.ID),
+				// TODO: temporary
+				"vaultName", core.ToString(entry.Name),
+				"location", core.ToString(entry.Location),
+				"type", core.ToString(entry.Type),
+				"tags", azureTagsToInterface(entry.Tags),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 	}
-
 	return res, nil
 }
 
@@ -72,53 +79,50 @@ func (a *mqlAzurermKeyvaultVault) GetVaultUri() (string, error) {
 	return KVUri, nil
 }
 
-const azureKeyVaulAudience = "https://vault.azure.net"
-
 func (a *mqlAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
 
-	KVUri, err := a.GetVaultUri()
+	vaultUri, err := a.GetVaultUri()
+	if err != nil {
+		return nil, err
+	}
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	authorizer, err := at.AuthorizerWithAudience(azureKeyVaulAudience)
-	if err != nil {
-		return nil, err
-	}
-
-	keyvaultkeyC := keyvault7.New()
-	keyvaultkeyC.Authorizer = authorizer
+	client := azkeys.NewClient(vaultUri, token, &azkeys.ClientOptions{})
 
 	ctx := context.Background()
-	keys, err := keyvaultkeyC.GetKeys(ctx, KVUri, nil)
-	if err != nil {
-		return nil, err
-	}
-
+	pager := client.NewListKeysPager(&azkeys.ListKeysOptions{})
 	res := []interface{}{}
-	for i := range keys.Values() {
-		entry := keys.Values()[i]
-
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
-			"kid", core.ToString(entry.Kid),
-			"managed", core.ToBool(entry.Managed),
-			"tags", azureTagsToInterface(entry.Tags),
-			"enabled", core.ToBool(entry.Attributes.Enabled),
-			"notBefore", azureRmUnixTime(entry.Attributes.NotBefore),
-			// TODO: handle case where we need to test for a time that is not set
-			"expires", azureRmUnixTime(entry.Attributes.Expires),
-			"created", azureRmUnixTime(entry.Attributes.Created),
-			"updated", azureRmUnixTime(entry.Attributes.Updated),
-			"recoveryLevel", string(entry.Attributes.RecoveryLevel),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+
+		for _, entry := range page.Value {
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
+				"kid", core.ToString((*string)(entry.KID)),
+				"managed", core.ToBool(entry.Attributes.Enabled),
+				"tags", azureTagsToInterface(entry.Tags),
+				"enabled", core.ToBool(entry.Attributes.Enabled),
+				"notBefore", entry.Attributes.NotBefore,
+				// TODO: handle case where we need to test for a time that is not set
+				"expires", entry.Attributes.Expires,
+				"created", entry.Attributes.Created,
+				"updated", entry.Attributes.Updated,
+				"recoveryLevel", core.ToString((*string)(entry.Attributes.RecoveryLevel)),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 	}
 
 	return res, nil
@@ -130,52 +134,43 @@ func (a *mqlAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 		return nil, err
 	}
 
-	KVUri, err := a.GetVaultUri()
+	vaultUri, err := a.GetVaultUri()
 	if err != nil {
 		return nil, err
 	}
 
-	authorizer, err := at.AuthorizerWithAudience(azureKeyVaulAudience)
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
-
-	keyvaultkeyC := keyvault7.New()
-	keyvaultkeyC.Authorizer = authorizer
-
 	ctx := context.Background()
-	certificates, err := keyvaultkeyC.GetCertificates(ctx, KVUri, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
+	client := azcertificates.NewClient(vaultUri, token, &azcertificates.ClientOptions{})
+	pager := client.NewListCertificatesPager(&azcertificates.ListCertificatesOptions{})
 	res := []interface{}{}
-	for i := range certificates.Values() {
-		entry := certificates.Values()[i]
-
-		// attributes, err := core.JsonToDict(entry.Attributes)
-		// if err != nil {
-		// 	return nil, err
-		// }
-
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
-			"id", core.ToString(entry.ID),
-			"tags", azureTagsToInterface(entry.Tags),
-			// "attributes", attributes,
-			"x5t", core.ToString(entry.X509Thumbprint),
-			"enabled", core.ToBool(entry.Attributes.Enabled),
-			"notBefore", azureRmUnixTime(entry.Attributes.NotBefore),
-			"expires", azureRmUnixTime(entry.Attributes.Expires),
-			"created", azureRmUnixTime(entry.Attributes.Created),
-			"updated", azureRmUnixTime(entry.Attributes.Updated),
-			"recoveryLevel", string(entry.Attributes.RecoveryLevel),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
-	}
+		for _, entry := range page.Value {
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
+				"id", core.ToString((*string)(entry.ID)),
+				"tags", azureTagsToInterface(entry.Tags),
+				"x5t", hex.EncodeToString(entry.X509Thumbprint),
+				"enabled", core.ToBool(entry.Attributes.Enabled),
+				"notBefore", entry.Attributes.NotBefore,
+				"expires", entry.Attributes.Expires,
+				"created", entry.Attributes.Created,
+				"updated", entry.Attributes.Updated,
+				"recoveryLevel", core.ToString((*string)(entry.Attributes.RecoveryLevel)),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 
+	}
 	return res, nil
 }
 
@@ -185,44 +180,46 @@ func (a *mqlAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	KVUri, err := a.GetVaultUri()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	authorizer, err := at.AuthorizerWithAudience(azureKeyVaulAudience)
+	vaultUrl, err := a.VaultUri()
 	if err != nil {
 		return nil, err
 	}
 
-	keyvaultkeyC := keyvault7.New()
-	keyvaultkeyC.Authorizer = authorizer
+	client := azsecrets.NewClient(vaultUrl, token, &azsecrets.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
 	ctx := context.Background()
-	secrets, err := keyvaultkeyC.GetSecrets(ctx, KVUri, nil)
-	if err != nil {
-		return nil, err
-	}
-
+	pager := client.NewListSecretsPager(&azsecrets.ListSecretsOptions{})
 	res := []interface{}{}
-	for i := range secrets.Values() {
-		entry := secrets.Values()[i]
-
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
-			"id", core.ToString(entry.ID),
-			"tags", azureTagsToInterface(entry.Tags),
-			"contentType", core.ToString(entry.ContentType),
-			"managed", core.ToBool(entry.Managed),
-			"enabled", core.ToBool(entry.Attributes.Enabled),
-			"notBefore", azureRmUnixTime(entry.Attributes.NotBefore),
-			"expires", azureRmUnixTime(entry.Attributes.Expires),
-			"created", azureRmUnixTime(entry.Attributes.Created),
-			"updated", azureRmUnixTime(entry.Attributes.Updated),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+		for _, entry := range page.Value {
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
+				"id", core.ToString((*string)(entry.ID)),
+				"tags", azureTagsToInterface(entry.Tags),
+				"contentType", core.ToString(entry.ContentType),
+				"managed", core.ToBool(entry.Managed),
+				"enabled", core.ToBool(entry.Attributes.Enabled),
+				"notBefore", entry.Attributes.NotBefore,
+				"expires", entry.Attributes.Expires,
+				"created", entry.Attributes.Created,
+				"updated", entry.Attributes.Updated,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 	}
 
 	return res, nil
@@ -234,7 +231,7 @@ func (a *mqlAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -251,15 +248,16 @@ func (a *mqlAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := keyvault_vault.NewVaultsClient(at.SubscriptionID())
-	client.Authorizer = authorizer
-
-	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName)
+	client, err := keyvault.NewVaultsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	vault, err := client.Get(ctx, resourceID.ResourceGroup, vaultName, &keyvault.VaultsClientGetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +266,7 @@ func (a *mqlAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error
 }
 
 func (a *mqlAzurermKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error) {
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -317,63 +315,57 @@ func (a *mqlAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	id, err := a.Kid()
+	kid, err := a.Kid()
 	if err != nil {
 		return nil, err
 	}
-
-	kvid, err := parseKeyVaultId(id)
+	kvid, err := parseKeyVaultId(kid)
 	if err != nil {
 		return nil, err
 	}
-
 	if len(kvid.Version) > 0 {
 		return nil, errors.New("versions is not supported for azure key version")
 	}
-
 	if kvid.Type != "keys" {
-		return nil, errors.New("only keys ids are supported")
+		return nil, errors.New("only key ids are supported")
 	}
 
-	vaultUrl := kvid.BaseUrl
-	name := kvid.Name
-
-	authorizer, err := at.AuthorizerWithAudience(azureKeyVaulAudience)
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	keyvaultkeyC := keyvault7.New()
-	keyvaultkeyC.Authorizer = authorizer
+	client := azkeys.NewClient(kvid.BaseUrl, token, &azkeys.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
 	ctx := context.Background()
-	// WARN: although maxResults is marked optional, the http call never returns if not provided????
-	maxResults := int32(25)
-	secrets, err := keyvaultkeyC.GetKeyVersions(ctx, vaultUrl, name, &maxResults)
-	if err != nil {
-		return nil, err
-	}
-
+	pager := client.NewListKeyVersionsPager(kvid.Name, &azkeys.ListKeyVersionsOptions{})
 	res := []interface{}{}
-	for i := range secrets.Values() {
-		entry := secrets.Values()[i]
-
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
-			"kid", core.ToString(entry.Kid),
-			"tags", azureTagsToInterface(entry.Tags),
-			"managed", core.ToBool(entry.Managed),
-
-			"enabled", core.ToBool(entry.Attributes.Enabled),
-			"notBefore", azureRmUnixTime(entry.Attributes.NotBefore),
-			"expires", azureRmUnixTime(entry.Attributes.Expires),
-			"created", azureRmUnixTime(entry.Attributes.Created),
-			"updated", azureRmUnixTime(entry.Attributes.Updated),
-			"recoveryLevel", string(entry.Attributes.RecoveryLevel),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+		for _, entry := range page.Value {
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.key",
+				"kid", core.ToString((*string)(entry.KID)),
+				"managed", core.ToBool(entry.Attributes.Enabled),
+				"tags", azureTagsToInterface(entry.Tags),
+				"enabled", core.ToBool(entry.Attributes.Enabled),
+				"notBefore", entry.Attributes.NotBefore,
+				// TODO: handle case where we need to test for a time that is not set
+				"expires", entry.Attributes.Expires,
+				"created", entry.Attributes.Created,
+				"updated", entry.Attributes.Updated,
+				"recoveryLevel", core.ToString((*string)(entry.Attributes.RecoveryLevel)),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 	}
 
 	return res, nil
@@ -395,7 +387,6 @@ func (a *mqlAzurermKeyvaultCertificate) GetCertName() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return kvid.Name, nil
 }
 
@@ -470,41 +461,38 @@ func (a *mqlAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
 	vaultUrl := kvid.BaseUrl
 	name := kvid.Name
 
-	authorizer, err := at.AuthorizerWithAudience(azureKeyVaulAudience)
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	keyvaultkeyC := keyvault7.New()
-	keyvaultkeyC.Authorizer = authorizer
+	client := azcertificates.NewClient(vaultUrl, token, &azcertificates.ClientOptions{})
 
 	ctx := context.Background()
-	// WARN: although maxResults is marked optional, the http call never returns if not provided????
-	maxResults := int32(25)
-	certificates, err := keyvaultkeyC.GetCertificateVersions(ctx, vaultUrl, name, &maxResults)
-	if err != nil {
-		return nil, err
-	}
-
+	pager := client.NewListCertificateVersionsPager(name, &azcertificates.ListCertificateVersionsOptions{})
 	res := []interface{}{}
-	for i := range certificates.Values() {
-		entry := certificates.Values()[i]
-
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
-			"id", core.ToString(entry.ID),
-			"tags", azureTagsToInterface(entry.Tags),
-			"x5t", core.ToString(entry.X509Thumbprint),
-			"enabled", core.ToBool(entry.Attributes.Enabled),
-			"notBefore", azureRmUnixTime(entry.Attributes.NotBefore),
-			"expires", azureRmUnixTime(entry.Attributes.Expires),
-			"created", azureRmUnixTime(entry.Attributes.Created),
-			"updated", azureRmUnixTime(entry.Attributes.Updated),
-			"recoveryLevel", string(entry.Attributes.RecoveryLevel),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+		for _, entry := range page.Value {
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.certificate",
+				"id", core.ToString((*string)(entry.ID)),
+				"tags", azureTagsToInterface(entry.Tags),
+				"x5t", hex.EncodeToString(entry.X509Thumbprint),
+				"enabled", core.ToBool(entry.Attributes.Enabled),
+				"notBefore", entry.Attributes.NotBefore,
+				"expires", entry.Attributes.Expires,
+				"created", entry.Attributes.Created,
+				"updated", entry.Attributes.Updated,
+				"recoveryLevel", core.ToString((*string)(entry.Attributes.RecoveryLevel)),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 	}
 
 	return res, nil
@@ -571,43 +559,37 @@ func (a *mqlAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
 	vaultUrl := kvid.BaseUrl
 	name := kvid.Name
 
-	authorizer, err := at.AuthorizerWithAudience(azureKeyVaulAudience)
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
-
-	keyvaultkeyC := keyvault7.New()
-	keyvaultkeyC.Authorizer = authorizer
 
 	ctx := context.Background()
-	// WARN: although maxResults is marked optional, the http call never returns if not provided????
-	maxResults := int32(25)
-	secrets, err := keyvaultkeyC.GetSecretVersions(ctx, vaultUrl, name, &maxResults)
-	if err != nil {
-		return nil, err
-	}
-
+	client := azsecrets.NewClient(vaultUrl, token, &azsecrets.ClientOptions{})
+	pager := client.NewListSecretVersionsPager(name, &azsecrets.ListSecretVersionsOptions{})
 	res := []interface{}{}
-	for i := range secrets.Values() {
-		entry := secrets.Values()[i]
-
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
-			"id", core.ToString(entry.ID),
-			"tags", azureTagsToInterface(entry.Tags),
-			"contentType", core.ToString(entry.ContentType),
-			"managed", core.ToBool(entry.Managed),
-
-			"enabled", core.ToBool(entry.Attributes.Enabled),
-			"notBefore", azureRmUnixTime(entry.Attributes.NotBefore),
-			"expires", azureRmUnixTime(entry.Attributes.Expires),
-			"created", azureRmUnixTime(entry.Attributes.Created),
-			"updated", azureRmUnixTime(entry.Attributes.Updated),
-			"recoveryLevel", string(entry.Attributes.RecoveryLevel),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzure)
+		for _, entry := range page.Value {
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.keyvault.secret",
+				"id", core.ToString((*string)(entry.ID)),
+				"tags", azureTagsToInterface(entry.Tags),
+				"contentType", core.ToString(entry.ContentType),
+				"managed", core.ToBool(entry.Managed),
+				"enabled", core.ToBool(entry.Attributes.Enabled),
+				"notBefore", entry.Attributes.NotBefore,
+				"expires", entry.Attributes.Expires,
+				"created", entry.Attributes.Created,
+				"updated", entry.Attributes.Updated,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
+		}
 	}
 
 	return res, nil

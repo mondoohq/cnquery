@@ -3,7 +3,9 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/mariadb/mgmt/mariadb"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+
+	mariadb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -25,51 +27,43 @@ func (a *mqlAzurermMariadb) GetServers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	subscriptionID := at.SubscriptionID()
-
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbClient := mariadb.NewServersClient(subscriptionID)
-	dbClient.Authorizer = authorizer
-
-	servers, err := dbClient.List(ctx)
+	dbClient, err := mariadb.NewServersClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := dbClient.NewListPager(&mariadb.ServersClientListOptions{})
 	res := []interface{}{}
-	if servers.Value == nil {
-		return res, nil
-	}
-
-	dbServers := *servers.Value
-
-	for i := range dbServers {
-		dbServer := dbServers[i]
-
-		properties, err := core.JsonToDict(dbServer.ServerProperties)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
+		for _, dbServer := range page.Value {
+			properties, err := core.JsonToDict(dbServer.Properties)
+			if err != nil {
+				return nil, err
+			}
 
-		mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mariadb.server",
-			"id", core.ToString(dbServer.ID),
-			"name", core.ToString(dbServer.Name),
-			"location", core.ToString(dbServer.Location),
-			"tags", azureTagsToInterface(dbServer.Tags),
-			"type", core.ToString(dbServer.Type),
-			"properties", properties,
-		)
-		if err != nil {
-			return nil, err
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mariadb.server",
+				"id", core.ToString(dbServer.ID),
+				"name", core.ToString(dbServer.Name),
+				"location", core.ToString(dbServer.Location),
+				"tags", azureTagsToInterface(dbServer.Tags),
+				"type", core.ToString(dbServer.Type),
+				"properties", properties,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureDbServer)
 		}
-		res = append(res, mqlAzureDbServer)
 	}
-
 	return res, nil
 }
 
@@ -79,7 +73,7 @@ func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -96,45 +90,41 @@ func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbConfClient := mariadb.NewConfigurationsClient(resourceID.SubscriptionID)
-	dbConfClient.Authorizer = authorizer
-
-	config, err := dbConfClient.ListByServer(ctx, resourceID.ResourceGroup, server)
+	dbConfClient, err := mariadb.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := dbConfClient.NewListByServerPager(resourceID.ResourceGroup, server, &mariadb.ConfigurationsClientListByServerOptions{})
 	res := []interface{}{}
-	if config.Value == nil {
-		return res, nil
-	}
 
-	list := *config.Value
-	for i := range list {
-		entry := list[i]
-
-		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
-			"id", core.ToString(entry.ID),
-			"name", core.ToString(entry.Name),
-			"type", core.ToString(entry.Type),
-			"value", core.ToString(entry.Value),
-			"description", core.ToString(entry.Description),
-			"defaultValue", core.ToString(entry.DefaultValue),
-			"dataType", core.ToString(entry.DataType),
-			"allowedValues", core.ToString(entry.AllowedValues),
-			"source", core.ToString(entry.Source),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzureConfiguration)
+		for _, entry := range page.Value {
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"type", core.ToString(entry.Type),
+				"value", core.ToString(entry.Properties.Value),
+				"description", core.ToString(entry.Properties.Description),
+				"defaultValue", core.ToString(entry.Properties.DefaultValue),
+				"dataType", core.ToString(entry.Properties.DataType),
+				"allowedValues", core.ToString(entry.Properties.AllowedValues),
+				"source", core.ToString(entry.Properties.Source),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureConfiguration)
+		}
 	}
-
 	return res, nil
 }
 
@@ -144,7 +134,7 @@ func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -161,40 +151,35 @@ func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbDatabaseClient := mariadb.NewDatabasesClient(resourceID.SubscriptionID)
-	dbDatabaseClient.Authorizer = authorizer
-
-	databases, err := dbDatabaseClient.ListByServer(ctx, resourceID.ResourceGroup, server)
+	dbDatabaseClient, err := mariadb.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &mariadb.DatabasesClientListByServerOptions{})
 	res := []interface{}{}
-
-	if databases.Value == nil {
-		return res, nil
-	}
-
-	list := *databases.Value
-	for i := range list {
-		entry := list[i]
-
-		mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mariadb.database",
-			"id", core.ToString(entry.ID),
-			"name", core.ToString(entry.Name),
-			"type", core.ToString(entry.Type),
-			"charset", core.ToString(entry.Charset),
-			"collation", core.ToString(entry.Collation),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzureDatabase)
+		for _, entry := range page.Value {
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mariadb.database",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"type", core.ToString(entry.Type),
+				"charset", core.ToString(entry.Properties.Charset),
+				"collation", core.ToString(entry.Properties.Collation),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureDatabase)
+		}
 	}
 
 	return res, nil
@@ -206,7 +191,7 @@ func (a *mqlAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -223,40 +208,36 @@ func (a *mqlAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbFirewallClient := mariadb.NewFirewallRulesClient(resourceID.SubscriptionID)
-	dbFirewallClient.Authorizer = authorizer
-
-	firewallRules, err := dbFirewallClient.ListByServer(ctx, resourceID.ResourceGroup, server)
+	dbFirewallClient, err := mariadb.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &mariadb.FirewallRulesClientListByServerOptions{})
 	res := []interface{}{}
 
-	if firewallRules.Value == nil {
-		return res, nil
-	}
-
-	list := *firewallRules.Value
-	for i := range list {
-		entry := list[i]
-
-		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
-			"id", core.ToString(entry.ID),
-			"name", core.ToString(entry.Name),
-			"type", core.ToString(entry.Type),
-			"startIpAddress", core.ToString(entry.StartIPAddress),
-			"endIpAddress", core.ToString(entry.EndIPAddress),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzureConfiguration)
+		for _, entry := range page.Value {
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"type", core.ToString(entry.Type),
+				"startIpAddress", core.ToString(entry.Properties.StartIPAddress),
+				"endIpAddress", core.ToString(entry.Properties.EndIPAddress),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureConfiguration)
+		}
 	}
 
 	return res, nil

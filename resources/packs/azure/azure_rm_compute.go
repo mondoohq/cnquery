@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/compute/mgmt/compute"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -21,44 +23,62 @@ func (a *mqlAzurermCompute) GetDisks() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := compute.NewDisksClient(at.SubscriptionID())
-	client.Authorizer = authorizer
+	client, err := compute.NewDisksClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
-	disks, err := client.List(ctx)
+	pager := client.NewListPager(&compute.DisksClientListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	res := []interface{}{}
-	for i := range disks.Values() {
-		disk := disks.Values()[i]
-
-		mqlAzureDisk, err := diskToMql(a.MotorRuntime, disk)
+	for pager.More() {
+		disks, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzureDisk)
+		for _, disk := range disks.Value {
+			mqlAzureDisk, err := diskToMql(a.MotorRuntime, *disk)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureDisk)
+		}
 	}
 
 	return res, nil
 }
 
 func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.ResourceType, error) {
-	properties, err := core.JsonToDict(disk.DiskProperties)
+	properties, err := core.JsonToDict(disk.Properties)
 	if err != nil {
 		return nil, err
 	}
 
-	sku, err := core.JsonToDict(disk.Sku)
+	sku, err := core.JsonToDict(disk.SKU)
 	if err != nil {
 		return nil, err
 	}
 
+	managedByExtended := []string{}
+	for _, mbe := range disk.ManagedByExtended {
+		if mbe != nil {
+			managedByExtended = append(managedByExtended, *mbe)
+		}
+	}
+	zones := []string{}
+	for _, z := range disk.Zones {
+		if z != nil {
+			zones = append(zones, *z)
+		}
+	}
 	return runtime.CreateResource("azurerm.compute.disk",
 		"id", core.ToString(disk.ID),
 		"name", core.ToString(disk.Name),
@@ -66,8 +86,8 @@ func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.Resourc
 		"tags", azureTagsToInterface(disk.Tags),
 		"type", core.ToString(disk.Type),
 		"managedBy", core.ToString(disk.ManagedBy),
-		"managedByExtended", core.ToStringSlice(disk.ManagedByExtended),
-		"zones", core.ToStringSlice(disk.Zones),
+		"managedByExtended", core.ToStringSlice(&managedByExtended),
+		"zones", core.ToStringSlice(&zones),
 		"sku", sku,
 		"properties", properties,
 	)
@@ -84,43 +104,43 @@ func (a *mqlAzurermCompute) GetVms() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
-
-	subscriptionID := at.SubscriptionID()
 
 	// list compute instances
-	vmClient := compute.NewVirtualMachinesClient(subscriptionID)
-	vmClient.Authorizer = authorizer
-
-	virtualMachines, err := vmClient.ListAll(ctx, "", "")
+	vmClient, err := compute.NewVirtualMachinesClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
+	pager := vmClient.NewListAllPager(&compute.VirtualMachinesClientListAllOptions{})
 
 	res := []interface{}{}
-	for i := range virtualMachines.Values() {
-		vm := virtualMachines.Values()[i]
-
-		properties, err := core.JsonToDict(vm.VirtualMachineProperties)
+	for pager.More() {
+		vms, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
+		for _, vm := range vms.Value {
+			properties, err := core.JsonToDict(vm.Properties)
+			if err != nil {
+				return nil, err
+			}
 
-		mqlAzureVm, err := a.MotorRuntime.CreateResource("azurerm.compute.vm",
-			"id", core.ToString(vm.ID),
-			"name", core.ToString(vm.Name),
-			"location", core.ToString(vm.Location),
-			"tags", azureTagsToInterface(vm.Tags),
-			"type", core.ToString(vm.Type),
-			"properties", properties,
-		)
-		if err != nil {
-			return nil, err
+			mqlAzureVm, err := a.MotorRuntime.CreateResource("azurerm.compute.vm",
+				"id", core.ToString(vm.ID),
+				"name", core.ToString(vm.Name),
+				"location", core.ToString(vm.Location),
+				"tags", azureTagsToInterface(vm.Tags),
+				"type", core.ToString(vm.Type),
+				"properties", properties,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureVm)
 		}
-		res = append(res, mqlAzureVm)
 	}
 
 	return res, nil
@@ -136,7 +156,7 @@ func (a *mqlAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -153,15 +173,16 @@ func (a *mqlAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := compute.NewVirtualMachineExtensionsClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
-
-	extensions, err := client.List(ctx, resourceID.ResourceGroup, vm, "")
+	client, err := compute.NewVirtualMachineExtensionsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	extensions, err := client.List(ctx, resourceID.ResourceGroup, vm, &compute.VirtualMachineExtensionsClientListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -172,12 +193,12 @@ func (a *mqlAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 		return res, nil
 	}
 
-	list := *extensions.Value
+	list := extensions.Value
 
 	for i := range list {
 		entry := list[i]
 
-		dict, err := core.JsonToDict(entry.VirtualMachineExtensionProperties)
+		dict, err := core.JsonToDict(entry.Properties)
 		if err != nil {
 			return nil, err
 		}
@@ -210,11 +231,11 @@ func (a *mqlAzurermComputeVm) GetOsDisk() (interface{}, error) {
 		return nil, err
 	}
 
-	if properties.StorageProfile == nil || properties.StorageProfile.OsDisk == nil || properties.StorageProfile.OsDisk.ManagedDisk == nil || properties.StorageProfile.OsDisk.ManagedDisk.ID == nil {
+	if properties.StorageProfile == nil || properties.StorageProfile.OSDisk == nil || properties.StorageProfile.OSDisk.ManagedDisk == nil || properties.StorageProfile.OSDisk.ManagedDisk.ID == nil {
 		return nil, errors.New("could not determine os disk from vm storage profile")
 	}
 
-	resourceID, err := at.ParseResourceID(*properties.StorageProfile.OsDisk.ManagedDisk.ID)
+	resourceID, err := at.ParseResourceID(*properties.StorageProfile.OSDisk.ManagedDisk.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -225,20 +246,21 @@ func (a *mqlAzurermComputeVm) GetOsDisk() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := compute.NewDisksClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
-
-	disk, err := client.Get(ctx, resourceID.ResourceGroup, diskName)
+	client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	disk, err := client.Get(ctx, resourceID.ResourceGroup, diskName, &compute.DisksClientGetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	return diskToMql(a.MotorRuntime, disk)
+	return diskToMql(a.MotorRuntime, disk.Disk)
 }
 
 func (a *mqlAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
@@ -267,7 +289,7 @@ func (a *mqlAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
 		return nil, errors.New("could not determine os disk from vm storage profile")
 	}
 
-	dataDisks := *properties.StorageProfile.DataDisks
+	dataDisks := properties.StorageProfile.DataDisks
 
 	res := []interface{}{}
 	for i := range dataDisks {
@@ -284,20 +306,21 @@ func (a *mqlAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
 		}
 
 		ctx := context.Background()
-		authorizer, err := at.Authorizer()
+		token, err := at.GetTokenCredential()
 		if err != nil {
 			return nil, err
 		}
 
-		client := compute.NewDisksClient(resourceID.SubscriptionID)
-		client.Authorizer = authorizer
-
-		disk, err := client.Get(ctx, resourceID.ResourceGroup, diskName)
+		client, err := compute.NewDisksClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+		if err != nil {
+			return nil, err
+		}
+		disk, err := client.Get(ctx, resourceID.ResourceGroup, diskName, &compute.DisksClientGetOptions{})
 		if err != nil {
 			return nil, err
 		}
 
-		mqlDisk, err := diskToMql(a.MotorRuntime, disk)
+		mqlDisk, err := diskToMql(a.MotorRuntime, disk.Disk)
 		if err != nil {
 			return nil, err
 		}

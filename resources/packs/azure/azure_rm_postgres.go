@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	postgresql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -23,53 +24,49 @@ func (a *mqlAzurermPostgresql) GetServers() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbClient := postgresql.NewServersClient(at.SubscriptionID())
-	dbClient.Authorizer = authorizer
-
-	servers, err := dbClient.List(ctx)
+	dbClient, err := postgresql.NewServersClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := dbClient.NewListPager(&postgresql.ServersClientListOptions{})
 	res := []interface{}{}
-	if servers.Value == nil {
-		return res, nil
-	}
 
-	dbServers := *servers.Value
-
-	for i := range dbServers {
-		dbServer := dbServers[i]
-
-		properties := make(map[string](interface{}))
-
-		data, err := json.Marshal(dbServer.ServerProperties)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
+		for _, dbServer := range page.Value {
+			properties := make(map[string](interface{}))
 
-		err = json.Unmarshal([]byte(data), &properties)
-		if err != nil {
-			return nil, err
-		}
+			data, err := json.Marshal(dbServer.Properties)
+			if err != nil {
+				return nil, err
+			}
 
-		mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.postgresql.server",
-			"id", core.ToString(dbServer.ID),
-			"name", core.ToString(dbServer.Name),
-			"location", core.ToString(dbServer.Location),
-			"tags", azureTagsToInterface(dbServer.Tags),
-			"type", core.ToString(dbServer.Type),
-			"properties", properties,
-		)
-		if err != nil {
-			return nil, err
+			err = json.Unmarshal([]byte(data), &properties)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.postgresql.server",
+				"id", core.ToString(dbServer.ID),
+				"name", core.ToString(dbServer.Name),
+				"location", core.ToString(dbServer.Location),
+				"tags", azureTagsToInterface(dbServer.Tags),
+				"type", core.ToString(dbServer.Type),
+				"properties", properties,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureDbServer)
 		}
-		res = append(res, mqlAzureDbServer)
 	}
 
 	return res, nil
@@ -85,7 +82,7 @@ func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -102,43 +99,41 @@ func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbConfClient := postgresql.NewConfigurationsClient(resourceID.SubscriptionID)
-	dbConfClient.Authorizer = authorizer
-
-	config, err := dbConfClient.ListByServer(ctx, resourceID.ResourceGroup, server)
+	dbConfClient, err := postgresql.NewConfigurationsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
 
+	pager := dbConfClient.NewListByServerPager(resourceID.ResourceGroup, server, &postgresql.ConfigurationsClientListByServerOptions{})
 	res := []interface{}{}
-	if config.Value == nil {
-		return res, nil
-	}
 
-	list := *config.Value
-	for i := range list {
-		entry := list[i]
-
-		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
-			"id", core.ToString(entry.ID),
-			"name", core.ToString(entry.Name),
-			"type", core.ToString(entry.Type),
-			"value", core.ToString(entry.Value),
-			"description", core.ToString(entry.Description),
-			"defaultValue", core.ToString(entry.DefaultValue),
-			"dataType", core.ToString(entry.DataType),
-			"allowedValues", core.ToString(entry.AllowedValues),
-			"source", core.ToString(entry.Source),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzureConfiguration)
+		for _, entry := range page.Value {
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"type", core.ToString(entry.Type),
+				"value", core.ToString(entry.Properties.Value),
+				"description", core.ToString(entry.Properties.Description),
+				"defaultValue", core.ToString(entry.Properties.DefaultValue),
+				"dataType", core.ToString(entry.Properties.DataType),
+				"allowedValues", core.ToString(entry.Properties.AllowedValues),
+				"source", core.ToString(entry.Properties.Source),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureConfiguration)
+		}
 	}
 
 	return res, nil
@@ -150,7 +145,7 @@ func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -167,40 +162,35 @@ func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbDatabaseClient := postgresql.NewDatabasesClient(resourceID.SubscriptionID)
-	dbDatabaseClient.Authorizer = authorizer
-
-	databases, err := dbDatabaseClient.ListByServer(ctx, resourceID.ResourceGroup, server)
+	dbDatabaseClient, err := postgresql.NewDatabasesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
 	if err != nil {
-		return nil, err
+		return nil, &json.MarshalerError{}
 	}
-
+	pager := dbDatabaseClient.NewListByServerPager(resourceID.ResourceGroup, server, &postgresql.DatabasesClientListByServerOptions{})
 	res := []interface{}{}
-
-	if databases.Value == nil {
-		return res, nil
-	}
-
-	list := *databases.Value
-	for i := range list {
-		entry := list[i]
-
-		mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.postgresql.database",
-			"id", core.ToString(entry.ID),
-			"name", core.ToString(entry.Name),
-			"type", core.ToString(entry.Type),
-			"charset", core.ToString(entry.Charset),
-			"collation", core.ToString(entry.Collation),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzureDatabase)
+		for _, entry := range page.Value {
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.postgresql.database",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"type", core.ToString(entry.Type),
+				"charset", core.ToString(entry.Properties.Charset),
+				"collation", core.ToString(entry.Properties.Collation),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureDatabase)
+		}
 	}
 
 	return res, nil
@@ -212,7 +202,7 @@ func (a *mqlAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -229,41 +219,36 @@ func (a *mqlAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	dbFirewallClient := postgresql.NewFirewallRulesClient(resourceID.SubscriptionID)
-	dbFirewallClient.Authorizer = authorizer
-
-	firewallRules, err := dbFirewallClient.ListByServer(ctx, resourceID.ResourceGroup, server)
+	dbFirewallClient, err := postgresql.NewFirewallRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
 
+	pager := dbFirewallClient.NewListByServerPager(resourceID.ResourceGroup, server, &postgresql.FirewallRulesClientListByServerOptions{})
 	res := []interface{}{}
-
-	if firewallRules.Value == nil {
-		return res, nil
-	}
-
-	list := *firewallRules.Value
-	for i := range list {
-		entry := list[i]
-
-		mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
-			"id", core.ToString(entry.ID),
-			"name", core.ToString(entry.Name),
-			"type", core.ToString(entry.Type),
-			"startIpAddress", core.ToString(entry.StartIPAddress),
-			"endIpAddress", core.ToString(entry.EndIPAddress),
-		)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlAzureConfiguration)
+		for _, entry := range page.Value {
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"type", core.ToString(entry.Type),
+				"startIpAddress", core.ToString(entry.Properties.StartIPAddress),
+				"endIpAddress", core.ToString(entry.Properties.EndIPAddress),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzureConfiguration)
+		}
 	}
-
 	return res, nil
 }

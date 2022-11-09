@@ -8,7 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/web/mgmt/web"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -24,47 +25,48 @@ func (a *mqlAzurermWeb) GetApps() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := web.NewAppsClient(at.SubscriptionID())
-	client.Authorizer = authorizer
-
-	webapps, err := client.List(ctx)
+	client, err := web.NewWebAppsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
-
+	pager := client.NewListPager(&web.WebAppsClientListOptions{})
 	res := []interface{}{}
-	for i := range webapps.Values() {
-		entry := webapps.Values()[i]
-
-		properties, err := core.JsonToDict(entry.SiteProperties)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
+		for _, entry := range page.Value {
+			properties, err := core.JsonToDict(entry.Properties)
+			if err != nil {
+				return nil, err
+			}
 
-		identity, err := core.JsonToDict(entry.Identity)
-		if err != nil {
-			return nil, err
-		}
+			identity, err := core.JsonToDict(entry.Identity)
+			if err != nil {
+				return nil, err
+			}
 
-		mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.web.appsite",
-			"id", core.ToString(entry.ID),
-			"name", core.ToString(entry.Name),
-			"location", core.ToString(entry.Location),
-			"tags", azureTagsToInterface(entry.Tags),
-			"type", core.ToString(entry.Type),
-			"kind", core.ToString(entry.Kind),
-			"properties", properties,
-			"identity", identity,
-		)
-		if err != nil {
-			return nil, err
+			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.web.appsite",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"location", core.ToString(entry.Location),
+				"tags", azureTagsToInterface(entry.Tags),
+				"type", core.ToString(entry.Type),
+				"kind", core.ToString(entry.Kind),
+				"properties", properties,
+				"identity", identity,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
 		}
-		res = append(res, mqlAzure)
 	}
 
 	return res, nil
@@ -108,122 +110,120 @@ func (a *mqlAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := web.NewProviderClient(at.SubscriptionID())
-	client.Authorizer = authorizer
+	client, err := web.NewProviderClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
 	res := []interface{}{}
+	windows := web.Enum15Windows
 	// NOTE: we do not return a MQL resource since stacks do not have their own proper id in azure
+	windowsPager := client.NewGetAvailableStacksPager(&web.ProviderClientGetAvailableStacksOptions{OSTypeSelected: &windows})
+	for windowsPager.More() {
+		page, err := windowsPager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
 
-	// fetch all windows stacks
-	// NOTE: 💥 This api is one of the worst I've ever seen and I understand the az client team why they maintain a hardcoded list
-	// - behaves completely different for linux and windows
-	// - even for windows, its output is different for different runtimes
-	// - versions are unreliable, on linux it includes only maintained runtimes 🎉 on windows it behaves different for each runtime
-	// - some entries have minor versions, some don't, on linux all major version include at least one minor version
-	// - some devs at microsoft seem to be unsure if node.js is supported for windows, this api show all version even unmaintained ones, the ui does not support nodejs for windows at all
-	stacks, err := client.GetAvailableStacks(ctx, "windows")
-	if err != nil {
-		return nil, err
-	}
+			majorVersions := entry.Properties.MajorVersions
+			for j := range majorVersions {
+				majorVersion := majorVersions[j]
 
-	for i := range stacks.Values() {
-		entry := stacks.Values()[i]
+				// NOTE: yes, not all major versions include minor versions
+				minorVersions := majorVersion.MinorVersions
 
-		majorVersions := *entry.ApplicationStack.MajorVersions
-		for j := range majorVersions {
-			majorVersion := majorVersions[j]
+				// special handling for dotnet and aspdotnet
+				if len(minorVersions) == 0 {
 
-			// NOTE: yes, not all major versions include minor versions
-			minorVersions := *majorVersion.MinorVersions
+					// NOTE: for dotnet, it seems the runtime is using the display version to create a stack
+					// BUT: the stack itself reports the runtime version, therefore we need it to match the stacks
+					runtimeVersion := core.ToString(majorVersion.RuntimeVersion)
+					// for dotnet, no runtime version is returned, therefore we need to use the display version
+					if len(runtimeVersion) == 0 {
+						runtimeVersion = core.ToString(majorVersion.DisplayVersion)
+					}
 
-			// special handling for dotnet and aspdotnet
-			if len(minorVersions) == 0 {
+					runtime := AzureWebAppStackRuntime{
+						Name: core.ToString(entry.Name),
 
-				// NOTE: for dotnet, it seems the runtime is using the display version to create a stack
-				// BUT: the stack itself reports the runtime version, therefore we need it to match the stacks
-				runtimeVersion := core.ToString(majorVersion.RuntimeVersion)
-				// for dotnet, no runtime version is returned, therefore we need to use the display version
-				if len(runtimeVersion) == 0 {
-					runtimeVersion = core.ToString(majorVersion.DisplayVersion)
+						ID:           strings.ToUpper(core.ToString(entry.Name)) + "|" + runtimeVersion,
+						Os:           "windows",
+						MajorVersion: core.ToString(majorVersion.DisplayVersion),
+						IsDeprecated: core.ToBool(majorVersion.IsDeprecated),
+						IsHidden:     core.ToBool(majorVersion.IsHidden),
+						IsDefault:    core.ToBool(majorVersion.IsDefault),
+					}
+					properties, err := core.JsonToDict(runtime)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, properties)
 				}
 
-				runtime := AzureWebAppStackRuntime{
-					Name: core.ToString(entry.Name),
+				for l := range minorVersions {
+					minorVersion := minorVersions[l]
 
-					ID:           strings.ToUpper(core.ToString(entry.Name)) + "|" + runtimeVersion,
-					Os:           "windows",
-					MajorVersion: core.ToString(majorVersion.DisplayVersion),
-					IsDeprecated: core.ToBool(majorVersion.IsDeprecated),
-					IsHidden:     core.ToBool(majorVersion.IsHidden),
-					IsDefault:    core.ToBool(majorVersion.IsDefault),
-				}
-				properties, err := core.JsonToDict(runtime)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, properties)
-			}
+					runtime := AzureWebAppStackRuntime{
+						Name:         core.ToString(entry.Name),
+						ID:           strings.ToUpper(core.ToString(entry.Name)) + "|" + core.ToString(minorVersion.RuntimeVersion),
+						Os:           "windows",
+						MinorVersion: core.ToString(minorVersion.DisplayVersion),
+						MajorVersion: core.ToString(majorVersion.DisplayVersion),
+						IsDeprecated: core.ToBool(majorVersion.IsDeprecated) || isPlatformEol(core.ToString(entry.Name), core.ToString(minorVersion.RuntimeVersion)),
+						IsHidden:     core.ToBool(majorVersion.IsHidden),
+						IsDefault:    core.ToBool(majorVersion.IsDefault),
+					}
 
-			for l := range minorVersions {
-				minorVersion := minorVersions[l]
-
-				runtime := AzureWebAppStackRuntime{
-					Name:         core.ToString(entry.Name),
-					ID:           strings.ToUpper(core.ToString(entry.Name)) + "|" + core.ToString(minorVersion.RuntimeVersion),
-					Os:           "windows",
-					MinorVersion: core.ToString(minorVersion.DisplayVersion),
-					MajorVersion: core.ToString(majorVersion.DisplayVersion),
-					IsDeprecated: core.ToBool(majorVersion.IsDeprecated) || isPlatformEol(core.ToString(entry.Name), core.ToString(minorVersion.RuntimeVersion)),
-					IsHidden:     core.ToBool(majorVersion.IsHidden),
-					IsDefault:    core.ToBool(majorVersion.IsDefault),
+					properties, err := core.JsonToDict(runtime)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, properties)
 				}
-
-				properties, err := core.JsonToDict(runtime)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, properties)
 			}
 		}
 	}
 
+	linux := web.Enum15Linux
 	// fetch all linux stacks
-	stacks, err = client.GetAvailableStacks(ctx, "linux")
-	if err != nil {
-		return nil, err
-	}
+	linuxPager := client.NewGetAvailableStacksPager(&web.ProviderClientGetAvailableStacksOptions{OSTypeSelected: &linux})
+	for linuxPager.More() {
+		page, err := linuxPager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
 
-	for i := range stacks.Values() {
-		entry := stacks.Values()[i]
+			majorVersions := entry.Properties.MajorVersions
+			for j := range majorVersions {
+				majorVersion := majorVersions[j]
 
-		majorVersions := *entry.ApplicationStack.MajorVersions
-		for j := range majorVersions {
-			majorVersion := majorVersions[j]
+				minorVersions := majorVersion.MinorVersions
+				for l := range minorVersions {
+					minorVersion := minorVersions[l]
+					runtime := AzureWebAppStackRuntime{
+						Name:         core.ToString(entry.Name),
+						ID:           core.ToString(minorVersion.RuntimeVersion),
+						Os:           "linux",
+						MinorVersion: core.ToString(minorVersion.DisplayVersion),
+						MajorVersion: core.ToString(majorVersion.DisplayVersion),
+						IsDeprecated: core.ToBool(majorVersion.IsDeprecated),
+						IsHidden:     core.ToBool(majorVersion.IsHidden),
+						IsDefault:    core.ToBool(majorVersion.IsDefault),
+					}
 
-			minorVersions := *majorVersion.MinorVersions
-			for l := range minorVersions {
-				minorVersion := minorVersions[l]
-				runtime := AzureWebAppStackRuntime{
-					Name:         core.ToString(entry.Name),
-					ID:           core.ToString(minorVersion.RuntimeVersion),
-					Os:           "linux",
-					MinorVersion: core.ToString(minorVersion.DisplayVersion),
-					MajorVersion: core.ToString(majorVersion.DisplayVersion),
-					IsDeprecated: core.ToBool(majorVersion.IsDeprecated),
-					IsHidden:     core.ToBool(majorVersion.IsHidden),
-					IsDefault:    core.ToBool(majorVersion.IsDefault),
+					properties, err := core.JsonToDict(runtime)
+					if err != nil {
+						return nil, err
+					}
+					res = append(res, properties)
 				}
-
-				properties, err := core.JsonToDict(runtime)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, properties)
 			}
 		}
 	}
@@ -241,7 +241,7 @@ func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -258,21 +258,23 @@ func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := web.NewAppsClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
-	configuration, err := client.GetConfiguration(ctx, resourceID.ResourceGroup, site)
+	configuration, err := client.GetConfiguration(ctx, resourceID.ResourceGroup, site, &web.WebAppsClientGetConfigurationOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	entry := configuration
-	properties, err := core.JsonToDict(entry.SiteConfig)
+	properties, err := core.JsonToDict(entry.Properties)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +294,7 @@ func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) 
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -309,21 +311,23 @@ func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) 
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := web.NewAppsClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
-	authSettings, err := client.GetAuthSettings(ctx, resourceID.ResourceGroup, site)
+	authSettings, err := client.GetAuthSettings(ctx, resourceID.ResourceGroup, site, &web.WebAppsClientGetAuthSettingsOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	entry := authSettings
-	properties, err := core.JsonToDict(entry.SiteAuthSettingsProperties)
+	properties, err := core.JsonToDict(entry.Properties)
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +347,7 @@ func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -360,15 +364,17 @@ func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := web.NewAppsClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
-	settings, err := client.ListApplicationSettings(ctx, resourceID.ResourceGroup, site)
+	settings, err := client.ListApplicationSettings(ctx, resourceID.ResourceGroup, site, &web.WebAppsClientListApplicationSettingsOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +394,7 @@ func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -405,15 +411,17 @@ func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := web.NewAppsClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
-	metadata, err := client.ListMetadata(ctx, resourceID.ResourceGroup, site)
+	metadata, err := client.ListMetadata(ctx, resourceID.ResourceGroup, site, &web.WebAppsClientListMetadataOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +441,7 @@ func (a *mqlAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	// id is a azure resource od
+	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -450,15 +458,17 @@ func (a *mqlAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	authorizer, err := at.Authorizer()
+	token, err := at.GetTokenCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := web.NewAppsClient(resourceID.SubscriptionID)
-	client.Authorizer = authorizer
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
-	settings, err := client.ListConnectionStrings(ctx, resourceID.ResourceGroup, site)
+	settings, err := client.ListConnectionStrings(ctx, resourceID.ResourceGroup, site, &web.WebAppsClientListConnectionStringsOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -512,7 +522,6 @@ func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 		Os: "windows",
 	}
 
-	// LOL Fact: WindowsFxVersion is never set :-)
 	if properties.LinuxFxVersion == nil && properties.WindowsFxVersion == nil {
 		return nil, errors.New("could not determine stack version")
 	}
@@ -530,9 +539,8 @@ func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 			return nil, nil // see behavior below
 		}
 
-		// read runtime from metadata, YES its works completely different than on linux
-		// NOTE: also take care of the runtime version for dotnet. This API and webapp runtime
-		// handling in specific is a complete 💥.
+		// read runtime from metadata, it works completely different than on linux
+		// NOTE: also take care of the runtime version for dotnet.
 		stack, ok := metadata["CURRENT_STACK"].(string)
 		if !ok {
 			// This doesn't seem to be consistently set
