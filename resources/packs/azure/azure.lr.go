@@ -8109,7 +8109,7 @@ type AzurermSqlDatabase interface {
 	RestorePointInTime() (*time.Time, error)
 	RecoveryServicesRecoveryPointResourceId() (string, error)
 	Edition() (string, error)
-	MaxSizeBytes() (string, error)
+	MaxSizeBytes() (int64, error)
 	RequestedServiceObjectiveId() (string, error)
 	RequestedServiceObjectiveName() (string, error)
 	ServiceLevelObjective() (string, error)
@@ -8124,7 +8124,7 @@ type AzurermSqlDatabase interface {
 	ZoneRedundant() (bool, error)
 	TransparentDataEncryption() (interface{}, error)
 	Advisor() ([]interface{}, error)
-	ThreadDetectionPolicy() (interface{}, error)
+	ThreatDetectionPolicy() (interface{}, error)
 	ConnectionPolicy() (interface{}, error)
 	AuditingPolicy() (interface{}, error)
 	Usage() ([]interface{}, error)
@@ -8217,8 +8217,8 @@ func newAzurermSqlDatabase(runtime *resources.Runtime, args *resources.Args) (in
 				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"edition\" argument has the wrong type (expected type \"string\")")
 			}
 		case "maxSizeBytes":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"maxSizeBytes\" argument has the wrong type (expected type \"string\")")
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"maxSizeBytes\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "requestedServiceObjectiveId":
 			if _, ok := val.(string); !ok {
@@ -8276,9 +8276,9 @@ func newAzurermSqlDatabase(runtime *resources.Runtime, args *resources.Args) (in
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"advisor\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
-		case "threadDetectionPolicy":
+		case "threatDetectionPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"threadDetectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"threatDetectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "connectionPolicy":
 			if _, ok := val.(interface{}); !ok {
@@ -8334,12 +8334,6 @@ func (s *mqlAzurermSqlDatabase) Validate() error {
 	if _, ok := s.Cache.Load("creationDate"); !ok {
 		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"creationDate\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("containmentState"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"containmentState\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("currentServiceObjectiveId"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"currentServiceObjectiveId\". This field is required.")
-	}
 	if _, ok := s.Cache.Load("databaseId"); !ok {
 		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"databaseId\". This field is required.")
 	}
@@ -8367,9 +8361,6 @@ func (s *mqlAzurermSqlDatabase) Validate() error {
 	if _, ok := s.Cache.Load("maxSizeBytes"); !ok {
 		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"maxSizeBytes\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("requestedServiceObjectiveId"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"requestedServiceObjectiveId\". This field is required.")
-	}
 	if _, ok := s.Cache.Load("requestedServiceObjectiveName"); !ok {
 		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"requestedServiceObjectiveName\". This field is required.")
 	}
@@ -8384,12 +8375,6 @@ func (s *mqlAzurermSqlDatabase) Validate() error {
 	}
 	if _, ok := s.Cache.Load("defaultSecondaryLocation"); !ok {
 		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"defaultSecondaryLocation\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("serviceTierAdvisors"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"serviceTierAdvisors\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("recommendedIndex"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"recommendedIndex\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("failoverGroupId"); !ok {
 		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"failoverGroupId\". This field is required.")
@@ -8471,7 +8456,7 @@ func (s *mqlAzurermSqlDatabase) Register(name string) error {
 		return nil
 	case "advisor":
 		return nil
-	case "threadDetectionPolicy":
+	case "threatDetectionPolicy":
 		return nil
 	case "connectionPolicy":
 		return nil
@@ -8548,8 +8533,8 @@ func (s *mqlAzurermSqlDatabase) Field(name string) (interface{}, error) {
 		return s.TransparentDataEncryption()
 	case "advisor":
 		return s.Advisor()
-	case "threadDetectionPolicy":
-		return s.ThreadDetectionPolicy()
+	case "threatDetectionPolicy":
+		return s.ThreatDetectionPolicy()
 	case "connectionPolicy":
 		return s.ConnectionPolicy()
 	case "auditingPolicy":
@@ -8645,7 +8630,14 @@ func (s *mqlAzurermSqlDatabase) CreationDate() (*time.Time, error) {
 func (s *mqlAzurermSqlDatabase) ContainmentState() (int64, error) {
 	res, ok := s.Cache.Load("containmentState")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"containmentState\"")
+		if err := s.ComputeContainmentState(); err != nil {
+			return 0, err
+		}
+		res, ok = s.Cache.Load("containmentState")
+		if !ok {
+			return 0, errors.New("\"azurerm.sql.database\" calculated \"containmentState\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "containmentState")
 	}
 	if res.Error != nil {
 		return 0, res.Error
@@ -8661,7 +8653,14 @@ func (s *mqlAzurermSqlDatabase) ContainmentState() (int64, error) {
 func (s *mqlAzurermSqlDatabase) CurrentServiceObjectiveId() (string, error) {
 	res, ok := s.Cache.Load("currentServiceObjectiveId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"currentServiceObjectiveId\"")
+		if err := s.ComputeCurrentServiceObjectiveId(); err != nil {
+			return "", err
+		}
+		res, ok = s.Cache.Load("currentServiceObjectiveId")
+		if !ok {
+			return "", errors.New("\"azurerm.sql.database\" calculated \"currentServiceObjectiveId\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "currentServiceObjectiveId")
 	}
 	if res.Error != nil {
 		return "", res.Error
@@ -8802,17 +8801,17 @@ func (s *mqlAzurermSqlDatabase) Edition() (string, error) {
 }
 
 // MaxSizeBytes accessor autogenerated
-func (s *mqlAzurermSqlDatabase) MaxSizeBytes() (string, error) {
+func (s *mqlAzurermSqlDatabase) MaxSizeBytes() (int64, error) {
 	res, ok := s.Cache.Load("maxSizeBytes")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"maxSizeBytes\"")
+		return 0, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"maxSizeBytes\"")
 	}
 	if res.Error != nil {
-		return "", res.Error
+		return 0, res.Error
 	}
-	tres, ok := res.Data.(string)
+	tres, ok := res.Data.(int64)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"maxSizeBytes\" to the right type (string): %#v", res)
+		return 0, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"maxSizeBytes\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
@@ -8821,7 +8820,14 @@ func (s *mqlAzurermSqlDatabase) MaxSizeBytes() (string, error) {
 func (s *mqlAzurermSqlDatabase) RequestedServiceObjectiveId() (string, error) {
 	res, ok := s.Cache.Load("requestedServiceObjectiveId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"requestedServiceObjectiveId\"")
+		if err := s.ComputeRequestedServiceObjectiveId(); err != nil {
+			return "", err
+		}
+		res, ok = s.Cache.Load("requestedServiceObjectiveId")
+		if !ok {
+			return "", errors.New("\"azurerm.sql.database\" calculated \"requestedServiceObjectiveId\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "requestedServiceObjectiveId")
 	}
 	if res.Error != nil {
 		return "", res.Error
@@ -8917,7 +8923,14 @@ func (s *mqlAzurermSqlDatabase) DefaultSecondaryLocation() (string, error) {
 func (s *mqlAzurermSqlDatabase) ServiceTierAdvisors() (interface{}, error) {
 	res, ok := s.Cache.Load("serviceTierAdvisors")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"serviceTierAdvisors\"")
+		if err := s.ComputeServiceTierAdvisors(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("serviceTierAdvisors")
+		if !ok {
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"serviceTierAdvisors\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "serviceTierAdvisors")
 	}
 	if res.Error != nil {
 		return nil, res.Error
@@ -8933,7 +8946,14 @@ func (s *mqlAzurermSqlDatabase) ServiceTierAdvisors() (interface{}, error) {
 func (s *mqlAzurermSqlDatabase) RecommendedIndex() (interface{}, error) {
 	res, ok := s.Cache.Load("recommendedIndex")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"recommendedIndex\"")
+		if err := s.ComputeRecommendedIndex(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("recommendedIndex")
+		if !ok {
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"recommendedIndex\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "recommendedIndex")
 	}
 	if res.Error != nil {
 		return nil, res.Error
@@ -9055,25 +9075,25 @@ func (s *mqlAzurermSqlDatabase) Advisor() ([]interface{}, error) {
 	return tres, nil
 }
 
-// ThreadDetectionPolicy accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ThreadDetectionPolicy() (interface{}, error) {
-	res, ok := s.Cache.Load("threadDetectionPolicy")
+// ThreatDetectionPolicy accessor autogenerated
+func (s *mqlAzurermSqlDatabase) ThreatDetectionPolicy() (interface{}, error) {
+	res, ok := s.Cache.Load("threatDetectionPolicy")
 	if !ok || !res.Valid {
-		if err := s.ComputeThreadDetectionPolicy(); err != nil {
+		if err := s.ComputeThreatDetectionPolicy(); err != nil {
 			return nil, err
 		}
-		res, ok = s.Cache.Load("threadDetectionPolicy")
+		res, ok = s.Cache.Load("threatDetectionPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"threadDetectionPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"azurerm.sql.database\" calculated \"threatDetectionPolicy\" but didn't find its value in cache.")
 		}
-		s.MotorRuntime.Trigger(s, "threadDetectionPolicy")
+		s.MotorRuntime.Trigger(s, "threatDetectionPolicy")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"threadDetectionPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"threatDetectionPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
@@ -9162,9 +9182,9 @@ func (s *mqlAzurermSqlDatabase) Compute(name string) error {
 	case "creationDate":
 		return nil
 	case "containmentState":
-		return nil
+		return s.ComputeContainmentState()
 	case "currentServiceObjectiveId":
-		return nil
+		return s.ComputeCurrentServiceObjectiveId()
 	case "databaseId":
 		return nil
 	case "earliestRestoreDate":
@@ -9184,7 +9204,7 @@ func (s *mqlAzurermSqlDatabase) Compute(name string) error {
 	case "maxSizeBytes":
 		return nil
 	case "requestedServiceObjectiveId":
-		return nil
+		return s.ComputeRequestedServiceObjectiveId()
 	case "requestedServiceObjectiveName":
 		return nil
 	case "serviceLevelObjective":
@@ -9196,9 +9216,9 @@ func (s *mqlAzurermSqlDatabase) Compute(name string) error {
 	case "defaultSecondaryLocation":
 		return nil
 	case "serviceTierAdvisors":
-		return nil
+		return s.ComputeServiceTierAdvisors()
 	case "recommendedIndex":
-		return nil
+		return s.ComputeRecommendedIndex()
 	case "failoverGroupId":
 		return nil
 	case "readScale":
@@ -9211,8 +9231,8 @@ func (s *mqlAzurermSqlDatabase) Compute(name string) error {
 		return s.ComputeTransparentDataEncryption()
 	case "advisor":
 		return s.ComputeAdvisor()
-	case "threadDetectionPolicy":
-		return s.ComputeThreadDetectionPolicy()
+	case "threatDetectionPolicy":
+		return s.ComputeThreatDetectionPolicy()
 	case "connectionPolicy":
 		return s.ComputeConnectionPolicy()
 	case "auditingPolicy":
@@ -9222,6 +9242,76 @@ func (s *mqlAzurermSqlDatabase) Compute(name string) error {
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.database\" resource")
 	}
+}
+
+// ComputeContainmentState computer autogenerated
+func (s *mqlAzurermSqlDatabase) ComputeContainmentState() error {
+	var err error
+	if _, ok := s.Cache.Load("containmentState"); ok {
+		return nil
+	}
+	vres, err := s.GetContainmentState()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("containmentState", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeCurrentServiceObjectiveId computer autogenerated
+func (s *mqlAzurermSqlDatabase) ComputeCurrentServiceObjectiveId() error {
+	var err error
+	if _, ok := s.Cache.Load("currentServiceObjectiveId"); ok {
+		return nil
+	}
+	vres, err := s.GetCurrentServiceObjectiveId()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("currentServiceObjectiveId", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeRequestedServiceObjectiveId computer autogenerated
+func (s *mqlAzurermSqlDatabase) ComputeRequestedServiceObjectiveId() error {
+	var err error
+	if _, ok := s.Cache.Load("requestedServiceObjectiveId"); ok {
+		return nil
+	}
+	vres, err := s.GetRequestedServiceObjectiveId()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("requestedServiceObjectiveId", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeServiceTierAdvisors computer autogenerated
+func (s *mqlAzurermSqlDatabase) ComputeServiceTierAdvisors() error {
+	var err error
+	if _, ok := s.Cache.Load("serviceTierAdvisors"); ok {
+		return nil
+	}
+	vres, err := s.GetServiceTierAdvisors()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("serviceTierAdvisors", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeRecommendedIndex computer autogenerated
+func (s *mqlAzurermSqlDatabase) ComputeRecommendedIndex() error {
+	var err error
+	if _, ok := s.Cache.Load("recommendedIndex"); ok {
+		return nil
+	}
+	vres, err := s.GetRecommendedIndex()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("recommendedIndex", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // ComputeTransparentDataEncryption computer autogenerated
@@ -9252,17 +9342,17 @@ func (s *mqlAzurermSqlDatabase) ComputeAdvisor() error {
 	return nil
 }
 
-// ComputeThreadDetectionPolicy computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeThreadDetectionPolicy() error {
+// ComputeThreatDetectionPolicy computer autogenerated
+func (s *mqlAzurermSqlDatabase) ComputeThreatDetectionPolicy() error {
 	var err error
-	if _, ok := s.Cache.Load("threadDetectionPolicy"); ok {
+	if _, ok := s.Cache.Load("threatDetectionPolicy"); ok {
 		return nil
 	}
-	vres, err := s.GetThreadDetectionPolicy()
+	vres, err := s.GetThreatDetectionPolicy()
 	if _, ok := err.(resources.NotReadyError); ok {
 		return err
 	}
-	s.Cache.Store("threadDetectionPolicy", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	s.Cache.Store("threatDetectionPolicy", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
 	return nil
 }
 
