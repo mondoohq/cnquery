@@ -1,8 +1,8 @@
 package azure
 
 import (
-	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -93,55 +93,40 @@ func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	}
 }
 
-// GetAuthorizer determines what authorizer to use, based on the passed in configs. Possible options are:
-// - Authorizer via the CLI that uses the `az` executable
-// - Authorizer via password that uses the sdk
-// - Authorizer via certificate that uses the sdk
-func getAuthorizer(clientId, tenantId, resource string, credential *vault.Credential) (autorest.Authorizer, error) {
-	var authorizer autorest.Authorizer
+func (p *Provider) GetTokenCredential() (azcore.TokenCredential, error) {
+	var credential azcore.TokenCredential
 	var err error
 
 	// fallback to CLI authorizer if no credentials are specified
-	if credential == nil {
+	if p.credential == nil {
 		log.Debug().Msg("using azure cli to get authorizer")
-		if resource != "" {
-			return auth.NewAuthorizerFromCLIWithResource(resource)
-		}
-		return auth.NewAuthorizerFromCLI()
-	}
-
-	switch credential.Type {
-	case vault.CredentialType_password:
-		config := auth.NewClientCredentialsConfig(clientId, string(credential.Secret), tenantId)
-		if resource != "" {
-			config.Resource = resource
-		}
-		authorizer, err = config.Authorizer()
+		credential, err = azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{})
 		if err != nil {
-			return nil, errors.Wrap(err, "error creating credentials from secret")
+			return nil, errors.Wrap(err, "error creating cli credentials")
 		}
-	case vault.CredentialType_pkcs12:
-		config := auth.NewClientCertificateConfig(credential.PrivateKeyPath, credential.Password, clientId, tenantId)
-		if resource != "" {
-			config.Resource = resource
+	} else {
+		// we only support private key authentication for ms 365
+		switch p.credential.Type {
+		case vault.CredentialType_pkcs12:
+			certs, privateKey, err := azidentity.ParseCertificates(p.credential.Secret, []byte(p.credential.Password))
+			if err != nil {
+				return nil, errors.Wrap(err, "could not parse pfx file")
+			}
+
+			credential, err = azidentity.NewClientCertificateCredential(p.tenantID, p.clientID, certs, privateKey, &azidentity.ClientCertificateCredentialOptions{})
+			if err != nil {
+				return nil, errors.Wrap(err, "error creating credentials")
+			}
+		case vault.CredentialType_password:
+			credential, err = azidentity.NewClientSecretCredential(p.tenantID, p.clientID, string(p.credential.Secret), &azidentity.ClientSecretCredentialOptions{})
+			if err != nil {
+				return nil, errors.Wrap(err, "error creating credentials")
+			}
+		default:
+			return nil, errors.New("invalid secret configuration for ms365 transport: " + p.credential.Type.String())
 		}
-		authorizer, err = config.Authorizer()
-		if err != nil {
-			return nil, errors.Wrap(err, "error creating credentials from certificate")
-		}
-	default:
-		return nil, errors.New("invalid secret configuration for azure transport: " + credential.Type.String())
 	}
-
-	return authorizer, nil
-}
-
-func (p *Provider) Authorizer() (autorest.Authorizer, error) {
-	return getAuthorizer(p.clientID, p.tenantID, "", p.credential)
-}
-
-func (p *Provider) AuthorizerWithAudience(audience string) (autorest.Authorizer, error) {
-	return getAuthorizer(p.clientID, p.tenantID, audience, p.credential)
+	return credential, nil
 }
 
 func (p *Provider) ParseResourceID(id string) (*ResourceID, error) {
