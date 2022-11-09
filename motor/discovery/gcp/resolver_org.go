@@ -29,7 +29,7 @@ func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, 
 		return nil, err
 	}
 
-	// TODO: for now we do not add the organization as asset since we need to adapt the polices and queries to distingush
+	// TODO: for now we do not add the organization as asset since we need to adapt the polices and queries to distinguish
 	// between them. Current resources most likely mix with the org, most gcp requests do not work on org level
 
 	//identifier, err := provider.Identifier()
@@ -52,7 +52,7 @@ func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, 
 	//})
 
 	// discover projects
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryProjects) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryProjects) {
 		orgId, err := provider.OrganizationID()
 		if err != nil {
 			return nil, err
