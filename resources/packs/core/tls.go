@@ -16,6 +16,11 @@ import (
 var reTarget = regexp.MustCompile("([^/:]+?)(:\\d+)?$")
 
 func (s *mqlTls) init(args *resources.Args) (*resources.Args, Tls, error) {
+	// if the socket is set already, we have nothing else to do
+	if _, ok := (*args)["socket"]; ok {
+		return args, nil, nil
+	}
+
 	var fqdn string
 	var port int64
 
