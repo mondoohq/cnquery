@@ -490,7 +490,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			connection.Credentials = append(connection.Credentials, &vault.Credential{
 				Type:     vault.CredentialType_password,
 				User:     username,
-				Password: password,
+				Password: clientSecret,
 			})
 		}
 
