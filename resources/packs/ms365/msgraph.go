@@ -41,7 +41,7 @@ func (m *mqlMsgraphBeta) GetSettings() ([]interface{}, error) {
 
 	settings, err := graphBetaClient.Settings().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 	return core.JsonToDictSlice(msgraphconv.NewDirectorySettings(settings.GetValue()))
 }
@@ -68,7 +68,7 @@ func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 
 	resp, err := graphBetaClient.Organization().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -117,7 +117,7 @@ func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
 
 	resp, err := graphBetaClient.Users().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -181,7 +181,7 @@ func (m *mqlMsgraphBeta) GetDomains() ([]interface{}, error) {
 
 	resp, err := graphBetaClient.Domains().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -238,7 +238,7 @@ func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, 
 
 	resp, err := graphBetaClient.DomainsById(id).ServiceConfigurationRecords().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -289,7 +289,7 @@ func (m *mqlMsgraphBeta) GetApplications() ([]interface{}, error) {
 
 	resp, err := graphBetaClient.Applications().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -338,7 +338,7 @@ func (m *mqlMsgraphBetaUser) GetSettings() (interface{}, error) {
 
 	userSettings, err := graphBetaClient.UsersById(id).Settings().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	return core.JsonToDict(msgraphconv.NewUserSettings(userSettings))
@@ -414,7 +414,7 @@ func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 
 	resp, err := graphBetaClient.Security().SecureScores().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	scores := resp.GetValue()
@@ -452,7 +452,7 @@ func (m *mqlMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 
 	resp, err := graphBetaClient.Security().SecureScores().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -495,7 +495,7 @@ func (m *mqlMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
 
 	resp, err := graphBetaClient.Policies().AuthorizationPolicy().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	policies := resp.GetValue()
@@ -524,7 +524,7 @@ func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() 
 
 	policy, err := graphBetaClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	return core.JsonToDict(msgraphconv.NewIdentitySecurityDefaultsEnforcementPolicy(policy))
@@ -549,7 +549,7 @@ func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, er
 
 	policy, err := graphBetaClient.Policies().AdminConsentRequestPolicy().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 	return core.JsonToDict(msgraphconv.NewAdminConsentRequestPolicy(policy))
 }
@@ -574,7 +574,7 @@ func (m *mqlMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, erro
 
 	resp, err := graphBetaClient.Policies().PermissionGrantPolicies().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 	return core.JsonToDictSlice(msgraphconv.NewPermissionGrantPolicys(resp.GetValue()))
 }
@@ -601,7 +601,7 @@ func (m *mqlMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error)
 
 	resp, err := graphBetaClient.RoleManagement().Directory().RoleDefinitions().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -663,11 +663,11 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interfa
 				Expand: []string{"principal"},
 			},
 		}, nil)
+	if err != nil {
+		return nil, msgraphclient.TransformODataError(err)
+	}
 
 	roleAssignments := resp.GetValue()
-	if err != nil {
-		return nil, err
-	}
 
 	res := []interface{}{}
 	for i := range roleAssignments {
@@ -714,7 +714,7 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{
 
 	resp, err := graphBetaClient.DeviceManagement().DeviceConfigurations().Get()
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	res := []interface{}{}
@@ -766,7 +766,7 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interf
 			},
 		}, nil)
 	if err != nil {
-		return nil, err
+		return nil, msgraphclient.TransformODataError(err)
 	}
 
 	compliancePolicies := resp.GetValue()
