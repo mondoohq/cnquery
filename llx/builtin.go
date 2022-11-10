@@ -519,6 +519,7 @@ func init() {
 			"&&":                     {Compiler: compileLogicalArrayOp(types.ArrayLike, "&&")},
 			"||":                     {Compiler: compileLogicalArrayOp(types.ArrayLike, "||")},
 			"+":                      {Compiler: compileArrayOpArray("+"), f: tarrayConcatTarrayV2, Label: "+"},
+			"-":                      {Compiler: compileArrayOpArray("-"), f: tarrayDeleteTarrayV2, Label: "-"},
 			// logical operations []<T> -- K
 			string(types.Any + "&&" + types.Bool):      {f: arrayAndBoolV2, Label: "&&"},
 			string(types.Any + "||" + types.Bool):      {f: arrayOrBoolV2, Label: "||"},

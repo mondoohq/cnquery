@@ -878,6 +878,11 @@ func TestArray(t *testing.T) {
 			0,
 			[]interface{}{int64(1), int64(2), int64(3)},
 		},
+		{
+			"[3,1,3,4,2] - [3,4,5]",
+			0,
+			[]interface{}{int64(1), int64(2)},
+		},
 	})
 }
 
