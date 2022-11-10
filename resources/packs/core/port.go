@@ -545,3 +545,23 @@ func (s *mqlPort) id() (string, error) {
 
 	return fmt.Sprintf("port: %s/%s:%d/%s:%d/%s", proto, addr, port, remoteAddress, remotePort, state), nil
 }
+
+func (s *mqlPort) GetTls(address string, port int64, proto string) (interface{}, error) {
+	if address == "" || address == "0.0.0.0" {
+		address = "127.0.0.1"
+	}
+
+	socket, err := s.MotorRuntime.CreateResource("socket",
+		"protocol", proto,
+		"port", port,
+		"address", address,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.MotorRuntime.CreateResource("tls",
+		"socket", socket,
+		"domainName", "",
+	)
+}

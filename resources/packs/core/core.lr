@@ -441,6 +441,8 @@ port @defaults("port protocol address process.executable") {
   remoteAddress string
   // Remote port connected to this port
   remotePort int
+  // TLS on this port, if it is available
+  tls(address, port, protocol) tls
 }
 
 // TCP/IP ports on the system
@@ -461,7 +463,7 @@ socket @defaults("protocol port address") {
 }
 
 // TLS
-tls @defaults("domainName") {
+tls @defaults("socket domainName") {
   init(target string)
   // Socket of this connection
   socket socket
