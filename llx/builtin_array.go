@@ -886,6 +886,54 @@ func tarrayConcatTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 	}, 0, nil
 }
 
+func tarrayDeleteTarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := e.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if items.Value == nil {
+		return &RawData{Type: items.Type}, 0, nil
+	}
+
+	v, _ := bind.Value.([]interface{})
+	if v == nil {
+		if items.Value == nil {
+			return &RawData{Type: bind.Type}, 0, nil
+		}
+		return nil, 0, errors.New("cannot add arrays to null")
+	}
+
+	list := items.Value.([]interface{})
+	if len(list) == 0 {
+		return items, 0, nil
+	}
+
+	// TODO: We can optimize the way the deletion works, but need to map to
+	// recognized types to do so. Common example: strings an numbers.
+
+	res := []interface{}{}
+	for i := range v {
+		found := false
+		for j := range list {
+			if v[i] == list[j] {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			res = append(res, v[i])
+		}
+	}
+
+	return &RawData{
+		Type:  bind.Type,
+		Value: res,
+	}, 0, nil
+}
+
 func boolarrayCmpBoolarrayV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	return rawboolOpV2(e, bind, chunk, ref, func(left *RawData, right *RawData) bool {
 		return cmpArrays(left, right, opBoolCmpBool)
