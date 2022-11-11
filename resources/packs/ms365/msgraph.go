@@ -208,6 +208,47 @@ func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
 	return res, nil
 }
 
+func (m *mqlMsgraphBetaServiceprincipal) id() (string, error) {
+	return m.Id()
+}
+
+func (m *mqlMsgraphBeta) GetServiceprincipals() ([]interface{}, error) {
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	missingPermissions := provider.MissingRoles("Application.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
+	}
+
+	graphBetaClient, err := graphBetaClient(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: we need to use Top, there are more than 100 SPs.
+	resp, err := graphBetaClient.ServicePrincipals().Get()
+	if err != nil {
+		return nil, msgraphclient.TransformODataError(err)
+	}
+
+	res := []interface{}{}
+	sps := resp.GetValue()
+	for _, sp := range sps {
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.serviceprincipal",
+			"id", core.ToString(sp.GetId()),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlResource)
+	}
+
+	return res, nil
+}
+
 func (m *mqlMsgraphBetaDomain) id() (string, error) {
 	return m.Id()
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/policies"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/security"
+	"github.com/microsoftgraph/msgraph-beta-sdk-go/serviceprincipals"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/settings"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/users"
 	usersitem "github.com/microsoftgraph/msgraph-beta-sdk-go/users/item"
@@ -66,6 +67,10 @@ func (m *GraphServiceClient) Organization() *organization.OrganizationRequestBui
 
 func (m *GraphServiceClient) Groups() *groups.GroupsRequestBuilder {
 	return groups.NewGroupsRequestBuilderInternal(m.pathParameters, m.requestAdapter)
+}
+
+func (m *GraphServiceClient) ServicePrincipals() *serviceprincipals.ServicePrincipalsRequestBuilder {
+	return serviceprincipals.NewServicePrincipalsRequestBuilderInternal(m.pathParameters, m.requestAdapter)
 }
 
 func (m *GraphServiceClient) Users() *users.UsersRequestBuilder {

@@ -9,6 +9,7 @@ msgraph.beta {
   groups() []msgraph.beta.group
   domains() []msgraph.beta.domain
   applications() []msgraph.beta.application
+  serviceprincipals() []msgraph.beta.serviceprincipal 
   settings() []dict
 }
 
@@ -94,6 +95,11 @@ msgraph.beta.application {
   displayName string
   publisherDomain string
   signInAudience string
+}
+
+// Microsoft Graph Service Principal
+msgraph.beta.serviceprincipal {
+  id string
 }
 
 // Microsoft Graph Beta Security

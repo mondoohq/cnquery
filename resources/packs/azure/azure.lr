@@ -10,6 +10,7 @@ azuread {
   domains() []azuread.domain
   // deprecated, use msgraph.beta.application
   applications() []azuread.application
+  // deprecated, use msgraph.beta.serviceprincipal
   servicePrincipals() []azuread.serviceprincipal
 }
 
@@ -60,7 +61,7 @@ azuread.application {
   id string
 }
 
-// Azure Active Directory Service Principal
+// Azure Active Directory Service Principal (deprecated, use msgraph.beta.serviceprincipal instead))
 azuread.serviceprincipal {
   id string
 }
