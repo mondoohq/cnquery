@@ -1224,7 +1224,7 @@ private aws.ec2.snapshot @defaults("arn") {
   startTime time
   // tags for the snapshot
   tags map[string]string
-  // state of the snapshot (pending|completed|error|recoverable|recovering)
+  // state of the snapshot (pending,completed,error,recoverable,or recovering)
   state string
 } 
 
