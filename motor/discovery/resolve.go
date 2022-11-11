@@ -33,6 +33,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/mock"
 	"go.mondoo.com/cnquery/motor/discovery/ms365"
 	"go.mondoo.com/cnquery/motor/discovery/network"
+	"go.mondoo.com/cnquery/motor/discovery/okta"
 	"go.mondoo.com/cnquery/motor/discovery/os"
 	"go.mondoo.com/cnquery/motor/discovery/tar"
 	"go.mondoo.com/cnquery/motor/discovery/terraform"
@@ -83,6 +84,7 @@ func init() {
 		providers.ProviderID_TERRAFORM:          &terraform.Resolver{},
 		providers.ProviderID_HOST:               &network.Resolver{},
 		providers.ProviderID_TLS:                &network.Resolver{},
+		providers.ProviderID_OKTA:               &okta.Resolver{},
 	}
 }
 

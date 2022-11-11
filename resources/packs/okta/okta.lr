@@ -1,0 +1,219 @@
+option go_package = "go.mondoo.com/cnquery/resources/packs/okta"
+
+okta {
+  // Okta users
+  users() []okta.user
+  // Okta groups
+  groups() []okta.group
+  // Okta domains
+  domains() []okta.domain
+  // Okta applications
+  applications() []okta.application
+  // Okta trusted origins
+  trustedOrigins() []okta.trustedOrigin
+}
+
+// Okta organization
+okta.organization {
+  // ID of organization
+  id string
+  // Name of the company
+  companyName string
+  // Status of organization. Accepted values: ACTIVE, INACTIVE
+  status string
+  // Subdomain of organization
+  subdomain string
+  // Primary address of organization
+  address1 string
+  // Secondary address of organization
+  address2 string
+  // City of organization
+  city string
+  // State of organization
+  state string
+  // Phone number of organization
+  phoneNumber string
+  // Postal code of organization
+  postalCode string
+  country string
+  // Support help phone of organization
+  supportPhoneNumber string
+  // The organization's website
+  website string
+  // Support link of organization
+  endUserSupportHelpURL string
+  // Timestamp when organization was created
+  created time
+  // Timestamp when org was last updated
+  lastUpdated time
+  // Expiration of organization
+  expiresAt time
+}
+
+// Okta policy
+okta.policies {
+    password() []okta.policy
+    mfaEnroll() []okta.policy
+    signOn() []okta.policy
+    oauthAuthorizationPolicy() []okta.policy
+    idpDiscovery() []okta.policy
+    accessPolicy() []okta.policy
+    profileEnrollment() []okta.policy
+}
+
+// Okta user
+private okta.user {
+  // Unique key for user
+  id string
+  type dict
+  credentials dict
+  activated time
+  // Timestamp when user was created
+  created time
+  // Timestamp of last login
+  lastLogin time
+  // Timestamp when user was last updated
+  lastUpdated time
+  // Timestamp when password last changed
+  passwordChanged time
+  // User profile properties
+  profile dict
+  // Current status of user
+  status string
+  // Timestamp when status last changed
+  statusChanged time
+  // Target status of an in-progress asynchronous status transition
+  transitioningToStatus string
+}
+
+// Okta group
+private okta.group {
+  // Unique key for Group
+  id string
+  // Determines how a Group's Profile and memberships are managed
+  type dict
+  // Timestamp when Group was created
+  created time
+  // Timestamp when Group's memberships were last updated
+  lastMembershipUpdated time
+  // Timestamp when Group's profile was last updated
+  lastUpdated time
+  // The Group's Profile properties
+  profile dict
+}
+
+// Okta application
+private okta.application {
+  // Unique key for app
+  id string
+  // Unique key for app definition
+  name string
+  // User-defined display name for app
+  label string
+  // Timestamp when app was created
+  created time
+  // Timestamp when app was last updated
+  lastUpdated time
+  // Credentials for the specified signOnMode
+  credentials dict
+  // Enabled app features
+  features []string
+  // Okta Licensing Information
+  licensing dict
+  // Valid JSON schema for specifying properties
+  profile dict
+  // Settings for app
+  settings dict
+  // Authentication mode of app
+  signOnMode string
+  // Status of app
+  status string
+  // Visibility settings for app
+  visibility dict
+}
+
+// Okta domain
+private okta.domain {
+  // Domain ID
+  id string
+  // Domain name
+  domain string
+  // Status of the domain. Accepted values: NOT_STARTED, IN_PROGRESS, VERIFIED, COMPLETED
+  validationStatus string
+  // TXT and CNAME records to be registered for the Domain
+  dnsRecords []dict
+  // Certificate metadata for the Domain
+  publicCertificate dict
+}
+
+// Okta policy
+private okta.policy {
+  // Identifier of the Policy
+  id string
+  // Name of the Policy
+  name string
+  // Description of the Policy
+  description string
+  // Priority of the Policy
+  priority int
+  // Status of the Policy: ACTIVE or INACTIVE
+  status string
+  // Indicates system policies
+  system bool
+  // Specifies the type of Policy
+  type string
+  // Conditions for Policy
+  conditions dict
+  // Timestamp when the Policy was created
+  created time
+  // Timestamp when the Policy was last modified
+  lastUpdated time
+  // Rules attached to the policy
+  rules() []okta.policyRule
+}
+
+// Okta Policy Rule
+private okta.policyRule {
+  // Identifier of the Rule
+  id string
+  // Name of the Rule
+  name string
+  // Priority of the Rule
+  priority int
+  // Status of the Rule: ACTIVE or INACTIVE
+  status string
+  // Indicates system policies
+  system bool
+  // Rule type
+  type string
+  // Actions for Rule
+  actions dict
+  // Conditions for a Rule
+  conditions dict
+  // Timestamp when the Rule was created
+  created time
+  // Timestamp when the Rule was last modified
+  lastUpdated time
+}
+
+// Okta Trusted Origin
+private okta.trustedOrigin {
+  // Unique identifier for the Trusted Origin
+  id string
+  // Name for the Trusted Origin
+  name string
+  // Unique origin URL for the Trusted Origin
+  origin string
+  // Timestamp when the Trusted Origin was created
+  created time
+  // ID of entity that created the Trusted Origin
+  createdBy string
+  // Timestamp when the Trusted Origin was last updated
+  lastUpdated time
+  // ID of entity that last updated the Trusted Origin
+  lastUpdatedBy string
+  // Array of Scope types that this Trusted Origin is used for
+  scopes []dict
+  // Status of the Trusted Origin
+  status string
+}

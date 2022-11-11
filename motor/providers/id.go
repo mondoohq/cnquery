@@ -39,6 +39,7 @@ const (
 	ProviderID_TERRAFORM          = "terraform"
 	ProviderID_HOST               = "host"
 	ProviderID_TLS                = "tls"
+	ProviderID_OKTA               = "okta"
 
 	// NOTE: its not mapped directly to a transport, it is transformed into ssh
 	ProviderID_AWS_EC2_INSTANCE_CONNECT = "aws-ec2-connect"
@@ -74,6 +75,7 @@ var ProviderType_id = map[ProviderType]string{
 	ProviderType_GITLAB:                  ProviderID_GITLAB,
 	ProviderType_TERRAFORM:               ProviderID_TERRAFORM,
 	ProviderType_HOST:                    ProviderID_HOST,
+	ProviderType_OKTA:                    ProviderID_OKTA,
 }
 
 var ProviderType_idvalue = map[string]ProviderType{
@@ -106,6 +108,7 @@ var ProviderType_idvalue = map[string]ProviderType{
 	ProviderID_HOST:                     ProviderType_HOST,
 	ProviderID_AWS_EC2_INSTANCE_CONNECT: ProviderType_SSH,
 	ProviderID_AWS_EC2_SSM_SESSION:      ProviderType_SSH,
+	ProviderID_OKTA:                     ProviderType_OKTA,
 }
 
 func (x ProviderType) Id() string {

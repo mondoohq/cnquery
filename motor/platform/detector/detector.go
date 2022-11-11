@@ -4,6 +4,8 @@ import (
 	"errors"
 	"runtime"
 
+	"go.mondoo.com/cnquery/motor/providers/okta"
+
 	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"go.mondoo.com/cnquery/motor/platform"
@@ -140,6 +142,13 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    pt.Kind(),
 			Family:  pt.Family,
 			Runtime: pt.Runtime(), // Not sure what we want to set here?
+		}, nil
+	case *okta.Provider:
+		return &platform.Platform{
+			Name:    "okta",
+			Title:   "Okta API",
+			Kind:    providers.Kind_KIND_API,
+			Runtime: pt.Runtime(), // TODO
 		}, nil
 	case os.OperatingSystemProvider:
 		var resolved bool
