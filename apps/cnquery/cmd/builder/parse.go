@@ -571,7 +571,6 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if x, err := cmd.Flags().GetString("token"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --token value")
 		} else if x != "" {
-			log.Info().Str("token", x).Msg("user set token")
 			connection.Credentials = append(connection.Credentials, &vault.Credential{
 				Type:     vault.CredentialType_password,
 				Password: x,
@@ -589,6 +588,17 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			log.Fatal().Err(err).Msg("cannot parse --customer-id value")
 		} else if impersonatedUserEmail != "" {
 			connection.Options["impersonated-user-email"] = impersonatedUserEmail
+		}
+	case providers.ProviderType_SLACK:
+		connection.Backend = providerType
+
+		if x, err := cmd.Flags().GetString("token"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --token value")
+		} else if x != "" {
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type:     vault.CredentialType_password,
+				Password: x,
+			})
 		}
 	}
 

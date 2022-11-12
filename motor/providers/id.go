@@ -41,6 +41,7 @@ const (
 	ProviderID_TLS                = "tls"
 	ProviderID_OKTA               = "okta"
 	ProviderID_GOOGLE_WORKSPACE   = "googleworkspace"
+	ProviderID_SLACK              = "slack"
 
 	// NOTE: its not mapped directly to a transport, it is transformed into ssh
 	ProviderID_AWS_EC2_INSTANCE_CONNECT = "aws-ec2-connect"
@@ -78,6 +79,7 @@ var ProviderType_id = map[ProviderType]string{
 	ProviderType_HOST:                    ProviderID_HOST,
 	ProviderType_OKTA:                    ProviderID_OKTA,
 	ProviderType_GOOGLE_WORKSPACE:        ProviderID_GOOGLE_WORKSPACE,
+	ProviderType_SLACK:                   ProviderID_SLACK,
 }
 
 var ProviderType_idvalue = map[string]ProviderType{
@@ -112,6 +114,7 @@ var ProviderType_idvalue = map[string]ProviderType{
 	ProviderID_AWS_EC2_SSM_SESSION:      ProviderType_SSH,
 	ProviderID_OKTA:                     ProviderType_OKTA,
 	ProviderID_GOOGLE_WORKSPACE:         ProviderType_GOOGLE_WORKSPACE,
+	ProviderID_SLACK:                    ProviderType_SLACK,
 }
 
 func (x ProviderType) Id() string {

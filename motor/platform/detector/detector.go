@@ -4,6 +4,8 @@ import (
 	"errors"
 	"runtime"
 
+	"go.mondoo.com/cnquery/motor/providers/slack"
+
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/arista"
@@ -143,6 +145,8 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    providers.Kind_KIND_API,
 			Runtime: pt.Runtime(), // TODO
 		}, nil
+	case *slack.Provider:
+		return pt.PlatformInfo()
 	case os.OperatingSystemProvider:
 		var resolved bool
 		pi, resolved = d.resolveOS(pt)

@@ -14,6 +14,8 @@ import (
 	"context"
 	"strings"
 
+	"go.mondoo.com/cnquery/motor/discovery/slack"
+
 	"go.mondoo.com/cnquery/motor/discovery/googleworkspace"
 
 	"github.com/cockroachdb/errors"
@@ -88,6 +90,7 @@ func init() {
 		providers.ProviderID_TLS:                &network.Resolver{},
 		providers.ProviderID_OKTA:               &okta.Resolver{},
 		providers.ProviderID_GOOGLE_WORKSPACE:   &googleworkspace.Resolver{},
+		providers.ProviderID_SLACK:              &slack.Resolver{},
 	}
 }
 

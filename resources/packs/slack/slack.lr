@@ -1,0 +1,198 @@
+option go_package = "go.mondoo.com/cnquery/resources/packs/slack"
+
+// Slack
+slack {
+  // Slack Access Logs
+  accessLogs() []slack.login
+  // List of Slack user groups
+  userGroups() []slack.userGroup
+  // List of channels in a Slack team
+  conversations() []slack.conversation
+}
+
+// Slack Team
+slack.team {
+  // ID of the team
+  id string
+  // Name of the team
+  name string
+  // Domain of the team
+  domain string
+  // Email domain of the team
+  emailDomain string
+}
+
+ // List of Slack users
+slack.users {
+  []slack.user
+  // Filter bot users
+  bots() []slack.user
+  // Filter members of workspace
+  members()  []slack.user
+  // Filter admins of workspace
+  admins() []slack.user
+  // Filter owner of workspace
+  owner() []slack.user
+}
+
+// Slack User
+slack.user @defaults("id") {
+  // Identifier for workspace user
+  id string
+  // User name
+  name string
+  // Slack workspace ID
+  teamId string
+  // Indicates if the user has been deactivated
+  deleted bool
+  // Special username color.
+  color string
+  // User's first and last name
+  realName string
+  // Geographic timezone-related region
+  timeZone string
+  // Commonly used name of the timezone
+  timeZoneLabel string
+  // Number of seconds to offset UTC time
+  timeZoneOffset int
+  // Indicates whether the user is actually a bot user
+  isBot bool
+  // Indicates whether the user is an Admin of the current workspace
+  isAdmin bool
+  // Indicates whether the user is an Owner of the current workspace
+  isOwner bool
+  // Indicates whether the user is the Primary Owner of the current workspace
+  isPrimaryOwner bool
+  // Indicates whether or not the user is a guest user
+  isRestricted bool
+  // Indicates whether or not the user is a single-channel guest
+  isUltraRestricted bool
+  // Indicates if the user belongs to a different workspace
+  isStranger bool
+  isAppUser bool
+  // Indicates whether a user has been invited but has not yet signed in
+  isInvitedUser bool
+  // Indicates whether two-factor authentication is enabled for this user
+  has2FA bool
+  // Indicates whether the user own files
+  hasFiles bool
+  // Presence of the user
+  presence string
+  // IETF language code that represents this user's chosen display language
+  locale string
+  // related Slack Enterprise Grid user
+  enterpriseUser slack.enterpriseUser
+}
+
+// Slack Enterprise Grid user
+slack.enterpriseUser {
+   id string
+   // Unique ID for the Enterprise Grid organization
+   enterpriseId string
+   // Name for the Enterprise Grid organization.
+   enterpriseName string
+   // Indicates whether the user is an Admin of the Enterprise Grid organization
+   isAdmin bool
+   // Indicates whether the user is an Owner of the Enterprise Grid organization
+   isOwner bool
+}
+
+// User Groups for a Slack Workspace
+slack.userGroup @defaults("handle") {
+  // Group ID
+  id string
+  // Slack workspace ID
+  teamId string
+  // Friendly name of the group
+  name string
+  // Purpose of the group
+  description string
+  // Value used to notify group members
+  handle string
+  // Indicates whether the group is external
+  isExternal bool
+  // Timestamp when the group was created
+  created time
+  // Timestamp when the group was updated
+  updated time
+  // Timestamp when the group was deleted
+  deleted time
+  // User that created the group
+  createdBy slack.user
+  // User that updated the group
+  updatedBy slack.user
+  // User that deleted the group
+  deletedBy slack.user
+  // Total number of users in a group
+  userCount int
+  // Members of the group
+  members() []slack.user
+}
+
+// Slack access log entry
+slack.login @defaults("userID") {
+  // User ID
+  userID string
+  // User's handle
+  username string
+  // Total number of access log entries for that combination
+  count int
+  // IP address of the device used
+  ip string
+  // User agent string from the browser or client application
+  userAgent string
+  // Best guess at the internet service provider
+  isp string
+  // Best guesses on where the access originated, based on the IP address
+  country string
+  // Best guesses on where the access originated, based on the IP address
+  region string
+  // First access log entry for user, IP address, and user agent combination
+  dateFirst time
+  // Most recent log entry for user, IP address, and user agent combination
+  dateLast time
+}
+
+// Slack Conversation
+slack.conversation @defaults("id name") {
+  // Conversation ID
+  id string
+  // Name of the channel-like thing
+  name string
+  // User the member that created this conversation
+  creator slack.user
+  // Timestamp of when the conversation was
+  created time
+  // IETF language code that represents chosen language
+  locale string
+  // Information about the channel topic
+  topic dict
+  // Information about the channel purpose
+  purpose dict
+  // Indicates that the conversation is archived
+  isArchived bool
+  // Indicates that the conversation is open
+  isOpen bool
+  // Conversation is privileged between two or more members
+  isPrivate bool
+  // Indicates whether this is a direct message
+  isIM bool
+  // Indicates whether this private conversation between multiple users
+  isMpim bool
+  // Indicates a private channel created before March 2021
+  isGroup bool
+  // Indicates whether a conversation is a channel
+  isChannel bool
+  // Indicates whether conversation is in some way shared between multiple workspaces
+  isShared bool
+  // Indicates whether a conversation is part of a Shared Channel with a remote organization
+  isExtShared bool
+  // Indicates whether a conversation is going to be shared with a remote organization
+  isPendingExtShared bool
+  // Indicates whether this shared channel is shared between Enterprise Grid workspaces
+  isOrgShared bool
+  // Priority of the conversation
+  priority float
+  // Members of the conversation
+  members() []slack.user
+}
