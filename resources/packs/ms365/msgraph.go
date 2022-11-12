@@ -95,6 +95,55 @@ func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlMsgraphBetaGroup) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlMsgraphBetaGroup) GetMembers() ([]interface{}, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (m *mqlMsgraphBeta) GetGroups() ([]interface{}, error) {
+	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	missingPermissions := provider.MissingRoles("Group.Read.All")
+	if len(missingPermissions) > 0 {
+		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
+	}
+
+	graphBetaClient, err := graphBetaClient(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := graphBetaClient.Groups().Get()
+	if err != nil {
+		return nil, msgraphclient.TransformODataError(err)
+	}
+
+	res := []interface{}{}
+	grps := resp.GetValue()
+	for _, grp := range grps {
+		graphGrp, err := m.MotorRuntime.CreateResource("msgraph.beta.group",
+			"id", core.ToString(grp.GetId()),
+			"displayName", core.ToString(grp.GetDisplayName()),
+			"securityEnabled", core.ToBool(grp.GetSecurityEnabled()),
+			"mailEnabled", core.ToBool(grp.GetMailEnabled()),
+			"mailNickname", core.ToString(grp.GetMailNickname()),
+			"mail", core.ToString(grp.GetMail()),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, graphGrp)
+	}
+
+	return res, nil
+}
+
 func (m *mqlMsgraphBetaUser) id() (string, error) {
 	return m.Id()
 }

@@ -14,6 +14,7 @@ var DefaultRoles = []string{
 	"AuditLog.Read.All",
 	"Calendars.Read",
 	"Device.Read.All",
+	"Group.Read.All",
 	"DeviceManagementApps.Read.All",
 	"DeviceManagementConfiguration.Read.All",
 	"DeviceManagementManagedDevices.Read.All",

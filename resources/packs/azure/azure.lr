@@ -4,6 +4,7 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/azure"
 azuread {
   // deprecated, use msgraph.beta.user
   users() []azuread.user
+  // deprecated, use msgraph.beta.group
   groups() []azuread.group
   // deprecated, use msgraph.beta.domain
   domains() []azuread.domain
@@ -29,7 +30,7 @@ azuread.user {
   properties() dict
 }
 
-// Azure Active Directory Group
+// Azure Active Directory Group (deprecated, use msgraph.beta.group instead)
 azuread.group {
   id string
   displayName string

@@ -6,6 +6,7 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/ms365"
 msgraph.beta {
   organizations() []msgraph.beta.organization
   users() []msgraph.beta.user
+  groups() []msgraph.beta.group
   domains() []msgraph.beta.domain
   applications() []msgraph.beta.application
   settings() []dict
@@ -44,6 +45,17 @@ msgraph.beta.user {
   userPrincipalName string
   userType string
   settings() dict
+}
+
+// Microsoft Graph Beta Group
+msgraph.beta.group {
+  id string
+  displayName string
+  securityEnabled bool
+  mailEnabled bool
+  mailNickname string
+  mail string
+  members() []msgraph.beta.user
 }
 
 // Microsoft Graph Beta Domain
