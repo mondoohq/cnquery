@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/motor/providers"
-	gcp_provider "go.mondoo.com/cnquery/motor/providers/gcp"
+	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 )
 
 func TestGcpDiscovery(t *testing.T) {

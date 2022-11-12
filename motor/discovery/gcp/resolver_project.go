@@ -7,7 +7,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
-	gcp_provider "go.mondoo.com/cnquery/motor/providers/gcp"
+	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 	"google.golang.org/api/compute/v1"
 )
 

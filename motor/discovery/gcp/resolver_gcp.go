@@ -7,7 +7,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
-	gcp_provider "go.mondoo.com/cnquery/motor/providers/gcp"
+	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 )
 
 type GcpResolver struct{}

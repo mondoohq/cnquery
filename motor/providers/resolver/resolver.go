@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/cnquery/motor/providers/okta"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -16,15 +14,16 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/container"
 	"go.mondoo.com/cnquery/motor/providers/equinix"
 	"go.mondoo.com/cnquery/motor/providers/fs"
-	"go.mondoo.com/cnquery/motor/providers/gcp"
 	"go.mondoo.com/cnquery/motor/providers/github"
 	"go.mondoo.com/cnquery/motor/providers/gitlab"
+	"go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/providers/ipmi"
 	k8s_provider "go.mondoo.com/cnquery/motor/providers/k8s"
 	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/motor/providers/ms365"
 	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/motor/providers/okta"
 	"go.mondoo.com/cnquery/motor/providers/ssh"
 	"go.mondoo.com/cnquery/motor/providers/tar"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
@@ -197,7 +196,7 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 		}
 	case providers.ProviderType_GCP:
 		log.Debug().Msg("connection> load gcp provider")
-		p, err := gcp.New(resolvedConfig)
+		p, err := google.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
