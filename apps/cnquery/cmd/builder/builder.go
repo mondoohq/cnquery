@@ -572,6 +572,8 @@ func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn
 			preRun(cmd, args)
 			viper.BindPFlag("project", cmd.Flags().Lookup("project"))
 			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
+			viper.BindPFlag("project-id", cmd.Flags().Lookup("project-id"))
+			viper.BindPFlag("organization-id", cmd.Flags().Lookup("organization-id"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_GCP, DefaultAssetType)
@@ -579,7 +581,11 @@ func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn
 	}
 	commonCmdFlags(cmd)
 	cmd.Flags().String("project", "", "specify the GCP project to scan")
+	cmd.Flags().MarkHidden("project")
+	cmd.Flags().String("project-id", "", "specify the GCP project ID to scan")
 	cmd.Flags().String("organization", "", "specify the GCP organization to scan")
+	cmd.Flags().MarkHidden("organization")
+	cmd.Flags().String("organization-id", "", "specify the GCP organization ID to scan")
 	return cmd
 }
 
