@@ -165,7 +165,6 @@ func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
 }
 
 func (t *Provider) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
-	log.Info().Msg("find recent snapshot")
 	return FindRecentSnapshotForVolume(ctx, v, t.scannerRegionEc2svc)
 }
 
@@ -187,6 +186,7 @@ func FindRecentSnapshotForVolume(ctx context.Context, v VolumeId, svc *ec2.Clien
 			s := SnapshotId{Account: v.Account, Region: v.Region, Id: *snapshot.SnapshotId}
 			log.Info().Interface("snapshot", s).Msg("found snapshot")
 			snapState := snapshot.State
+			timeout := 0
 			for snapState != types.SnapshotStateCompleted {
 				log.Info().Interface("state", snapState).Msg("waiting for snapshot copy completion; sleeping 10 seconds")
 				time.Sleep(10 * time.Second)
@@ -201,6 +201,10 @@ func FindRecentSnapshotForVolume(ctx context.Context, v VolumeId, svc *ec2.Clien
 					return false, SnapshotId{}, err
 				}
 				snapState = snaps.Snapshots[0].State
+				if timeout == 6 { // we've waited a minute
+					return false, SnapshotId{}, errors.New("timed out waiting for recent snapshot to complete")
+				}
+				timeout++
 			}
 			return true, s, nil
 		}
@@ -237,16 +241,40 @@ func CreateSnapshotFromVolume(ctx context.Context, cfg aws.Config, volID string,
 	*/
 
 	// wait for snapshot to be ready
+	time.Sleep(10 * time.Second)
 	snapProgress := *res.Progress
-	for !strings.Contains(snapProgress, "100") {
+	snapState := res.State
+	timeout := 0
+	notFoundTimeout := 0
+	for snapState != types.SnapshotStateCompleted || !strings.Contains(snapProgress, "100") {
 		log.Info().Str("progress", snapProgress).Msg("waiting for snapshot completion; sleeping 10 seconds")
 		time.Sleep(10 * time.Second)
 		snaps, err := ec2svc.DescribeSnapshots(ctx, &ec2.DescribeSnapshotsInput{SnapshotIds: []string{*res.SnapshotId}})
 		if err != nil {
+			var ae smithy.APIError
+			if errors.As(err, &ae) {
+				if ae.ErrorCode() == "InvalidSnapshot.NotFound" {
+					time.Sleep(30 * time.Second) // if it says it doesnt exist, even though we just created it, then it must still be busy creating
+					notFoundTimeout++
+					if notFoundTimeout > 10 {
+						return nil, errors.New("timed out wating for created snapshot to complete; snapshot not found")
+					}
+					continue
+				}
+			}
 			return nil, err
 		}
+		if len(snaps.Snapshots) != 1 {
+			return nil, errors.Newf("expected one snapshot, got %d", len(snaps.Snapshots))
+		}
 		snapProgress = *snaps.Snapshots[0].Progress
+		snapState = snaps.Snapshots[0].State
+		if timeout > 24 { // 4 minutes
+			return nil, errors.New("timed out wating for created snapshot to complete")
+		}
 	}
+	log.Info().Str("progress", snapProgress).Msg("snapshot complete")
+
 	return res.SnapshotId, nil
 }
 
