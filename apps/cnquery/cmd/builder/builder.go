@@ -582,9 +582,11 @@ func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn
 	commonCmdFlags(cmd)
 	cmd.Flags().String("project", "", "specify the GCP project to scan")
 	cmd.Flags().MarkHidden("project")
+	cmd.Flags().MarkDeprecated("project", "--project is deprecated in favor of --project-id")
 	cmd.Flags().String("project-id", "", "specify the GCP project ID to scan")
 	cmd.Flags().String("organization", "", "specify the GCP organization to scan")
 	cmd.Flags().MarkHidden("organization")
+	cmd.Flags().MarkDeprecated("organization", "--organization is deprecated in favor of --organization-id")
 	cmd.Flags().String("organization-id", "", "specify the GCP organization ID to scan")
 	return cmd
 }
