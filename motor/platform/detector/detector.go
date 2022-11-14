@@ -4,24 +4,22 @@ import (
 	"errors"
 	"runtime"
 
-	"go.mondoo.com/cnquery/motor/providers/okta"
-
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/arista"
 	"go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/motor/providers/azure"
 	"go.mondoo.com/cnquery/motor/providers/equinix"
-	"go.mondoo.com/cnquery/motor/providers/gcp"
 	"go.mondoo.com/cnquery/motor/providers/github"
 	"go.mondoo.com/cnquery/motor/providers/gitlab"
+	"go.mondoo.com/cnquery/motor/providers/google"
 	ipmi "go.mondoo.com/cnquery/motor/providers/ipmi"
 	k8s_transport "go.mondoo.com/cnquery/motor/providers/k8s"
 	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/motor/providers/ms365"
 	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/motor/providers/okta"
+	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
 )
@@ -87,7 +85,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Kind:    providers.Kind_KIND_API,
 			Runtime: providers.RUNTIME_AWS,
 		}, nil
-	case *gcp.Provider:
+	case *google.Provider:
 		return &platform.Platform{
 			Name:    "gcp",
 			Title:   "Google Cloud Platform",

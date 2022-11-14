@@ -1,7 +1,7 @@
 //go:build debugtest
 // +build debugtest
 
-package gcp
+package google
 
 import (
 	"fmt"
