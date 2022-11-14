@@ -30,7 +30,8 @@ func New(cfg *providers.Config) (*Provider, error) {
 		cred = cfg.Credentials[0]
 	}
 
-	// deprecated options for backward compatibility with older inventory files
+	// FIXME: DEPRECATED, remove in v8.0 vv
+	// The options "subscriptionId" and "tenantId" have been deprecated in favor of subscription-id and tenant-id
 	if subscriptionId == "" {
 		sid, ok := cfg.Options["subscriptionId"]
 		if ok {
