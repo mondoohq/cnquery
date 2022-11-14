@@ -24,8 +24,10 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	// NOTE: project is deprecated in favor of project-id and will be removed in v8
+	// FIXME: DEPRECATED, update in v8.0 vv
+	// The option "project" has been deprecated in favor of project-id
 	if tc == nil || (tc.Options["project"] == "" && tc.Options["project-id"] == "") {
+		// ^^
 		return resolved, nil
 	}
 
@@ -47,9 +49,12 @@ func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.Credential
 	}
 
 	project := tc.Options["project-id"]
+	// FIXME: DEPRECATED, remove in v8.0 vv
+	// The option "project" has been deprecated in favor of project-id
 	if project == "" {
 		project = tc.Options["project"]
 	}
+	// ^^
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects) {
 		resolved = append(resolved, &asset.Asset{

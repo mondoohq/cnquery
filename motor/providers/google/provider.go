@@ -26,7 +26,10 @@ const (
 
 func New(pCfg *providers.Config) (*Provider, error) {
 	if pCfg.Backend == providers.ProviderType_GCP {
+		// FIXME: DEPRECATED, update in v8.0 vv
+		// The options "project" and "organization" have been deprecated in favor of project-id and organization-id
 		if pCfg.Options == nil || (pCfg.Options["project-id"] == "" && pCfg.Options["project"] == "" && pCfg.Options["organization-id"] == "" && pCfg.Options["organization"] == "") {
+			// ^^
 			return nil, errors.New("google provider requires a gcp organization id, gcp project id or google workspace customer id. please set option `project-id` or `organization-id` or `customer-id`")
 		}
 	} else if pCfg.Backend == providers.ProviderType_GOOGLE_WORKSPACE {
@@ -47,16 +50,25 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	if pCfg.Options["project-id"] != "" {
 		resourceType = Project
 		id = pCfg.Options["project-id"]
+
+		// FIXME: DEPRECATED, remove in v8.0 vv
+		// The options "project" and "organization" have been deprecated in favor of project-id and organization-id
 	} else if pCfg.Options["project"] != "" {
-		// deprecated, use project-id
 		resourceType = Project
 		id = pCfg.Options["project"]
+		// ^^
+
 	} else if pCfg.Options["organization-id"] != "" {
 		resourceType = Organization
 		id = pCfg.Options["organization-id"]
+
+		// FIXME: DEPRECATED, remove in v8.0 vv
+		// The options "project" and "organization" have been deprecated in favor of project-id and organization-id
 	} else if pCfg.Options["organization"] != "" {
 		resourceType = Organization
 		id = pCfg.Options["organization"]
+		// ^^
+
 	} else if pCfg.Options["customer-id"] != "" {
 		resourceType = Workspace
 		id = pCfg.Options["customer-id"]
