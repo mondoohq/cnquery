@@ -577,6 +577,19 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 				Password: x,
 			})
 		}
+	case providers.ProviderType_GOOGLE_WORKSPACE:
+		connection.Backend = providerType
+		if customerID, err := cmd.Flags().GetString("customer-id"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --customer-id value")
+		} else if customerID != "" {
+			connection.Options["customer-id"] = customerID
+		}
+
+		if impersonatedUserEmail, err := cmd.Flags().GetString("impersonated-user-email"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --customer-id value")
+		} else if impersonatedUserEmail != "" {
+			connection.Options["impersonated-user-email"] = impersonatedUserEmail
+		}
 	}
 
 	// if username was set but not credentials

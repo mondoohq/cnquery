@@ -152,6 +152,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	baseCmd.AddCommand(hostProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(aristaProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanOktaCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(scanGoogleWorkspaceCmd(commonCmdFlags, preRun, runFn, docs))
 }
 
 type CommandsDocs struct {
@@ -784,5 +785,27 @@ func scanOktaCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runF
 	commonCmdFlags(cmd)
 	cmd.Flags().String("organization", "", "specify the Okta organization to scan")
 	cmd.Flags().String("token", "", "Okta access token")
+	return cmd
+}
+
+func scanGoogleWorkspaceCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "googleworkspace",
+		Short: docs.GetShort("googleworkspace"),
+		Long:  docs.GetLong("googleworkspace"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("customer-id", cmd.Flags().Lookup("customer-id"))
+			viper.BindPFlag("impersonated-user-email", cmd.Flags().Lookup("impersonated-user-email"))
+
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_GOOGLE_WORKSPACE, DefaultAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("customer-id", "", "Specify the Google Workspace customer id to scan")
+	cmd.Flags().String("impersonated-user-email", "", "The impersonated user's email with access to the Admin APIs")
 	return cmd
 }

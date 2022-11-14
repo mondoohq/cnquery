@@ -14,6 +14,8 @@ import (
 	"context"
 	"strings"
 
+	"go.mondoo.com/cnquery/motor/discovery/googleworkspace"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -85,6 +87,7 @@ func init() {
 		providers.ProviderID_HOST:               &network.Resolver{},
 		providers.ProviderID_TLS:                &network.Resolver{},
 		providers.ProviderID_OKTA:               &okta.Resolver{},
+		providers.ProviderID_GOOGLE_WORKSPACE:   &googleworkspace.Resolver{},
 	}
 }
 

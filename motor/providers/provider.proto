@@ -36,6 +36,7 @@ enum ProviderType {
   HOST = 27;
   UNKNOWN = 28;
   OKTA = 29;
+  GOOGLE_WORKSPACE = 30;
 }
 
 enum Kind {
