@@ -23,6 +23,7 @@ import (
 	ms365Info "go.mondoo.com/cnquery/resources/packs/ms365/info"
 	oktaInfo "go.mondoo.com/cnquery/resources/packs/okta/info"
 	osInfo "go.mondoo.com/cnquery/resources/packs/os/info"
+	slackInfo "go.mondoo.com/cnquery/resources/packs/slack/info"
 	terraformInfo "go.mondoo.com/cnquery/resources/packs/terraform/info"
 	vsphereInfo "go.mondoo.com/cnquery/resources/packs/vsphere/info"
 )
@@ -42,6 +43,7 @@ func init() {
 	Registry.Add(githubInfo.Registry)
 	Registry.Add(gitlabInfo.Registry)
 	Registry.Add(oktaInfo.Registry)
+	Registry.Add(slackInfo.Registry)
 
 	ResourceDocs = mergeDocs(
 		coreInfo.ResourceDocs,
@@ -57,6 +59,7 @@ func init() {
 		k8sInfo.ResourceDocs,
 		vsphereInfo.ResourceDocs,
 		oktaInfo.ResourceDocs,
+		slackInfo.ResourceDocs,
 	)
 }
 

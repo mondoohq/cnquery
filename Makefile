@@ -106,6 +106,8 @@ lr/build:
 	./lr docs json resources/packs/okta/okta.lr.manifest.yaml
 	./lr go resources/packs/googleworkspace/googleworkspace.lr
 	./lr docs json resources/packs/googleworkspace/googleworkspace.lr.manifest.yaml
+	./lr go resources/packs/slack/slack.lr
+	./lr docs json resources/packs/slack/slack.lr.manifest.yaml
 	./lr go resources/mock/mochi.lr
 
 lr/release:

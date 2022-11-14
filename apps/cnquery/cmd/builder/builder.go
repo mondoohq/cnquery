@@ -153,6 +153,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	baseCmd.AddCommand(aristaProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanOktaCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanGoogleWorkspaceCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(scanSlackCmd(commonCmdFlags, preRun, runFn, docs))
 }
 
 type CommandsDocs struct {
@@ -807,5 +808,24 @@ func scanGoogleWorkspaceCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn,
 	commonCmdFlags(cmd)
 	cmd.Flags().String("customer-id", "", "Specify the Google Workspace customer id to scan")
 	cmd.Flags().String("impersonated-user-email", "", "The impersonated user's email with access to the Admin APIs")
+	return cmd
+}
+
+func scanSlackCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "slack",
+		Short: docs.GetShort("slack"),
+		Long:  docs.GetLong("slack"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_SLACK, DefaultAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("token", "", "Slack API token")
 	return cmd
 }

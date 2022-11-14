@@ -77,6 +77,10 @@ func (cfg *Config) ToUrl() string {
 		return ProviderID_AWS_EC2_EBS
 	case ProviderType_TERRAFORM:
 		return ProviderID_TERRAFORM
+	case ProviderType_OKTA:
+		return ProviderID_OKTA
+	case ProviderType_SLACK:
+		return ProviderID_SLACK
 	case ProviderType_HOST:
 		if _, ok := cfg.Options["tls"]; ok {
 			return ProviderID_TLS + "://" + cfg.Host

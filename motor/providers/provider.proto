@@ -37,6 +37,7 @@ enum ProviderType {
   UNKNOWN = 28;
   OKTA = 29;
   GOOGLE_WORKSPACE = 30;
+  SLACK = 31;
 }
 
 enum Kind {
