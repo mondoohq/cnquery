@@ -21,12 +21,12 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	if tc.Options != nil && tc.Options["organization"] != "" {
+	if tc.Options != nil && (tc.Options["organization"] != "" || tc.Options["organization-id"] != "") {
 		// discover the full organization
 		return (&GcpOrgResolver{}).Resolve(tc, cfn, sfn, userIdDetectors...)
 	} else {
 		// when the user has not provided a project, check if we got a project or try to determine it
-		if tc.Options == nil || tc.Options["project"] == "" {
+		if tc.Options == nil || (tc.Options["project"] == "" || tc.Options["project-id"] != "") {
 			// try to determine current project
 			projectid, err := gcp_provider.GetCurrentProject()
 			if err != nil || len(projectid) == 0 {

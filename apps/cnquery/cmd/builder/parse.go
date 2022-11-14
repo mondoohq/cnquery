@@ -367,17 +367,32 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_GCP:
 		connection.Backend = providerType
 
+		// deprecated, remove in v8
 		if project, err := cmd.Flags().GetString("project"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --project value")
 		} else if project != "" {
-			connection.Options["project"] = project
+			connection.Options["project-id"] = project
 		}
 
+		// deprecated, remove in v8
 		if organization, err := cmd.Flags().GetString("organization"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --organization value")
 		} else if organization != "" {
-			connection.Options["organization"] = organization
+			connection.Options["organization-id"] = organization
 		}
+
+		if project, err := cmd.Flags().GetString("project-id"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --project value")
+		} else if project != "" {
+			connection.Options["project-id"] = project
+		}
+
+		if organization, err := cmd.Flags().GetString("organization-id"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --organization value")
+		} else if organization != "" {
+			connection.Options["organization-id"] = organization
+		}
+
 	case providers.ProviderType_VSPHERE:
 		connection.Backend = providerType
 		target, err := parseTarget(args[0])

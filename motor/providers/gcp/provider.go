@@ -28,15 +28,22 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	if pCfg.Options == nil || (pCfg.Options["project"] == "" && pCfg.Options["organization"] == "") {
+	if pCfg.Options == nil || (pCfg.Options["project-id"] == "" && pCfg.Options["project"] == "" && pCfg.Options["organization-id"] == "" && pCfg.Options["organization"] == "") {
 		return nil, errors.New("gcp provider requires a project id or organization id. please set option `project` or `organization`")
 	}
 
 	var resourceType ResourceType
 	var id string
-	if pCfg.Options["project"] != "" {
+	if pCfg.Options["project-id"] != "" {
+		resourceType = Project
+		id = pCfg.Options["project-id"]
+	} else if pCfg.Options["project"] != "" {
+		// deprecated, use project-id
 		resourceType = Project
 		id = pCfg.Options["project"]
+	} else if pCfg.Options["organization-id"] != "" {
+		resourceType = Organization
+		id = pCfg.Options["organization-id"]
 	} else if pCfg.Options["organization"] != "" {
 		resourceType = Organization
 		id = pCfg.Options["organization"]
@@ -100,7 +107,7 @@ func (p *Provider) Kind() providers.Kind {
 }
 
 func (p *Provider) Runtime() string {
-	return providers.RUNTIME_AWS
+	return providers.RUNTIME_GCP
 }
 
 func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {

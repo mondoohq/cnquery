@@ -20,7 +20,7 @@ func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
 func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	if tc == nil || tc.Options["organization"] == "" {
+	if tc == nil || (tc.Options["organization"] == "" && tc.Options["organization-id"] == "") {
 		return resolved, nil
 	}
 
@@ -70,7 +70,7 @@ func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, 
 			project := projects[i]
 			projectConfig := tc.Clone()
 			projectConfig.Options = map[string]string{
-				"project": project.ProjectId,
+				"project-id": project.ProjectId,
 			}
 
 			assets, err := (&GcpProjectResolver{}).Resolve(projectConfig, cfn, sfn, userIdDetectors...)
