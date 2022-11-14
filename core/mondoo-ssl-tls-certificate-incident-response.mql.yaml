@@ -1,0 +1,61 @@
+packs:
+  - uid: mondoo-ssl-tls-certificate-incident-response
+    name: Mondoo SSL/TLS Certificate Incident Response
+    is_public: true
+    docs:
+      desc: |
+        ### Overview
+
+        The Mondoo SSL/TLS Certificate Incident Response query pack gathers information about SSL/TLS certificates of a domain for investigation during a security incident.
+
+        ### Prerequisites
+
+        To run this query pack, you will need to install the cnquery binary ([Get Started with cnquery](https://mondoo.com/docs/cnquery/)).
+
+        ### Run query pack
+
+        To run this query pack against a Domain:
+
+        ```bash
+        cnquery scan host <domain> -f mondoo-ssl-tls-certificate-incident-response.mql.yaml
+        ```
+    filters:
+      - asset.family.contains('network')
+    queries:
+      - uid: mondoo-ssl-tls-certificate-incident-response-domain-name
+        title: Retreive Domain Name
+        query: |
+          tls.domainName
+      - uid: mondoo-ssl-tls-certificate-incident-response-versions
+        title: Retrieve list of supported SSL and TLS versions
+        query: |
+          tls.versions
+      - uid: mondoo-ssl-tls-certificate-incident-response-ciphers
+        title: Retrieve list of supported SSl/TLS ciphers
+        query: |
+          tls.ciphers
+      - uid: mondoo-ssl-tls-certificate-incident-response-signing-algo
+        title: Retrieve information about signature algorithm of all certificates in the certificate chain
+        query: |
+          tls.certificates {
+            signingAlgorithm
+            subject.commonName
+          }
+      - uid: mondoo-ssl-tls-certificate-incident-response-is-revoked
+        title: Retrieve information about revoked, verified and CA status of all certificates in the certificate chain
+        query: |
+          tls.certificates {
+            subject.commonName
+            isCA
+            isRevoked
+            isVerified
+          }
+      - uid: mondoo-ssl-tls-certificate-incident-response-when-expire
+        title: Retrieve the expiration dates for all certificates in the certificate chain
+        query: |
+          tls.certificates {
+            subject.commonName
+            expiresIn
+            notAfter
+            notBefore
+          }
