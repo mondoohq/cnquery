@@ -120,7 +120,7 @@ private googleworkspace.group @defaults("email") {
   securitySettings() dict
 }
 
-// Google Workpsace Group Member
+// Google Workspace Group Member
 private googleworkspace.member @defaults("email") {
   // The unique ID of the group member
   id string
