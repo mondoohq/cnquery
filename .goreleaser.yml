@@ -93,7 +93,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target root"
+      - "--target=root"
   - use: buildx
     goos: linux
     goarch: arm64
@@ -107,7 +107,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target root"
+      - "--target=root"
   - use: buildx
     goos: linux
     goarch: arm
@@ -122,7 +122,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target root"
+      - "--target=root"
   - use: buildx
     goos: linux
     goarch: arm
@@ -137,7 +137,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target root"
+      - "--target=root"
   # Rootless
   - use: buildx
     goos: linux
@@ -152,7 +152,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target rootless"
+      - "--target=rootless"
   - use: buildx
     goos: linux
     goarch: arm64
@@ -166,7 +166,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target rootless"
+      - "--target=rootless"
   - use: buildx
     goos: linux
     goarch: arm
@@ -181,7 +181,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target rootless"
+      - "--target=rootless"
   - use: buildx
     goos: linux
     goarch: arm
@@ -196,7 +196,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--target rootless"
+      - "--target=rootless"
 docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
   - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}
     image_templates:
