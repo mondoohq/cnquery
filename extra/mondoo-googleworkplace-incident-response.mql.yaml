@@ -1,0 +1,63 @@
+packs:
+  - uid: mondoo-googleworkspace-incident-response
+    name: Google Workspace Incident Response
+    is_public: true
+    docs:
+      desc: |
+        ### Overview
+
+        The Mondoo Google Workspace Incident Response query pack gathers configuration data about your Google Workspace investigation during a security incident.
+
+        ### Prerequisites
+
+        1. Create/Select a GCP project
+        2. Navigate to the [Google API Console](https://console.cloud.google.com/apis/dashboard). 
+        3. Click "Enable APIs and Services" and enable the following APIs:
+          - Admin SDK API 
+          - Cloud Identity API 
+          - Google Calendar API
+          - Google Drive API
+          - Gmail API
+          - Google People API
+        4. Create a service account for [Google Workspace](https://support.google.com/a/answer/7378726?product_name=UnuFlow&hl=en&visit_id=638041387835615758-4147680582&rd=1&src=supportwidget0&hl=en)
+        5. Create credentials for the service account and downlaad the json file
+        6. Enter the following scopes in Security -> Access and data controls -> API controls, and click on  [Domain-wide Delegation](https://developers.google.com/workspace/guides/create-credentials#delegate_domain-wide_authority_to_your_service_account) 
+
+          - https://www.googleapis.com/auth/admin.chrome.printers.readonly
+          - https://www.googleapis.com/auth/admin.directory.customer.readonly
+          - https://www.googleapis.com/auth/admin.directory.device.chromeos.readonly
+          - https://www.googleapis.com/auth/admin.directory.device.mobile.readonly
+          - https://www.googleapis.com/auth/admin.directory.domain.readonly
+          - https://www.googleapis.com/auth/admin.directory.group.member.readonly
+          - https://www.googleapis.com/auth/admin.directory.group.readonly
+          - https://www.googleapis.com/auth/admin.directory.orgunit.readonly
+          - https://www.googleapis.com/auth/admin.directory.resource.calendar.readonly
+          - https://www.googleapis.com/auth/admin.directory.rolemanagement.readonly
+          - https://www.googleapis.com/auth/admin.directory.user.alias.readonly
+          - https://www.googleapis.com/auth/admin.directory.user.readonly
+          - https://www.googleapis.com/auth/admin.directory.userschema.readonly
+          - https://www.googleapis.com/auth/admin.reports.audit.readonly
+          - https://www.googleapis.com/auth/admin.reports.usage.readonly
+          - https://www.googleapis.com/auth/admin.directory.user.security
+          - https://www.googleapis.com/auth/cloud-identity.groups.readonly
+
+        ### Run query pack
+
+        To run this query pack against a Google Workspace customer:
+
+        ```bash
+        export GOOGLEWORKSPACE_CREDENTIALS=$PWD/my-project-123456-1234ea722b12.json
+        cnquery scan googleworkspace --customer-id <CUSTOMERID> --impersonated-user-email <EMAIL>
+        ```
+    filters:
+      - asset.platform == "googleworkspace"
+    queries:
+      - uid: mondoo-incident-response-slack-team-domain
+        title: Retrieve Google Workspace Domains
+        query: googleworkspace.domains { domainName isPrimary verified }
+      - uid: mondoo-incident-response-slack-mfa-status
+        title: Retrieve Github Workspace Users MFA status 
+        query: googleworkspace.users { primaryEmail isEnforcedIn2Sv }
+      - uid: mondoo-incident-response-github-org-owners
+        title: Retrieve Google Workspace Super Admins
+        query: googleworkspace.report.users.where( security["isSuperAdmin"] == true) { userEmail  }
