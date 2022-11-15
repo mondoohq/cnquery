@@ -103,10 +103,13 @@ lr/build:
 	./lr go resources/packs/vsphere/vsphere.lr
 	./lr docs json resources/packs/vsphere/vsphere.lr.manifest.yaml
 	./lr go resources/packs/okta/okta.lr
+	./lr docs yaml resources/packs/okta/okta.lr --docs-file resources/packs/okta/okta.lr.manifest.yaml
 	./lr docs json resources/packs/okta/okta.lr.manifest.yaml
 	./lr go resources/packs/googleworkspace/googleworkspace.lr
+	./lr docs yaml resources/packs/googleworkspace/googleworkspace.lr --docs-file resources/packs/googleworkspace/googleworkspace.lr.manifest.yaml
 	./lr docs json resources/packs/googleworkspace/googleworkspace.lr.manifest.yaml
 	./lr go resources/packs/slack/slack.lr
+	./lr docs yaml resources/packs/slack/slack.lr --docs-file resources/packs/slack/slack.lr.manifest.yaml
 	./lr docs json resources/packs/slack/slack.lr.manifest.yaml
 	./lr go resources/mock/mochi.lr
 
