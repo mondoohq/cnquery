@@ -76,6 +76,7 @@ resources:
       locale: {}
       name: {}
       presence: {}
+      profile: {}
       realName: {}
       teamId: {}
       timeZone: {}
@@ -106,4 +107,5 @@ resources:
       list: {}
       members: {}
       owner: {}
+      owners: {}
     min_mondoo_version: latest
