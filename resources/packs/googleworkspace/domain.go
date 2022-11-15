@@ -8,7 +8,7 @@ import (
 )
 
 func (g *mqlGoogleworkspace) GetDomains() ([]interface{}, error) {
-	provider, directoryService, err := directoryService(g.MotorRuntime.Motor.Provider)
+	provider, directoryService, err := directoryService(g.MotorRuntime.Motor.Provider, directory.AdminDirectoryDomainReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
