@@ -96,8 +96,8 @@ func AskPassword(prompt string) (string, error) {
 		}
 	})
 
-	p := tea.NewProgram(passwordModel)
-	if err := p.Start(); err != nil {
+	p := tea.NewProgram(passwordModel, tea.WithInputTTY())
+	if _, err := p.Run(); err != nil {
 		return res, err
 	}
 

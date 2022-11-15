@@ -23,9 +23,10 @@ func AssetSelect(assetList []*asset.Asset) *asset.Asset {
 	}
 
 	selection := -1 // make sure we have an invalid index
-	err := tea.NewProgram(NewListModel("Available assets", list, func(s int) {
+	model := NewListModel("Available assets", list, func(s int) {
 		selection = s
-	})).Start()
+	})
+	_, err := tea.NewProgram(model, tea.WithInputTTY()).Run()
 	if err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
