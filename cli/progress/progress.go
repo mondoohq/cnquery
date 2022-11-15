@@ -78,7 +78,7 @@ func (p *progressbar) Open() error {
 			(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
 			defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
 
-			if err := tea.NewProgram(p).Start(); err != nil {
+			if _, err := tea.NewProgram(p).Run(); err != nil {
 				panic(err)
 			}
 		}()
