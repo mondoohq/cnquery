@@ -94,7 +94,10 @@ func (a *mqlAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 		return nil, err
 	}
 
-	client := azkeys.NewClient(vaultUri, token, &azkeys.ClientOptions{})
+	client, err := azkeys.NewClient(vaultUri, token, &azkeys.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
 
 	ctx := context.Background()
 	pager := client.NewListKeysPager(&azkeys.ListKeysOptions{})
@@ -190,7 +193,7 @@ func (a *mqlAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	client := azsecrets.NewClient(vaultUrl, token, &azsecrets.ClientOptions{})
+	client, err := azsecrets.NewClient(vaultUrl, token, &azsecrets.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +338,7 @@ func (a *mqlAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	client := azkeys.NewClient(kvid.BaseUrl, token, &azkeys.ClientOptions{})
+	client, err := azkeys.NewClient(kvid.BaseUrl, token, &azkeys.ClientOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -565,7 +568,11 @@ func (a *mqlAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	client := azsecrets.NewClient(vaultUrl, token, &azsecrets.ClientOptions{})
+	client, err := azsecrets.NewClient(vaultUrl, token, &azsecrets.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
 	pager := client.NewListSecretVersionsPager(name, &azsecrets.ListSecretVersionsOptions{})
 	res := []interface{}{}
 	for pager.More() {
