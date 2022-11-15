@@ -11,7 +11,7 @@ slack {
 }
 
 // Slack Team
-slack.team {
+slack.team @defaults("id domain") {
   // ID of the team
   id string
   // Name of the team
@@ -32,7 +32,7 @@ slack.users {
   // Filter admins of workspace
   admins() []slack.user
   // Filter owner of workspace
-  owner() []slack.user
+  owners() []slack.user
 }
 
 // Slack User
@@ -80,6 +80,8 @@ slack.user @defaults("id") {
   presence string
   // IETF language code that represents this user's chosen display language
   locale string
+  // User profile
+  profile dict
   // related Slack Enterprise Grid user
   enterpriseUser slack.enterpriseUser
 }

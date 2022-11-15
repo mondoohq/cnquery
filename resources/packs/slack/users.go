@@ -3,6 +3,9 @@ package slack
 import (
 	"context"
 	"errors"
+	"time"
+
+	"go.mondoo.com/cnquery/resources/packs/core"
 
 	"github.com/slack-go/slack"
 	"go.mondoo.com/cnquery/resources"
@@ -100,7 +103,7 @@ func (s *mqlSlackUsers) GetAdmins() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlSlackUsers) GetOwner() ([]interface{}, error) {
+func (s *mqlSlackUsers) GetOwners() ([]interface{}, error) {
 	all, err := s.GetList()
 	if err != nil {
 		return all, err
@@ -121,8 +124,55 @@ func (s *mqlSlackUsers) GetOwner() ([]interface{}, error) {
 	return res, nil
 }
 
+type userProfile struct {
+	FirstName             string     `json:"firstName"`
+	LastName              string     `json:"lastName"`
+	RealName              string     `json:"realName"`
+	RealNameNormalized    string     `json:"realNameNormalized"`
+	DisplayName           string     `json:"displayName"`
+	DisplayNameNormalized string     `json:"displayNameNormalized"`
+	Email                 string     `json:"email"`
+	Skype                 string     `json:"skype"`
+	Phone                 string     `json:"phone"`
+	Title                 string     `json:"title"`
+	BotID                 string     `json:"botId,omitempty"`
+	ApiAppID              string     `json:"apiAppId,omitempty"`
+	StatusText            string     `json:"statusText,omitempty"`
+	StatusEmoji           string     `json:"statusEmoji,omitempty"`
+	StatusExpiration      *time.Time `json:"statusExpiration"`
+	Team                  string     `json:"team"`
+}
+
+func newUserProfile(u slack.UserProfile) userProfile {
+	statusExpiration := time.Unix(int64(u.StatusExpiration), 0)
+
+	return userProfile{
+		FirstName:             u.FirstName,
+		LastName:              u.LastName,
+		RealName:              u.RealName,
+		RealNameNormalized:    u.RealNameNormalized,
+		DisplayName:           u.DisplayName,
+		DisplayNameNormalized: u.DisplayNameNormalized,
+		Email:                 u.Email,
+		Skype:                 u.Skype,
+		Phone:                 u.Phone,
+		Title:                 u.Title,
+		BotID:                 u.BotID,
+		ApiAppID:              u.ApiAppID,
+		StatusText:            u.StatusText,
+		StatusEmoji:           u.StatusEmoji,
+		StatusExpiration:      &statusExpiration,
+		Team:                  u.Team,
+	}
+}
+
 func newMqlSlackUser(runtime *resources.Runtime, user slack.User) (interface{}, error) {
 	var enterpriseUser interface{}
+
+	userProfile, err := core.JsonToDict(newUserProfile(user.Profile))
+	if err != nil {
+		return nil, err
+	}
 
 	if user.Enterprise.ID != "" {
 		var err error
@@ -155,6 +205,7 @@ func newMqlSlackUser(runtime *resources.Runtime, user slack.User) (interface{}, 
 		"hasFiles", user.HasFiles,
 		"presence", user.Presence,
 		"locale", user.Locale,
+		"profile", userProfile,
 		"enterpriseUser", enterpriseUser,
 	)
 }
