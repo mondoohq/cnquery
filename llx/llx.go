@@ -69,19 +69,33 @@ func (c *Calls) Load(k uint64) ([]uint64, bool) {
 	return v, ok
 }
 
-// Cache is a map containing stepCache values
-type Cache struct{ sync.Map }
+// cache is a map containing stepCache values
+type cache struct {
+	data map[uint64]*stepCache
+	lock sync.Mutex
+}
+
+func newCache() *cache {
+	return &cache{
+		data: map[uint64]*stepCache{},
+		lock: sync.Mutex{},
+	}
+}
 
 // Store a new call connection
-func (c *Cache) Store(k uint64, v *stepCache) { c.Map.Store(k, v) }
+func (c *cache) Store(k uint64, v *stepCache) {
+	c.lock.Lock()
+	c.data[k] = v
+	c.lock.Unlock()
+}
 
 // Load a call connection
-func (c *Cache) Load(k uint64) (*stepCache, bool) {
-	res, ok := c.Map.Load(k)
-	if res == nil {
-		return nil, ok
-	}
-	return res.(*stepCache), ok
+func (c *cache) Load(k uint64) (*stepCache, bool) {
+	c.lock.Lock()
+	res, ok := c.data[k]
+	c.lock.Unlock()
+
+	return res, ok
 }
 
 type blockExecutor struct {
@@ -90,8 +104,8 @@ type blockExecutor struct {
 	entrypoints    map[uint64]struct{}
 	callback       ResultCallback
 	callbackPoints map[uint64]string
-	cache          *Cache
-	stepTracker    *Cache
+	cache          *cache
+	stepTracker    *cache
 	calls          *Calls
 	block          *Block
 	parent         *blockExecutor
@@ -173,8 +187,8 @@ func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallba
 		blockRef:       blockRef,
 		callback:       callback,
 		callbackPoints: callbackPoints,
-		cache:          &Cache{},
-		stepTracker:    &Cache{},
+		cache:          newCache(),
+		stepTracker:    newCache(),
 		calls: &Calls{
 			locker: sync.Mutex{},
 			calls:  map[uint64][]uint64{},
