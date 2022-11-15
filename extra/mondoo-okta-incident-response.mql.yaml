@@ -1,0 +1,34 @@
+packs:
+  - uid: mondoo-okta-incident-response
+    name: Mondoo Okta Incident Response
+    is_public: true
+    docs:
+      desc: |
+        ### Overview
+
+        The Mondoo Okta Incident Response Pack query pack gathers configuration data about your Okta investigation during a security incident.
+
+        ### Prerequisites
+
+        To run this query pack, you will need access to the Okta API:
+
+        1. Create an Okta [API token](https://developer.okta.com/docs/guides/create-an-api-token/create-the-token/) by going to https:/DOMAIN.okta.com/admin/access/api/tokens
+        2. Note your Okta domain https://DOMAIN.okta.com
+
+        ### Run query pack
+
+        To run this query pack against a Okta domain:
+
+        ```bash
+        export OKTA_TOKEN=<TOKEN>
+        cnquery shell okta --organization DOMAIN.okta.com --token $OKTA_TOKEN 
+        ```
+    filters:
+      - asset.platform == "okta"
+    queries:
+      - uid: mondoo-slack-incident-response-users
+        title: Retrieve Users
+        query: okta.users { * }
+      - uid: mondoo-slack-incident-response-team-id
+        title: Retrieve installed applications
+        query: okta.applications  { * }

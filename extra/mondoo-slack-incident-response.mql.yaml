@@ -6,7 +6,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo Slack Security policy ensures best-practice settings for Slack workspaces.
+        The Mondoo Slack Incident Response Pack query pack gathers configuration data about your Slack investigation during a security incident.
 
         ### Prerequisites
 
