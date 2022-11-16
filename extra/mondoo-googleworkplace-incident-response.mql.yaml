@@ -52,12 +52,12 @@ packs:
     filters:
       - asset.platform == "googleworkspace"
     queries:
-      - uid: mondoo-incident-response-slack-team-domain
+      - uid: mondoo-googleworkspace-incident-response-domain
         title: Retrieve Google Workspace Domains
         query: googleworkspace.domains { domainName isPrimary verified }
-      - uid: mondoo-incident-response-slack-mfa-status
-        title: Retrieve Github Workspace Users MFA status 
+      - uid: mondoo-googleworkspace-incident-response-user-mfa-status
+        title: Retrieve Google Workspace Users MFA status 
         query: googleworkspace.users { primaryEmail isEnforcedIn2Sv }
-      - uid: mondoo-incident-response-github-org-owners
+      - uid: mondoo-googleworkspace-incident-response-super-admins
         title: Retrieve Google Workspace Super Admins
         query: googleworkspace.report.users.where( security["isSuperAdmin"] == true) { userEmail  }

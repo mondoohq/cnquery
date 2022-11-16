@@ -26,9 +26,9 @@ packs:
     filters:
       - asset.platform == "okta"
     queries:
-      - uid: mondoo-slack-incident-response-users
+      - uid: mondoo-okta-incident-response-users
         title: Retrieve Users
         query: okta.users { * }
-      - uid: mondoo-slack-incident-response-team-id
+      - uid: mondoo-okta-incident-response-team-id
         title: Retrieve installed applications
         query: okta.applications  { * }
