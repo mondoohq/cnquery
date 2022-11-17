@@ -67,7 +67,7 @@ To learn more, use the `help` command.
 
 To exit, either press CTRL + D or type `exit`.
 
-You can run the shell against local and remote targets, like `k8s`, `aws`, `docker`, and many more. Run `--help` to see a full list of supported providers.
+You can run the shell against local and remote targets like `k8s`, `aws`, `docker`, and many more. Run `--help` to see a full list of supported providers.
 
 ## Run simple queries
 
@@ -125,7 +125,7 @@ Like all other commands, you can specify different providers like `k8s`, `aws`, 
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
 
-## Private Query Packs 
+## Private query packs 
 
 Distributing cnqueries across your fleet
 
@@ -149,9 +149,9 @@ To add custom query packs, you can upload them:
 cnquery bundle upload mypack.mql.yaml
 ```
 
-## Supported Targets
+## Supported targets
 
-| Description                  | Provider                   | Example                                                                                                                                                     |
+| Target                       | Provider                   | Example                                                                                                                                                     |
 | ---------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | AWS accounts                 | `aws`                      | `cnquery shell aws`                                                                                                                                         |
 | AWS EC2 instances            | `ssh`                      | `cnquery shell ssh user@host`                                                                                                                               |
@@ -191,9 +191,9 @@ There are so many things `cnquery` can do! Gather information about your fleet, 
 Explore:
 
 - [cnspec docs](https://mondoo.com/docs/cnquery/)
-- [Query Packs](https://github.com/mondoohq/cnquery-packs)
+- [Query packs](https://github.com/mondoohq/cnquery-packs)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
-- [MQL Language Reference](https://mondoo.com/docs/mql/resources/)
+- [MQL language reference](https://mondoo.com/docs/mql/resources/)
 - [cnspec](https://github.com/mondoohq/cnspec), our open source, cloud-native security scanner
 
 ## Join the community!
@@ -202,7 +202,7 @@ Our goal is to become the API for your entire infrastructure. Join our [communit
 
 ## Development
 
-See our [Development Documentation](docs/development.md) for information on building and contributing to cnquery.
+See our [development documentation](docs/development.md) for information on building and contributing to cnquery.
 
 ## Legal
 
