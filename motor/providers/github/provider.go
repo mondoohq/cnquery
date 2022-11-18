@@ -57,7 +57,14 @@ func New(tc *providers.Config) (*Provider, error) {
 	}
 
 	client := github.NewClient(oauthClient)
-
+	// perform a quick call to verify the token's validity.
+	_, resp, err := client.Zen(context.Background())
+	if err != nil {
+		if resp.StatusCode == 401 {
+			return nil, errors.New("invalid github token provided")
+		}
+		return nil, err
+	}
 	return &Provider{
 		client: client,
 		opts:   tc.Options,
