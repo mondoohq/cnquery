@@ -165,7 +165,7 @@ configuration for the account scan. To scan your Azure compute, you need to
 configure your Azure credentials and have SSH access to your instances.`,
 			},
 			"gcp": {
-				Short: "Scan a Google Cloud Platform (GCP) account",
+				Short: "Scan a Google Cloud Platform (GCP) organization or project",
 			},
 			"gcp-gcr": {
 				Short: "Scan a Google Container Registry (GCR)",
