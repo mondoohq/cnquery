@@ -98,7 +98,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-plugin v1.4.6
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/hcl/v2 v2.15.0
+	github.com/hashicorp/hcl/v2 v2.14.1
 	github.com/hashicorp/vault/api v1.8.2
 	github.com/hnakamur/go-scp v1.0.2
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
@@ -143,7 +143,7 @@ require (
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	github.com/vmware/govmomi v0.29.0
 	github.com/xanzy/go-gitlab v0.74.0
-	github.com/zclconf/go-cty v1.12.1
+	github.com/zclconf/go-cty v1.10.0
 	go.mondoo.com/ranger-rpc v0.5.1-0.20220923135836-9e7732899d34
 	go.opentelemetry.io/otel v1.10.0
 	golang.org/x/crypto v0.2.0
