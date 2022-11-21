@@ -15,7 +15,7 @@ const (
 	azureIdentifierFileLinux = "/sys/class/dmi/id/sys_vendor"
 )
 
-func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string, []string) {
+func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string, string, []string) {
 	sysVendor := ""
 	if pf.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow
@@ -26,18 +26,18 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 		content, err := afero.ReadFile(provider.FS(), azureIdentifierFileLinux)
 		if err != nil {
 			log.Debug().Err(err).Msgf("unable to read %s", azureIdentifierFileLinux)
-			return "", nil
+			return "", "", nil
 		}
 		sysVendor = string(content)
 	} else {
 		mgr, err := smbios.ResolveManager(provider, pf)
 		if err != nil {
-			return "", nil
+			return "", "", nil
 		}
 		info, err := mgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")
-			return "", nil
+			return "", "", nil
 		}
 		sysVendor = info.SysInfo.Vendor
 	}
@@ -46,7 +46,7 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 		mdsvc, err := azcompute.Resolve(provider, pf)
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to get metadata resolver")
-			return "", nil
+			return "", "", nil
 		}
 		id, err := mdsvc.Identify()
 		if err != nil {
@@ -54,10 +54,10 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 				Str("transport", provider.Kind().String()).
 				Strs("platform", pf.GetFamily()).
 				Msg("failed to get azure platform id")
-			return "", nil
+			return "", "", nil
 		}
-		return id.InstanceID, []string{id.AccountID}
+		return id.InstanceID, "", []string{id.AccountID}
 	}
 
-	return "", nil
+	return "", "", nil
 }

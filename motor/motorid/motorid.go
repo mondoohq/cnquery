@@ -27,6 +27,12 @@ type PlatformFingerprint struct {
 	RelatedAssets []PlatformFingerprint
 }
 
+type PlatformInfo struct {
+	IDs                []string
+	Name               string
+	RelatedPlatformIDs []string
+}
+
 func IdentifyPlatform(t providers.Instance, p *platform.Platform, idDetectors []providers.PlatformIdDetector) (*PlatformFingerprint, error) {
 	if len(idDetectors) == 0 {
 		idDetectors = t.PlatformIdDetectors()
@@ -38,30 +44,33 @@ func IdentifyPlatform(t providers.Instance, p *platform.Platform, idDetectors []
 
 	for i := range idDetectors {
 		idDetector := idDetectors[i]
-		platformIds, relatedPlatformIds, err := GatherPlatformIDs(t, p, idDetector)
+		platformInfo, err := GatherPlatformInfo(t, p, idDetector)
 		if err != nil {
 			// we only err if we found zero platform ids, if we try multiple, a fail of an individual one is okay
-			log.Debug().Err(err).Str("detector", string(idDetector)).Msg("could not determine platform id")
+			log.Debug().Err(err).Str("detector", string(idDetector)).Msg("could not determine platform info")
 			continue
 		}
-		if len(platformIds) > 0 {
-			ids = append(ids, platformIds...)
+		if len(platformInfo.IDs) > 0 {
+			ids = append(ids, platformInfo.IDs...)
 		}
-		if len(relatedPlatformIds) > 0 {
-			relatedIds = append(relatedIds, relatedPlatformIds...)
+		if len(platformInfo.RelatedPlatformIDs) > 0 {
+			relatedIds = append(relatedIds, platformInfo.RelatedPlatformIDs...)
 		}
 
-		// check if we get a name for the asset, eg. aws instance id
-		for i := range platformIds {
-			name := gatherNameForPlatformId(platformIds[i])
-			if name != "" {
-				fingerprint.Name = name
+		if len(platformInfo.Name) > 0 {
+			fingerprint.Name = platformInfo.Name
+		} else {
+			// check if we get a name for the asset, eg. aws instance id
+			for _, id := range platformInfo.IDs {
+				name := gatherNameForPlatformId(id)
+				if name != "" {
+					fingerprint.Name = name
+				}
 			}
 		}
-
 		// check whether we can extract runtime and kind information
-		for i := range platformIds {
-			runtime, kind := extractPlatformAndKindFromPlatformId(platformIds[i])
+		for _, id := range platformInfo.IDs {
+			runtime, kind := extractPlatformAndKindFromPlatformId(id)
 			if runtime != "" {
 				fingerprint.Runtime = runtime
 				fingerprint.Kind = kind
@@ -105,7 +114,7 @@ func extractPlatformAndKindFromPlatformId(id string) (string, providers.Kind) {
 	return "", providers.Kind_KIND_UNKNOWN
 }
 
-func GatherPlatformIDs(provider providers.Instance, pf *platform.Platform, idDetector providers.PlatformIdDetector) ([]string, []string, error) {
+func GatherPlatformInfo(provider providers.Instance, pf *platform.Platform, idDetector providers.PlatformIdDetector) (*PlatformInfo, error) {
 	// helper for recoding transport to extract the original transport
 	recT, ok := provider.(*mock.MockRecordProvider)
 	if ok {
@@ -121,53 +130,77 @@ func GatherPlatformIDs(provider providers.Instance, pf *platform.Platform, idDet
 		hostname, hostErr := hostname.Hostname(osProvider, pf)
 		if hostErr == nil && len(hostname) > 0 {
 			identifier = "//platformid.api.mondoo.app/hostname/" + hostname
-			return []string{identifier}, nil, hostErr
+			return &PlatformInfo{
+				IDs:                []string{identifier},
+				Name:               "",
+				RelatedPlatformIDs: []string{},
+			}, hostErr
 		}
-		return nil, nil, nil
+		return &PlatformInfo{}, nil
 	case isOSProvider && idDetector == providers.MachineIdDetector:
 		guid, hostErr := machineid.MachineId(osProvider, pf)
 		if hostErr == nil && len(guid) > 0 {
 			identifier = "//platformid.api.mondoo.app/machineid/" + guid
-			return []string{identifier}, nil, hostErr
+			return &PlatformInfo{
+				IDs:                []string{identifier},
+				Name:               "",
+				RelatedPlatformIDs: []string{},
+			}, hostErr
 		}
-		return nil, nil, nil
+		return &PlatformInfo{}, nil
 	case isOSProvider && idDetector == providers.AWSEc2Detector:
 		metadata, err := awsec2.Resolve(osProvider, pf)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		ident, err := metadata.Identify()
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		if ident.InstanceID != "" {
-			return []string{ident.InstanceID}, []string{ident.AccountID}, nil
+			return &PlatformInfo{
+				IDs:                []string{ident.InstanceID},
+				Name:               ident.InstanceName,
+				RelatedPlatformIDs: []string{ident.AccountID},
+			}, nil
 		}
-		return nil, nil, nil
+		return &PlatformInfo{}, nil
 	case isOSProvider && idDetector == providers.CloudDetector:
-		identifier, relatedIdentifiers := clouddetect.Detect(osProvider, pf)
+		identifier, name, relatedIdentifiers := clouddetect.Detect(osProvider, pf)
 		if identifier != "" {
-			return []string{identifier}, relatedIdentifiers, nil
+			return &PlatformInfo{
+				IDs:                []string{identifier},
+				Name:               name,
+				RelatedPlatformIDs: relatedIdentifiers,
+			}, nil
 		}
-		return nil, nil, nil
+		return &PlatformInfo{}, nil
 	case isOSProvider && idDetector == providers.SshHostKey:
 		identifier, err := sshhostkey.Detect(osProvider, pf)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
-		return identifier, nil, err
+		return &PlatformInfo{
+			IDs:                identifier,
+			Name:               "",
+			RelatedPlatformIDs: []string{},
+		}, nil
 	case idDetector == providers.TransportPlatformIdentifierDetector:
 		identifiable, ok := provider.(providers.PlatformIdentifier)
 		if !ok {
-			return nil, nil, errors.New("the transport-platform-id detector is not supported for transport")
+			return nil, errors.New("the transport-platform-id detector is not supported for transport")
 		}
 
 		identifier, err := identifiable.Identifier()
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
-		return []string{identifier}, nil, nil
+		return &PlatformInfo{
+			IDs:                []string{identifier},
+			Name:               "",
+			RelatedPlatformIDs: []string{},
+		}, nil
 	default:
-		return nil, nil, errors.New(fmt.Sprintf("the provided id-detector is not supported: %s", idDetector))
+		return nil, errors.New(fmt.Sprintf("the provided id-detector is not supported: %s", idDetector))
 	}
 }

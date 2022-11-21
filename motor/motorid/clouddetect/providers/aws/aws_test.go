@@ -20,9 +20,10 @@ func TestDetectInstance(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	identifier, related := Detect(provider, p)
+	identifier, name, related := Detect(provider, p)
 
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/123456789012/regions/us-west-2/instances/i-1234567890abcdef0", identifier)
+	assert.Equal(t, "ec2-name", name)
 	require.Len(t, related, 1)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/accounts/123456789012", related[0])
 }
@@ -37,9 +38,10 @@ func TestDetectInstanceArm(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	identifier, related := Detect(provider, p)
+	identifier, name, related := Detect(provider, p)
 
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/123456789012/regions/us-west-2/instances/i-1234567890abcdef0", identifier)
+	assert.Equal(t, "ec2-name", name)
 	require.Len(t, related, 1)
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/accounts/123456789012", related[0])
 }
@@ -54,8 +56,10 @@ func TestDetectNotInstance(t *testing.T) {
 	p, err := m.Platform()
 	require.NoError(t, err)
 
-	identifier, related := Detect(provider, p)
+	identifier, name, related := Detect(provider, p)
 
 	assert.Equal(t, "", identifier)
+	assert.Equal(t, "", name)
+
 	require.Len(t, related, 0)
 }

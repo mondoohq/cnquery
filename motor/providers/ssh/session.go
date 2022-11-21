@@ -210,7 +210,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			if err != nil {
 				return nil, nil, err
 			}
-
+			log.Debug().Msg("generating instance connect credentials")
 			eic := awsinstanceconnect.New(cfg)
 			creds, err := eic.GenerateCredentials(pCfg.Host, credential.User)
 			if err != nil {

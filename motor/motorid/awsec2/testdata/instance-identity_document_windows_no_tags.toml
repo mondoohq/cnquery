@@ -6,7 +6,19 @@
     exit_status = 0
   [commands.fb0f5ced4f556de99f237ea35a78ba4ddd5fc4e149589805d95cbf44f5ccc7aa]
     command = "powershell.exe -NoProfile -EncodedCommand JABQAHIAbwBnAHIAZQBzAHMAUAByAGUAZgBlAHIAZQBuAGMAZQA9ACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsASQBuAHYAbwBrAGUALQBSAGUAcwB0AE0AZQB0AGgAbwBkACAALQBUAGkAbQBlAG8AdQB0AFMAZQBjACAAMQAgAC0AVQBSAEkAIABoAHQAdABwADoALwAvADEANgA5AC4AMgA1ADQALgAxADYAOQAuADIANQA0AC8AbABhAHQAZQBzAHQALwBtAGUAdABhAC0AZABhAHQAYQAvAHQAYQBnAHMALwBpAG4AcwB0AGEAbgBjAGUALwBOAGEAbQBlACAALQBVAHMAZQBCAGEAcwBpAGMAUABhAHIAcwBpAG4AZwAgAHwAIABDAG8AbgB2AGUAcgB0AFQAbwAtAEoAcwBvAG4A"
-    stdout = "ec2-name-windows"
+    stdout = """
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+  <title>404 - Not Found</title>
+ </head>
+ <body>
+  <h1>404 - Not Found</h1>
+ </body>
+</html>
+"""
     stderr = ""
     exit_status = 0
   [commands.7063dece7cccf374d9fa1ee30ff23300fa42477e064e69be7bb6d01c0cfff682]
