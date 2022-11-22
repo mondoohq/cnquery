@@ -4,8 +4,6 @@ import (
 	"errors"
 	"runtime"
 
-	"go.mondoo.com/cnquery/motor/providers/slack"
-
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/arista"
@@ -22,7 +20,9 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/motor/providers/okta"
 	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/slack"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
+	"go.mondoo.com/cnquery/motor/providers/vcd"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
 )
 
@@ -146,6 +146,8 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Runtime: pt.Runtime(), // TODO
 		}, nil
 	case *slack.Provider:
+		return pt.PlatformInfo()
+	case *vcd.Provider:
 		return pt.PlatformInfo()
 	case os.OperatingSystemProvider:
 		var resolved bool

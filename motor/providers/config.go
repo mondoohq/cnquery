@@ -83,6 +83,8 @@ func (cfg *Config) ToUrl() string {
 		return ProviderID_SLACK
 	case ProviderType_GOOGLE_WORKSPACE:
 		return ProviderID_GOOGLE_WORKSPACE
+	case ProviderType_VCD:
+		return ProviderID_VCD
 	case ProviderType_HOST:
 		if _, ok := cfg.Options["tls"]; ok {
 			return ProviderID_TLS + "://" + cfg.Host

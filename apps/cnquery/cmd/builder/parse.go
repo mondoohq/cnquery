@@ -601,6 +601,33 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 				Password: x,
 			})
 		}
+	case providers.ProviderType_VCD:
+		connection.Backend = providerType
+
+		cred := &vault.Credential{
+			Type:     vault.CredentialType_password,
+			Password: password,
+		}
+
+		if x, err := cmd.Flags().GetString("user"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --user value")
+		} else if x != "" {
+			cred.User = x
+		}
+
+		if x, err := cmd.Flags().GetString("organization"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --organization value")
+		} else if x != "" {
+			connection.Options["organization"] = x
+		}
+
+		if x, err := cmd.Flags().GetString("host"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --host value")
+		} else if x != "" {
+			connection.Host = x
+		}
+
+		connection.Credentials = append(connection.Credentials, cred)
 	}
 
 	// if username was set but not credentials

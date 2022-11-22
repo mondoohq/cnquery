@@ -14,10 +14,6 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/discovery/slack"
-
-	"go.mondoo.com/cnquery/motor/discovery/googleworkspace"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -31,6 +27,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/gcp"
 	"go.mondoo.com/cnquery/motor/discovery/github"
 	"go.mondoo.com/cnquery/motor/discovery/gitlab"
+	"go.mondoo.com/cnquery/motor/discovery/googleworkspace"
 	"go.mondoo.com/cnquery/motor/discovery/ipmi"
 	"go.mondoo.com/cnquery/motor/discovery/k8s"
 	"go.mondoo.com/cnquery/motor/discovery/local"
@@ -39,9 +36,11 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/network"
 	"go.mondoo.com/cnquery/motor/discovery/okta"
 	"go.mondoo.com/cnquery/motor/discovery/os"
+	"go.mondoo.com/cnquery/motor/discovery/slack"
 	"go.mondoo.com/cnquery/motor/discovery/tar"
 	"go.mondoo.com/cnquery/motor/discovery/terraform"
 	"go.mondoo.com/cnquery/motor/discovery/vagrant"
+	"go.mondoo.com/cnquery/motor/discovery/vcd"
 	"go.mondoo.com/cnquery/motor/discovery/vsphere"
 	"go.mondoo.com/cnquery/motor/motorid"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -91,6 +90,7 @@ func init() {
 		providers.ProviderID_OKTA:               &okta.Resolver{},
 		providers.ProviderID_GOOGLE_WORKSPACE:   &googleworkspace.Resolver{},
 		providers.ProviderID_SLACK:              &slack.Resolver{},
+		providers.ProviderID_VCD:                &vcd.Resolver{},
 	}
 }
 

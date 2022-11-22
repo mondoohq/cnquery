@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/cnquery/motor/providers/slack"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -26,9 +24,11 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/motor/providers/okta"
+	"go.mondoo.com/cnquery/motor/providers/slack"
 	"go.mondoo.com/cnquery/motor/providers/ssh"
 	"go.mondoo.com/cnquery/motor/providers/tar"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
+	"go.mondoo.com/cnquery/motor/providers/vcd"
 	"go.mondoo.com/cnquery/motor/providers/vmwareguestapi"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
 	"go.mondoo.com/cnquery/motor/providers/winrm"
@@ -340,6 +340,15 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 		}
 	case providers.ProviderType_SLACK:
 		p, err := slack.New(resolvedConfig)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(p)
+		if err != nil {
+			return nil, err
+		}
+	case providers.ProviderType_VCD:
+		p, err := vcd.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
