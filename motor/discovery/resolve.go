@@ -114,8 +114,8 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialF
 	assetFallbackName := func(a *asset.Asset, c *providers.Config) {
 		// set the asset name to the config name. This is only required for error cases where the discovery
 		// is not successful
-		if root.Name == "" {
-			root.Name = c.Host
+		if a.Name == "" {
+			a.Name = c.Host
 		}
 	}
 
