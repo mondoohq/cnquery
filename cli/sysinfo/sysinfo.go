@@ -70,9 +70,9 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 			idDetector = providers.MachineIdDetector
 		}
 
-		platformIDs, _, err := motorid.GatherPlatformIDs(cfg.m.Provider, pi, idDetector)
-		if err == nil && len(platformIDs) > 0 {
-			sysInfo.PlatformId = platformIDs[0]
+		info, err := motorid.GatherPlatformInfo(cfg.m.Provider, pi, idDetector)
+		if err == nil && len(info.IDs) > 0 {
+			sysInfo.PlatformId = info.IDs[0]
 		}
 	}
 

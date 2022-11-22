@@ -14,10 +14,11 @@ import (
 
 type (
 	RelatedPlatformID = string
+	PlatformName      = string
 	PlatformID        = string
 )
 
-type detectorFunc func(provider os.OperatingSystemProvider, p *platform.Platform) (PlatformID, []RelatedPlatformID)
+type detectorFunc func(provider os.OperatingSystemProvider, p *platform.Platform) (PlatformID, PlatformName, []RelatedPlatformID)
 
 var detectors = []detectorFunc{
 	aws.Detect,
@@ -27,10 +28,11 @@ var detectors = []detectorFunc{
 
 type detectResult struct {
 	platformId         string
+	platformName       string
 	relatedPlatformIds []string
 }
 
-func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (PlatformID, []RelatedPlatformID) {
+func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (PlatformID, PlatformName, []RelatedPlatformID) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(detectors))
 
@@ -39,9 +41,10 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (Platform
 		go func(f detectorFunc) {
 			defer wg.Done()
 
-			v, related := f(provider, p)
+			v, name, related := f(provider, p)
 			if v != "" {
 				valChan <- detectResult{
+					platformName:       name,
 					platformId:         v,
 					relatedPlatformIds: related,
 				}
@@ -54,17 +57,19 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (Platform
 
 	platformIds := []string{}
 	relatedPlatformIds := []string{}
+	var name string
 	for v := range valChan {
 		platformIds = append(platformIds, v.platformId)
+		name = v.platformName
 		relatedPlatformIds = append(relatedPlatformIds, v.relatedPlatformIds...)
 	}
 
 	if len(platformIds) == 0 {
-		return "", nil
+		return "", "", nil
 	} else if len(platformIds) > 1 {
 		log.Error().Strs("detected", platformIds).Msg("multiple cloud platform ids detected")
-		return "", nil
+		return "", "", nil
 	}
 
-	return platformIds[0], relatedPlatformIds
+	return platformIds[0], name, relatedPlatformIds
 }

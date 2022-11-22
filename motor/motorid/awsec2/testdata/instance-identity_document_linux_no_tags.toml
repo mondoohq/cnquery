@@ -10,30 +10,6 @@ stdout = "4.9.125-linuxkit"
 [files."/etc/redhat-release"]
 content = "Red Hat Enterprise Linux Server release 7.2 (Maipo)"
 
-[files."/sys/class/dmi/id/product_version"]
-  path = "/sys/class/dmi/id/product_version"
-  enoent = false
-  content = " "
-  [files."/sys/class/dmi/id/product_version".stat]
-    mode = 292
-    time = 2021-11-15T13:16:57Z
-    isdir = false
-    uid = 0
-    gid = 0
-    size = 0
-
-[files."/sys/class/dmi/id/bios_vendor"]
-  path = "/sys/class/dmi/id/bios_vendor"
-  enoent = false
-  content = "Amazon EC2"
-  [files."/sys/class/dmi/id/bios_vendor".stat]
-    mode = 292
-    time = 2021-11-15T13:16:57Z
-    isdir = false
-    uid = 0
-    gid = 0
-    size = 0
-
 [commands."curl http://169.254.169.254/latest/dynamic/instance-identity/document"]
 stdout = """
 {
@@ -56,4 +32,16 @@ stdout = """
 """
 
 [commands."curl http://169.254.169.254/latest/meta-data/tags/instance/Name"]
-stdout = "ec2-name"
+stdout = """
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+  <title>404 - Not Found</title>
+ </head>
+ <body>
+  <h1>404 - Not Found</h1>
+ </body>
+</html>
+"""

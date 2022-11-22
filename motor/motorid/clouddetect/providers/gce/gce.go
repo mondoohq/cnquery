@@ -15,7 +15,7 @@ const (
 	gceIdentifierFileLinux = "/sys/class/dmi/id/product_name"
 )
 
-func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string, []string) {
+func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string, string, []string) {
 	productName := ""
 	if pf.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow
@@ -26,18 +26,18 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 		content, err := afero.ReadFile(provider.FS(), gceIdentifierFileLinux)
 		if err != nil {
 			log.Debug().Err(err).Msgf("unable to read %s", gceIdentifierFileLinux)
-			return "", nil
+			return "", "", nil
 		}
 		productName = string(content)
 	} else {
 		mgr, err := smbios.ResolveManager(provider, pf)
 		if err != nil {
-			return "", nil
+			return "", "", nil
 		}
 		info, err := mgr.Info()
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to query smbios")
-			return "", nil
+			return "", "", nil
 		}
 		productName = info.SysInfo.Model
 	}
@@ -46,7 +46,7 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 		mdsvc, err := gce.Resolve(provider, pf)
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to get metadata resolver")
-			return "", nil
+			return "", "", nil
 		}
 		id, err := mdsvc.Identify()
 		if err != nil {
@@ -54,10 +54,9 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 				Str("transport", provider.Kind().String()).
 				Strs("platform", pf.GetFamily()).
 				Msg("failed to get gce platform id")
-			return "", nil
+			return "", "", nil
 		}
-		return id.InstanceID, []string{id.ProjectID}
+		return id.InstanceID, "", []string{id.ProjectID}
 	}
-
-	return "", nil
+	return "", "", nil
 }

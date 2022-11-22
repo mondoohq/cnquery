@@ -31,3 +31,5 @@ stdout = """
 }
 """
 
+[commands."curl http://169.254.169.254/latest/meta-data/tags/instance/Name"]
+stdout = "ec2-name"
