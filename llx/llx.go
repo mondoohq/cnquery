@@ -113,7 +113,7 @@ type blockExecutor struct {
 	watcherIds     *types.StringSet
 }
 
-// MQLExecutorV2 is the runtime of a MQL codestructure
+// MQLExecutorV2 is the runtime of MQL codestructure
 type MQLExecutorV2 struct {
 	id      string
 	runtime *resources.Runtime

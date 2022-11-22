@@ -28,11 +28,11 @@ func init() {
 }
 
 const frontMatterTemplate = `---
-title: {{ .PackName }} Resource Pack - Mondoo Query Language (MQL) Resources
+title: {{ .PackName }} Resource Pack - MQL Resources
 id: {{ .ID }}.pack
 sidebar_label: {{ .PackName }} Resource Pack
 displayed_sidebar: MQL
-description: Learn about all of the available Mondoo Query Language (MQL) resources and how you can use them to query your infrastructure and to create policies to keep your business secure and compliant.
+description: Learn about all of the available MQL resources and how you can use them to query your infrastructure and to create policies to keep your business secure and compliant.
 ---
 `
 

@@ -84,10 +84,10 @@ type Runtime struct {
 // NewRuntime creates a new runtime from a registry and motor backend
 func NewRuntime(registry *Registry, motor *motor.Motor) *Runtime {
 	if registry == nil {
-		panic("cannot initialize a MQL runtime without a registry")
+		panic("cannot initialize MQL runtime without a registry")
 	}
 	if motor == nil {
-		panic("cannot initialize a MQL runtime without a motor")
+		panic("cannot initialize MQL runtime without a motor")
 	}
 
 	return &Runtime{
@@ -125,7 +125,7 @@ func args2map(args []interface{}) (*Args, error) {
 
 func (ctx *Runtime) cloneWithMotor(motor *motor.Motor) *Runtime {
 	if motor == nil {
-		panic("cannot initialize a MQL runtime without a motor")
+		panic("cannot initialize MQL runtime without a motor")
 	}
 
 	return &Runtime{

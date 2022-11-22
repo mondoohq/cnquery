@@ -122,7 +122,7 @@ func (a *mqlAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
 
 	res := []interface{}{}
 	windows := web.Enum15Windows
-	// NOTE: we do not return a MQL resource since stacks do not have their own proper id in azure
+	// NOTE: we do not return MQL resource since stacks do not have their own proper id in azure
 	windowsPager := client.NewGetAvailableStacksPager(&web.ProviderClientGetAvailableStacksOptions{OSTypeSelected: &windows})
 	for windowsPager.More() {
 		page, err := windowsPager.NextPage(ctx)
