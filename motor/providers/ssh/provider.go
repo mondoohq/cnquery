@@ -35,7 +35,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	}
 
 	activateScp := false
-	if os.Getenv("MONDOO_SSH_SCP") == "on" {
+	if os.Getenv("MONDOO_SSH_SCP") == "on" || pCfg.Options["ssh_scp"] == "on" {
 		activateScp = true
 	}
 
