@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -40,6 +41,45 @@ func TestEC2RoleProviderInstanceIdentityLocal(t *testing.T) {
 
 	cfg := fakeConfig()
 	cfg.HTTPClient = smithyhttp.ClientDoFunc(func(r *http.Request) (*http.Response, error) {
+		url := r.URL.String()
+		if strings.Contains(url, "tags/instance/Name") {
+			return &http.Response{
+				StatusCode: 200,
+				Header:     http.Header{},
+				Body:       ioutil.NopCloser(bytes.NewBufferString("ec2-name")),
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: 200,
+			Header:     http.Header{},
+			Body:       ioutil.NopCloser(bytes.NewReader(instanceIdentityDocument)),
+		}, nil
+	})
+
+	metadata := awsec2.NewLocal(cfg)
+	ident, err := metadata.Identify()
+	assert.Nil(t, err)
+	assert.Equal(t, "ec2-name", ident.InstanceName)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/ec2/v1/accounts/123456789012/regions/us-west-2/instances/i-1234567890abcdef0", ident.InstanceID)
+	assert.Equal(t, "//platformid.api.mondoo.app/runtime/aws/accounts/123456789012", ident.AccountID)
+}
+
+func TestEC2RoleProviderInstanceIdentityLocalDisabledTagsService(t *testing.T) {
+	instanceIdentityDocument, err := os.ReadFile("./testdata/instance-identity-document.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := fakeConfig()
+	cfg.HTTPClient = smithyhttp.ClientDoFunc(func(r *http.Request) (*http.Response, error) {
+		url := r.URL.String()
+		if strings.Contains(url, "tags/instance/Name") {
+			return &http.Response{
+				StatusCode: 404,
+				Header:     http.Header{},
+				Body:       ioutil.NopCloser(bytes.NewBufferString("not enabled")),
+			}, nil
+		}
 		return &http.Response{
 			StatusCode: 200,
 			Header:     http.Header{},

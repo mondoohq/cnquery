@@ -2,6 +2,7 @@ package awsec2
 
 import (
 	"context"
+	"io"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
@@ -29,18 +30,26 @@ func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
 	if err != nil {
 		return Identity{}, err
 	}
-	filters := []ec2types.Filter{
-		{
-			Name:   aws.String("resource-id"),
-			Values: []string{doc.InstanceID},
-		},
-	}
-	tags, err := ec2svc.DescribeTags(ctx, &ec2.DescribeTagsInput{Filters: filters})
 	name := ""
+	// try and fetch this from the metadata, if the tag metadata service is enabled.
+	nameTag, err := m.getMetadataValue(metadata, "tags/instance/Name")
 	if err == nil {
-		for _, t := range tags.Tags {
-			if t.Key != nil && *t.Key == "Name" && t.Value != nil {
-				name = *t.Value
+		name = nameTag
+	} else {
+		// if not enabled, try and use the aws api as a fallback. this only works if the aws config is setup
+		// correctly on the ec2 instance.
+		filters := []ec2types.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{doc.InstanceID},
+			},
+		}
+		tags, err := ec2svc.DescribeTags(ctx, &ec2.DescribeTagsInput{Filters: filters})
+		if err == nil {
+			for _, t := range tags.Tags {
+				if t.Key != nil && *t.Key == "Name" && t.Value != nil {
+					name = *t.Value
+				}
 			}
 		}
 	}
@@ -49,4 +58,22 @@ func (m *LocalEc2InstanceMetadata) Identify() (Identity, error) {
 		InstanceID:   MondooInstanceID(doc.AccountID, doc.Region, doc.InstanceID),
 		AccountID:    "//platformid.api.mondoo.app/runtime/aws/accounts/" + doc.AccountID,
 	}, nil
+}
+
+// gets the metadata at the relative specified path. The base path is /latest/meta-data
+// so the path param needs to only specify which metadata path is requested
+func (m *LocalEc2InstanceMetadata) getMetadataValue(client *imds.Client, path string) (value string, err error) {
+	output, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
+		Path: path,
+	})
+	if err != nil {
+		return "", err
+	}
+	defer output.Content.Close()
+	bytes, err := io.ReadAll(output.Content)
+	if err != nil {
+		return "", err
+	}
+	resp := string(bytes)
+	return resp, err
 }
