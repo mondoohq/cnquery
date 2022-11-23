@@ -199,6 +199,8 @@ func (p *Provider) Close() {
 				log.Error().Err(err).Msg("unable to delete volume")
 			}
 		}
+	} else {
+		log.Debug().Str("vol-id", p.tmpInfo.scanVolumeInfo.Id).Msg("skipping volume deletion, not created by Mondoo")
 	}
 	err = p.RemoveCreatedDir()
 	if err != nil {
