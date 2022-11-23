@@ -53,16 +53,18 @@ type SnapshotId struct {
 	Account string
 }
 
-type VolumeId struct {
+type VolumeInfo struct {
 	Id          string
 	Region      string
 	Account     string
 	IsAvailable bool
+	Tags        map[string]string
 }
 
 func resourceTags(resourceType types.ResourceType, instanceId string) []types.TagSpecification {
 	return []types.TagSpecification{
-		{ResourceType: resourceType,
+		{
+			ResourceType: resourceType,
 			Tags: []types.Tag{
 				{Key: aws.String("Created By"), Value: aws.String("Mondoo")},
 				{Key: aws.String("Created From Instance"), Value: aws.String(instanceId)},
