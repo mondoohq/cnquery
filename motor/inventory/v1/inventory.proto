@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "motor/asset/asset.proto";
 import "motor/vault/vault.proto";
+import "upstream/upstream.proto";
 
 package cnquery.motor.inventory.v1;
 option go_package = "go.mondoo.com/cnquery/motor/inventory/v1";
@@ -136,6 +137,9 @@ message InventorySpec {
   map<string, cnquery.motor.vault.v1.Credential> credentials = 2;
   VaultConfiguration vault = 3;
   string credential_query = 4;
+
+  // optional: the upstream credentials to use for the inventory
+  mondoo.upstream.v1.ServiceAccountCredentials upstream_credentals = 16;
 }
 
 message InventoryStatus {}
