@@ -20,7 +20,9 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -44,7 +46,7 @@ func newApiProvider(namespace string, objectKind string, selectedResourceID stri
 		}
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := buildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +76,20 @@ func newApiProvider(namespace string, objectKind string, selectedResourceID stri
 		selectedResourceID: selectedResourceID,
 		objectKind:         objectKind,
 	}, nil
+}
+
+// buildConfigFromFlags we rebuild clientcmd.BuildConfigFromFlags to make sure we do not log warnings for every
+// scan.
+func buildConfigFromFlags(masterUrl, kubeconfigPath string) (*restclient.Config, error) {
+	if kubeconfigPath == "" && masterUrl == "" {
+		kubeconfig, err := restclient.InClusterConfig()
+		if err == nil {
+			return kubeconfig, nil
+		}
+	}
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
+		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}}).ClientConfig()
 }
 
 type apiProvider struct {
