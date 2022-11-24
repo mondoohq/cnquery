@@ -54,7 +54,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	password, _ := cmd.Flags().GetString("password")
 	identityFile, _ := cmd.Flags().GetString("identity-file")
 	sudo, _ := cmd.Flags().GetBool("sudo")
-
+	assetName, _ := cmd.Flags().GetString("asset-name")
 	// parse options
 	optionData, err := cmd.Flags().GetStringToString("option")
 	if err != nil {
@@ -88,6 +88,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	annotations, err := cmd.Flags().GetStringToString("annotation")
 
 	parsedAsset := &asset.Asset{
+		Name:        assetName,
 		Options:     map[string]string{},
 		Labels:      labels,
 		Annotations: annotations,

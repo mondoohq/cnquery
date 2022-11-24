@@ -62,7 +62,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	assetObj.PlatformIds = fingerprint.PlatformIDs
-	if fingerprint.Name != "" {
+	if fingerprint.Name != "" && assetObj.Name == "" {
 		assetObj.Name = fingerprint.Name
 	}
 
