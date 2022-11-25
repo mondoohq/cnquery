@@ -139,7 +139,7 @@ message InventorySpec {
   string credential_query = 4;
 
   // optional: the upstream credentials to use for the inventory
-  mondoo.upstream.v1.ServiceAccountCredentials upstream_credentals = 16;
+  mondoo.upstream.v1.ServiceAccountCredentials upstream_credentials = 16;
 }
 
 message InventoryStatus {}
