@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-windows-incident-response
     name: Mondoo Windows Incident Response
-    is_public: true
     filters:
       - asset.platform == "windows"
     queries:

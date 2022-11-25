@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-slack-incident-response
     name: Mondoo Slack Incident Response
-    is_public: true
     docs:
       desc: |
         ### Overview

@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-openssl-incident-response
     name: Mondoo OpenSSL Incident Response
-    is_public: true
     filters:
       - asset.family.contains("linux")
     queries:

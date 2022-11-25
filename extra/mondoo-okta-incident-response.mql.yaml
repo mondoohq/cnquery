@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-okta-incident-response
     name: Mondoo Okta Incident Response
-    is_public: true
     docs:
       desc: |
         ### Overview

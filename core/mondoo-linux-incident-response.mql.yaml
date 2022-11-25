@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-linux-incident-response
     name: Mondoo Linux Incident Response
-    is_public: true
     filters:
       - asset.family.contains("linux")
     queries:

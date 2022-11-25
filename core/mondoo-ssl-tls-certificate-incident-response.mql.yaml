@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-ssl-tls-certificate-incident-response
     name: Mondoo SSL/TLS Certificate Incident Response
-    is_public: true
     docs:
       desc: |
         ### Overview

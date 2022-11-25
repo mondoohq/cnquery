@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-asset-inventory-aws
     name: Mondoo AWS Asset Inventory
-    is_public: true
     docs:
       desc: |
         The Mondoo AWS Inventory query pack gathers information about AWS accounts for asset inventory.

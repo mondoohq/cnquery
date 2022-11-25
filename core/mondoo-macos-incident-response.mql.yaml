@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-macos-incident-response
     name: Mondoo macOS Incident Response
-    is_public: true
     filters:
       - asset.platform == "macos"
     queries:

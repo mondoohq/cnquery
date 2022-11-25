@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-incident-response-aws
     name: Mondoo AWS Incident Response
-    is_public: true
     docs:
       desc: |
         ### Overview

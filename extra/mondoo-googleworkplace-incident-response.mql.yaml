@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-googleworkspace-incident-response
     name: Google Workspace Incident Response
-    is_public: true
     docs:
       desc: |
         ### Overview

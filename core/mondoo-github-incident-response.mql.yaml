@@ -1,7 +1,6 @@
 packs:
   - uid: mondoo-incident-response-github-org
     name: Mondoo GitHub Organization Incident Response
-    is_public: true
     docs:
       desc: |
         ### Overview
