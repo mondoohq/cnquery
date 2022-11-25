@@ -192,12 +192,13 @@ func (p *Provider) Close() {
 		log.Error().Err(err).Msg("unable to detach volume")
 	}
 	// only delete the volume if we created it, e.g., if we're scanning a snapshot
-	if val, ok := p.tmpInfo.scanVolumeInfo.Tags["Created By"]; ok {
+	if val, ok := p.tmpInfo.scanVolumeInfo.Tags["createdBy"]; ok {
 		if val == "Mondoo" {
 			err = p.DeleteCreatedVolume(ctx, p.tmpInfo.scanVolumeInfo)
 			if err != nil {
 				log.Error().Err(err).Msg("unable to delete volume")
 			}
+			log.Info().Str("vol-id", p.tmpInfo.scanVolumeInfo.Id).Msg("deleted temporary volume created by Mondoo")
 		}
 	} else {
 		log.Debug().Str("vol-id", p.tmpInfo.scanVolumeInfo.Id).Msg("skipping volume deletion, not created by Mondoo")

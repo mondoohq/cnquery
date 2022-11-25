@@ -66,7 +66,7 @@ func resourceTags(resourceType types.ResourceType, instanceId string) []types.Ta
 		{
 			ResourceType: resourceType,
 			Tags: []types.Tag{
-				{Key: aws.String("Created By"), Value: aws.String("Mondoo")},
+				{Key: aws.String("createdBy"), Value: aws.String("Mondoo")},
 				{Key: aws.String("Created From Instance"), Value: aws.String(instanceId)},
 			},
 		},
