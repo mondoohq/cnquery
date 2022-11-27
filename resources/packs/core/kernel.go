@@ -23,7 +23,7 @@ func (k *mqlKernel) init(args *resources.Args) (*resources.Args, Kernel, error) 
 	}
 
 	if supported == false {
-		return nil, nil, errors.New("kernel resource is only supported for linux platforms")
+		return nil, nil, errors.New("kernel resource is only supported for unix platforms")
 	}
 
 	return args, nil, nil
