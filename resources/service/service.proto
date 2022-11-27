@@ -17,7 +17,7 @@ service MQL {
   // TODO: I am not sure why we need CreateResource and ListFields
   rpc ListFields(FieldsQuery) returns (Fields);
 
-  // returns informaion about a specific resource
+  // returns information about a specific resource
   rpc CreateResource(ResourceArguments) returns (mondoo.resources.ResourceID);
 
   // essentially returns the result of a field

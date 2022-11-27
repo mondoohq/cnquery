@@ -1,6 +1,6 @@
 package execruntime
 
-// func TestMonndooRuntimeEnv(t *testing.T) {
+// func TestMondooRuntimeEnv(t *testing.T) {
 // 	gl := environmentDef["mondoo-ci"]
 // 	assert.NotNil(t, gl)
 // 	assert.Equal(t, "mondoo-ci", gl.Id)

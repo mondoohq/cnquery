@@ -138,7 +138,7 @@ func (t *mqlTerraformState) GetResources() (interface{}, error) {
 		return nil, nil
 	}
 
-	// resolve all tfstate resources, to achive this we need to walk all modules
+	// resolve all tfstate resources, to achieve this we need to walk all modules
 	resourceList := []*terraform.Resource{}
 
 	resourceList = append(resourceList, state.Values.RootModule.Resources...)
