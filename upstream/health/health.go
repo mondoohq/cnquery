@@ -39,8 +39,8 @@ func CheckApiHealth(endpoint string) Status {
 		status.API.Version = healthResp.ApiVersion
 
 		// do time check to make it easier to dected ssl/tls issues
-		recievedResponseTime := time.Now()
-		roundTripDuration := recievedResponseTime.Sub(sendTime)
+		receivedResponseTime := time.Now()
+		roundTripDuration := receivedResponseTime.Sub(sendTime)
 		if roundTripDuration > time.Second*5 {
 			status.Warnings = append(status.Warnings, "detected very long round-trip times: "+roundTripDuration.String())
 		}

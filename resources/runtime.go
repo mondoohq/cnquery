@@ -335,7 +335,7 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 		}
 	}
 
-	// if the field wasnt registered in the chain of watchers yet,
+	// if the field wasn't registered in the chain of watchers yet,
 	// pull all its dependencies in
 	if isInitial {
 		if err = r.Register(field); err != nil {
