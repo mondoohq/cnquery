@@ -15,9 +15,9 @@ var (
 	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 
-func New(tc *providers.Config) (*Provider, error) {
+func New(pCfg *providers.Config) (*Provider, error) {
 	// check if the token was provided by the option. This way is deprecated since it does not pass the token as secret
-	token := tc.Options["token"]
+	token := pCfg.Options["token"]
 
 	// if no token was provided, lets read the env variable
 	if token == "" {
@@ -25,13 +25,13 @@ func New(tc *providers.Config) (*Provider, error) {
 	}
 
 	// if a secret was provided, it always overrides the env variable since it has precedence
-	if len(tc.Credentials) > 0 {
-		for i := range tc.Credentials {
-			cred := tc.Credentials[i]
+	if len(pCfg.Credentials) > 0 {
+		for i := range pCfg.Credentials {
+			cred := pCfg.Credentials[i]
 			if cred.Type == vault.CredentialType_password {
 				token = string(cred.Secret)
 			} else {
-				log.Warn().Str("credential-type", cred.Type.String()).Msg("unsupported credential type for GitHub provider")
+				log.Warn().Str("credential-type", cred.Type.String()).Msg("unsupported credential type for Slack provider")
 			}
 		}
 	}
@@ -49,7 +49,7 @@ func New(tc *providers.Config) (*Provider, error) {
 
 	return &Provider{
 		client:   client,
-		opts:     tc.Options,
+		opts:     pCfg.Options,
 		teamInfo: teamInfo,
 	}, nil
 }
