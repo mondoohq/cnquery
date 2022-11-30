@@ -15,7 +15,7 @@ import (
 	motoraws "go.mondoo.com/cnquery/motor/discovery/aws"
 )
 
-func (t *Provider) Validate(ctx context.Context) (*types.Instance, *VolumeId, *SnapshotId, error) {
+func (t *Provider) Validate(ctx context.Context) (*types.Instance, *VolumeInfo, *SnapshotId, error) {
 	target := t.target
 	switch t.targetType {
 	case EBSTargetInstance:
@@ -39,9 +39,9 @@ func (t *Provider) Validate(ctx context.Context) (*types.Instance, *VolumeId, *S
 			if vol.State != types.VolumeStateAvailable {
 				// we can still scan it, it just means we have to do the whole snapshot/create volume dance
 				log.Warn().Msg("volume specified is not in available state")
-				return nil, &VolumeId{Id: t.target.Id, Account: t.target.AccountId, Region: t.target.Region, IsAvailable: false}, nil, nil
+				return nil, &VolumeInfo{Id: t.target.Id, Account: t.target.AccountId, Region: t.target.Region, IsAvailable: false, Tags: awsTagsToMap(vol.Tags)}, nil, nil
 			}
-			return nil, &VolumeId{Id: t.target.Id, Account: t.target.AccountId, Region: t.target.Region, IsAvailable: true}, nil, nil
+			return nil, &VolumeInfo{Id: t.target.Id, Account: t.target.AccountId, Region: t.target.Region, IsAvailable: true, Tags: awsTagsToMap(vol.Tags)}, nil, nil
 		}
 	case EBSTargetSnapshot:
 		log.Info().Interface("snapshot", target).Msg("validate exists")
@@ -58,16 +58,16 @@ func (t *Provider) Validate(ctx context.Context) (*types.Instance, *VolumeId, *S
 	return nil, nil, nil, errors.New("cannot validate; unrecognized ebs target")
 }
 
-func (t *Provider) SetupForTargetVolume(ctx context.Context, volume VolumeId) (bool, error) {
+func (t *Provider) SetupForTargetVolume(ctx context.Context, volume VolumeInfo) (bool, error) {
 	log.Debug().Interface("volume", volume).Msg("setup for target volume")
 	if !volume.IsAvailable {
 		return t.SetupForTargetVolumeUnavailable(ctx, volume)
 	}
-	t.tmpInfo.scanVolumeId = &volume
+	t.tmpInfo.scanVolumeInfo = &volume
 	return t.AttachVolumeToInstance(ctx, volume)
 }
 
-func (t *Provider) SetupForTargetVolumeUnavailable(ctx context.Context, volume VolumeId) (bool, error) {
+func (t *Provider) SetupForTargetVolumeUnavailable(ctx context.Context, volume VolumeInfo) (bool, error) {
 	found, snapId, err := t.FindRecentSnapshotForVolume(ctx, volume)
 	if err != nil {
 		// only log the error here, this is not a blocker
@@ -87,7 +87,7 @@ func (t *Provider) SetupForTargetVolumeUnavailable(ctx context.Context, volume V
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeId = &volId
+	t.tmpInfo.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
@@ -101,14 +101,14 @@ func (t *Provider) SetupForTargetSnapshot(ctx context.Context, snapshot Snapshot
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeId = &volId
+	t.tmpInfo.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
 func (t *Provider) SetupForTargetInstance(ctx context.Context, instanceinfo *types.Instance) (bool, error) {
 	log.Debug().Str("instance id", *instanceinfo.InstanceId).Msg("setup for target instance")
 	var err error
-	v, err := t.GetVolumeIdForInstance(ctx, instanceinfo)
+	v, err := t.GetVolumeInfoForInstance(ctx, instanceinfo)
 	if err != nil {
 		return false, err
 	}
@@ -131,21 +131,21 @@ func (t *Provider) SetupForTargetInstance(ctx context.Context, instanceinfo *typ
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeId = &volId
+	t.tmpInfo.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
-func (t *Provider) GetVolumeIdForInstance(ctx context.Context, instanceinfo *types.Instance) (VolumeId, error) {
+func (t *Provider) GetVolumeInfoForInstance(ctx context.Context, instanceinfo *types.Instance) (VolumeInfo, error) {
 	i := t.target
 	log.Info().Interface("instance", i).Msg("find volume id")
 
-	if volID := GetVolumeIdForInstance(instanceinfo); volID != nil {
-		return VolumeId{Id: *volID, Region: i.Region, Account: i.AccountId}, nil
+	if volID := GetVolumeInfoForInstance(instanceinfo); volID != nil {
+		return VolumeInfo{Id: *volID, Region: i.Region, Account: i.AccountId, Tags: map[string]string{}}, nil
 	}
-	return VolumeId{}, errors.New("no volume id found for instance")
+	return VolumeInfo{}, errors.New("no volume id found for instance")
 }
 
-func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
+func GetVolumeInfoForInstance(instanceinfo *types.Instance) *string {
 	if len(instanceinfo.BlockDeviceMappings) == 1 {
 		return instanceinfo.BlockDeviceMappings[0].Ebs.VolumeId
 	}
@@ -164,11 +164,11 @@ func GetVolumeIdForInstance(instanceinfo *types.Instance) *string {
 	return nil
 }
 
-func (t *Provider) FindRecentSnapshotForVolume(ctx context.Context, v VolumeId) (bool, SnapshotId, error) {
+func (t *Provider) FindRecentSnapshotForVolume(ctx context.Context, v VolumeInfo) (bool, SnapshotId, error) {
 	return FindRecentSnapshotForVolume(ctx, v, t.scannerRegionEc2svc)
 }
 
-func FindRecentSnapshotForVolume(ctx context.Context, v VolumeId, svc *ec2.Client) (bool, SnapshotId, error) {
+func FindRecentSnapshotForVolume(ctx context.Context, v VolumeInfo, svc *ec2.Client) (bool, SnapshotId, error) {
 	log.Info().Msg("find recent snapshot")
 	res, err := svc.DescribeSnapshots(ctx,
 		&ec2.DescribeSnapshotsInput{Filters: []types.Filter{
@@ -212,7 +212,7 @@ func FindRecentSnapshotForVolume(ctx context.Context, v VolumeId, svc *ec2.Clien
 	return false, SnapshotId{}, nil
 }
 
-func (t *Provider) CreateSnapshotFromVolume(ctx context.Context, v VolumeId) (SnapshotId, error) {
+func (t *Provider) CreateSnapshotFromVolume(ctx context.Context, v VolumeInfo) (SnapshotId, error) {
 	log.Info().Msg("create snapshot")
 	// snapshot the volume
 	// use region from volume for aws config
@@ -310,9 +310,9 @@ func (t *Provider) CopySnapshotToRegion(ctx context.Context, snapshot SnapshotId
 	return SnapshotId{Id: *res.SnapshotId, Region: t.config.Region, Account: t.scannerInstance.Account}, nil
 }
 
-func (t *Provider) CreateVolumeFromSnapshot(ctx context.Context, snapshot SnapshotId) (VolumeId, error) {
+func (t *Provider) CreateVolumeFromSnapshot(ctx context.Context, snapshot SnapshotId) (VolumeInfo, error) {
 	log.Info().Msg("create volume")
-	var vol VolumeId
+	var vol VolumeInfo
 
 	out, err := t.scannerRegionEc2svc.CreateVolume(ctx, &ec2.CreateVolumeInput{
 		SnapshotId:        &snapshot.Id,
@@ -340,7 +340,7 @@ func (t *Provider) CreateVolumeFromSnapshot(ctx context.Context, snapshot Snapsh
 		}
 		state = vols.Volumes[0].State
 	}
-	return VolumeId{Id: *out.VolumeId, Region: t.config.Region, Account: t.scannerInstance.Account}, nil
+	return VolumeInfo{Id: *out.VolumeId, Region: t.config.Region, Account: t.scannerInstance.Account, Tags: awsTagsToMap(out.Tags)}, nil
 }
 
 func newVolumeAttachmentLoc() string {
@@ -388,7 +388,7 @@ func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volI
 	return location, res.State, nil
 }
 
-func (t *Provider) AttachVolumeToInstance(ctx context.Context, volume VolumeId) (bool, error) {
+func (t *Provider) AttachVolumeToInstance(ctx context.Context, volume VolumeInfo) (bool, error) {
 	log.Info().Str("volume id", volume.Id).Msg("attach volume")
 	t.tmpInfo.volumeAttachmentLoc = newVolumeAttachmentLoc()
 	ready := false
@@ -421,4 +421,14 @@ func (t *Provider) AttachVolumeToInstance(ctx context.Context, volume VolumeId) 
 		}
 	}
 	return true, nil
+}
+
+func awsTagsToMap(tags []types.Tag) map[string]string {
+	m := make(map[string]string)
+	for _, t := range tags {
+		if t.Key != nil && t.Value != nil {
+			m[*t.Key] = *t.Value
+		}
+	}
+	return m
 }

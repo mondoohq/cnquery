@@ -155,10 +155,9 @@ type TargetInfo struct {
 }
 
 type tmpInfo struct {
-	// these fields are referenced during setup/mount and close
-	scanVolumeId        *VolumeId // the volume id of the volume we attached to the instance
-	scanDir             string    // the tmp dir we create; serves as the directory we mount the volume to
-	volumeAttachmentLoc string    // where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
+	scanVolumeInfo      *VolumeInfo // the info of the volume we attached to the instance
+	scanDir             string      // the tmp dir we create; serves as the directory we mount the volume to
+	volumeAttachmentLoc string      // where we tell AWS to attach the volume; it doesn't necessarily get attached there, but we have to reference this same location when detaching
 }
 
 func (p *Provider) RunCommand(command string) (*os.Command, error) {
@@ -179,7 +178,7 @@ func (p *Provider) FS() afero.Fs {
 
 func (p *Provider) Close() {
 	if p.opts != nil {
-		if p.opts[NoSetup] == "true" || p.targetType == EBSTargetSnapshot {
+		if p.opts[NoSetup] == "true" {
 			return
 		}
 	}
@@ -188,13 +187,21 @@ func (p *Provider) Close() {
 	if err != nil {
 		log.Error().Err(err).Msg("unable to unmount volume")
 	}
-	err = p.DetachVolumeFromInstance(ctx, p.tmpInfo.scanVolumeId)
+	err = p.DetachVolumeFromInstance(ctx, p.tmpInfo.scanVolumeInfo)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to detach volume")
 	}
-	err = p.DeleteCreatedVolume(ctx, p.tmpInfo.scanVolumeId)
-	if err != nil {
-		log.Error().Err(err).Msg("unable to delete volume")
+	// only delete the volume if we created it, e.g., if we're scanning a snapshot
+	if val, ok := p.tmpInfo.scanVolumeInfo.Tags["createdBy"]; ok {
+		if val == "Mondoo" {
+			err = p.DeleteCreatedVolume(ctx, p.tmpInfo.scanVolumeInfo)
+			if err != nil {
+				log.Error().Err(err).Msg("unable to delete volume")
+			}
+			log.Info().Str("vol-id", p.tmpInfo.scanVolumeInfo.Id).Msg("deleted temporary volume created by Mondoo")
+		}
+	} else {
+		log.Debug().Str("vol-id", p.tmpInfo.scanVolumeInfo.Id).Msg("skipping volume deletion, not created by Mondoo")
 	}
 	err = p.RemoveCreatedDir()
 	if err != nil {

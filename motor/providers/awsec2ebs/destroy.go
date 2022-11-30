@@ -21,7 +21,7 @@ func (p *Provider) UnmountVolumeFromInstance() error {
 	return nil
 }
 
-func (p *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeId) error {
+func (p *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeInfo) error {
 	log.Info().Msg("detach volume")
 	res, err := p.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
 		Device: aws.String(p.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
@@ -47,7 +47,7 @@ func (p *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeI
 	return nil
 }
 
-func (p *Provider) DeleteCreatedVolume(ctx context.Context, volume *VolumeId) error {
+func (p *Provider) DeleteCreatedVolume(ctx context.Context, volume *VolumeInfo) error {
 	log.Info().Msg("delete created volume")
 	_, err := p.scannerRegionEc2svc.DeleteVolume(ctx, &ec2.DeleteVolumeInput{VolumeId: &volume.Id})
 	return err
