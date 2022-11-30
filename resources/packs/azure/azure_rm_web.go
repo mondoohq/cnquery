@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice"
 	"github.com/rs/zerolog/log"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -19,7 +20,7 @@ func (a *mqlAzurermWeb) id() (string, error) {
 }
 
 func (a *mqlAzurermWeb) GetApps() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ func isPlatformEol(platform string, version string) bool {
 
 // all runtimes that are returned here are not EOL and are supported
 func (a *mqlAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +237,7 @@ func (a *mqlAzurermWebAppsite) id() (string, error) {
 }
 
 func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +248,7 @@ func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +290,7 @@ func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 }
 
 func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +301,7 @@ func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) 
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +343,7 @@ func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) 
 }
 
 func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +354,7 @@ func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +390,7 @@ func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 }
 
 func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +401,7 @@ func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +437,7 @@ func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
 }
 
 func (a *mqlAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +448,7 @@ func (a *mqlAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}

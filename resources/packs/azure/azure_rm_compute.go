@@ -8,6 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -17,7 +18,7 @@ func (a *mqlAzurermCompute) id() (string, error) {
 }
 
 func (a *mqlAzurermCompute) GetDisks() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +99,7 @@ func (a *mqlAzurermComputeDisk) id() (string, error) {
 }
 
 func (a *mqlAzurermCompute) GetVms() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +152,7 @@ func (a *mqlAzurermComputeVm) id() (string, error) {
 }
 
 func (a *mqlAzurermComputeVm) GetExtensions() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +163,7 @@ func (a *mqlAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +211,7 @@ func (a *mqlAzurermComputeVm) GetExtensions() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermComputeVm) GetOsDisk() (interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +236,7 @@ func (a *mqlAzurermComputeVm) GetOsDisk() (interface{}, error) {
 		return nil, errors.New("could not determine os disk from vm storage profile")
 	}
 
-	resourceID, err := at.ParseResourceID(*properties.StorageProfile.OSDisk.ManagedDisk.ID)
+	resourceID, err := azure.ParseResourceID(*properties.StorageProfile.OSDisk.ManagedDisk.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +265,7 @@ func (a *mqlAzurermComputeVm) GetOsDisk() (interface{}, error) {
 }
 
 func (a *mqlAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +296,7 @@ func (a *mqlAzurermComputeVm) GetDataDisks() ([]interface{}, error) {
 	for i := range dataDisks {
 		dataDisk := dataDisks[i]
 
-		resourceID, err := at.ParseResourceID(*dataDisk.ManagedDisk.ID)
+		resourceID, err := azure.ParseResourceID(*dataDisk.ManagedDisk.ID)
 		if err != nil {
 			return nil, err
 		}

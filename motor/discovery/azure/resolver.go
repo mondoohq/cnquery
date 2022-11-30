@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
-	azure_provider "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	microsoft "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 
@@ -40,14 +40,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 	defer m.Close()
-	provider, ok := m.Provider.(*azure_provider.Provider)
+	provider, ok := m.Provider.(*microsoft.Provider)
 	if !ok {
 		return nil, errors.New("could not create azure provider")
 	}
 
 	// if no creds, check that the CLI is installed as we are going to use that
 	if clientId == "" && len(tc.Credentials) == 0 {
-		azInstalled := azure_provider.IsAzInstalled()
+		azInstalled := IsAzInstalled()
 		if !azInstalled {
 			return nil, errors.New("az not installed")
 		}
@@ -98,7 +98,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			if cfg.Options["tenant-id"] == "" {
 				cfg.Options["tenant-id"] = *sub.TenantID
 			}
-			provider, err := azure_provider.New(cfg)
+			provider, err := microsoft.New(cfg)
 			if err != nil {
 				return nil, err
 			}

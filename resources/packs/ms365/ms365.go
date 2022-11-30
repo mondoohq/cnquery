@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.com/cnquery/motor/providers"
-	ms365_provider "go.mondoo.com/cnquery/motor/providers/microsoft/ms365"
+	microsoft "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/resources/packs/ms365/info"
 )
 
@@ -14,10 +14,10 @@ func init() {
 	Init(Registry)
 }
 
-func ms365Provider(t providers.Instance) (*ms365_provider.Provider, error) {
-	at, ok := t.(*ms365_provider.Provider)
+func microsoftProvider(t providers.Instance) (*microsoft.Provider, error) {
+	at, ok := t.(*microsoft.Provider)
 	if !ok {
-		return nil, errors.New("ms365 resource is not supported on this provider")
+		return nil, errors.New("microsoft resource is not supported on this transport")
 	}
 	return at, nil
 }

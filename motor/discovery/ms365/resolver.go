@@ -7,7 +7,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
-	ms365_provider "go.mondoo.com/cnquery/motor/providers/microsoft/ms365"
+	microsoft "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 
@@ -32,7 +32,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 		return nil, err
 	}
 	defer m.Close()
-	provider, ok := m.Provider.(*ms365_provider.Provider)
+	provider, ok := m.Provider.(*microsoft.Provider)
 	if !ok {
 		return nil, errors.New("could not create ms 365 transport")
 	}

@@ -1,4 +1,4 @@
-package ms365
+package microsoft
 
 import (
 	"encoding/json"
@@ -11,6 +11,10 @@ import (
 // NOTE: this is a temporary solution and will be replaced with logic that calls powershell directly and
 // hopefully provides more flexibility in the future
 func (p *Provider) GetMs365DataReport() (*ms365report.Microsoft365Report, error) {
+	if p.assetType != ms365 {
+		return nil, errors.New("ms365 data report not supported on this transport")
+	}
+
 	p.ms365PowershellReportLoader.Lock()
 	defer p.ms365PowershellReportLoader.Unlock()
 

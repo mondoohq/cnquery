@@ -1,4 +1,4 @@
-package ms365
+package microsoft
 
 import (
 	"sync"
@@ -10,10 +10,18 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
+type microsoftAssetType int32
+
 const (
-	OptionTenantID   = "tenant-id"
-	OptionClientID   = "client-id"
-	OptionDataReport = "mondoo-ms365-datareport"
+	OptionTenantID       = "tenant-id"
+	OptionClientID       = "client-id"
+	OptionDataReport     = "mondoo-ms365-datareport"
+	OptionSubscriptionID = "subscription-id"
+)
+
+const (
+	ms365 microsoftAssetType = 0
+	azure microsoftAssetType = 1
 )
 
 var (
@@ -21,7 +29,7 @@ var (
 	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 
-// New create a new Microsoft 365 provider
+// New create a new Microsoft provider
 //
 // At this point, this provider only supports application permissions
 // because we are not able to get the user consent on cli yet. Seems like
@@ -34,16 +42,29 @@ var (
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
 // [Always check permissions in tokens in an Azure AD protected API](https://joonasw.net/view/always-check-token-permissions-in-aad-protected-api)
 func New(pCfg *providers.Config) (*Provider, error) {
-	if pCfg.Backend != providers.ProviderType_MS365 {
+	if pCfg.Backend != providers.ProviderType_MS365 && pCfg.Backend != providers.ProviderType_AZURE {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	if len(pCfg.Credentials) != 1 || pCfg.Credentials[0] == nil {
-		return nil, errors.New("ms365 provider requires a credentials file, pass path via --certificate-path option")
+	var assetType microsoftAssetType
+	if pCfg.Backend == providers.ProviderType_MS365 {
+		assetType = ms365
+	} else if pCfg.Backend == providers.ProviderType_AZURE {
+		assetType = azure
 	}
-
 	tenantId := pCfg.Options[OptionTenantID]
 	clientId := pCfg.Options[OptionClientID]
+	subscriptionId := pCfg.Options[OptionSubscriptionID]
+
+	// we need credentials for ms365. for azure these are optional, we fallback to the AZ cli (if installed)
+	if assetType == ms365 && (len(pCfg.Credentials) != 1 || pCfg.Credentials[0] == nil) {
+		return nil, errors.New("microsoft provider requires a credentials file, pass path via --certificate-path option")
+	}
+
+	var cred *vault.Credential
+	if len(pCfg.Credentials) != 0 {
+		cred = pCfg.Credentials[0]
+	}
 
 	// deprecated options for backward compatibility with older inventory files
 	if tenantId == "" {
@@ -53,7 +74,6 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		}
 		tenantId = tid
 	}
-
 	if clientId == "" {
 		cid, ok := pCfg.Options["clientId"]
 		if ok {
@@ -61,31 +81,31 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		}
 		clientId = cid
 	}
-
-	p := &Provider{
-		tenantID: tenantId,
-		clientID: clientId,
-		// TODO: we want to remove the data report with a proper implementation
-		powershellDataReportFile: pCfg.Options[OptionDataReport],
-		opts:                     pCfg.Options,
-		cred:                     pCfg.Credentials[0],
+	if subscriptionId == "" {
+		sid, ok := pCfg.Options["subscriptionId"]
+		if ok {
+			log.Warn().Str("subscriptionId", sid).Msg("subscriptionId is deprecated, use subscription-id instead")
+		}
+		subscriptionId = sid
 	}
 
-	// we only support private key authentication and client secret for ms 365
-	switch p.cred.Type {
-	case vault.CredentialType_pkcs12:
-	case vault.CredentialType_password:
-	default:
-		return nil, errors.New("invalid secret configuration for ms365 provider: " + p.cred.Type.String())
-	}
-
-	if len(p.tenantID) == 0 {
+	if assetType == ms365 && len(tenantId) == 0 {
 		return nil, errors.New("ms365 backend requires a tenant-id")
 	}
 
+	p := &Provider{
+		assetType:      assetType,
+		tenantID:       tenantId,
+		subscriptionID: subscriptionId,
+		clientID:       clientId,
+		// TODO: we want to remove the data report with a proper implementation
+		powershellDataReportFile: pCfg.Options[OptionDataReport],
+		opts:                     pCfg.Options,
+		cred:                     cred,
+		rolesMap:                 map[string]struct{}{},
+	}
 	// map the roles that we request
 	// TODO: check that actual credentials include permissions, this is included in the tokens
-	p.rolesMap = map[string]struct{}{}
 	for i := range DefaultRoles {
 		r := DefaultRoles[i]
 		p.rolesMap[r] = struct{}{}
@@ -95,8 +115,10 @@ func New(pCfg *providers.Config) (*Provider, error) {
 }
 
 type Provider struct {
+	assetType                   microsoftAssetType
 	tenantID                    string
 	clientID                    string
+	subscriptionID              string
 	cred                        *vault.Credential
 	opts                        map[string]string
 	rolesMap                    map[string]struct{}
@@ -105,22 +127,12 @@ type Provider struct {
 	ms365PowershellReportLoader sync.Mutex
 }
 
-func (p *Provider) MissingRoles(checkRoles ...string) []string {
-	missing := []string{}
-	for i := range checkRoles {
-		_, ok := p.rolesMap[checkRoles[i]]
-		if !ok {
-			missing = append(missing, checkRoles[i])
-		}
-	}
-	return missing
-}
-
 func (p *Provider) Close() {}
 
 func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Microsoft365,
+		providers.Capability_Azure,
 	}
 }
 

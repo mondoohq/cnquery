@@ -6,6 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 
 	mariadb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -22,7 +23,7 @@ func (a *mqlAzurermMariadbDatabase) id() (string, error) {
 }
 
 func (a *mqlAzurermMariadb) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (a *mqlAzurermMariadb) GetServers() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +80,7 @@ func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +130,7 @@ func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +187,7 @@ func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +198,7 @@ func (a *mqlAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}

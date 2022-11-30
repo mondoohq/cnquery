@@ -19,8 +19,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/ipmi"
 	k8s_provider "go.mondoo.com/cnquery/motor/providers/k8s"
 	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/azure"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365"
+	"go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/motor/providers/okta"
@@ -217,8 +216,8 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 			return nil, err
 		}
 	case providers.ProviderType_AZURE:
-		log.Debug().Msg("connection> load azure provider")
-		p, err := azure.New(resolvedConfig)
+		log.Debug().Msg("connection> load microsoft provider (azure backend)")
+		p, err := microsoft.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -227,8 +226,8 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 			return nil, err
 		}
 	case providers.ProviderType_MS365:
-		log.Debug().Msg("connection> load microsoft 365 provider")
-		p, err := ms365.New(resolvedConfig)
+		log.Debug().Msg("connection> load microsoft provider (ms365 backend)")
+		p, err := microsoft.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}

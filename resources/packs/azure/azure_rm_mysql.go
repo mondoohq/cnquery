@@ -5,6 +5,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	mysql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -21,7 +22,7 @@ func (a *mqlAzurermMysqlDatabase) id() (string, error) {
 }
 
 func (a *mqlAzurermMysql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (a *mqlAzurermMysql) GetServers() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (a *mqlAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +128,7 @@ func (a *mqlAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +139,7 @@ func (a *mqlAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +185,7 @@ func (a *mqlAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +196,7 @@ func (a *mqlAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}

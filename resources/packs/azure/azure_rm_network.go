@@ -16,7 +16,7 @@ func (a *mqlAzurermNetwork) id() (string, error) {
 }
 
 func (a *mqlAzurermNetwork) GetInterfaces() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resou
 }
 
 func (a *mqlAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (a *mqlAzurermNetworkSecurityrule) id() (string, error) {
 }
 
 func (a *mqlAzurermNetwork) GetWatchers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -18,7 +19,7 @@ type AzureStorageAccountProperties storage.AccountProperties
 type Kind storage.Kind
 
 func (a *mqlAzurermStorage) GetAccounts() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func (a *mqlAzurermStorageAccount) init(args *resources.Args) (*resources.Args, 
 		return args, nil, nil
 	}
 
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -122,7 +123,7 @@ func (a *mqlAzurermStorageAccount) init(args *resources.Args) (*resources.Args, 
 	}
 
 	// parse the id
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -173,7 +174,7 @@ func (a *mqlAzurermStorageAccount) init(args *resources.Args) (*resources.Args, 
 }
 
 func (a *mqlAzurermStorageAccount) GetContainers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +185,7 @@ func (a *mqlAzurermStorageAccount) GetContainers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}

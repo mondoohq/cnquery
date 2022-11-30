@@ -4,12 +4,12 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
-	azure_provider "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	microsoft_provider "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphclient"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func graphBetaClient(t *azure_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
+func graphBetaClient(t *microsoft_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
 	auth, err := t.GetTokenCredential()
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (a *mqlAzuread) id() (string, error) {
 }
 
 func (a *mqlAzuread) GetUsers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := msGraphTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (a *mqlAzuread) GetUsers() ([]interface{}, error) {
 }
 
 func (a *mqlAzuread) GetGroups() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := msGraphTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (a *mqlAzuread) GetGroups() ([]interface{}, error) {
 }
 
 func (a *mqlAzuread) GetDomains() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := msGraphTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
