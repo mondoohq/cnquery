@@ -35,7 +35,7 @@ k8s {
   configmaps() []k8s.configmap
   // Kubernetes Services
   services() []k8s.service
-  // Kubernetes Network Polices
+  // Kubernetes Network Policies
   networkPolicies() []k8s.networkpolicy
   // Kubernetes Service Accounts
   serviceaccounts() []k8s.serviceaccount
