@@ -7,7 +7,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
-	ms365_provider "go.mondoo.com/cnquery/motor/providers/ms365"
+	ms365_provider "go.mondoo.com/cnquery/motor/providers/microsoft/ms365"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 

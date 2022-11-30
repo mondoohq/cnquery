@@ -48,5 +48,6 @@ func (client *Subscriptions) GetSubscriptions() ([]subscriptions.Subscription, e
 			subs = append(subs, *s)
 		}
 	}
+
 	return subs, nil
 }

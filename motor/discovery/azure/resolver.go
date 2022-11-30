@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
-	azure_provider "go.mondoo.com/cnquery/motor/providers/azure"
+	azure_provider "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 )
 

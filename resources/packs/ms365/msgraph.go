@@ -9,17 +9,32 @@ import (
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
 	"go.mondoo.com/cnquery/motor/providers"
-	ms365_provider "go.mondoo.com/cnquery/motor/providers/ms365"
-	"go.mondoo.com/cnquery/motor/providers/ms365/msgraphclient"
-	"go.mondoo.com/cnquery/motor/providers/ms365/msgraphconv"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	ms365_provider "go.mondoo.com/cnquery/motor/providers/microsoft/ms365"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphclient"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphconv"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func ms365Provider(t providers.Instance) (*ms365_provider.Provider, error) {
+func msGraphProvider(t providers.Instance) (*ms365_provider.Provider, error) {
 	at, ok := t.(*ms365_provider.Provider)
 	if !ok {
-		return nil, errors.New("ms365 resource is not supported on this transport")
+		az, ok := t.(*azure.Provider)
+		if !ok {
+			return nil, errors.New("msgraph resource is not supported on this transport")
+		}
+		cred := az.Credential()
+		if cred == nil {
+			return nil, errors.New("msgraph resource requires credentials")
+		}
+		cfg := &providers.Config{
+			Backend:     providers.ProviderType_MS365,
+			Options:     az.Options(),
+			Credentials: []*vault.Credential{cred},
+		}
+		return ms365_provider.New(cfg)
 	}
 	return at, nil
 }
@@ -29,7 +44,7 @@ func (m *mqlMsgraphBeta) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetSettings() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +66,7 @@ func (m *mqlMsgraphBetaOrganization) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +119,7 @@ func (a *mqlMsgraphBetaGroup) GetMembers() ([]interface{}, error) {
 }
 
 func (m *mqlMsgraphBeta) GetGroups() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +164,7 @@ func (m *mqlMsgraphBetaUser) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +228,7 @@ func (m *mqlMsgraphBetaServiceprincipal) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetServiceprincipals() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +269,7 @@ func (m *mqlMsgraphBetaDomain) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetDomains() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +321,7 @@ func (m *mqlMsgraphBetaDomaindnsrecord) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +377,7 @@ func (m *mqlMsgraphBetaApplication) id() (string, error) {
 }
 
 func (m *mqlMsgraphBeta) GetApplications() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +426,7 @@ func (m *mqlMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -487,7 +502,7 @@ func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable
 }
 
 func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +540,7 @@ func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
 func (m *mqlMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -568,7 +583,7 @@ func (s *mqlMsgraphBetaPolicies) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +612,7 @@ func (m *mqlMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
 }
 
 func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -622,7 +637,7 @@ func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() 
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-beta
 func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -647,7 +662,7 @@ func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, er
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
 // https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
 func (m *mqlMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -674,7 +689,7 @@ func (m *mqlMsgraphBetaRolemanagement) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -725,7 +740,7 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -787,7 +802,7 @@ func (m *mqlMsgraphBetaDevicemanagement) id() (string, error) {
 }
 
 func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -834,7 +849,7 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{
 }
 
 func (m *mqlMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
-	provider, err := ms365Provider(m.MotorRuntime.Motor.Provider)
+	provider, err := msGraphProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
