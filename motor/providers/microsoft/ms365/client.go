@@ -5,7 +5,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/cockroachdb/errors"
 	a "github.com/microsoft/kiota-authentication-azure-go"
-	"go.mondoo.com/cnquery/motor/providers/ms365/msgraphclient"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphclient"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 

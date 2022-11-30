@@ -6,7 +6,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/ms365/ms365report"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/ms365report"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 

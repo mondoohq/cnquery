@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
-	azure_transport "go.mondoo.com/cnquery/motor/providers/azure"
+	azure_transport "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 )
 
 type Compute struct {

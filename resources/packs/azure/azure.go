@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.com/cnquery/motor/providers"
-	azure_transport "go.mondoo.com/cnquery/motor/providers/azure"
+	azure_transport "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources/packs/azure/info"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )

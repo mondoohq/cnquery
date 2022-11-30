@@ -4,8 +4,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
-	azure_provider "go.mondoo.com/cnquery/motor/providers/azure"
-	"go.mondoo.com/cnquery/motor/providers/ms365/msgraphclient"
+	azure_provider "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphclient"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
