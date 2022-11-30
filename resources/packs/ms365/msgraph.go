@@ -19,24 +19,23 @@ import (
 )
 
 func msGraphProvider(t providers.Instance) (*ms365_provider.Provider, error) {
-	at, ok := t.(*ms365_provider.Provider)
-	if !ok {
-		az, ok := t.(*azure.Provider)
-		if !ok {
-			return nil, errors.New("msgraph resource is not supported on this transport")
-		}
-		cred := az.Credential()
+	switch p := t.(type) {
+	case *ms365_provider.Provider:
+		return p, nil
+	case *azure.Provider:
+		cred := p.Credential()
 		if cred == nil {
 			return nil, errors.New("msgraph resource requires credentials")
 		}
 		cfg := &providers.Config{
 			Backend:     providers.ProviderType_MS365,
-			Options:     az.Options(),
+			Options:     p.Options(),
 			Credentials: []*vault.Credential{cred},
 		}
 		return ms365_provider.New(cfg)
+	default:
+		return nil, errors.New("msgraph resource is not supported on this transport")
 	}
-	return at, nil
 }
 
 func (m *mqlMsgraphBeta) id() (string, error) {
