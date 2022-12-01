@@ -3,13 +3,14 @@
 package processes
 
 import (
-	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -66,9 +67,12 @@ func (lpm *LinuxProcManager) getInodeFromFd(fdPath string) (int64, error) {
 	if err != nil {
 		return inode, fmt.Errorf("processes> could not run command: %v", err)
 	}
-	scannerInode := bufio.NewScanner(c.Stdout)
-	scannerInode.Scan()
-	m := UNIX_INODE_REGEX.FindStringSubmatch(scannerInode.Text())
+	buf := &bytes.Buffer{}
+	_, err = buf.ReadFrom(c.Stdout)
+	if err != nil {
+		return inode, fmt.Errorf("processes> could not read command output: %v", err)
+	}
+	m := UNIX_INODE_REGEX.FindStringSubmatch(strings.TrimSuffix(buf.String(), "\n"))
 	inode, err = strconv.ParseInt(m[1], 10, 64)
 	if err != nil {
 		return inode, fmt.Errorf("processes> could not parse inode: %v", err)

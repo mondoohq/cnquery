@@ -16,12 +16,10 @@ import (
 )
 
 var (
-	LINUX_PS_REGEX         = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
-	UNIX_PS_REGEX          = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
-	UNIX_SS_REGEX          = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s*$`)
-	UNIX_SS_FD_REGEX       = regexp.MustCompile(`^users:\((\(.+\),?)+\)$`)
-	UNIX_SS_FD_ENTRY_REGEX = regexp.MustCompile(`^\(?".+",pid=(\d+),fd=(\d+)\)?$`)
-	UNIX_INODE_REGEX       = regexp.MustCompile(`^socket:\[(\d+)\]$`)
+	LINUX_PS_REGEX   = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
+	UNIX_PS_REGEX    = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
+	UNIX_LSOF_REGEX  = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+).+$`)
+	UNIX_INODE_REGEX = regexp.MustCompile(`^socket:\[(\d+)\]$`)
 )
 
 type ProcessEntry struct {
@@ -232,7 +230,7 @@ func (upm *UnixProcessManager) Process(pid int64) (*OSProcess, error) {
 }
 
 func (upm *UnixProcessManager) getSockets() (map[int64][]int64, error) {
-	c, err := upm.provider.RunCommand("ss -tunpH")
+	c, err := upm.provider.RunCommand("lsof -i")
 	if err != nil {
 		return nil, fmt.Errorf("processes> could not run command: %v", err)
 	}
@@ -241,32 +239,31 @@ func (upm *UnixProcessManager) getSockets() (map[int64][]int64, error) {
 	scanner := bufio.NewScanner(c.Stdout)
 	for scanner.Scan() {
 		line := scanner.Text()
-		m := UNIX_SS_REGEX.FindStringSubmatch(line)
+		m := UNIX_LSOF_REGEX.FindStringSubmatch(line)
 
-		// users:(("rpcbind",pid=2137,fd=4),("systemd",pid=1,fd=380))
-		fdMG := UNIX_SS_FD_REGEX.FindStringSubmatch(m[7])
-		fdEntries := strings.Split(fdMG[1], "),(")
-		for _, entry := range fdEntries {
-			fdPid := UNIX_SS_FD_ENTRY_REGEX.FindStringSubmatch(entry)
-			pid, err := strconv.ParseInt(fdPid[1], 10, 64)
-			if err != nil {
-				log.Error().Err(err).Msg("cannot parse unix pid " + fdPid[1])
-				continue
-			}
-			fd, err := strconv.ParseInt(fdPid[2], 10, 64)
-			if err != nil {
-				log.Error().Err(err).Msg("cannot parse unix fd " + fdPid[2])
-				continue
-			}
-			fdPath := filepath.Join("/proc", strconv.Itoa(int(pid)), "/fd/", strconv.Itoa(int(fd)))
-			inode, err := upm.getInodeFromFd(fdPath)
-			if err != nil {
-				log.Error().Err(err).Msg("cannot get inode for fd")
-				continue
-			}
-
-			sockets[pid] = append(sockets[pid], inode)
+		if m[1] == "COMMAND" {
+			// header
+			continue
 		}
+
+		pid, err := strconv.ParseInt(m[2], 10, 64)
+		if err != nil {
+			log.Error().Err(err).Msg("cannot parse unix pid " + m[2])
+			continue
+		}
+		m[4] = strings.TrimSuffix(m[4], "u")
+		fd, err := strconv.ParseInt(m[4], 10, 64)
+		if err != nil {
+			log.Error().Err(err).Msg("cannot parse unix fd " + m[4])
+			continue
+		}
+		fdPath := filepath.Join("/proc", strconv.Itoa(int(pid)), "/fd/", strconv.Itoa(int(fd)))
+		inode, err := upm.getInodeFromFd(fdPath)
+		if err != nil {
+			continue
+		}
+
+		sockets[pid] = append(sockets[pid], inode)
 	}
 
 	return sockets, nil
@@ -281,7 +278,14 @@ func (upm *UnixProcessManager) getInodeFromFd(fdPath string) (int64, error) {
 	}
 	scannerInode := bufio.NewScanner(c.Stdout)
 	scannerInode.Scan()
-	m := UNIX_INODE_REGEX.FindStringSubmatch(scannerInode.Text())
+	line := scannerInode.Text()
+	if line == "" {
+		return inode, fmt.Errorf("processes> could not get inode from fd")
+	}
+	m := UNIX_INODE_REGEX.FindStringSubmatch(line)
+	if len(m) < 2 {
+		return inode, fmt.Errorf("processes> could not get inode from fd")
+	}
 	inode, err = strconv.ParseInt(m[1], 10, 64)
 	if err != nil {
 		return inode, fmt.Errorf("processes> could not parse inode: %v", err)
