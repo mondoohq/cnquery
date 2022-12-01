@@ -1,0 +1,50 @@
+packs:
+  - uid: mondoo-macos-inventory
+    name: Mondoo macOS Inventory Pack 
+    docs:
+      desc: |
+        The Mondoo macOS inventory pack is designed to gather data about macOS hosts for asset inventory. 
+
+        ## Local scan
+        To run this pack locally on a macOS host:
+
+        ```bash
+        cnquery scan local -f mondoo-macos-inventory.mql.yaml
+        ```
+
+        ## Remote scan
+        To run this pack against a remote macOS host using SSH (requires Remote Management is activated in System Preferences):
+
+        ```bash
+        cnquery scan ssh <user>@<ip_address> -i <identity_file> -f mondoo-macos-inventory.mql.yaml
+        ```
+
+        ## Join the community!
+        Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
+        
+        If you have any suggestions on how to improve this query pack, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
+    filters:
+      - asset.platform.contains("macos")
+    queries:
+      - uid: mondoo-asset-info
+        title: Gather asset information
+        query: asset { kind title platform name arch runtime }
+      - uid: mondoo-hostname
+        title: Gather the hostname
+        query: os.hostname
+      - uid: mondoo-macos-users 
+        title: Gather regular users 
+        query: users.where( name != /^_/ && shell != "/usr/bin/false" ) { * }
+      - uid: mondoo-macos-systemsetup
+        title: Gather macOS system setup 
+        query: macos.systemsetup {*}
+      - uid: mondoo-macos-packages
+        title: Gather macOS packages 
+        query: packages {*}
+      - uid: mondoo-macos-running-services
+        title: Gather data on running services
+        query: services.where( running == true ) { * }
+      - uid: mondoo-macos-ports-listening
+        title: Gather data on listening ports 
+        query: ports.listening 
+      

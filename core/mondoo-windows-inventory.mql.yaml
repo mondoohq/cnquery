@@ -1,0 +1,47 @@
+packs:
+  - uid: mondoo-windows-asset-inventory
+    name: Mondoo Windows Asset Inventory Pack 
+    docs:
+      desc: |
+        The Mondoo Windows inventory pack is designed to gather data about Windows hosts for asset inventory. 
+
+        ## Local scan
+        To run this pack locally on a Windows host:
+
+        ```bash
+        cnquery scan local -f mondoo-windows-inventory.mql.yaml
+        ```
+
+        ## Remote scan
+        To run this pack against a remote macOS host using SSH (requires Remote Management is activated in System Preferences):
+
+        ```bash
+        cnquery scan winrm <user>@<ip_address> -f mondoo-windows-inventory.mql.yaml
+        ```
+
+        ## Join the community!
+        Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
+        
+        If you have any suggestions on how to improve this query pack, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
+    filters:
+      - asset.platform.contains("windows")
+    queries:
+      - uid: mondoo-asset-info
+        title: Gather asset information
+        query: asset { kind title platform name arch runtime }
+      - uid: mondoo-hostname
+        title: Gather the hostname
+        query: os.hostname
+      - uid: mondoo-windows-users 
+        title: Gather regular users 
+        query: users { * }
+      - uid: mondoo-windows-packages
+        title: Gather Windows packages 
+        query: packages {*}
+      - uid: mondoo-windows-running-services
+        title: Gather data on running services
+        query: services.where( running == true ) { * }
+      - uid: mondoo-windows-ports-listening
+        title: Gather data on listening ports 
+        query: ports.listening 
+      
