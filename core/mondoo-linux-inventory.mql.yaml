@@ -83,3 +83,9 @@ packs:
       - uid: mondoo-linux-running-services
         title: Retrieve list of running services
         query: services.where( running == true ) { * }
+      - uid: mondoo-linux-interface-configuration
+        title: Retrieve interface configuration of the system
+        query: |
+          if ( mondoo.capabilities.contains('run-command') ) {
+            parse.json(content: command('ip -j a').stdout).params
+          }

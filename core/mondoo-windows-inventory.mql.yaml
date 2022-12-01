@@ -43,5 +43,8 @@ packs:
         query: services.where( running == true ) { * }
       - uid: mondoo-windows-ports-listening
         title: Gather data on listening ports 
-        query: ports.listening 
+        query: ports.listening
+      - uid: mondoo-windows-interface-configuration
+        title: Retrieve interface configuration of the system
+        query: command('wmic nicconfig get macaddress,ipaddress,IPSubnet').stdout
       

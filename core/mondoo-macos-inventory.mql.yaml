@@ -47,4 +47,7 @@ packs:
       - uid: mondoo-macos-ports-listening
         title: Gather data on listening ports 
         query: ports.listening 
+      - uid: mondoo-macos-interface-configuration
+        title: Retrieve interface configuration of the system
+        query: command("ifconfig").stdout
       
