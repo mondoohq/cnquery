@@ -190,7 +190,7 @@ There are so many things `cnquery` can do! Gather information about your fleet, 
 
 Explore:
 
-- [cnspec docs](https://mondoo.com/docs/cnquery/)
+- [cnquery docs](https://mondoo.com/docs/cnquery/)
 - [Query packs](https://github.com/mondoohq/cnquery-packs)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL language reference](https://mondoo.com/docs/mql/resources/)
