@@ -57,7 +57,7 @@ func TestTruthy(t *testing.T) {
 		{RegexData("r"), true},
 		{TimeData(time.Time{}), false},
 		{TimeData(now), true},
-		{ArrayData([]interface{}{}, types.Any), true},
+		{ArrayData([]interface{}{}, types.Any), false},
 		{ArrayData([]interface{}{false}, types.Bool), false},
 		{ArrayData([]interface{}{true}, types.Bool), true},
 		{MapData(map[string]interface{}{}, types.Any), true},
