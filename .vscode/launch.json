@@ -21,33 +21,17 @@
       "program": "${fileDirname}"
     },
     {
-      "name": "cnquery-run-local",
-      "type": "go",
-      "request": "launch",
-      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
-      "args": [
-        "run",
-        "local",
-        "--sudo",
-        "-c",
-        "ports"
-      ],
-      "console": "integratedTerminal",
-    },
-    {
       "name": "cnquery-run",
       "type": "go",
       "request": "launch",
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "args": [
         "run",
-        "ssh",
+        "local",
+        "--record",
         "--sudo",
-        "-i",
-        "/home/christian/workspace/mondoo/examples/.vagrant/machines/default/virtualbox/private_key",
-        "vagrant@127.0.0.1:2222",
         "-c",
-        "ports"
+        "processes.list"
       ],
     },
     {
