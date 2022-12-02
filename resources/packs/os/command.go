@@ -41,7 +41,7 @@ func (c *mqlCommand) execute() (*os.Command, error) {
 
 	// note: we ignore the error here, because we want to give all results
 	// (stdout/stderr/exitcode) to the user for handling. otherwise the command
-	// resource would be nil and you couldnt do `command('notme').exitcode`
+	// resource would be nil and you couldn't do `command('notme').exitcode`
 	executedCmd, err = osProvider.RunCommand(cmd)
 
 	c.Cache.Store(cmd, &resources.CacheEntry{Data: executedCmd, Error: err})

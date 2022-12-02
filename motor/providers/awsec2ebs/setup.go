@@ -254,7 +254,7 @@ func CreateSnapshotFromVolume(ctx context.Context, cfg aws.Config, volID string,
 			var ae smithy.APIError
 			if errors.As(err, &ae) {
 				if ae.ErrorCode() == "InvalidSnapshot.NotFound" {
-					time.Sleep(30 * time.Second) // if it says it doesnt exist, even though we just created it, then it must still be busy creating
+					time.Sleep(30 * time.Second) // if it says it doesn't exist, even though we just created it, then it must still be busy creating
 					notFoundTimeout++
 					if notFoundTimeout > 10 {
 						return nil, errors.New("timed out wating for created snapshot to complete; snapshot not found")

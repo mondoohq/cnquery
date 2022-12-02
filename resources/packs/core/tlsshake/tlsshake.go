@@ -125,7 +125,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 		go func() {
 			defer workers.Done()
 
-			// we don't activate any of the additioinal tests in the beginning
+			// we don't activate any of the additional tests in the beginning
 			// let's find out if we work on this version of TLS/SSL
 			curConf := &ScanConfig{
 				version:       version,
@@ -277,7 +277,7 @@ func (s *Tester) parseServerHello(data []byte, version string, conf *ScanConfig)
 	cipher, cipherOK := ALL_CIPHERS[string(data[idx:idx+2])]
 	idx += 2
 
-	// TLS 1.3 pretends to be TLS 1.2 in the preceeding headers for
+	// TLS 1.3 pretends to be TLS 1.2 in the preceding headers for
 	// compatibility. To correctly identify it, we have to look at
 	// any Supported Versions extensions that the server sent us.
 

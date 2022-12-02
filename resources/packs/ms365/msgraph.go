@@ -680,7 +680,7 @@ func (m *mqlMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, erro
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
-	return core.JsonToDictSlice(msgraphconv.NewPermissionGrantPolicys(resp.GetValue()))
+	return core.JsonToDictSlice(msgraphconv.NewPermissionGrantPolicies(resp.GetValue()))
 }
 
 func (m *mqlMsgraphBetaRolemanagement) id() (string, error) {
@@ -776,7 +776,7 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interfa
 	res := []interface{}{}
 	for i := range roleAssignments {
 		roleAssignment := roleAssignments[i]
-		principal, _ := core.JsonToDict(msgraphconv.NewDirectoryPricipal(roleAssignment.GetPrincipal()))
+		principal, _ := core.JsonToDict(msgraphconv.NewDirectoryPrincipal(roleAssignment.GetPrincipal()))
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.rolemanagement.roleassignment",
 			"id", core.ToString(roleAssignment.GetId()),
 			"roleDefinitionId", core.ToString(roleAssignment.GetRoleDefinitionId()),

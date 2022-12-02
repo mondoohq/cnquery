@@ -51,7 +51,7 @@ type ChassisInfo struct {
 // https://en.wikipedia.org/wiki/System_Management_BIOS
 // https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.4.0.pdf
 // There are also tools (https://github.com/digitalocean/go-smbios) out there to parse
-// the memory dump directly, but this would require to transfer large amout of data \
+// the memory dump directly, but this would require to transfer large amount of data \
 // for remove access, therefore we restrict the data to what is exposed in /sys/class/dmi/id/
 type SmBiosManager interface {
 	Name() string

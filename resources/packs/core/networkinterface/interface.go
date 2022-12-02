@@ -278,10 +278,10 @@ func (i *MacOSInterfaceHandler) ParseMacOS(r io.Reader) ([]Interface, error) {
 			ifIndex++
 		}
 
-		// parse mac adress
+		// parse mac address
 		if strings.HasPrefix(line, "	ether") {
-			macadress := strings.TrimSpace(strings.TrimPrefix(line, "	ether"))
-			mac, err := net.ParseMAC(macadress)
+			macaddress := strings.TrimSpace(strings.TrimPrefix(line, "	ether"))
+			mac, err := net.ParseMAC(macaddress)
 			if err != nil {
 				return nil, err
 			}
@@ -407,14 +407,14 @@ func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 		return nil, errors.Wrap(err, "could not parse windows network adapter list")
 	}
 
-	// fetch all ip adresses
+	// fetch all ip addresses
 	cmd, err = i.provider.RunCommand(powershell.Wrap(WinGetNetIPAddress))
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch windows ip adresses")
+		return nil, errors.Wrap(err, "could not fetch windows ip addresses")
 	}
 	winIpAdresses, err := i.ParseNetIpAdresses(cmd.Stdout)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse windows ip adresses")
+		return nil, errors.Wrap(err, "could not parse windows ip addresses")
 	}
 
 	// map information together

@@ -63,7 +63,7 @@ func ReadSSHConfig(cc *providers.Config) *providers.Config {
 			expandedPath, err := homedir.Expand(entry)
 			if err == nil {
 				log.Debug().Str("key", expandedPath).Str("host", host).Msg("ssh> read ssh identity key from ssh config")
-				// NOTE: we ignore the error here for now but this should probably been catched earlier anyway
+				// NOTE: we ignore the error here for now but this should probably been caught earlier anyway
 				credential, _ := vault.NewPrivateKeyCredentialFromPath(user, expandedPath, "")
 				// apply the option manually
 				if credential != nil {

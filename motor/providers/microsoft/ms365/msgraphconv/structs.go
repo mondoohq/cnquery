@@ -131,7 +131,7 @@ type DirectoryObject struct {
 	DeletedDateTime *time.Time `json:"deletedDateTime"`
 }
 
-func NewDirectoryPricipal(p models.DirectoryObjectable) *DirectoryObject {
+func NewDirectoryPrincipal(p models.DirectoryObjectable) *DirectoryObject {
 	if p == nil {
 		return nil
 	}
@@ -1007,7 +1007,7 @@ func NewPermissionGrantPolicy(p models.PermissionGrantPolicyable) *PermissionGra
 	}
 }
 
-func NewPermissionGrantPolicys(policies []models.PermissionGrantPolicyable) []*PermissionGrantPolicy {
+func NewPermissionGrantPolicies(policies []models.PermissionGrantPolicyable) []*PermissionGrantPolicy {
 	res := []*PermissionGrantPolicy{}
 	for i := range policies {
 		res = append(res, NewPermissionGrantPolicy(policies[i]))

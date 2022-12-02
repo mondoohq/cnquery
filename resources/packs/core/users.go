@@ -79,7 +79,7 @@ func (u *mqlUser) init(args *resources.Args) (*resources.Args, User, error) {
 			return nil, nil, errors.New("user> username has invalid type")
 		}
 
-		// we go a username as an initizator, which eg. is used by the groups resource
+		// we go a username as an initializer, which eg. is used by the groups resource
 		// lets do minimal IO in initialize
 		um, err := users.ResolveManager(u.MotorRuntime.Motor)
 		if err != nil {

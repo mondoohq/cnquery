@@ -70,7 +70,7 @@ func TestWindowsRemoteInterface(t *testing.T) {
 	assert.Equal(t, 2, len(inet.Addrs))
 	assert.Equal(t, "fe80::ed94:1267:afb5:bb76", inet.Addrs[0].String())
 	assert.Equal(t, "192.168.178.112", inet.Addrs[1].String())
-	// the windows resourse does not support multicast adresses
+	// the windows resource does not support multicast addresses
 	assert.True(t, len(inet.MulticastAddrs) == 0)
 
 	ip, err := networkinterface.HostIP(list)
