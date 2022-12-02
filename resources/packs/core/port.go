@@ -195,6 +195,45 @@ func (p *mqlPorts) processesBySocket() (map[int64]Process, error) {
 	if c.Error != nil {
 		err = errors.New("cannot read related processess: " + c.Error.Error())
 	}
+
+	if len(res) == 0 {
+		processesByPid, err := p.processesByPid()
+		if err != nil {
+			return nil, err
+		}
+		osProvider, err := osProvider(p.MotorRuntime.Motor)
+		if err != nil {
+			return nil, err
+		}
+		c, err := osProvider.RunCommand("lsof -nP -i -F")
+		if err != nil {
+			return nil, fmt.Errorf("processes> could not run command: %v", err)
+		}
+
+		lsofProcesses, err := lsof.Parse(c.Stdout)
+		if err != nil {
+			return nil, err
+		}
+
+		processesBySocket := map[int64]Process{}
+		for i := range lsofProcesses {
+
+			pid, err := strconv.ParseInt(lsofProcesses[i].PID, 10, 64)
+			if err != nil {
+				log.Error().Err(err).Msg("cannot parse unix pid " + lsofProcesses[i].PID)
+				continue
+			}
+			inode, err := strconv.ParseInt(lsofProcesses[i].SocketInode, 10, 64)
+			if err != nil {
+				log.Error().Err(err).Msg("cannot parse socket inode " + lsofProcesses[i].SocketInode)
+				continue
+			}
+			processesBySocket[inode] = processesByPid[pid]
+		}
+		processes.MqlResource().Cache.Store("_socketsMap", &resources.CacheEntry{Data: processesBySocket, Error: nil})
+		res = processesBySocket
+	}
+
 	return res, err
 }
 

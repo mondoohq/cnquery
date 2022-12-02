@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/resources/packs/core/lsof"
 )
 
 var (
@@ -183,17 +182,9 @@ func (upm *UnixProcessManager) List() ([]*OSProcess, error) {
 
 	log.Debug().Int("processes", len(entries)).Msg("found processes")
 
-	// get socket information to enrich the process list
-	sockets, err := upm.getSockets()
-	if err != nil {
-		log.Error().Err(err).Msg("processes> cannot get sockets")
-	}
-
 	var ps []*OSProcess
 	for i := range entries {
-		osProcess := entries[i].ToOSProcess()
-		osProcess.SocketInodes = sockets[osProcess.Pid]
-		ps = append(ps, osProcess)
+		ps = append(ps, entries[i].ToOSProcess())
 	}
 	return ps, nil
 }
@@ -224,35 +215,4 @@ func (upm *UnixProcessManager) Process(pid int64) (*OSProcess, error) {
 	}
 
 	return nil, nil
-}
-
-func (upm *UnixProcessManager) getSockets() (map[int64][]int64, error) {
-	c, err := upm.provider.RunCommand("lsof -nP -i -F")
-	if err != nil {
-		return nil, fmt.Errorf("processes> could not run command: %v", err)
-	}
-
-	lsofProcesses, err := lsof.Parse(c.Stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	sockets := map[int64][]int64{}
-	for i := range lsofProcesses {
-
-		pid, err := strconv.ParseInt(lsofProcesses[i].PID, 10, 64)
-		if err != nil {
-			log.Error().Err(err).Msg("cannot parse unix pid " + lsofProcesses[i].PID)
-			continue
-		}
-		inode, err := strconv.ParseInt(lsofProcesses[i].SocketInode, 10, 64)
-		if err != nil {
-			log.Error().Err(err).Msg("cannot parse socket inode " + lsofProcesses[i].SocketInode)
-			continue
-		}
-
-		sockets[pid] = append(sockets[pid], inode)
-	}
-
-	return sockets, nil
 }
