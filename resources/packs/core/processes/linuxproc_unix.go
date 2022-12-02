@@ -10,11 +10,14 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 )
+
+var UNIX_INODE_REGEX = regexp.MustCompile(`^socket:\[(\d+)\]$`)
 
 // Read out all connected sockets
 // we will ignore all FD errors here since we may not have access to everything

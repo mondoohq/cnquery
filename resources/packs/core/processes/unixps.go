@@ -4,22 +4,19 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/resources/packs/core/lsof"
 )
 
 var (
-	LINUX_PS_REGEX   = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
-	UNIX_PS_REGEX    = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
-	UNIX_LSOF_REGEX  = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+).+$`)
-	UNIX_INODE_REGEX = regexp.MustCompile(`^socket:\[(\d+)\]$`)
+	LINUX_PS_REGEX = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
+	UNIX_PS_REGEX  = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
 )
 
 type ProcessEntry struct {
@@ -230,36 +227,27 @@ func (upm *UnixProcessManager) Process(pid int64) (*OSProcess, error) {
 }
 
 func (upm *UnixProcessManager) getSockets() (map[int64][]int64, error) {
-	c, err := upm.provider.RunCommand("lsof -i")
+	c, err := upm.provider.RunCommand("lsof -nP -i -F")
 	if err != nil {
 		return nil, fmt.Errorf("processes> could not run command: %v", err)
 	}
 
+	lsofProcesses, err := lsof.Parse(c.Stdout)
+	if err != nil {
+		return nil, err
+	}
+
 	sockets := map[int64][]int64{}
-	scanner := bufio.NewScanner(c.Stdout)
-	for scanner.Scan() {
-		line := scanner.Text()
-		m := UNIX_LSOF_REGEX.FindStringSubmatch(line)
+	for i := range lsofProcesses {
 
-		if m[1] == "COMMAND" {
-			// header
+		pid, err := strconv.ParseInt(lsofProcesses[i].PID, 10, 64)
+		if err != nil {
+			log.Error().Err(err).Msg("cannot parse unix pid " + lsofProcesses[i].PID)
 			continue
 		}
-
-		pid, err := strconv.ParseInt(m[2], 10, 64)
+		inode, err := strconv.ParseInt(lsofProcesses[i].SocketInode, 10, 64)
 		if err != nil {
-			log.Error().Err(err).Msg("cannot parse unix pid " + m[2])
-			continue
-		}
-		m[4] = strings.TrimSuffix(m[4], "u")
-		fd, err := strconv.ParseInt(m[4], 10, 64)
-		if err != nil {
-			log.Error().Err(err).Msg("cannot parse unix fd " + m[4])
-			continue
-		}
-		fdPath := filepath.Join("/proc", strconv.Itoa(int(pid)), "/fd/", strconv.Itoa(int(fd)))
-		inode, err := upm.getInodeFromFd(fdPath)
-		if err != nil {
+			log.Error().Err(err).Msg("cannot parse socket inode " + lsofProcesses[i].SocketInode)
 			continue
 		}
 
@@ -267,14 +255,4 @@ func (upm *UnixProcessManager) getSockets() (map[int64][]int64, error) {
 	}
 
 	return sockets, nil
-}
-
-func (upm *UnixProcessManager) getInodeFromFd(fdPath string) (int64, error) {
-	var inode int64
-	command := fmt.Sprintf("readlink %s", fdPath)
-	c, err := upm.provider.RunCommand(command)
-	if err != nil {
-		return inode, fmt.Errorf("processes> could not run command: %v", err)
-	}
-	return readInodeFromOutput(c.Stdout)
 }
