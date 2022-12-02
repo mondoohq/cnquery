@@ -453,6 +453,8 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 		for i := range arr {
 			c := print.autoExpand(blockRef, arr[i], bundle, prefix)
 			res.WriteString(prefix)
+			res.WriteString(strconv.Itoa(i))
+			res.WriteString(": ")
 			res.WriteString(c)
 			res.WriteByte('\n')
 		}

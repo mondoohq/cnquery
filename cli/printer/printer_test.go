@@ -215,11 +215,11 @@ func TestPrinter(t *testing.T) {
 			"", // ignore
 			[]string{
 				"users.list: [\n" +
-					"  user name=\"root\" uid=0 gid=0\n" +
-					"  user name=\"chris\" uid=1000 gid=1001\n" +
-					"  user name=\"christopher\" uid=1000 gid=1001\n" +
-					"  user name=\"chris\" uid=1002 gid=1003\n" +
-					"  user name=\"bin\" uid=1 gid=1\n" +
+					"  0: user name=\"root\" uid=0 gid=0\n" +
+					"  1: user name=\"chris\" uid=1000 gid=1001\n" +
+					"  2: user name=\"christopher\" uid=1000 gid=1001\n" +
+					"  3: user name=\"chris\" uid=1002 gid=1003\n" +
+					"  4: user name=\"bin\" uid=1 gid=1\n" +
 					"]",
 			},
 		},
