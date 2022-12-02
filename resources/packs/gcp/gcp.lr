@@ -1,7 +1,7 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/gcp"
 
 // GCP Cloud organization
-gcloud.organization {
+gcloud.organization @defaults("id") {
   id() string
   name() string
   lifecycleState() string
@@ -9,7 +9,7 @@ gcloud.organization {
 }
 
 // GCP Cloud Project
-gcloud.project {
+gcloud.project @defaults("id") {
   id() string
   name() string
   number() string
@@ -33,7 +33,7 @@ gcloud.compute {
 }
 
 // GCP Compute Instances
-gcloud.compute.instance {
+gcloud.compute.instance @defaults("id name") {
   id string
   name string
   cpuPlatform string
@@ -49,7 +49,7 @@ gcloud.compute.instance {
 }
 
 // GCP Compute Service Account
-gcloud.compute.serviceaccount {
+gcloud.compute.serviceaccount @defaults("email") {
   email string
   scopes []string
 }
@@ -61,14 +61,13 @@ gcloud.storage {
 }
 
 // GCP Cloud Storage Bucket
-gcloud.storage.bucket {
+gcloud.storage.bucket @defaults("id") {
   id string
   name string
-  kind string
   labels map[string]string
   location string
   locationType string
-  projectNumber string
+  projectNumber string // TODO: project number / project id / project name
   storageClass string
   created time
   updated time
@@ -82,7 +81,7 @@ gcloud.sql {
 }
 
 // GCP Cloud SQL Instance
-gcloud.sql.instance {
+gcloud.sql.instance @defaults("name") {
   name string
   backendType string
   connectionName string
@@ -93,8 +92,9 @@ gcloud.sql.instance {
   currentDiskSize int
   maxDiskSize int
   state string
-  project string
+  project string // TODO: should this be id or name
   region string
   serviceAccountEmailAddress string
   settings dict
 }
+
