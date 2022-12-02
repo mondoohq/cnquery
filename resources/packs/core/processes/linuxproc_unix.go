@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -67,12 +68,21 @@ func (lpm *LinuxProcManager) getInodeFromFd(fdPath string) (int64, error) {
 	if err != nil {
 		return inode, fmt.Errorf("processes> could not run command: %v", err)
 	}
+	return readInodeFromOutput(c.Stdout)
+}
+
+func readInodeFromOutput(reader io.Reader) (int64, error) {
+	var inode int64
 	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(c.Stdout)
+	_, err := buf.ReadFrom(reader)
 	if err != nil {
 		return inode, fmt.Errorf("processes> could not read command output: %v", err)
 	}
-	m := UNIX_INODE_REGEX.FindStringSubmatch(strings.TrimSuffix(buf.String(), "\n"))
+	line := strings.TrimSuffix(buf.String(), "\n")
+	if line == "" {
+		return inode, fmt.Errorf("processes> could not get inode from fd")
+	}
+	m := UNIX_INODE_REGEX.FindStringSubmatch(line)
 	inode, err = strconv.ParseInt(m[1], 10, 64)
 	if err != nil {
 		return inode, fmt.Errorf("processes> could not parse inode: %v", err)

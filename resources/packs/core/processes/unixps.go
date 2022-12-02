@@ -276,19 +276,5 @@ func (upm *UnixProcessManager) getInodeFromFd(fdPath string) (int64, error) {
 	if err != nil {
 		return inode, fmt.Errorf("processes> could not run command: %v", err)
 	}
-	scannerInode := bufio.NewScanner(c.Stdout)
-	scannerInode.Scan()
-	line := scannerInode.Text()
-	if line == "" {
-		return inode, fmt.Errorf("processes> could not get inode from fd")
-	}
-	m := UNIX_INODE_REGEX.FindStringSubmatch(line)
-	if len(m) < 2 {
-		return inode, fmt.Errorf("processes> could not get inode from fd")
-	}
-	inode, err = strconv.ParseInt(m[1], 10, 64)
-	if err != nil {
-		return inode, fmt.Errorf("processes> could not parse inode: %v", err)
-	}
-	return inode, nil
+	return readInodeFromOutput(c.Stdout)
 }
