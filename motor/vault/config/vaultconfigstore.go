@@ -65,7 +65,7 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 	return v, nil
 }
 
-// GetInternalVault returns the local store that is used in Mondoo client to store
+// GetInternalVault returns the local store that is used in cnquery to store
 // Vault configurations eg. Hashicorp Vault access data
 func GetInternalVault() vault.Vault {
 	// on linux we are going to use kernel key management
