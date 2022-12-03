@@ -18,7 +18,7 @@ import (
 func k8sProvider(t providers.Instance) (k8s_provider.KubernetesProvider, error) {
 	at, ok := t.(k8s_provider.KubernetesProvider)
 	if !ok {
-		return nil, errors.New("k8s resource is not supported on this transport")
+		return nil, errors.New("k8s resource is not supported on this provider")
 	}
 	return at, nil
 }

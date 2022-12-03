@@ -19,7 +19,7 @@ func init() {
 func gitlabProvider(t providers.Instance) (*provider.Provider, error) {
 	gt, ok := t.(*provider.Provider)
 	if !ok {
-		return nil, errors.New("gitlab resource is not supported on this transport")
+		return nil, errors.New("gitlab resource is not supported on this provider")
 	}
 	return gt, nil
 }

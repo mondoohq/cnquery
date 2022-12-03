@@ -14,7 +14,7 @@ import (
 func aristaClientInstance(t providers.Instance) (*arista.Eos, *arista_provider.Provider, error) {
 	provider, ok := t.(*arista_provider.Provider)
 	if !ok {
-		return nil, nil, errors.New("arista.eos resource is not supported on this transport")
+		return nil, nil, errors.New("arista.eos resource is not supported on this provider")
 	}
 
 	eos := arista.NewEos(provider.Client())

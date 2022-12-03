@@ -11,7 +11,7 @@ import (
 func getIpmiInstance(t providers.Instance) (*ipmi.IpmiClient, error) {
 	provider, ok := t.(*ipmi_provider.Provider)
 	if !ok {
-		return nil, errors.New("ipmi resource is not supported on this transport")
+		return nil, errors.New("ipmi resource is not supported on this provider")
 	}
 
 	return provider.Client(), nil

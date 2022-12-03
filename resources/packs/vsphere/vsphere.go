@@ -24,7 +24,7 @@ func init() {
 func getClientInstance(t providers.Instance) (*resourceclient.Client, error) {
 	vt, ok := t.(*provider.Provider)
 	if !ok {
-		return nil, errors.New("vsphere resource is not supported on this transport")
+		return nil, errors.New("vsphere resource is not supported on this provider")
 	}
 
 	cl := resourceclient.New(vt.Client())
@@ -804,7 +804,7 @@ func esxiHostProperties(runtime *resources.Runtime) (*object.HostSystem, *mo.Hos
 	t := runtime.Motor.Provider
 	vt, ok := t.(*provider.Provider)
 	if !ok {
-		return nil, nil, errors.New("esxi resource is not supported on this transport")
+		return nil, nil, errors.New("esxi resource is not supported on this provider")
 	}
 
 	var h *object.HostSystem
@@ -900,7 +900,7 @@ func esxiVmProperties(runtime *resources.Runtime) (*object.VirtualMachine, *mo.V
 	t := runtime.Motor.Provider
 	vt, ok := t.(*provider.Provider)
 	if !ok {
-		return nil, nil, errors.New("esxi resource is not supported on this transport")
+		return nil, nil, errors.New("esxi resource is not supported on this provider")
 	}
 
 	vClient := vt.Client()
@@ -1027,7 +1027,7 @@ func (v *mqlEsxiCommand) GetResult() ([]interface{}, error) {
 	t := v.MotorRuntime.Motor.Provider
 	_, ok := t.(*provider.Provider)
 	if !ok {
-		return nil, errors.New("esxi resource is not supported on this transport")
+		return nil, errors.New("esxi resource is not supported on this provider")
 	}
 
 	inventoryPath, err := v.InventoryPath()
