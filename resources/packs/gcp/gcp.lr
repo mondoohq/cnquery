@@ -98,3 +98,65 @@ gcloud.sql.instance @defaults("name") {
   settings dict
 }
 
+gcloud.bigquery {
+  datasets() []gcloud.bigquery.dataset
+}
+
+gcloud.bigquery.dataset @defaults("id"){
+  id string
+  projectId string
+  description string
+  location string
+  labels map[string]string
+  created time
+  modified time
+  tags map[string]string
+  defaultEncryptionConfig dict
+  tables() []gcloud.bigquery.table
+  models() []gcloud.bigquery.model
+  routines() []gcloud.bigquery.routine
+}
+
+private gcloud.bigquery.table @defaults("name") {
+  name string
+  location string
+  description string
+  fullQualifiedName string
+  labels map[string]string
+  useLegacySQL bool
+  useStandardSQL bool
+  requirePartitionFilter bool
+  created time
+  modified time
+  numBytes int
+  numLongTermBytes int
+  numRows int
+  type string
+  expirationTime time
+}
+
+private gcloud.bigquery.model @defaults("id") {
+  id string
+  datasetId string
+  projectId string
+  name string
+  location string
+  description string
+  fullQualifiedName string
+  labels map[string]string
+  created time
+  modified time
+  type string
+  expirationTime time
+}
+
+private gcloud.bigquery.routine @defaults("id") {
+  id string
+  datasetId string
+  projectId string
+  language string
+  description string
+  created time
+  modified time
+  type string
+}
