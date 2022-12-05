@@ -78,6 +78,10 @@ func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load aws configuration")
 	}
+	if cfg.Region == "" {
+		log.Warn().Msg("no AWS region found, using us-east-1")
+		cfg.Region = "us-east-1" // in case the user has no region set, default to us-east-1
+	}
 
 	t.config = cfg
 
