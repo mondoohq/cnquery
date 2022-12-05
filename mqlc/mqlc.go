@@ -1183,7 +1183,7 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 					// this type of builtin function
 					var bind *variable
 					h, bind, err = c.compileImplicitBuiltin(callBinding.typ, "[]")
-					if err != nil {
+					if err != nil || h == nil {
 						return nil, types.Nil, errors.New("cannot find '[]' function on type " + callBinding.typ.Label())
 					}
 					callBinding = bind
@@ -1437,7 +1437,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				// this type of builtin function
 				var bind *variable
 				h, bind, err = c.compileImplicitBuiltin(typ, "[]")
-				if err != nil {
+				if err != nil || h == nil {
 					return nil, errors.New("cannot find '[]' function on type " + typ.Label())
 				}
 				relBinding = bind
