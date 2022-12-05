@@ -117,7 +117,6 @@ func _mapWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inve
 	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
 		resMap := map[string]interface{}{}
 		for i, res := range results {
-
 			if res.isTruthy() == !invert {
 				key := argsList[i][0].Value.(string)
 				resMap[key] = list[key]
@@ -396,6 +395,42 @@ func dictValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	return ArrayData(res, types.Dict), 0, nil
 }
 
+// Where blocks on strings try to see if the content is found inside the string.
+// Due to the way the compiler behaves, if we check for static values, it is
+// converted into a function:
+//
+//	"hello".contains("ll")  ==>  "hello".contains( _ == "ll" )
+//
+// ie: "hello".where("ll")     ==>  "hello".where(_ == "ll") = "ll"
+//
+// This means that we do not treat these operations the same we would for equality.
+// This is why the operations need a bit of special handling, which is done
+// inside this function.
+func _stringWhere(e *blockExecutor, src string, chunk *Chunk, ref uint64, inverted bool) (*RawData, uint64, error) {
+	arg1 := chunk.Function.Args[1]
+	fref, ok := arg1.RefV2()
+	if !ok {
+		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+	}
+
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
+	}
+
+	funBlock := e.ctx.code.Block(fref)
+	if len(funBlock.Chunks) == 0 {
+		return BoolFalse, 0, nil
+	}
+
+	var found *RawResult
+	err = e.runFunctionBlock([]*RawData{{Type: types.StringSlice, Value: src}}, fref, func(res *RawResult) {
+		found = res
+	})
+
+	return found.Data, 0, nil
+}
+
 func _dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inverted bool) (*RawData, uint64, error) {
 	// where(array, function)
 	itemsRef := chunk.Function.Args[0]
@@ -408,9 +443,13 @@ func _dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inv
 		return &RawData{Type: items.Type}, 0, nil
 	}
 
+	if s, ok := items.Value.(string); ok {
+		return _stringWhere(e, s, chunk, ref, inverted)
+	}
+
 	list, ok := items.Value.([]interface{})
 	if !ok {
-		return nil, 0, errors.New("failed to call dict.where on a non-list value")
+		return nil, 0, errors.New("failed to call dict.where on this value")
 	}
 
 	if len(list) == 0 {

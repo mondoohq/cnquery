@@ -312,6 +312,23 @@ func init() {
 			string("split"):     {f: stringSplitV2, Label: "split"},
 			string("trim"):      {f: stringTrimV2, Label: "trim"},
 		},
+		types.StringSlice: {
+			// TODO: implement the remaining calls for this type
+			// string("==" + types.Nil):                 {f: chunkEqFalseV2, Label: "=="},
+			// string("!=" + types.Nil):                 {f: chunkNeqFalseV2, Label: "!="},
+			string("==" + types.String): {f: stringsliceEqString, Label: "=="},
+			// string("!=" + types.String):              {f: stringNotStringV2, Label: "!="},
+			// string("==" + types.Regex):               {f: stringCmpRegexV2, Label: "=="},
+			// string("!=" + types.Regex):               {f: stringNotRegexV2, Label: "!="},
+			// string("==" + types.Bool):                {f: stringCmpBoolV2, Label: "=="},
+			// string("!=" + types.Bool):                {f: stringNotBoolV2, Label: "!="},
+			// string("==" + types.Int):                 {f: stringCmpIntV2, Label: "=="},
+			// string("!=" + types.Int):                 {f: stringNotIntV2, Label: "!="},
+			// string("==" + types.Float):               {f: stringCmpFloatV2, Label: "=="},
+			// string("!=" + types.Float):               {f: stringNotFloatV2, Label: "!="},
+			// string("==" + types.Dict):                {f: stringCmpDictV2, Label: "=="},
+			// string("!=" + types.Dict):                {f: stringNotDictV2, Label: "!="},
+		},
 		types.Regex: {
 			// == / !=
 			string("==" + types.Nil):                 {f: stringCmpNilV2, Label: "=="},

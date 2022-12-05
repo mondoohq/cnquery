@@ -2313,3 +2313,17 @@ func timeUnixV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	raw := t.Unix()
 	return IntData(int64(raw)), 0, nil
 }
+
+// stringslice methods
+
+func stringsliceEqString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+		l := left.(string)
+		r := right.(string)
+		idx := strings.Index(l, r)
+		if idx == -1 {
+			return StringData("")
+		}
+		return StringData(r)
+	})
+}

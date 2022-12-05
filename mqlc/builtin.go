@@ -50,10 +50,10 @@ func init() {
 			"unix":    {typ: intType, signature: FunctionSignature{}},
 		},
 		types.Dict: {
-			"[]": {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
-			"{}": {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"[]":       {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
+			"{}":       {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"contains": {compile: compileArrayContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			// string-ish
-			"contains":  {compile: compileStringContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"find":      {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"length":    {typ: intType, signature: FunctionSignature{}},
 			"camelcase": {typ: stringType, signature: FunctionSignature{}},
