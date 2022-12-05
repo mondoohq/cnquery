@@ -61,7 +61,7 @@ func New(tc *providers.Config) (*Provider, error) {
 	_, resp, err := client.Zen(context.Background())
 	if err != nil {
 		if resp.StatusCode == 401 {
-			return nil, errors.New("invalid github token provided")
+			return nil, errors.New("invalid GitHub token provided. check the value passed with the --token flag or the GITHUB_TOKEN environment variable")
 		}
 		return nil, err
 	}
