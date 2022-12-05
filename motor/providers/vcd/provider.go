@@ -81,12 +81,14 @@ func New(pCfg *providers.Config) (*Provider, error) {
 
 	return &Provider{
 		client: client,
+		host:   pCfg.Host,
 		opts:   pCfg.Options,
 	}, nil
 }
 
 type Provider struct {
 	client *govcd.VCDClient
+	host   string
 	opts   map[string]string
 }
 
