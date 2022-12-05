@@ -101,9 +101,11 @@ func (v *mqlVcdOrganization) GetLdapConfiguration() (interface{}, error) {
 func newMqlVcdOrgLdapConfiguration(runtime *resources.Runtime, org *types.OrgLdapSettingsType) (interface{}, error) {
 	hostname := ""
 	username := ""
+	realm := ""
 	if org.CustomOrgLdapSettings != nil {
 		hostname = org.CustomOrgLdapSettings.HostName
 		username = org.CustomOrgLdapSettings.Username
+		realm = org.CustomOrgLdapSettings.Realm
 	}
 	return runtime.CreateResource("vcd.organization.ldapSettings",
 		"id", org.HREF,
@@ -111,6 +113,7 @@ func newMqlVcdOrgLdapConfiguration(runtime *resources.Runtime, org *types.OrgLda
 		"orgLdapMode", org.OrgLdapMode,
 		"hostname", hostname,
 		"username", username,
+		"realm", realm,
 	)
 }
 
@@ -358,7 +361,7 @@ func (v *mqlVcdOrganization) GetVdcGroups() ([]interface{}, error) {
 }
 
 func newMqlVcdVdcGroup(runtime *resources.Runtime, grp *types.VdcGroup) (interface{}, error) {
-	return runtime.CreateResource("vcd.vcdGroup",
+	return runtime.CreateResource("vcd.vdcGroup",
 		"name", grp.Name,
 		"description", grp.Description,
 		"localEgress", grp.LocalEgress,
@@ -374,7 +377,7 @@ func (v *mqlVcdVdcGroup) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "vcd.vcdGroup/" + id, nil
+	return "vcd.vdcGroup/" + id, nil
 }
 
 // https://developer.vmware.com/apis/1260/vmware-cloud-director/doc/doc//types/RoleType.html

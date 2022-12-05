@@ -32,7 +32,7 @@ vcd.organization @defaults("name") {
   // Virtual Data Centers (VDC)
   vdcs() []vcd.vdc
   // VDC groups
-  vdcGroups() []vdc.vdcGroup
+  vdcGroups() []vcd.vdcGroup
   // Organization roles
   roles() []vcd.role
   // Organization settings

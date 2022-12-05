@@ -59,7 +59,7 @@ func (v *mqlVcdVdcProvider) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "vcd.provider/" + id, nil
+	return "vcd.vdcProvider/" + id, nil
 }
 
 func (v *mqlVcdVdcProvider) GetMetadata() (map[string]interface{}, error) {

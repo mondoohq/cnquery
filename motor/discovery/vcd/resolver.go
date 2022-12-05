@@ -32,7 +32,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 
 	provider, ok := m.Provider.(*vcd_provider.Provider)
 	if !ok {
-		return nil, errors.New("could not create slack provider")
+		return nil, errors.New("could not create VMware Cloud Director provider")
 	}
 
 	identifier, err := provider.Identifier()
@@ -49,7 +49,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 	if cc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll) {
 		resolved = append(resolved, &asset.Asset{
 			PlatformIds: []string{identifier},
-			Name:        "VMware Cloud Director", // TODO: we need to find a unique instance id
+			Name:        "VMware Cloud Director",
 			Platform:    pf,
 			Connections: []*providers.Config{cc}, // pass-in the current config
 			Labels:      map[string]string{},
