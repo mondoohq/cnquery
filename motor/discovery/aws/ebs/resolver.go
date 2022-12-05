@@ -28,6 +28,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		PlatformIds: []string{pCfg.PlatformId},
 		Labels:      map[string]string{aws.EBSScanLabel: "true", aws.RegionLabel: pCfg.Options["region"], "mondoo.com/item-type": pCfg.Options["type"]},
 	}
+	// If there's a root-provided name, use that to overwrite
+	if root.Name != "" {
+		assetInfo.Name = root.Name
+	}
 
 	return []*asset.Asset{assetInfo}, nil
 }

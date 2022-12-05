@@ -13,6 +13,7 @@ import (
 type InstanceId struct {
 	Id             string
 	Region         string
+	Name           string
 	Account        string
 	Zone           string
 	MarketplaceImg bool
