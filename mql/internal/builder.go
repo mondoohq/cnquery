@@ -190,7 +190,7 @@ func (ge *GraphExecutor) handleUnrunnableQueries(unrunnableQueries []query) {
 				&llx.RawResult{
 					CodeID: checksum,
 					Data: &llx.RawData{
-						Error: fmt.Errorf("Unable to run query, mondoo client version %s required", q.codeBundle.MinMondooVersion),
+						Error: fmt.Errorf("Unable to run query, cnquery version %s required", q.codeBundle.MinMondooVersion),
 					},
 				})
 		}
