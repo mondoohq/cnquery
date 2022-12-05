@@ -17,7 +17,7 @@ func init() {
 func terraformProvider(t providers.Instance) (*terraform.Provider, error) {
 	gt, ok := t.(*terraform.Provider)
 	if !ok {
-		return nil, errors.New("terraform resource is not supported on this transport")
+		return nil, errors.New("terraform resource is not supported on this provider")
 	}
 	return gt, nil
 }

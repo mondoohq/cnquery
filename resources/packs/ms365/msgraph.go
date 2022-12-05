@@ -34,7 +34,7 @@ func msGraphProvider(t providers.Instance) (*ms365_provider.Provider, error) {
 		}
 		return ms365_provider.New(cfg)
 	default:
-		return nil, errors.New("msgraph resource is not supported on this transport")
+		return nil, errors.New("msgraph resource is not supported on this provider")
 	}
 }
 

@@ -14,7 +14,7 @@ import (
 func equinixProvider(t providers.Instance) (*equinix_provider.Provider, error) {
 	provider, ok := t.(*equinix_provider.Provider)
 	if !ok {
-		return nil, errors.New("equinix resource is not supported on this transport")
+		return nil, errors.New("equinix resource is not supported on this provider")
 	}
 	return provider, nil
 }

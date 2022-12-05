@@ -40,7 +40,7 @@ func (s *mqlAws) GetRegions() ([]interface{}, error) {
 func awsProvider(t providers.Instance) (*aws_provider.Provider, error) {
 	provider, ok := t.(*aws_provider.Provider)
 	if !ok {
-		return nil, errors.New("aws resource is not supported on this transport; please run with -t aws")
+		return nil, errors.New("aws resource is not supported on this provider; please run with -t aws")
 	}
 	return provider, nil
 }
