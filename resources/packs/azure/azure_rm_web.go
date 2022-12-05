@@ -554,8 +554,8 @@ func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 			stack = "aspnet" // needs to be overwritten (do not ask)
 			version = core.ToString(properties.NetFrameworkVersion)
 		case "dotnetcore":
-			// NOTE: this will always return v4.0 no matter what you set (which is definitly wrong for dotnetcore)
-			// The UI let you select different version, but in confgure it does not show the version again
+			// NOTE: this will always return v4.0 no matter what you set (which is definitely wrong for dotnetcore)
+			// The UI let you select different version, but in configure it does not show the version again
 			// therefore we have no way than to hardcode the value for now
 			version = "3.1"
 		case "php":

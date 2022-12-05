@@ -75,7 +75,7 @@ func (o *Operator) String() string {
 
 // processOperators handles simple ops like ==, >=, *, ...
 // and turns them into functions; only on the level of this expression and its
-// Operations children, not deeper funtion calls
+// Operations children, not deeper function calls
 func (e *Expression) processOperators() error {
 	if len(e.Operations) == 0 {
 		return nil
@@ -176,7 +176,7 @@ func (e *Expression) processChildOperators() error {
 }
 
 // ProcessOperators of this expression and all its children recursively
-// and make everything be a flat expression with funtion calls only
+// and make everything be a flat expression with function calls only
 func (e *Expression) ProcessOperators() error {
 	if e == nil {
 		return nil

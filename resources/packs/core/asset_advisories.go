@@ -47,7 +47,7 @@ func (a *mqlAsset) GetVulnerabilityReport() (interface{}, error) {
 	apiPackages := []*mvd.Package{}
 	kernelVersion := ""
 
-	// collect pacakges if the asset supports gathering files
+	// collect packages if the asset supports gathering files
 	if r.Motor.Provider.Capabilities().HasCapability(providers.Capability_File) {
 		obj, err = r.CreateResource("packages")
 		if err != nil {

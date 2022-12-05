@@ -148,7 +148,7 @@ func (p *mqlAwsS3Bucket) GetPolicy() (interface{}, error) {
 	}
 
 	if policy != nil && policy.Policy != nil {
-		// create the plicy resource
+		// create the policy resource
 		mqlS3BucketPolicy, err := p.MotorRuntime.CreateResource("aws.s3.bucket.policy",
 			"name", bucketname,
 			"document", core.ToString(policy.Policy),

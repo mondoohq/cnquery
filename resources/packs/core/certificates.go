@@ -161,7 +161,7 @@ func CertificatesToMqlCertificates(runtime *resources.Runtime, certs []*x509.Cer
 		mqlCert, err := runtime.CreateResource("certificate",
 			"pem", string(certdata),
 			// NOTE: if we do not set the hash here, it will generate the cache content before we can store it
-			// we are using the hashs for the id, therefore it is required during creation
+			// we are using the hashes for the id, therefore it is required during creation
 			"fingerprints", certFingerprints(cert),
 		)
 		if err != nil {

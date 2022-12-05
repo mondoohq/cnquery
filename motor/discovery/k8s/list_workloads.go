@@ -175,7 +175,7 @@ func ListWorkloads[T runtime.Object](
 }
 
 func skipNamespace(namespace v1.Namespace, filter NamespaceFilterOpts) (bool, error) {
-	// anything explictly specified in the list of includes means accept only from that list
+	// anything explicitly specified in the list of includes means accept only from that list
 	if len(filter.include) > 0 {
 		for _, ns := range filter.include {
 			g, err := glob.Compile(ns)
@@ -192,7 +192,7 @@ func skipNamespace(namespace v1.Namespace, filter NamespaceFilterOpts) (bool, er
 		return true, nil
 	}
 
-	// if nothing explictly meant to be included, then check whether
+	// if nothing explicitly meant to be included, then check whether
 	// it should be excluded
 	for _, ns := range filter.exclude {
 		g, err := glob.Compile(ns)

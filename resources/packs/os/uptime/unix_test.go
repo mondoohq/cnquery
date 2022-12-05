@@ -82,7 +82,7 @@ func TestDebianUptime(t *testing.T) {
 }
 
 func TestRhelUptime(t *testing.T) {
-	// rehl
+	// rhel
 	data := " 12:27:22 up 8 min,  1 user,  load average: 0.01, 0.02, 0.00"
 	duration, err := uptime.ParseUnixUptime(data)
 	assert.Nil(t, err)

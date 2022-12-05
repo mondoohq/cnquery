@@ -224,7 +224,7 @@ func (p *Provider) FS() afero.Fs {
 	//	return t.fs
 	//}
 
-	// if any priviledge elevation is used, we have no other chance as to use command-based file transfer
+	// if any privilege elevation is used, we have no other chance as to use command-based file transfer
 	if p.Sudo != nil {
 		p.fs = cat.New(p)
 		return p.fs

@@ -37,7 +37,7 @@ func ParseIni(raw string, delimiter string) *Ini {
 			continue
 		}
 
-		// this is a common accurance on space-separated files
+		// this is a common occurrence on space-separated files
 		// we pre-process tabs to make things easier on the tester and allow for
 		// space-split mechanisms to still work
 		if delimiter != "\t" {

@@ -69,11 +69,11 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 		res.RegistryValues[entry.Name()] = entry.Value()
 	}
 
-	priviledgeRights, err := cfg.GetSection("Privilege Rights")
+	privilegeRights, err := cfg.GetSection("Privilege Rights")
 	if err != nil {
 		return nil, err
 	}
-	keys = priviledgeRights.Keys()
+	keys = privilegeRights.Keys()
 	for i := range keys {
 		entry := keys[i]
 		rawValue := entry.Value()

@@ -149,7 +149,7 @@ func (w *Watcher) TearDown() error {
 	// remove all subscriptions
 	w.subscriptions.Range(func(k string, v *WatcherSubscription) bool {
 		if err := w.unsubscribe(k); err != nil {
-			log.Warn().Str("sub", k).Err(err).Msg("motor.watch> teardown unscribe failed")
+			log.Warn().Str("sub", k).Err(err).Msg("motor.watch> teardown unsubscribe failed")
 		}
 		return true
 	})

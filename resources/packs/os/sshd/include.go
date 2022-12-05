@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	// includeStatement is a regexp for checking whether a given sshd configuratoin line
+	// includeStatement is a regexp for checking whether a given sshd configuration line
 	// is an 'Include' statement
 	includeStatement = regexp.MustCompile(`^Include\s+(.*)$`)
 	// includeStatementHasGlob is a regext for checking whether the contents of an 'Include'
@@ -63,7 +63,7 @@ func getFullPath(filePath string) string {
 // readSshdConfig will traverse the provided path to an sshd config file and return
 // the list of all depended files encountered while recursively traversing the
 // sshd 'Include' statements, and the unified sshd configuration where all the
-// sshd 'Include' statments have been replaced with the referenced file's content
+// sshd 'Include' statements have been replaced with the referenced file's content
 // in place of the 'Include'.
 func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]string, string, error) {
 	allFiles := []string{}

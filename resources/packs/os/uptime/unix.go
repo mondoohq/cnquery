@@ -35,7 +35,7 @@ func ParseUnixUptime(uptime string) (*UnixUptimeResult, error) {
 	var err error
 
 	if len(m[2]) > 0 {
-		// caclulate the time x * days / minutes + hours ( m[1]*m[2] + m[3])
+		// calculate the time x * days / minutes + hours ( m[1]*m[2] + m[3])
 		duration, err = strconv.ParseInt(m[1], 10, 64)
 		if err != nil {
 			return nil, err

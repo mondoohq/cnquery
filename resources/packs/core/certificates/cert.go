@@ -67,7 +67,7 @@ func tlsVersion(suite string) uint16 {
 	return 0
 }
 
-var gatherPeerCertificats = func(host, port string, ciphersuite string, insecureskipverify bool) ([]*x509.Certificate, error) {
+var gatherPeerCertificates = func(host, port string, ciphersuite string, insecureskipverify bool) ([]*x509.Certificate, error) {
 	d := &net.Dialer{
 		Timeout: time.Duration(TimeoutSeconds) * time.Second,
 	}
@@ -100,7 +100,7 @@ func Fetch(hostport string) ([]*x509.Certificate, error) {
 		return nil, err
 	}
 
-	return gatherPeerCertificats(host, port, "", true)
+	return gatherPeerCertificates(host, port, "", true)
 }
 
 func HexEncodeToHumanString(b []byte) string {

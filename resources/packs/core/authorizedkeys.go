@@ -137,7 +137,7 @@ func (a *mqlAuthorizedkeys) GetList(file File, content string) ([]interface{}, e
 		return res, nil
 	}
 
-	log.Debug().Msg("autorizedkeys> list...")
+	log.Debug().Msg("authorizedkeys> list...")
 
 	entries, err := authorizedkeys.Parse(strings.NewReader(content))
 	if err != nil {
