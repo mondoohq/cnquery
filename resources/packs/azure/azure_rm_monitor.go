@@ -14,7 +14,7 @@ func (a *mqlAzurermMonitor) id() (string, error) {
 }
 
 func (a *mqlAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (a *mqlAzurermMonitorLogprofile) id() (string, error) {
 
 func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, error) {
 	// fetch the details
-	at, err := azuretransport(runtime.Motor.Provider)
+	at, err := azureTransport(runtime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

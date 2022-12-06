@@ -7,6 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	sql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 	"github.com/rs/zerolog/log"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -27,7 +28,7 @@ func (a *mqlAzurermSqlServerAdministrator) id() (string, error) {
 }
 
 func (a *mqlAzurermSql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (a *mqlAzurermSqlServer) id() (string, error) {
 }
 
 func (a *mqlAzurermSqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +90,7 @@ func (a *mqlAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +153,7 @@ func (a *mqlAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +164,7 @@ func (a *mqlAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +211,7 @@ func (a *mqlAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +222,7 @@ func (a *mqlAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) 
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +270,7 @@ func (a *mqlAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) 
 }
 
 func (a *mqlAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +281,7 @@ func (a *mqlAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, err
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +310,7 @@ func (a *mqlAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, err
 }
 
 func (a *mqlAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +321,7 @@ func (a *mqlAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +350,7 @@ func (a *mqlAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error
 }
 
 func (a *mqlAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +361,7 @@ func (a *mqlAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, 
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +390,7 @@ func (a *mqlAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, 
 }
 
 func (a *mqlAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +401,7 @@ func (a *mqlAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, 
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +434,7 @@ func (a *mqlAzurermSqlDatabase) id() (string, error) {
 }
 
 func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -444,7 +445,7 @@ func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -506,7 +507,7 @@ func (a *mqlAzurermSqlDatabaseusage) GetNextResetTime() (interface{}, error) {
 }
 
 func (a *mqlAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -527,7 +528,7 @@ func (a *mqlAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
 		return []interface{}{}, nil
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +575,7 @@ func (a *mqlAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermSqlDatabase) GetThreatDetectionPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +586,7 @@ func (a *mqlAzurermSqlDatabase) GetThreatDetectionPolicy() (map[string]interface
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -620,7 +621,7 @@ func (a *mqlAzurermSqlDatabase) GetThreatDetectionPolicy() (map[string]interface
 }
 
 func (a *mqlAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +632,7 @@ func (a *mqlAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, e
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -660,7 +661,7 @@ func (a *mqlAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, e
 }
 
 func (a *mqlAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -671,7 +672,7 @@ func (a *mqlAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, err
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -706,7 +707,7 @@ func (a *mqlAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, err
 }
 
 func (a *mqlAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -717,7 +718,7 @@ func (a *mqlAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]inter
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}

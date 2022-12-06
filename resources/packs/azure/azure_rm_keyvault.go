@@ -11,7 +11,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azcertificates"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
+
 	keyvault "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -25,7 +27,7 @@ func (a *mqlAzurermKeyvault) id() (string, error) {
 }
 
 func (a *mqlAzurermKeyvault) GetVaults() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +82,7 @@ func (a *mqlAzurermKeyvaultVault) GetVaultUri() (string, error) {
 }
 
 func (a *mqlAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +134,7 @@ func (a *mqlAzurermKeyvaultVault) GetKeys() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +180,7 @@ func (a *mqlAzurermKeyvaultVault) GetCertificates() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +231,7 @@ func (a *mqlAzurermKeyvaultVault) GetSecrets() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +242,7 @@ func (a *mqlAzurermKeyvaultVault) GetProperties() (map[string]interface{}, error
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +315,7 @@ func (a *mqlAzurermKeyvaultKey) GetVersion() (interface{}, error) {
 }
 
 func (a *mqlAzurermKeyvaultKey) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +440,7 @@ func parseKeyVaultId(url string) (*keyvaultid, error) {
 }
 
 func (a *mqlAzurermKeyvaultCertificate) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +538,7 @@ func (a *mqlAzurermKeyvaultSecret) GetVersion() (interface{}, error) {
 }
 
 func (a *mqlAzurermKeyvaultSecret) GetVersions() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

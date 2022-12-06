@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+
 	postgresql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -18,7 +20,7 @@ func (a *mqlAzurermPostgresqlDatabase) id() (string, error) {
 }
 
 func (a *mqlAzurermPostgresql) GetServers() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +79,7 @@ func (a *mqlAzurermPostgresqlServer) id() (string, error) {
 }
 
 func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +90,7 @@ func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +142,7 @@ func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +153,7 @@ func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +199,7 @@ func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 }
 
 func (a *mqlAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +210,7 @@ func (a *mqlAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 		return nil, err
 	}
 
-	resourceID, err := at.ParseResourceID(id)
+	resourceID, err := azure.ParseResourceID(id)
 	if err != nil {
 		return nil, err
 	}

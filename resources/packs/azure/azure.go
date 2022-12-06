@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.com/cnquery/motor/providers"
-	azure_transport "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	microsoft_transport "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/resources/packs/azure/info"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -16,8 +16,20 @@ func init() {
 	Registry.Add(core.Registry)
 }
 
-func azuretransport(t providers.Instance) (*azure_transport.Provider, error) {
-	at, ok := t.(*azure_transport.Provider)
+func azureTransport(t providers.Instance) (*microsoft_transport.Provider, error) {
+	at, ok := t.(*microsoft_transport.Provider)
+	if !ok {
+		return nil, errors.New("azure resource is not supported on this transport")
+	}
+	if len(at.SubscriptionID()) == 0 {
+		return nil, errors.New("azure resource requires a subscription id")
+	}
+	return at, nil
+}
+
+// TODO: temporary second function to be used only in azuread.* resources. for these, a subscription is not required.
+func msGraphTransport(t providers.Instance) (*microsoft_transport.Provider, error) {
+	at, ok := t.(*microsoft_transport.Provider)
 	if !ok {
 		return nil, errors.New("azure resource is not supported on this provider")
 	}

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// really azure? https://github.com/Azure/azure-sdk-for-go/issues/3080
+// https://github.com/Azure/azure-sdk-for-go/issues/3080
 // we need to parse the resource id to extract the individual parts to regenerate the url
 type ResourceID struct {
 	SubscriptionID string

@@ -9,7 +9,7 @@ import (
 )
 
 func (a *mqlAzurerm) GetResources() ([]interface{}, error) {
-	at, err := azuretransport(a.MotorRuntime.Motor.Provider)
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
 	}

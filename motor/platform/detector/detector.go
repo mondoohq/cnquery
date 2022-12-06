@@ -15,8 +15,7 @@ import (
 	ipmi "go.mondoo.com/cnquery/motor/providers/ipmi"
 	k8s_transport "go.mondoo.com/cnquery/motor/providers/k8s"
 	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/azure"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365"
+	"go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/motor/providers/okta"
 	"go.mondoo.com/cnquery/motor/providers/os"
@@ -89,20 +88,8 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 		}, nil
 	case *google.Provider:
 		return pt.PlatformInfo()
-	case *azure.Provider:
-		return &platform.Platform{
-			Name:    "azure",
-			Title:   "Microsoft Azure",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: providers.RUNTIME_AZ,
-		}, nil
-	case *ms365.Provider:
-		return &platform.Platform{
-			Name:    "microsoft365",
-			Title:   "Microsoft 365",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: providers.RUNTIME_MICROSOFT_GRAPH,
-		}, nil
+	case *microsoft.Provider:
+		return pt.PlatformInfo()
 	case *ipmi.Provider:
 		return &platform.Platform{
 			Name:    "ipmi",
