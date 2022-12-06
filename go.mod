@@ -145,7 +145,7 @@ require (
 	github.com/xanzy/go-gitlab v0.74.0
 	github.com/zclconf/go-cty v1.10.0
 	go.mondoo.com/ranger-rpc v0.5.1-0.20220923135836-9e7732899d34
-	go.opentelemetry.io/otel v1.10.0
+	go.opentelemetry.io/otel v1.11.1
 	golang.org/x/crypto v0.2.0
 	golang.org/x/net v0.2.0
 	golang.org/x/oauth2 v0.2.0
@@ -452,7 +452,7 @@ require (
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	gitlab.com/bosi/decorder v0.2.3 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.opentelemetry.io/otel/trace v1.10.0 // indirect
+	go.opentelemetry.io/otel/trace v1.11.1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
