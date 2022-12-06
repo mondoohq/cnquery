@@ -2,9 +2,9 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/core"
 
 // Provide contextual info about cnquery and environment
 mondoo @defaults("version") {
-  // Version of mondoo the client is running
+  // Version of the client running on the asset
   version() string
-  // The build of the cnquery (e.g. production, development)
+  // The build of the client (e.g. production, development)
   build() string
   // All resources supported by the language
   resources() []string
