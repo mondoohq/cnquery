@@ -47,6 +47,7 @@ const (
 	byteMap
 	byteResource
 	byteFunction
+	byteStringSlice
 )
 
 // Empty type is one whose type information is not available at all
@@ -87,6 +88,16 @@ const (
 	ResourceLike = Type(rune(byteResource))
 	// FunctionLike is the underlying type of all functions
 	FunctionLike = Type(rune(byteFunction))
+
+	// StringSlice is used to represent special function for searching strings.
+	// Users are never exposed to this type directly and it is not documented
+	// as a primitive. It serves as a way to array functions on top of strings,
+	// which is required for cases where a `dict` can represent both an array
+	// and a string (as well as other things) at the same time. Functions like
+	// `contains` are defined on both arrays and strings with different behavior.
+	// This types allows us to keep the compiler and execution simple, while
+	// handling the runtime distinction for dict.
+	StringSlice = Type(rune(byteStringSlice))
 )
 
 // IsEmpty returns true if the type has no information
@@ -203,19 +214,20 @@ func (typ Type) ResourceName() string {
 }
 
 var labels = map[byte]string{
-	byteUnset:  "unset",
-	byteAny:    "any",
-	byteNil:    "null",
-	byteRef:    "ref",
-	byteBool:   "bool",
-	byteInt:    "int",
-	byteFloat:  "float",
-	byteString: "string",
-	byteRegex:  "regex",
-	byteTime:   "time",
-	byteDict:   "dict",
-	byteScore:  "score",
-	byteBlock:  "block",
+	byteUnset:       "unset",
+	byteAny:         "any",
+	byteNil:         "null",
+	byteRef:         "ref",
+	byteBool:        "bool",
+	byteInt:         "int",
+	byteFloat:       "float",
+	byteString:      "string",
+	byteRegex:       "regex",
+	byteTime:        "time",
+	byteDict:        "dict",
+	byteScore:       "score",
+	byteBlock:       "block",
+	byteStringSlice: "stringslice",
 }
 
 var labelfun map[byte]func(Type) string
@@ -235,19 +247,16 @@ func (typ Type) Label() string {
 		return "EMPTY"
 	}
 
-	if typ[0]&'\xf0' == '\x00' {
-		h, ok := labels[typ[0]]
-		if !ok {
-			panic("cannot find label for simple type " + typ)
-		}
+	h, ok := labels[typ[0]]
+	if ok {
 		return h
 	}
 
-	h, ok := labelfun[typ[0]]
+	hf, ok := labelfun[typ[0]]
 	if !ok {
-		panic("cannot find label for complex type " + typ)
+		panic("cannot find label for type " + typ)
 	}
-	return h(typ[1:])
+	return hf(typ[1:])
 }
 
 // Equal provides a set of function for a range of types to test if 2 values

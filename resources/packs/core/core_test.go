@@ -1076,6 +1076,30 @@ func TestResource_duplicateFields(t *testing.T) {
 	})
 }
 
+func TestDict_Methods_Contains(t *testing.T) {
+	p := "parse.json('/dummy.json')."
+
+	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			p + "params['hello'].contains('ll')",
+			1, true,
+		},
+		{
+			p + "params['hello'].contains('lloo')",
+			1, false,
+		},
+		{
+			p + "params['string-array'].contains('a')",
+			1, true,
+		},
+		{
+			p + "params['string-array'].contains(_ == 'a')",
+			1, true,
+		},
+	})
+}
+
 func TestDict_Methods_Map(t *testing.T) {
 	p := "parse.json('/dummy.json')."
 
@@ -1132,10 +1156,6 @@ func TestDict_Methods_Map(t *testing.T) {
 		{
 			p + "params['hello'].trim('ho')",
 			0, "ell",
-		},
-		{
-			p + "params['hello'].contains('llo')",
-			0, true,
 		},
 		{
 			p + "params['dict'].length",
