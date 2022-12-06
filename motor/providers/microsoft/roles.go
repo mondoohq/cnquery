@@ -1,5 +1,6 @@
 package microsoft
 
+// These roles only apply for MSGraph. They are not used for azure resources
 var DefaultRoles = []string{
 	"Application.Read.All",
 	"AuditLog.Read.All",
@@ -35,10 +36,11 @@ var DefaultRoles = []string{
 
 func (p *Provider) MissingRoles(checkRoles ...string) []string {
 	missing := []string{}
-	for i := range checkRoles {
-		_, ok := p.rolesMap[checkRoles[i]]
+	roles := p.Roles()
+	for _, role := range checkRoles {
+		_, ok := roles[role]
 		if !ok {
-			missing = append(missing, checkRoles[i])
+			missing = append(missing, role)
 		}
 	}
 	return missing

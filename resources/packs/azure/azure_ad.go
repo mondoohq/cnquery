@@ -5,7 +5,7 @@ import (
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
 	microsoft_provider "go.mondoo.com/cnquery/motor/providers/microsoft"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphclient"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 

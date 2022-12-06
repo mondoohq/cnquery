@@ -27,7 +27,7 @@ func azureTransport(t providers.Instance) (*microsoft_transport.Provider, error)
 	return at, nil
 }
 
-// temporary second function to be used only in azuread.* resources. for these, a subscription is not required.
+// TODO: temporary second function to be used only in azuread.* resources. for these, a subscription is not required.
 func msGraphTransport(t providers.Instance) (*microsoft_transport.Provider, error) {
 	at, ok := t.(*microsoft_transport.Provider)
 	if !ok {

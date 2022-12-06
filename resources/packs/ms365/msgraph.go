@@ -10,8 +10,8 @@ import (
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
 	microsoft "go.mondoo.com/cnquery/motor/providers/microsoft"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphclient"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/msgraphconv"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphconv"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )

@@ -29,15 +29,23 @@ var (
 	_ providers.PlatformIdentifier = (*Provider)(nil)
 )
 
-// New create a new Microsoft provider
+// New creates a new Microsoft provider that can be used against either Azure, MSGraph or both.
 //
 // At this point, this provider only supports application permissions
 // because we are not able to get the user consent on cli yet. Seems like
 // Microsoft is working on some Powershell features that may make it happen.
 //
-// For authentication we need a tenant id, client id (appid), and a certificate and an optional password
-// mondoo scan -t ms365:// --certificate-path certificate --certificate-secret password --client-id CLIENT_ID --tenant-id TENANT_ID
-//
+// For authentication we need a tenant id, client id (appid), and either certificate or a client secret
+// cnquery scan ms365 --certificate-path certificate --certificate-secret password --client-id CLIENT_ID --tenant-id TENANT_ID
+// cnquery scan ms365 --client-secret password --client-id CLIENT_ID --tenant-id TENANT_ID
+
+// Furthermore, this provider also supports authenticating against Azure. For this, it also requires a subscription
+// cnquery scan azure --client-secret password --client-id CLIENT_ID --tenant-id TENANT_ID --subscription SUB_ID
+
+// Depending on what parameters are passed, this provider will give access to different resources.
+// > msgraph.* resources are always available if a client id, tenant id and a way to authenticate (password or cert) are provided.
+// > azure.rm* resources are available only if a client id, tenant id, a way to authenticate AND a subscription is provided.
+
 // [How to recognize differences between delegated and application permissions](https://docs.microsoft.com/en-us/azure/active-directory/develop/delegated-and-app-perms)
 // [Authentication and authorization basics for Microsoft Graph](https://docs.microsoft.com/en-us/graph/auth/auth-concepts)
 // [Always check permissions in tokens in an Azure AD protected API](https://joonasw.net/view/always-check-token-permissions-in-aad-protected-api)

@@ -30,6 +30,10 @@ func (p *Provider) Credential() *vault.Credential {
 	return p.cred
 }
 
+func (p *Provider) Roles() map[string]struct{} {
+	return p.rolesMap
+}
+
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 	switch p.assetType {
 	case azure:
