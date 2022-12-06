@@ -5,7 +5,6 @@ package msgraphconv
 
 import (
 	"encoding/json"
-	"strings"
 	"time"
 
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
@@ -82,17 +81,6 @@ func NewUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePer
 		Condition:               core.ToString(p.GetCondition()),
 		ExcludedResourceActions: p.GetExcludedResourceActions(),
 	}
-}
-
-type DirectorySetting struct {
-	DisplayName string         `json:"displayName"`
-	TemplateId  string         `json:"templateId"`
-	Values      []SettingValue `json:"values"`
-}
-
-type SettingValue struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
 }
 
 // structs for AuthorizationPolicy
@@ -356,8 +344,6 @@ func NewIdentitySet(p models.IdentitySetable) *IdentitySet {
 
 type ChangeTrackedEntity struct {
 	Entity
-	//
-	CreatedBy *IdentitySet `json:"createdBy"`
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
 	CreatedDateTime *time.Time `json:"createdDateTime"`
 	// Identity of the person who last modified the entity.
@@ -366,266 +352,12 @@ type ChangeTrackedEntity struct {
 	LastModifiedDateTime *time.Time `json:"lastModifiedDateTime"`
 }
 
-type TimeRange struct {
-	// End time for the time range.
-	EndTime *time.Time `json:"endTime"`
-	// Start time for the time range.
-	StartTime *time.Time `json:"startTime"`
-}
-
-const timeOnlyFormat = "15:04:05.000000000"
-
-var timeOnlyParsingFormats = map[int]string{
-	0: "15:04:05", // Go doesn't seem to support optional parameters in time.Parse, which is sad
-	1: "15:04:05.0",
-	2: "15:04:05.00",
-	3: "15:04:05.000",
-	4: "15:04:05.0000",
-	5: "15:04:05.00000",
-	6: "15:04:05.000000",
-	7: "15:04:05.0000000",
-	8: "15:04:05.00000000",
-	9: timeOnlyFormat,
-}
-
-// ParseTimeOnly parses a string into a TimeOnly following the RFC3339 standard.
-func ParseTimeOnly(s string) *time.Time {
-	if len(strings.TrimSpace(s)) <= 0 {
-		return nil
-	}
-	splat := strings.Split(s, ".")
-	parsingFormat := timeOnlyParsingFormats[0]
-	if len(splat) > 1 {
-		dotSectionLen := len(splat[1])
-		if dotSectionLen >= len(timeOnlyParsingFormats) {
-			return nil
-		}
-		parsingFormat = timeOnlyParsingFormats[dotSectionLen]
-	}
-	timeValue, err := time.Parse(parsingFormat, s)
-	if err != nil {
-		return nil
-	}
-	return &timeValue
-}
-
-func NewTimeRange(p models.TimeRangeable) TimeRange {
-	return TimeRange{
-		EndTime:   ParseTimeOnly(p.GetEndTime().String()),
-		StartTime: ParseTimeOnly(p.GetStartTime().String()),
-	}
-}
-
-func NewTimeRangeList(entries []models.TimeRangeable) []TimeRange {
-	res := []TimeRange{}
-	for i := range entries {
-		res = append(res, NewTimeRange(entries[i]))
-	}
-	return res
-}
-
-// TODO: update marshaling
-type (
-	DayOfWeek int
-	WeekIndex int
-)
-
-func NewDayOfWeek(p models.DayOfWeek) DayOfWeek {
-	return DayOfWeek(p)
-}
-
-func NewDayOfWeekList(entries []models.DayOfWeek) []DayOfWeek {
-	res := []DayOfWeek{}
-	for i := range entries {
-		res = append(res, NewDayOfWeek(entries[i]))
-	}
-	return res
-}
-
-type RecurrencePatternType int
-
-type RecurrencePattern struct {
-	// The day of the month on which the event occurs. Required if type is absoluteMonthly or absoluteYearly.
-	DayOfMonth *int32 `json:"dayOfMonth"`
-	// A collection of the days of the week on which the event occurs. The possible values are: sunday, monday, tuesday, wednesday, thursday, friday, saturday. If type is relativeMonthly or relativeYearly, and daysOfWeek specifies more than one day, the event falls on the first day that satisfies the pattern.  Required if type is weekly, relativeMonthly, or relativeYearly.
-	DaysOfWeek []DayOfWeek `json:"daysOfWeek"`
-	// The first day of the week. The possible values are: sunday, monday, tuesday, wednesday, thursday, friday, saturday. Default is sunday. Required if type is weekly.
-	FirstDayOfWeek *DayOfWeek `json:"firstDayOfWeek"`
-	// Specifies on which instance of the allowed days specified in daysOfWeek the event occurs, counted from the first instance in the month. The possible values are: first, second, third, fourth, last. Default is first. Optional and used if type is relativeMonthly or relativeYearly.
-	Index *WeekIndex `json:"index"`
-	// The number of units between occurrences, where units can be in days, weeks, months, or years, depending on the type. Required.
-	Interval *int32 `json:"interval"`
-	// The month in which the event occurs.  This is a number from 1 to 12.
-	Month *int32 `json:"month"`
-	// The recurrence pattern type: daily, weekly, absoluteMonthly, relativeMonthly, absoluteYearly, relativeYearly. Required. For more information, see values of type property.
-	Type *RecurrencePatternType `json:"type"`
-}
-
-func NewRecurrencePattern(p models.RecurrencePatternable) *RecurrencePattern {
-	if p == nil {
-		return nil
-	}
-
-	var idx *WeekIndex
-	if p.GetIndex() != nil {
-		v := WeekIndex(int(*p.GetIndex()))
-		idx = &v
-	}
-
-	var t *RecurrencePatternType
-	if p.GetType() != nil {
-		v := RecurrencePatternType(int(*p.GetType()))
-		t = &v
-	}
-
-	var firstDayOfWeek *DayOfWeek
-	if p.GetFirstDayOfWeek() != nil {
-		v := NewDayOfWeek(*p.GetFirstDayOfWeek())
-		firstDayOfWeek = &v
-	}
-
-	return &RecurrencePattern{
-		DayOfMonth:     p.GetDayOfMonth(),
-		DaysOfWeek:     NewDayOfWeekList(p.GetDaysOfWeek()),
-		FirstDayOfWeek: firstDayOfWeek,
-		Index:          idx,
-		Interval:       p.GetInterval(),
-		Month:          p.GetMonth(),
-		Type:           t,
-	}
-}
-
-type RecurrenceRangeType int
-
-type RecurrenceRange struct {
-	// The date to stop applying the recurrence pattern. Depending on the recurrence pattern of the event, the last occurrence of the meeting may not be this date. Required if type is endDate.
-	EndDate *time.Time `json:"endDate"`
-	// The number of times to repeat the event. Required and must be positive if type is numbered.
-	NumberOfOccurrences *int32 `json:"numberOfOccurrences"`
-	// Time zone for the startDate and endDate properties. Optional. If not specified, the time zone of the event is used.
-	RecurrenceTimeZone *string `json:"recurrenceTimeZone"`
-	// The date to start applying the recurrence pattern. The first occurrence of the meeting may be this date or later, depending on the recurrence pattern of the event. Must be the same value as the start property of the recurring event. Required.
-	StartDate *time.Time `json:"startDate"`
-	// The recurrence range. The possible values are: endDate, noEnd, numbered. Required.
-	Type *RecurrenceRangeType `json:"type"`
-}
-
-const dateOnlyFormat = "2006-01-02"
-
-// ParseDateOnly parses a string into a DateOnly following the RFC3339 standard.
-func ParseDateOnly(s string) *time.Time {
-	if len(strings.TrimSpace(s)) <= 0 {
-		return nil
-	}
-	timeValue, err := time.Parse(dateOnlyFormat, s)
-	if err != nil {
-		return nil
-	}
-	return &timeValue
-}
-
-func NewRecurrenceRange(p models.RecurrenceRangeable) *RecurrenceRange {
-	if p == nil {
-		return nil
-	}
-
-	var t *RecurrenceRangeType
-	if p.GetType() != nil {
-		v := RecurrenceRangeType(*p.GetType())
-		t = &v
-	}
-
-	var endDate *time.Time
-	if p.GetEndDate() != nil {
-		endDate = ParseDateOnly(p.GetEndDate().String())
-	}
-
-	var startDate *time.Time
-	if p.GetStartDate() != nil {
-		startDate = ParseDateOnly(p.GetStartDate().String())
-	}
-
-	return &RecurrenceRange{
-		EndDate:             endDate,
-		NumberOfOccurrences: p.GetNumberOfOccurrences(),
-		RecurrenceTimeZone:  p.GetRecurrenceTimeZone(),
-		StartDate:           startDate,
-		Type:                t,
-	}
-}
-
-type PatternedRecurrence struct {
-	// The frequency of an event.  For access reviews: Do not specify this property for a one-time access review.  Only interval, dayOfMonth, and type (weekly, absoluteMonthly) properties of recurrencePattern are supported.
-	Pattern *RecurrencePattern `json:"pattern"`
-	// The duration of an event.
-	Range *RecurrenceRange `json:"range"`
-}
-
-func NewPatternedRecurrence(p models.PatternedRecurrenceable) *PatternedRecurrence {
-	if p == nil {
-		return nil
-	}
-
-	return &PatternedRecurrence{
-		Pattern: NewRecurrencePattern(p.GetPattern()),
-		Range:   NewRecurrenceRange(p.GetRange()),
-	}
-}
-
-type ShiftAvailability struct {
-	// Specifies the pattern for recurrence
-	Recurrence *PatternedRecurrence `json:"recurrence"`
-	// The time slot(s) preferred by the user.
-	TimeSlots []TimeRange `json:"timeSlots"`
-	// Specifies the time zone for the indicated time.
-	TimeZone *string `json:"timeZone"`
-}
-
-func NewShiftAvailability(p models.ShiftAvailabilityable) ShiftAvailability {
-	return ShiftAvailability{
-		Recurrence: NewPatternedRecurrence(p.GetRecurrence()),
-		TimeSlots:  NewTimeRangeList(p.GetTimeSlots()),
-		TimeZone:   p.GetTimeZone(),
-	}
-}
-
-func NewShiftAvailabilityList(entries []models.ShiftAvailabilityable) []ShiftAvailability {
-	res := []ShiftAvailability{}
-	for i := range entries {
-		res = append(res, NewShiftAvailability(entries[i]))
-	}
-	return res
-}
-
-type ShiftPreferences struct {
-	ChangeTrackedEntity
-	// Availability of the user to be scheduled for work and its recurrence pattern.
-	Availability []ShiftAvailability `json:"availability"`
-}
-
-func NewShiftPreferences(p models.ShiftPreferencesable) *ShiftPreferences {
-	return &ShiftPreferences{
-		ChangeTrackedEntity: ChangeTrackedEntity{
-			Entity: Entity{
-				Id: p.GetId(),
-			},
-			LastModifiedBy:       NewIdentitySet(p.GetLastModifiedBy()),
-			CreatedDateTime:      p.GetCreatedDateTime(),
-			LastModifiedDateTime: p.GetLastModifiedDateTime(),
-		},
-		Availability: NewShiftAvailabilityList(p.GetAvailability()),
-	}
-}
-
 type UserSettings struct {
 	Entity
 	// Reflects the Office Delve organization level setting. When set to true, the organization doesn't have access to Office Delve. This setting is read-only and can only be changed by administrators in the SharePoint admin center.
 	ContributionToContentDiscoveryAsOrganizationDisabled *bool `json:"contributionToContentDiscoveryAsOrganizationDisabled"`
 	// When set to true, documents in the user's Office Delve are disabled. Users can control this setting in Office Delve.
 	ContributionToContentDiscoveryDisabled *bool `json:"contributionToContentDiscoveryDisabled"`
-	// The user's settings for the visibility of meeting hour insights, and insights derived between a user and other items in Microsoft 365, such as documents or sites. Get userInsightsSettings through this navigation property.
-	// The shift preferences for the user.
-	ShiftPreferences *ShiftPreferences `json:"shiftPreferences"`
 }
 
 func NewUserSettings(p models.UserSettingsable) *UserSettings {
@@ -638,7 +370,6 @@ func NewUserSettings(p models.UserSettingsable) *UserSettings {
 		},
 		ContributionToContentDiscoveryAsOrganizationDisabled: p.GetContributionToContentDiscoveryAsOrganizationDisabled(),
 		ContributionToContentDiscoveryDisabled:               p.GetContributionToContentDiscoveryDisabled(),
-		ShiftPreferences:                                     NewShiftPreferences(p.GetShiftPreferences()),
 	}
 }
 

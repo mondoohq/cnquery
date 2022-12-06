@@ -159,7 +159,6 @@ func (m *mqlMsgraph) GetUsers() ([]interface{}, error) {
 	for i := range users {
 		user := users[i]
 
-		settings, _ := core.JsonToDict(user.GetSettings())
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.user",
 			"id", core.ToString(user.GetId()),
 			"accountEnabled", core.ToBool(user.GetAccountEnabled()),
@@ -182,7 +181,6 @@ func (m *mqlMsgraph) GetUsers() ([]interface{}, error) {
 			"surname", core.ToString(user.GetSurname()),
 			"userPrincipalName", core.ToString(user.GetUserPrincipalName()),
 			"userType", core.ToString(user.GetUserType()),
-			"settings", settings,
 		)
 		if err != nil {
 			return nil, err
