@@ -229,8 +229,20 @@ func isTruthy(data interface{}, typ types.Type) (bool, bool) {
 
 	case types.ArrayLike:
 		arr := data.([]interface{})
-		res := true
 
+		// Empty arrays count as false here, this is because users
+		// frequently write statements like:
+		//     list.where(a == 1) && list.where(b == 2)
+		// which technically should be:
+		//     list.contains(a == 1) && list.contains(b == 2)
+		// However, it's so frequent with our users and we can't see
+		// a reasonable upside to keeping empty array as truthy, since
+		// null checks are far less likely.
+		if len(arr) == 0 {
+			return false, true
+		}
+
+		res := true
 		for i := range arr {
 			t1, f1 := isTruthy(arr[i], typ.Child())
 			if f1 {
