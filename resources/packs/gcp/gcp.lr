@@ -30,6 +30,8 @@ gcloud.resourcemanager.binding {
 gcloud.compute {
   // displays all Google Compute Engine instances in a project
   instances() []gcloud.compute.instance
+  //
+  disks() []gcloud.compute.disk
 }
 
 // GCP Compute Instances
@@ -52,6 +54,35 @@ gcloud.compute.instance @defaults("id name") {
 gcloud.compute.serviceaccount @defaults("email") {
   email string
   scopes []string
+}
+
+// GCP Compute Persistent Disk
+gcloud.compute.disk @defaults("id name") {
+  id string
+  name string
+  // The architecture of the disk
+  architecture string
+  // Optional description
+  description string
+  // Labels to apply to this disk
+  labels map[string]string
+  // An opaque location hint
+  locationHint string
+  // Physical block size of the persistent disk
+  physicalBlockSizeBytes int
+  // Indicates how many IOPS to provision for the disk
+  provisionedIops int
+  // Size, in GB, of the persistent disk
+  sizeGb int
+  // The status of disk creation
+  status string
+  // GCP Compute Zone
+  zone gcloud.compute.zone
+}
+
+gcloud.compute.zone {
+  projectId string
+  name string
 }
 
 // GCP Cloud Storage
