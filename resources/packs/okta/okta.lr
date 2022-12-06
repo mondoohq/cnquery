@@ -35,6 +35,7 @@ okta.organization {
   phoneNumber string
   // Postal code of organization
   postalCode string
+  // Country code of organization
   country string
   // Support help phone of organization
   supportPhoneNumber string

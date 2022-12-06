@@ -208,7 +208,6 @@ func TestParseAndCompare(t *testing.T) {
 }
 
 func Test(t *testing.T) {
-
 	affected := "5.24.1-3+deb9u3"
 	installed := "5.24.1-3+deb9u5"
 
