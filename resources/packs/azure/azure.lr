@@ -1,20 +1,20 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/azure"
 
-// Azure Active Directory (deprecated, use msgraph.beta resource pack instead)
+// Azure Active Directory (deprecated, use msgraph resource pack instead)
 azuread {
-  // deprecated, use msgraph.beta.user
+  // deprecated, use msgraph.user
   users() []azuread.user
-  // deprecated, use msgraph.beta.group
+  // deprecated, use msgraph.group
   groups() []azuread.group
-  // deprecated, use msgraph.beta.domain
+  // deprecated, use msgraph.domain
   domains() []azuread.domain
-  // deprecated, use msgraph.beta.application
+  // deprecated, use msgraph.application
   applications() []azuread.application
-  // deprecated, use msgraph.beta.serviceprincipal
+  // deprecated, use msgraph.serviceprincipal
   servicePrincipals() []azuread.serviceprincipal
 }
 
-// Azure Active Directory User (deprecated, use msgraph.beta.user instead)
+// Azure Active Directory User (deprecated, use msgraph.user instead)
 azuread.user {
   id string
   displayName string
@@ -31,7 +31,7 @@ azuread.user {
   properties() dict
 }
 
-// Azure Active Directory Group (deprecated, use msgraph.beta.group instead)
+// Azure Active Directory Group (deprecated, use msgraph.group instead)
 azuread.group {
   id string
   displayName string
@@ -46,7 +46,7 @@ azuread.group {
   members() []azuread.user
 }
 
-// Azure Active Directory Domain (deprecated, use msgraph.beta.domain instead)
+// Azure Active Directory Domain (deprecated, use msgraph.domain instead)
 azuread.domain {
   name string
   isVerified bool
@@ -56,12 +56,12 @@ azuread.domain {
   properties() dict
 }
 
-// Azure Active Directory Application (deprecated, use msgraph.beta.application instead))
+// Azure Active Directory Application (deprecated, use msgraph.application instead))
 azuread.application {
   id string
 }
 
-// Azure Active Directory Service Principal (deprecated, use msgraph.beta.serviceprincipal instead))
+// Azure Active Directory Service Principal (deprecated, use msgraph.serviceprincipal instead))
 azuread.serviceprincipal {
   id string
 }

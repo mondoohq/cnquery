@@ -12,30 +12,30 @@ import (
 
 // Init all resources into the registry
 func Init(registry *resources.Registry) {
-	registry.AddFactory("msgraph.beta", newMsgraphBeta)
-	registry.AddFactory("msgraph.beta.organization", newMsgraphBetaOrganization)
-	registry.AddFactory("msgraph.beta.user", newMsgraphBetaUser)
-	registry.AddFactory("msgraph.beta.group", newMsgraphBetaGroup)
-	registry.AddFactory("msgraph.beta.domain", newMsgraphBetaDomain)
-	registry.AddFactory("msgraph.beta.domaindnsrecord", newMsgraphBetaDomaindnsrecord)
-	registry.AddFactory("msgraph.beta.application", newMsgraphBetaApplication)
-	registry.AddFactory("msgraph.beta.serviceprincipal", newMsgraphBetaServiceprincipal)
-	registry.AddFactory("msgraph.beta.security", newMsgraphBetaSecurity)
-	registry.AddFactory("msgraph.beta.security.securityscore", newMsgraphBetaSecuritySecurityscore)
-	registry.AddFactory("msgraph.beta.policies", newMsgraphBetaPolicies)
-	registry.AddFactory("msgraph.beta.rolemanagement", newMsgraphBetaRolemanagement)
-	registry.AddFactory("msgraph.beta.rolemanagement.roledefinition", newMsgraphBetaRolemanagementRoledefinition)
-	registry.AddFactory("msgraph.beta.rolemanagement.roleassignment", newMsgraphBetaRolemanagementRoleassignment)
-	registry.AddFactory("msgraph.beta.devicemanagement", newMsgraphBetaDevicemanagement)
-	registry.AddFactory("msgraph.beta.devicemanagement.deviceconfiguration", newMsgraphBetaDevicemanagementDeviceconfiguration)
-	registry.AddFactory("msgraph.beta.devicemanagement.devicecompliancepolicy", newMsgraphBetaDevicemanagementDevicecompliancepolicy)
+	registry.AddFactory("msgraph", newMsgraph)
+	registry.AddFactory("msgraph.organization", newMsgraphOrganization)
+	registry.AddFactory("msgraph.user", newMsgraphUser)
+	registry.AddFactory("msgraph.group", newMsgraphGroup)
+	registry.AddFactory("msgraph.domain", newMsgraphDomain)
+	registry.AddFactory("msgraph.domaindnsrecord", newMsgraphDomaindnsrecord)
+	registry.AddFactory("msgraph.application", newMsgraphApplication)
+	registry.AddFactory("msgraph.serviceprincipal", newMsgraphServiceprincipal)
+	registry.AddFactory("msgraph.security", newMsgraphSecurity)
+	registry.AddFactory("msgraph.security.securityscore", newMsgraphSecuritySecurityscore)
+	registry.AddFactory("msgraph.policies", newMsgraphPolicies)
+	registry.AddFactory("msgraph.rolemanagement", newMsgraphRolemanagement)
+	registry.AddFactory("msgraph.rolemanagement.roledefinition", newMsgraphRolemanagementRoledefinition)
+	registry.AddFactory("msgraph.rolemanagement.roleassignment", newMsgraphRolemanagementRoleassignment)
+	registry.AddFactory("msgraph.devicemanagement", newMsgraphDevicemanagement)
+	registry.AddFactory("msgraph.devicemanagement.deviceconfiguration", newMsgraphDevicemanagementDeviceconfiguration)
+	registry.AddFactory("msgraph.devicemanagement.devicecompliancepolicy", newMsgraphDevicemanagementDevicecompliancepolicy)
 	registry.AddFactory("ms365.exchangeonline", newMs365Exchangeonline)
 	registry.AddFactory("ms365.sharepointonline", newMs365Sharepointonline)
 	registry.AddFactory("ms365.teams", newMs365Teams)
 }
 
-// MsgraphBeta resource interface
-type MsgraphBeta interface {
+// Msgraph resource interface
+type Msgraph interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -47,24 +47,23 @@ type MsgraphBeta interface {
 	Domains() ([]interface{}, error)
 	Applications() ([]interface{}, error)
 	Serviceprincipals() ([]interface{}, error)
-	Settings() ([]interface{}, error)
 }
 
-// mqlMsgraphBeta for the msgraph.beta resource
-type mqlMsgraphBeta struct {
+// mqlMsgraph for the msgraph resource
+type mqlMsgraph struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBeta) MqlResource() *resources.Resource {
+func (s *mqlMsgraph) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta resource
-func newMsgraphBeta(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph resource
+func newMsgraph(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBeta{runtime.NewResource("msgraph.beta")}
+	res := mqlMsgraph{runtime.NewResource("msgraph")}
 	// assign all named fields
 	var id string
 
@@ -78,40 +77,36 @@ func newMsgraphBeta(runtime *resources.Runtime, args *resources.Args) (interface
 		switch name {
 		case "organizations":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"organizations\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph\", its \"organizations\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "users":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"users\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph\", its \"users\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "groups":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"groups\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph\", its \"groups\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "domains":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"domains\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph\", its \"domains\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "applications":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"applications\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph\", its \"applications\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "serviceprincipals":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"serviceprincipals\" argument has the wrong type (expected type \"[]interface{}\")")
-			}
-		case "settings":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"settings\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph\", its \"serviceprincipals\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -129,7 +124,7 @@ func newMsgraphBeta(runtime *resources.Runtime, args *resources.Args) (interface
 	return &res, nil
 }
 
-func (s *mqlMsgraphBeta) Validate() error {
+func (s *mqlMsgraph) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -137,8 +132,8 @@ func (s *mqlMsgraphBeta) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBeta) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta].Register")
+func (s *mqlMsgraph) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph].Register")
 	switch name {
 	case "organizations":
 		return nil
@@ -152,16 +147,14 @@ func (s *mqlMsgraphBeta) Register(name string) error {
 		return nil
 	case "serviceprincipals":
 		return nil
-	case "settings":
-		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBeta) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta].Field")
+func (s *mqlMsgraph) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph].Field")
 	switch name {
 	case "organizations":
 		return s.Organizations()
@@ -175,15 +168,13 @@ func (s *mqlMsgraphBeta) Field(name string) (interface{}, error) {
 		return s.Applications()
 	case "serviceprincipals":
 		return s.Serviceprincipals()
-	case "settings":
-		return s.Settings()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph\" resource")
 	}
 }
 
 // Organizations accessor autogenerated
-func (s *mqlMsgraphBeta) Organizations() ([]interface{}, error) {
+func (s *mqlMsgraph) Organizations() ([]interface{}, error) {
 	res, ok := s.Cache.Load("organizations")
 	if !ok || !res.Valid {
 		if err := s.ComputeOrganizations(); err != nil {
@@ -191,7 +182,7 @@ func (s *mqlMsgraphBeta) Organizations() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("organizations")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"organizations\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph\" calculated \"organizations\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "organizations")
 	}
@@ -200,13 +191,13 @@ func (s *mqlMsgraphBeta) Organizations() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta\" failed to cast field \"organizations\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph\" failed to cast field \"organizations\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Users accessor autogenerated
-func (s *mqlMsgraphBeta) Users() ([]interface{}, error) {
+func (s *mqlMsgraph) Users() ([]interface{}, error) {
 	res, ok := s.Cache.Load("users")
 	if !ok || !res.Valid {
 		if err := s.ComputeUsers(); err != nil {
@@ -214,7 +205,7 @@ func (s *mqlMsgraphBeta) Users() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("users")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"users\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph\" calculated \"users\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "users")
 	}
@@ -223,13 +214,13 @@ func (s *mqlMsgraphBeta) Users() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta\" failed to cast field \"users\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph\" failed to cast field \"users\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Groups accessor autogenerated
-func (s *mqlMsgraphBeta) Groups() ([]interface{}, error) {
+func (s *mqlMsgraph) Groups() ([]interface{}, error) {
 	res, ok := s.Cache.Load("groups")
 	if !ok || !res.Valid {
 		if err := s.ComputeGroups(); err != nil {
@@ -237,7 +228,7 @@ func (s *mqlMsgraphBeta) Groups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("groups")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"groups\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph\" calculated \"groups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "groups")
 	}
@@ -246,13 +237,13 @@ func (s *mqlMsgraphBeta) Groups() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta\" failed to cast field \"groups\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph\" failed to cast field \"groups\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Domains accessor autogenerated
-func (s *mqlMsgraphBeta) Domains() ([]interface{}, error) {
+func (s *mqlMsgraph) Domains() ([]interface{}, error) {
 	res, ok := s.Cache.Load("domains")
 	if !ok || !res.Valid {
 		if err := s.ComputeDomains(); err != nil {
@@ -260,7 +251,7 @@ func (s *mqlMsgraphBeta) Domains() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("domains")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"domains\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph\" calculated \"domains\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "domains")
 	}
@@ -269,13 +260,13 @@ func (s *mqlMsgraphBeta) Domains() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta\" failed to cast field \"domains\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph\" failed to cast field \"domains\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Applications accessor autogenerated
-func (s *mqlMsgraphBeta) Applications() ([]interface{}, error) {
+func (s *mqlMsgraph) Applications() ([]interface{}, error) {
 	res, ok := s.Cache.Load("applications")
 	if !ok || !res.Valid {
 		if err := s.ComputeApplications(); err != nil {
@@ -283,7 +274,7 @@ func (s *mqlMsgraphBeta) Applications() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("applications")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"applications\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph\" calculated \"applications\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "applications")
 	}
@@ -292,13 +283,13 @@ func (s *mqlMsgraphBeta) Applications() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta\" failed to cast field \"applications\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph\" failed to cast field \"applications\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Serviceprincipals accessor autogenerated
-func (s *mqlMsgraphBeta) Serviceprincipals() ([]interface{}, error) {
+func (s *mqlMsgraph) Serviceprincipals() ([]interface{}, error) {
 	res, ok := s.Cache.Load("serviceprincipals")
 	if !ok || !res.Valid {
 		if err := s.ComputeServiceprincipals(); err != nil {
@@ -306,7 +297,7 @@ func (s *mqlMsgraphBeta) Serviceprincipals() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("serviceprincipals")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"serviceprincipals\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph\" calculated \"serviceprincipals\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "serviceprincipals")
 	}
@@ -315,37 +306,14 @@ func (s *mqlMsgraphBeta) Serviceprincipals() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta\" failed to cast field \"serviceprincipals\" to the right type ([]interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// Settings accessor autogenerated
-func (s *mqlMsgraphBeta) Settings() ([]interface{}, error) {
-	res, ok := s.Cache.Load("settings")
-	if !ok || !res.Valid {
-		if err := s.ComputeSettings(); err != nil {
-			return nil, err
-		}
-		res, ok = s.Cache.Load("settings")
-		if !ok {
-			return nil, errors.New("\"msgraph.beta\" calculated \"settings\" but didn't find its value in cache.")
-		}
-		s.MotorRuntime.Trigger(s, "settings")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta\" failed to cast field \"settings\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph\" failed to cast field \"serviceprincipals\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBeta) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta].Compute")
+func (s *mqlMsgraph) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph].Compute")
 	switch name {
 	case "organizations":
 		return s.ComputeOrganizations()
@@ -359,15 +327,13 @@ func (s *mqlMsgraphBeta) Compute(name string) error {
 		return s.ComputeApplications()
 	case "serviceprincipals":
 		return s.ComputeServiceprincipals()
-	case "settings":
-		return s.ComputeSettings()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph\" resource")
 	}
 }
 
 // ComputeOrganizations computer autogenerated
-func (s *mqlMsgraphBeta) ComputeOrganizations() error {
+func (s *mqlMsgraph) ComputeOrganizations() error {
 	var err error
 	if _, ok := s.Cache.Load("organizations"); ok {
 		return nil
@@ -381,7 +347,7 @@ func (s *mqlMsgraphBeta) ComputeOrganizations() error {
 }
 
 // ComputeUsers computer autogenerated
-func (s *mqlMsgraphBeta) ComputeUsers() error {
+func (s *mqlMsgraph) ComputeUsers() error {
 	var err error
 	if _, ok := s.Cache.Load("users"); ok {
 		return nil
@@ -395,7 +361,7 @@ func (s *mqlMsgraphBeta) ComputeUsers() error {
 }
 
 // ComputeGroups computer autogenerated
-func (s *mqlMsgraphBeta) ComputeGroups() error {
+func (s *mqlMsgraph) ComputeGroups() error {
 	var err error
 	if _, ok := s.Cache.Load("groups"); ok {
 		return nil
@@ -409,7 +375,7 @@ func (s *mqlMsgraphBeta) ComputeGroups() error {
 }
 
 // ComputeDomains computer autogenerated
-func (s *mqlMsgraphBeta) ComputeDomains() error {
+func (s *mqlMsgraph) ComputeDomains() error {
 	var err error
 	if _, ok := s.Cache.Load("domains"); ok {
 		return nil
@@ -423,7 +389,7 @@ func (s *mqlMsgraphBeta) ComputeDomains() error {
 }
 
 // ComputeApplications computer autogenerated
-func (s *mqlMsgraphBeta) ComputeApplications() error {
+func (s *mqlMsgraph) ComputeApplications() error {
 	var err error
 	if _, ok := s.Cache.Load("applications"); ok {
 		return nil
@@ -437,7 +403,7 @@ func (s *mqlMsgraphBeta) ComputeApplications() error {
 }
 
 // ComputeServiceprincipals computer autogenerated
-func (s *mqlMsgraphBeta) ComputeServiceprincipals() error {
+func (s *mqlMsgraph) ComputeServiceprincipals() error {
 	var err error
 	if _, ok := s.Cache.Load("serviceprincipals"); ok {
 		return nil
@@ -450,22 +416,8 @@ func (s *mqlMsgraphBeta) ComputeServiceprincipals() error {
 	return nil
 }
 
-// ComputeSettings computer autogenerated
-func (s *mqlMsgraphBeta) ComputeSettings() error {
-	var err error
-	if _, ok := s.Cache.Load("settings"); ok {
-		return nil
-	}
-	vres, err := s.GetSettings()
-	if _, ok := err.(resources.NotReadyError); ok {
-		return err
-	}
-	s.Cache.Store("settings", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
-	return nil
-}
-
-// MsgraphBetaOrganization resource interface
-type MsgraphBetaOrganization interface {
+// MsgraphOrganization resource interface
+type MsgraphOrganization interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -478,21 +430,21 @@ type MsgraphBetaOrganization interface {
 	VerifiedDomains() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaOrganization for the msgraph.beta.organization resource
-type mqlMsgraphBetaOrganization struct {
+// mqlMsgraphOrganization for the msgraph.organization resource
+type mqlMsgraphOrganization struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaOrganization) MqlResource() *resources.Resource {
+func (s *mqlMsgraphOrganization) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.organization resource
-func newMsgraphBetaOrganization(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.organization resource
+func newMsgraphOrganization(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaOrganization{runtime.NewResource("msgraph.beta.organization")}
+	res := mqlMsgraphOrganization{runtime.NewResource("msgraph.organization")}
 	// assign all named fields
 	var id string
 
@@ -506,32 +458,32 @@ func newMsgraphBetaOrganization(runtime *resources.Runtime, args *resources.Args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.organization\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.organization\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "assignedPlans":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.organization\", its \"assignedPlans\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.organization\", its \"assignedPlans\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "createdDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.organization\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"msgraph.organization\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.organization\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.organization\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "verifiedDomains":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.organization\", its \"verifiedDomains\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.organization\", its \"verifiedDomains\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.organization\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.organization\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.organization with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.organization with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -549,30 +501,30 @@ func newMsgraphBetaOrganization(runtime *resources.Runtime, args *resources.Args
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaOrganization) Validate() error {
+func (s *mqlMsgraphOrganization) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.organization\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.organization\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("assignedPlans"); !ok {
-		return errors.New("Initialized \"msgraph.beta.organization\" resource without a \"assignedPlans\". This field is required.")
+		return errors.New("Initialized \"msgraph.organization\" resource without a \"assignedPlans\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createdDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.organization\" resource without a \"createdDateTime\". This field is required.")
+		return errors.New("Initialized \"msgraph.organization\" resource without a \"createdDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.organization\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"msgraph.organization\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("verifiedDomains"); !ok {
-		return errors.New("Initialized \"msgraph.beta.organization\" resource without a \"verifiedDomains\". This field is required.")
+		return errors.New("Initialized \"msgraph.organization\" resource without a \"verifiedDomains\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.organization].Register")
+func (s *mqlMsgraphOrganization) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.organization].Register")
 	switch name {
 	case "id":
 		return nil
@@ -585,13 +537,13 @@ func (s *mqlMsgraphBetaOrganization) Register(name string) error {
 	case "verifiedDomains":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.organization\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.organization\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.organization].Field")
+func (s *mqlMsgraphOrganization) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.organization].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -604,93 +556,93 @@ func (s *mqlMsgraphBetaOrganization) Field(name string) (interface{}, error) {
 	case "verifiedDomains":
 		return s.VerifiedDomains()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.organization\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.organization\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) Id() (string, error) {
+func (s *mqlMsgraphOrganization) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.organization\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.organization\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.organization\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.organization\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AssignedPlans accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) AssignedPlans() ([]interface{}, error) {
+func (s *mqlMsgraphOrganization) AssignedPlans() ([]interface{}, error) {
 	res, ok := s.Cache.Load("assignedPlans")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.organization\" failed: no value provided for static field \"assignedPlans\"")
+		return nil, errors.New("\"msgraph.organization\" failed: no value provided for static field \"assignedPlans\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.organization\" failed to cast field \"assignedPlans\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.organization\" failed to cast field \"assignedPlans\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreatedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) CreatedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphOrganization) CreatedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createdDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.organization\" failed: no value provided for static field \"createdDateTime\"")
+		return nil, errors.New("\"msgraph.organization\" failed: no value provided for static field \"createdDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.organization\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.organization\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) DisplayName() (string, error) {
+func (s *mqlMsgraphOrganization) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.organization\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"msgraph.organization\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.organization\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.organization\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // VerifiedDomains accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) VerifiedDomains() ([]interface{}, error) {
+func (s *mqlMsgraphOrganization) VerifiedDomains() ([]interface{}, error) {
 	res, ok := s.Cache.Load("verifiedDomains")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.organization\" failed: no value provided for static field \"verifiedDomains\"")
+		return nil, errors.New("\"msgraph.organization\" failed: no value provided for static field \"verifiedDomains\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.organization\" failed to cast field \"verifiedDomains\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.organization\" failed to cast field \"verifiedDomains\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaOrganization) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.organization].Compute")
+func (s *mqlMsgraphOrganization) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.organization].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -703,12 +655,12 @@ func (s *mqlMsgraphBetaOrganization) Compute(name string) error {
 	case "verifiedDomains":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.organization\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.organization\" resource")
 	}
 }
 
-// MsgraphBetaUser resource interface
-type MsgraphBetaUser interface {
+// MsgraphUser resource interface
+type MsgraphUser interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -738,21 +690,21 @@ type MsgraphBetaUser interface {
 	Settings() (interface{}, error)
 }
 
-// mqlMsgraphBetaUser for the msgraph.beta.user resource
-type mqlMsgraphBetaUser struct {
+// mqlMsgraphUser for the msgraph.user resource
+type mqlMsgraphUser struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaUser) MqlResource() *resources.Resource {
+func (s *mqlMsgraphUser) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.user resource
-func newMsgraphBetaUser(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.user resource
+func newMsgraphUser(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaUser{runtime.NewResource("msgraph.beta.user")}
+	res := mqlMsgraphUser{runtime.NewResource("msgraph.user")}
 	// assign all named fields
 	var id string
 
@@ -766,100 +718,100 @@ func newMsgraphBetaUser(runtime *resources.Runtime, args *resources.Args) (inter
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "accountEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"accountEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"accountEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "city":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"city\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"city\" argument has the wrong type (expected type \"string\")")
 			}
 		case "companyName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"companyName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"companyName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "country":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"country\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"country\" argument has the wrong type (expected type \"string\")")
 			}
 		case "createdDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "department":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"department\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"department\" argument has the wrong type (expected type \"string\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "employeeId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"employeeId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"employeeId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "givenName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"givenName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"givenName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "jobTitle":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"jobTitle\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"jobTitle\" argument has the wrong type (expected type \"string\")")
 			}
 		case "mail":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"mail\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"mail\" argument has the wrong type (expected type \"string\")")
 			}
 		case "mobilePhone":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"mobilePhone\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"mobilePhone\" argument has the wrong type (expected type \"string\")")
 			}
 		case "otherMails":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"otherMails\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"otherMails\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "officeLocation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"officeLocation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"officeLocation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "postalCode":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"postalCode\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"postalCode\" argument has the wrong type (expected type \"string\")")
 			}
 		case "state":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"state\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"state\" argument has the wrong type (expected type \"string\")")
 			}
 		case "streetAddress":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"streetAddress\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"streetAddress\" argument has the wrong type (expected type \"string\")")
 			}
 		case "surname":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"surname\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"surname\" argument has the wrong type (expected type \"string\")")
 			}
 		case "userPrincipalName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"userPrincipalName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"userPrincipalName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "userType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"userType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"userType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "settings":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"settings\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"settings\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.user\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.user\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.user with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.user with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -877,78 +829,78 @@ func newMsgraphBetaUser(runtime *resources.Runtime, args *resources.Args) (inter
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaUser) Validate() error {
+func (s *mqlMsgraphUser) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("accountEnabled"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"accountEnabled\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"accountEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("city"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"city\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"city\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("companyName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"companyName\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"companyName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("country"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"country\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"country\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createdDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"createdDateTime\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"createdDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("department"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"department\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"department\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("employeeId"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"employeeId\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"employeeId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("givenName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"givenName\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"givenName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("jobTitle"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"jobTitle\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"jobTitle\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("mail"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"mail\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"mail\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("mobilePhone"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"mobilePhone\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"mobilePhone\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("otherMails"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"otherMails\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"otherMails\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("officeLocation"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"officeLocation\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"officeLocation\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("postalCode"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"postalCode\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"postalCode\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("state"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"state\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"state\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("streetAddress"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"streetAddress\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"streetAddress\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("surname"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"surname\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"surname\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("userPrincipalName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"userPrincipalName\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"userPrincipalName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("userType"); !ok {
-		return errors.New("Initialized \"msgraph.beta.user\" resource without a \"userType\". This field is required.")
+		return errors.New("Initialized \"msgraph.user\" resource without a \"userType\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaUser) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.user].Register")
+func (s *mqlMsgraphUser) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.user].Register")
 	switch name {
 	case "id":
 		return nil
@@ -995,13 +947,13 @@ func (s *mqlMsgraphBetaUser) Register(name string) error {
 	case "settings":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.user\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.user\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaUser) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.user].Field")
+func (s *mqlMsgraphUser) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.user].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -1048,348 +1000,348 @@ func (s *mqlMsgraphBetaUser) Field(name string) (interface{}, error) {
 	case "settings":
 		return s.Settings()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.user\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.user\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaUser) Id() (string, error) {
+func (s *mqlMsgraphUser) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AccountEnabled accessor autogenerated
-func (s *mqlMsgraphBetaUser) AccountEnabled() (bool, error) {
+func (s *mqlMsgraphUser) AccountEnabled() (bool, error) {
 	res, ok := s.Cache.Load("accountEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"accountEnabled\"")
+		return false, errors.New("\"msgraph.user\" failed: no value provided for static field \"accountEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"accountEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.user\" failed to cast field \"accountEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // City accessor autogenerated
-func (s *mqlMsgraphBetaUser) City() (string, error) {
+func (s *mqlMsgraphUser) City() (string, error) {
 	res, ok := s.Cache.Load("city")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"city\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"city\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"city\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"city\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CompanyName accessor autogenerated
-func (s *mqlMsgraphBetaUser) CompanyName() (string, error) {
+func (s *mqlMsgraphUser) CompanyName() (string, error) {
 	res, ok := s.Cache.Load("companyName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"companyName\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"companyName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"companyName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"companyName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Country accessor autogenerated
-func (s *mqlMsgraphBetaUser) Country() (string, error) {
+func (s *mqlMsgraphUser) Country() (string, error) {
 	res, ok := s.Cache.Load("country")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"country\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"country\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"country\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"country\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreatedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaUser) CreatedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphUser) CreatedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createdDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"createdDateTime\"")
+		return nil, errors.New("\"msgraph.user\" failed: no value provided for static field \"createdDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.user\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Department accessor autogenerated
-func (s *mqlMsgraphBetaUser) Department() (string, error) {
+func (s *mqlMsgraphUser) Department() (string, error) {
 	res, ok := s.Cache.Load("department")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"department\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"department\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"department\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"department\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlMsgraphBetaUser) DisplayName() (string, error) {
+func (s *mqlMsgraphUser) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // EmployeeId accessor autogenerated
-func (s *mqlMsgraphBetaUser) EmployeeId() (string, error) {
+func (s *mqlMsgraphUser) EmployeeId() (string, error) {
 	res, ok := s.Cache.Load("employeeId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"employeeId\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"employeeId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"employeeId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"employeeId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // GivenName accessor autogenerated
-func (s *mqlMsgraphBetaUser) GivenName() (string, error) {
+func (s *mqlMsgraphUser) GivenName() (string, error) {
 	res, ok := s.Cache.Load("givenName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"givenName\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"givenName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"givenName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"givenName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // JobTitle accessor autogenerated
-func (s *mqlMsgraphBetaUser) JobTitle() (string, error) {
+func (s *mqlMsgraphUser) JobTitle() (string, error) {
 	res, ok := s.Cache.Load("jobTitle")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"jobTitle\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"jobTitle\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"jobTitle\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"jobTitle\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Mail accessor autogenerated
-func (s *mqlMsgraphBetaUser) Mail() (string, error) {
+func (s *mqlMsgraphUser) Mail() (string, error) {
 	res, ok := s.Cache.Load("mail")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"mail\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"mail\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"mail\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"mail\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MobilePhone accessor autogenerated
-func (s *mqlMsgraphBetaUser) MobilePhone() (string, error) {
+func (s *mqlMsgraphUser) MobilePhone() (string, error) {
 	res, ok := s.Cache.Load("mobilePhone")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"mobilePhone\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"mobilePhone\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"mobilePhone\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"mobilePhone\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // OtherMails accessor autogenerated
-func (s *mqlMsgraphBetaUser) OtherMails() ([]interface{}, error) {
+func (s *mqlMsgraphUser) OtherMails() ([]interface{}, error) {
 	res, ok := s.Cache.Load("otherMails")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"otherMails\"")
+		return nil, errors.New("\"msgraph.user\" failed: no value provided for static field \"otherMails\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"otherMails\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.user\" failed to cast field \"otherMails\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // OfficeLocation accessor autogenerated
-func (s *mqlMsgraphBetaUser) OfficeLocation() (string, error) {
+func (s *mqlMsgraphUser) OfficeLocation() (string, error) {
 	res, ok := s.Cache.Load("officeLocation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"officeLocation\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"officeLocation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"officeLocation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"officeLocation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PostalCode accessor autogenerated
-func (s *mqlMsgraphBetaUser) PostalCode() (string, error) {
+func (s *mqlMsgraphUser) PostalCode() (string, error) {
 	res, ok := s.Cache.Load("postalCode")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"postalCode\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"postalCode\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"postalCode\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"postalCode\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // State accessor autogenerated
-func (s *mqlMsgraphBetaUser) State() (string, error) {
+func (s *mqlMsgraphUser) State() (string, error) {
 	res, ok := s.Cache.Load("state")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"state\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"state\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"state\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"state\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // StreetAddress accessor autogenerated
-func (s *mqlMsgraphBetaUser) StreetAddress() (string, error) {
+func (s *mqlMsgraphUser) StreetAddress() (string, error) {
 	res, ok := s.Cache.Load("streetAddress")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"streetAddress\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"streetAddress\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"streetAddress\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"streetAddress\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Surname accessor autogenerated
-func (s *mqlMsgraphBetaUser) Surname() (string, error) {
+func (s *mqlMsgraphUser) Surname() (string, error) {
 	res, ok := s.Cache.Load("surname")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"surname\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"surname\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"surname\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"surname\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // UserPrincipalName accessor autogenerated
-func (s *mqlMsgraphBetaUser) UserPrincipalName() (string, error) {
+func (s *mqlMsgraphUser) UserPrincipalName() (string, error) {
 	res, ok := s.Cache.Load("userPrincipalName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"userPrincipalName\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"userPrincipalName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"userPrincipalName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"userPrincipalName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // UserType accessor autogenerated
-func (s *mqlMsgraphBetaUser) UserType() (string, error) {
+func (s *mqlMsgraphUser) UserType() (string, error) {
 	res, ok := s.Cache.Load("userType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.user\" failed: no value provided for static field \"userType\"")
+		return "", errors.New("\"msgraph.user\" failed: no value provided for static field \"userType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"userType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.user\" failed to cast field \"userType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Settings accessor autogenerated
-func (s *mqlMsgraphBetaUser) Settings() (interface{}, error) {
+func (s *mqlMsgraphUser) Settings() (interface{}, error) {
 	res, ok := s.Cache.Load("settings")
 	if !ok || !res.Valid {
 		if err := s.ComputeSettings(); err != nil {
@@ -1397,7 +1349,7 @@ func (s *mqlMsgraphBetaUser) Settings() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("settings")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.user\" calculated \"settings\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.user\" calculated \"settings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "settings")
 	}
@@ -1406,14 +1358,14 @@ func (s *mqlMsgraphBetaUser) Settings() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.user\" failed to cast field \"settings\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.user\" failed to cast field \"settings\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaUser) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.user].Compute")
+func (s *mqlMsgraphUser) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.user].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -1460,12 +1412,12 @@ func (s *mqlMsgraphBetaUser) Compute(name string) error {
 	case "settings":
 		return s.ComputeSettings()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.user\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.user\" resource")
 	}
 }
 
 // ComputeSettings computer autogenerated
-func (s *mqlMsgraphBetaUser) ComputeSettings() error {
+func (s *mqlMsgraphUser) ComputeSettings() error {
 	var err error
 	if _, ok := s.Cache.Load("settings"); ok {
 		return nil
@@ -1478,8 +1430,8 @@ func (s *mqlMsgraphBetaUser) ComputeSettings() error {
 	return nil
 }
 
-// MsgraphBetaGroup resource interface
-type MsgraphBetaGroup interface {
+// MsgraphGroup resource interface
+type MsgraphGroup interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1494,21 +1446,21 @@ type MsgraphBetaGroup interface {
 	Members() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaGroup for the msgraph.beta.group resource
-type mqlMsgraphBetaGroup struct {
+// mqlMsgraphGroup for the msgraph.group resource
+type mqlMsgraphGroup struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaGroup) MqlResource() *resources.Resource {
+func (s *mqlMsgraphGroup) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.group resource
-func newMsgraphBetaGroup(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.group resource
+func newMsgraphGroup(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaGroup{runtime.NewResource("msgraph.beta.group")}
+	res := mqlMsgraphGroup{runtime.NewResource("msgraph.group")}
 	// assign all named fields
 	var id string
 
@@ -1522,40 +1474,40 @@ func newMsgraphBetaGroup(runtime *resources.Runtime, args *resources.Args) (inte
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "securityEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"securityEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"securityEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "mailEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"mailEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"mailEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "mailNickname":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"mailNickname\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"mailNickname\" argument has the wrong type (expected type \"string\")")
 			}
 		case "mail":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"mail\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"mail\" argument has the wrong type (expected type \"string\")")
 			}
 		case "members":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"members\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"members\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.group\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.group\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.group with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.group with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1573,33 +1525,33 @@ func newMsgraphBetaGroup(runtime *resources.Runtime, args *resources.Args) (inte
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaGroup) Validate() error {
+func (s *mqlMsgraphGroup) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.group\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.group\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.group\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"msgraph.group\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("securityEnabled"); !ok {
-		return errors.New("Initialized \"msgraph.beta.group\" resource without a \"securityEnabled\". This field is required.")
+		return errors.New("Initialized \"msgraph.group\" resource without a \"securityEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("mailEnabled"); !ok {
-		return errors.New("Initialized \"msgraph.beta.group\" resource without a \"mailEnabled\". This field is required.")
+		return errors.New("Initialized \"msgraph.group\" resource without a \"mailEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("mailNickname"); !ok {
-		return errors.New("Initialized \"msgraph.beta.group\" resource without a \"mailNickname\". This field is required.")
+		return errors.New("Initialized \"msgraph.group\" resource without a \"mailNickname\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("mail"); !ok {
-		return errors.New("Initialized \"msgraph.beta.group\" resource without a \"mail\". This field is required.")
+		return errors.New("Initialized \"msgraph.group\" resource without a \"mail\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaGroup) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.group].Register")
+func (s *mqlMsgraphGroup) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.group].Register")
 	switch name {
 	case "id":
 		return nil
@@ -1616,13 +1568,13 @@ func (s *mqlMsgraphBetaGroup) Register(name string) error {
 	case "members":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.group\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.group\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaGroup) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.group].Field")
+func (s *mqlMsgraphGroup) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.group].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -1639,108 +1591,108 @@ func (s *mqlMsgraphBetaGroup) Field(name string) (interface{}, error) {
 	case "members":
 		return s.Members()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.group\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.group\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaGroup) Id() (string, error) {
+func (s *mqlMsgraphGroup) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.group\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.group\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.group\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.group\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlMsgraphBetaGroup) DisplayName() (string, error) {
+func (s *mqlMsgraphGroup) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.group\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"msgraph.group\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.group\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.group\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SecurityEnabled accessor autogenerated
-func (s *mqlMsgraphBetaGroup) SecurityEnabled() (bool, error) {
+func (s *mqlMsgraphGroup) SecurityEnabled() (bool, error) {
 	res, ok := s.Cache.Load("securityEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.group\" failed: no value provided for static field \"securityEnabled\"")
+		return false, errors.New("\"msgraph.group\" failed: no value provided for static field \"securityEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.group\" failed to cast field \"securityEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.group\" failed to cast field \"securityEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // MailEnabled accessor autogenerated
-func (s *mqlMsgraphBetaGroup) MailEnabled() (bool, error) {
+func (s *mqlMsgraphGroup) MailEnabled() (bool, error) {
 	res, ok := s.Cache.Load("mailEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.group\" failed: no value provided for static field \"mailEnabled\"")
+		return false, errors.New("\"msgraph.group\" failed: no value provided for static field \"mailEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.group\" failed to cast field \"mailEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.group\" failed to cast field \"mailEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // MailNickname accessor autogenerated
-func (s *mqlMsgraphBetaGroup) MailNickname() (string, error) {
+func (s *mqlMsgraphGroup) MailNickname() (string, error) {
 	res, ok := s.Cache.Load("mailNickname")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.group\" failed: no value provided for static field \"mailNickname\"")
+		return "", errors.New("\"msgraph.group\" failed: no value provided for static field \"mailNickname\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.group\" failed to cast field \"mailNickname\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.group\" failed to cast field \"mailNickname\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Mail accessor autogenerated
-func (s *mqlMsgraphBetaGroup) Mail() (string, error) {
+func (s *mqlMsgraphGroup) Mail() (string, error) {
 	res, ok := s.Cache.Load("mail")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.group\" failed: no value provided for static field \"mail\"")
+		return "", errors.New("\"msgraph.group\" failed: no value provided for static field \"mail\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.group\" failed to cast field \"mail\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.group\" failed to cast field \"mail\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Members accessor autogenerated
-func (s *mqlMsgraphBetaGroup) Members() ([]interface{}, error) {
+func (s *mqlMsgraphGroup) Members() ([]interface{}, error) {
 	res, ok := s.Cache.Load("members")
 	if !ok || !res.Valid {
 		if err := s.ComputeMembers(); err != nil {
@@ -1748,7 +1700,7 @@ func (s *mqlMsgraphBetaGroup) Members() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("members")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.group\" calculated \"members\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.group\" calculated \"members\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "members")
 	}
@@ -1757,14 +1709,14 @@ func (s *mqlMsgraphBetaGroup) Members() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.group\" failed to cast field \"members\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.group\" failed to cast field \"members\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaGroup) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.group].Compute")
+func (s *mqlMsgraphGroup) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.group].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -1781,12 +1733,12 @@ func (s *mqlMsgraphBetaGroup) Compute(name string) error {
 	case "members":
 		return s.ComputeMembers()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.group\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.group\" resource")
 	}
 }
 
 // ComputeMembers computer autogenerated
-func (s *mqlMsgraphBetaGroup) ComputeMembers() error {
+func (s *mqlMsgraphGroup) ComputeMembers() error {
 	var err error
 	if _, ok := s.Cache.Load("members"); ok {
 		return nil
@@ -1799,8 +1751,8 @@ func (s *mqlMsgraphBetaGroup) ComputeMembers() error {
 	return nil
 }
 
-// MsgraphBetaDomain resource interface
-type MsgraphBetaDomain interface {
+// MsgraphDomain resource interface
+type MsgraphDomain interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1820,21 +1772,21 @@ type MsgraphBetaDomain interface {
 	ServiceConfigurationRecords() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaDomain for the msgraph.beta.domain resource
-type mqlMsgraphBetaDomain struct {
+// mqlMsgraphDomain for the msgraph.domain resource
+type mqlMsgraphDomain struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaDomain) MqlResource() *resources.Resource {
+func (s *mqlMsgraphDomain) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.domain resource
-func newMsgraphBetaDomain(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.domain resource
+func newMsgraphDomain(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaDomain{runtime.NewResource("msgraph.beta.domain")}
+	res := mqlMsgraphDomain{runtime.NewResource("msgraph.domain")}
 	// assign all named fields
 	var id string
 
@@ -1848,60 +1800,60 @@ func newMsgraphBetaDomain(runtime *resources.Runtime, args *resources.Args) (int
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "authenticationType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"authenticationType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"authenticationType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "availabilityStatus":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"availabilityStatus\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"availabilityStatus\" argument has the wrong type (expected type \"string\")")
 			}
 		case "isAdminManaged":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"isAdminManaged\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"isAdminManaged\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "isDefault":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"isDefault\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"isDefault\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "isInitial":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"isInitial\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"isInitial\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "isRoot":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"isRoot\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"isRoot\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "isVerified":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"isVerified\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"isVerified\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "passwordNotificationWindowInDays":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"passwordNotificationWindowInDays\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"passwordNotificationWindowInDays\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "passwordValidityPeriodInDays":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"passwordValidityPeriodInDays\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"passwordValidityPeriodInDays\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "supportedServices":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"supportedServices\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"supportedServices\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "serviceConfigurationRecords":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"serviceConfigurationRecords\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"serviceConfigurationRecords\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domain\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domain\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.domain with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.domain with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1919,48 +1871,48 @@ func newMsgraphBetaDomain(runtime *resources.Runtime, args *resources.Args) (int
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaDomain) Validate() error {
+func (s *mqlMsgraphDomain) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("authenticationType"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"authenticationType\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"authenticationType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("availabilityStatus"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"availabilityStatus\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"availabilityStatus\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isAdminManaged"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"isAdminManaged\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"isAdminManaged\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isDefault"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"isDefault\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"isDefault\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isInitial"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"isInitial\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"isInitial\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isRoot"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"isRoot\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"isRoot\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isVerified"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"isVerified\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"isVerified\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("passwordNotificationWindowInDays"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"passwordNotificationWindowInDays\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"passwordNotificationWindowInDays\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("passwordValidityPeriodInDays"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"passwordValidityPeriodInDays\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"passwordValidityPeriodInDays\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("supportedServices"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domain\" resource without a \"supportedServices\". This field is required.")
+		return errors.New("Initialized \"msgraph.domain\" resource without a \"supportedServices\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaDomain) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.domain].Register")
+func (s *mqlMsgraphDomain) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.domain].Register")
 	switch name {
 	case "id":
 		return nil
@@ -1987,13 +1939,13 @@ func (s *mqlMsgraphBetaDomain) Register(name string) error {
 	case "serviceConfigurationRecords":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.domain\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.domain\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaDomain) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.domain].Field")
+func (s *mqlMsgraphDomain) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.domain].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -2020,188 +1972,188 @@ func (s *mqlMsgraphBetaDomain) Field(name string) (interface{}, error) {
 	case "serviceConfigurationRecords":
 		return s.ServiceConfigurationRecords()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.domain\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.domain\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaDomain) Id() (string, error) {
+func (s *mqlMsgraphDomain) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.domain\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.domain\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AuthenticationType accessor autogenerated
-func (s *mqlMsgraphBetaDomain) AuthenticationType() (string, error) {
+func (s *mqlMsgraphDomain) AuthenticationType() (string, error) {
 	res, ok := s.Cache.Load("authenticationType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"authenticationType\"")
+		return "", errors.New("\"msgraph.domain\" failed: no value provided for static field \"authenticationType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"authenticationType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.domain\" failed to cast field \"authenticationType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AvailabilityStatus accessor autogenerated
-func (s *mqlMsgraphBetaDomain) AvailabilityStatus() (string, error) {
+func (s *mqlMsgraphDomain) AvailabilityStatus() (string, error) {
 	res, ok := s.Cache.Load("availabilityStatus")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"availabilityStatus\"")
+		return "", errors.New("\"msgraph.domain\" failed: no value provided for static field \"availabilityStatus\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"availabilityStatus\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.domain\" failed to cast field \"availabilityStatus\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsAdminManaged accessor autogenerated
-func (s *mqlMsgraphBetaDomain) IsAdminManaged() (bool, error) {
+func (s *mqlMsgraphDomain) IsAdminManaged() (bool, error) {
 	res, ok := s.Cache.Load("isAdminManaged")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"isAdminManaged\"")
+		return false, errors.New("\"msgraph.domain\" failed: no value provided for static field \"isAdminManaged\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"isAdminManaged\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.domain\" failed to cast field \"isAdminManaged\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsDefault accessor autogenerated
-func (s *mqlMsgraphBetaDomain) IsDefault() (bool, error) {
+func (s *mqlMsgraphDomain) IsDefault() (bool, error) {
 	res, ok := s.Cache.Load("isDefault")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"isDefault\"")
+		return false, errors.New("\"msgraph.domain\" failed: no value provided for static field \"isDefault\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"isDefault\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.domain\" failed to cast field \"isDefault\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsInitial accessor autogenerated
-func (s *mqlMsgraphBetaDomain) IsInitial() (bool, error) {
+func (s *mqlMsgraphDomain) IsInitial() (bool, error) {
 	res, ok := s.Cache.Load("isInitial")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"isInitial\"")
+		return false, errors.New("\"msgraph.domain\" failed: no value provided for static field \"isInitial\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"isInitial\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.domain\" failed to cast field \"isInitial\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsRoot accessor autogenerated
-func (s *mqlMsgraphBetaDomain) IsRoot() (bool, error) {
+func (s *mqlMsgraphDomain) IsRoot() (bool, error) {
 	res, ok := s.Cache.Load("isRoot")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"isRoot\"")
+		return false, errors.New("\"msgraph.domain\" failed: no value provided for static field \"isRoot\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"isRoot\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.domain\" failed to cast field \"isRoot\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsVerified accessor autogenerated
-func (s *mqlMsgraphBetaDomain) IsVerified() (bool, error) {
+func (s *mqlMsgraphDomain) IsVerified() (bool, error) {
 	res, ok := s.Cache.Load("isVerified")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"isVerified\"")
+		return false, errors.New("\"msgraph.domain\" failed: no value provided for static field \"isVerified\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"isVerified\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.domain\" failed to cast field \"isVerified\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // PasswordNotificationWindowInDays accessor autogenerated
-func (s *mqlMsgraphBetaDomain) PasswordNotificationWindowInDays() (int64, error) {
+func (s *mqlMsgraphDomain) PasswordNotificationWindowInDays() (int64, error) {
 	res, ok := s.Cache.Load("passwordNotificationWindowInDays")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"passwordNotificationWindowInDays\"")
+		return 0, errors.New("\"msgraph.domain\" failed: no value provided for static field \"passwordNotificationWindowInDays\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"passwordNotificationWindowInDays\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"msgraph.domain\" failed to cast field \"passwordNotificationWindowInDays\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // PasswordValidityPeriodInDays accessor autogenerated
-func (s *mqlMsgraphBetaDomain) PasswordValidityPeriodInDays() (int64, error) {
+func (s *mqlMsgraphDomain) PasswordValidityPeriodInDays() (int64, error) {
 	res, ok := s.Cache.Load("passwordValidityPeriodInDays")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"passwordValidityPeriodInDays\"")
+		return 0, errors.New("\"msgraph.domain\" failed: no value provided for static field \"passwordValidityPeriodInDays\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"passwordValidityPeriodInDays\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"msgraph.domain\" failed to cast field \"passwordValidityPeriodInDays\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // SupportedServices accessor autogenerated
-func (s *mqlMsgraphBetaDomain) SupportedServices() ([]interface{}, error) {
+func (s *mqlMsgraphDomain) SupportedServices() ([]interface{}, error) {
 	res, ok := s.Cache.Load("supportedServices")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.domain\" failed: no value provided for static field \"supportedServices\"")
+		return nil, errors.New("\"msgraph.domain\" failed: no value provided for static field \"supportedServices\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"supportedServices\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.domain\" failed to cast field \"supportedServices\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServiceConfigurationRecords accessor autogenerated
-func (s *mqlMsgraphBetaDomain) ServiceConfigurationRecords() ([]interface{}, error) {
+func (s *mqlMsgraphDomain) ServiceConfigurationRecords() ([]interface{}, error) {
 	res, ok := s.Cache.Load("serviceConfigurationRecords")
 	if !ok || !res.Valid {
 		if err := s.ComputeServiceConfigurationRecords(); err != nil {
@@ -2209,7 +2161,7 @@ func (s *mqlMsgraphBetaDomain) ServiceConfigurationRecords() ([]interface{}, err
 		}
 		res, ok = s.Cache.Load("serviceConfigurationRecords")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.domain\" calculated \"serviceConfigurationRecords\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.domain\" calculated \"serviceConfigurationRecords\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "serviceConfigurationRecords")
 	}
@@ -2218,14 +2170,14 @@ func (s *mqlMsgraphBetaDomain) ServiceConfigurationRecords() ([]interface{}, err
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.domain\" failed to cast field \"serviceConfigurationRecords\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.domain\" failed to cast field \"serviceConfigurationRecords\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaDomain) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.domain].Compute")
+func (s *mqlMsgraphDomain) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.domain].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -2252,12 +2204,12 @@ func (s *mqlMsgraphBetaDomain) Compute(name string) error {
 	case "serviceConfigurationRecords":
 		return s.ComputeServiceConfigurationRecords()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.domain\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.domain\" resource")
 	}
 }
 
 // ComputeServiceConfigurationRecords computer autogenerated
-func (s *mqlMsgraphBetaDomain) ComputeServiceConfigurationRecords() error {
+func (s *mqlMsgraphDomain) ComputeServiceConfigurationRecords() error {
 	var err error
 	if _, ok := s.Cache.Load("serviceConfigurationRecords"); ok {
 		return nil
@@ -2270,8 +2222,8 @@ func (s *mqlMsgraphBetaDomain) ComputeServiceConfigurationRecords() error {
 	return nil
 }
 
-// MsgraphBetaDomaindnsrecord resource interface
-type MsgraphBetaDomaindnsrecord interface {
+// MsgraphDomaindnsrecord resource interface
+type MsgraphDomaindnsrecord interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -2283,24 +2235,23 @@ type MsgraphBetaDomaindnsrecord interface {
 	RecordType() (string, error)
 	SupportedService() (string, error)
 	Ttl() (int64, error)
-	Properties() (interface{}, error)
 }
 
-// mqlMsgraphBetaDomaindnsrecord for the msgraph.beta.domaindnsrecord resource
-type mqlMsgraphBetaDomaindnsrecord struct {
+// mqlMsgraphDomaindnsrecord for the msgraph.domaindnsrecord resource
+type mqlMsgraphDomaindnsrecord struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaDomaindnsrecord) MqlResource() *resources.Resource {
+func (s *mqlMsgraphDomaindnsrecord) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.domaindnsrecord resource
-func newMsgraphBetaDomaindnsrecord(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.domaindnsrecord resource
+func newMsgraphDomaindnsrecord(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaDomaindnsrecord{runtime.NewResource("msgraph.beta.domaindnsrecord")}
+	res := mqlMsgraphDomaindnsrecord{runtime.NewResource("msgraph.domaindnsrecord")}
 	// assign all named fields
 	var id string
 
@@ -2314,40 +2265,36 @@ func newMsgraphBetaDomaindnsrecord(runtime *resources.Runtime, args *resources.A
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domaindnsrecord\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "isOptional":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"isOptional\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domaindnsrecord\", its \"isOptional\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "label":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"label\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domaindnsrecord\", its \"label\" argument has the wrong type (expected type \"string\")")
 			}
 		case "recordType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"recordType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domaindnsrecord\", its \"recordType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "supportedService":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"supportedService\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domaindnsrecord\", its \"supportedService\" argument has the wrong type (expected type \"string\")")
 			}
 		case "ttl":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"ttl\" argument has the wrong type (expected type \"int64\")")
-			}
-		case "properties":
-			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domaindnsrecord\", its \"ttl\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.domaindnsrecord\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.domaindnsrecord\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.domaindnsrecord with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.domaindnsrecord with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2365,36 +2312,33 @@ func newMsgraphBetaDomaindnsrecord(runtime *resources.Runtime, args *resources.A
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaDomaindnsrecord) Validate() error {
+func (s *mqlMsgraphDomaindnsrecord) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domaindnsrecord\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.domaindnsrecord\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isOptional"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domaindnsrecord\" resource without a \"isOptional\". This field is required.")
+		return errors.New("Initialized \"msgraph.domaindnsrecord\" resource without a \"isOptional\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("label"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domaindnsrecord\" resource without a \"label\". This field is required.")
+		return errors.New("Initialized \"msgraph.domaindnsrecord\" resource without a \"label\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("recordType"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domaindnsrecord\" resource without a \"recordType\". This field is required.")
+		return errors.New("Initialized \"msgraph.domaindnsrecord\" resource without a \"recordType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("supportedService"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domaindnsrecord\" resource without a \"supportedService\". This field is required.")
+		return errors.New("Initialized \"msgraph.domaindnsrecord\" resource without a \"supportedService\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("ttl"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domaindnsrecord\" resource without a \"ttl\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"msgraph.beta.domaindnsrecord\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"msgraph.domaindnsrecord\" resource without a \"ttl\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.domaindnsrecord].Register")
+func (s *mqlMsgraphDomaindnsrecord) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.domaindnsrecord].Register")
 	switch name {
 	case "id":
 		return nil
@@ -2408,16 +2352,14 @@ func (s *mqlMsgraphBetaDomaindnsrecord) Register(name string) error {
 		return nil
 	case "ttl":
 		return nil
-	case "properties":
-		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.domaindnsrecord\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.domaindnsrecord\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.domaindnsrecord].Field")
+func (s *mqlMsgraphDomaindnsrecord) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.domaindnsrecord].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -2431,128 +2373,110 @@ func (s *mqlMsgraphBetaDomaindnsrecord) Field(name string) (interface{}, error) 
 		return s.SupportedService()
 	case "ttl":
 		return s.Ttl()
-	case "properties":
-		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.domaindnsrecord\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.domaindnsrecord\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) Id() (string, error) {
+func (s *mqlMsgraphDomaindnsrecord) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.domaindnsrecord\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.domaindnsrecord\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.domaindnsrecord\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.domaindnsrecord\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsOptional accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) IsOptional() (bool, error) {
+func (s *mqlMsgraphDomaindnsrecord) IsOptional() (bool, error) {
 	res, ok := s.Cache.Load("isOptional")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.domaindnsrecord\" failed: no value provided for static field \"isOptional\"")
+		return false, errors.New("\"msgraph.domaindnsrecord\" failed: no value provided for static field \"isOptional\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.domaindnsrecord\" failed to cast field \"isOptional\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.domaindnsrecord\" failed to cast field \"isOptional\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Label accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) Label() (string, error) {
+func (s *mqlMsgraphDomaindnsrecord) Label() (string, error) {
 	res, ok := s.Cache.Load("label")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.domaindnsrecord\" failed: no value provided for static field \"label\"")
+		return "", errors.New("\"msgraph.domaindnsrecord\" failed: no value provided for static field \"label\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.domaindnsrecord\" failed to cast field \"label\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.domaindnsrecord\" failed to cast field \"label\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecordType accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) RecordType() (string, error) {
+func (s *mqlMsgraphDomaindnsrecord) RecordType() (string, error) {
 	res, ok := s.Cache.Load("recordType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.domaindnsrecord\" failed: no value provided for static field \"recordType\"")
+		return "", errors.New("\"msgraph.domaindnsrecord\" failed: no value provided for static field \"recordType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.domaindnsrecord\" failed to cast field \"recordType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.domaindnsrecord\" failed to cast field \"recordType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SupportedService accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) SupportedService() (string, error) {
+func (s *mqlMsgraphDomaindnsrecord) SupportedService() (string, error) {
 	res, ok := s.Cache.Load("supportedService")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.domaindnsrecord\" failed: no value provided for static field \"supportedService\"")
+		return "", errors.New("\"msgraph.domaindnsrecord\" failed: no value provided for static field \"supportedService\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.domaindnsrecord\" failed to cast field \"supportedService\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.domaindnsrecord\" failed to cast field \"supportedService\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Ttl accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) Ttl() (int64, error) {
+func (s *mqlMsgraphDomaindnsrecord) Ttl() (int64, error) {
 	res, ok := s.Cache.Load("ttl")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"msgraph.beta.domaindnsrecord\" failed: no value provided for static field \"ttl\"")
+		return 0, errors.New("\"msgraph.domaindnsrecord\" failed: no value provided for static field \"ttl\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"msgraph.beta.domaindnsrecord\" failed to cast field \"ttl\" to the right type (int64): %#v", res)
-	}
-	return tres, nil
-}
-
-// Properties accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) Properties() (interface{}, error) {
-	res, ok := s.Cache.Load("properties")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.domaindnsrecord\" failed: no value provided for static field \"properties\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.(interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.domaindnsrecord\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return 0, fmt.Errorf("\"msgraph.domaindnsrecord\" failed to cast field \"ttl\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaDomaindnsrecord) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.domaindnsrecord].Compute")
+func (s *mqlMsgraphDomaindnsrecord) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.domaindnsrecord].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -2566,15 +2490,13 @@ func (s *mqlMsgraphBetaDomaindnsrecord) Compute(name string) error {
 		return nil
 	case "ttl":
 		return nil
-	case "properties":
-		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.domaindnsrecord\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.domaindnsrecord\" resource")
 	}
 }
 
-// MsgraphBetaApplication resource interface
-type MsgraphBetaApplication interface {
+// MsgraphApplication resource interface
+type MsgraphApplication interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -2589,21 +2511,21 @@ type MsgraphBetaApplication interface {
 	SignInAudience() (string, error)
 }
 
-// mqlMsgraphBetaApplication for the msgraph.beta.application resource
-type mqlMsgraphBetaApplication struct {
+// mqlMsgraphApplication for the msgraph.application resource
+type mqlMsgraphApplication struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaApplication) MqlResource() *resources.Resource {
+func (s *mqlMsgraphApplication) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.application resource
-func newMsgraphBetaApplication(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.application resource
+func newMsgraphApplication(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaApplication{runtime.NewResource("msgraph.beta.application")}
+	res := mqlMsgraphApplication{runtime.NewResource("msgraph.application")}
 	// assign all named fields
 	var id string
 
@@ -2617,40 +2539,40 @@ func newMsgraphBetaApplication(runtime *resources.Runtime, args *resources.Args)
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "appId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"appId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"appId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "createdDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "identifierUris":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"identifierUris\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"identifierUris\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "publisherDomain":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"publisherDomain\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"publisherDomain\" argument has the wrong type (expected type \"string\")")
 			}
 		case "signInAudience":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"signInAudience\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"signInAudience\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.application\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.application\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.application with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.application with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2668,36 +2590,36 @@ func newMsgraphBetaApplication(runtime *resources.Runtime, args *resources.Args)
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaApplication) Validate() error {
+func (s *mqlMsgraphApplication) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.application\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.application\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("appId"); !ok {
-		return errors.New("Initialized \"msgraph.beta.application\" resource without a \"appId\". This field is required.")
+		return errors.New("Initialized \"msgraph.application\" resource without a \"appId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createdDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.application\" resource without a \"createdDateTime\". This field is required.")
+		return errors.New("Initialized \"msgraph.application\" resource without a \"createdDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("identifierUris"); !ok {
-		return errors.New("Initialized \"msgraph.beta.application\" resource without a \"identifierUris\". This field is required.")
+		return errors.New("Initialized \"msgraph.application\" resource without a \"identifierUris\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.application\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"msgraph.application\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("publisherDomain"); !ok {
-		return errors.New("Initialized \"msgraph.beta.application\" resource without a \"publisherDomain\". This field is required.")
+		return errors.New("Initialized \"msgraph.application\" resource without a \"publisherDomain\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("signInAudience"); !ok {
-		return errors.New("Initialized \"msgraph.beta.application\" resource without a \"signInAudience\". This field is required.")
+		return errors.New("Initialized \"msgraph.application\" resource without a \"signInAudience\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaApplication) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.application].Register")
+func (s *mqlMsgraphApplication) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.application].Register")
 	switch name {
 	case "id":
 		return nil
@@ -2714,13 +2636,13 @@ func (s *mqlMsgraphBetaApplication) Register(name string) error {
 	case "signInAudience":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.application\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.application\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaApplication) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.application].Field")
+func (s *mqlMsgraphApplication) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.application].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -2737,125 +2659,125 @@ func (s *mqlMsgraphBetaApplication) Field(name string) (interface{}, error) {
 	case "signInAudience":
 		return s.SignInAudience()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.application\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.application\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaApplication) Id() (string, error) {
+func (s *mqlMsgraphApplication) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.application\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.application\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.application\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.application\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AppId accessor autogenerated
-func (s *mqlMsgraphBetaApplication) AppId() (string, error) {
+func (s *mqlMsgraphApplication) AppId() (string, error) {
 	res, ok := s.Cache.Load("appId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.application\" failed: no value provided for static field \"appId\"")
+		return "", errors.New("\"msgraph.application\" failed: no value provided for static field \"appId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.application\" failed to cast field \"appId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.application\" failed to cast field \"appId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreatedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaApplication) CreatedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphApplication) CreatedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createdDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.application\" failed: no value provided for static field \"createdDateTime\"")
+		return nil, errors.New("\"msgraph.application\" failed: no value provided for static field \"createdDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.application\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.application\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // IdentifierUris accessor autogenerated
-func (s *mqlMsgraphBetaApplication) IdentifierUris() ([]interface{}, error) {
+func (s *mqlMsgraphApplication) IdentifierUris() ([]interface{}, error) {
 	res, ok := s.Cache.Load("identifierUris")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.application\" failed: no value provided for static field \"identifierUris\"")
+		return nil, errors.New("\"msgraph.application\" failed: no value provided for static field \"identifierUris\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.application\" failed to cast field \"identifierUris\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.application\" failed to cast field \"identifierUris\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlMsgraphBetaApplication) DisplayName() (string, error) {
+func (s *mqlMsgraphApplication) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.application\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"msgraph.application\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.application\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.application\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PublisherDomain accessor autogenerated
-func (s *mqlMsgraphBetaApplication) PublisherDomain() (string, error) {
+func (s *mqlMsgraphApplication) PublisherDomain() (string, error) {
 	res, ok := s.Cache.Load("publisherDomain")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.application\" failed: no value provided for static field \"publisherDomain\"")
+		return "", errors.New("\"msgraph.application\" failed: no value provided for static field \"publisherDomain\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.application\" failed to cast field \"publisherDomain\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.application\" failed to cast field \"publisherDomain\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SignInAudience accessor autogenerated
-func (s *mqlMsgraphBetaApplication) SignInAudience() (string, error) {
+func (s *mqlMsgraphApplication) SignInAudience() (string, error) {
 	res, ok := s.Cache.Load("signInAudience")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.application\" failed: no value provided for static field \"signInAudience\"")
+		return "", errors.New("\"msgraph.application\" failed: no value provided for static field \"signInAudience\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.application\" failed to cast field \"signInAudience\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.application\" failed to cast field \"signInAudience\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaApplication) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.application].Compute")
+func (s *mqlMsgraphApplication) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.application].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -2872,12 +2794,12 @@ func (s *mqlMsgraphBetaApplication) Compute(name string) error {
 	case "signInAudience":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.application\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.application\" resource")
 	}
 }
 
-// MsgraphBetaServiceprincipal resource interface
-type MsgraphBetaServiceprincipal interface {
+// MsgraphServiceprincipal resource interface
+type MsgraphServiceprincipal interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -2886,21 +2808,21 @@ type MsgraphBetaServiceprincipal interface {
 	Id() (string, error)
 }
 
-// mqlMsgraphBetaServiceprincipal for the msgraph.beta.serviceprincipal resource
-type mqlMsgraphBetaServiceprincipal struct {
+// mqlMsgraphServiceprincipal for the msgraph.serviceprincipal resource
+type mqlMsgraphServiceprincipal struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaServiceprincipal) MqlResource() *resources.Resource {
+func (s *mqlMsgraphServiceprincipal) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.serviceprincipal resource
-func newMsgraphBetaServiceprincipal(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.serviceprincipal resource
+func newMsgraphServiceprincipal(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaServiceprincipal{runtime.NewResource("msgraph.beta.serviceprincipal")}
+	res := mqlMsgraphServiceprincipal{runtime.NewResource("msgraph.serviceprincipal")}
 	// assign all named fields
 	var id string
 
@@ -2914,16 +2836,16 @@ func newMsgraphBetaServiceprincipal(runtime *resources.Runtime, args *resources.
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.serviceprincipal\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.serviceprincipal\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.serviceprincipal\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.serviceprincipal\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.serviceprincipal with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.serviceprincipal with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2941,90 +2863,90 @@ func newMsgraphBetaServiceprincipal(runtime *resources.Runtime, args *resources.
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaServiceprincipal) Validate() error {
+func (s *mqlMsgraphServiceprincipal) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.serviceprincipal\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.serviceprincipal\" resource without a \"id\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaServiceprincipal) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.serviceprincipal].Register")
+func (s *mqlMsgraphServiceprincipal) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.serviceprincipal].Register")
 	switch name {
 	case "id":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.serviceprincipal\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.serviceprincipal\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaServiceprincipal) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.serviceprincipal].Field")
+func (s *mqlMsgraphServiceprincipal) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.serviceprincipal].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.serviceprincipal\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.serviceprincipal\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaServiceprincipal) Id() (string, error) {
+func (s *mqlMsgraphServiceprincipal) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.serviceprincipal\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.serviceprincipal\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.serviceprincipal\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.serviceprincipal\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaServiceprincipal) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.serviceprincipal].Compute")
+func (s *mqlMsgraphServiceprincipal) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.serviceprincipal].Compute")
 	switch name {
 	case "id":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.serviceprincipal\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.serviceprincipal\" resource")
 	}
 }
 
-// MsgraphBetaSecurity resource interface
-type MsgraphBetaSecurity interface {
+// MsgraphSecurity resource interface
+type MsgraphSecurity interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
 	SecureScores() ([]interface{}, error)
-	LatestSecureScores() (MsgraphBetaSecuritySecurityscore, error)
+	LatestSecureScores() (MsgraphSecuritySecurityscore, error)
 }
 
-// mqlMsgraphBetaSecurity for the msgraph.beta.security resource
-type mqlMsgraphBetaSecurity struct {
+// mqlMsgraphSecurity for the msgraph.security resource
+type mqlMsgraphSecurity struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaSecurity) MqlResource() *resources.Resource {
+func (s *mqlMsgraphSecurity) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.security resource
-func newMsgraphBetaSecurity(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.security resource
+func newMsgraphSecurity(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaSecurity{runtime.NewResource("msgraph.beta.security")}
+	res := mqlMsgraphSecurity{runtime.NewResource("msgraph.security")}
 	// assign all named fields
 	var id string
 
@@ -3038,20 +2960,20 @@ func newMsgraphBetaSecurity(runtime *resources.Runtime, args *resources.Args) (i
 		switch name {
 		case "secureScores":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security\", its \"secureScores\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security\", its \"secureScores\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "latestSecureScores":
-			if _, ok := val.(MsgraphBetaSecuritySecurityscore); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security\", its \"latestSecureScores\" argument has the wrong type (expected type \"MsgraphBetaSecuritySecurityscore\")")
+			if _, ok := val.(MsgraphSecuritySecurityscore); !ok {
+				return nil, errors.New("Failed to initialize \"msgraph.security\", its \"latestSecureScores\" argument has the wrong type (expected type \"MsgraphSecuritySecurityscore\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.security with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.security with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -3069,7 +2991,7 @@ func newMsgraphBetaSecurity(runtime *resources.Runtime, args *resources.Args) (i
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaSecurity) Validate() error {
+func (s *mqlMsgraphSecurity) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -3077,33 +2999,33 @@ func (s *mqlMsgraphBetaSecurity) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaSecurity) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.security].Register")
+func (s *mqlMsgraphSecurity) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.security].Register")
 	switch name {
 	case "secureScores":
 		return nil
 	case "latestSecureScores":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.security\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.security\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaSecurity) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.security].Field")
+func (s *mqlMsgraphSecurity) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.security].Field")
 	switch name {
 	case "secureScores":
 		return s.SecureScores()
 	case "latestSecureScores":
 		return s.LatestSecureScores()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.security\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.security\" resource")
 	}
 }
 
 // SecureScores accessor autogenerated
-func (s *mqlMsgraphBetaSecurity) SecureScores() ([]interface{}, error) {
+func (s *mqlMsgraphSecurity) SecureScores() ([]interface{}, error) {
 	res, ok := s.Cache.Load("secureScores")
 	if !ok || !res.Valid {
 		if err := s.ComputeSecureScores(); err != nil {
@@ -3111,7 +3033,7 @@ func (s *mqlMsgraphBetaSecurity) SecureScores() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("secureScores")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.security\" calculated \"secureScores\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.security\" calculated \"secureScores\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "secureScores")
 	}
@@ -3120,13 +3042,13 @@ func (s *mqlMsgraphBetaSecurity) SecureScores() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.security\" failed to cast field \"secureScores\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.security\" failed to cast field \"secureScores\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // LatestSecureScores accessor autogenerated
-func (s *mqlMsgraphBetaSecurity) LatestSecureScores() (MsgraphBetaSecuritySecurityscore, error) {
+func (s *mqlMsgraphSecurity) LatestSecureScores() (MsgraphSecuritySecurityscore, error) {
 	res, ok := s.Cache.Load("latestSecureScores")
 	if !ok || !res.Valid {
 		if err := s.ComputeLatestSecureScores(); err != nil {
@@ -3134,35 +3056,35 @@ func (s *mqlMsgraphBetaSecurity) LatestSecureScores() (MsgraphBetaSecuritySecuri
 		}
 		res, ok = s.Cache.Load("latestSecureScores")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.security\" calculated \"latestSecureScores\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.security\" calculated \"latestSecureScores\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "latestSecureScores")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(MsgraphBetaSecuritySecurityscore)
+	tres, ok := res.Data.(MsgraphSecuritySecurityscore)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.security\" failed to cast field \"latestSecureScores\" to the right type (MsgraphBetaSecuritySecurityscore): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.security\" failed to cast field \"latestSecureScores\" to the right type (MsgraphSecuritySecurityscore): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaSecurity) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.security].Compute")
+func (s *mqlMsgraphSecurity) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.security].Compute")
 	switch name {
 	case "secureScores":
 		return s.ComputeSecureScores()
 	case "latestSecureScores":
 		return s.ComputeLatestSecureScores()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.security\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.security\" resource")
 	}
 }
 
 // ComputeSecureScores computer autogenerated
-func (s *mqlMsgraphBetaSecurity) ComputeSecureScores() error {
+func (s *mqlMsgraphSecurity) ComputeSecureScores() error {
 	var err error
 	if _, ok := s.Cache.Load("secureScores"); ok {
 		return nil
@@ -3176,7 +3098,7 @@ func (s *mqlMsgraphBetaSecurity) ComputeSecureScores() error {
 }
 
 // ComputeLatestSecureScores computer autogenerated
-func (s *mqlMsgraphBetaSecurity) ComputeLatestSecureScores() error {
+func (s *mqlMsgraphSecurity) ComputeLatestSecureScores() error {
 	var err error
 	if _, ok := s.Cache.Load("latestSecureScores"); ok {
 		return nil
@@ -3189,8 +3111,8 @@ func (s *mqlMsgraphBetaSecurity) ComputeLatestSecureScores() error {
 	return nil
 }
 
-// MsgraphBetaSecuritySecurityscore resource interface
-type MsgraphBetaSecuritySecurityscore interface {
+// MsgraphSecuritySecurityscore resource interface
+type MsgraphSecuritySecurityscore interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -3209,21 +3131,21 @@ type MsgraphBetaSecuritySecurityscore interface {
 	VendorInformation() (interface{}, error)
 }
 
-// mqlMsgraphBetaSecuritySecurityscore for the msgraph.beta.security.securityscore resource
-type mqlMsgraphBetaSecuritySecurityscore struct {
+// mqlMsgraphSecuritySecurityscore for the msgraph.security.securityscore resource
+type mqlMsgraphSecuritySecurityscore struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaSecuritySecurityscore) MqlResource() *resources.Resource {
+func (s *mqlMsgraphSecuritySecurityscore) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.security.securityscore resource
-func newMsgraphBetaSecuritySecurityscore(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.security.securityscore resource
+func newMsgraphSecuritySecurityscore(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaSecuritySecurityscore{runtime.NewResource("msgraph.beta.security.securityscore")}
+	res := mqlMsgraphSecuritySecurityscore{runtime.NewResource("msgraph.security.securityscore")}
 	// assign all named fields
 	var id string
 
@@ -3237,56 +3159,56 @@ func newMsgraphBetaSecuritySecurityscore(runtime *resources.Runtime, args *resou
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "activeUserCount":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"activeUserCount\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"activeUserCount\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "averageComparativeScores":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"averageComparativeScores\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"averageComparativeScores\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "azureTenantId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"azureTenantId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"azureTenantId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "controlScores":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"controlScores\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"controlScores\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "createdDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "currentScore":
 			if _, ok := val.(float64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"currentScore\" argument has the wrong type (expected type \"float64\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"currentScore\" argument has the wrong type (expected type \"float64\")")
 			}
 		case "enabledServices":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"enabledServices\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"enabledServices\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "licensedUserCount":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"licensedUserCount\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"licensedUserCount\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "maxScore":
 			if _, ok := val.(float64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"maxScore\" argument has the wrong type (expected type \"float64\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"maxScore\" argument has the wrong type (expected type \"float64\")")
 			}
 		case "vendorInformation":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"vendorInformation\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"vendorInformation\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.security.securityscore\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.security.securityscore\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.security.securityscore with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.security.securityscore with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -3304,48 +3226,48 @@ func newMsgraphBetaSecuritySecurityscore(runtime *resources.Runtime, args *resou
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaSecuritySecurityscore) Validate() error {
+func (s *mqlMsgraphSecuritySecurityscore) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("activeUserCount"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"activeUserCount\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"activeUserCount\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("averageComparativeScores"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"averageComparativeScores\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"averageComparativeScores\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("azureTenantId"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"azureTenantId\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"azureTenantId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("controlScores"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"controlScores\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"controlScores\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createdDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"createdDateTime\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"createdDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("currentScore"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"currentScore\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"currentScore\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabledServices"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"enabledServices\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"enabledServices\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("licensedUserCount"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"licensedUserCount\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"licensedUserCount\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("maxScore"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"maxScore\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"maxScore\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("vendorInformation"); !ok {
-		return errors.New("Initialized \"msgraph.beta.security.securityscore\" resource without a \"vendorInformation\". This field is required.")
+		return errors.New("Initialized \"msgraph.security.securityscore\" resource without a \"vendorInformation\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.security.securityscore].Register")
+func (s *mqlMsgraphSecuritySecurityscore) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.security.securityscore].Register")
 	switch name {
 	case "id":
 		return nil
@@ -3370,13 +3292,13 @@ func (s *mqlMsgraphBetaSecuritySecurityscore) Register(name string) error {
 	case "vendorInformation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.security.securityscore\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.security.securityscore\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.security.securityscore].Field")
+func (s *mqlMsgraphSecuritySecurityscore) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.security.securityscore].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -3401,189 +3323,189 @@ func (s *mqlMsgraphBetaSecuritySecurityscore) Field(name string) (interface{}, e
 	case "vendorInformation":
 		return s.VendorInformation()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.security.securityscore\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.security.securityscore\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) Id() (string, error) {
+func (s *mqlMsgraphSecuritySecurityscore) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ActiveUserCount accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) ActiveUserCount() (int64, error) {
+func (s *mqlMsgraphSecuritySecurityscore) ActiveUserCount() (int64, error) {
 	res, ok := s.Cache.Load("activeUserCount")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"activeUserCount\"")
+		return 0, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"activeUserCount\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"activeUserCount\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"activeUserCount\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // AverageComparativeScores accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) AverageComparativeScores() ([]interface{}, error) {
+func (s *mqlMsgraphSecuritySecurityscore) AverageComparativeScores() ([]interface{}, error) {
 	res, ok := s.Cache.Load("averageComparativeScores")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"averageComparativeScores\"")
+		return nil, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"averageComparativeScores\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"averageComparativeScores\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"averageComparativeScores\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // AzureTenantId accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) AzureTenantId() (string, error) {
+func (s *mqlMsgraphSecuritySecurityscore) AzureTenantId() (string, error) {
 	res, ok := s.Cache.Load("azureTenantId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"azureTenantId\"")
+		return "", errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"azureTenantId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"azureTenantId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"azureTenantId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ControlScores accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) ControlScores() ([]interface{}, error) {
+func (s *mqlMsgraphSecuritySecurityscore) ControlScores() ([]interface{}, error) {
 	res, ok := s.Cache.Load("controlScores")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"controlScores\"")
+		return nil, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"controlScores\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"controlScores\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"controlScores\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreatedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) CreatedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphSecuritySecurityscore) CreatedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createdDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"createdDateTime\"")
+		return nil, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"createdDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // CurrentScore accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) CurrentScore() (float64, error) {
+func (s *mqlMsgraphSecuritySecurityscore) CurrentScore() (float64, error) {
 	res, ok := s.Cache.Load("currentScore")
 	if !ok || !res.Valid {
-		return 0.0, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"currentScore\"")
+		return 0.0, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"currentScore\"")
 	}
 	if res.Error != nil {
 		return 0.0, res.Error
 	}
 	tres, ok := res.Data.(float64)
 	if !ok {
-		return 0.0, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"currentScore\" to the right type (float64): %#v", res)
+		return 0.0, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"currentScore\" to the right type (float64): %#v", res)
 	}
 	return tres, nil
 }
 
 // EnabledServices accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) EnabledServices() ([]interface{}, error) {
+func (s *mqlMsgraphSecuritySecurityscore) EnabledServices() ([]interface{}, error) {
 	res, ok := s.Cache.Load("enabledServices")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"enabledServices\"")
+		return nil, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"enabledServices\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"enabledServices\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"enabledServices\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // LicensedUserCount accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) LicensedUserCount() (int64, error) {
+func (s *mqlMsgraphSecuritySecurityscore) LicensedUserCount() (int64, error) {
 	res, ok := s.Cache.Load("licensedUserCount")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"licensedUserCount\"")
+		return 0, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"licensedUserCount\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"licensedUserCount\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"licensedUserCount\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // MaxScore accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) MaxScore() (float64, error) {
+func (s *mqlMsgraphSecuritySecurityscore) MaxScore() (float64, error) {
 	res, ok := s.Cache.Load("maxScore")
 	if !ok || !res.Valid {
-		return 0.0, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"maxScore\"")
+		return 0.0, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"maxScore\"")
 	}
 	if res.Error != nil {
 		return 0.0, res.Error
 	}
 	tres, ok := res.Data.(float64)
 	if !ok {
-		return 0.0, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"maxScore\" to the right type (float64): %#v", res)
+		return 0.0, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"maxScore\" to the right type (float64): %#v", res)
 	}
 	return tres, nil
 }
 
 // VendorInformation accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) VendorInformation() (interface{}, error) {
+func (s *mqlMsgraphSecuritySecurityscore) VendorInformation() (interface{}, error) {
 	res, ok := s.Cache.Load("vendorInformation")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.security.securityscore\" failed: no value provided for static field \"vendorInformation\"")
+		return nil, errors.New("\"msgraph.security.securityscore\" failed: no value provided for static field \"vendorInformation\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.security.securityscore\" failed to cast field \"vendorInformation\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.security.securityscore\" failed to cast field \"vendorInformation\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaSecuritySecurityscore) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.security.securityscore].Compute")
+func (s *mqlMsgraphSecuritySecurityscore) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.security.securityscore].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -3608,12 +3530,12 @@ func (s *mqlMsgraphBetaSecuritySecurityscore) Compute(name string) error {
 	case "vendorInformation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.security.securityscore\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.security.securityscore\" resource")
 	}
 }
 
-// MsgraphBetaPolicies resource interface
-type MsgraphBetaPolicies interface {
+// MsgraphPolicies resource interface
+type MsgraphPolicies interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -3625,21 +3547,21 @@ type MsgraphBetaPolicies interface {
 	PermissionGrantPolicies() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaPolicies for the msgraph.beta.policies resource
-type mqlMsgraphBetaPolicies struct {
+// mqlMsgraphPolicies for the msgraph.policies resource
+type mqlMsgraphPolicies struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaPolicies) MqlResource() *resources.Resource {
+func (s *mqlMsgraphPolicies) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.policies resource
-func newMsgraphBetaPolicies(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.policies resource
+func newMsgraphPolicies(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaPolicies{runtime.NewResource("msgraph.beta.policies")}
+	res := mqlMsgraphPolicies{runtime.NewResource("msgraph.policies")}
 	// assign all named fields
 	var id string
 
@@ -3653,28 +3575,28 @@ func newMsgraphBetaPolicies(runtime *resources.Runtime, args *resources.Args) (i
 		switch name {
 		case "authorizationPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.policies\", its \"authorizationPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.policies\", its \"authorizationPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "identitySecurityDefaultsEnforcementPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.policies\", its \"identitySecurityDefaultsEnforcementPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.policies\", its \"identitySecurityDefaultsEnforcementPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "adminConsentRequestPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.policies\", its \"adminConsentRequestPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.policies\", its \"adminConsentRequestPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "permissionGrantPolicies":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.policies\", its \"permissionGrantPolicies\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.policies\", its \"permissionGrantPolicies\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.policies\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.policies\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.policies with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.policies with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -3692,7 +3614,7 @@ func newMsgraphBetaPolicies(runtime *resources.Runtime, args *resources.Args) (i
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaPolicies) Validate() error {
+func (s *mqlMsgraphPolicies) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -3700,8 +3622,8 @@ func (s *mqlMsgraphBetaPolicies) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaPolicies) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.policies].Register")
+func (s *mqlMsgraphPolicies) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.policies].Register")
 	switch name {
 	case "authorizationPolicy":
 		return nil
@@ -3712,13 +3634,13 @@ func (s *mqlMsgraphBetaPolicies) Register(name string) error {
 	case "permissionGrantPolicies":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.policies\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.policies\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaPolicies) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.policies].Field")
+func (s *mqlMsgraphPolicies) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.policies].Field")
 	switch name {
 	case "authorizationPolicy":
 		return s.AuthorizationPolicy()
@@ -3729,12 +3651,12 @@ func (s *mqlMsgraphBetaPolicies) Field(name string) (interface{}, error) {
 	case "permissionGrantPolicies":
 		return s.PermissionGrantPolicies()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.policies\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.policies\" resource")
 	}
 }
 
 // AuthorizationPolicy accessor autogenerated
-func (s *mqlMsgraphBetaPolicies) AuthorizationPolicy() (interface{}, error) {
+func (s *mqlMsgraphPolicies) AuthorizationPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("authorizationPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeAuthorizationPolicy(); err != nil {
@@ -3742,7 +3664,7 @@ func (s *mqlMsgraphBetaPolicies) AuthorizationPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("authorizationPolicy")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"authorizationPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.policies\" calculated \"authorizationPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "authorizationPolicy")
 	}
@@ -3751,13 +3673,13 @@ func (s *mqlMsgraphBetaPolicies) AuthorizationPolicy() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.policies\" failed to cast field \"authorizationPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.policies\" failed to cast field \"authorizationPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // IdentitySecurityDefaultsEnforcementPolicy accessor autogenerated
-func (s *mqlMsgraphBetaPolicies) IdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
+func (s *mqlMsgraphPolicies) IdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("identitySecurityDefaultsEnforcementPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeIdentitySecurityDefaultsEnforcementPolicy(); err != nil {
@@ -3765,7 +3687,7 @@ func (s *mqlMsgraphBetaPolicies) IdentitySecurityDefaultsEnforcementPolicy() (in
 		}
 		res, ok = s.Cache.Load("identitySecurityDefaultsEnforcementPolicy")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"identitySecurityDefaultsEnforcementPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.policies\" calculated \"identitySecurityDefaultsEnforcementPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "identitySecurityDefaultsEnforcementPolicy")
 	}
@@ -3774,13 +3696,13 @@ func (s *mqlMsgraphBetaPolicies) IdentitySecurityDefaultsEnforcementPolicy() (in
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.policies\" failed to cast field \"identitySecurityDefaultsEnforcementPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.policies\" failed to cast field \"identitySecurityDefaultsEnforcementPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // AdminConsentRequestPolicy accessor autogenerated
-func (s *mqlMsgraphBetaPolicies) AdminConsentRequestPolicy() (interface{}, error) {
+func (s *mqlMsgraphPolicies) AdminConsentRequestPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("adminConsentRequestPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeAdminConsentRequestPolicy(); err != nil {
@@ -3788,7 +3710,7 @@ func (s *mqlMsgraphBetaPolicies) AdminConsentRequestPolicy() (interface{}, error
 		}
 		res, ok = s.Cache.Load("adminConsentRequestPolicy")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"adminConsentRequestPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.policies\" calculated \"adminConsentRequestPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "adminConsentRequestPolicy")
 	}
@@ -3797,13 +3719,13 @@ func (s *mqlMsgraphBetaPolicies) AdminConsentRequestPolicy() (interface{}, error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.policies\" failed to cast field \"adminConsentRequestPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.policies\" failed to cast field \"adminConsentRequestPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // PermissionGrantPolicies accessor autogenerated
-func (s *mqlMsgraphBetaPolicies) PermissionGrantPolicies() ([]interface{}, error) {
+func (s *mqlMsgraphPolicies) PermissionGrantPolicies() ([]interface{}, error) {
 	res, ok := s.Cache.Load("permissionGrantPolicies")
 	if !ok || !res.Valid {
 		if err := s.ComputePermissionGrantPolicies(); err != nil {
@@ -3811,7 +3733,7 @@ func (s *mqlMsgraphBetaPolicies) PermissionGrantPolicies() ([]interface{}, error
 		}
 		res, ok = s.Cache.Load("permissionGrantPolicies")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.policies\" calculated \"permissionGrantPolicies\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.policies\" calculated \"permissionGrantPolicies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "permissionGrantPolicies")
 	}
@@ -3820,14 +3742,14 @@ func (s *mqlMsgraphBetaPolicies) PermissionGrantPolicies() ([]interface{}, error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.policies\" failed to cast field \"permissionGrantPolicies\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.policies\" failed to cast field \"permissionGrantPolicies\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaPolicies) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.policies].Compute")
+func (s *mqlMsgraphPolicies) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.policies].Compute")
 	switch name {
 	case "authorizationPolicy":
 		return s.ComputeAuthorizationPolicy()
@@ -3838,12 +3760,12 @@ func (s *mqlMsgraphBetaPolicies) Compute(name string) error {
 	case "permissionGrantPolicies":
 		return s.ComputePermissionGrantPolicies()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.policies\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.policies\" resource")
 	}
 }
 
 // ComputeAuthorizationPolicy computer autogenerated
-func (s *mqlMsgraphBetaPolicies) ComputeAuthorizationPolicy() error {
+func (s *mqlMsgraphPolicies) ComputeAuthorizationPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("authorizationPolicy"); ok {
 		return nil
@@ -3857,7 +3779,7 @@ func (s *mqlMsgraphBetaPolicies) ComputeAuthorizationPolicy() error {
 }
 
 // ComputeIdentitySecurityDefaultsEnforcementPolicy computer autogenerated
-func (s *mqlMsgraphBetaPolicies) ComputeIdentitySecurityDefaultsEnforcementPolicy() error {
+func (s *mqlMsgraphPolicies) ComputeIdentitySecurityDefaultsEnforcementPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("identitySecurityDefaultsEnforcementPolicy"); ok {
 		return nil
@@ -3871,7 +3793,7 @@ func (s *mqlMsgraphBetaPolicies) ComputeIdentitySecurityDefaultsEnforcementPolic
 }
 
 // ComputeAdminConsentRequestPolicy computer autogenerated
-func (s *mqlMsgraphBetaPolicies) ComputeAdminConsentRequestPolicy() error {
+func (s *mqlMsgraphPolicies) ComputeAdminConsentRequestPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("adminConsentRequestPolicy"); ok {
 		return nil
@@ -3885,7 +3807,7 @@ func (s *mqlMsgraphBetaPolicies) ComputeAdminConsentRequestPolicy() error {
 }
 
 // ComputePermissionGrantPolicies computer autogenerated
-func (s *mqlMsgraphBetaPolicies) ComputePermissionGrantPolicies() error {
+func (s *mqlMsgraphPolicies) ComputePermissionGrantPolicies() error {
 	var err error
 	if _, ok := s.Cache.Load("permissionGrantPolicies"); ok {
 		return nil
@@ -3898,8 +3820,8 @@ func (s *mqlMsgraphBetaPolicies) ComputePermissionGrantPolicies() error {
 	return nil
 }
 
-// MsgraphBetaRolemanagement resource interface
-type MsgraphBetaRolemanagement interface {
+// MsgraphRolemanagement resource interface
+type MsgraphRolemanagement interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -3908,21 +3830,21 @@ type MsgraphBetaRolemanagement interface {
 	RoleDefinitions() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaRolemanagement for the msgraph.beta.rolemanagement resource
-type mqlMsgraphBetaRolemanagement struct {
+// mqlMsgraphRolemanagement for the msgraph.rolemanagement resource
+type mqlMsgraphRolemanagement struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaRolemanagement) MqlResource() *resources.Resource {
+func (s *mqlMsgraphRolemanagement) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.rolemanagement resource
-func newMsgraphBetaRolemanagement(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.rolemanagement resource
+func newMsgraphRolemanagement(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaRolemanagement{runtime.NewResource("msgraph.beta.rolemanagement")}
+	res := mqlMsgraphRolemanagement{runtime.NewResource("msgraph.rolemanagement")}
 	// assign all named fields
 	var id string
 
@@ -3936,16 +3858,16 @@ func newMsgraphBetaRolemanagement(runtime *resources.Runtime, args *resources.Ar
 		switch name {
 		case "roleDefinitions":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement\", its \"roleDefinitions\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement\", its \"roleDefinitions\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.rolemanagement with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.rolemanagement with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -3963,7 +3885,7 @@ func newMsgraphBetaRolemanagement(runtime *resources.Runtime, args *resources.Ar
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaRolemanagement) Validate() error {
+func (s *mqlMsgraphRolemanagement) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -3971,29 +3893,29 @@ func (s *mqlMsgraphBetaRolemanagement) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagement) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement].Register")
+func (s *mqlMsgraphRolemanagement) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement].Register")
 	switch name {
 	case "roleDefinitions":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.rolemanagement\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagement) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement].Field")
+func (s *mqlMsgraphRolemanagement) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement].Field")
 	switch name {
 	case "roleDefinitions":
 		return s.RoleDefinitions()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.rolemanagement\" resource")
 	}
 }
 
 // RoleDefinitions accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagement) RoleDefinitions() ([]interface{}, error) {
+func (s *mqlMsgraphRolemanagement) RoleDefinitions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("roleDefinitions")
 	if !ok || !res.Valid {
 		if err := s.ComputeRoleDefinitions(); err != nil {
@@ -4001,7 +3923,7 @@ func (s *mqlMsgraphBetaRolemanagement) RoleDefinitions() ([]interface{}, error) 
 		}
 		res, ok = s.Cache.Load("roleDefinitions")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.rolemanagement\" calculated \"roleDefinitions\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.rolemanagement\" calculated \"roleDefinitions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "roleDefinitions")
 	}
@@ -4010,24 +3932,24 @@ func (s *mqlMsgraphBetaRolemanagement) RoleDefinitions() ([]interface{}, error) 
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.rolemanagement\" failed to cast field \"roleDefinitions\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.rolemanagement\" failed to cast field \"roleDefinitions\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagement) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement].Compute")
+func (s *mqlMsgraphRolemanagement) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement].Compute")
 	switch name {
 	case "roleDefinitions":
 		return s.ComputeRoleDefinitions()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.rolemanagement\" resource")
 	}
 }
 
 // ComputeRoleDefinitions computer autogenerated
-func (s *mqlMsgraphBetaRolemanagement) ComputeRoleDefinitions() error {
+func (s *mqlMsgraphRolemanagement) ComputeRoleDefinitions() error {
 	var err error
 	if _, ok := s.Cache.Load("roleDefinitions"); ok {
 		return nil
@@ -4040,8 +3962,8 @@ func (s *mqlMsgraphBetaRolemanagement) ComputeRoleDefinitions() error {
 	return nil
 }
 
-// MsgraphBetaRolemanagementRoledefinition resource interface
-type MsgraphBetaRolemanagementRoledefinition interface {
+// MsgraphRolemanagementRoledefinition resource interface
+type MsgraphRolemanagementRoledefinition interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4058,21 +3980,21 @@ type MsgraphBetaRolemanagementRoledefinition interface {
 	Assignments() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaRolemanagementRoledefinition for the msgraph.beta.rolemanagement.roledefinition resource
-type mqlMsgraphBetaRolemanagementRoledefinition struct {
+// mqlMsgraphRolemanagementRoledefinition for the msgraph.rolemanagement.roledefinition resource
+type mqlMsgraphRolemanagementRoledefinition struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) MqlResource() *resources.Resource {
+func (s *mqlMsgraphRolemanagementRoledefinition) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.rolemanagement.roledefinition resource
-func newMsgraphBetaRolemanagementRoledefinition(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.rolemanagement.roledefinition resource
+func newMsgraphRolemanagementRoledefinition(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaRolemanagementRoledefinition{runtime.NewResource("msgraph.beta.rolemanagement.roledefinition")}
+	res := mqlMsgraphRolemanagementRoledefinition{runtime.NewResource("msgraph.rolemanagement.roledefinition")}
 	// assign all named fields
 	var id string
 
@@ -4086,48 +4008,48 @@ func newMsgraphBetaRolemanagementRoledefinition(runtime *resources.Runtime, args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "description":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"description\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "isBuiltIn":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"isBuiltIn\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"isBuiltIn\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "isEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"isEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"isEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "rolePermissions":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"rolePermissions\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"rolePermissions\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "templateId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"templateId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"templateId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "version":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"version\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"version\" argument has the wrong type (expected type \"string\")")
 			}
 		case "assignments":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"assignments\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"assignments\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roledefinition\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roledefinition\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.rolemanagement.roledefinition with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.rolemanagement.roledefinition with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4145,39 +4067,39 @@ func newMsgraphBetaRolemanagementRoledefinition(runtime *resources.Runtime, args
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Validate() error {
+func (s *mqlMsgraphRolemanagementRoledefinition) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("description"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"description\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"description\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isBuiltIn"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"isBuiltIn\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"isBuiltIn\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("isEnabled"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"isEnabled\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"isEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("rolePermissions"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"rolePermissions\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"rolePermissions\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("templateId"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"templateId\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"templateId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("version"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roledefinition\" resource without a \"version\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roledefinition\" resource without a \"version\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement.roledefinition].Register")
+func (s *mqlMsgraphRolemanagementRoledefinition) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement.roledefinition].Register")
 	switch name {
 	case "id":
 		return nil
@@ -4198,13 +4120,13 @@ func (s *mqlMsgraphBetaRolemanagementRoledefinition) Register(name string) error
 	case "assignments":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement.roledefinition\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.rolemanagement.roledefinition\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement.roledefinition].Field")
+func (s *mqlMsgraphRolemanagementRoledefinition) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement.roledefinition].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -4225,140 +4147,140 @@ func (s *mqlMsgraphBetaRolemanagementRoledefinition) Field(name string) (interfa
 	case "assignments":
 		return s.Assignments()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement.roledefinition\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.rolemanagement.roledefinition\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Id() (string, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Description accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Description() (string, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) Description() (string, error) {
 	res, ok := s.Cache.Load("description")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"description\"")
+		return "", errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"description\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"description\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"description\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) DisplayName() (string, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsBuiltIn accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) IsBuiltIn() (bool, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) IsBuiltIn() (bool, error) {
 	res, ok := s.Cache.Load("isBuiltIn")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"isBuiltIn\"")
+		return false, errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"isBuiltIn\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"isBuiltIn\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"isBuiltIn\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // IsEnabled accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) IsEnabled() (bool, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) IsEnabled() (bool, error) {
 	res, ok := s.Cache.Load("isEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"isEnabled\"")
+		return false, errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"isEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"isEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"isEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // RolePermissions accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) RolePermissions() ([]interface{}, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) RolePermissions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("rolePermissions")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"rolePermissions\"")
+		return nil, errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"rolePermissions\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"rolePermissions\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"rolePermissions\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // TemplateId accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) TemplateId() (string, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) TemplateId() (string, error) {
 	res, ok := s.Cache.Load("templateId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"templateId\"")
+		return "", errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"templateId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"templateId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"templateId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Version accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Version() (string, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) Version() (string, error) {
 	res, ok := s.Cache.Load("version")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roledefinition\" failed: no value provided for static field \"version\"")
+		return "", errors.New("\"msgraph.rolemanagement.roledefinition\" failed: no value provided for static field \"version\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"version\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"version\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Assignments accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Assignments() ([]interface{}, error) {
+func (s *mqlMsgraphRolemanagementRoledefinition) Assignments() ([]interface{}, error) {
 	res, ok := s.Cache.Load("assignments")
 	if !ok || !res.Valid {
 		if err := s.ComputeAssignments(); err != nil {
@@ -4366,7 +4288,7 @@ func (s *mqlMsgraphBetaRolemanagementRoledefinition) Assignments() ([]interface{
 		}
 		res, ok = s.Cache.Load("assignments")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.rolemanagement.roledefinition\" calculated \"assignments\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.rolemanagement.roledefinition\" calculated \"assignments\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "assignments")
 	}
@@ -4375,14 +4297,14 @@ func (s *mqlMsgraphBetaRolemanagementRoledefinition) Assignments() ([]interface{
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.rolemanagement.roledefinition\" failed to cast field \"assignments\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.rolemanagement.roledefinition\" failed to cast field \"assignments\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement.roledefinition].Compute")
+func (s *mqlMsgraphRolemanagementRoledefinition) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement.roledefinition].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -4403,12 +4325,12 @@ func (s *mqlMsgraphBetaRolemanagementRoledefinition) Compute(name string) error 
 	case "assignments":
 		return s.ComputeAssignments()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement.roledefinition\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.rolemanagement.roledefinition\" resource")
 	}
 }
 
 // ComputeAssignments computer autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoledefinition) ComputeAssignments() error {
+func (s *mqlMsgraphRolemanagementRoledefinition) ComputeAssignments() error {
 	var err error
 	if _, ok := s.Cache.Load("assignments"); ok {
 		return nil
@@ -4421,8 +4343,8 @@ func (s *mqlMsgraphBetaRolemanagementRoledefinition) ComputeAssignments() error 
 	return nil
 }
 
-// MsgraphBetaRolemanagementRoleassignment resource interface
-type MsgraphBetaRolemanagementRoleassignment interface {
+// MsgraphRolemanagementRoleassignment resource interface
+type MsgraphRolemanagementRoleassignment interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4434,21 +4356,21 @@ type MsgraphBetaRolemanagementRoleassignment interface {
 	Principal() (interface{}, error)
 }
 
-// mqlMsgraphBetaRolemanagementRoleassignment for the msgraph.beta.rolemanagement.roleassignment resource
-type mqlMsgraphBetaRolemanagementRoleassignment struct {
+// mqlMsgraphRolemanagementRoleassignment for the msgraph.rolemanagement.roleassignment resource
+type mqlMsgraphRolemanagementRoleassignment struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) MqlResource() *resources.Resource {
+func (s *mqlMsgraphRolemanagementRoleassignment) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.rolemanagement.roleassignment resource
-func newMsgraphBetaRolemanagementRoleassignment(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.rolemanagement.roleassignment resource
+func newMsgraphRolemanagementRoleassignment(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaRolemanagementRoleassignment{runtime.NewResource("msgraph.beta.rolemanagement.roleassignment")}
+	res := mqlMsgraphRolemanagementRoleassignment{runtime.NewResource("msgraph.rolemanagement.roleassignment")}
 	// assign all named fields
 	var id string
 
@@ -4462,28 +4384,28 @@ func newMsgraphBetaRolemanagementRoleassignment(runtime *resources.Runtime, args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roleassignment\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roleassignment\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "roleDefinitionId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roleassignment\", its \"roleDefinitionId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roleassignment\", its \"roleDefinitionId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "principalId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roleassignment\", its \"principalId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roleassignment\", its \"principalId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "principal":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roleassignment\", its \"principal\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roleassignment\", its \"principal\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.rolemanagement.roleassignment\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.rolemanagement.roleassignment\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.rolemanagement.roleassignment with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.rolemanagement.roleassignment with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4501,27 +4423,27 @@ func newMsgraphBetaRolemanagementRoleassignment(runtime *resources.Runtime, args
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) Validate() error {
+func (s *mqlMsgraphRolemanagementRoleassignment) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roleassignment\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roleassignment\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("roleDefinitionId"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roleassignment\" resource without a \"roleDefinitionId\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roleassignment\" resource without a \"roleDefinitionId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("principalId"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roleassignment\" resource without a \"principalId\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roleassignment\" resource without a \"principalId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("principal"); !ok {
-		return errors.New("Initialized \"msgraph.beta.rolemanagement.roleassignment\" resource without a \"principal\". This field is required.")
+		return errors.New("Initialized \"msgraph.rolemanagement.roleassignment\" resource without a \"principal\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement.roleassignment].Register")
+func (s *mqlMsgraphRolemanagementRoleassignment) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement.roleassignment].Register")
 	switch name {
 	case "id":
 		return nil
@@ -4532,13 +4454,13 @@ func (s *mqlMsgraphBetaRolemanagementRoleassignment) Register(name string) error
 	case "principal":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement.roleassignment\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.rolemanagement.roleassignment\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement.roleassignment].Field")
+func (s *mqlMsgraphRolemanagementRoleassignment) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement.roleassignment].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -4549,77 +4471,77 @@ func (s *mqlMsgraphBetaRolemanagementRoleassignment) Field(name string) (interfa
 	case "principal":
 		return s.Principal()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement.roleassignment\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.rolemanagement.roleassignment\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) Id() (string, error) {
+func (s *mqlMsgraphRolemanagementRoleassignment) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roleassignment\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.rolemanagement.roleassignment\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roleassignment\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roleassignment\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // RoleDefinitionId accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) RoleDefinitionId() (string, error) {
+func (s *mqlMsgraphRolemanagementRoleassignment) RoleDefinitionId() (string, error) {
 	res, ok := s.Cache.Load("roleDefinitionId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roleassignment\" failed: no value provided for static field \"roleDefinitionId\"")
+		return "", errors.New("\"msgraph.rolemanagement.roleassignment\" failed: no value provided for static field \"roleDefinitionId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roleassignment\" failed to cast field \"roleDefinitionId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roleassignment\" failed to cast field \"roleDefinitionId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PrincipalId accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) PrincipalId() (string, error) {
+func (s *mqlMsgraphRolemanagementRoleassignment) PrincipalId() (string, error) {
 	res, ok := s.Cache.Load("principalId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.rolemanagement.roleassignment\" failed: no value provided for static field \"principalId\"")
+		return "", errors.New("\"msgraph.rolemanagement.roleassignment\" failed: no value provided for static field \"principalId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.rolemanagement.roleassignment\" failed to cast field \"principalId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.rolemanagement.roleassignment\" failed to cast field \"principalId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Principal accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) Principal() (interface{}, error) {
+func (s *mqlMsgraphRolemanagementRoleassignment) Principal() (interface{}, error) {
 	res, ok := s.Cache.Load("principal")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.rolemanagement.roleassignment\" failed: no value provided for static field \"principal\"")
+		return nil, errors.New("\"msgraph.rolemanagement.roleassignment\" failed: no value provided for static field \"principal\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.rolemanagement.roleassignment\" failed to cast field \"principal\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.rolemanagement.roleassignment\" failed to cast field \"principal\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaRolemanagementRoleassignment) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.rolemanagement.roleassignment].Compute")
+func (s *mqlMsgraphRolemanagementRoleassignment) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.rolemanagement.roleassignment].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -4630,12 +4552,12 @@ func (s *mqlMsgraphBetaRolemanagementRoleassignment) Compute(name string) error 
 	case "principal":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.rolemanagement.roleassignment\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.rolemanagement.roleassignment\" resource")
 	}
 }
 
-// MsgraphBetaDevicemanagement resource interface
-type MsgraphBetaDevicemanagement interface {
+// MsgraphDevicemanagement resource interface
+type MsgraphDevicemanagement interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4645,21 +4567,21 @@ type MsgraphBetaDevicemanagement interface {
 	DeviceCompliancePolicies() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaDevicemanagement for the msgraph.beta.devicemanagement resource
-type mqlMsgraphBetaDevicemanagement struct {
+// mqlMsgraphDevicemanagement for the msgraph.devicemanagement resource
+type mqlMsgraphDevicemanagement struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaDevicemanagement) MqlResource() *resources.Resource {
+func (s *mqlMsgraphDevicemanagement) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.devicemanagement resource
-func newMsgraphBetaDevicemanagement(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.devicemanagement resource
+func newMsgraphDevicemanagement(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaDevicemanagement{runtime.NewResource("msgraph.beta.devicemanagement")}
+	res := mqlMsgraphDevicemanagement{runtime.NewResource("msgraph.devicemanagement")}
 	// assign all named fields
 	var id string
 
@@ -4673,20 +4595,20 @@ func newMsgraphBetaDevicemanagement(runtime *resources.Runtime, args *resources.
 		switch name {
 		case "deviceConfigurations":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement\", its \"deviceConfigurations\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement\", its \"deviceConfigurations\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "deviceCompliancePolicies":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement\", its \"deviceCompliancePolicies\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement\", its \"deviceCompliancePolicies\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.devicemanagement with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.devicemanagement with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4704,7 +4626,7 @@ func newMsgraphBetaDevicemanagement(runtime *resources.Runtime, args *resources.
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaDevicemanagement) Validate() error {
+func (s *mqlMsgraphDevicemanagement) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -4712,33 +4634,33 @@ func (s *mqlMsgraphBetaDevicemanagement) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagement) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement].Register")
+func (s *mqlMsgraphDevicemanagement) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement].Register")
 	switch name {
 	case "deviceConfigurations":
 		return nil
 	case "deviceCompliancePolicies":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.devicemanagement\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagement) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement].Field")
+func (s *mqlMsgraphDevicemanagement) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement].Field")
 	switch name {
 	case "deviceConfigurations":
 		return s.DeviceConfigurations()
 	case "deviceCompliancePolicies":
 		return s.DeviceCompliancePolicies()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.devicemanagement\" resource")
 	}
 }
 
 // DeviceConfigurations accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagement) DeviceConfigurations() ([]interface{}, error) {
+func (s *mqlMsgraphDevicemanagement) DeviceConfigurations() ([]interface{}, error) {
 	res, ok := s.Cache.Load("deviceConfigurations")
 	if !ok || !res.Valid {
 		if err := s.ComputeDeviceConfigurations(); err != nil {
@@ -4746,7 +4668,7 @@ func (s *mqlMsgraphBetaDevicemanagement) DeviceConfigurations() ([]interface{}, 
 		}
 		res, ok = s.Cache.Load("deviceConfigurations")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.devicemanagement\" calculated \"deviceConfigurations\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.devicemanagement\" calculated \"deviceConfigurations\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "deviceConfigurations")
 	}
@@ -4755,13 +4677,13 @@ func (s *mqlMsgraphBetaDevicemanagement) DeviceConfigurations() ([]interface{}, 
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement\" failed to cast field \"deviceConfigurations\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.devicemanagement\" failed to cast field \"deviceConfigurations\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DeviceCompliancePolicies accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagement) DeviceCompliancePolicies() ([]interface{}, error) {
+func (s *mqlMsgraphDevicemanagement) DeviceCompliancePolicies() ([]interface{}, error) {
 	res, ok := s.Cache.Load("deviceCompliancePolicies")
 	if !ok || !res.Valid {
 		if err := s.ComputeDeviceCompliancePolicies(); err != nil {
@@ -4769,7 +4691,7 @@ func (s *mqlMsgraphBetaDevicemanagement) DeviceCompliancePolicies() ([]interface
 		}
 		res, ok = s.Cache.Load("deviceCompliancePolicies")
 		if !ok {
-			return nil, errors.New("\"msgraph.beta.devicemanagement\" calculated \"deviceCompliancePolicies\" but didn't find its value in cache.")
+			return nil, errors.New("\"msgraph.devicemanagement\" calculated \"deviceCompliancePolicies\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "deviceCompliancePolicies")
 	}
@@ -4778,26 +4700,26 @@ func (s *mqlMsgraphBetaDevicemanagement) DeviceCompliancePolicies() ([]interface
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement\" failed to cast field \"deviceCompliancePolicies\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.devicemanagement\" failed to cast field \"deviceCompliancePolicies\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagement) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement].Compute")
+func (s *mqlMsgraphDevicemanagement) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement].Compute")
 	switch name {
 	case "deviceConfigurations":
 		return s.ComputeDeviceConfigurations()
 	case "deviceCompliancePolicies":
 		return s.ComputeDeviceCompliancePolicies()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.devicemanagement\" resource")
 	}
 }
 
 // ComputeDeviceConfigurations computer autogenerated
-func (s *mqlMsgraphBetaDevicemanagement) ComputeDeviceConfigurations() error {
+func (s *mqlMsgraphDevicemanagement) ComputeDeviceConfigurations() error {
 	var err error
 	if _, ok := s.Cache.Load("deviceConfigurations"); ok {
 		return nil
@@ -4811,7 +4733,7 @@ func (s *mqlMsgraphBetaDevicemanagement) ComputeDeviceConfigurations() error {
 }
 
 // ComputeDeviceCompliancePolicies computer autogenerated
-func (s *mqlMsgraphBetaDevicemanagement) ComputeDeviceCompliancePolicies() error {
+func (s *mqlMsgraphDevicemanagement) ComputeDeviceCompliancePolicies() error {
 	var err error
 	if _, ok := s.Cache.Load("deviceCompliancePolicies"); ok {
 		return nil
@@ -4824,8 +4746,8 @@ func (s *mqlMsgraphBetaDevicemanagement) ComputeDeviceCompliancePolicies() error
 	return nil
 }
 
-// MsgraphBetaDevicemanagementDeviceconfiguration resource interface
-type MsgraphBetaDevicemanagementDeviceconfiguration interface {
+// MsgraphDevicemanagementDeviceconfiguration resource interface
+type MsgraphDevicemanagementDeviceconfiguration interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4833,30 +4755,27 @@ type MsgraphBetaDevicemanagementDeviceconfiguration interface {
 	Validate() error
 	Id() (string, error)
 	LastModifiedDateTime() (*time.Time, error)
-	RoleScopeTagIds() ([]interface{}, error)
-	SupportsScopeTags() (bool, error)
 	CreatedDateTime() (*time.Time, error)
 	Description() (string, error)
 	DisplayName() (string, error)
 	Version() (int64, error)
-	Properties() (interface{}, error)
 }
 
-// mqlMsgraphBetaDevicemanagementDeviceconfiguration for the msgraph.beta.devicemanagement.deviceconfiguration resource
-type mqlMsgraphBetaDevicemanagementDeviceconfiguration struct {
+// mqlMsgraphDevicemanagementDeviceconfiguration for the msgraph.devicemanagement.deviceconfiguration resource
+type mqlMsgraphDevicemanagementDeviceconfiguration struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) MqlResource() *resources.Resource {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.devicemanagement.deviceconfiguration resource
-func newMsgraphBetaDevicemanagementDeviceconfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.devicemanagement.deviceconfiguration resource
+func newMsgraphDevicemanagementDeviceconfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaDevicemanagementDeviceconfiguration{runtime.NewResource("msgraph.beta.devicemanagement.deviceconfiguration")}
+	res := mqlMsgraphDevicemanagementDeviceconfiguration{runtime.NewResource("msgraph.devicemanagement.deviceconfiguration")}
 	// assign all named fields
 	var id string
 
@@ -4870,48 +4789,36 @@ func newMsgraphBetaDevicemanagementDeviceconfiguration(runtime *resources.Runtim
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.deviceconfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "lastModifiedDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"lastModifiedDateTime\" argument has the wrong type (expected type \"*time.Time\")")
-			}
-		case "roleScopeTagIds":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"roleScopeTagIds\" argument has the wrong type (expected type \"[]interface{}\")")
-			}
-		case "supportsScopeTags":
-			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"supportsScopeTags\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.deviceconfiguration\", its \"lastModifiedDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "createdDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.deviceconfiguration\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "description":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"description\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.deviceconfiguration\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.deviceconfiguration\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "version":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"version\" argument has the wrong type (expected type \"int64\")")
-			}
-		case "properties":
-			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.deviceconfiguration\", its \"version\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.deviceconfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.deviceconfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.devicemanagement.deviceconfiguration with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.devicemanagement.deviceconfiguration with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4929,50 +4836,37 @@ func newMsgraphBetaDevicemanagementDeviceconfiguration(runtime *resources.Runtim
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Validate() error {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.deviceconfiguration\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("lastModifiedDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"lastModifiedDateTime\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("roleScopeTagIds"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"roleScopeTagIds\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("supportsScopeTags"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"supportsScopeTags\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.deviceconfiguration\" resource without a \"lastModifiedDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createdDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"createdDateTime\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.deviceconfiguration\" resource without a \"createdDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("description"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"description\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.deviceconfiguration\" resource without a \"description\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.deviceconfiguration\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("version"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"version\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.deviceconfiguration\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.deviceconfiguration\" resource without a \"version\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement.deviceconfiguration].Register")
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement.deviceconfiguration].Register")
 	switch name {
 	case "id":
 		return nil
 	case "lastModifiedDateTime":
-		return nil
-	case "roleScopeTagIds":
-		return nil
-	case "supportsScopeTags":
 		return nil
 	case "createdDateTime":
 		return nil
@@ -4982,25 +4876,19 @@ func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Register(name string
 		return nil
 	case "version":
 		return nil
-	case "properties":
-		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement.deviceconfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.devicemanagement.deviceconfiguration\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement.deviceconfiguration].Field")
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement.deviceconfiguration].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "lastModifiedDateTime":
 		return s.LastModifiedDateTime()
-	case "roleScopeTagIds":
-		return s.RoleScopeTagIds()
-	case "supportsScopeTags":
-		return s.SupportsScopeTags()
 	case "createdDateTime":
 		return s.CreatedDateTime()
 	case "description":
@@ -5009,168 +4897,114 @@ func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Field(name string) (
 		return s.DisplayName()
 	case "version":
 		return s.Version()
-	case "properties":
-		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement.deviceconfiguration\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.devicemanagement.deviceconfiguration\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Id() (string, error) {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.devicemanagement.deviceconfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // LastModifiedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) LastModifiedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) LastModifiedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("lastModifiedDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"lastModifiedDateTime\"")
+		return nil, errors.New("\"msgraph.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"lastModifiedDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"lastModifiedDateTime\" to the right type (*time.Time): %#v", res)
-	}
-	return tres, nil
-}
-
-// RoleScopeTagIds accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) RoleScopeTagIds() ([]interface{}, error) {
-	res, ok := s.Cache.Load("roleScopeTagIds")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"roleScopeTagIds\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"roleScopeTagIds\" to the right type ([]interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// SupportsScopeTags accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) SupportsScopeTags() (bool, error) {
-	res, ok := s.Cache.Load("supportsScopeTags")
-	if !ok || !res.Valid {
-		return false, errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"supportsScopeTags\"")
-	}
-	if res.Error != nil {
-		return false, res.Error
-	}
-	tres, ok := res.Data.(bool)
-	if !ok {
-		return false, fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"supportsScopeTags\" to the right type (bool): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.devicemanagement.deviceconfiguration\" failed to cast field \"lastModifiedDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreatedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) CreatedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) CreatedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createdDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"createdDateTime\"")
+		return nil, errors.New("\"msgraph.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"createdDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.devicemanagement.deviceconfiguration\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Description accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Description() (string, error) {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) Description() (string, error) {
 	res, ok := s.Cache.Load("description")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"description\"")
+		return "", errors.New("\"msgraph.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"description\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"description\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.devicemanagement.deviceconfiguration\" failed to cast field \"description\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) DisplayName() (string, error) {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"msgraph.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.devicemanagement.deviceconfiguration\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Version accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Version() (int64, error) {
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) Version() (int64, error) {
 	res, ok := s.Cache.Load("version")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"version\"")
+		return 0, errors.New("\"msgraph.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"version\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"version\" to the right type (int64): %#v", res)
-	}
-	return tres, nil
-}
-
-// Properties accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Properties() (interface{}, error) {
-	res, ok := s.Cache.Load("properties")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed: no value provided for static field \"properties\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.(interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.deviceconfiguration\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return 0, fmt.Errorf("\"msgraph.devicemanagement.deviceconfiguration\" failed to cast field \"version\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement.deviceconfiguration].Compute")
+func (s *mqlMsgraphDevicemanagementDeviceconfiguration) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement.deviceconfiguration].Compute")
 	switch name {
 	case "id":
 		return nil
 	case "lastModifiedDateTime":
-		return nil
-	case "roleScopeTagIds":
-		return nil
-	case "supportsScopeTags":
 		return nil
 	case "createdDateTime":
 		return nil
@@ -5180,15 +5014,13 @@ func (s *mqlMsgraphBetaDevicemanagementDeviceconfiguration) Compute(name string)
 		return nil
 	case "version":
 		return nil
-	case "properties":
-		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement.deviceconfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.devicemanagement.deviceconfiguration\" resource")
 	}
 }
 
-// MsgraphBetaDevicemanagementDevicecompliancepolicy resource interface
-type MsgraphBetaDevicemanagementDevicecompliancepolicy interface {
+// MsgraphDevicemanagementDevicecompliancepolicy resource interface
+type MsgraphDevicemanagementDevicecompliancepolicy interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -5199,27 +5031,25 @@ type MsgraphBetaDevicemanagementDevicecompliancepolicy interface {
 	Description() (string, error)
 	DisplayName() (string, error)
 	LastModifiedDateTime() (*time.Time, error)
-	RoleScopeTagIds() ([]interface{}, error)
 	Version() (int64, error)
-	Properties() (interface{}, error)
 	Assignments() ([]interface{}, error)
 }
 
-// mqlMsgraphBetaDevicemanagementDevicecompliancepolicy for the msgraph.beta.devicemanagement.devicecompliancepolicy resource
-type mqlMsgraphBetaDevicemanagementDevicecompliancepolicy struct {
+// mqlMsgraphDevicemanagementDevicecompliancepolicy for the msgraph.devicemanagement.devicecompliancepolicy resource
+type mqlMsgraphDevicemanagementDevicecompliancepolicy struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) MqlResource() *resources.Resource {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the msgraph.beta.devicemanagement.devicecompliancepolicy resource
-func newMsgraphBetaDevicemanagementDevicecompliancepolicy(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the msgraph.devicemanagement.devicecompliancepolicy resource
+func newMsgraphDevicemanagementDevicecompliancepolicy(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlMsgraphBetaDevicemanagementDevicecompliancepolicy{runtime.NewResource("msgraph.beta.devicemanagement.devicecompliancepolicy")}
+	res := mqlMsgraphDevicemanagementDevicecompliancepolicy{runtime.NewResource("msgraph.devicemanagement.devicecompliancepolicy")}
 	// assign all named fields
 	var id string
 
@@ -5233,48 +5063,40 @@ func newMsgraphBetaDevicemanagementDevicecompliancepolicy(runtime *resources.Run
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "createdDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"createdDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "description":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"description\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "lastModifiedDateTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"lastModifiedDateTime\" argument has the wrong type (expected type \"*time.Time\")")
-			}
-		case "roleScopeTagIds":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"roleScopeTagIds\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"lastModifiedDateTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "version":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"version\" argument has the wrong type (expected type \"int64\")")
-			}
-		case "properties":
-			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"version\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "assignments":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"assignments\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"assignments\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"msgraph.beta.devicemanagement.devicecompliancepolicy\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"msgraph.devicemanagement.devicecompliancepolicy\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized msgraph.beta.devicemanagement.devicecompliancepolicy with unknown argument " + name)
+			return nil, errors.New("Initialized msgraph.devicemanagement.devicecompliancepolicy with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -5292,42 +5114,36 @@ func newMsgraphBetaDevicemanagementDevicecompliancepolicy(runtime *resources.Run
 	return &res, nil
 }
 
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Validate() error {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.devicecompliancepolicy\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createdDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"createdDateTime\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.devicecompliancepolicy\" resource without a \"createdDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("description"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"description\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.devicecompliancepolicy\" resource without a \"description\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.devicecompliancepolicy\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("lastModifiedDateTime"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"lastModifiedDateTime\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("roleScopeTagIds"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"roleScopeTagIds\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.devicecompliancepolicy\" resource without a \"lastModifiedDateTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("version"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"version\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.devicecompliancepolicy\" resource without a \"version\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("assignments"); !ok {
-		return errors.New("Initialized \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource without a \"assignments\". This field is required.")
+		return errors.New("Initialized \"msgraph.devicemanagement.devicecompliancepolicy\" resource without a \"assignments\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement.devicecompliancepolicy].Register")
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement.devicecompliancepolicy].Register")
 	switch name {
 	case "id":
 		return nil
@@ -5339,22 +5155,18 @@ func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Register(name str
 		return nil
 	case "lastModifiedDateTime":
 		return nil
-	case "roleScopeTagIds":
-		return nil
 	case "version":
-		return nil
-	case "properties":
 		return nil
 	case "assignments":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.devicemanagement.devicecompliancepolicy\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement.devicecompliancepolicy].Field")
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement.devicecompliancepolicy].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -5366,166 +5178,130 @@ func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Field(name string
 		return s.DisplayName()
 	case "lastModifiedDateTime":
 		return s.LastModifiedDateTime()
-	case "roleScopeTagIds":
-		return s.RoleScopeTagIds()
 	case "version":
 		return s.Version()
-	case "properties":
-		return s.Properties()
 	case "assignments":
 		return s.Assignments()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"msgraph.devicemanagement.devicecompliancepolicy\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Id() (string, error) {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"msgraph.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.devicemanagement.devicecompliancepolicy\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreatedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) CreatedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) CreatedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createdDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"createdDateTime\"")
+		return nil, errors.New("\"msgraph.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"createdDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.devicemanagement.devicecompliancepolicy\" failed to cast field \"createdDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Description accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Description() (string, error) {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Description() (string, error) {
 	res, ok := s.Cache.Load("description")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"description\"")
+		return "", errors.New("\"msgraph.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"description\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"description\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.devicemanagement.devicecompliancepolicy\" failed to cast field \"description\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) DisplayName() (string, error) {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"msgraph.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"msgraph.devicemanagement.devicecompliancepolicy\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // LastModifiedDateTime accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) LastModifiedDateTime() (*time.Time, error) {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) LastModifiedDateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("lastModifiedDateTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"lastModifiedDateTime\"")
+		return nil, errors.New("\"msgraph.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"lastModifiedDateTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"lastModifiedDateTime\" to the right type (*time.Time): %#v", res)
-	}
-	return tres, nil
-}
-
-// RoleScopeTagIds accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) RoleScopeTagIds() ([]interface{}, error) {
-	res, ok := s.Cache.Load("roleScopeTagIds")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"roleScopeTagIds\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"roleScopeTagIds\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.devicemanagement.devicecompliancepolicy\" failed to cast field \"lastModifiedDateTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Version accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Version() (int64, error) {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Version() (int64, error) {
 	res, ok := s.Cache.Load("version")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"version\"")
+		return 0, errors.New("\"msgraph.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"version\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"version\" to the right type (int64): %#v", res)
-	}
-	return tres, nil
-}
-
-// Properties accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Properties() (interface{}, error) {
-	res, ok := s.Cache.Load("properties")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"properties\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.(interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return 0, fmt.Errorf("\"msgraph.devicemanagement.devicecompliancepolicy\" failed to cast field \"version\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Assignments accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Assignments() ([]interface{}, error) {
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Assignments() ([]interface{}, error) {
 	res, ok := s.Cache.Load("assignments")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"assignments\"")
+		return nil, errors.New("\"msgraph.devicemanagement.devicecompliancepolicy\" failed: no value provided for static field \"assignments\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"msgraph.beta.devicemanagement.devicecompliancepolicy\" failed to cast field \"assignments\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"msgraph.devicemanagement.devicecompliancepolicy\" failed to cast field \"assignments\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[msgraph.beta.devicemanagement.devicecompliancepolicy].Compute")
+func (s *mqlMsgraphDevicemanagementDevicecompliancepolicy) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[msgraph.devicemanagement.devicecompliancepolicy].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -5537,16 +5313,12 @@ func (s *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) Compute(name stri
 		return nil
 	case "lastModifiedDateTime":
 		return nil
-	case "roleScopeTagIds":
-		return nil
 	case "version":
-		return nil
-	case "properties":
 		return nil
 	case "assignments":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"msgraph.beta.devicemanagement.devicecompliancepolicy\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"msgraph.devicemanagement.devicecompliancepolicy\" resource")
 	}
 }
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -95,31 +95,6 @@ type SettingValue struct {
 	Value string `json:"value"`
 }
 
-func NewDirectorySettings(p []models.DirectorySettingable) []DirectorySetting {
-	res := []DirectorySetting{}
-	for i := range p {
-		res = append(res, NewDirectorySetting(p[i]))
-	}
-	return res
-}
-
-func NewDirectorySetting(p models.DirectorySettingable) DirectorySetting {
-	values := []SettingValue{}
-	entries := p.GetValues()
-	for i := range entries {
-		values = append(values, SettingValue{
-			Name:  core.ToString(entries[i].GetName()),
-			Value: core.ToString(entries[i].GetValue()),
-		})
-	}
-
-	return DirectorySetting{
-		DisplayName: core.ToString(p.GetDisplayName()),
-		TemplateId:  core.ToString(p.GetTemplateId()),
-		Values:      values,
-	}
-}
-
 // structs for AuthorizationPolicy
 
 type Entity struct {
@@ -169,30 +144,6 @@ func NewAllowInvitesFrom(a *models.AllowInvitesFrom) *AllowInvitesFrom {
 	return &n
 }
 
-type DefaultUserRoleOverride struct {
-	Entity
-	IsDefault       *bool                   `json:"isDefault"`
-	RolePermissions []UnifiedRolePermission `json:"rolePermissions"`
-}
-
-func NewDefaultUserRoleOverride(a models.DefaultUserRoleOverrideable) DefaultUserRoleOverride {
-	return DefaultUserRoleOverride{
-		Entity: Entity{
-			Id: a.GetId(),
-		},
-		IsDefault:       a.GetIsDefault(),
-		RolePermissions: NewUnifiedRolePermissions(a.GetRolePermissions()),
-	}
-}
-
-func NewDefaultUserRoleOverrides(a []models.DefaultUserRoleOverrideable) []DefaultUserRoleOverride {
-	res := []DefaultUserRoleOverride{}
-	for i := range a {
-		res = append(res, NewDefaultUserRoleOverride(a[i]))
-	}
-	return res
-}
-
 type DefaultUserRolePermissions struct {
 	// Indicates whether the default user role can create applications.
 	AllowedToCreateApps *bool `json:"allowedToCreateApps"`
@@ -226,15 +177,9 @@ type AuthorizationPolicy struct {
 	// To disable the use of MSOL PowerShell set this property to true. This will also disable user-based access to the legacy service endpoint used by MSOL PowerShell. This does not affect Azure AD Connect or Microsoft Graph.
 	BlockMsolPowerShell *bool `json:"blockMsolPowerShell"`
 	//
-	DefaultUserRoleOverrides []DefaultUserRoleOverride `json:"defaultUserRoleOverrides"`
-	//
 	DefaultUserRolePermissions *DefaultUserRolePermissions `json:"defaultUserRolePermissions"`
-	// List of features enabled for private preview on the tenant.
-	EnabledPreviewFeatures []string `json:"enabledPreviewFeatures"`
 	// Represents role templateId for the role that should be granted to guest user. Currently following roles are supported:  User (a0b1b346-4d3e-4e8b-98f8-753987be4970), Guest User (10dae51f-b6af-4016-8d66-8c2a99b929b3), and Restricted Guest User (2af84b1e-32c8-42b7-82bc-daa82404023b).
 	GuestUserRoleId *string `json:"guestUserRoleId"`
-	// Indicates if user consent to apps is allowed, and if it is, which app consent policy (permissionGrantPolicy) governs the permission for users to grant consent. Values should be in the format managePermissionGrantsForSelf.{id}, where {id} is the id of a built-in or custom app consent policy. An empty list indicates user consent to apps is disabled.
-	PermissionGrantPolicyIdsAssignedToDefaultUserRole []string `json:"permissionGrantPolicyIdsAssignedToDefaultUserRole"`
 }
 
 func NewAuthorizationPolicys(policies []models.AuthorizationPolicyable) []*AuthorizationPolicy {
@@ -250,16 +195,13 @@ func NewAuthorizationPolicy(p models.AuthorizationPolicyable) *AuthorizationPoli
 		return nil
 	}
 	return &AuthorizationPolicy{
-		AllowedToSignUpEmailBasedSubscriptions:            p.GetAllowedToSignUpEmailBasedSubscriptions(),
-		AllowedToUseSSPR:                                  p.GetAllowedToUseSSPR(),
-		AllowEmailVerifiedUsersToJoinOrganization:         p.GetAllowEmailVerifiedUsersToJoinOrganization(),
-		AllowInvitesFrom:                                  NewAllowInvitesFrom(p.GetAllowInvitesFrom()),
-		BlockMsolPowerShell:                               p.GetBlockMsolPowerShell(),
-		DefaultUserRoleOverrides:                          NewDefaultUserRoleOverrides(p.GetDefaultUserRoleOverrides()),
-		DefaultUserRolePermissions:                        NewDefaultUserRolePermissions(p.GetDefaultUserRolePermissions()),
-		EnabledPreviewFeatures:                            p.GetEnabledPreviewFeatures(),
-		GuestUserRoleId:                                   p.GetGuestUserRoleId(),
-		PermissionGrantPolicyIdsAssignedToDefaultUserRole: p.GetPermissionGrantPolicyIdsAssignedToDefaultUserRole(),
+		AllowedToSignUpEmailBasedSubscriptions:    p.GetAllowedToSignUpEmailBasedSubscriptions(),
+		AllowedToUseSSPR:                          p.GetAllowedToUseSSPR(),
+		AllowEmailVerifiedUsersToJoinOrganization: p.GetAllowEmailVerifiedUsersToJoinOrganization(),
+		AllowInvitesFrom:                          NewAllowInvitesFrom(p.GetAllowInvitesFrom()),
+		BlockMsolPowerShell:                       p.GetBlockMsolPowerShell(),
+		DefaultUserRolePermissions:                NewDefaultUserRolePermissions(p.GetDefaultUserRolePermissions()),
+		GuestUserRoleId:                           p.GetGuestUserRoleId(),
 	}
 }
 
@@ -350,38 +292,6 @@ type ContactMergeSuggestions struct {
 	IsEnabled *bool `json:"isEnabled"`
 }
 
-func NewContactMergeSuggestions(p models.ContactMergeSuggestionsable) *ContactMergeSuggestions {
-	if p == nil {
-		return nil
-	}
-
-	return &ContactMergeSuggestions{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
-		IsEnabled: p.GetIsEnabled(),
-	}
-}
-
-type UserInsightsSettings struct {
-	Entity
-	// true if user's itemInsights and meeting hours insights are enabled; false if user's itemInsights and meeting hours insights are disabled. Default is true. Optional.
-	IsEnabled *bool `json:"isEnabled"`
-}
-
-func NewUserInsightsSettings(p models.UserInsightsSettingsable) *UserInsightsSettings {
-	if p == nil {
-		return nil
-	}
-
-	return &UserInsightsSettings{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
-		IsEnabled: p.GetIsEnabled(),
-	}
-}
-
 type LocaleInfo struct {
 	// A name representing the user's locale in natural language, for example, 'English (United States)'.
 	DisplayName *string `json:"displayName"`
@@ -405,131 +315,6 @@ func NewLocalInfoList(policies []models.LocaleInfoable) []LocaleInfo {
 		res = append(res, *NewLocalInfo(policies[i]))
 	}
 	return res
-}
-
-type RegionalFormatOverrides struct {
-	// The calendar to use, e.g., Gregorian Calendar.Returned by default.
-	Calendar *string `json:"calendar"`
-	// The first day of the week to use, e.g., Sunday.Returned by default.
-	FirstDayOfWeek *string `json:"firstDayOfWeek"`
-	// The long date time format to be used for displaying dates.Returned by default.
-	LongDateFormat *string `json:"longDateFormat"`
-	// The long time format to be used for displaying time.Returned by default.
-	LongTimeFormat *string `json:"longTimeFormat"`
-	// The short date time format to be used for displaying dates.Returned by default.
-	ShortDateFormat *string `json:"shortDateFormat"`
-	// The short time format to be used for displaying time.Returned by default.
-	ShortTimeFormat *string `json:"shortTimeFormat"`
-	// The timezone to be used for displaying time.Returned by default.
-	TimeZone *string `json:"timeZone"`
-}
-
-func NewRegionalFormatOverrides(p models.RegionalFormatOverridesable) *RegionalFormatOverrides {
-	if p == nil {
-		return nil
-	}
-	return &RegionalFormatOverrides{
-		Calendar:        p.GetCalendar(),
-		FirstDayOfWeek:  p.GetFirstDayOfWeek(),
-		LongDateFormat:  p.GetLongDateFormat(),
-		LongTimeFormat:  p.GetLongTimeFormat(),
-		ShortDateFormat: p.GetShortDateFormat(),
-		ShortTimeFormat: p.GetShortTimeFormat(),
-		TimeZone:        p.GetTimeZone(),
-	}
-}
-
-type TranslationBehavior int
-
-type TranslationLanguageOverride struct {
-	// The language to apply the override.Returned by default. Not nullable.
-	LanguageTag *string `json:"languageTag"`
-	// The translation override behavior for the language, if any.Returned by default. Not nullable.
-	TranslationBehavior *TranslationBehavior `json:"translationBehavior"`
-}
-
-func NewTranslationLanguageOverride(p models.TranslationLanguageOverrideable) TranslationLanguageOverride {
-	var tb *TranslationBehavior
-	if p.GetTranslationBehavior() != nil {
-		v := TranslationBehavior(*p.GetTranslationBehavior())
-		tb = &v
-	}
-	return TranslationLanguageOverride{
-		LanguageTag:         p.GetLanguageTag(),
-		TranslationBehavior: tb,
-	}
-}
-
-func NewTranslationLanguageOverrideList(entries []models.TranslationLanguageOverrideable) []TranslationLanguageOverride {
-	res := []TranslationLanguageOverride{}
-	for i := range entries {
-		res = append(res, NewTranslationLanguageOverride(entries[i]))
-	}
-	return res
-}
-
-type TranslationPreferences struct {
-	// Translation override behavior for languages, if any.Returned by default.
-	LanguageOverrides []TranslationLanguageOverride `json:"languageOverrides"`
-	// The user's preferred translation behavior.Returned by default. Not nullable.
-	TranslationBehavior *TranslationBehavior `json:"translationBehavior"`
-	// The list of languages the user does not need translated. This is computed from the authoringLanguages collection in regionalAndLanguageSettings, and the languageOverrides collection in translationPreferences. The list specifies neutral culture values that include the language code without any country or region association. For example, it would specify 'fr' for the neutral French culture, but not 'fr-FR' for the French culture in France. Returned by default. Read only.
-	UntranslatedLanguages []string `json:"untranslatedLanguages"`
-}
-
-func NewTranslationPreferences(p models.TranslationPreferencesable) *TranslationPreferences {
-	if p == nil {
-		return nil
-	}
-
-	var tb *TranslationBehavior
-	if p.GetTranslationBehavior() != nil {
-		v := TranslationBehavior(*p.GetTranslationBehavior())
-		tb = &v
-	}
-
-	return &TranslationPreferences{
-		LanguageOverrides:     NewTranslationLanguageOverrideList(p.GetLanguageOverrides()),
-		TranslationBehavior:   tb,
-		UntranslatedLanguages: p.GetUntranslatedLanguages(),
-	}
-}
-
-type RegionalAndLanguageSettings struct {
-	Entity
-	// Prioritized list of languages the user reads and authors in.Returned by default. Not nullable.
-	AuthoringLanguages []LocaleInfo `json:"authoringLanguages"`
-	// The  user's preferred user interface language (menus, buttons, ribbons, warning messages) for Microsoft web applications.Returned by default. Not nullable.
-	DefaultDisplayLanguage *LocaleInfo `json:"defaultDisplayLanguage"`
-	// The locale that drives the default date, time, and calendar formatting.Returned by default.
-	DefaultRegionalFormat *LocaleInfo `json:"defaultRegionalFormat"`
-	// The language a user expected to use as input for text to speech scenarios.Returned by default.
-	DefaultSpeechInputLanguage *LocaleInfo `json:"defaultSpeechInputLanguage"`
-	// The language a user expects to have documents, emails, and messages translated into.Returned by default.
-	DefaultTranslationLanguage *LocaleInfo `json:"defaultTranslationLanguage"`
-	// Allows a user to override their defaultRegionalFormat with field specific formats.Returned by default.
-	RegionalFormatOverrides *RegionalFormatOverrides `json:"regionalFormatOverrides"`
-	// The user's preferred settings when consuming translated documents, emails, messages, and websites.Returned by default. Not nullable.
-	TranslationPreferences *TranslationPreferences `json:"translationPreferences"`
-}
-
-func NewRegionalAndLanguageSettings(p models.RegionalAndLanguageSettingsable) *RegionalAndLanguageSettings {
-	if p == nil {
-		return nil
-	}
-
-	return &RegionalAndLanguageSettings{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
-		AuthoringLanguages:         NewLocalInfoList(p.GetAuthoringLanguages()),
-		DefaultDisplayLanguage:     NewLocalInfo(p.GetDefaultDisplayLanguage()),
-		DefaultRegionalFormat:      NewLocalInfo(p.GetDefaultRegionalFormat()),
-		DefaultSpeechInputLanguage: NewLocalInfo(p.GetDefaultSpeechInputLanguage()),
-		DefaultTranslationLanguage: NewLocalInfo(p.GetDefaultTranslationLanguage()),
-		RegionalFormatOverrides:    NewRegionalFormatOverrides(p.GetRegionalFormatOverrides()),
-		TranslationPreferences:     NewTranslationPreferences(p.GetTranslationPreferences()),
-	}
 }
 
 type Identity struct {
@@ -824,7 +609,6 @@ func NewShiftPreferences(p models.ShiftPreferencesable) *ShiftPreferences {
 			Entity: Entity{
 				Id: p.GetId(),
 			},
-			CreatedBy:            NewIdentitySet(p.GetCreatedBy()),
 			LastModifiedBy:       NewIdentitySet(p.GetLastModifiedBy()),
 			CreatedDateTime:      p.GetCreatedDateTime(),
 			LastModifiedDateTime: p.GetLastModifiedDateTime(),
@@ -835,16 +619,11 @@ func NewShiftPreferences(p models.ShiftPreferencesable) *ShiftPreferences {
 
 type UserSettings struct {
 	Entity
-	//
-	ContactMergeSuggestions *ContactMergeSuggestions `json:"contactMergeSuggestions"`
 	// Reflects the Office Delve organization level setting. When set to true, the organization doesn't have access to Office Delve. This setting is read-only and can only be changed by administrators in the SharePoint admin center.
 	ContributionToContentDiscoveryAsOrganizationDisabled *bool `json:"contributionToContentDiscoveryAsOrganizationDisabled"`
 	// When set to true, documents in the user's Office Delve are disabled. Users can control this setting in Office Delve.
 	ContributionToContentDiscoveryDisabled *bool `json:"contributionToContentDiscoveryDisabled"`
 	// The user's settings for the visibility of meeting hour insights, and insights derived between a user and other items in Microsoft 365, such as documents or sites. Get userInsightsSettings through this navigation property.
-	ItemInsights *UserInsightsSettings `json:"itemInsights"`
-	// The user's preferences for languages, regional locale and date/time formatting.
-	RegionalAndLanguageSettings *RegionalAndLanguageSettings `json:"regionalAndLanguageSettings"`
 	// The shift preferences for the user.
 	ShiftPreferences *ShiftPreferences `json:"shiftPreferences"`
 }
@@ -857,11 +636,8 @@ func NewUserSettings(p models.UserSettingsable) *UserSettings {
 		Entity: Entity{
 			Id: p.GetId(),
 		},
-		ContactMergeSuggestions:                              NewContactMergeSuggestions(p.GetContactMergeSuggestions()),
 		ContributionToContentDiscoveryAsOrganizationDisabled: p.GetContributionToContentDiscoveryAsOrganizationDisabled(),
 		ContributionToContentDiscoveryDisabled:               p.GetContributionToContentDiscoveryDisabled(),
-		ItemInsights:                                         NewUserInsightsSettings(p.GetItemInsights()),
-		RegionalAndLanguageSettings:                          NewRegionalAndLanguageSettings(p.GetRegionalAndLanguageSettings()),
 		ShiftPreferences:                                     NewShiftPreferences(p.GetShiftPreferences()),
 	}
 }
@@ -871,52 +647,19 @@ type (
 	DeviceAndAppManagementAssignmentFilterType int
 )
 
-type DeviceAndAppManagementAssignmentTarget struct {
-	// The Id of the filter for the target assignment.
-	DeviceAndAppManagementAssignmentFilterId *string `json:"deviceAndAppManagementAssignmentFilterId"`
-	// The type of filter of the target assignment i.e. Exclude or Include. Possible values are: none, include, exclude.
-	DeviceAndAppManagementAssignmentFilterType *DeviceAndAppManagementAssignmentFilterType `json:"deviceAndAppManagementAssignmentFilterType"`
-}
-
-func NewDeviceAndAppManagementAssignmentTarget(p models.DeviceAndAppManagementAssignmentTargetable) *DeviceAndAppManagementAssignmentTarget {
-	var filterType *DeviceAndAppManagementAssignmentFilterType
-	if p.GetDeviceAndAppManagementAssignmentFilterType() != nil {
-		t := DeviceAndAppManagementAssignmentFilterType(*p.GetDeviceAndAppManagementAssignmentFilterType())
-		filterType = &t
-	}
-	return &DeviceAndAppManagementAssignmentTarget{
-		DeviceAndAppManagementAssignmentFilterId:   p.GetDeviceAndAppManagementAssignmentFilterId(),
-		DeviceAndAppManagementAssignmentFilterType: filterType,
-	}
-}
-
 type DeviceCompliancePolicyAssignment struct {
 	Entity
-	// The assignment source for the device compliance policy, direct or parcel/policySet. Possible values are: direct, policySets.
-	Source *DeviceAndAppManagementAssignmentSource `json:"source"`
-	// The identifier of the source of the assignment.
-	SourceId *string `json:"vendor"`
-	// Target for the compliance policy assignment.
-	Target *DeviceAndAppManagementAssignmentTarget `json:"target"`
 }
 
 func NewDeviceCompliancePolicyAssignment(p models.DeviceCompliancePolicyAssignmentable) *DeviceCompliancePolicyAssignment {
 	if p == nil {
 		return nil
 	}
-	var source *DeviceAndAppManagementAssignmentSource
-	if p.GetSource() != nil {
-		s := DeviceAndAppManagementAssignmentSource(*p.GetSource())
-		source = &s
-	}
 
 	return &DeviceCompliancePolicyAssignment{
 		Entity: Entity{
 			Id: p.GetId(),
 		},
-		Source:   source,
-		SourceId: p.GetSourceId(),
-		Target:   NewDeviceAndAppManagementAssignmentTarget(p.GetTarget()),
 	}
 }
 
@@ -932,8 +675,6 @@ type PermissionType int
 
 type PermissionGrantConditionSet struct {
 	Entity
-	// Set to true to only match on client applications that are Microsoft 365 certified. Set to false to match on any other client app. Default is false.
-	CertifiedClientApplicationsOnly *bool `json:"certifiedClientApplicationsOnly"`
 	// A list of appId values for the client applications to match with, or a list with the single value all to match any client application. Default is the single value all.
 	ClientApplicationIds []string `json:"clientApplicationIds"`
 	// A list of Microsoft Partner Network (MPN) IDs for verified publishers of the client application, or a list with the single value all to match with client apps from any publisher. Default is the single value all.
@@ -959,7 +700,6 @@ func NewPermissionGrantConditionSet(p models.PermissionGrantConditionSetable) Pe
 		Entity: Entity{
 			Id: p.GetId(),
 		},
-		CertifiedClientApplicationsOnly:             p.GetCertifiedClientApplicationsOnly(),
 		ClientApplicationIds:                        p.GetClientApplicationIds(),
 		ClientApplicationPublisherIds:               p.GetClientApplicationPublisherIds(),
 		ClientApplicationsFromVerifiedPublisherOnly: p.GetClientApplicationsFromVerifiedPublisherOnly(),

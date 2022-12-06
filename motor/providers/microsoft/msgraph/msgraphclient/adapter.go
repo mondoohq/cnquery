@@ -10,13 +10,13 @@ import (
 )
 
 // NOTE:
-// This code is almost verbatim from https://github.com/microsoftgraph/msgraph-beta-sdk-go
+// This code is almost verbatim from https://github.com/microsoftgraph/msgraph-sdk-go
 // We avoid using that package directly because it brings in a bunch of things we don't
 // use
 
 var clientOptions = core.GraphClientOptions{
-	GraphServiceVersion:        "beta",
-	GraphServiceLibraryVersion: "0.27.0",
+	GraphServiceVersion:        "", // v1 doesn't include the service version in the telemetry header
+	GraphServiceLibraryVersion: "0.48.0",
 }
 
 const DefaultMSGraphScope = "https://graph.microsoft.com/.default"
