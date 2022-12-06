@@ -2,9 +2,11 @@ package core
 
 import (
 	"bufio"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"net/netip"
 	"regexp"
 	"strconv"
 	"strings"
@@ -123,6 +125,24 @@ func hex2ipv4(s string) (string, error) {
 		strconv.FormatUint(a, 10)), nil
 }
 
+func hex2ipv6(s string) (string, error) {
+	ipBytes, err := hex.DecodeString(s)
+	if err != nil {
+		return "", err
+	}
+
+	var ipBytes16 [16]byte
+
+	copy(ipBytes16[:], ipBytes)
+	ip := netip.AddrFrom16(ipBytes16)
+
+	if ip.Next().Is6() {
+		return ip.String(), nil
+	} else {
+		return "", err
+	}
+}
+
 func (p *mqlPorts) users() (map[int64]User, error) {
 	obj, err := p.MotorRuntime.CreateResource("users")
 	if err != nil {
@@ -206,71 +226,111 @@ func (p *mqlPorts) parseProcNet(path string, protocol string, users map[int64]Us
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		m := reLinuxProcNet.FindStringSubmatch(line)
-		if len(m) == 0 {
+		port, err := parseProcNetLine(line)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse proc net line: %v", err)
+		}
+		if port == nil {
 			continue
-		}
-
-		address, err := hex2ipv4(m[1])
-		if err != nil {
-			return nil, errors.New("failed to parse port address: " + m[1])
-		}
-
-		port, err := strconv.ParseUint(m[2], 16, 64)
-		if err != nil {
-			return nil, errors.New("failed to parse port number: " + m[2])
-		}
-
-		remoteAddress, err := hex2ipv4(m[3])
-		if err != nil {
-			return nil, errors.New("failed to parse port address: " + m[3])
-		}
-
-		remotePort, err := strconv.ParseUint(m[4], 16, 64)
-		if err != nil {
-			return nil, errors.New("failed to parse port number: " + m[4])
-		}
-
-		stateNum, err := strconv.ParseInt(m[5], 16, 64)
-		if err != nil {
-			return nil, errors.New("failed to parse state number: " + m[5])
-		}
-		state, ok := TCP_STATES[stateNum]
-		if !ok {
-			state = "unknown"
-		}
-
-		uid, err := strconv.ParseUint(m[6], 10, 64)
-		if err != nil {
-			return nil, errors.New("failed to parse port UID: " + m[6])
-		}
-		user := users[int64(uid)]
-
-		inode, err := strconv.ParseUint(m[7], 10, 64)
-		if err != nil {
-			return nil, errors.New("failed to parse port Inode: " + m[7])
 		}
 
 		obj, err := p.MotorRuntime.CreateResource("port",
 			"protocol", protocol,
-			"port", int64(port),
-			"address", address,
-			"user", user,
+			"port", port.Port,
+			"address", port.Address,
+			"user", users[port.Uid],
 			"process", nil,
-			"state", state,
-			"remoteAddress", remoteAddress,
-			"remotePort", int64(remotePort),
+			"state", port.State,
+			"remoteAddress", port.RemoteAddress,
+			"remotePort", port.RemotePort,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		obj.MqlResource().Cache.Store("process", getProcess(int64(inode)))
+		obj.MqlResource().Cache.Store("process", getProcess(port.Inode))
 
 		res = append(res, obj)
 	}
 
 	return res, nil
+}
+
+type procNetPort struct {
+	Address       string
+	Port          int64
+	RemoteAddress string
+	RemotePort    int64
+	State         string
+	Uid           int64
+	Inode         int64
+}
+
+func parseProcNetLine(line string) (*procNetPort, error) {
+	m := reLinuxProcNet.FindStringSubmatch(line)
+	port := &procNetPort{}
+	if len(m) == 0 {
+		return nil, nil
+	}
+
+	var address string
+	var err error
+	if len(m[1]) > 8 {
+		address, err = hex2ipv6(m[1])
+	} else {
+		address, err = hex2ipv4(m[1])
+	}
+	if err != nil {
+		return nil, errors.New("failed to parse port address: " + m[1])
+	}
+	port.Address = address
+
+	localPort, err := strconv.ParseUint(m[2], 16, 64)
+	if err != nil {
+		return nil, errors.New("failed to parse port number: " + m[2])
+	}
+	port.Port = int64(localPort)
+
+	var remoteAddress string
+	if len(m[1]) > 8 {
+		remoteAddress, err = hex2ipv6(m[3])
+	} else {
+		remoteAddress, err = hex2ipv4(m[3])
+	}
+	if err != nil {
+		return nil, errors.New("failed to parse port address: " + m[3])
+	}
+	port.RemoteAddress = remoteAddress
+
+	remotePort, err := strconv.ParseUint(m[4], 16, 64)
+	if err != nil {
+		return nil, errors.New("failed to parse port number: " + m[4])
+	}
+	port.RemotePort = int64(remotePort)
+
+	stateNum, err := strconv.ParseInt(m[5], 16, 64)
+	if err != nil {
+		return nil, errors.New("failed to parse state number: " + m[5])
+	}
+	state, ok := TCP_STATES[stateNum]
+	if !ok {
+		state = "unknown"
+	}
+	port.State = state
+
+	uid, err := strconv.ParseUint(m[6], 10, 64)
+	if err != nil {
+		return nil, errors.New("failed to parse port UID: " + m[6])
+	}
+	port.Uid = int64(uid)
+
+	inode, err := strconv.ParseUint(m[7], 10, 64)
+	if err != nil {
+		return nil, errors.New("failed to parse port Inode: " + m[7])
+	}
+	port.Inode = int64(inode)
+
+	return port, nil
 }
 
 func (p *mqlPorts) listLinux() ([]interface{}, error) {
