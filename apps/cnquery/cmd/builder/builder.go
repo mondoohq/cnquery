@@ -154,6 +154,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	baseCmd.AddCommand(scanOktaCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanGoogleWorkspaceCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanSlackCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(scanVcdCmd(commonCmdFlags, preRun, runFn, docs))
 }
 
 type CommandsDocs struct {
@@ -827,5 +828,28 @@ func scanSlackCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn run
 	}
 	commonCmdFlags(cmd)
 	cmd.Flags().String("token", "", "Slack API token")
+	return cmd
+}
+
+func scanVcdCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "vcd",
+		Short: docs.GetShort("vcd"),
+		Long:  docs.GetLong("vcd"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("user", cmd.Flags().Lookup("user"))
+			viper.BindPFlag("host", cmd.Flags().Lookup("host"))
+			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_VCD, DefaultAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("user", "", "vCloud Director user")
+	cmd.Flags().String("host", "", "vCloud Director Host")
+	cmd.Flags().String("organization", "", "vCloud Director Organization (optional)")
 	return cmd
 }

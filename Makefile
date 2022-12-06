@@ -111,6 +111,9 @@ lr/build:
 	./lr go resources/packs/slack/slack.lr
 	./lr docs yaml resources/packs/slack/slack.lr --docs-file resources/packs/slack/slack.lr.manifest.yaml
 	./lr docs json resources/packs/slack/slack.lr.manifest.yaml
+	./lr go resources/packs/vcd/vcd.lr
+	./lr docs yaml resources/packs/vcd/vcd.lr --docs-file resources/packs/vcd/vcd.lr.manifest.yaml
+	./lr docs json resources/packs/vcd/vcd.lr.manifest.yaml
 	./lr go resources/mock/mochi.lr
 
 lr/release:
@@ -192,6 +195,10 @@ lr/docs/markdown: lr/build
 		--pack-name "Slack" \
 		--docs-file resources/packs/slack/slack.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/slack-pack
+	./lr markdown resources/packs/vcd/vcd.lr \
+		--pack-name "VMware Cloud Director" \
+		--docs-file resources/packs/vcd/vcd.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/vcd-pack
 
 .PHONY: resources
 resources: | lr resources/generate resources/test

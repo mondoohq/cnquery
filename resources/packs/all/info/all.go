@@ -25,6 +25,7 @@ import (
 	osInfo "go.mondoo.com/cnquery/resources/packs/os/info"
 	slackInfo "go.mondoo.com/cnquery/resources/packs/slack/info"
 	terraformInfo "go.mondoo.com/cnquery/resources/packs/terraform/info"
+	vcdInfo "go.mondoo.com/cnquery/resources/packs/vcd/info"
 	vsphereInfo "go.mondoo.com/cnquery/resources/packs/vsphere/info"
 )
 
@@ -44,6 +45,7 @@ func init() {
 	Registry.Add(gitlabInfo.Registry)
 	Registry.Add(oktaInfo.Registry)
 	Registry.Add(slackInfo.Registry)
+	Registry.Add(vcdInfo.Registry)
 
 	ResourceDocs = mergeDocs(
 		coreInfo.ResourceDocs,
@@ -60,6 +62,7 @@ func init() {
 		vsphereInfo.ResourceDocs,
 		oktaInfo.ResourceDocs,
 		slackInfo.ResourceDocs,
+		vcdInfo.ResourceDocs,
 	)
 }
 
