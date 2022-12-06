@@ -741,9 +741,9 @@ func constructTLSHello(version string, ciphers []byte, extensions []byte) []byte
 	content.Write(int2bytes(len(extensions)))
 	content.Write(extensions)
 
-	var c = content.Bytes()
+	c := content.Bytes()
 
-	var core = []byte{HANDSHAKE_TYPE_ClientHello}
+	core := []byte{HANDSHAKE_TYPE_ClientHello}
 	core = append(core, int3bytes(len(c))...)
 	core = append(core, c...)
 
@@ -774,8 +774,10 @@ var VERSIONS = map[string]string{
 	"tls1.3": "\x03\x04",
 }
 
-var VERSIONS_LOOKUP map[string]string
-var ALL_CIPHERS map[string]string
+var (
+	VERSIONS_LOOKUP map[string]string
+	ALL_CIPHERS     map[string]string
+)
 
 func init() {
 	VERSIONS_LOOKUP = make(map[string]string, len(VERSIONS))

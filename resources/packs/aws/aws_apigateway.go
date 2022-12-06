@@ -56,7 +56,7 @@ func (a *mqlAwsApigateway) getRestApis(provider *aws_provider.Provider) []*jobpo
 	for _, region := range regions {
 		regionVal := region
 		f := func() (jobpool.JobResult, error) {
-			log.Debug().Msgf("calling aws with region %s", regionVal)
+			log.Debug().Msgf("calling AWS with region %s", regionVal)
 
 			svc := provider.Apigateway(regionVal)
 			ctx := context.Background()
@@ -66,7 +66,7 @@ func (a *mqlAwsApigateway) getRestApis(provider *aws_provider.Provider) []*jobpo
 			for {
 				restApisResp, err := svc.GetRestApis(ctx, &apigateway.GetRestApisInput{Position: position})
 				if err != nil {
-					return nil, errors.Wrap(err, "could not gather aws apigateway rest apis")
+					return nil, errors.Wrap(err, "could not gather AWS API Gateway REST APIs")
 				}
 
 				for _, restApi := range restApisResp.Items {
@@ -119,7 +119,7 @@ func (a *mqlAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	// no pagination required
 	stagesResp, err := svc.GetStages(ctx, &apigateway.GetStagesInput{RestApiId: &restApiId})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws api gateway stages")
+		return nil, errors.Wrap(err, "could not gather AWS API Gateway stages")
 	}
 	res := []interface{}{}
 	for _, stage := range stagesResp.Item {

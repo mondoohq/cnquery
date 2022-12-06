@@ -1,6 +1,6 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/core"
 
-// Provide contextual info about cnquery and environment
+// Provide contextual info about Mondoo Client/cnquery and environment
 mondoo @defaults("version") {
   // Version of the client running on the asset
   version() string
@@ -117,13 +117,13 @@ private file.permissions @defaults("string") {
   sgid bool
   // Sticky bit indicator
   sticky bool
-  // whether the file describes a directory
+  // Whether the file describes a directory
   isDirectory bool
-  // whether the file describes a regular file
+  // Whether the file describes a regular file
   isFile bool
-  // whether the file is a symlink
+  // Whether the file is a symlink
   isSymlink bool
-  // a simple printed string version of the permissions
+  // A simple printed string version of the permissions
   string() string
 }
 
@@ -323,13 +323,13 @@ platform @defaults("name version") {
   runtimeEnv string
 }
 
-// hardware virtualization information
+// Hardware virtualization information
 platform.virtualization {
   // Indicates if the target is a container or container image
   isContainer() bool
 }
 
-// information about the platform end-of-life
+// Information about the platform end-of-life
 platform.eol @defaults("date") {
   // Documentation URL
   docsUrl string
@@ -698,7 +698,7 @@ uuid @defaults("value") {
   variant() string
 }
 
-// socket stats from ss command
+// Socket stats from ss command
 socketstats {
   // Listening non-localhost open ports
   openPorts() []string

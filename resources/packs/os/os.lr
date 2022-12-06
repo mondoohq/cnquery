@@ -69,13 +69,13 @@ files.find {
 // PAM configuration (Pluggable Authentication Module)
 pam.conf {
   init(path string)
-  // A list of files that make up the PAM configuration
+  // List of files that make up the PAM configuration
   files() []core.file
   // The raw PAM configuration (across all files)
   content(files) string
   // Deprecated: A list of services that are configured via PAM
   services(files) map[string][]string
-  // A list of services with parsed entries that are configured via PAM
+  // List of services with parsed entries that are configured via PAM
   entries(files) map[string][]pam.conf.serviceEntry
 }
 
@@ -90,7 +90,7 @@ private pam.conf.serviceEntry @defaults("service module") {
   control string
   // PAM module used
   module string
-  // configuration options for pam service entry
+  // Configuration options for pam service entry
   options []string
 }
 
@@ -499,15 +499,15 @@ arista.eos {
 
 // Arista EOS system’s operating configuration
 arista.eos.runningConfig {
-  // returns EOS running-config
+  // EOS running-config
   content() string
 }
 
 // Arista EOS system’s operating configuration for a specific section
 arista.eos.runningConfig.section {
-  // section name
+  // Section name
   name string
-  // returns the section from EOS running-config
+  // Section from EOS running-config
   content() string
 }
 
