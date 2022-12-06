@@ -297,17 +297,32 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 		}
 	}
 
+	var ports []interface{}
 	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
+	ports = append(ports, tcpPorts...)
 
 	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
+	ports = append(ports, udpPorts...)
 
-	return append(tcpPorts, udpPorts...), nil
+	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp", users, getProcess)
+	if err != nil {
+		return nil, err
+	}
+	ports = append(ports, tcpPortsV6...)
+
+	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "udp", users, getProcess)
+	if err != nil {
+		return nil, err
+	}
+	ports = append(ports, udpPortsV6...)
+
+	return ports, nil
 }
 
 func (p *mqlPorts) processesByPid() (map[int64]Process, error) {
