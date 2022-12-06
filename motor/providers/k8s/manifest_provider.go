@@ -4,9 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"io/ioutil"
+	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -20,6 +19,8 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 	"k8s.io/apimachinery/pkg/version"
 )
 
@@ -197,29 +198,50 @@ func loadManifestFile(manifestFile string) ([]byte, error) {
 		}
 
 		if fi.IsDir() {
-			// NOTE: we are not using filepath.WalkDir since we do not net recursive walking
-			files, err := ioutil.ReadDir(manifestFile)
-			if err != nil {
-				return nil, err
-			}
-			for i := range files {
-				f := files[i]
-				if f.IsDir() {
-					continue
+			filepath.WalkDir(manifestFile, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
 				}
-				filename := path.Join(manifestFile, f.Name())
 
 				// only load yaml files for now
-				ext := filepath.Ext(filename)
-				if ext == ".yaml" || ext == ".yml" {
-					log.Debug().Str("file", filename).Msg("add file to manifest loading")
-					filenames = append(filenames, filename)
-				} else {
-					log.Debug().Str("file", filename).Msg("ignore file")
+				if !d.IsDir() {
+					ext := filepath.Ext(path)
+					if ext != ".yaml" && ext != ".yml" {
+						log.Debug().Str("file", path).Msg("ignore file, no .yaml or .yml ending")
+						return nil
+					}
+					// check whether this is valid k8s yaml
+					f, err := os.Open(path)
+					if err != nil {
+						log.Debug().Str("file", path).Err(err).Msg("ignore file, could not open file")
+						return nil
+					}
+					defer f.Close()
+
+					content, err := io.ReadAll(f)
+					if err != nil {
+						log.Debug().Str("file", path).Err(err).Msg("ignore file, could not read file")
+						return nil
+					}
+					// At this point, we do not care about specific schemes, just whether the file is a valid k8s yaml
+					_, _, err = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(content, nil, nil)
+					if err != nil {
+						// the err contains the file content, which is not useful in the output
+						errorString := ""
+						if len(err.Error()) > 40 {
+							errorString = err.Error()[:40] + "..."
+						} else {
+							errorString = err.Error()
+						}
+						log.Debug().Str("file", path).Str("error", errorString).Msg("ignore file, no valid kubernetes yaml")
+						return nil
+					}
+					log.Debug().Str("file", path).Msg("add file to manifest loading")
+					filenames = append(filenames, path)
 				}
 
-			}
-
+				return nil
+			})
 		} else {
 			filenames = append(filenames, manifestFile)
 		}
@@ -230,5 +252,5 @@ func loadManifestFile(manifestFile string) ([]byte, error) {
 		}
 	}
 
-	return ioutil.ReadAll(input)
+	return io.ReadAll(input)
 }
