@@ -1251,7 +1251,7 @@ private aws.ec2.volume @defaults("arn") {
 }
 
 // AWS EC2 Instance
-private aws.ec2.instance @defaults("arn state") {attachments
+private aws.ec2.instance @defaults("arn state") {
   // ARN for the instance
   arn string
   // Instance id for the instance
