@@ -1270,7 +1270,7 @@ private aws.ec2.instance @defaults("arn state") {
   httpTokens string
   // patch state information about the instance
   patchState() dict
-  // state of the instance
+  // state of the instance (pending, running, stopping, stopped, rebooting, or terminated)
   state string
   // List of devices attached to the instance (e.g. ebs volume)
   deviceMappings []aws.ec2.instance.device
