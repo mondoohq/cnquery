@@ -83,6 +83,20 @@ var reLinuxProcNet = regexp.MustCompile(
 		"", // lots of other stuff if we want it...
 )
 
+// "lrwx------ 1 0 0 64 Dec  6 13:56 /proc/1/fd/12 -> socket:[37364]"
+var reFindSockets = regexp.MustCompile(
+	"^[lrwx-]+\\s+" +
+		"\\d+\\s+" +
+		"\\d+\\s+" + // uid
+		"\\d+\\s+" + // gid
+		"\\d+\\s+" +
+		"[^ ]+\\s+" + // month, e.g. Dec
+		"\\d+\\s+" + // day
+		"\\d+:\\d+\\s+" + // time
+		"/proc/(\\d+)/fd/\\d+\\s+" + // path
+		"->\\s+" +
+		"socket:\\[(\\d+)\\]\\s*") // target
+
 var TCP_STATES = map[int64]string{
 	1:  "established",
 	2:  "syn sent",
@@ -205,27 +219,33 @@ func (p *mqlPorts) processesBySocket() (map[int64]Process, error) {
 		if err != nil {
 			return nil, err
 		}
-		c, err := osProvider.RunCommand("lsof -nP -i -F")
+		c, err := osProvider.RunCommand("find /proc -maxdepth 4 -path '/proc/*/fd/*' -exec ls -n {} \\;")
 		if err != nil {
 			return nil, fmt.Errorf("processes> could not run command: %v", err)
 		}
 
-		lsofProcesses, err := lsof.Parse(c.Stdout)
-		if err != nil {
-			return nil, err
-		}
-
 		processesBySocket := map[int64]Process{}
-		for i := range lsofProcesses {
-
-			pid, err := strconv.ParseInt(lsofProcesses[i].PID, 10, 64)
-			if err != nil {
-				log.Error().Err(err).Msg("cannot parse unix pid " + lsofProcesses[i].PID)
+		scanner := bufio.NewScanner(c.Stdout)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasSuffix(line, "Permission denied") || strings.HasSuffix(line, "No such file or directory") {
 				continue
 			}
-			inode, err := strconv.ParseInt(lsofProcesses[i].SocketInode, 10, 64)
+
+			m := reFindSockets.FindStringSubmatch(line)
+			if len(m) == 0 {
+				continue
+			}
+
+			pid, err := strconv.ParseInt(m[1], 10, 64)
 			if err != nil {
-				log.Error().Err(err).Msg("cannot parse socket inode " + lsofProcesses[i].SocketInode)
+				log.Error().Err(err).Msg("cannot parse unix pid " + m[1])
+				continue
+			}
+
+			inode, err := strconv.ParseInt(m[2], 10, 64)
+			if err != nil {
+				log.Error().Err(err).Msg("cannot parse socket inode " + m[2])
 				continue
 			}
 			processesBySocket[inode] = processesByPid[pid]
