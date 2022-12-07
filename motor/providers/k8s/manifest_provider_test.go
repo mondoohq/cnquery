@@ -60,3 +60,23 @@ func TestManifestFileProvider(t *testing.T) {
 		assert.Contains(t, transport.PlatformInfo().Family, "k8s")
 	})
 }
+
+func TestLoadManifestDirRecursively(t *testing.T) {
+	manifests, err := loadManifestFile("./resources/testdata/")
+	require.NoError(t, err)
+
+	manifestsAsString := string(manifests[:])
+	// This is content from files of the root dir
+	assert.Contains(t, manifestsAsString, "mondoo")
+	assert.Contains(t, manifestsAsString, "RollingUpdate")
+
+	// Files containing this should be skipped
+	assert.NotContains(t, manifestsAsString, "AdmissionReview")
+	assert.NotContains(t, manifestsAsString, "README")
+	assert.NotContains(t, manifestsAsString, "operators.coreos.com")
+
+	// This is from files in subdirs whicch should be included
+	assert.Contains(t, manifestsAsString, "hello-1")
+	assert.Contains(t, manifestsAsString, "hello-2")
+	assert.Contains(t, manifestsAsString, "MondooAuditConfig")
+}

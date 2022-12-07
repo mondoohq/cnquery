@@ -69,6 +69,7 @@ func (r *defaultReporter) printAssetSummary(assetMrn string, asset *explorer.Ass
 				target,
 			)))
 		}
+		r.out.Write([]byte("\n"))
 		return
 	}
 
