@@ -2327,3 +2327,19 @@ func stringsliceEqString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		return StringData(r)
 	})
 }
+
+func stringsliceEqArrayString(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	return dataOpV2(e, bind, chunk, ref, types.Int, func(left interface{}, right interface{}) *RawData {
+		l := left.(string)
+		arr := right.([]interface{})
+		for i := range arr {
+			r := arr[i].(string)
+			idx := strings.Index(l, r)
+			if idx != -1 {
+				return StringData(r)
+			}
+		}
+
+		return StringData("")
+	})
+}

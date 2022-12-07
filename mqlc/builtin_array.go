@@ -53,7 +53,7 @@ func compileWhere(c *compiler, typ types.Type, ref uint64, id string, call *pars
 		chunkId := "==" + string(childType)
 		if blockTyp != childType {
 			chunkId = "==" + string(blockTyp)
-			_, err := llx.BuiltinFunctionV2(blockTyp, chunkId)
+			_, err := llx.BuiltinFunctionV2(childType, chunkId)
 			if err != nil {
 				return types.Nil, errors.New("called '" + id + "' with wrong type; either provide a type " + childType.Label() + " value or write it as an expression (e.g. \"_ == 123\")")
 			}

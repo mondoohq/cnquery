@@ -1090,6 +1090,14 @@ func TestDict_Methods_Contains(t *testing.T) {
 			1, false,
 		},
 		{
+			p + "params['hello'].contains(['xx','he'])",
+			1, true,
+		},
+		{
+			p + "params['hello'].contains(['xx'])",
+			1, false,
+		},
+		{
 			p + "params['string-array'].contains('a')",
 			1, true,
 		},

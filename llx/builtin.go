@@ -328,6 +328,7 @@ func init() {
 			// string("!=" + types.Float):               {f: stringNotFloatV2, Label: "!="},
 			// string("==" + types.Dict):                {f: stringCmpDictV2, Label: "=="},
 			// string("!=" + types.Dict):                {f: stringNotDictV2, Label: "!="},
+			string("==" + types.Array(types.String)): {f: stringsliceEqArrayString, Label: "=="},
 		},
 		types.Regex: {
 			// == / !=
