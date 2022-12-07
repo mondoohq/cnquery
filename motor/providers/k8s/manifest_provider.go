@@ -198,6 +198,7 @@ func loadManifestFile(manifestFile string) ([]byte, error) {
 		}
 
 		if fi.IsDir() {
+			yamlDecoder := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
 			filepath.WalkDir(manifestFile, func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
@@ -211,20 +212,13 @@ func loadManifestFile(manifestFile string) ([]byte, error) {
 						return nil
 					}
 					// check whether this is valid k8s yaml
-					f, err := os.Open(path)
-					if err != nil {
-						log.Debug().Str("file", path).Err(err).Msg("ignore file, could not open file")
-						return nil
-					}
-					defer f.Close()
-
-					content, err := io.ReadAll(f)
+					content, err := os.ReadFile(path)
 					if err != nil {
 						log.Debug().Str("file", path).Err(err).Msg("ignore file, could not read file")
 						return nil
 					}
 					// At this point, we do not care about specific schemes, just whether the file is a valid k8s yaml
-					_, _, err = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(content, nil, nil)
+					_, _, err = yamlDecoder.Decode(content, nil, nil)
 					if err != nil {
 						// the err contains the file content, which is not useful in the output
 						errorString := ""
