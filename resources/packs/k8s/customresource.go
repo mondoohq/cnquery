@@ -54,7 +54,7 @@ func (k *mqlK8s) GetCustomresources() ([]interface{}, error) {
 				log.Error().Err(err).Msg("couldn't create resource")
 				return nil, err
 			}
-			r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resp})
+			r.MqlResource().Cache.Store("_resource", &resources.CacheEntry{Data: resource})
 			return r, nil
 		})
 		resp = append(resp, mqlResources...)

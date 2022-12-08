@@ -3,6 +3,8 @@ kind: Pipeline
 metadata:
   name: demo-pipeline
   namespace: default
+  labels:
+    test: mondoo
 spec:
   tasks:
     - name: build-skaffold-web
