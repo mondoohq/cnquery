@@ -34,19 +34,7 @@ func (m *mqlMsgraphOrganization) id() (string, error) {
 }
 
 func (m *mqlMsgraph) GetSettings() ([]interface{}, error) {
-	return []interface{}{}, nil
-}
-
-func (m *mqlMsgraphDomaindnsrecord) GetProperties() ([]interface{}, error) {
-	return []interface{}{}, nil
-}
-
-func (m *mqlMsgraphDevicemanagementDeviceconfiguration) GetProperties() ([]interface{}, error) {
-	return []interface{}{}, nil
-}
-
-func (m *mqlMsgraphDevicemanagementDevicecompliancepolicy) GetProperties() ([]interface{}, error) {
-	return []interface{}{}, nil
+	return nil, errors.New("msgraph.beta.settings not supported")
 }
 
 func (m *mqlMsgraph) GetOrganizations() ([]interface{}, error) {
@@ -337,6 +325,7 @@ func (m *mqlMsgraphDomain) GetServiceConfigurationRecords() ([]interface{}, erro
 	records := resp.GetValue()
 	for i := range records {
 		record := records[i]
+		properties, _ := core.JsonToDict(record.GetAdditionalData())
 
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.domaindnsrecord",
 			"id", core.ToString(record.GetId()),
@@ -345,6 +334,7 @@ func (m *mqlMsgraphDomain) GetServiceConfigurationRecords() ([]interface{}, erro
 			"recordType", core.ToString(record.GetRecordType()),
 			"supportedService", core.ToString(record.GetSupportedService()),
 			"ttl", core.ToInt64From32(record.GetTtl()),
+			"properties", properties,
 		)
 		if err != nil {
 			return nil, err
@@ -812,6 +802,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceConfigurations() ([]interface{}, e
 	configurations := resp.GetValue()
 	for i := range configurations {
 		configuration := configurations[i]
+		properties, _ := core.JsonToDict(configuration.GetAdditionalData())
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.deviceconfiguration",
 			"id", core.ToString(configuration.GetId()),
 			"lastModifiedDateTime", configuration.GetLastModifiedDateTime(),
@@ -819,6 +810,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceConfigurations() ([]interface{}, e
 			"description", core.ToString(configuration.GetDescription()),
 			"displayName", core.ToString(configuration.GetDisplayName()),
 			"version", core.ToInt64From32(configuration.GetVersion()),
+			"properties", properties,
 		)
 		if err != nil {
 			return nil, err
@@ -862,6 +854,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{
 		compliancePolicy := compliancePolicies[i]
 
 		assignments, _ := core.JsonToDictSlice(msgraphconv.NewDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))
+		properties, _ := core.JsonToDict(compliancePolicy.GetAdditionalData())
 
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.devicecompliancepolicy",
 			"id", core.ToString(compliancePolicy.GetId()),
@@ -871,6 +864,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{
 			"lastModifiedDateTime", compliancePolicy.GetLastModifiedDateTime(),
 			"version", core.ToInt64From32(compliancePolicy.GetVersion()),
 			"assignments", assignments,
+			"properties", properties,
 		)
 		if err != nil {
 			return nil, err
