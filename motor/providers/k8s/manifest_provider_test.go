@@ -48,6 +48,24 @@ func TestManifestFiles(t *testing.T) {
 	}
 }
 
+func TestManifestFile_CustomResource(t *testing.T) {
+	manifestFile := "./resources/testdata/cr/tekton.yaml"
+	transport, err := newManifestProvider("", "", WithManifestFile(manifestFile))
+	require.NoError(t, err)
+	require.NotNil(t, transport)
+
+	name := "demo-pipeline"
+	namespace := "default"
+	kind := "pipeline.tekton.dev"
+	res, err := transport.Resources(kind, name, namespace)
+	require.NoError(t, err)
+	assert.Equal(t, name, res.Name)
+	assert.Equal(t, namespace, res.Namespace)
+	assert.Equal(t, kind, res.Kind)
+	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
+	assert.Equal(t, 1, len(res.Resources))
+}
+
 func TestManifestFileProvider(t *testing.T) {
 	t.Run("k8s manifest provider", func(t *testing.T) {
 		manifestFile := "./resources/testdata/pod.yaml"
