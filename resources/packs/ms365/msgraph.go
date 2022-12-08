@@ -33,6 +33,22 @@ func (m *mqlMsgraphOrganization) id() (string, error) {
 	return m.Id()
 }
 
+func (m *mqlMsgraph) GetSettings() ([]interface{}, error) {
+	return []interface{}{}, nil
+}
+
+func (m *mqlMsgraphDomaindnsrecord) GetProperties() ([]interface{}, error) {
+	return []interface{}{}, nil
+}
+
+func (m *mqlMsgraphDevicemanagementDeviceconfiguration) GetProperties() ([]interface{}, error) {
+	return []interface{}{}, nil
+}
+
+func (m *mqlMsgraphDevicemanagementDevicecompliancepolicy) GetProperties() ([]interface{}, error) {
+	return []interface{}{}, nil
+}
+
 func (m *mqlMsgraph) GetOrganizations() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {

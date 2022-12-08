@@ -2,6 +2,24 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/ms365"
 
+alias msgraph.beta = msgraph
+alias msgraph.beta.user = msgraph.user
+alias msgraph.beta.group = msgraph.group
+alias msgraph.beta.domain = msgraph.domain
+alias msgraph.beta.application = msgraph.application
+alias msgraph.beta.serviceprincipal = msgraph.serviceprincipal
+alias msgraph.beta.organization = msgraph.organization
+alias msgraph.beta.domaindnsrecord = msgraph.domaindnsrecord
+alias msgraph.beta.security = msgraph.security
+alias msgraph.beta.security.securityscore = msgraph.security.securityscore
+alias msgraph.beta.policies = msgraph.policies
+alias msgraph.beta.rolemanagement = msgraph.rolemanagement
+alias msgraph.beta.rolemanagement.roledefinition = msgraph.rolemanagement.roledefinition
+alias msgraph.beta.rolemanagement.roleassignment = msgraph.rolemanagement.roleassignment
+alias msgraph.beta.devicemanagement = msgraph.devicemanagement
+alias msgraph.beta.devicemanagement.deviceconfiguration = msgraph.devicemanagement.deviceconfiguration
+alias msgraph.beta.devicemanagement.devicecompliancepolicy = msgraph.devicemanagement.devicecompliancepolicy
+
 // Microsoft Graph
 msgraph {
   organizations() []msgraph.organization
@@ -9,7 +27,9 @@ msgraph {
   groups() []msgraph.group
   domains() []msgraph.domain
   applications() []msgraph.application
-  serviceprincipals() []msgraph.serviceprincipal 
+  serviceprincipals() []msgraph.serviceprincipal
+  // deprecated, kept for backwards compatability. always returns an empty dictionary.
+  settings() dict
 }
 
 // Microsoft Graph Organization
@@ -82,6 +102,8 @@ msgraph.domaindnsrecord {
   recordType string
   supportedService string
   ttl int
+  // deprecated, kept for backwards compatability. always returns an empty dictionary.
+  properties() dict
 }
 
 // Microsoft Graph Application
@@ -169,6 +191,8 @@ msgraph.devicemanagement.deviceconfiguration {
   description string
   displayName string
   version int
+  // deprecated, kept for backwards compatability. always returns an empty dictionary.
+  properties() dict
 }
 
 // Microsoft Graph Device Compliance Policy
@@ -180,6 +204,8 @@ msgraph.devicemanagement.devicecompliancepolicy {
   lastModifiedDateTime time
   version int
   assignments []dict
+  // deprecated, kept for backwards compatability. always returns an empty dictionary.
+  properties() dict
 }
 
 // Microsoft 365 ExchangeOnline
