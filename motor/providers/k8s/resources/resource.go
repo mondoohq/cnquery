@@ -134,6 +134,12 @@ func (ri *ApiResourceIndex) Lookup(kind string) (*ApiResource, error) {
 			return &out[0], nil
 		}
 
+	case "ingress", "ingresses":
+		out := ri.find("ingresses.v1.networking.k8s.io")
+		if len(out) != 0 {
+			return &out[0], nil
+		}
+
 	// prevent "Error: ambiguous kind "networkpolicies". use one of these as the KIND disambiguate: [networkpolicies.v1.networking.k8s.io, networkpolicies.v1.crd.projectcalico.org]
 	case "networkpolicy", "networkpolicies":
 		// check for k8s network policies as the default

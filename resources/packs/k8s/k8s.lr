@@ -49,6 +49,8 @@ k8s {
   rolebindings() []k8s.rbac.rolebinding
   // Kubernetes custom resources
   customresources() []k8s.customresource
+  // Kubernetes Ingresses
+  ingresses() []k8s.ingress
 }
 
 // Kubernetes API Resources
@@ -537,6 +539,32 @@ k8s.service @defaults("namespace name created") {
   // Full resource manifest
   manifest dict
   // Service Spec
+  spec dict
+}
+
+// Kubernetes Ingress
+k8s.ingress @defaults("namespace name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namesapce
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Ingress Spec
   spec dict
 }
 

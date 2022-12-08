@@ -11,6 +11,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -436,6 +437,47 @@ func (t *manifestParser) DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet
 	}
 
 	return sliceToPtrSlice(daemonsets), nil
+}
+
+func (t *manifestParser) Ingress(namespace, name string) (*networkingv1.Ingress, error) {
+	result, err := t.Resources("ingresses.v1.networking.k8s.io", name, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Resources) > 1 {
+		return nil, errors.New("multiple ingresses found")
+	}
+	foundIngress, ok := result.Resources[0].(*networkingv1.Ingress)
+	if !ok {
+		return nil, errors.New("could not convert k8s resource to ingress")
+	}
+
+	if foundIngress.Name == "" {
+		return nil, errors.New("ingress not found")
+	}
+	return foundIngress, nil
+}
+
+func (t *manifestParser) Ingresses(namespace v1.Namespace) ([]*networkingv1.Ingress, error) {
+	result, err := t.Resources("ingresses.v1.networking.k8s.io", "", namespace.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+
+	var ingresses []networkingv1.Ingress
+	for i := range result.Resources {
+		r := result.Resources[i]
+
+		ingress, ok := r.(*networkingv1.Ingress)
+		if !ok {
+			log.Error().Err(err).Msg("could not convert k8s resource to ingress")
+			return nil, err
+		}
+		ingresses = append(ingresses, *ingress)
+	}
+
+	return sliceToPtrSlice(ingresses), nil
 }
 
 func (t *manifestParser) Secret(namespace, name string) (*v1.Secret, error) {
