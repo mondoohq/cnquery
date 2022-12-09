@@ -1,13 +1,39 @@
 package packages
 
 import (
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
+
+func TestWindowsAppPackagesParser(t *testing.T) {
+	f, err := os.Open("./testdata/windows_packages.json")
+	defer f.Close()
+	require.NoError(t, err)
+
+	m, err := ParseWindowsAppPackages(f)
+	assert.Nil(t, err)
+	assert.Equal(t, 19, len(m), "detected the right amount of packages")
+
+	var p Package
+	p = Package{
+		Name:    "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
+		Version: "14.28.29913.0",
+		Arch:    "",
+		Format:  "windows/app",
+	}
+	assert.Contains(t, m, p)
+
+	// check empty return
+	m, err = ParseWindowsAppxPackages(strings.NewReader(""))
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(m), "detected the right amount of packages")
+}
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
 	mock, err := mock.NewFromTomlFile("./testdata/windows_2019.toml")

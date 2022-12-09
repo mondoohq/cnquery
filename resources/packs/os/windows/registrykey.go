@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"strconv"
 
@@ -157,7 +156,7 @@ type RegistryKeyChild struct {
 }
 
 func ParseRegistryKeyItems(r io.Reader) ([]RegistryKeyItem, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +171,7 @@ func ParseRegistryKeyItems(r io.Reader) ([]RegistryKeyItem, error) {
 }
 
 func ParseRegistryKeyChildren(r io.Reader) ([]RegistryKeyChild, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
