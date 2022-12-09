@@ -4,16 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"time"
-
-	"go.mondoo.com/cnquery/motor/platform"
-
-	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/platform/windows"
+	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 )
 
@@ -81,28 +78,8 @@ const (
 )
 
 var (
-	WINDOWS_QUERY_HOTFIXES       = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
-	WINDOWS_QUERY_APPX_PACKAGES  = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
-	WINDOWS_QUERY_WSUS_AVAILABLE = `
-$ProgressPreference='SilentlyContinue';
-$updateSession = new-object -com "Microsoft.Update.Session"
-$searcher=$updateSession.CreateupdateSearcher().Search(("IsInstalled=0 and Type='Software'"))
-$updates = $searcher.Updates | ForEach-Object {
-	$update = $_
-	$value = New-Object psobject -Property @{
-		"UpdateID" =  $update.Identity.UpdateID;
-		"Title" = $update.Title
-		"MsrcSeverity" = $update.MsrcSeverity
-		"RevisionNumber" =  $update.Identity.RevisionNumber;
-		"CategoryIDs" = @($update.Categories | % { $_.CategoryID })
-		"SecurityBulletinIDs" = $update.SecurityBulletinIDs
-		"RebootRequired" = $update.RebootRequired
-		"KBArticleIDs" = $update.KBArticleIDs
-		"CveIDs" = @($update.CveIDs)
-	}
-	$value
-}
-@($updates) | ConvertTo-Json`
+	WINDOWS_QUERY_HOTFIXES      = `Get-HotFix | Select-Object -Property Status, Description, HotFixId, Caption, InstalledOn, InstalledBy | ConvertTo-Json`
+	WINDOWS_QUERY_APPX_PACKAGES = `Get-AppxPackage -AllUsers | Select Name, PackageFullName, Architecture, Version  | ConvertTo-Json`
 )
 
 type powershellWinAppxPackages struct {
@@ -114,7 +91,7 @@ type powershellWinAppxPackages struct {
 
 // Good read: https://www.wintips.org/view-installed-apps-and-packages-in-windows-10-8-1-8-from-powershell/
 func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
-	data, err := ioutil.ReadAll(input)
+	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}
@@ -149,58 +126,6 @@ func ParseWindowsAppxPackages(input io.Reader) ([]Package, error) {
 	return pkgs, nil
 }
 
-type powershellWinUpdate struct {
-	UpdateID     string   `json:"UpdateID"`
-	Title        string   `json:"Title"`
-	CategoryIDs  []string `json:"CategoryIDs"`
-	KBArticleIDs []string `json:"KBArticleIDs"`
-}
-
-func ParseWindowsUpdates(input io.Reader) ([]Package, error) {
-	data, err := ioutil.ReadAll(input)
-	if err != nil {
-		return nil, err
-	}
-
-	// handle case where no packages are installed
-	if len(data) == 0 {
-		return []Package{}, nil
-	}
-
-	var powerShellUpdates []powershellWinUpdate
-	err = json.Unmarshal(data, &powerShellUpdates)
-	if err != nil {
-		return nil, err
-	}
-
-	updates := make([]Package, len(powerShellUpdates))
-	for i := range powerShellUpdates {
-		if len(powerShellUpdates[i].KBArticleIDs) == 0 {
-			log.Warn().Str("update", powerShellUpdates[i].UpdateID).Msg("ms update has no kb assigned")
-			continue
-		}
-
-		// todo: we may want to make that decision server-side, since it does not require us to update the agent
-		// therefore we need additional information to be transmitted via the packages eg. labels
-		// important := false
-		// for ci := range powerShellUpdates[i].CategoryIDs {
-		// 	id := powerShellUpdates[i].CategoryIDs[ci]
-		// 	classification := wsusClassificationGUID[strings.ToLower(id)]
-		// 	if classification == CriticalUpdates || classification == SecurityUpdates || classification == UpdateRollups {
-		// 		important = true
-		// 	}
-		// }
-
-		updates[i] = Package{
-			Name:        powerShellUpdates[i].KBArticleIDs[0],
-			Version:     powerShellUpdates[i].UpdateID,
-			Description: powerShellUpdates[i].Title,
-			Format:      "windows/updates",
-		}
-	}
-	return updates, nil
-}
-
 type PowershellWinHotFix struct {
 	Status      string `json:"Status"`
 	Description string `json:"Description"`
@@ -218,7 +143,7 @@ func (hf PowershellWinHotFix) InstalledOnTime() *time.Time {
 }
 
 func ParseWindowsHotfixes(input io.Reader) ([]PowershellWinHotFix, error) {
-	data, err := ioutil.ReadAll(input)
+	data, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}
@@ -284,6 +209,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 		pkgs = append(pkgs, appxPkgs...)
 	}
 
+	// hotfixes
 	cmd, err := w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch hotfixes")

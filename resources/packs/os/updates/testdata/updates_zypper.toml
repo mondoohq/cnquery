@@ -1,0 +1,623 @@
+[commands."zypper --xmlout list-updates"]
+stdout = """<?xml version='1.0'?>
+<stream>
+<message type="info">Loading repository data...</message>
+<message type="info">Reading installed packages...</message>
+<update-status version="0.6">
+<update-list>
+ <update name="aaa_base" edition="13.2+git20140911.61c1681-28.6.1" arch="x86_64" kind="package" edition-old="13.2+git20140911.61c1681-28.3.1" >
+  <summary>openSUSE Base Package</summary>
+  <description>This package installs several important configuration files and central scripts.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="bash" edition="4.3-83.6.1" arch="x86_64" kind="package" edition-old="4.3-83.3.1" >
+  <summary>The GNU Bourne-Again Shell</summary>
+  <description>Bash is an sh-compatible command interpreter that executes commands
+read from standard input or from a file.  Bash incorporates useful
+features from the Korn and C shells (ksh and csh).  Bash is intended to
+be a conformant implementation of the IEEE Posix Shell and Tools
+specification (IEEE Working Group 1003.2).</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="glibc" edition="2.22-19.1" arch="x86_64" kind="package" edition-old="2.22-16.3" >
+  <summary>Standard Shared Libraries (from the GNU C Library)</summary>
+  <description>The GNU C Library provides the most important standard libraries used
+by nearly all programs: the standard C library, the standard math
+library, and the POSIX thread library. A system is not functional
+without these libraries.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="gpg2" edition="2.0.24-9.3.1" arch="x86_64" kind="package" edition-old="2.0.24-8.1" >
+  <summary>GnuPG 2</summary>
+  <description>GnuPG 2 is the successor of &quot;GnuPG&quot; or GPG. It provides: GPGSM,
+gpg-agent, and a keybox library.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libcurl4" edition="7.37.0-36.1" arch="x86_64" kind="package" edition-old="7.37.0-33.1" >
+  <summary>Version 4 of cURL shared library</summary>
+  <description>The cURL shared library version 4 for accessing data using different
+network protocols.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libgcc_s1" edition="7.3.1+r258812-10.1" arch="x86_64" kind="package" edition-old="7.3.1+r258313-6.1" >
+  <summary>C compiler runtime library</summary>
+  <description>Libgcc is needed for dynamically linked C programs.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libgcrypt20" edition="1.6.1-45.1" arch="x86_64" kind="package" edition-old="1.6.1-42.1" >
+  <summary>The GNU Crypto Library</summary>
+  <description>Libgcrypt is a general purpose crypto library based on the code used in
+GnuPG (alpha version).</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libopenssl1_0_0" edition="1.0.2j-25.1" arch="x86_64" kind="package" edition-old="1.0.2j-16.1" >
+  <summary>Secure Sockets and Transport Layer Security</summary>
+  <description>The OpenSSL Project is a collaborative effort to develop a robust,
+commercial-grade, full-featured, and open source toolkit implementing
+the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
+v1) protocols with full-strength cryptography. The project is managed
+by a worldwide community of volunteers that use the Internet to
+communicate, plan, and develop the OpenSSL toolkit and its related
+documentation.
+
+Derivation and License
+
+OpenSSL is based on the excellent SSLeay library developed by Eric A.
+Young and Tim J. Hudson. The OpenSSL toolkit is licensed under an
+Apache-style license, which basically means that you are free to get it
+and to use it for commercial and noncommercial purposes.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libprocps3" edition="3.3.9-20.1" arch="x86_64" kind="package" edition-old="3.3.9-17.1" >
+  <summary>The procps library</summary>
+  <description>The procps library can be used to read informations out from /proc
+the process information pseudo-file system,</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libreadline6" edition="6.3-83.6.1" arch="x86_64" kind="package" edition-old="6.3-83.3.1" >
+  <summary>The Readline Library</summary>
+  <description>The readline library is used by the Bourne Again Shell (bash, the
+standard command interpreter) for easy editing of command lines.  This
+includes history and search functionality.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libsolv-tools" edition="0.6.34-9.1" arch="x86_64" kind="package" edition-old="0.6.32-6.1" >
+  <summary>Utilities to work with .solv files</summary>
+  <description>libsolv is a library for solving packages and reading repositories.
+
+This subpackage contains utilities to create and work with the .solv
+files used by libsolv.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libstdc++6" edition="7.3.1+r258812-10.1" arch="x86_64" kind="package" edition-old="7.3.1+r258313-6.1" >
+  <summary>The standard C++ shared library</summary>
+  <description>The standard C++ library, needed for dynamically linked C++ programs.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libsystemd0" edition="228-50.1" arch="x86_64" kind="package" edition-old="228-47.1" >
+  <summary>Component library for systemd</summary>
+  <description>This library provides several of the systemd C APIs:
+
+* sd-bus implements an alternative D-Bus client library that is
+  relatively easy to use, very efficient and supports both classic
+  D-Bus as well as kdbus as transport backend.
+
+* sd-daemon(3): for system services (daemons) to report their status
+  to systemd and to make easy use of socket-based activation logic
+
+* sd-event is a generic event loop abstraction that is built around
+  Linux epoll, but adds features such as event prioritization or
+  efficient timer handling.
+
+* sd-id128(3): generation and processing of 128-bit IDs
+
+* sd-journal(3): API to submit and query journal log entries
+
+* sd-login(3): APIs to introspect and monitor seat, login session and
+  user status information on the local system.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libudev1" edition="228-50.1" arch="x86_64" kind="package" edition-old="228-47.1" >
+  <summary>Dynamic library to access udev device information</summary>
+  <description>This package contains the dynamic library libudev, which provides
+access to udev device information</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libz1" edition="1.2.8-14.3.1" arch="x86_64" kind="package" edition-old="1.2.8-13.15" >
+  <summary>Library implementing the DEFLATE compression algorithm</summary>
+  <description>zlib is a general-purpose lossless data-compression library,
+implementing an API for the DEFLATE algorithm, the latter of
+which is being used by, for example, gzip and the ZIP archive
+format.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="libzypp" edition="16.17.12-24.1" arch="x86_64" kind="package" edition-old="16.17.10-21.1" >
+  <summary>Package, Patch, Pattern, and Product Management</summary>
+  <description>Package, Patch, Pattern, and Product Management</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openssl" edition="1.0.2j-25.1" arch="x86_64" kind="package" edition-old="1.0.2j-16.1" >
+  <summary>Secure Sockets and Transport Layer Security</summary>
+  <description>The OpenSSL Project is a collaborative effort to develop a robust,
+commercial-grade, full-featured, and open source toolkit implementing
+the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
+v1) protocols with full-strength cryptography. The project is managed
+by a worldwide community of volunteers that use the Internet to
+communicate, plan, and develop the OpenSSL toolkit and its related
+documentation.
+
+Derivation and License
+
+OpenSSL is based on the excellent SSLeay library developed by Eric A.
+Young and Tim J. Hudson. The OpenSSL toolkit is licensed under an
+Apache-style license, which basically means that you are free to get it
+and to use it for commercial and noncommercial purposes.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="perl-base" edition="5.18.2-15.2" arch="x86_64" kind="package" edition-old="5.18.2-9.1" >
+  <summary>The Perl interpreter</summary>
+  <description>perl - Practical Extraction and Report Language
+
+Perl is optimized for scanning arbitrary text files, extracting
+information from those text files, and printing reports based on that
+information.  It is also good for many system management tasks.
+
+Perl is intended to be practical (easy to use, efficient, and complete)
+rather than beautiful (tiny, elegant, and minimal).
+
+This package contains only some basic modules and the perl binary
+itself.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="procps" edition="3.3.9-20.1" arch="x86_64" kind="package" edition-old="3.3.9-17.1" >
+  <summary>The ps utilities for /proc</summary>
+  <description>The procps package contains a set of system utilities that provide
+system information. Procps includes ps, free, skill, snice, tload, top,
+uptime, vmstat, w, and watch. The ps command displays a snapshot of
+running processes. The top command provides a repetitive update of the
+statuses of running processes. The free command displays the amounts of
+free and used memory on your system. The skill command sends a
+terminate command (or another specified signal) to a specified set of
+processes. The snice command is used to change the scheduling priority
+of specified processes. The tload command prints a graph of the current
+system load average to a specified tty. The uptime command displays the
+current time, how long the system has been running, how many users are
+logged on, and system load averages for the past one, five, and fifteen
+minutes. The w command displays a list of the users who are currently
+logged on and what they are running. The watch program watches a
+running program. The vmstat command displays virtual memory statistics
+about processes, memory, paging, block I/O, traps, and CPU activity.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="rpm" edition="4.11.2-14.7.1" arch="x86_64" kind="package" edition-old="4.11.2-13.7" >
+  <summary>The RPM Package Manager</summary>
+  <description>RPM Package Manager is the main tool for managing the software packages
+of the SUSE Linux distribution.
+
+RPM can be used to install and remove software packages. With rpm, it
+is easy to update packages.  RPM keeps track of all these manipulations
+in a central database.	This way it is possible to get an overview of
+all installed packages.  RPM also supports database queries.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="shadow" edition="4.2.1-16.1" arch="x86_64" kind="package" edition-old="4.2.1-13.1" >
+  <summary>Utilities to Manage User and Group Accounts</summary>
+  <description>This package includes the necessary programs for converting plain
+password files to the shadow password format and to manage user and
+group accounts.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="systemd" edition="228-50.1" arch="x86_64" kind="package" edition-old="228-47.1" >
+  <summary>A System and Session Manager</summary>
+  <description>Systemd is a system and service manager, compatible with SysV and LSB
+init scripts for Linux. systemd provides aggressive parallelization
+capabilities, uses socket and D-Bus activation for starting services,
+offers on-demand starting of daemons, keeps track of processes using
+Linux cgroups, supports snapshotting and restoring of the system state,
+maintains mount and automount points and implements an elaborate
+transactional dependency-based service control logic. It can work as a
+drop-in replacement for sysvinit.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+</update-list>
+</update-status>
+</stream>
+"""
+
+[commands."zypper --xmlout list-updates -t patch"]
+stdout = """<?xml version='1.0'?>
+<stream>
+<progress id="raw-refresh" name="Retrieving repository &apos;NON OSS&apos; metadata" value="0"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;NON OSS&apos; metadata" done="1"/>
+<progress id="11" name="Building repository &apos;NON OSS&apos; cache"/>
+<progress id="11" name="Building repository &apos;NON OSS&apos; cache" value="0"/>
+<progress id="11" name="Building repository &apos;NON OSS&apos; cache" value="100"/>
+<progress id="11" name="Building repository &apos;NON OSS&apos; cache" value="100"/>
+<progress id="11" name="Building repository &apos;NON OSS&apos; cache" done="1"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;NON OSS Update&apos; metadata" value="0"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;NON OSS Update&apos; metadata" done="1"/>
+<progress id="17" name="Building repository &apos;NON OSS Update&apos; cache"/>
+<progress id="17" name="Building repository &apos;NON OSS Update&apos; cache" value="0"/>
+<progress id="17" name="Building repository &apos;NON OSS Update&apos; cache" value="100"/>
+<progress id="17" name="Building repository &apos;NON OSS Update&apos; cache" value="100"/>
+<progress id="17" name="Building repository &apos;NON OSS Update&apos; cache" done="1"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS&apos; metadata" value="0"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS&apos; metadata" done="1"/>
+<progress id="23" name="Building repository &apos;OSS&apos; cache"/>
+<progress id="23" name="Building repository &apos;OSS&apos; cache" value="0"/>
+<progress id="23" name="Building repository &apos;OSS&apos; cache" value="100"/>
+<progress id="23" name="Building repository &apos;OSS&apos; cache" value="100"/>
+<progress id="23" name="Building repository &apos;OSS&apos; cache" done="1"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata" value="0"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;OSS Update&apos; metadata" done="1"/>
+<progress id="29" name="Building repository &apos;OSS Update&apos; cache"/>
+<progress id="29" name="Building repository &apos;OSS Update&apos; cache" value="0"/>
+<progress id="29" name="Building repository &apos;OSS Update&apos; cache" value="100"/>
+<progress id="29" name="Building repository &apos;OSS Update&apos; cache" value="100"/>
+<progress id="29" name="Building repository &apos;OSS Update&apos; cache" done="1"/>
+<message type="info">Loading repository data...</message>
+<message type="info">Reading installed packages...</message>
+<update-status version="0.6">
+<update-list>
+ <update name="openSUSE-2018-397" edition="1" arch="noarch" status="needed" category="recommended" severity="moderate" pkgmanager="true" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for libsolv, libzypp  </summary>
+  <description>This update for libsolv, libzypp provides the following fixes:
+
+Changes in libsolv:
+- Make sure the product file comes from /etc/products.d for the fallback product search.
+  (bsc#1086602)
+- Also make use of suggests for ordering packages. (bsc#1077635)
+- Fix bad assignment in solution refinement that led to a memory leak. (bsc#1075978)
+- Use license tag instead of doc in the spec file. (bsc#1082318)
+
+Changes in libzypp:
+- Make sure the product file comes from /etc/products.d for the fallback product search.
+  (bsc#1086602)
+- Fix a memory leak in Digest.cc. (bsc#1075978)
+- Add /var/lib/gdm to CheckAccessDeleted blacklist to prevent showing superfluous `zypper ps -s`
+  messages. (bsc#1079991)
+
+This update was imported from the SUSE:SLE-12-SP3:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+</update-list>
+<blocked-update-list>
+ <update name="openSUSE-2018-361" edition="1" arch="noarch" status="needed" category="security" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for openssl  </summary>
+  <description>This update for openssl fixes the following issues:
+
+- CVE-2018-0739: Constructed ASN.1 types with a recursive definition (such as can be found in PKCS7)
+  could eventually exceed the stack given malicious input with excessive recursion. This could result
+  in a Denial Of Service attack. There are no such structures used within SSL/TLS that come from
+  untrusted sources so this is considered safe. (bsc#1087102).
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-400" edition="1" arch="noarch" status="needed" category="security" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for perl  </summary>
+  <description>This update for perl fixes the following issues:
+
+Security issues fixed:
+
+- CVE-2018-6913: Fixed space calculation issues in pp_pack.c (bsc#1082216).
+- CVE-2018-6798: Fixed heap buffer overflow in regexec.c (bsc#1082233).
+- CVE-2018-6797: Fixed sharp-s regexp overflow (bsc#1082234).
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-419" edition="1" arch="noarch" status="needed" category="recommended" severity="low" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for rpm  </summary>
+  <description>This update for rpm provides the following fixes:
+
+- Added a %rpm_vercmp macro which accepts two versions as parameters and returns -1, 0, 1
+  if the first version is less than, equal or greater than the second version respectively.
+- Added a %pkg_version macro that accepts a package or capability name as argument and
+  returns the version number of the installed package. If no package provides the argument,
+  it returns the string &quot;~~~&quot;.
+- Added a %pkg_vcmp macro that accepts 3 parameters. The first parameter is a package name
+  or provided capability name, the second argument is an operator ( &lt; &lt;= = &gt;= &gt; != )
+  and the third parameter is a version string to be compared to the installed version of
+  the first argument.
+- Added a %pkg_version_cmp macro which accepts a package or capability name as first argument
+  and a version number as second argument and returns -1, 0, 1 or &quot;~~~&quot;. The number values
+  have the same meaning as in %rpm_vercmp and the &quot;~~~&quot; string is returned if the package
+  or capability can&apos;t be found. (bsc#1069934)
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-439" edition="1" arch="noarch" status="needed" category="recommended" severity="important" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for gcc7  </summary>
+  <description>This update for gcc7 to 7.3 release fixes the following issues:
+
+- Update to GCC 7.3 release and further updated to gcc-7-branch head (r258812).
+- Various AArch64 compile fixes are included:
+
+  * Picks fix to no longer enable -mpc-relative-literal-loads by default
+    with --enable-fix-cortex-a53-843419.
+  * Enable --enable-fix-cortex-a53-843419 for aarch64.  [bsc#1084812] [bsc#1087930]
+  * Enable --enable-fix-cortex-a53-835769 for aarch64.
+  * Contains fix for PR82445 which is about a RPI1 bootloader miscompile. [bsc#1061667]
+  * Fixed bogus stack probe instruction on ARM. [bsc#1068967]
+
+- Revert the ios_base::failure ABI back to compatible behavior with the default ABI.  [bsc#1087550]
+
+- Fix nvptx offload target compiler install so GCC can pick up
+  required files.  Split out the newlib part into cross-nvptx-newlib7-devel
+  and avoid conflicts with GCC 8 variant via Provides/Conflicts
+  of cross-nvptx-newlib-devel.
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-471" edition="1" arch="noarch" status="needed" category="security" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for curl  </summary>
+  <description>This update for curl fixes several issues:
+
+Security issues fixed:
+
+- CVE-2018-1000301: Fixed a RTSP bad headers buffer over-read could crash the curl client (bsc#1092098)
+
+Non security issues fixed:
+
+- If the DEFAULT_SUSE cipher list is not available use the HIGH cipher alias before failing.
+  (bsc#1086825)
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-530" edition="1" arch="noarch" status="needed" category="recommended" severity="important" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for aaa_base  </summary>
+  <description>This update for aaa_base fixes the following issue:
+
+- bsc#1088524: customized profiles were not sourced properly
+
+This update was imported from the SUSE:SLE-12-SP3:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-516" edition="1" arch="noarch" status="needed" category="security" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for bash  </summary>
+  <description>This update for bash fixes the following issues:
+
+Security issues fixed:
+
+- CVE-2016-7543: A code execution possibility via SHELLOPTS+PS4 variable was fixed (bsc#1001299)
+- CVE-2016-0634: Arbitrary code execution via malicious hostname was fixed (bsc#1000396)
+
+Non-security issues fixed:
+
+- Fix repeating self-calling of traps due the combination of a non-interactive shell, a trap handler for SIGINT, an
+  external process in the trap handler, and a SIGINT within the trap after the external process runs. (bsc#1086247)
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-529" edition="1" arch="noarch" status="needed" category="recommended" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for systemd  </summary>
+  <description>This update for systemd provides the following fixes:
+
+- sysusers: Do not append entries after the NIS ones. (bsc#1085062, bsc#1045092)
+- sysusers: Also add support for NIS entries in /etc/shadow.
+- sysusers: Make sure to reset errno before calling fget*ent().
+- coredump: Respect ulimit -c 0 settings. (bsc#1075804)
+- systemctl: Don&apos;t make up unit states, and don&apos;t eat up errors too eagerly. (bsc#1084626)
+- systemctl: Don&apos;t mangle unit names in check_unit_generic().
+- rules, compat-rules: Fix errors detected by the rule syntax checker.
+- python: Use raw strings for regexp patterns.
+- compat-rules: Make path_id_compat build with meson.
+- compat-rules: Get rid of scsi_id when generating compat symlinks for NVMe devices.
+  (bsc#1051465)
+- Fix memory hotplugging.
+- systemd: Add offline environmental condition to the udev rules for acpi container to
+  prevent them from being triggered by the &quot;udevadm trigger&quot; from user space. (bsc#1082485)
+- systemd-udevd: Limit children-max by the available memory. (bsc#1086785, bsc#1066422)
+- Rename the tarball to reflect the exact version used, so that it is clear that it
+  contains some additional patches on top of the upstream version. Use the commit hash in
+  the name so the exact version can easily be identified. (bsc#1087323)
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-522" edition="1" arch="noarch" status="needed" category="recommended" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for zlib  </summary>
+  <description>This update for zlib fixes the following issues:
+
+- Fix a segmentation fault which was raised when converting a negative value into an unsigned integer (bsc#1071321)
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-567" edition="1" arch="noarch" status="needed" category="security" severity="important" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for glibc  </summary>
+  <description>This update for glibc fixes the following issues:
+
+- CVE-2017-18269: Fix SSE2 memmove issue when crossing 2GB boundary (bsc#1094150)
+- CVE-2018-11236: Fix overflow in path length computation (bsc#1094161)
+- CVE-2018-11237: Don&apos;t write beyond buffer destination in __mempcpy_avx512_no_vzeroupper (bsc#1094154)
+
+Non security bugs fixed:
+
+- Fix crash in resolver on memory allocation failure (bsc#1086690)
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-580" edition="1" arch="noarch" status="needed" category="recommended" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for rpm  </summary>
+  <description>This update for rpm fixes the following issues:
+
+- Backport support for no_recompute_build_ids macro. (bsc#964063)
+- Fix code execution when evaluating common python-related macros. (bsc#1080078)
+
+Additionally, this update adds python3-rpm to the SUSE Linux Enterprise Server.
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-640" edition="1" arch="noarch" status="needed" category="security" severity="important" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for gpg2  </summary>
+  <description>This update for gpg2 fixes the following security issue:
+
+- CVE-2018-12020: GnuPG mishandled the original filename during decryption and
+  verification actions, which allowed remote attackers to spoof the output that
+  GnuPG sends on file descriptor 2 to other programs that use the &quot;--status-fd 2&quot;
+  option (bsc#1096745)
+</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-645" edition="1" arch="noarch" status="needed" category="recommended" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Recommended update for openssl  </summary>
+  <description>This update for openssl provides the following fix:
+
+- Suggest libopenssl1_0_0-hmac from libopenssl1_0_0 package to avoid dependency issues
+  during updates. (bsc#1090765)
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.
+</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-685" edition="1" arch="noarch" status="needed" category="security" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for procps  </summary>
+  <description>This update for procps fixes the following security issues:
+
+- CVE-2018-1122: Prevent local privilege escalation in top. If a user ran top
+  with HOME unset in an attacker-controlled directory, the attacker could have
+  achieved privilege escalation by exploiting one of several vulnerabilities in
+  the config_file() function (bsc#1092100).
+- CVE-2018-1123: Prevent denial of service in ps via mmap buffer overflow.
+  Inbuilt protection in ps maped a guard page at the end of the overflowed
+  buffer, ensuring that the impact of this flaw is limited to a crash (temporary
+  denial of service) (bsc#1092100).
+- CVE-2018-1124: Prevent multiple integer overflows leading to a heap
+  corruption in file2strvec function. This allowed a privilege escalation for a
+  local attacker who can create entries in procfs by starting processes, which
+  could result in crashes or arbitrary code execution in proc utilities run by
+  other users (bsc#1092100).
+- CVE-2018-1125: Prevent stack buffer overflow in pgrep. This vulnerability was
+  mitigated by FORTIFY limiting the impact to a crash (bsc#1092100).
+- CVE-2018-1126: Ensure correct integer size in proc/alloc.* to prevent
+  truncation/integer overflow issues (bsc#1092100).
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-704" edition="1" arch="noarch" status="needed" category="security" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for openssl  </summary>
+  <description>This update for openssl fixes the following issues:
+
+- CVE-2018-0732: During key agreement in a TLS handshake using a DH(E) based
+  ciphersuite a malicious server could have sent a very large prime value to the
+  client. This caused the client to spend an unreasonably long period of time
+  generating a key for this prime resulting in a hang until the client has
+  finished. This could be exploited in a Denial Of Service attack (bsc#1097158).
+- Blinding enhancements for ECDSA and DSA (bsc#1097624, bsc#1098592)
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-750" edition="1" arch="noarch" status="needed" category="security" severity="important" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for perl  </summary>
+  <description>This update for perl fixes the following issues:
+
+This security issue was fixed:
+
+- CVE-2018-12015: The Archive::Tar module allowed remote attackers to bypass a
+  directory-traversal protection mechanism and overwrite arbitrary files
+  (bsc#1096718)
+
+This non-security issue was fixed:
+
+- fix debugger crash in tab completion with Term::ReadLine::Gnu [bsc#1068565]
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-770" edition="1" arch="noarch" status="needed" category="security" severity="important" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for shadow  </summary>
+  <description>This update for shadow fixes the following issues:
+
+- CVE-2016-6252: Incorrect integer handling could results in local privilege escalation (bsc#1099310)
+
+This update was imported from the SUSE:SLE-12-SP2:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+ <update name="openSUSE-2018-795" edition="1" arch="noarch" status="needed" category="security" severity="moderate" pkgmanager="false" restart="false" interactive="false" kind="patch">
+  <summary>Security update for libgcrypt  </summary>
+  <description>This update for libgcrypt fixes the following issues:
+
+The following security vulnerability was addressed:
+
+- CVE-2018-0495: Mitigate a novel side-channel attack by enabling blinding for
+  ECDSA signatures (bsc#1097410).
+
+The following other issues were fixed:
+
+- Extended the fipsdrv dsa-sign and dsa-verify commands with the
+  --algo parameter for the FIPS testing of DSA SigVer and SigGen (bsc#1064455).
+- Ensure libgcrypt20-hmac and libgcrypt20 are installed in the correct order. (bsc#1090766)
+
+This update was imported from the SUSE:SLE-12:Update update project.</description>
+  <license></license>
+  <source url="http://download.opensuse.org/update/leap/42.3/oss/" alias="OSS Update"/>
+ </update>
+</blocked-update-list>
+</update-status>
+</stream>
+"""

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"io"
-	"io/ioutil"
 )
 
 func ParseRpmUpdates(input io.Reader) (map[string]PackageUpdate, error) {
@@ -53,7 +52,7 @@ type zypper struct {
 // parses the output of `zypper --xmlout list-updates`
 func ParseZypperUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 	pkgs := map[string]PackageUpdate{}
-	zypper, err := parseZypper(input)
+	zypper, err := ParseZypper(input)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +72,8 @@ func ParseZypperUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 	return pkgs, nil
 }
 
-func parseZypper(input io.Reader) (*zypper, error) {
-	content, err := ioutil.ReadAll(input)
+func ParseZypper(input io.Reader) (*zypper, error) {
+	content, err := io.ReadAll(input)
 	if err != nil {
 		return nil, err
 	}

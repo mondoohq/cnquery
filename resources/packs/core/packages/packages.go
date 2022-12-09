@@ -29,24 +29,10 @@ type PackageUpdate struct {
 	Repo      string `json:"repo"`
 }
 
-type OperatingSystemUpdate struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Severity    string `json:"severity"`
-	Category    string `json:"category"`
-	Restart     bool   `json:"restart"`
-	Format      string `json:"format"`
-}
-
 type OperatingSystemPkgManager interface {
 	Name() string
 	List() ([]Package, error)
 	Available() (map[string]PackageUpdate, error)
-}
-
-type OperatingSystemUpdateManager interface {
-	Name() string
-	List() ([]OperatingSystemUpdate, error)
 }
 
 // this will find the right package manager for the operating system
@@ -95,29 +81,4 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 	}
 
 	return pm, nil
-}
-
-// TODO: harmonize with ResolveSystemPkgManager
-// this will find the right package manager for the operating system
-func ResolveSystemUpdateManager(motor *motor.Motor) (OperatingSystemUpdateManager, error) {
-	var um OperatingSystemUpdateManager
-
-	pf, err := motor.Platform()
-	if err != nil {
-		return nil, err
-	}
-
-	osProvider, isOSProvider := motor.Provider.(os.OperatingSystemProvider)
-	if !isOSProvider {
-		return nil, errors.New("package manager is not supported for platform: " + pf.Name)
-	}
-
-	// TODO: use OS family and select package manager
-	switch pf.Name {
-	case "opensuse", "sles", "opensuse-leap", "opensuse-tumbleweed": // suse family
-		um = &SuseUpdateManager{provider: osProvider}
-	default:
-		return nil, errors.New("your platform is not supported by os updates resource")
-	}
-	return um, nil
 }

@@ -1,10 +1,11 @@
-package packages
+package updates
 
 import (
 	"fmt"
 	"io"
 
 	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/resources/packs/core/packages"
 )
 
 const (
@@ -33,7 +34,7 @@ func (sum *SuseUpdateManager) List() ([]OperatingSystemUpdate, error) {
 
 // ParseZypperPatches reads the operating system patches for Suse
 func ParseZypperPatches(input io.Reader) ([]OperatingSystemUpdate, error) {
-	zypper, err := parseZypper(input)
+	zypper, err := packages.ParseZypper(input)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +52,7 @@ func ParseZypperPatches(input io.Reader) ([]OperatingSystemUpdate, error) {
 		}
 
 		updates = append(updates, OperatingSystemUpdate{
+			ID:          u.Edition,
 			Name:        u.Name,
 			Severity:    u.Severity,
 			Restart:     restart,
