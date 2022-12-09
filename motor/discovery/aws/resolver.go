@@ -20,16 +20,17 @@ const (
 	// deprecated: use DiscoverySSMInstances instead
 	DiscoverySSM          = "ssm"
 	DiscoverySSMInstances = "ssm-instances"
+	DiscoveryECR          = "ecr"
 )
 
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
-	return "AWS EC2 Resolver"
+	return "AWS Resolver"
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances, DiscoveryECR}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -144,6 +145,27 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			} else {
 				instancesPlatformIdsMap[id] = a
 			}
+		}
+	}
+
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECR) {
+		r, err := NewEcrDiscovery(provider.Config())
+		if err != nil {
+			return nil, errors.Wrap(err, "could not initialize aws ecr discovery")
+		}
+
+		r.profile = tc.Options["profile"]
+		assetList, err := r.List()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch ecr repositories information")
+		}
+		log.Debug().Int("images", len(assetList)).Msg("completed ecr search")
+		for i := range assetList {
+			a := assetList[i]
+			if resolvedRoot != nil {
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			}
+			resolved = append(resolved, a)
 		}
 	}
 

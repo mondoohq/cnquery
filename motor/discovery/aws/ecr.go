@@ -8,22 +8,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
+	publicecrtypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/motorid/containerid"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 )
 
-func NewEcrImages(cfg aws.Config) (*EcrImages, error) {
+func NewEcrDiscovery(cfg aws.Config) (*EcrImages, error) {
 	return &EcrImages{config: cfg}, nil
 }
 
 type EcrImages struct {
-	config aws.Config
+	config  aws.Config
+	profile string
 }
-
-var aws_ecr_registry_pattern = "https://%s.dkr.ecr.%s.amazonaws.com"
 
 func (k *EcrImages) Name() string {
 	return "AWS ECR Discover"
@@ -77,69 +80,172 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 			clonedConfig := a.config.Copy()
 			clonedConfig.Region = region
 			svc := ecr.NewFromConfig(clonedConfig)
-			imgs := []*asset.Asset{}
+			assets := []*asset.Asset{}
 
 			repoResp, err := svc.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{})
 			if err != nil {
-				return imgs, nil
+				return assets, nil
 			}
 			for i := range repoResp.Repositories {
+				assets = append(assets, ecrRepoToAsset(repoResp.Repositories[i], region, a.profile))
 				repoName := repoResp.Repositories[i].RepositoryName
+				repoUrl := *repoResp.Repositories[i].RepositoryUri
 				imageResp, err := svc.DescribeImages(ctx, &ecr.DescribeImagesInput{
 					RepositoryName: repoName,
 				})
 				if err != nil {
-					return imgs, nil
+					log.Error().Err(err).Str("repo", repoUrl).Msg("cannot describe images")
+					continue
 				}
 				for i := range imageResp.ImageDetails {
-					registryURL := fmt.Sprintf(aws_ecr_registry_pattern, *imageResp.ImageDetails[i].RegistryId, a.config.Region)
-					repoURL := registryURL + "/" + *imageResp.ImageDetails[i].RepositoryName
-					digest := *imageResp.ImageDetails[i].ImageDigest
-
-					asset := &asset.Asset{
-						PlatformIds: []string{MondooContainerImageID(digest)},
-						// Name:         strings.Join(dImg.RepoTags, ","),
-						Platform: &platform.Platform{
-							Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
-							Runtime: providers.RUNTIME_AWS_ECR,
-						},
-						Connections: []*providers.Config{
-							{
-								Backend: providers.ProviderType_CONTAINER_REGISTRY,
-								Host:    registryURL,
-							},
-						},
-						State:  asset.State_STATE_ONLINE,
-						Labels: make(map[string]string),
-					}
-
-					// store digest
-					asset.Labels["docker.io/digest"] = digest
-
-					// store repo tags
-					imageTags := []string{}
-					for j := range imageResp.ImageDetails[i].ImageTags {
-						imageTags = append(imageTags, repoURL+":"+imageResp.ImageDetails[i].ImageTags[j])
-					}
-					asset.Labels["docker.io/tags"] = strings.Join(imageTags, ",")
-
-					// store repo digest
-					repoDigests := []string{repoURL + "@" + digest}
-					asset.Labels["docker.io/repo-digests"] = strings.Join(repoDigests, ",")
-
-					imgs = append(imgs, asset)
-
+					assets = append(assets, ecrImageToAsset(imageResp.ImageDetails[i], region, repoUrl, a.profile))
 				}
 			}
-			return jobpool.JobResult(imgs), nil
+			publicEcrSvc := ecrpublic.NewFromConfig(clonedConfig)
+
+			publicRepoResp, err := publicEcrSvc.DescribeRepositories(ctx, &ecrpublic.DescribeRepositoriesInput{})
+			if err != nil {
+				return assets, nil
+			}
+			for i := range publicRepoResp.Repositories {
+				assets = append(assets, publicEcrRepoToAsset(publicRepoResp.Repositories[i], region, a.profile))
+				repoName := publicRepoResp.Repositories[i].RepositoryName
+				repoUrl := publicRepoResp.Repositories[i].RepositoryUri
+				imageResp, err := publicEcrSvc.DescribeImages(ctx, &ecrpublic.DescribeImagesInput{
+					RepositoryName: repoName,
+				})
+				if err != nil {
+					log.Error().Err(err).Str("repo", *repoUrl).Msg("cannot describe images")
+					continue
+				}
+				for i := range imageResp.ImageDetails {
+					assets = append(assets, publicEcrImageToAsset(imageResp.ImageDetails[i], region, *repoUrl, a.profile))
+				}
+			}
+			return jobpool.JobResult(assets), nil
 		}
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
 }
 
-// combine with docker image MondooContainerImageID
-func MondooContainerImageID(id string) string {
-	id = strings.Replace(id, "sha256:", "", -1)
-	return "//platformid.api.mondoo.app/runtime/docker/images/" + id
+func MondooImageRegistryID(id string) string {
+	return "//platformid.api.mondoo.app/runtime/docker/registry/" + id
+}
+
+func publicEcrRepoToAsset(repo publicecrtypes.Repository, region string, profile string) *asset.Asset {
+	asset := &asset.Asset{
+		PlatformIds: []string{MondooImageRegistryID(*repo.RegistryId)},
+		Name:        *repo.RepositoryName,
+		Platform: &platform.Platform{
+			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+			Runtime: providers.RUNTIME_AWS_ECR,
+		},
+		Connections: []*providers.Config{
+			{
+				Backend: providers.ProviderType_CONTAINER_REGISTRY,
+				Host:    *repo.RepositoryUri,
+				Options: map[string]string{
+					"region":  region,
+					"profile": profile,
+				},
+			},
+		},
+		State:  asset.State_STATE_ONLINE,
+		Labels: make(map[string]string),
+	}
+	return asset
+}
+
+func ecrRepoToAsset(repo types.Repository, region string, profile string) *asset.Asset {
+	asset := &asset.Asset{
+		PlatformIds: []string{MondooImageRegistryID(*repo.RegistryId)},
+		Name:        *repo.RepositoryName,
+		Platform: &platform.Platform{
+			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+			Runtime: providers.RUNTIME_AWS_ECR,
+		},
+		Connections: []*providers.Config{
+			{
+				Backend: providers.ProviderType_CONTAINER_REGISTRY,
+				Host:    *repo.RepositoryUri,
+				Options: map[string]string{
+					"region":  region,
+					"profile": profile,
+				},
+			},
+		},
+		State:  asset.State_STATE_ONLINE,
+		Labels: make(map[string]string),
+	}
+	return asset
+}
+
+type EcrImageInfo struct {
+	digest      string
+	tags        []string
+	repoDigests []string
+	repoUrl     string
+	region      string
+	repoName    string
+}
+
+func ecrToAsset(i EcrImageInfo, profile string) *asset.Asset {
+	a := &asset.Asset{
+		PlatformIds: []string{containerid.MondooContainerImageID(i.digest)},
+		Name:        i.repoName + "@" + i.digest,
+		Platform: &platform.Platform{
+			Kind:    providers.Kind_KIND_CONTAINER_IMAGE,
+			Runtime: providers.RUNTIME_AWS_ECR,
+		},
+		Connections: []*providers.Config{},
+		State:       asset.State_STATE_ONLINE,
+		Labels:      make(map[string]string),
+	}
+	for _, tag := range i.tags {
+		a.Connections = append(a.Connections, &providers.Config{
+			Backend: providers.ProviderType_CONTAINER_REGISTRY,
+			Host:    i.repoUrl + ":" + tag,
+			Options: map[string]string{
+				"region":  i.region,
+				"profile": profile,
+			},
+		})
+	}
+	// store digest
+	a.Labels[fmt.Sprintf("ecr.%s.amazonaws.com/digest", i.region)] = i.digest
+
+	// store repo tags
+	imageTags := []string{}
+	for j := range i.tags {
+		imageTags = append(imageTags, i.repoUrl+":"+i.tags[j])
+	}
+	a.Labels[fmt.Sprintf("ecr.%s.amazonaws.com/tags", i.region)] = strings.Join(imageTags, ",")
+
+	// store repo digest
+	repoDigests := []string{i.repoUrl + "@" + i.digest}
+	a.Labels[fmt.Sprintf("ecr.%s.amazonaws.com/repo-digests", i.region)] = strings.Join(repoDigests, ",")
+	return a
+}
+
+func publicEcrImageToAsset(image publicecrtypes.ImageDetail, region string, repoUrl string, profile string) *asset.Asset {
+	return ecrToAsset(EcrImageInfo{
+		digest:      *image.ImageDigest,
+		tags:        image.ImageTags,
+		repoDigests: []string{repoUrl + "@" + *image.ImageDigest},
+		repoUrl:     repoUrl,
+		region:      region,
+		repoName:    *image.RepositoryName,
+	}, profile)
+}
+
+func ecrImageToAsset(image types.ImageDetail, region string, repoUrl string, profile string) *asset.Asset {
+	return ecrToAsset(EcrImageInfo{
+		digest:      *image.ImageDigest,
+		tags:        image.ImageTags,
+		repoDigests: []string{repoUrl + "@" + *image.ImageDigest},
+		repoUrl:     repoUrl,
+		region:      region,
+		repoName:    *image.RepositoryName,
+	}, profile)
 }
