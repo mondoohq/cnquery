@@ -118,18 +118,24 @@ func HexEncodeToHumanString(b []byte) string {
 
 func Sha1Hash(cert *x509.Certificate) []byte {
 	h := sha1.New()
-	h.Write(cert.Raw)
+	if cert != nil {
+		h.Write(cert.Raw)
+	}
 	return h.Sum(nil)
 }
 
 func Sha256Hash(cert *x509.Certificate) []byte {
 	h := sha256.New()
-	h.Write(cert.Raw)
+	if cert != nil {
+		h.Write(cert.Raw)
+	}
 	return h.Sum(nil)
 }
 
 func Md5Hash(cert *x509.Certificate) []byte {
 	h := md5.New()
-	h.Write(cert.Raw)
+	if cert != nil {
+		h.Write(cert.Raw)
+	}
 	return h.Sum(nil)
 }
