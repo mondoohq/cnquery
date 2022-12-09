@@ -355,7 +355,7 @@ func dockerProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runF
 		Use:    "docker ID",
 		Short:  docs.GetShort("docker"),
 		Long:   docs.GetLong("docker"),
-		Args:   cobra.ExactArgs(1),
+		Args:   cobra.ExactArgs(0),
 		PreRun: preRun,
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
