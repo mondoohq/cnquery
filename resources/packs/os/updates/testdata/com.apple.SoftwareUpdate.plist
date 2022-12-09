@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>DoItLaterTonightAttemptsCount</key>
+	<dict>
+		<key>002-83793</key>
+		<integer>1</integer>
+		<key>012-70652</key>
+		<integer>1</integer>
+		<key>071-82714</key>
+		<integer>1</integer>
+		<key>21E258</key>
+		<integer>1</integer>
+		<key>21G72</key>
+		<integer>1</integer>
+	</dict>
+	<key>LastAttemptBuildVersion</key>
+	<string>12.6 (21G115)</string>
+	<key>LastAttemptSystemVersion</key>
+	<string>12.6 (21G115)</string>
+	<key>LastBackgroundSuccessfulDate</key>
+	<date>2022-12-09T14:28:24Z</date>
+	<key>LastFullSuccessfulDate</key>
+	<date>2022-12-09T14:28:24Z</date>
+	<key>LastRecommendedMajorOSBundleIdentifier</key>
+	<string></string>
+	<key>LastRecommendedUpdatesAvailable</key>
+	<integer>4</integer>
+	<key>LastResultCode</key>
+	<integer>0</integer>
+	<key>LastSessionSuccessful</key>
+	<true/>
+	<key>LastSuccessfulDate</key>
+	<date>2022-12-09T14:28:52Z</date>
+	<key>LastUpdatesAvailable</key>
+	<integer>4</integer>
+	<key>PrimaryLanguages</key>
+	<array>
+		<string>en-DE</string>
+		<string>en-GB</string>
+	</array>
+	<key>RecommendedUpdates</key>
+	<array>
+		<dict>
+			<key>Display Name</key>
+			<string>macOS Monterey 12.6.1</string>
+			<key>Display Version</key>
+			<string>12.6.1</string>
+			<key>Identifier</key>
+			<string>MSU_UPDATE_21G217_patch_12.6.1</string>
+			<key>MobileSoftwareUpdate</key>
+			<true/>
+			<key>Product Key</key>
+			<string>MSU_UPDATE_21G217_patch_12.6.1</string>
+		</dict>
+		<dict>
+			<key>Display Name</key>
+			<string>Command Line Tools beta 3 for Xcode</string>
+			<key>Display Version</key>
+			<string>14.1</string>
+			<key>Identifier</key>
+			<string>Command Line Tools beta 3 for Xcode</string>
+			<key>Product Key</key>
+			<string>012-70652</string>
+		</dict>
+		<dict>
+			<key>Display Name</key>
+			<string>Command Line Tools for Xcode</string>
+			<key>Display Version</key>
+			<string>14.1</string>
+			<key>Identifier</key>
+			<string>Command Line Tools for Xcode</string>
+			<key>Product Key</key>
+			<string>012-91817</string>
+		</dict>
+		<dict>
+			<key>Display Name</key>
+			<string>Safari</string>
+			<key>Display Version</key>
+			<string>16.1</string>
+			<key>Identifier</key>
+			<string>Safari16.1MontereyAuto</string>
+			<key>Product Key</key>
+			<string>012-89022</string>
+		</dict>
+	</array>
+</dict>
+</plist>

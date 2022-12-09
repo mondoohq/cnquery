@@ -43,6 +43,8 @@ func ResolveSystemUpdateManager(motor *motor.Motor) (OperatingSystemUpdateManage
 		um = &SuseUpdateManager{provider: osProvider}
 	case "windows":
 		um = &WindowsUpdateManager{provider: osProvider}
+	case "macos":
+		um = &MacosUpdateManager{provider: osProvider}
 	default:
 		return nil, errors.New("your platform is not supported by os updates resource")
 	}
