@@ -34,7 +34,7 @@ jobs:
           mkdir tools
           unzip protoc-${PROTO_VERSION}-linux-x86_64.zip -d ./tools
           rm protoc-${PROTO_VERSION}-linux-x86_64.zip
-          export PATH="$PATH:$(PWD)/tools/bin"
+          export PATH="$PATH:$(pwd)/tools/bin"
           protoc --version
           make prep
           make cnquery/generate
