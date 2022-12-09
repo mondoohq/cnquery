@@ -97,17 +97,19 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
 		}
 		s.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
+		s.profile = tc.Options["profile"]
 		assetList, err := s.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
 		}
 		log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 		for i := range assetList {
+			a := assetList[i]
 			if resolvedRoot != nil {
-				assetList[i].RelatedAssets = append(assetList[i].RelatedAssets, resolvedRoot)
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}
-			log.Debug().Str("name", assetList[i].Name).Msg("resolved ssm instance")
-			instancesPlatformIdsMap[assetList[i].PlatformIds[0]] = assetList[i]
+			log.Debug().Str("name", a.Name).Str("region", a.Labels[RegionLabel]).Str("state", strings.ToLower(a.State.String())).Msg("resolved ssm instance")
+			instancesPlatformIdsMap[a.PlatformIds[0]] = a
 		}
 	}
 	// discover ec2 instances
@@ -119,7 +121,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 
 		r.Insecure = tc.Insecure
 		r.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
-
+		r.profile = tc.Options["profile"]
 		assetList, err := r.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ec2 instances")
@@ -130,7 +132,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			if resolvedRoot != nil {
 				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}
-			log.Debug().Str("name", a.Name).Msg("resolved ec2 instance")
+			log.Debug().Str("name", a.Name).Str("region", a.Labels[RegionLabel]).Str("state", strings.ToLower(a.State.String())).Msg("resolved ec2 instance")
 			id := a.PlatformIds[0]
 			existing, ok := instancesPlatformIdsMap[id]
 			if ok {
