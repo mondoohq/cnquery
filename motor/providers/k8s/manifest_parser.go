@@ -482,11 +482,18 @@ func load(manifest []byte) ([]k8sRuntime.Object, error) {
 	// Such objects we treat as custom resources and should end up in the k8s.customresources list.
 	// To do that we need to have a CRD for every kind that couldn't be matched to a type. Here we create
 	// the related CRD for every type that needs it.
+	addedCrds := make(map[string]struct{})
 	for _, o := range res {
 		if unstr, ok := o.(*unstructured.Unstructured); ok {
 			gvk := unstr.GetObjectKind().GroupVersionKind()
 			if _, err := resTypes.Lookup(gvk.Kind); err != nil {
+				// Only add the CRD once.
 				crdName := strings.ToLower(fmt.Sprintf("%s.%s", gvk.Kind, gvk.Group))
+				if _, ok := addedCrds[crdName]; ok {
+					continue
+				}
+
+				addedCrds[crdName] = struct{}{}
 				res = append(
 					res,
 					&apiextensionsv1.CustomResourceDefinition{TypeMeta: metav1.TypeMeta{Kind: "CustomResourceDefinition"}, ObjectMeta: metav1.ObjectMeta{Name: crdName}})
