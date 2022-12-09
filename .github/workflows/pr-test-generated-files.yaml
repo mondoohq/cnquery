@@ -31,9 +31,10 @@ jobs:
         run: |
           PB_REL="https://github.com/protocolbuffers/protobuf/releases"
           curl -LO $PB_REL/download/v${PROTO_VERSION}/protoc-${PROTO_VERSION}-linux-x86_64.zip
-          unzip -o protoc-${PROTO_VERSION}-linux-x86_64.zip -d $HOME/.local
+          mkdir tools
+          unzip protoc-${PROTO_VERSION}-linux-x86_64.zip -d ./tools
           rm protoc-${PROTO_VERSION}-linux-x86_64.zip
-          export PATH="$PATH:$HOME/.local/bin"
+          export PATH="$PATH:$(PWD)/tools/bin"
           protoc --version
           make prep
           make cnquery/generate
