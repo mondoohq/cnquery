@@ -40,7 +40,7 @@ aws.account @defaults("id") {
   organization() aws.organization
 }
 
-// AWS organization resource
+// AWS Organization resource
 aws.organization {
   // ARN of the organization
   arn string
@@ -315,13 +315,13 @@ private aws.sagemaker.endpoint @defaults("arn") {
   tags map[string]string
 }
 
-// AWS SNS
+// AWS Simple Notification Service (SNS)
 aws.sns {
   // List of SNS topics
   topics() []aws.sns.topic
 }
 
-// AWS SNS Topic
+// AWS Simple Notification Service (SNS) Topic
 private aws.sns.topic @defaults("arn") {
   // SNS topic ARN
   arn string
@@ -335,7 +335,7 @@ private aws.sns.topic @defaults("arn") {
   tags map[string]string
 }
 
-// AWS SNS Subscription
+// AWS Simple Notification Service (SNS) Subscription
 private aws.sns.subscription @defaults("arn") {
   // ARN of the subscription
   arn string
@@ -343,13 +343,13 @@ private aws.sns.subscription @defaults("arn") {
   protocol string
 }
 
-// AWS service for a managed Elasticsearch service
+// AWS Elasticsearch Service
 aws.es {
   // List of Elasticsearch domains
   domains() []aws.es.domain
 }
 
-// Amazon Elasticsearch Service
+// Amazon Elasticsearch Service Domain
 private aws.es.domain @defaults("arn") {
   // ARN for the Elasticsearch domain
   arn string
