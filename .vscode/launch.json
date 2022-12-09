@@ -47,6 +47,20 @@
       ],
     },
     {
+      "name": "cnquery-run-cr-manifest",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "args": [
+        "run",
+        "k8s",
+        "--path",
+        "${workspaceRoot}/motor/providers/k8s/resources/testdata/cr/tekton.yaml",
+        "-c",
+        "k8s.customresources{ * }"
+      ],
+    },
+    {
       "name": "cnquery-run-admission",
       "type": "go",
       "request": "launch",

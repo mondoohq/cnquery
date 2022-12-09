@@ -2,6 +2,8 @@ package k8s
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -9,8 +11,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sRuntime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -163,6 +167,33 @@ func (t *manifestParser) resourceIndex() (*resources.ApiResourceIndex, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// We have a static list of API resources for the manifest provider. Here we dynamically add
+	// API resources for every Unstructured object we encounter.
+	for _, o := range t.objects {
+		if unstr, ok := o.(*unstructured.Unstructured); ok {
+			gvk := unstr.GetObjectKind().GroupVersionKind()
+
+			// Only add the API resource if it wasn't added already.
+			if _, err := resTypes.Lookup(strings.ToLower(gvk.GroupKind().String())); err != nil {
+				apiRes := resources.ApiResource{
+					GroupVersion: unstr.GroupVersionKind().GroupVersion(),
+					Resource: metav1.APIResource{
+						// The k8s API doesn't add just 's'. For kinds that end on 's' the suffix is 'es' but
+						// that doesn't change anything for us. That's why only the basic logic is implemented.
+						Name:         strings.ToLower(gvk.Kind) + "s",
+						SingularName: strings.ToLower(gvk.Kind),
+						Verbs:        []string{"list"},
+						Kind:         gvk.Kind,
+						Version:      gvk.Version,
+						Group:        gvk.Group,
+					},
+				}
+				resTypes.Add(apiRes)
+			}
+		}
+	}
+
 	return resTypes, nil
 }
 
@@ -188,13 +219,13 @@ func (t *manifestParser) Resources(kind string, name string, namespace string) (
 		return nil, err
 	}
 
-	resources, err := resources.FilterResource(resType, t.objects, name, namespace)
+	res, err := resources.FilterResource(resType, t.objects, name, namespace)
 
 	return &ResourceResult{
 		Name:         name,
 		Kind:         kind,
 		ResourceType: resType,
-		Resources:    resources,
+		Resources:    res,
 		Namespace:    ns,
 		AllNs:        allNs,
 	}, err
@@ -435,6 +466,39 @@ func load(manifest []byte) ([]k8sRuntime.Object, error) {
 			return nil, err
 		}
 		res = append(res, objects...)
+	}
+
+	resList, err := resources.CachedServerResources()
+	if err != nil {
+		return nil, err
+	}
+
+	resTypes, err := resources.ResourceIndex(resList)
+	if err != nil {
+		return nil, err
+	}
+
+	// Every unstructured object here is an object that we couldn't match to an actual type.
+	// Such objects we treat as custom resources and should end up in the k8s.customresources list.
+	// To do that we need to have a CRD for every kind that couldn't be matched to a type. Here we create
+	// the related CRD for every type that needs it.
+	addedCrds := make(map[string]struct{})
+	for _, o := range res {
+		if unstr, ok := o.(*unstructured.Unstructured); ok {
+			gvk := unstr.GetObjectKind().GroupVersionKind()
+			if _, err := resTypes.Lookup(gvk.Kind); err != nil {
+				// Only add the CRD once.
+				crdName := strings.ToLower(fmt.Sprintf("%s.%s", gvk.Kind, gvk.Group))
+				if _, ok := addedCrds[crdName]; ok {
+					continue
+				}
+
+				addedCrds[crdName] = struct{}{}
+				res = append(
+					res,
+					&apiextensionsv1.CustomResourceDefinition{TypeMeta: metav1.TypeMeta{Kind: "CustomResourceDefinition"}, ObjectMeta: metav1.ObjectMeta{Name: crdName}})
+			}
+		}
 	}
 
 	return res, nil
