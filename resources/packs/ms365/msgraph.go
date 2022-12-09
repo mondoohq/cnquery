@@ -11,6 +11,7 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-sdk-go/domains"
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
+	"github.com/microsoftgraph/msgraph-sdk-go/groupsettings"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
@@ -34,7 +35,22 @@ func (m *mqlMsgraphOrganization) id() (string, error) {
 }
 
 func (m *mqlMsgraph) GetSettings() ([]interface{}, error) {
-	return nil, errors.New("msgraph.beta.settings not supported")
+	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	graphClient, err := graphClient(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	settings, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
+	if err != nil {
+		return nil, msgraphclient.TransformODataError(err)
+	}
+	return core.JsonToDictSlice(msgraphconv.NewSettings(settings.GetValue()))
 }
 
 func (m *mqlMsgraph) GetOrganizations() ([]interface{}, error) {
