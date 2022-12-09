@@ -818,7 +818,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceConfigurations() ([]interface{}, e
 	configurations := resp.GetValue()
 	for i := range configurations {
 		configuration := configurations[i]
-		properties, _ := core.JsonToDict(configuration.GetAdditionalData())
+		properties := getConfigurationProperties(configuration)
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.deviceconfiguration",
 			"id", core.ToString(configuration.GetId()),
 			"lastModifiedDateTime", configuration.GetLastModifiedDateTime(),
@@ -835,6 +835,138 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceConfigurations() ([]interface{}, e
 	}
 
 	return res, nil
+}
+
+// TODO: androidDeviceOwnerGeneralDeviceConfiguration missing
+func getConfigurationProperties(config models.DeviceConfigurationable) map[string]interface{} {
+	props := map[string]interface{}{}
+	if config.GetOdataType() != nil {
+		props["@odata.type"] = *config.GetOdataType()
+	}
+
+	agdc, ok := config.(*models.AndroidGeneralDeviceConfiguration)
+	if ok {
+		if agdc.GetPasswordRequired() != nil {
+			props["passwordRequired"] = *agdc.GetPasswordRequired()
+		}
+		if agdc.GetPasswordSignInFailureCountBeforeFactoryReset() != nil {
+			props["passwordSignInFailureCountBeforeFactoryReset"] = *agdc.GetPasswordSignInFailureCountBeforeFactoryReset()
+		}
+		if agdc.GetPasswordMinimumLength() != nil {
+			props["passwordMinimumLength"] = *agdc.GetPasswordMinimumLength()
+		}
+		if agdc.GetStorageRequireDeviceEncryption() != nil {
+			props["storageRequireDeviceEncryption"] = *agdc.GetStorageRequireDeviceEncryption()
+		}
+		if agdc.GetPasswordRequiredType() != nil {
+			props["passwordRequiredType"] = *agdc.GetPasswordRequiredType()
+		}
+		if agdc.GetPasswordExpirationDays() != nil {
+			props["passwordExpirationDays"] = *agdc.GetPasswordExpirationDays()
+		}
+	}
+	w10gc, ok := config.(*models.Windows10GeneralConfiguration)
+	if ok {
+		if w10gc.GetPasswordRequired() != nil {
+			props["passwordRequired"] = *w10gc.GetPasswordRequired()
+		}
+		if w10gc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *w10gc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
+		}
+		if w10gc.GetPasswordSignInFailureCountBeforeFactoryReset() != nil {
+			props["passwordSignInFailureCountBeforeFactoryReset"] = *w10gc.GetPasswordSignInFailureCountBeforeFactoryReset()
+		}
+		if w10gc.GetPasswordMinimumLength() != nil {
+			props["passwordMinimumLength"] = *w10gc.GetPasswordMinimumLength()
+		}
+		if w10gc.GetPasswordRequiredType() != nil {
+			props["passwordRequiredType"] = *w10gc.GetPasswordRequiredType()
+		}
+		if w10gc.GetPasswordExpirationDays() != nil {
+			props["passwordExpirationDays"] = *w10gc.GetPasswordExpirationDays()
+		}
+		if w10gc.GetPasswordExpirationDays() != nil {
+			props["passwordExpirationDays"] = *w10gc.GetPasswordExpirationDays()
+		}
+	}
+	macdc, ok := config.(*models.MacOSGeneralDeviceConfiguration)
+	if ok {
+		if macdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *macdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
+		}
+		if macdc.GetPasswordMinimumLength() != nil {
+			props["passwordMinimumLength"] = *macdc.GetPasswordMinimumLength()
+		}
+		if macdc.GetPasswordMinutesOfInactivityBeforeLock() != nil {
+			props["passwordMinutesOfInactivityBeforeLock"] = *macdc.GetPasswordMinutesOfInactivityBeforeLock()
+		}
+		if macdc.GetPasswordRequiredType() != nil {
+			props["passwordRequiredType"] = *macdc.GetPasswordRequiredType()
+		}
+		if macdc.GetPasswordBlockSimple() != nil {
+			props["passwordBlockSimple"] = *macdc.GetPasswordBlockSimple()
+		}
+		if macdc.GetPasswordRequired() != nil {
+			props["passwordRequired"] = *macdc.GetPasswordRequired()
+		}
+		if macdc.GetPasswordExpirationDays() != nil {
+			props["passwordExpirationDays"] = *macdc.GetPasswordExpirationDays()
+		}
+	}
+
+	iosdc, ok := config.(*models.IosGeneralDeviceConfiguration)
+	if ok {
+		if iosdc.GetPasscodeSignInFailureCountBeforeWipe() != nil {
+			props["passcodeSignInFailureCountBeforeWipe"] = *iosdc.GetPasscodeSignInFailureCountBeforeWipe()
+		}
+		if iosdc.GetPasscodeMinimumLength() != nil {
+			props["passcodeMinimumLength"] = *iosdc.GetPasscodeMinimumLength()
+		}
+		if iosdc.GetPasscodeMinutesOfInactivityBeforeLock() != nil {
+			props["passcodeMinutesOfInactivityBeforeLock"] = *iosdc.GetPasscodeMinutesOfInactivityBeforeLock()
+		}
+		if iosdc.GetPasscodeMinutesOfInactivityBeforeScreenTimeout() != nil {
+			props["passcodeMinutesOfInactivityBeforeScreenTimeout"] = *iosdc.GetPasscodeMinutesOfInactivityBeforeScreenTimeout()
+		}
+		if iosdc.GetPasscodeRequiredType() != nil {
+			props["passcodeRequiredType"] = *iosdc.GetPasscodeRequiredType()
+		}
+		if iosdc.GetPasscodeBlockSimple() != nil {
+			props["passcodeBlockSimple"] = *iosdc.GetPasscodeBlockSimple()
+		}
+		if iosdc.GetPasscodeRequired() != nil {
+			props["passcodeRequired"] = *iosdc.GetPasscodeRequired()
+		}
+		if iosdc.GetPasscodeExpirationDays() != nil {
+			props["passcodeExpirationDays"] = *iosdc.GetPasscodeExpirationDays()
+		}
+	}
+	awpgdc, ok := config.(*models.AndroidWorkProfileGeneralDeviceConfiguration)
+	if ok {
+		if awpgdc.GetPasswordSignInFailureCountBeforeFactoryReset() != nil {
+			props["passwordSignInFailureCountBeforeFactoryReset"] = *awpgdc.GetPasswordSignInFailureCountBeforeFactoryReset()
+		}
+		if awpgdc.GetPasswordMinimumLength() != nil {
+			props["passwordMinimumLength"] = *awpgdc.GetPasswordMinimumLength()
+		}
+		if awpgdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *awpgdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
+		}
+		if awpgdc.GetWorkProfilePasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
+			props["workProfilePasswordMinutesOfInactivityBeforeScreenTimeout"] = *awpgdc.GetWorkProfilePasswordMinutesOfInactivityBeforeScreenTimeout()
+		}
+		if awpgdc.GetPasswordRequiredType() != nil {
+			props["passwordRequiredType"] = *awpgdc.GetPasswordRequiredType()
+		}
+		if awpgdc.GetWorkProfilePasswordRequiredType() != nil {
+			props["workProfilePasswordRequiredType"] = *awpgdc.GetWorkProfilePasswordRequiredType()
+		}
+		if awpgdc.GetPasswordExpirationDays() != nil {
+			props["passwordExpirationDays"] = *awpgdc.GetPasswordExpirationDays()
+		}
+
+	}
+	return props
 }
 
 func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
@@ -870,7 +1002,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{
 		compliancePolicy := compliancePolicies[i]
 
 		assignments, _ := core.JsonToDictSlice(msgraphconv.NewDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))
-		properties, _ := core.JsonToDict(compliancePolicy.GetAdditionalData())
+		properties := getComplianceProperties(compliancePolicy)
 
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.devicecompliancepolicy",
 			"id", core.ToString(compliancePolicy.GetId()),
@@ -889,6 +1021,37 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{
 	}
 
 	return res, nil
+}
+
+// TODO: windows 10 props missing.
+func getComplianceProperties(compliance models.DeviceCompliancePolicyable) map[string]interface{} {
+	props := map[string]interface{}{}
+	if compliance.GetOdataType() != nil {
+		props["@odata.type"] = *compliance.GetOdataType()
+	}
+
+	ioscp, ok := compliance.(*models.IosCompliancePolicy)
+	if ok {
+		if ioscp.GetSecurityBlockJailbrokenDevices() != nil {
+			props["securityBlockJailbrokenDevices"] = *ioscp.GetSecurityBlockJailbrokenDevices()
+		}
+		if ioscp.GetManagedEmailProfileRequired() != nil {
+			props["managedEmailProfileRequired"] = *ioscp.GetManagedEmailProfileRequired()
+		}
+	}
+	androidcp, ok := compliance.(*models.AndroidCompliancePolicy)
+	if ok {
+		if androidcp.GetSecurityBlockJailbrokenDevices() != nil {
+			props["securityBlockJailbrokenDevices"] = *androidcp.GetSecurityBlockJailbrokenDevices()
+		}
+	}
+	androidworkcp, ok := compliance.(*models.AndroidWorkProfileCompliancePolicy)
+	if ok {
+		if androidworkcp.GetSecurityBlockJailbrokenDevices() != nil {
+			props["securityBlockJailbrokenDevices"] = *androidworkcp.GetSecurityBlockJailbrokenDevices()
+		}
+	}
+	return props
 }
 
 func (m *mqlMsgraphDevicemanagementDeviceconfiguration) id() (string, error) {
