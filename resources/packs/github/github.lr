@@ -4,21 +4,29 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/github"
 
 // Git commit
 private git.commit {
+  // Git commit SHA
   sha string
+  // Git commit message
   message string
+  // Git commit author
   author git.commitAuthor
+  // Git commit committer
   committer git.commitAuthor
+  // The GPG signature of the commit if there is one
   signatureVerification git.gpgSignature
 }
 
 // Git commit author
 private git.commitAuthor {
   sha string
+  // Author name
   name string
+  // Author email
   email string
   date time
 }
 
+// Git GPG signature
 private git.gpgSignature {
   sha string
   reason string
@@ -38,23 +46,36 @@ github.organization {
   login string
   id int
   nodeId string
+  // Organization name
   name string
+  // Organization commpany
   company string
+  // Organization blog
   blog string
+  // Organization location
   location string
+  // Organization email
   email string
+  // Organization Twitter name
   twitterUsername string
+  // Organization description
   description string
   createdAt time
   updatedAt time
+  // Number of private repos
   totalPrivateRepos int
   ownedPrivateRepos int
+  // Number of private gists
   privateGists int
   diskUsage int
   collaborators int
+  // Organization billing email
   billingEmail string
+  // GitHub plan the organization is subscribed to
   plan dict
+  // Two factor authentication required for all members
   twoFactorRequirementEnabled bool
+  // Verified organization by GitHub
   isVerified bool
 
   defaultRepositoryPermission string
@@ -78,26 +99,39 @@ github.organization {
 // GitHub user
 private github.user {
   id int
+  // User login
   login string
+  // User name
   name string
+  // User email
   email string
+  // User bio
   bio string
+  // User create time in UTC
   createdAt time
+  // Last user update time in UTC
   updatedAt time
+  // User suspended time
   suspendedAt time
+  // User company
   company string
 }
 
 // GitHub team
 private github.team {
   id int
+  // Team name
   name string
+  // Team description
   description string
   slug string
   privacy string
   defaultPermission string
+  // Team members
   members() []github.user
+  // Team owned repositories
   repositories() []github.repository
+  // Team organization
   organization github.organization
 }
 
