@@ -165,7 +165,7 @@ private vcd.vm @defaults("name") {
   hardwareVersion int
   // VM tools status
   vmToolsStatus string
-  // Indicates if this VM is in maintainance mode
+  // Indicates if this VM is in maintenance mode
   isInMaintenanceMode bool
   // Indicates if the parent vApp is a managed vApp
   isAutoNature bool
