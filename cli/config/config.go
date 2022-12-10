@@ -226,6 +226,6 @@ func DisplayUsedConfig() {
 	} else if Source == configSourceBase64 {
 		log.Info().Msg("loaded configuration from environment using source " + Source)
 	} else {
-		log.Info().Msg("no configuration file provided")
+		log.Info().Msg("no Mondoo configuration file provided. using defaults")
 	}
 }
