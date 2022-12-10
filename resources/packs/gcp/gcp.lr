@@ -1,39 +1,50 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/gcp"
 
+alias gcloud.organization = gcp.organization
+alias gcloud.project = gcp.project
+alias gcloud.resourcemanager.binding = gcp.resourcemanager.binding
+alias gcloud.compute = gcp.compute
+alias gcloud.compute.instance = gcp.compute.instance
+alias gcloud.compute.serviceaccount = gcp.compute.serviceaccount
+alias gcloud.storage = gcp.storage
+alias gcloud.storage.bucket = gcp.storage.bucket
+alias gcloud.sql = gcp.sql
+alias gcloud.sql.instance = gcp.sql.instance
+
 // GCP Cloud organization
-gcloud.organization @defaults("id") {
+gcp.organization @defaults("id") {
   id() string
   name() string
   lifecycleState() string
-  iamPolicy() []gcloud.resourcemanager.binding
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // GCP Cloud Project
-gcloud.project @defaults("id") {
+gcp.project @defaults("id") {
   id() string
   name() string
   number() string
   lifecycleState() string
   createTime() time
   labels() map[string]string
-  iamPolicy() []gcloud.resourcemanager.binding
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // GCP Resource Manager Binding
-gcloud.resourcemanager.binding {
+gcp.resourcemanager.binding {
   id string
   members []string
   role string
 }
 
 // GCP Compute
-gcloud.compute {
+gcp.compute {
   // displays all Google Compute Engine instances in a project
-  instances() []gcloud.compute.instance
+  instances() []gcp.compute.instance
 }
 
 // GCP Compute Instances
-gcloud.compute.instance @defaults("id name") {
+gcp.compute.instance @defaults("id name") {
   id string
   name string
   cpuPlatform string
@@ -45,23 +56,23 @@ gcloud.compute.instance @defaults("id name") {
   statusMessage string
   tags []string
   metadata map[string]string
-  serviceAccounts []gcloud.compute.serviceaccount
+  serviceAccounts []gcp.compute.serviceaccount
 }
 
 // GCP Compute Service Account
-gcloud.compute.serviceaccount @defaults("email") {
+gcp.compute.serviceaccount @defaults("email") {
   email string
   scopes []string
 }
 
 // GCP Cloud Storage
-gcloud.storage {
+gcp.storage {
   // List all buckets
-  buckets() []gcloud.storage.bucket
+  buckets() []gcp.storage.bucket
 }
 
 // GCP Cloud Storage Bucket
-gcloud.storage.bucket @defaults("id") {
+gcp.storage.bucket @defaults("id") {
   id string
   name string
   labels map[string]string
@@ -71,13 +82,13 @@ gcloud.storage.bucket @defaults("id") {
   storageClass string
   created time
   updated time
-  iamPolicy() []gcloud.resourcemanager.binding
+  iamPolicy() []gcp.resourcemanager.binding
   iamConfiguration dict
 }
 
 // GCP Cloud SQL
-gcloud.sql {
-  instances() []gcloud.sql.instance
+gcp.sql {
+  instances() []gcp.sql.instance
 }
 
 // GCP Cloud SQL Instance

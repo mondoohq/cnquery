@@ -12,11 +12,11 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcloudCompute) id() (string, error) {
-	return "gcloud.compute", nil
+func (g *mqlGcpCompute) id() (string, error) {
+	return "gcp.compute", nil
 }
 
-func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
+func (g *mqlGcpCompute) GetInstances() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
 					for i := range instance.ServiceAccounts {
 						sa := instance.ServiceAccounts[i]
 
-						mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.compute.serviceaccount",
+						mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.compute.serviceaccount",
 							"email", sa.Email,
 							"scopes", core.StrSliceToInterface(sa.Scopes),
 						)
@@ -73,7 +73,7 @@ func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
 						}
 					}
 
-					mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.compute.instance",
+					mqlInstance, err := g.MotorRuntime.CreateResource("gcp.compute.instance",
 						"id", strconv.FormatUint(instance.Id, 10),
 						"name", instance.Name,
 						"cpuPlatform", instance.CpuPlatform,
@@ -101,10 +101,10 @@ func (g *mqlGcloudCompute) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcloudComputeInstance) id() (string, error) {
+func (g *mqlGcpComputeInstance) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcloudComputeServiceaccount) id() (string, error) {
+func (g *mqlGcpComputeServiceaccount) id() (string, error) {
 	return g.Email()
 }

@@ -12,11 +12,11 @@ import (
 	"google.golang.org/api/storage/v1"
 )
 
-func (g *mqlGcloudStorage) id() (string, error) {
-	return "gcloud.storage", nil
+func (g *mqlGcpStorage) id() (string, error) {
+	return "gcp.storage", nil
 }
 
-func (g *mqlGcloudStorage) GetBuckets() ([]interface{}, error) {
+func (g *mqlGcpStorage) GetBuckets() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -95,10 +95,9 @@ func (g *mqlGcloudStorage) GetBuckets() ([]interface{}, error) {
 			}
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.storage.bucket",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.storage.bucket",
 			"id", bucket.Id,
 			"name", bucket.Name,
-			"kind", bucket.Kind,
 			"labels", core.StrMapToInterface(bucket.Labels),
 			"location", bucket.Location,
 			"locationType", bucket.LocationType,
@@ -117,11 +116,11 @@ func (g *mqlGcloudStorage) GetBuckets() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcloudStorageBucket) id() (string, error) {
+func (g *mqlGcpStorageBucket) id() (string, error) {
 	return g.Name()
 }
 
-func (g *mqlGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpStorageBucket) GetIamPolicy() ([]interface{}, error) {
 	bucketName, err := g.Name()
 	if err != nil {
 		return nil, err
@@ -152,7 +151,7 @@ func (g *mqlGcloudStorageBucket) GetIamPolicy() ([]interface{}, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
+		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
 			"id", bucketName+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", core.StrSliceToInterface(b.Members),

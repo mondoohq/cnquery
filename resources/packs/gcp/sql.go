@@ -9,11 +9,11 @@ import (
 	"google.golang.org/api/sqladmin/v1"
 )
 
-func (g *mqlGcloudSql) id() (string, error) {
-	return "gcloud.sql", nil
+func (g *mqlGcpSql) id() (string, error) {
+	return "gcp.sql", nil
 }
 
-func (g *mqlGcloudSql) GetInstances() ([]interface{}, error) {
+func (g *mqlGcpSql) GetInstances() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (g *mqlGcloudSql) GetInstances() ([]interface{}, error) {
 			// TODO: handle all other database settings
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcloud.sql.instance",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.sql.instance",
 			"name", instance.Name,
 			"backendType", instance.BackendType,
 			"connectionName", instance.ConnectionName,
@@ -106,7 +106,7 @@ func (g *mqlGcloudSql) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcloudSqlInstance) id() (string, error) {
+func (g *mqlGcpSqlInstance) id() (string, error) {
 	// TODO: instances are scoped in project
 	return g.Name()
 }

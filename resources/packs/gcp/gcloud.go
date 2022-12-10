@@ -15,11 +15,11 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcloudOrganization) id() (string, error) {
-	return "gcloud.organization", nil
+func (g *mqlGcpOrganization) id() (string, error) {
+	return "gcp.organization", nil
 }
 
-func (g *mqlGcloudOrganization) init(args *resources.Args) (*resources.Args, GcloudOrganization, error) {
+func (g *mqlGcpOrganization) init(args *resources.Args) (*resources.Args, GcpOrganization, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -60,25 +60,25 @@ func (g *mqlGcloudOrganization) init(args *resources.Args) (*resources.Args, Gcl
 	return args, nil, nil
 }
 
-func (g *mqlGcloudOrganization) GetId() (string, error) {
+func (g *mqlGcpOrganization) GetId() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudOrganization) GetName() (string, error) {
+func (g *mqlGcpOrganization) GetName() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudOrganization) GetLifecycleState() (string, error) {
+func (g *mqlGcpOrganization) GetLifecycleState() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (g *mqlGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
 	for i := range orgpolicy.Bindings {
 		b := orgpolicy.Bindings[i]
 
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
+		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
 			"id", name+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", core.StrSliceToInterface(b.Members),
@@ -125,11 +125,11 @@ func (g *mqlGcloudOrganization) GetIamPolicy() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcloudProject) id() (string, error) {
-	return "gcloud.project", nil
+func (g *mqlGcpProject) id() (string, error) {
+	return "gcp.project", nil
 }
 
-func (g *mqlGcloudProject) init(args *resources.Args) (*resources.Args, GcloudProject, error) {
+func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -163,53 +163,53 @@ func (g *mqlGcloudProject) init(args *resources.Args) (*resources.Args, GcloudPr
 	var createTime *time.Time
 	parsedTime, err := time.Parse(time.RFC3339, project.CreateTime)
 	if err != nil {
-		return nil, nil, errors.New("could not parse gcloud.project create time: " + project.CreateTime)
+		return nil, nil, errors.New("could not parse gcp.project create time: " + project.CreateTime)
 	} else {
 		createTime = &parsedTime
 	}
 	(*args)["createTime"] = createTime
 	(*args)["labels"] = core.StrMapToInterface(project.Labels)
-	// TODO: add organization gcloud.organization
+	// TODO: add organization gcp.organization
 	return args, nil, nil
 }
 
-func (g *mqlGcloudProject) GetId() (string, error) {
+func (g *mqlGcpProject) GetId() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudProject) GetName() (string, error) {
+func (g *mqlGcpProject) GetName() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudProject) GetNumber() (string, error) {
+func (g *mqlGcpProject) GetNumber() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudProject) GetLifecycleState() (string, error) {
+func (g *mqlGcpProject) GetLifecycleState() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudProject) GetCreateTime() (string, error) {
+func (g *mqlGcpProject) GetCreateTime() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return "", errors.New("not implemented")
 }
 
-func (g *mqlGcloudProject) GetLabels() (map[string]interface{}, error) {
+func (g *mqlGcpProject) GetLabels() (map[string]interface{}, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcloudProject) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
 	projectId, err := g.Id()
 	if err != nil {
 		return nil, err
@@ -240,7 +240,7 @@ func (g *mqlGcloudProject) GetIamPolicy() ([]interface{}, error) {
 	for i := range policy.Bindings {
 		b := policy.Bindings[i]
 
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcloud.resourcemanager.binding",
+		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
 			"id", projectId+"-"+strconv.Itoa(i),
 			"role", b.Role,
 			"members", core.StrSliceToInterface(b.Members),
@@ -254,6 +254,6 @@ func (g *mqlGcloudProject) GetIamPolicy() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcloudResourcemanagerBinding) id() (string, error) {
+func (g *mqlGcpResourcemanagerBinding) id() (string, error) {
 	return g.Id()
 }
