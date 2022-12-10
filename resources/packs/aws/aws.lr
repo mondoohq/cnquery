@@ -46,9 +46,9 @@ aws.organization {
   arn string
   // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
   featureSet string
-  // ID of the org master account
+  // ID of the organization master account
   masterAccountId string
-  // Email owner of the org master account
+  // Email owner of the organization master account
   masterAccountEmail string
 }
 
@@ -196,6 +196,7 @@ aws.iam.policy @defaults("arn") {
   description() string
   // Denotes if the policy can be attached
   isAttachable() bool
+  // The number of principal entities (users, groups, and roles) that the policy is attached to
   attachmentCount() int
   // Time when the policy was created
   createDate() time
@@ -326,11 +327,11 @@ aws.sns {
 private aws.sns.topic @defaults("arn") {
   // SNS topic ARN
   arn string
-  // Region where the sns topic exists
+  // Region where the SNS topic exists
   region string
   // List of subscriptions associated with the topic ARN
   subscriptions() []aws.sns.subscription 
-  // Attributes for the sns topic, including kms id if any
+  // Attributes for the SNS topic, including KMS ID if any
   attributes() dict
   // Tags for the topic
   tags map[string]string
@@ -472,7 +473,7 @@ aws.guardduty {
 
 // Amazon GuardDuty Detector
 private aws.guardduty.detector @defaults("id region") {
-  // Unique id for the detector
+  // Unique ID for the detector
   id string
   // Region for the detector
   region string
@@ -647,7 +648,7 @@ private aws.cloudwatch.loggroup @defaults("arn") {
 
 // AWS CloudWatch Log Group Metrics Filter
 private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
-  // Unique id for the metric
+  // Unique ID for the metric
   id string
   // Filter name associated with metric
   filterName string
@@ -802,7 +803,7 @@ private aws.s3.bucket.policy @defaults("name version") {
   document string
   // Version of the policy
   version() string
-  // Unique id for the policy
+  // Unique ID for the policy
   id() string
   // List of statements for the policy
   statements() []dict
@@ -873,11 +874,11 @@ private aws.backup.vaultRecoveryPoint @defaults("arn") {
 
 // AWS DynamoDB
 aws.dynamodb {
-  // List of backups for dynamodb
+  // List of backups for DynamoDB
   backups() []dict
-  // List of global tables for dynamodb
+  // List of global tables for DynamoDB
   globalTables() []aws.dynamodb.globaltable
-  // List of tables for dynamodb
+  // List of tables for DynamoDB
   tables() []aws.dynamodb.table
   // List of dynamodb settings across all regions
   limits() []aws.dynamodb.limit
@@ -969,7 +970,7 @@ private aws.rds.snapshot @defaults("arn") {
   encrypted bool
   // Region where the snapshot exists
   region string
-  // True if snapshot if for cluster
+  // True if snapshot is for cluster
   isClusterSnapshot bool
   // Tags for the snapshot
   tags map[string]string
@@ -1059,6 +1060,7 @@ private aws.redshift.cluster @defaults("arn") {
 
 // AWS Database Migration Service (DMS)
 aws.dms {
+  // List of DMS replication instances
   replicationInstances() []dict
 }
 
@@ -1072,7 +1074,7 @@ aws.apigateway {
 private aws.apigateway.restapi @defaults("arn") {
   // ARN for the REST API
   arn string
-  // Unique id for the REST API
+  // Unique ID for the REST API
   id string
   // Name for the REST API
   name string
@@ -1134,17 +1136,17 @@ private aws.lambda.function @defaults("arn") {
 aws.ec2 {
   // List of security groups available to the account
   securityGroups() []aws.ec2.securitygroup 
-  // List of instances across the aws account (all regions)
+  // List of instances across the AWS account (all regions)
   instances() []aws.ec2.instance
   // map[region]boolean used to denote if ebs encryption is on by default per region
   ebsEncryptionByDefault() map[string]bool
-  // List of volumes across the aws account
+  // List of volumes across the AWS account
   volumes() []aws.ec2.volume
   // List of snapshots across the account
   snapshots() []aws.ec2.snapshot
   // List of internet gateways
   internetGateways() []aws.ec2.internetgateway
-  // List of vpn connections 
+  // List of VPN connections 
   vpnConnections() []aws.ec2.vpnconnection
   // List of network ACLs 
   networkAcls() []aws.ec2.networkacl
@@ -1170,9 +1172,9 @@ private aws.ec2.networkacl.entry {
   egress bool
   // Allow or deny
   ruleAction string
-  // Port range for the acl entry
+  // Port range for the ACL entry
   portRange() aws.ec2.networkacl.entry.portrange
-  // ID for the entry rule
+  // ID for the ACL entry rule
   id string
 }
 
@@ -1188,16 +1190,19 @@ private aws.ec2.networkacl.entry.portrange {
 
 // Amazon EC2 VPN Connection
 private aws.ec2.vpnconnection @defaults("arn") {
-  // ARN for the vpn connection
+  // ARN for the VPN connection
   arn string
-  // List of telemetry data for the vpn
+  // List of telemetry data for the VPN
   vgwTelemetry []aws.ec2.vgwtelemetry
 }
 
 // Amazon EC2 VPN Tunnel Telemetry
 private aws.ec2.vgwtelemetry {
+  // Outside IP address
   outsideIpAddress string
+  // VPN Tunnel status
   status string
+  // VPN Tunnel status message
   statusMessage string
 }
 
@@ -1227,7 +1232,7 @@ private aws.ec2.snapshot @defaults("arn") {
   startTime time
   // Tags for the snapshot
   tags map[string]string
-  // State of the snapshot (pending,completed,error,recoverable,or recovering)
+  // State of the snapshot (pending, completed, error, recoverable, or recovering)
   state string
 } 
 
@@ -1247,7 +1252,7 @@ private aws.ec2.volume @defaults("arn") {
   tags map[string]string
   // Availability Zone in which the volume was created
   availabilityZone string
-  // EBS volume type (gp2, gp3, io1, io2, st1, sc1, standard)
+  // EBS volume type (gp2, gp3, io1, io2, st1, sc1, or standard)
   volumeType string
   // Time the volume was created
   createTime time
@@ -1289,7 +1294,7 @@ private aws.ec2.instance @defaults("arn state") {
   stateTransitionReason string
   // Denotes whether or not instance has ebs optimization turned on
   ebsOptimized bool
-  // Instance type, e.g. t1.micro
+  // Instance type, e.g. t2.micro
   instanceType string
   // Tags on the instance
   tags map[string]string
@@ -1307,17 +1312,17 @@ private aws.ec2.instance @defaults("arn state") {
 
 // Amazon EC2 Key Pair
 private aws.ec2.keypair @defaults("arn name") {
-  // ARN of the keypair
+  // ARN of the key pair
   arn string
-  // Fingerprint for the keypair
+  // Fingerprint for the key pair
   fingerprint string
-  // Name of the keypair
+  // Name of the key pair
   name string
   // Type of key (e.g. RSA)
   type string
-  // Tags for the keypair
+  // Tags for the key pair
   tags map[string]string
-  // Region where the keypair exists
+  // Region where the key pair exists
   region string
 }
 
@@ -1351,41 +1356,41 @@ private aws.ec2.instance.device {
 
 // AWS Virtual Private Cloud (VPC)
 private aws.vpc @defaults("arn isDefault") {
-  // ARN of the vpc
+  // ARN of the VPC
   arn string
-  // ID of the vpc
+  // ID of the VPC
   id string
-  // State of the vpc (pending or available)
+  // State of the VPC (pending or available)
   state string
-  // Whether the vpc is the default one
+  // Whether the VPC is the default one
   isDefault bool
-  // Region the vpc exists in
+  // Region the VPC exists in
   region string
-  // A list of flowlogs for the vpc
+  // A list of flowlogs for the VPC
   flowLogs() []aws.vpc.flowlog
-  // List of route tables for the vpc
+  // List of route tables for the VPC
   routeTables() []aws.vpc.routetable
-  // Tags on the vpc
+  // Tags on the VPC
   tags map[string]string
 }
 
 // Amazon Virtual Private Cloud (VPC) Flow Log
 private aws.vpc.flowlog @defaults("id region status") {
-  // Unique ID of the flowlog
+  // Unique ID of the flow log
   id string
-  // VPC the flowlog exists in
+  // VPC the flow log exists in
   vpc string
-  // Region the flowlog exists in
+  // Region the flow log exists in
   region string
-  // Status of the flowlog
+  // Status of the flow log
   status string
-  // Tags on the flowlog
+  // Tags on the flow log
   tags map[string]string
 }
 
 // Amazon Virtual Private Cloud (VPC) Route Table
 private aws.vpc.routetable @defaults("id") {
-  // Unique id of the route table
+  // Unique ID of the route table
   id string
   // A list of route descriptions
   routes []dict
@@ -1417,11 +1422,11 @@ private aws.ec2.securitygroup @defaults("arn") {
 
 // Amazon EC2 Security Group IP Permission
 private aws.ec2.securitygroup.ippermission @defaults("id") {
-  // Unique id for the ip permission
+  // Unique ID for the IP permission
   id string
-  // Start of port range for tcp/udp protocols
+  // Start of port range for TCP/UDP protocols
   fromPort int
-  // End of port range for tcp/udp protocols
+  // End of port range for TCP/UDP protocols
   toPort int
   // IP protocol name
   ipProtocol string
