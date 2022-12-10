@@ -30,7 +30,7 @@ private aws.accessanalyzer.analyzer @defaults("arn status") {
   tags map[string]string
 }
 
-// AWS account resource
+// AWS Account
 aws.account @defaults("id") {
   // Account ID
   id() string
@@ -270,7 +270,7 @@ private aws.iam.virtualmfadevice @defaults("serialNumber") {
   user aws.iam.user
 }
 
-// AWS SageMaker service for machine learning
+// AWS SageMaker
 aws.sagemaker {
   // List of SageMaker endpoints
   endpoints() []aws.sagemaker.endpoint
@@ -302,6 +302,7 @@ private aws.sagemaker.notebookinstance.details @defaults("arn") {
   directInternetAccess string
 }
 
+// AWS SageMaker Endpoint
 private aws.sagemaker.endpoint @defaults("arn") {
   // ARN for the endpoint
   arn string
@@ -1151,7 +1152,7 @@ aws.ec2 {
   keypairs() []aws.ec2.keypair
 }
 
-// AWS EC2 Network ACL
+// Amazon EC2 Network ACL
 private aws.ec2.networkacl @defaults("arn") {
   // ARN for the network ACL
   arn string
@@ -1163,7 +1164,7 @@ private aws.ec2.networkacl @defaults("arn") {
   entries() []aws.ec2.networkacl.entry
 }
 
-// AWS EC2 Network ACL Entry
+// Amazon EC2 Network ACL Entry
 private aws.ec2.networkacl.entry {
   // Denotes whether this is an entry for egress rules
   egress bool
@@ -1175,7 +1176,7 @@ private aws.ec2.networkacl.entry {
   id string
 }
 
-// AWS EC2 Network ACL Entry Port Range
+// Amazon EC2 Network ACL Entry Port Range
 private aws.ec2.networkacl.entry.portrange {
   // Starting port for port range
   from int
@@ -1210,7 +1211,7 @@ private aws.ec2.internetgateway @defaults("arn") {
   attachments []dict
 }
 
-// AWS EC2 Snapshot
+// Amazon EC2 Snapshot
 private aws.ec2.snapshot @defaults("arn") {
   // ARN for the snapshot
   arn string
@@ -1230,7 +1231,7 @@ private aws.ec2.snapshot @defaults("arn") {
   state string
 } 
 
-// AWS EC2 Volume
+// Amazon EC2 Volume
 private aws.ec2.volume @defaults("arn") {
   // ARN for the EC2 volume
   arn string
@@ -1252,7 +1253,7 @@ private aws.ec2.volume @defaults("arn") {
   createTime time
 }
 
-// AWS EC2 Instance
+// Amazon EC2 Instance
 private aws.ec2.instance @defaults("arn state") {
   // ARN for the instance
   arn string
@@ -1304,7 +1305,7 @@ private aws.ec2.instance @defaults("arn state") {
   keypair() aws.ec2.keypair
 }
 
-// AWS EC2 Key Pair
+// Amazon EC2 Key Pair
 private aws.ec2.keypair @defaults("arn name") {
   // ARN of the keypair
   arn string
@@ -1320,7 +1321,7 @@ private aws.ec2.keypair @defaults("arn name") {
   region string
 }
 
-// AWS EC2 Image (AMI)
+// Amazon EC2 Image (AMI)
 private aws.ec2.image @defaults("arn") {
   // ARN for the AMI
   arn string
@@ -1336,7 +1337,7 @@ private aws.ec2.image @defaults("arn") {
   ownerAlias string
 }
 
-// AWS EC2 Instance Device
+// Amazon EC2 Instance Device
 private aws.ec2.instance.device {
   // Boolean to denote whether volume should be deleted on instance termination
   deleteOnTermination bool
@@ -1390,7 +1391,7 @@ private aws.vpc.routetable @defaults("id") {
   routes []dict
 }
 
-// AWS EC2 Security Group
+// Amazon EC2 Security Group
 private aws.ec2.securitygroup @defaults("arn") {
   // Security group arn
   arn string
@@ -1414,7 +1415,7 @@ private aws.ec2.securitygroup @defaults("arn") {
   isAttachedToNetworkInterface() bool
 }
 
-// AWS EC2 Security Group IP Permission
+// Amazon EC2 Security Group IP Permission
 private aws.ec2.securitygroup.ippermission @defaults("id") {
   // Unique id for the ip permission
   id string
