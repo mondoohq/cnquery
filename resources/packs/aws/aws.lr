@@ -483,7 +483,7 @@ private aws.guardduty.detector @defaults("id region") {
   unarchivedFindings() []dict
 }
 
-// AWS Security Hub service for viewing and managing security alerts
+// AWS Security Hub
 aws.securityhub {
   // List of Security Hubs in the account
   hubs() []aws.securityhub.hub
@@ -497,13 +497,13 @@ private aws.securityhub.hub @defaults("arn") {
   subscribedAt string
 }
 
-// AWS Secrets Manager for rotating, managing, and retrieving secrets
+// AWS Secrets Manager
 aws.secretsmanager {
   // List of secrets
   secrets() []aws.secretsmanager.secret
 }
 
-// Secret in AWS Secrets Manager
+// AWS Secrets Manager Secret
 private aws.secretsmanager.secret @defaults("arn") {
   // ARN for the secret
   arn string
@@ -515,7 +515,7 @@ private aws.secretsmanager.secret @defaults("arn") {
   tags map[string]string
 }
 
-// AWS EMR for large data processing
+// AWS EMR
 aws.emr {
   // List of EMR clusters
   clusters() []aws.emr.cluster
@@ -541,7 +541,7 @@ private aws.emr.cluster @defaults("arn") {
   tags map[string]string
 }
 
-// AWS CloudWatch provides observability of AWS resources and applications
+// AWS CloudWatch
 aws.cloudwatch {
   // List of CloudWatch log groups
   logGroups() []aws.cloudwatch.loggroup
@@ -551,7 +551,7 @@ aws.cloudwatch {
   metrics() []aws.cloudwatch.metric
 }
 
-// AWS CloudWatch Alarms
+// AWS CloudWatch Metrics Alarm
 private aws.cloudwatch.metricsalarm @defaults("arn") {
   // ARN for the metric alarm
   arn string
@@ -632,8 +632,7 @@ private aws.cloudwatch.metric.datapoint @defaults("id") {
   unit string
 }
 
-
-// AWS CloudWatch Log Groups
+// AWS CloudWatch Log Group
 private aws.cloudwatch.loggroup @defaults("arn") {
   // ARN of the log group
   arn string
@@ -657,7 +656,7 @@ private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
   metrics []aws.cloudwatch.metric
 }
 
-// AWS CloudTrail enables risk auditing of your AWS account
+// AWS CloudTrail
 aws.cloudtrail {
   // List of CloudTrail trails associated with the account
   trails() []aws.cloudtrail.trail
@@ -695,13 +694,13 @@ private aws.cloudtrail.trail @defaults("arn") {
   region string
 }
 
-// AWS KMS for key management
+// AWS Key Management Service (KMS)
 aws.kms {
   // A list of all customer master keys (CMKs) in the caller's AWS account (across all regions)
   keys() []aws.kms.key
 }
 
-// AWS KMS Key
+// AWS Key Management Service (KMS) Key
 private aws.kms.key @defaults("arn") {
   // Unique identifier for the key
   id string
@@ -817,6 +816,7 @@ aws.applicationAutoscaling @defaults("namespace") {
   scalableTargets() []aws.applicationautoscaling.target
 }
 
+// AWS Application Autoscaling Target
 private aws.applicationautoscaling.target @defaults("arn") {
   // Namespace for the target
   namespace string
@@ -832,12 +832,13 @@ private aws.applicationautoscaling.target @defaults("arn") {
   suspendedState dict
 }
 
-// AWS service for managing and automating backups
+// AWS Backup
 aws.backup {
   // List of vaults for the service
   vaults() []aws.backup.vault
 }
 
+// AWS Backup Vault
 private aws.backup.vault @defaults("arn") {
   // ARN of the vault
   arn string
@@ -847,6 +848,7 @@ private aws.backup.vault @defaults("arn") {
   recoveryPoints() []aws.backup.vaultRecoveryPoint
 }
 
+// AWS Backup Vault Recovery Point
 private aws.backup.vaultRecoveryPoint @defaults("arn") {
   // ARN of the recovery point
   arn string
@@ -868,7 +870,7 @@ private aws.backup.vaultRecoveryPoint @defaults("arn") {
   isEncrypted bool
 }
 
-// AWS NoSQL database service for scale
+// AWS DynamoDB
 aws.dynamodb {
   // List of backups for dynamodb
   backups() []dict
@@ -928,7 +930,7 @@ private aws.dynamodb.table @defaults("arn") {
   tags map[string]string
 }
 
-// AWS RDS for operating and scaling relational dbs
+// AWS RDS
 aws.rds {
   // List of database instances
   dbInstances() []aws.rds.dbinstance
@@ -936,7 +938,7 @@ aws.rds {
   dbClusters() []aws.rds.dbcluster
 }
 
-// AWS RDS Cluster
+// AWS RDS Database Cluster
 private aws.rds.dbcluster @defaults("arn") {
   // ARN for the database cluster
   arn string
@@ -1012,13 +1014,13 @@ private aws.rds.dbinstance @defaults("arn") {
   status string
 }
 
-// Amazon ElastiCache in-memory data store
+// Amazon ElastiCache
 aws.elasticache {
   // List of clusters
   clusters() []dict
 }
 
-// AWS Redshift for analyzing large amounts of data
+// AWS Redshift
 aws.redshift {
   // List of clusters
   clusters() []aws.redshift.cluster
@@ -1054,18 +1056,18 @@ private aws.redshift.cluster @defaults("arn") {
   tags map[string]string
 }
 
-// AWS Database Migration Service
+// AWS Database Migration Service (DMS)
 aws.dms {
   replicationInstances() []dict
 }
 
-// Amazon API Gateway resource for assessing the configuration of the AWS API Gateway service
+// AWS API Gateway
 aws.apigateway {
   // List of `aws.apigateway.restapi` objects representing all rest APIs across all enabled regions in the account
   restApis() []aws.apigateway.restapi
 }
 
-// Amazon API Gateway REST API resource provides an object representing an individual configured API Gateway REST API
+// Amazon API Gateway REST API
 private aws.apigateway.restapi @defaults("arn") {
   // ARN for the REST API
   arn string
@@ -1085,7 +1087,7 @@ private aws.apigateway.restapi @defaults("arn") {
   tags map[string]string
 }
 
-// Amazon API Gateway REST API resource provides an object representing an individual stage configured on an API Gateway
+// Amazon API Gateway REST API Stages
 private aws.apigateway.stage @defaults("arn") {
   // ARN for the REST API stage
   arn string
@@ -1101,7 +1103,7 @@ private aws.apigateway.stage @defaults("arn") {
   methodSettings dict
 }
 
-// AWS Lambda serverless compute service for running code
+// AWS Lambda
 aws.lambda {
   // List of lambda functions across all regions in the account
   functions() []aws.lambda.function
@@ -1173,7 +1175,7 @@ private aws.ec2.networkacl.entry {
   id string
 }
 
-// AWS EC2 Network ACL Port Range
+// AWS EC2 Network ACL Entry Port Range
 private aws.ec2.networkacl.entry.portrange {
   // Starting port for port range
   from int
@@ -1191,14 +1193,14 @@ private aws.ec2.vpnconnection @defaults("arn") {
   vgwTelemetry []aws.ec2.vgwtelemetry
 }
 
-// Amazon EC2 VPN Telemetry for a VPN tunnel.
+// Amazon EC2 VPN Tunnel Telemetry
 private aws.ec2.vgwtelemetry {
   outsideIpAddress string
   status string
   statusMessage string
 }
 
-// Amazon EC2 internet gateway for use with a VPC
+// Amazon EC2 Internet Gateway
 private aws.ec2.internetgateway @defaults("arn") {
   // ARN for the gateway
   arn string
@@ -1302,6 +1304,7 @@ private aws.ec2.instance @defaults("arn state") {
   keypair() aws.ec2.keypair
 }
 
+// AWS EC2 Key Pair
 private aws.ec2.keypair @defaults("arn name") {
   // ARN of the keypair
   arn string
@@ -1317,7 +1320,7 @@ private aws.ec2.keypair @defaults("arn name") {
   region string
 }
 
-// AWS EC2 Image
+// AWS EC2 Image (AMI)
 private aws.ec2.image @defaults("arn") {
   // ARN for the AMI
   arn string
@@ -1345,7 +1348,7 @@ private aws.ec2.instance.device {
   deviceName string
 }
 
-// AWS Virtual Private Cloud (VPC) resource
+// AWS Virtual Private Cloud (VPC)
 private aws.vpc @defaults("arn isDefault") {
   // ARN of the vpc
   arn string
@@ -1469,7 +1472,7 @@ aws.eks {
   clusters() []aws.eks.cluster
 }
 
-// Amazon EKS cluster
+// Amazon EKS Cluster
 private aws.eks.cluster @defaults("arn version status") {
   // Name of the cluster
   name string
@@ -1498,4 +1501,3 @@ private aws.eks.cluster @defaults("arn version status") {
   // Cluster creation timestamp
   createdAt time
 }
-
