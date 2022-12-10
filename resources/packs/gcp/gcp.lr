@@ -82,19 +82,33 @@ gcloud.sql {
 
 // GCP Cloud SQL Instance
 gcloud.sql.instance @defaults("name") {
+  // Instance name
   name string
+  // Backend type
   backendType string
+  // Connection name
   connectionName string
+  // Database version
   databaseVersion string
+  // GCE zone
   gceZone string
+  // Instance type
   instanceType string
+  // Kind
   kind string
+  // Current disk size
   currentDiskSize int
+  // Maximum disk size
   maxDiskSize int
+  // Instance state
   state string
+  // Project
   project string // TODO: should this be id or name
+  // Region
   region string
+  // Service account email address
   serviceAccountEmailAddress string
+  // Settings
   settings dict
 }
 

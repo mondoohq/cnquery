@@ -84,7 +84,7 @@ terraform.settings {
   requiredProviders dict
 }
 
-// Terraform state
+// Terraform State
 terraform.state {
   // Terraform state format version
   formatVersion string
@@ -100,7 +100,7 @@ terraform.state {
   resources() []terraform.state.resource
 }
 
-// Terraform state output values
+// Terraform State Output Values
 terraform.state.output {
   init(identifier string)
   // Output identifier
@@ -148,7 +148,7 @@ terraform.state.resource {
   deposedKey string
 }
 
-// Terraform state
+// Terraform State
 terraform.plan {
   // Terraform state format version
   formatVersion string
@@ -158,6 +158,7 @@ terraform.plan {
   resourceChanges() []terraform.plan.resourceChange
 }
 
+// Terraform Plan Resource Change
 terraform.plan.resourceChange {
   // Resource address
   address string
@@ -181,7 +182,7 @@ terraform.plan.resourceChange {
   actionReason string
 }
 
-// proposed change for an object
+// Terraform Plan Proposed Change
 terraform.plan.proposedChange {
   // Resource address
   address string
