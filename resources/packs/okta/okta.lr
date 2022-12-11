@@ -1,5 +1,6 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/okta"
 
+// Okta
 okta {
   // Okta users
   users() []okta.user
@@ -13,7 +14,7 @@ okta {
   trustedOrigins() []okta.trustedOrigin
 }
 
-// Okta organization
+// Okta Organization
 okta.organization {
   // ID of organization
   id string
@@ -51,7 +52,7 @@ okta.organization {
   expiresAt time
 }
 
-// Okta policy
+// Okta Policy
 okta.policies {
     password() []okta.policy
     mfaEnroll() []okta.policy
@@ -62,7 +63,7 @@ okta.policies {
     profileEnrollment() []okta.policy
 }
 
-// Okta user
+// Okta User
 private okta.user {
   // Unique key for user
   id string
@@ -87,7 +88,7 @@ private okta.user {
   transitioningToStatus string
 }
 
-// Okta group
+// Okta Group
 private okta.group {
   // Unique key for Group
   id string
@@ -103,7 +104,7 @@ private okta.group {
   profile dict
 }
 
-// Okta application
+// Okta Application
 private okta.application {
   // Unique key for app
   id string
@@ -133,7 +134,7 @@ private okta.application {
   visibility dict
 }
 
-// Okta domain
+// Okta Domain
 private okta.domain {
   // Domain ID
   id string
@@ -147,7 +148,7 @@ private okta.domain {
   publicCertificate dict
 }
 
-// Okta policy
+// Okta Policy
 private okta.policy {
   // Identifier of the Policy
   id string

@@ -22,7 +22,7 @@ slack.team @defaults("id domain") {
   emailDomain string
 }
 
- // List of Slack users
+ // Slack Users
 slack.users {
   []slack.user
   // Filter bot users
@@ -86,7 +86,7 @@ slack.user @defaults("id") {
   enterpriseUser slack.enterpriseUser
 }
 
-// Slack Enterprise Grid user
+// Slack Enterprise Grid User
 slack.enterpriseUser {
    id string
    // Unique ID for the Enterprise Grid organization
@@ -99,7 +99,7 @@ slack.enterpriseUser {
    isOwner bool
 }
 
-// User Groups for a Slack Workspace
+// Slack User Groups
 slack.userGroup @defaults("handle") {
   // Group ID
   id string
