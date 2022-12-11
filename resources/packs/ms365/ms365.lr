@@ -2,19 +2,38 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/ms365"
 
-// Microsoft Graph Beta
-msgraph.beta {
-  organizations() []msgraph.beta.organization
-  users() []msgraph.beta.user
-  groups() []msgraph.beta.group
-  domains() []msgraph.beta.domain
-  applications() []msgraph.beta.application
-  serviceprincipals() []msgraph.beta.serviceprincipal 
-  settings() []dict
+alias msgraph.beta = msgraph
+alias msgraph.beta.user = msgraph.user
+alias msgraph.beta.group = msgraph.group
+alias msgraph.beta.domain = msgraph.domain
+alias msgraph.beta.application = msgraph.application
+alias msgraph.beta.serviceprincipal = msgraph.serviceprincipal
+alias msgraph.beta.organization = msgraph.organization
+alias msgraph.beta.domaindnsrecord = msgraph.domaindnsrecord
+alias msgraph.beta.security = msgraph.security
+alias msgraph.beta.security.securityscore = msgraph.security.securityscore
+alias msgraph.beta.policies = msgraph.policies
+alias msgraph.beta.rolemanagement = msgraph.rolemanagement
+alias msgraph.beta.rolemanagement.roledefinition = msgraph.rolemanagement.roledefinition
+alias msgraph.beta.rolemanagement.roleassignment = msgraph.rolemanagement.roleassignment
+alias msgraph.beta.devicemanagement = msgraph.devicemanagement
+alias msgraph.beta.devicemanagement.deviceconfiguration = msgraph.devicemanagement.deviceconfiguration
+alias msgraph.beta.devicemanagement.devicecompliancepolicy = msgraph.devicemanagement.devicecompliancepolicy
+
+// Microsoft Graph
+msgraph {
+  organizations() []msgraph.organization
+  users() []msgraph.user
+  groups() []msgraph.group
+  domains() []msgraph.domain
+  applications() []msgraph.application
+  serviceprincipals() []msgraph.serviceprincipal
+  // deprecated, kept for backwards compatability. always returns an empty dictionary.
+  settings() dict
 }
 
-// Microsoft Graph Beta Organization
-msgraph.beta.organization {
+// Microsoft Graph Organization
+msgraph.organization {
   id string
   assignedPlans []dict
   createdDateTime time
@@ -22,8 +41,8 @@ msgraph.beta.organization {
   verifiedDomains []dict
 }
 
-// Microsoft Graph Beta User
-msgraph.beta.user {
+// Microsoft Graph User
+msgraph.user {
   id string
   accountEnabled bool
   city string
@@ -48,19 +67,19 @@ msgraph.beta.user {
   settings() dict
 }
 
-// Microsoft Graph Beta Group
-msgraph.beta.group {
+// Microsoft Graph Group
+msgraph.group {
   id string
   displayName string
   securityEnabled bool
   mailEnabled bool
   mailNickname string
   mail string
-  members() []msgraph.beta.user
+  members() []msgraph.user
 }
 
-// Microsoft Graph Beta Domain
-msgraph.beta.domain {
+// Microsoft Graph Domain
+msgraph.domain {
   id string
   authenticationType string
   availabilityStatus string
@@ -72,22 +91,23 @@ msgraph.beta.domain {
   passwordNotificationWindowInDays int
   passwordValidityPeriodInDays int
   supportedServices []string
-  serviceConfigurationRecords() []msgraph.beta.domaindnsrecord
+  serviceConfigurationRecords() []msgraph.domaindnsrecord
 }
 
-// Microsoft Graph Beta Domain DNS Record
-msgraph.beta.domaindnsrecord {
+// Microsoft Graph Domain DNS Record
+msgraph.domaindnsrecord {
   id string
   isOptional bool
   label string
   recordType string
   supportedService string
   ttl int
+  // deprecated, kept for backwards compatability.
   properties dict
 }
 
-// Microsoft Graph Beta Application
-msgraph.beta.application {
+// Microsoft Graph Application
+msgraph.application {
   id string
   appId string
   createdDateTime time
@@ -98,18 +118,18 @@ msgraph.beta.application {
 }
 
 // Microsoft Graph Service Principal
-msgraph.beta.serviceprincipal {
+msgraph.serviceprincipal {
   id string
 }
 
-// Microsoft Graph Beta Security
-msgraph.beta.security {
-  secureScores() []msgraph.beta.security.securityscore
-  latestSecureScores() msgraph.beta.security.securityscore
+// Microsoft Graph Security
+msgraph.security {
+  secureScores() []msgraph.security.securityscore
+  latestSecureScores() msgraph.security.securityscore
 }
 
-// Microsoft Graph Beta Security Score
-msgraph.beta.security.securityscore {
+// Microsoft Graph Security Score
+msgraph.security.securityscore {
   id string
   activeUserCount int
   averageComparativeScores []dict
@@ -123,21 +143,21 @@ msgraph.beta.security.securityscore {
   vendorInformation dict
 }
 
-// Microsoft Graph Beta Policies
-msgraph.beta.policies {
+// Microsoft Graph Policies
+msgraph.policies {
   authorizationPolicy() dict
   identitySecurityDefaultsEnforcementPolicy() dict
   adminConsentRequestPolicy() dict
   permissionGrantPolicies() []dict
 }
 
-// Microsoft Graph Beta Role Management
-msgraph.beta.rolemanagement {
-  roleDefinitions() []msgraph.beta.rolemanagement.roledefinition
+// Microsoft Graph Role Management
+msgraph.rolemanagement {
+  roleDefinitions() []msgraph.rolemanagement.roledefinition
 }
 
-// Microsoft Graph Beta Role Definition
-msgraph.beta.rolemanagement.roledefinition {
+// Microsoft Graph Role Definition
+msgraph.rolemanagement.roledefinition {
   id string
   description string
   displayName string
@@ -146,47 +166,46 @@ msgraph.beta.rolemanagement.roledefinition {
   rolePermissions []dict
   templateId string
   version string
-  assignments() []msgraph.beta.rolemanagement.roleassignment
+  assignments() []msgraph.rolemanagement.roleassignment
 }
 
-// Microsoft Graph Beta Role Assignment
-msgraph.beta.rolemanagement.roleassignment {
+// Microsoft Graph Role Assignment
+msgraph.rolemanagement.roleassignment {
   id string
   roleDefinitionId string
   principalId string
   principal dict
 }
 
-// Microsoft Graph Beta Device Management
-msgraph.beta.devicemanagement {
-  deviceConfigurations() []msgraph.beta.devicemanagement.deviceconfiguration
-  deviceCompliancePolicies() []msgraph.beta.devicemanagement.devicecompliancepolicy
+// Microsoft Graph Device Management
+msgraph.devicemanagement {
+  deviceConfigurations() []msgraph.devicemanagement.deviceconfiguration
+  deviceCompliancePolicies() []msgraph.devicemanagement.devicecompliancepolicy
 }
 
-// Microsoft Graph Beta Device Configuration
-msgraph.beta.devicemanagement.deviceconfiguration {
+// Microsoft Graph Device Configuration
+msgraph.devicemanagement.deviceconfiguration {
   id string
   lastModifiedDateTime time
-  roleScopeTagIds []string
-  supportsScopeTags bool
   createdDateTime time
   description string
   displayName string
   version int
+  // deprecated, kept for backwards compatability.
   properties dict
 }
 
-// Microsoft Graph Beta Device Compliance Policy
-msgraph.beta.devicemanagement.devicecompliancepolicy {
+// Microsoft Graph Device Compliance Policy
+msgraph.devicemanagement.devicecompliancepolicy {
   id string
   createdDateTime time
   description string
   displayName string
   lastModifiedDateTime time
-  roleScopeTagIds []string
   version int
-  properties dict
   assignments []dict
+  // deprecated, kept for backwards compatability.
+  properties dict
 }
 
 // Microsoft 365 ExchangeOnline

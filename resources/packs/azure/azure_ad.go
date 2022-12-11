@@ -1,15 +1,20 @@
 package azure
 
 import (
+	"context"
+
 	"github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
+	"github.com/microsoftgraph/msgraph-sdk-go/domains"
+	"github.com/microsoftgraph/msgraph-sdk-go/groups"
+	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	microsoft_provider "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func graphBetaClient(t *microsoft_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
+func graphClient(t *microsoft_provider.Provider) (*msgraphclient.GraphServiceClient, error) {
 	auth, err := t.GetTokenCredential()
 	if err != nil {
 		return nil, err
@@ -21,8 +26,8 @@ func graphBetaClient(t *microsoft_provider.Provider) (*msgraphclient.GraphServic
 	if err != nil {
 		return nil, err
 	}
-	graphBetaClient := msgraphclient.NewGraphServiceClient(adapter)
-	return graphBetaClient, nil
+	graphClient := msgraphclient.NewGraphServiceClient(adapter)
+	return graphClient, nil
 }
 
 func (a *mqlAzuread) id() (string, error) {
@@ -35,11 +40,13 @@ func (a *mqlAzuread) GetUsers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	usersClient, err := graphBetaClient(at)
+	usersClient, err := graphClient(at)
 	if err != nil {
 		return nil, err
 	}
-	userList, err := usersClient.Users().Get()
+
+	ctx := context.Background()
+	userList, err := usersClient.Users().Get(ctx, &users.UsersRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, err
 	}
@@ -72,11 +79,13 @@ func (a *mqlAzuread) GetGroups() ([]interface{}, error) {
 		return nil, err
 	}
 
-	groupsClient, err := graphBetaClient(at)
+	groupsClient, err := graphClient(at)
 	if err != nil {
 		return nil, err
 	}
-	groupsList, err := groupsClient.Groups().Get()
+
+	ctx := context.Background()
+	groupsList, err := groupsClient.Groups().Get(ctx, &groups.GroupsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, err
 	}
@@ -106,11 +115,13 @@ func (a *mqlAzuread) GetDomains() ([]interface{}, error) {
 		return nil, err
 	}
 
-	client, err := graphBetaClient(at)
+	client, err := graphClient(at)
 	if err != nil {
 		return nil, err
 	}
-	domains, err := client.Domains().Get()
+
+	ctx := context.Background()
+	domains, err := client.Domains().Get(ctx, &domains.DomainsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, err
 	}

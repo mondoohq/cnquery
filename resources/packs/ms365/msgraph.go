@@ -1,14 +1,23 @@
 package ms365
 
 import (
+	"context"
 	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement/devicecompliancepolicies"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement/directory/roleassignments"
+	"github.com/microsoftgraph/msgraph-sdk-go/applications"
+	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
+	"github.com/microsoftgraph/msgraph-sdk-go/domains"
+	"github.com/microsoftgraph/msgraph-sdk-go/groups"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/organization"
+	"github.com/microsoftgraph/msgraph-sdk-go/policies"
+	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
+	"github.com/microsoftgraph/msgraph-sdk-go/security"
+	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
+	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	microsoft "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
 	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphconv"
@@ -16,33 +25,19 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (m *mqlMsgraphBeta) id() (string, error) {
-	return "msgraph.beta", nil
+func (m *mqlMsgraph) id() (string, error) {
+	return "msgraph", nil
 }
 
-func (m *mqlMsgraphBeta) GetSettings() ([]interface{}, error) {
-	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
-
-	graphBetaClient, err := graphBetaClient(provider)
-	if err != nil {
-		return nil, err
-	}
-
-	settings, err := graphBetaClient.Settings().Get()
-	if err != nil {
-		return nil, msgraphclient.TransformODataError(err)
-	}
-	return core.JsonToDictSlice(msgraphconv.NewDirectorySettings(settings.GetValue()))
-}
-
-func (m *mqlMsgraphBetaOrganization) id() (string, error) {
+func (m *mqlMsgraphOrganization) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
+func (m *mqlMsgraph) GetSettings() ([]interface{}, error) {
+	return nil, errors.New("msgraph.beta.settings not supported")
+}
+
+func (m *mqlMsgraph) GetOrganizations() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -53,12 +48,13 @@ func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Organization().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Organization().Get(ctx, &organization.OrganizationRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -71,7 +67,7 @@ func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 		assignedPlans, _ := core.JsonToDictSlice(msgraphconv.NewAssignedPlans(org.GetAssignedPlans()))
 		verifiedDomains, _ := core.JsonToDictSlice(msgraphconv.NewVerifiedDomains(org.GetVerifiedDomains()))
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.organization",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.organization",
 			"id", core.ToString(org.GetId()),
 			"assignedPlans", assignedPlans,
 			"createdDateTime", org.GetCreatedDateTime(),
@@ -87,15 +83,15 @@ func (m *mqlMsgraphBeta) GetOrganizations() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlMsgraphBetaGroup) id() (string, error) {
+func (a *mqlMsgraphGroup) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlMsgraphBetaGroup) GetMembers() ([]interface{}, error) {
+func (a *mqlMsgraphGroup) GetMembers() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *mqlMsgraphBeta) GetGroups() ([]interface{}, error) {
+func (m *mqlMsgraph) GetGroups() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -106,12 +102,12 @@ func (m *mqlMsgraphBeta) GetGroups() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := graphBetaClient.Groups().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Groups().Get(ctx, &groups.GroupsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -119,7 +115,7 @@ func (m *mqlMsgraphBeta) GetGroups() ([]interface{}, error) {
 	res := []interface{}{}
 	grps := resp.GetValue()
 	for _, grp := range grps {
-		graphGrp, err := m.MotorRuntime.CreateResource("msgraph.beta.group",
+		graphGrp, err := m.MotorRuntime.CreateResource("msgraph.group",
 			"id", core.ToString(grp.GetId()),
 			"displayName", core.ToString(grp.GetDisplayName()),
 			"securityEnabled", core.ToBool(grp.GetSecurityEnabled()),
@@ -136,11 +132,11 @@ func (m *mqlMsgraphBeta) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaUser) id() (string, error) {
+func (m *mqlMsgraphUser) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
+func (m *mqlMsgraph) GetUsers() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -151,12 +147,13 @@ func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Users().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Users().Get(ctx, &users.UsersRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -166,8 +163,7 @@ func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
 	for i := range users {
 		user := users[i]
 
-		settings, _ := core.JsonToDict(user.GetSettings())
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.user",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.user",
 			"id", core.ToString(user.GetId()),
 			"accountEnabled", core.ToBool(user.GetAccountEnabled()),
 			"city", core.ToString(user.GetCity()),
@@ -189,7 +185,6 @@ func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
 			"surname", core.ToString(user.GetSurname()),
 			"userPrincipalName", core.ToString(user.GetUserPrincipalName()),
 			"userType", core.ToString(user.GetUserType()),
-			"settings", settings,
 		)
 		if err != nil {
 			return nil, err
@@ -200,11 +195,11 @@ func (m *mqlMsgraphBeta) GetUsers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaServiceprincipal) id() (string, error) {
+func (m *mqlMsgraphServiceprincipal) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBeta) GetServiceprincipals() ([]interface{}, error) {
+func (m *mqlMsgraph) GetServiceprincipals() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -215,13 +210,14 @@ func (m *mqlMsgraphBeta) GetServiceprincipals() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: we need to use Top, there are more than 100 SPs.
-	resp, err := graphBetaClient.ServicePrincipals().Get()
+	ctx := context.Background()
+	resp, err := graphClient.ServicePrincipals().Get(ctx, &serviceprincipals.ServicePrincipalsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -229,7 +225,7 @@ func (m *mqlMsgraphBeta) GetServiceprincipals() ([]interface{}, error) {
 	res := []interface{}{}
 	sps := resp.GetValue()
 	for _, sp := range sps {
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.serviceprincipal",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.serviceprincipal",
 			"id", core.ToString(sp.GetId()),
 		)
 		if err != nil {
@@ -241,11 +237,11 @@ func (m *mqlMsgraphBeta) GetServiceprincipals() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaDomain) id() (string, error) {
+func (m *mqlMsgraphDomain) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBeta) GetDomains() ([]interface{}, error) {
+func (m *mqlMsgraph) GetDomains() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -256,12 +252,13 @@ func (m *mqlMsgraphBeta) GetDomains() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Domains().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Domains().Get(ctx, &domains.DomainsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -271,7 +268,7 @@ func (m *mqlMsgraphBeta) GetDomains() ([]interface{}, error) {
 	for i := range domains {
 		domain := domains[i]
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.domain",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.domain",
 			"id", core.ToString(domain.GetId()),
 			"authenticationType", core.ToString(domain.GetAuthenticationType()),
 			"availabilityStatus", core.ToString(domain.GetAvailabilityStatus()),
@@ -293,11 +290,11 @@ func (m *mqlMsgraphBeta) GetDomains() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaDomaindnsrecord) id() (string, error) {
+func (m *mqlMsgraphDomaindnsrecord) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
+func (m *mqlMsgraphDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -313,12 +310,13 @@ func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, 
 		return nil, err
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.DomainsById(id).ServiceConfigurationRecords().Get()
+	ctx := context.Background()
+	resp, err := graphClient.DomainsById(id).ServiceConfigurationRecords().Get(ctx, &domains.DomainsItemServiceConfigurationRecordsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -327,11 +325,9 @@ func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, 
 	records := resp.GetValue()
 	for i := range records {
 		record := records[i]
-
-		// TODO: do not return additional data, it is used to gather the text
 		properties, _ := core.JsonToDict(record.GetAdditionalData())
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.domaindnsrecord",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.domaindnsrecord",
 			"id", core.ToString(record.GetId()),
 			"isOptional", core.ToBool(record.GetIsOptional()),
 			"label", core.ToString(record.GetLabel()),
@@ -349,11 +345,11 @@ func (m *mqlMsgraphBetaDomain) GetServiceConfigurationRecords() ([]interface{}, 
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaApplication) id() (string, error) {
+func (m *mqlMsgraphApplication) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBeta) GetApplications() ([]interface{}, error) {
+func (m *mqlMsgraph) GetApplications() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -364,12 +360,13 @@ func (m *mqlMsgraphBeta) GetApplications() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Applications().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -379,7 +376,7 @@ func (m *mqlMsgraphBeta) GetApplications() ([]interface{}, error) {
 	for i := range apps {
 		app := apps[i]
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.application",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.application",
 			"id", core.ToString(app.GetId()),
 			"appId", core.ToString(app.GetAppId()),
 			"createdDateTime", app.GetCreatedDateTime(),
@@ -397,7 +394,7 @@ func (m *mqlMsgraphBeta) GetApplications() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaUser) GetSettings() (interface{}, error) {
+func (m *mqlMsgraphUser) GetSettings() (interface{}, error) {
 	id, err := m.Id()
 	if err != nil {
 		return nil, err
@@ -413,12 +410,13 @@ func (m *mqlMsgraphBetaUser) GetSettings() (interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	userSettings, err := graphBetaClient.UsersById(id).Settings().Get()
+	ctx := context.Background()
+	userSettings, err := graphClient.UsersById(id).Settings().Get(ctx, &users.UsersItemSettingsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -426,8 +424,8 @@ func (m *mqlMsgraphBetaUser) GetSettings() (interface{}, error) {
 	return core.JsonToDict(msgraphconv.NewUserSettings(userSettings))
 }
 
-func (m *mqlMsgraphBetaSecurity) id() (string, error) {
-	return "msgraph.beta.security", nil
+func (m *mqlMsgraphSecurity) id() (string, error) {
+	return "msgraph.security", nil
 }
 
 func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable) (interface{}, error) {
@@ -459,7 +457,7 @@ func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable
 		return nil, err
 	}
 
-	mqlResource, err := runtime.CreateResource("msgraph.beta.security.securityscore",
+	mqlResource, err := runtime.CreateResource("msgraph.security.securityscore",
 		"id", core.ToString(score.GetId()),
 		"activeUserCount", core.ToInt64From32(score.GetActiveUserCount()),
 		"averageComparativeScores", averageComparativeScores,
@@ -478,7 +476,7 @@ func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable
 	return mqlResource, nil
 }
 
-func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
+func (m *mqlMsgraphSecurity) GetLatestSecureScores() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -489,12 +487,13 @@ func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.Security().SecureScores().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecuritySecureScoresRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -516,7 +515,7 @@ func (m *mqlMsgraphBetaSecurity) GetLatestSecureScores() (interface{}, error) {
 }
 
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
-func (m *mqlMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
+func (m *mqlMsgraphSecurity) GetSecureScores() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -527,12 +526,12 @@ func (m *mqlMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := graphBetaClient.Security().SecureScores().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecuritySecureScoresRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -551,15 +550,15 @@ func (m *mqlMsgraphBetaSecurity) GetSecureScores() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlMsgraphBetaSecuritySecurityscore) id() (string, error) {
+func (s *mqlMsgraphSecuritySecurityscore) id() (string, error) {
 	return s.Id()
 }
 
-func (s *mqlMsgraphBetaPolicies) id() (string, error) {
-	return "msgraph.beta.policies", nil
+func (s *mqlMsgraphPolicies) id() (string, error) {
+	return "msgraph.policies", nil
 }
 
-func (m *mqlMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
+func (m *mqlMsgraphPolicies) GetAuthorizationPolicy() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -570,25 +569,20 @@ func (m *mqlMsgraphBetaPolicies) GetAuthorizationPolicy() (interface{}, error) {
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := graphBetaClient.Policies().AuthorizationPolicy().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Policies().AuthorizationPolicy().Get(ctx, &policies.PoliciesAuthorizationPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
 
-	policies := resp.GetValue()
-	if len(policies) > 0 {
-		// TODO: we need to change the MQL resource to return more than one
-		return core.JsonToDict(msgraphconv.NewAuthorizationPolicy(policies[0]))
-	}
-	return nil, nil
+	return core.JsonToDict(msgraphconv.NewAuthorizationPolicy(resp))
 }
 
-func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
+func (m *mqlMsgraphPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -599,12 +593,13 @@ func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() 
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	policy, err := graphBetaClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get()
+	ctx := context.Background()
+	policy, err := graphClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(ctx, &policies.PoliciesIdentitySecurityDefaultsEnforcementPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -612,8 +607,8 @@ func (m *mqlMsgraphBetaPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() 
 	return core.JsonToDict(msgraphconv.NewIdentitySecurityDefaultsEnforcementPolicy(policy))
 }
 
-// https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-beta
-func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
+// https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
+func (m *mqlMsgraphPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -624,12 +619,13 @@ func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, er
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	policy, err := graphBetaClient.Policies().AdminConsentRequestPolicy().Get()
+	ctx := context.Background()
+	policy, err := graphClient.Policies().AdminConsentRequestPolicy().Get(ctx, &policies.PoliciesAdminConsentRequestPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -638,7 +634,7 @@ func (m *mqlMsgraphBetaPolicies) GetAdminConsentRequestPolicy() (interface{}, er
 
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
 // https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
-func (m *mqlMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, error) {
+func (m *mqlMsgraphPolicies) GetPermissionGrantPolicies() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -649,23 +645,23 @@ func (m *mqlMsgraphBetaPolicies) GetPermissionGrantPolicies() (interface{}, erro
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := graphBetaClient.Policies().PermissionGrantPolicies().Get()
+	ctx := context.Background()
+	resp, err := graphClient.Policies().PermissionGrantPolicies().Get(ctx, &policies.PoliciesPermissionGrantPoliciesRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
 	return core.JsonToDictSlice(msgraphconv.NewPermissionGrantPolicies(resp.GetValue()))
 }
 
-func (m *mqlMsgraphBetaRolemanagement) id() (string, error) {
+func (m *mqlMsgraphRolemanagement) id() (string, error) {
 	return "msgraph.rolemanagement", nil
 }
 
-func (m *mqlMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error) {
+func (m *mqlMsgraphRolemanagement) GetRoleDefinitions() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -676,12 +672,13 @@ func (m *mqlMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error)
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.RoleManagement().Directory().RoleDefinitions().Get()
+	ctx := context.Background()
+	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.RoleManagementDirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -693,7 +690,7 @@ func (m *mqlMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error)
 
 		rolePermissions, _ := core.JsonToDictSlice(msgraphconv.NewUnifiedRolePermissions(role.GetRolePermissions()))
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.rolemanagement.roledefinition",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.rolemanagement.roledefinition",
 			"id", core.ToString(role.GetId()),
 			"description", core.ToString(role.GetDescription()),
 			"displayName", core.ToString(role.GetDisplayName()),
@@ -712,11 +709,11 @@ func (m *mqlMsgraphBetaRolemanagement) GetRoleDefinitions() (interface{}, error)
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaRolemanagementRoledefinition) id() (string, error) {
+func (m *mqlMsgraphRolemanagementRoledefinition) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interface{}, error) {
+func (m *mqlMsgraphRolemanagementRoledefinition) GetAssignments() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -727,7 +724,7 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interfa
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
@@ -738,13 +735,14 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interfa
 	}
 	filter := "roleDefinitionId eq '" + roleDefinitionID + "'"
 
-	resp, err := graphBetaClient.RoleManagement().Directory().RoleAssignments().
-		GetWithRequestConfigurationAndResponseHandler(&roleassignments.RoleAssignmentsRequestBuilderGetRequestConfiguration{
-			QueryParameters: &roleassignments.RoleAssignmentsRequestBuilderGetQueryParameters{
-				Filter: &filter,
-				Expand: []string{"principal"},
-			},
-		}, nil)
+	ctx := context.Background()
+	requestConfig := &rolemanagement.RoleManagementDirectoryRoleAssignmentsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &rolemanagement.RoleManagementDirectoryRoleAssignmentsRequestBuilderGetQueryParameters{
+			Filter: &filter,
+			Expand: []string{"principal"},
+		},
+	}
+	resp, err := graphClient.RoleManagement().Directory().RoleAssignments().Get(ctx, requestConfig)
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -755,7 +753,7 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interfa
 	for i := range roleAssignments {
 		roleAssignment := roleAssignments[i]
 		principal, _ := core.JsonToDict(msgraphconv.NewDirectoryPrincipal(roleAssignment.GetPrincipal()))
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.rolemanagement.roleassignment",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.rolemanagement.roleassignment",
 			"id", core.ToString(roleAssignment.GetId()),
 			"roleDefinitionId", core.ToString(roleAssignment.GetRoleDefinitionId()),
 			"principalId", core.ToString(roleAssignment.GetPrincipalId()),
@@ -770,15 +768,15 @@ func (m *mqlMsgraphBetaRolemanagementRoledefinition) GetAssignments() ([]interfa
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaRolemanagementRoleassignment) id() (string, error) {
+func (m *mqlMsgraphRolemanagementRoleassignment) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBetaDevicemanagement) id() (string, error) {
-	return "msgraph.beta.devicemanagement", nil
+func (m *mqlMsgraphDevicemanagement) id() (string, error) {
+	return "msgraph.devicemanagement", nil
 }
 
-func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{}, error) {
+func (m *mqlMsgraphDevicemanagement) GetDeviceConfigurations() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -789,12 +787,13 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.DeviceManagement().DeviceConfigurations().Get()
+	ctx := context.Background()
+	resp, err := graphClient.DeviceManagement().DeviceConfigurations().Get(ctx, &devicemanagement.DeviceManagementDeviceConfigurationsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -803,13 +802,10 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{
 	configurations := resp.GetValue()
 	for i := range configurations {
 		configuration := configurations[i]
-		// TODO: do not return additional data
 		properties, _ := core.JsonToDict(configuration.GetAdditionalData())
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.devicemanagement.deviceconfiguration",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.deviceconfiguration",
 			"id", core.ToString(configuration.GetId()),
 			"lastModifiedDateTime", configuration.GetLastModifiedDateTime(),
-			"roleScopeTagIds", core.StrSliceToInterface(configuration.GetRoleScopeTagIds()),
-			"supportsScopeTags", core.ToBool(configuration.GetSupportsScopeTags()),
 			"createdDateTime", configuration.GetCreatedDateTime(),
 			"description", core.ToString(configuration.GetDescription()),
 			"displayName", core.ToString(configuration.GetDisplayName()),
@@ -825,7 +821,7 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceConfigurations() ([]interface{
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
+func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -836,17 +832,18 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interf
 		return nil, errors.New("current credentials have insufficient privileges: " + strings.Join(missingPermissions, ","))
 	}
 
-	graphBetaClient, err := graphBetaClient(provider)
+	graphClient, err := graphClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := graphBetaClient.DeviceManagement().DeviceCompliancePolicies().
-		GetWithRequestConfigurationAndResponseHandler(&devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
-			QueryParameters: &devicecompliancepolicies.DeviceCompliancePoliciesRequestBuilderGetQueryParameters{
-				Expand: []string{"assignments"},
-			},
-		}, nil)
+	ctx := context.Background()
+	requestConfig := &devicemanagement.DeviceManagementDeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
+		QueryParameters: &devicemanagement.DeviceManagementDeviceCompliancePoliciesRequestBuilderGetQueryParameters{
+			Expand: []string{"assignments"},
+		},
+	}
+	resp, err := graphClient.DeviceManagement().DeviceCompliancePolicies().Get(ctx, requestConfig)
 	if err != nil {
 		return nil, msgraphclient.TransformODataError(err)
 	}
@@ -856,21 +853,18 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interf
 	for i := range compliancePolicies {
 		compliancePolicy := compliancePolicies[i]
 
-		// TODO: revisit if we really need to expose the additional data
-		// expose the struct better
-		properties, _ := core.JsonToDict(compliancePolicy.GetAdditionalData())
 		assignments, _ := core.JsonToDictSlice(msgraphconv.NewDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))
+		properties, _ := core.JsonToDict(compliancePolicy.GetAdditionalData())
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.beta.devicemanagement.devicecompliancepolicy",
+		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.devicecompliancepolicy",
 			"id", core.ToString(compliancePolicy.GetId()),
 			"createdDateTime", compliancePolicy.GetCreatedDateTime(),
 			"description", core.ToString(compliancePolicy.GetDescription()),
 			"displayName", core.ToString(compliancePolicy.GetDisplayName()),
 			"lastModifiedDateTime", compliancePolicy.GetLastModifiedDateTime(),
-			"roleScopeTagIds", core.StrSliceToInterface(compliancePolicy.GetRoleScopeTagIds()),
 			"version", core.ToInt64From32(compliancePolicy.GetVersion()),
-			"properties", properties,
 			"assignments", assignments,
+			"properties", properties,
 		)
 		if err != nil {
 			return nil, err
@@ -881,15 +875,15 @@ func (m *mqlMsgraphBetaDevicemanagement) GetDeviceCompliancePolicies() ([]interf
 	return res, nil
 }
 
-func (m *mqlMsgraphBetaDevicemanagementDeviceconfiguration) id() (string, error) {
+func (m *mqlMsgraphDevicemanagementDeviceconfiguration) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphBetaDevicemanagementDevicecompliancepolicy) id() (string, error) {
+func (m *mqlMsgraphDevicemanagementDevicecompliancepolicy) id() (string, error) {
 	return m.Id()
 }
 
-func graphBetaClient(t *microsoft.Provider) (*msgraphclient.GraphServiceClient, error) {
+func graphClient(t *microsoft.Provider) (*msgraphclient.GraphServiceClient, error) {
 	auth, err := t.GetTokenCredential()
 	if err != nil {
 		return nil, err
@@ -902,6 +896,6 @@ func graphBetaClient(t *microsoft.Provider) (*msgraphclient.GraphServiceClient, 
 	if err != nil {
 		return nil, err
 	}
-	graphBetaClient := msgraphclient.NewGraphServiceClient(adapter)
-	return graphBetaClient, nil
+	graphClient := msgraphclient.NewGraphServiceClient(adapter)
+	return graphClient, nil
 }

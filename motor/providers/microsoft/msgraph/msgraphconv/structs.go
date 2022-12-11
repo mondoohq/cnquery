@@ -5,10 +5,9 @@ package msgraphconv
 
 import (
 	"encoding/json"
-	"strings"
 	"time"
 
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -84,42 +83,6 @@ func NewUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePer
 	}
 }
 
-type DirectorySetting struct {
-	DisplayName string         `json:"displayName"`
-	TemplateId  string         `json:"templateId"`
-	Values      []SettingValue `json:"values"`
-}
-
-type SettingValue struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-func NewDirectorySettings(p []models.DirectorySettingable) []DirectorySetting {
-	res := []DirectorySetting{}
-	for i := range p {
-		res = append(res, NewDirectorySetting(p[i]))
-	}
-	return res
-}
-
-func NewDirectorySetting(p models.DirectorySettingable) DirectorySetting {
-	values := []SettingValue{}
-	entries := p.GetValues()
-	for i := range entries {
-		values = append(values, SettingValue{
-			Name:  core.ToString(entries[i].GetName()),
-			Value: core.ToString(entries[i].GetValue()),
-		})
-	}
-
-	return DirectorySetting{
-		DisplayName: core.ToString(p.GetDisplayName()),
-		TemplateId:  core.ToString(p.GetTemplateId()),
-		Values:      values,
-	}
-}
-
 // structs for AuthorizationPolicy
 
 type Entity struct {
@@ -169,30 +132,6 @@ func NewAllowInvitesFrom(a *models.AllowInvitesFrom) *AllowInvitesFrom {
 	return &n
 }
 
-type DefaultUserRoleOverride struct {
-	Entity
-	IsDefault       *bool                   `json:"isDefault"`
-	RolePermissions []UnifiedRolePermission `json:"rolePermissions"`
-}
-
-func NewDefaultUserRoleOverride(a models.DefaultUserRoleOverrideable) DefaultUserRoleOverride {
-	return DefaultUserRoleOverride{
-		Entity: Entity{
-			Id: a.GetId(),
-		},
-		IsDefault:       a.GetIsDefault(),
-		RolePermissions: NewUnifiedRolePermissions(a.GetRolePermissions()),
-	}
-}
-
-func NewDefaultUserRoleOverrides(a []models.DefaultUserRoleOverrideable) []DefaultUserRoleOverride {
-	res := []DefaultUserRoleOverride{}
-	for i := range a {
-		res = append(res, NewDefaultUserRoleOverride(a[i]))
-	}
-	return res
-}
-
 type DefaultUserRolePermissions struct {
 	// Indicates whether the default user role can create applications.
 	AllowedToCreateApps *bool `json:"allowedToCreateApps"`
@@ -226,15 +165,9 @@ type AuthorizationPolicy struct {
 	// To disable the use of MSOL PowerShell set this property to true. This will also disable user-based access to the legacy service endpoint used by MSOL PowerShell. This does not affect Azure AD Connect or Microsoft Graph.
 	BlockMsolPowerShell *bool `json:"blockMsolPowerShell"`
 	//
-	DefaultUserRoleOverrides []DefaultUserRoleOverride `json:"defaultUserRoleOverrides"`
-	//
 	DefaultUserRolePermissions *DefaultUserRolePermissions `json:"defaultUserRolePermissions"`
-	// List of features enabled for private preview on the tenant.
-	EnabledPreviewFeatures []string `json:"enabledPreviewFeatures"`
 	// Represents role templateId for the role that should be granted to guest user. Currently following roles are supported:  User (a0b1b346-4d3e-4e8b-98f8-753987be4970), Guest User (10dae51f-b6af-4016-8d66-8c2a99b929b3), and Restricted Guest User (2af84b1e-32c8-42b7-82bc-daa82404023b).
 	GuestUserRoleId *string `json:"guestUserRoleId"`
-	// Indicates if user consent to apps is allowed, and if it is, which app consent policy (permissionGrantPolicy) governs the permission for users to grant consent. Values should be in the format managePermissionGrantsForSelf.{id}, where {id} is the id of a built-in or custom app consent policy. An empty list indicates user consent to apps is disabled.
-	PermissionGrantPolicyIdsAssignedToDefaultUserRole []string `json:"permissionGrantPolicyIdsAssignedToDefaultUserRole"`
 }
 
 func NewAuthorizationPolicys(policies []models.AuthorizationPolicyable) []*AuthorizationPolicy {
@@ -250,16 +183,13 @@ func NewAuthorizationPolicy(p models.AuthorizationPolicyable) *AuthorizationPoli
 		return nil
 	}
 	return &AuthorizationPolicy{
-		AllowedToSignUpEmailBasedSubscriptions:            p.GetAllowedToSignUpEmailBasedSubscriptions(),
-		AllowedToUseSSPR:                                  p.GetAllowedToUseSSPR(),
-		AllowEmailVerifiedUsersToJoinOrganization:         p.GetAllowEmailVerifiedUsersToJoinOrganization(),
-		AllowInvitesFrom:                                  NewAllowInvitesFrom(p.GetAllowInvitesFrom()),
-		BlockMsolPowerShell:                               p.GetBlockMsolPowerShell(),
-		DefaultUserRoleOverrides:                          NewDefaultUserRoleOverrides(p.GetDefaultUserRoleOverrides()),
-		DefaultUserRolePermissions:                        NewDefaultUserRolePermissions(p.GetDefaultUserRolePermissions()),
-		EnabledPreviewFeatures:                            p.GetEnabledPreviewFeatures(),
-		GuestUserRoleId:                                   p.GetGuestUserRoleId(),
-		PermissionGrantPolicyIdsAssignedToDefaultUserRole: p.GetPermissionGrantPolicyIdsAssignedToDefaultUserRole(),
+		AllowedToSignUpEmailBasedSubscriptions:    p.GetAllowedToSignUpEmailBasedSubscriptions(),
+		AllowedToUseSSPR:                          p.GetAllowedToUseSSPR(),
+		AllowEmailVerifiedUsersToJoinOrganization: p.GetAllowEmailVerifiedUsersToJoinOrganization(),
+		AllowInvitesFrom:                          NewAllowInvitesFrom(p.GetAllowInvitesFrom()),
+		BlockMsolPowerShell:                       p.GetBlockMsolPowerShell(),
+		DefaultUserRolePermissions:                NewDefaultUserRolePermissions(p.GetDefaultUserRolePermissions()),
+		GuestUserRoleId:                           p.GetGuestUserRoleId(),
 	}
 }
 
@@ -350,38 +280,6 @@ type ContactMergeSuggestions struct {
 	IsEnabled *bool `json:"isEnabled"`
 }
 
-func NewContactMergeSuggestions(p models.ContactMergeSuggestionsable) *ContactMergeSuggestions {
-	if p == nil {
-		return nil
-	}
-
-	return &ContactMergeSuggestions{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
-		IsEnabled: p.GetIsEnabled(),
-	}
-}
-
-type UserInsightsSettings struct {
-	Entity
-	// true if user's itemInsights and meeting hours insights are enabled; false if user's itemInsights and meeting hours insights are disabled. Default is true. Optional.
-	IsEnabled *bool `json:"isEnabled"`
-}
-
-func NewUserInsightsSettings(p models.UserInsightsSettingsable) *UserInsightsSettings {
-	if p == nil {
-		return nil
-	}
-
-	return &UserInsightsSettings{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
-		IsEnabled: p.GetIsEnabled(),
-	}
-}
-
 type LocaleInfo struct {
 	// A name representing the user's locale in natural language, for example, 'English (United States)'.
 	DisplayName *string `json:"displayName"`
@@ -405,131 +303,6 @@ func NewLocalInfoList(policies []models.LocaleInfoable) []LocaleInfo {
 		res = append(res, *NewLocalInfo(policies[i]))
 	}
 	return res
-}
-
-type RegionalFormatOverrides struct {
-	// The calendar to use, e.g., Gregorian Calendar.Returned by default.
-	Calendar *string `json:"calendar"`
-	// The first day of the week to use, e.g., Sunday.Returned by default.
-	FirstDayOfWeek *string `json:"firstDayOfWeek"`
-	// The long date time format to be used for displaying dates.Returned by default.
-	LongDateFormat *string `json:"longDateFormat"`
-	// The long time format to be used for displaying time.Returned by default.
-	LongTimeFormat *string `json:"longTimeFormat"`
-	// The short date time format to be used for displaying dates.Returned by default.
-	ShortDateFormat *string `json:"shortDateFormat"`
-	// The short time format to be used for displaying time.Returned by default.
-	ShortTimeFormat *string `json:"shortTimeFormat"`
-	// The timezone to be used for displaying time.Returned by default.
-	TimeZone *string `json:"timeZone"`
-}
-
-func NewRegionalFormatOverrides(p models.RegionalFormatOverridesable) *RegionalFormatOverrides {
-	if p == nil {
-		return nil
-	}
-	return &RegionalFormatOverrides{
-		Calendar:        p.GetCalendar(),
-		FirstDayOfWeek:  p.GetFirstDayOfWeek(),
-		LongDateFormat:  p.GetLongDateFormat(),
-		LongTimeFormat:  p.GetLongTimeFormat(),
-		ShortDateFormat: p.GetShortDateFormat(),
-		ShortTimeFormat: p.GetShortTimeFormat(),
-		TimeZone:        p.GetTimeZone(),
-	}
-}
-
-type TranslationBehavior int
-
-type TranslationLanguageOverride struct {
-	// The language to apply the override.Returned by default. Not nullable.
-	LanguageTag *string `json:"languageTag"`
-	// The translation override behavior for the language, if any.Returned by default. Not nullable.
-	TranslationBehavior *TranslationBehavior `json:"translationBehavior"`
-}
-
-func NewTranslationLanguageOverride(p models.TranslationLanguageOverrideable) TranslationLanguageOverride {
-	var tb *TranslationBehavior
-	if p.GetTranslationBehavior() != nil {
-		v := TranslationBehavior(*p.GetTranslationBehavior())
-		tb = &v
-	}
-	return TranslationLanguageOverride{
-		LanguageTag:         p.GetLanguageTag(),
-		TranslationBehavior: tb,
-	}
-}
-
-func NewTranslationLanguageOverrideList(entries []models.TranslationLanguageOverrideable) []TranslationLanguageOverride {
-	res := []TranslationLanguageOverride{}
-	for i := range entries {
-		res = append(res, NewTranslationLanguageOverride(entries[i]))
-	}
-	return res
-}
-
-type TranslationPreferences struct {
-	// Translation override behavior for languages, if any.Returned by default.
-	LanguageOverrides []TranslationLanguageOverride `json:"languageOverrides"`
-	// The user's preferred translation behavior.Returned by default. Not nullable.
-	TranslationBehavior *TranslationBehavior `json:"translationBehavior"`
-	// The list of languages the user does not need translated. This is computed from the authoringLanguages collection in regionalAndLanguageSettings, and the languageOverrides collection in translationPreferences. The list specifies neutral culture values that include the language code without any country or region association. For example, it would specify 'fr' for the neutral French culture, but not 'fr-FR' for the French culture in France. Returned by default. Read only.
-	UntranslatedLanguages []string `json:"untranslatedLanguages"`
-}
-
-func NewTranslationPreferences(p models.TranslationPreferencesable) *TranslationPreferences {
-	if p == nil {
-		return nil
-	}
-
-	var tb *TranslationBehavior
-	if p.GetTranslationBehavior() != nil {
-		v := TranslationBehavior(*p.GetTranslationBehavior())
-		tb = &v
-	}
-
-	return &TranslationPreferences{
-		LanguageOverrides:     NewTranslationLanguageOverrideList(p.GetLanguageOverrides()),
-		TranslationBehavior:   tb,
-		UntranslatedLanguages: p.GetUntranslatedLanguages(),
-	}
-}
-
-type RegionalAndLanguageSettings struct {
-	Entity
-	// Prioritized list of languages the user reads and authors in.Returned by default. Not nullable.
-	AuthoringLanguages []LocaleInfo `json:"authoringLanguages"`
-	// The  user's preferred user interface language (menus, buttons, ribbons, warning messages) for Microsoft web applications.Returned by default. Not nullable.
-	DefaultDisplayLanguage *LocaleInfo `json:"defaultDisplayLanguage"`
-	// The locale that drives the default date, time, and calendar formatting.Returned by default.
-	DefaultRegionalFormat *LocaleInfo `json:"defaultRegionalFormat"`
-	// The language a user expected to use as input for text to speech scenarios.Returned by default.
-	DefaultSpeechInputLanguage *LocaleInfo `json:"defaultSpeechInputLanguage"`
-	// The language a user expects to have documents, emails, and messages translated into.Returned by default.
-	DefaultTranslationLanguage *LocaleInfo `json:"defaultTranslationLanguage"`
-	// Allows a user to override their defaultRegionalFormat with field specific formats.Returned by default.
-	RegionalFormatOverrides *RegionalFormatOverrides `json:"regionalFormatOverrides"`
-	// The user's preferred settings when consuming translated documents, emails, messages, and websites.Returned by default. Not nullable.
-	TranslationPreferences *TranslationPreferences `json:"translationPreferences"`
-}
-
-func NewRegionalAndLanguageSettings(p models.RegionalAndLanguageSettingsable) *RegionalAndLanguageSettings {
-	if p == nil {
-		return nil
-	}
-
-	return &RegionalAndLanguageSettings{
-		Entity: Entity{
-			Id: p.GetId(),
-		},
-		AuthoringLanguages:         NewLocalInfoList(p.GetAuthoringLanguages()),
-		DefaultDisplayLanguage:     NewLocalInfo(p.GetDefaultDisplayLanguage()),
-		DefaultRegionalFormat:      NewLocalInfo(p.GetDefaultRegionalFormat()),
-		DefaultSpeechInputLanguage: NewLocalInfo(p.GetDefaultSpeechInputLanguage()),
-		DefaultTranslationLanguage: NewLocalInfo(p.GetDefaultTranslationLanguage()),
-		RegionalFormatOverrides:    NewRegionalFormatOverrides(p.GetRegionalFormatOverrides()),
-		TranslationPreferences:     NewTranslationPreferences(p.GetTranslationPreferences()),
-	}
 }
 
 type Identity struct {
@@ -571,8 +344,6 @@ func NewIdentitySet(p models.IdentitySetable) *IdentitySet {
 
 type ChangeTrackedEntity struct {
 	Entity
-	//
-	CreatedBy *IdentitySet `json:"createdBy"`
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
 	CreatedDateTime *time.Time `json:"createdDateTime"`
 	// Identity of the person who last modified the entity.
@@ -581,272 +352,12 @@ type ChangeTrackedEntity struct {
 	LastModifiedDateTime *time.Time `json:"lastModifiedDateTime"`
 }
 
-type TimeRange struct {
-	// End time for the time range.
-	EndTime *time.Time `json:"endTime"`
-	// Start time for the time range.
-	StartTime *time.Time `json:"startTime"`
-}
-
-const timeOnlyFormat = "15:04:05.000000000"
-
-var timeOnlyParsingFormats = map[int]string{
-	0: "15:04:05", // Go doesn't seem to support optional parameters in time.Parse, which is sad
-	1: "15:04:05.0",
-	2: "15:04:05.00",
-	3: "15:04:05.000",
-	4: "15:04:05.0000",
-	5: "15:04:05.00000",
-	6: "15:04:05.000000",
-	7: "15:04:05.0000000",
-	8: "15:04:05.00000000",
-	9: timeOnlyFormat,
-}
-
-// ParseTimeOnly parses a string into a TimeOnly following the RFC3339 standard.
-func ParseTimeOnly(s string) *time.Time {
-	if len(strings.TrimSpace(s)) <= 0 {
-		return nil
-	}
-	splat := strings.Split(s, ".")
-	parsingFormat := timeOnlyParsingFormats[0]
-	if len(splat) > 1 {
-		dotSectionLen := len(splat[1])
-		if dotSectionLen >= len(timeOnlyParsingFormats) {
-			return nil
-		}
-		parsingFormat = timeOnlyParsingFormats[dotSectionLen]
-	}
-	timeValue, err := time.Parse(parsingFormat, s)
-	if err != nil {
-		return nil
-	}
-	return &timeValue
-}
-
-func NewTimeRange(p models.TimeRangeable) TimeRange {
-	return TimeRange{
-		EndTime:   ParseTimeOnly(p.GetEndTime().String()),
-		StartTime: ParseTimeOnly(p.GetStartTime().String()),
-	}
-}
-
-func NewTimeRangeList(entries []models.TimeRangeable) []TimeRange {
-	res := []TimeRange{}
-	for i := range entries {
-		res = append(res, NewTimeRange(entries[i]))
-	}
-	return res
-}
-
-// TODO: update marshaling
-type (
-	DayOfWeek int
-	WeekIndex int
-)
-
-func NewDayOfWeek(p models.DayOfWeek) DayOfWeek {
-	return DayOfWeek(p)
-}
-
-func NewDayOfWeekList(entries []models.DayOfWeek) []DayOfWeek {
-	res := []DayOfWeek{}
-	for i := range entries {
-		res = append(res, NewDayOfWeek(entries[i]))
-	}
-	return res
-}
-
-type RecurrencePatternType int
-
-type RecurrencePattern struct {
-	// The day of the month on which the event occurs. Required if type is absoluteMonthly or absoluteYearly.
-	DayOfMonth *int32 `json:"dayOfMonth"`
-	// A collection of the days of the week on which the event occurs. The possible values are: sunday, monday, tuesday, wednesday, thursday, friday, saturday. If type is relativeMonthly or relativeYearly, and daysOfWeek specifies more than one day, the event falls on the first day that satisfies the pattern.  Required if type is weekly, relativeMonthly, or relativeYearly.
-	DaysOfWeek []DayOfWeek `json:"daysOfWeek"`
-	// The first day of the week. The possible values are: sunday, monday, tuesday, wednesday, thursday, friday, saturday. Default is sunday. Required if type is weekly.
-	FirstDayOfWeek *DayOfWeek `json:"firstDayOfWeek"`
-	// Specifies on which instance of the allowed days specified in daysOfWeek the event occurs, counted from the first instance in the month. The possible values are: first, second, third, fourth, last. Default is first. Optional and used if type is relativeMonthly or relativeYearly.
-	Index *WeekIndex `json:"index"`
-	// The number of units between occurrences, where units can be in days, weeks, months, or years, depending on the type. Required.
-	Interval *int32 `json:"interval"`
-	// The month in which the event occurs.  This is a number from 1 to 12.
-	Month *int32 `json:"month"`
-	// The recurrence pattern type: daily, weekly, absoluteMonthly, relativeMonthly, absoluteYearly, relativeYearly. Required. For more information, see values of type property.
-	Type *RecurrencePatternType `json:"type"`
-}
-
-func NewRecurrencePattern(p models.RecurrencePatternable) *RecurrencePattern {
-	if p == nil {
-		return nil
-	}
-
-	var idx *WeekIndex
-	if p.GetIndex() != nil {
-		v := WeekIndex(int(*p.GetIndex()))
-		idx = &v
-	}
-
-	var t *RecurrencePatternType
-	if p.GetType() != nil {
-		v := RecurrencePatternType(int(*p.GetType()))
-		t = &v
-	}
-
-	var firstDayOfWeek *DayOfWeek
-	if p.GetFirstDayOfWeek() != nil {
-		v := NewDayOfWeek(*p.GetFirstDayOfWeek())
-		firstDayOfWeek = &v
-	}
-
-	return &RecurrencePattern{
-		DayOfMonth:     p.GetDayOfMonth(),
-		DaysOfWeek:     NewDayOfWeekList(p.GetDaysOfWeek()),
-		FirstDayOfWeek: firstDayOfWeek,
-		Index:          idx,
-		Interval:       p.GetInterval(),
-		Month:          p.GetMonth(),
-		Type:           t,
-	}
-}
-
-type RecurrenceRangeType int
-
-type RecurrenceRange struct {
-	// The date to stop applying the recurrence pattern. Depending on the recurrence pattern of the event, the last occurrence of the meeting may not be this date. Required if type is endDate.
-	EndDate *time.Time `json:"endDate"`
-	// The number of times to repeat the event. Required and must be positive if type is numbered.
-	NumberOfOccurrences *int32 `json:"numberOfOccurrences"`
-	// Time zone for the startDate and endDate properties. Optional. If not specified, the time zone of the event is used.
-	RecurrenceTimeZone *string `json:"recurrenceTimeZone"`
-	// The date to start applying the recurrence pattern. The first occurrence of the meeting may be this date or later, depending on the recurrence pattern of the event. Must be the same value as the start property of the recurring event. Required.
-	StartDate *time.Time `json:"startDate"`
-	// The recurrence range. The possible values are: endDate, noEnd, numbered. Required.
-	Type *RecurrenceRangeType `json:"type"`
-}
-
-const dateOnlyFormat = "2006-01-02"
-
-// ParseDateOnly parses a string into a DateOnly following the RFC3339 standard.
-func ParseDateOnly(s string) *time.Time {
-	if len(strings.TrimSpace(s)) <= 0 {
-		return nil
-	}
-	timeValue, err := time.Parse(dateOnlyFormat, s)
-	if err != nil {
-		return nil
-	}
-	return &timeValue
-}
-
-func NewRecurrenceRange(p models.RecurrenceRangeable) *RecurrenceRange {
-	if p == nil {
-		return nil
-	}
-
-	var t *RecurrenceRangeType
-	if p.GetType() != nil {
-		v := RecurrenceRangeType(*p.GetType())
-		t = &v
-	}
-
-	var endDate *time.Time
-	if p.GetEndDate() != nil {
-		endDate = ParseDateOnly(p.GetEndDate().String())
-	}
-
-	var startDate *time.Time
-	if p.GetStartDate() != nil {
-		startDate = ParseDateOnly(p.GetStartDate().String())
-	}
-
-	return &RecurrenceRange{
-		EndDate:             endDate,
-		NumberOfOccurrences: p.GetNumberOfOccurrences(),
-		RecurrenceTimeZone:  p.GetRecurrenceTimeZone(),
-		StartDate:           startDate,
-		Type:                t,
-	}
-}
-
-type PatternedRecurrence struct {
-	// The frequency of an event.  For access reviews: Do not specify this property for a one-time access review.  Only interval, dayOfMonth, and type (weekly, absoluteMonthly) properties of recurrencePattern are supported.
-	Pattern *RecurrencePattern `json:"pattern"`
-	// The duration of an event.
-	Range *RecurrenceRange `json:"range"`
-}
-
-func NewPatternedRecurrence(p models.PatternedRecurrenceable) *PatternedRecurrence {
-	if p == nil {
-		return nil
-	}
-
-	return &PatternedRecurrence{
-		Pattern: NewRecurrencePattern(p.GetPattern()),
-		Range:   NewRecurrenceRange(p.GetRange()),
-	}
-}
-
-type ShiftAvailability struct {
-	// Specifies the pattern for recurrence
-	Recurrence *PatternedRecurrence `json:"recurrence"`
-	// The time slot(s) preferred by the user.
-	TimeSlots []TimeRange `json:"timeSlots"`
-	// Specifies the time zone for the indicated time.
-	TimeZone *string `json:"timeZone"`
-}
-
-func NewShiftAvailability(p models.ShiftAvailabilityable) ShiftAvailability {
-	return ShiftAvailability{
-		Recurrence: NewPatternedRecurrence(p.GetRecurrence()),
-		TimeSlots:  NewTimeRangeList(p.GetTimeSlots()),
-		TimeZone:   p.GetTimeZone(),
-	}
-}
-
-func NewShiftAvailabilityList(entries []models.ShiftAvailabilityable) []ShiftAvailability {
-	res := []ShiftAvailability{}
-	for i := range entries {
-		res = append(res, NewShiftAvailability(entries[i]))
-	}
-	return res
-}
-
-type ShiftPreferences struct {
-	ChangeTrackedEntity
-	// Availability of the user to be scheduled for work and its recurrence pattern.
-	Availability []ShiftAvailability `json:"availability"`
-}
-
-func NewShiftPreferences(p models.ShiftPreferencesable) *ShiftPreferences {
-	return &ShiftPreferences{
-		ChangeTrackedEntity: ChangeTrackedEntity{
-			Entity: Entity{
-				Id: p.GetId(),
-			},
-			CreatedBy:            NewIdentitySet(p.GetCreatedBy()),
-			LastModifiedBy:       NewIdentitySet(p.GetLastModifiedBy()),
-			CreatedDateTime:      p.GetCreatedDateTime(),
-			LastModifiedDateTime: p.GetLastModifiedDateTime(),
-		},
-		Availability: NewShiftAvailabilityList(p.GetAvailability()),
-	}
-}
-
 type UserSettings struct {
 	Entity
-	//
-	ContactMergeSuggestions *ContactMergeSuggestions `json:"contactMergeSuggestions"`
 	// Reflects the Office Delve organization level setting. When set to true, the organization doesn't have access to Office Delve. This setting is read-only and can only be changed by administrators in the SharePoint admin center.
 	ContributionToContentDiscoveryAsOrganizationDisabled *bool `json:"contributionToContentDiscoveryAsOrganizationDisabled"`
 	// When set to true, documents in the user's Office Delve are disabled. Users can control this setting in Office Delve.
 	ContributionToContentDiscoveryDisabled *bool `json:"contributionToContentDiscoveryDisabled"`
-	// The user's settings for the visibility of meeting hour insights, and insights derived between a user and other items in Microsoft 365, such as documents or sites. Get userInsightsSettings through this navigation property.
-	ItemInsights *UserInsightsSettings `json:"itemInsights"`
-	// The user's preferences for languages, regional locale and date/time formatting.
-	RegionalAndLanguageSettings *RegionalAndLanguageSettings `json:"regionalAndLanguageSettings"`
-	// The shift preferences for the user.
-	ShiftPreferences *ShiftPreferences `json:"shiftPreferences"`
 }
 
 func NewUserSettings(p models.UserSettingsable) *UserSettings {
@@ -857,12 +368,8 @@ func NewUserSettings(p models.UserSettingsable) *UserSettings {
 		Entity: Entity{
 			Id: p.GetId(),
 		},
-		ContactMergeSuggestions:                              NewContactMergeSuggestions(p.GetContactMergeSuggestions()),
 		ContributionToContentDiscoveryAsOrganizationDisabled: p.GetContributionToContentDiscoveryAsOrganizationDisabled(),
 		ContributionToContentDiscoveryDisabled:               p.GetContributionToContentDiscoveryDisabled(),
-		ItemInsights:                                         NewUserInsightsSettings(p.GetItemInsights()),
-		RegionalAndLanguageSettings:                          NewRegionalAndLanguageSettings(p.GetRegionalAndLanguageSettings()),
-		ShiftPreferences:                                     NewShiftPreferences(p.GetShiftPreferences()),
 	}
 }
 
@@ -871,52 +378,19 @@ type (
 	DeviceAndAppManagementAssignmentFilterType int
 )
 
-type DeviceAndAppManagementAssignmentTarget struct {
-	// The Id of the filter for the target assignment.
-	DeviceAndAppManagementAssignmentFilterId *string `json:"deviceAndAppManagementAssignmentFilterId"`
-	// The type of filter of the target assignment i.e. Exclude or Include. Possible values are: none, include, exclude.
-	DeviceAndAppManagementAssignmentFilterType *DeviceAndAppManagementAssignmentFilterType `json:"deviceAndAppManagementAssignmentFilterType"`
-}
-
-func NewDeviceAndAppManagementAssignmentTarget(p models.DeviceAndAppManagementAssignmentTargetable) *DeviceAndAppManagementAssignmentTarget {
-	var filterType *DeviceAndAppManagementAssignmentFilterType
-	if p.GetDeviceAndAppManagementAssignmentFilterType() != nil {
-		t := DeviceAndAppManagementAssignmentFilterType(*p.GetDeviceAndAppManagementAssignmentFilterType())
-		filterType = &t
-	}
-	return &DeviceAndAppManagementAssignmentTarget{
-		DeviceAndAppManagementAssignmentFilterId:   p.GetDeviceAndAppManagementAssignmentFilterId(),
-		DeviceAndAppManagementAssignmentFilterType: filterType,
-	}
-}
-
 type DeviceCompliancePolicyAssignment struct {
 	Entity
-	// The assignment source for the device compliance policy, direct or parcel/policySet. Possible values are: direct, policySets.
-	Source *DeviceAndAppManagementAssignmentSource `json:"source"`
-	// The identifier of the source of the assignment.
-	SourceId *string `json:"vendor"`
-	// Target for the compliance policy assignment.
-	Target *DeviceAndAppManagementAssignmentTarget `json:"target"`
 }
 
 func NewDeviceCompliancePolicyAssignment(p models.DeviceCompliancePolicyAssignmentable) *DeviceCompliancePolicyAssignment {
 	if p == nil {
 		return nil
 	}
-	var source *DeviceAndAppManagementAssignmentSource
-	if p.GetSource() != nil {
-		s := DeviceAndAppManagementAssignmentSource(*p.GetSource())
-		source = &s
-	}
 
 	return &DeviceCompliancePolicyAssignment{
 		Entity: Entity{
 			Id: p.GetId(),
 		},
-		Source:   source,
-		SourceId: p.GetSourceId(),
-		Target:   NewDeviceAndAppManagementAssignmentTarget(p.GetTarget()),
 	}
 }
 
@@ -932,8 +406,6 @@ type PermissionType int
 
 type PermissionGrantConditionSet struct {
 	Entity
-	// Set to true to only match on client applications that are Microsoft 365 certified. Set to false to match on any other client app. Default is false.
-	CertifiedClientApplicationsOnly *bool `json:"certifiedClientApplicationsOnly"`
 	// A list of appId values for the client applications to match with, or a list with the single value all to match any client application. Default is the single value all.
 	ClientApplicationIds []string `json:"clientApplicationIds"`
 	// A list of Microsoft Partner Network (MPN) IDs for verified publishers of the client application, or a list with the single value all to match with client apps from any publisher. Default is the single value all.
@@ -959,7 +431,6 @@ func NewPermissionGrantConditionSet(p models.PermissionGrantConditionSetable) Pe
 		Entity: Entity{
 			Id: p.GetId(),
 		},
-		CertifiedClientApplicationsOnly:             p.GetCertifiedClientApplicationsOnly(),
 		ClientApplicationIds:                        p.GetClientApplicationIds(),
 		ClientApplicationPublisherIds:               p.GetClientApplicationPublisherIds(),
 		ClientApplicationsFromVerifiedPublisherOnly: p.GetClientApplicationsFromVerifiedPublisherOnly(),

@@ -5,23 +5,20 @@ import (
 	kioser "github.com/microsoft/kiota-abstractions-go/serialization"
 	kiojson "github.com/microsoft/kiota-serialization-json-go"
 	kiotext "github.com/microsoft/kiota-serialization-text-go"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/applications"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/devicemanagement"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/domains"
-	domainitem "github.com/microsoftgraph/msgraph-beta-sdk-go/domains/item"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/groups"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/organization"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/policies"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/rolemanagement"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/security"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/serviceprincipals"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/settings"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/users"
-	usersitem "github.com/microsoftgraph/msgraph-beta-sdk-go/users/item"
+	"github.com/microsoftgraph/msgraph-sdk-go/applications"
+	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
+	"github.com/microsoftgraph/msgraph-sdk-go/domains"
+	"github.com/microsoftgraph/msgraph-sdk-go/groups"
+	"github.com/microsoftgraph/msgraph-sdk-go/organization"
+	"github.com/microsoftgraph/msgraph-sdk-go/policies"
+	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
+	"github.com/microsoftgraph/msgraph-sdk-go/security"
+	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
+	"github.com/microsoftgraph/msgraph-sdk-go/users"
 )
 
 // NOTE:
-// This code is almost verbatim from https://github.com/microsoftgraph/msgraph-beta-sdk-go
+// This code is almost verbatim from https://github.com/microsoftgraph/msgraph-sdk-go
 // We avoid using that package directly because it brings in a bunch of things we don't
 // use
 
@@ -52,13 +49,9 @@ func NewGraphServiceClient(requestAdapter kioabs.RequestAdapter) *GraphServiceCl
 		return kiotext.NewTextParseNodeFactory()
 	})
 	if m.requestAdapter.GetBaseUrl() == "" {
-		m.requestAdapter.SetBaseUrl("https://graph.microsoft.com/beta")
+		m.requestAdapter.SetBaseUrl("https://graph.microsoft.com/v1.0")
 	}
 	return m
-}
-
-func (m *GraphServiceClient) Settings() *settings.SettingsRequestBuilder {
-	return settings.NewSettingsRequestBuilderInternal(m.pathParameters, m.requestAdapter)
 }
 
 func (m *GraphServiceClient) Organization() *organization.OrganizationRequestBuilder {
@@ -81,7 +74,7 @@ func (m *GraphServiceClient) Domains() *domains.DomainsRequestBuilder {
 	return domains.NewDomainsRequestBuilderInternal(m.pathParameters, m.requestAdapter)
 }
 
-func (m *GraphServiceClient) DomainsById(id string) *domainitem.DomainItemRequestBuilder {
+func (m *GraphServiceClient) DomainsById(id string) *domains.DomainsDomainItemRequestBuilder {
 	urlTplParams := make(map[string]string)
 	for idx, item := range m.pathParameters {
 		urlTplParams[idx] = item
@@ -89,14 +82,14 @@ func (m *GraphServiceClient) DomainsById(id string) *domainitem.DomainItemReques
 	if id != "" {
 		urlTplParams["domain%2Did"] = id
 	}
-	return domainitem.NewDomainItemRequestBuilderInternal(urlTplParams, m.requestAdapter)
+	return domains.NewDomainsDomainItemRequestBuilderInternal(urlTplParams, m.requestAdapter)
 }
 
 func (m *GraphServiceClient) Applications() *applications.ApplicationsRequestBuilder {
 	return applications.NewApplicationsRequestBuilderInternal(m.pathParameters, m.requestAdapter)
 }
 
-func (m *GraphServiceClient) UsersById(id string) *usersitem.UserItemRequestBuilder {
+func (m *GraphServiceClient) UsersById(id string) *users.UsersUserItemRequestBuilder {
 	urlTplParams := make(map[string]string)
 	for idx, item := range m.pathParameters {
 		urlTplParams[idx] = item
@@ -104,7 +97,7 @@ func (m *GraphServiceClient) UsersById(id string) *usersitem.UserItemRequestBuil
 	if id != "" {
 		urlTplParams["user%2Did"] = id
 	}
-	return usersitem.NewUserItemRequestBuilderInternal(urlTplParams, m.requestAdapter)
+	return users.NewUsersUserItemRequestBuilderInternal(urlTplParams, m.requestAdapter)
 }
 
 func (m *GraphServiceClient) Security() *security.SecurityRequestBuilder {
