@@ -11,6 +11,22 @@ import (
 	"google.golang.org/api/transport"
 )
 
+func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, error) {
+	ctx := context.Background()
+
+	if t.serviceAccountSubject == "" {
+		return googleoauth.FindDefaultCredentials(ctx, scopes...)
+	}
+
+	// use custom service account provided by user
+	credParams := googleoauth.CredentialsParams{
+		Scopes:  scopes,
+		Subject: t.serviceAccountSubject,
+	}
+
+	return googleoauth.CredentialsFromJSONWithParams(ctx, t.serviceAccount, credParams)
+}
+
 func (t *Provider) Client(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
 

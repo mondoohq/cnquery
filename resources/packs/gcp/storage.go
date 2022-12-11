@@ -44,20 +44,8 @@ func (g *mqlGcpStorage) GetBuckets() ([]interface{}, error) {
 	for i := range buckets.Items {
 		bucket := buckets.Items[i]
 
-		var created *time.Time
-		// parse created and updated time properly "2019-06-12T21:14:13.190Z"
-		parsedCreated, err := time.Parse(time.RFC3339, bucket.TimeCreated)
-		if err != nil {
-			return nil, err
-		}
-		created = &parsedCreated
-
-		var updated *time.Time
-		parsedUpdated, err := time.Parse(time.RFC3339, bucket.Updated)
-		if err != nil {
-			return nil, err
-		}
-		updated = &parsedUpdated
+		created := parseTime(bucket.TimeCreated)
+		updated := parseTime(bucket.Updated)
 
 		iamConfigurationDict := map[string]interface{}{}
 

@@ -11,23 +11,73 @@ alias gcloud.storage.bucket = gcp.storage.bucket
 alias gcloud.sql = gcp.sql
 alias gcloud.sql.instance = gcp.sql.instance
 
-// GCP Organization
+// GCP Cloud Organization
 gcp.organization @defaults("id") {
-  id() string
-  name() string
-  lifecycleState() string
+  id string
+  name string
+  lifecycleState string
   iamPolicy() []gcp.resourcemanager.binding
 }
 
 // Google Cloud Platform Project
 gcp.project @defaults("id") {
+  // Unique, user-assigned id of the project
   id() string
+  // The unique resource name
   name() string
+  // deprecated, use id
   number() string
+  // The project lifecycle state
+  state() string
+  // deprecated, use state
   lifecycleState() string
+  // Creation time
   createTime() time
+  // The labels associated with this project
   labels() map[string]string
   iamPolicy() []gcp.resourcemanager.binding
+  // List of available and enabled services for project
+  services() []gcp.service
+
+  // List of recommendations
+  recommendations() []gcp.recommendation
+
+  // GCP Compute Resources for the Project
+  // compute() gcp.compute
+}
+
+// GCP Service
+gcp.service {
+  // Service Name
+  name string
+  // Service parent
+  parent string
+  // Service title
+  title string
+  // Service state
+  state string
+}
+
+// GCP recommendation along with a suggested action
+gcp.recommendation {
+  // Id of recommendation
+  id string
+  // Description of the recommendation
+  name string
+  // The primary impact that this recommendation can have
+  primaryImpact dict
+  // Optional set of additional impact that this recommendation may have
+  additionalImpact []dict
+  // Describing recommended changes to resources
+  content dict
+  // Category of Primary Impact
+  category string
+  // Recommendation's priority
+  priority string
+  // Last time this recommendation was refreshed
+  lastRefreshTime time
+  // State and Metadata about Recommendation
+  state dict
 }
 
 // GCP Resource Manager Binding
@@ -39,8 +89,51 @@ gcp.resourcemanager.binding {
 
 // GCP Compute
 gcp.compute {
-  // displays all Google Compute Engine instances in a project
+  // Project ID
+  projectId string
+
+  // Displays all Google Compute Engine instances in a project
   instances() []gcp.compute.instance
+
+  // Project Regions
+  regions() []gcp.compute.region
+
+  // Project Zones
+  zones() []gcp.compute.zone
+}
+
+// GCP Compute Region
+gcp.compute.region {
+  // Unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Resource Description
+  description string
+  // Status of the region
+  status string
+  // Creation timestamp
+  created time
+  // Quotas assigned to this region
+  quotas map[string]float
+  // Deprecation status
+  deprecated dict
+}
+
+// GCP Compute Zone
+gcp.compute.zone {
+  // Unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Resource Description
+  description string
+  // Region
+  region() gcp.compute.region
+  // Status of the zone
+  status string
+  // Creation timestamp
+  created time
 }
 
 // GCP Compute Instances
