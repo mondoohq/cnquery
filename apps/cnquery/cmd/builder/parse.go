@@ -220,6 +220,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 	case providers.ProviderType_DOCKER:
 		connection.Backend = providerType
+		connection.Host = args[0]
 	case providers.ProviderType_K8S:
 		connection.Backend = providerType
 
