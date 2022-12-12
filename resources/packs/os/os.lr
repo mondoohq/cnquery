@@ -256,7 +256,7 @@ os {
 }
 
 // Operating system update information
-os.update {
+os.update @defaults("name")  {
   // Name of the update
   name string
   // Category of the update

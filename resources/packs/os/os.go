@@ -17,11 +17,11 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/tar"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
 	"go.mondoo.com/cnquery/resources/packs/core/platformid"
 	"go.mondoo.com/cnquery/resources/packs/os/info"
 	"go.mondoo.com/cnquery/resources/packs/os/reboot"
 	"go.mondoo.com/cnquery/resources/packs/os/systemd"
+	"go.mondoo.com/cnquery/resources/packs/os/updates"
 	"go.mondoo.com/cnquery/resources/packs/os/uptime"
 	"go.mondoo.com/cnquery/resources/packs/os/windows"
 )
@@ -199,7 +199,7 @@ func (p *mqlOsUpdate) id() (string, error) {
 
 func (p *mqlOs) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
-	um, err := packages.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
+	um, err := updates.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
 	if um == nil || err != nil {
 		return nil, fmt.Errorf("could not detect suitable update manager for platform")
 	}
@@ -509,7 +509,7 @@ func (p *mqlOsBase) GetUptime() (*time.Time, error) {
 
 func (p *mqlOsBase) GetUpdates() ([]interface{}, error) {
 	// find suitable system updates
-	um, err := packages.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
+	um, err := updates.ResolveSystemUpdateManager(p.MotorRuntime.Motor)
 	if um == nil || err != nil {
 		return nil, fmt.Errorf("could not detect suitable update manager for platform")
 	}
