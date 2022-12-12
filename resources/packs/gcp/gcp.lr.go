@@ -52,6 +52,15 @@ func newGcpOrganization(runtime *resources.Runtime, args *resources.Args) (inter
 	// User hooks
 	var err error
 	res := mqlGcpOrganization{runtime.NewResource("gcp.organization")}
+	var existing GcpOrganization
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -341,6 +350,15 @@ func newGcpProject(runtime *resources.Runtime, args *resources.Args) (interface{
 	// User hooks
 	var err error
 	res := mqlGcpProject{runtime.NewResource("gcp.project")}
+	var existing GcpProject
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 

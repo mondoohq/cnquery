@@ -92,7 +92,7 @@ gcp.sql {
 }
 
 // GCP Cloud SQL Instance
-gcloud.sql.instance @defaults("name") {
+gcp.sql.instance @defaults("name") {
   // Instance name
   name string
   // Backend type
