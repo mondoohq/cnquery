@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-isatty"
+	"github.com/muesli/termenv"
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/logger"
 )
@@ -33,6 +34,7 @@ type progressbar struct {
 	lock         sync.Mutex
 	bar          *renderer
 	isTTY        bool
+	wg           sync.WaitGroup
 }
 
 type progressData struct {
@@ -62,7 +64,7 @@ func NewMultiBar(id string, data progressData) *progressbar {
 		id:           id,
 		maxNameWidth: maxNameWidth,
 		Data:         data,
-		isTTY:        isatty.IsTerminal(os.Stdout.Fd()) && false, // FIXME: re-enable the detection
+		isTTY:        isatty.IsTerminal(os.Stdout.Fd()),
 	}
 }
 
@@ -73,26 +75,32 @@ func (p *progressbar) Open() error {
 		return errors.Wrap(err, "failed to initialize progressbar renderer")
 	}
 
+	p.wg.Add(1)
 	if p.isTTY {
 		go func() {
+			defer p.wg.Done()
 			(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
 			defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
-
 			if _, err := tea.NewProgram(p).Run(); err != nil {
+				fmt.Println(err.Error())
 				panic(err)
 			}
 		}()
 	} else {
 		go func() {
+			defer p.wg.Done()
+			o := termenv.NewOutput(os.Stdout)
 			for {
 				time.Sleep(time.Second / progressPipedFps)
-				if p.Data.complete {
+				o.ClearLines(2)
+				o.WriteString(p.View())
+				p.lock.Lock()
+				complete := p.Data.complete
+				p.lock.Unlock()
+				if complete {
 					break
 				}
-				fmt.Print(p.View() + "\r\033[2A")
 			}
-
-			fmt.Print(p.View())
 		}()
 	}
 
@@ -106,7 +114,10 @@ func (p *progressbar) OnProgress(current int, total int) {
 }
 
 func (p *progressbar) Close() {
+	p.lock.Lock()
 	p.Data.complete = true
+	p.lock.Unlock()
+	p.wg.Wait()
 }
 
 const (
@@ -124,10 +135,6 @@ func (p *progressbar) Init() tea.Cmd {
 
 // Update is a required interface method for the underlying renderer
 func (p *progressbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if p.Data.complete {
-		return p, tea.Quit
-	}
-
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -145,6 +152,12 @@ func (p *progressbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return p, nil
 
 	case tickMsg:
+		p.lock.Lock()
+		complete := p.Data.complete
+		p.lock.Unlock()
+		if complete {
+			return p, tea.Quit
+		}
 		return p, tickCmd()
 
 	default:
@@ -155,15 +168,12 @@ func (p *progressbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View is a required interface method for the underlying renderer
 func (p *progressbar) View() string {
 	pad := strings.Repeat(" ", p.padding)
-
 	out := ""
-	p.lock.Lock()
 	for i := range p.Data.Names {
 		name := p.Data.Names[i]
 		value := p.Data.Completion[i]
 		out += "\n" + pad + p.bar.View(value) + " " + name
 	}
-	p.lock.Unlock()
 
 	out += "\n"
 	return out
