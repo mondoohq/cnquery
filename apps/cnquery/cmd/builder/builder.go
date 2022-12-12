@@ -2,10 +2,12 @@ package builder
 
 import (
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.mondoo.com/cnquery/motor/discovery/docker_engine"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -355,9 +357,19 @@ func dockerProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runF
 		Use:    "docker ID",
 		Short:  docs.GetShort("docker"),
 		Long:   docs.GetLong("docker"),
-		Args:   cobra.ExactArgs(0),
+		Args:   cobra.MaximumNArgs(1),
 		PreRun: preRun,
 		Run: func(cmd *cobra.Command, args []string) {
+			discover, err := cmd.Flags().GetString("discover")
+			if err != nil {
+				log.Error().Err(err).Msg("failed to retrieve discover flag")
+				return
+			}
+			if len(args) == 0 && !strings.Contains(discover, docker_engine.DiscoveryContainerRunning) {
+				log.Error().Msg("either a target or the \"container\" discovery flag must be provided for docker scans")
+				return
+			}
+
 			runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
 		},
 	}
