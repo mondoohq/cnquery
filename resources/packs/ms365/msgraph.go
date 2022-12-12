@@ -909,16 +909,22 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["storageRequireDeviceEncryption"] = *agdc.GetStorageRequireDeviceEncryption()
 		}
 		if agdc.GetPasswordRequiredType() != nil {
-			props["passwordRequiredType"] = *agdc.GetPasswordRequiredType()
+			props["passwordRequiredType"] = agdc.GetPasswordRequiredType().String()
 		}
 		if agdc.GetPasswordExpirationDays() != nil {
 			props["passwordExpirationDays"] = *agdc.GetPasswordExpirationDays()
+		}
+		if agdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
+			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *agdc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
 		}
 	}
 	w10gc, ok := config.(*models.Windows10GeneralConfiguration)
 	if ok {
 		if w10gc.GetPasswordRequired() != nil {
 			props["passwordRequired"] = *w10gc.GetPasswordRequired()
+		}
+		if w10gc.GetPasswordBlockSimple() != nil {
+			props["passwordBlockSimple"] = *w10gc.GetPasswordBlockSimple()
 		}
 		if w10gc.GetPasswordMinutesOfInactivityBeforeScreenTimeout() != nil {
 			props["passwordMinutesOfInactivityBeforeScreenTimeout"] = *w10gc.GetPasswordMinutesOfInactivityBeforeScreenTimeout()
@@ -930,7 +936,7 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passwordMinimumLength"] = *w10gc.GetPasswordMinimumLength()
 		}
 		if w10gc.GetPasswordRequiredType() != nil {
-			props["passwordRequiredType"] = *w10gc.GetPasswordRequiredType()
+			props["passwordRequiredType"] = w10gc.GetPasswordRequiredType().String()
 		}
 		if w10gc.GetPasswordExpirationDays() != nil {
 			props["passwordExpirationDays"] = *w10gc.GetPasswordExpirationDays()
@@ -951,7 +957,7 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passwordMinutesOfInactivityBeforeLock"] = *macdc.GetPasswordMinutesOfInactivityBeforeLock()
 		}
 		if macdc.GetPasswordRequiredType() != nil {
-			props["passwordRequiredType"] = *macdc.GetPasswordRequiredType()
+			props["passwordRequiredType"] = macdc.GetPasswordRequiredType().String()
 		}
 		if macdc.GetPasswordBlockSimple() != nil {
 			props["passwordBlockSimple"] = *macdc.GetPasswordBlockSimple()
@@ -979,7 +985,7 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["passcodeMinutesOfInactivityBeforeScreenTimeout"] = *iosdc.GetPasscodeMinutesOfInactivityBeforeScreenTimeout()
 		}
 		if iosdc.GetPasscodeRequiredType() != nil {
-			props["passcodeRequiredType"] = *iosdc.GetPasscodeRequiredType()
+			props["passcodeRequiredType"] = iosdc.GetPasscodeRequiredType().String()
 		}
 		if iosdc.GetPasscodeBlockSimple() != nil {
 			props["passcodeBlockSimple"] = *iosdc.GetPasscodeBlockSimple()
@@ -1006,15 +1012,14 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 			props["workProfilePasswordMinutesOfInactivityBeforeScreenTimeout"] = *awpgdc.GetWorkProfilePasswordMinutesOfInactivityBeforeScreenTimeout()
 		}
 		if awpgdc.GetPasswordRequiredType() != nil {
-			props["passwordRequiredType"] = *awpgdc.GetPasswordRequiredType()
+			props["passwordRequiredType"] = awpgdc.GetPasswordRequiredType().String()
 		}
 		if awpgdc.GetWorkProfilePasswordRequiredType() != nil {
-			props["workProfilePasswordRequiredType"] = *awpgdc.GetWorkProfilePasswordRequiredType()
+			props["workProfilePasswordRequiredType"] = awpgdc.GetWorkProfilePasswordRequiredType().String()
 		}
 		if awpgdc.GetPasswordExpirationDays() != nil {
 			props["passwordExpirationDays"] = *awpgdc.GetPasswordExpirationDays()
 		}
-
 	}
 	return props
 }
