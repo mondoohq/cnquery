@@ -12,20 +12,20 @@ import (
 
 // Init all resources into the registry
 func Init(registry *resources.Registry) {
-	registry.AddFactory("gcloud.organization", newGcloudOrganization)
-	registry.AddFactory("gcloud.project", newGcloudProject)
-	registry.AddFactory("gcloud.resourcemanager.binding", newGcloudResourcemanagerBinding)
-	registry.AddFactory("gcloud.compute", newGcloudCompute)
-	registry.AddFactory("gcloud.compute.instance", newGcloudComputeInstance)
-	registry.AddFactory("gcloud.compute.serviceaccount", newGcloudComputeServiceaccount)
-	registry.AddFactory("gcloud.storage", newGcloudStorage)
-	registry.AddFactory("gcloud.storage.bucket", newGcloudStorageBucket)
-	registry.AddFactory("gcloud.sql", newGcloudSql)
-	registry.AddFactory("gcloud.sql.instance", newGcloudSqlInstance)
+	registry.AddFactory("gcp.organization", newGcpOrganization)
+	registry.AddFactory("gcp.project", newGcpProject)
+	registry.AddFactory("gcp.resourcemanager.binding", newGcpResourcemanagerBinding)
+	registry.AddFactory("gcp.compute", newGcpCompute)
+	registry.AddFactory("gcp.compute.instance", newGcpComputeInstance)
+	registry.AddFactory("gcp.compute.serviceaccount", newGcpComputeServiceaccount)
+	registry.AddFactory("gcp.storage", newGcpStorage)
+	registry.AddFactory("gcp.storage.bucket", newGcpStorageBucket)
+	registry.AddFactory("gcp.sql", newGcpSql)
+	registry.AddFactory("gcp.sql.instance", newGcpSqlInstance)
 }
 
-// GcloudOrganization resource interface
-type GcloudOrganization interface {
+// GcpOrganization resource interface
+type GcpOrganization interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -37,30 +37,21 @@ type GcloudOrganization interface {
 	IamPolicy() ([]interface{}, error)
 }
 
-// mqlGcloudOrganization for the gcloud.organization resource
-type mqlGcloudOrganization struct {
+// mqlGcpOrganization for the gcp.organization resource
+type mqlGcpOrganization struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudOrganization) MqlResource() *resources.Resource {
+func (s *mqlGcpOrganization) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.organization resource
-func newGcloudOrganization(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.organization resource
+func newGcpOrganization(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudOrganization{runtime.NewResource("gcloud.organization")}
-	var existing GcloudOrganization
-	args, existing, err = res.init(args)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
-
+	res := mqlGcpOrganization{runtime.NewResource("gcp.organization")}
 	// assign all named fields
 	var id string
 
@@ -74,28 +65,28 @@ func newGcloudOrganization(runtime *resources.Runtime, args *resources.Args) (in
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.organization\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.organization\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "lifecycleState":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.organization\", its \"lifecycleState\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"lifecycleState\" argument has the wrong type (expected type \"string\")")
 			}
 		case "iamPolicy":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.organization\", its \"iamPolicy\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"iamPolicy\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.organization\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.organization with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.organization with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -113,7 +104,7 @@ func newGcloudOrganization(runtime *resources.Runtime, args *resources.Args) (in
 	return &res, nil
 }
 
-func (s *mqlGcloudOrganization) Validate() error {
+func (s *mqlGcpOrganization) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -121,8 +112,8 @@ func (s *mqlGcloudOrganization) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudOrganization) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.organization].Register")
+func (s *mqlGcpOrganization) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.organization].Register")
 	switch name {
 	case "id":
 		return nil
@@ -133,13 +124,13 @@ func (s *mqlGcloudOrganization) Register(name string) error {
 	case "iamPolicy":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.organization\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.organization\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudOrganization) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.organization].Field")
+func (s *mqlGcpOrganization) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.organization].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -150,12 +141,12 @@ func (s *mqlGcloudOrganization) Field(name string) (interface{}, error) {
 	case "iamPolicy":
 		return s.IamPolicy()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.organization\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.organization\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcloudOrganization) Id() (string, error) {
+func (s *mqlGcpOrganization) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
 		if err := s.ComputeId(); err != nil {
@@ -163,7 +154,7 @@ func (s *mqlGcloudOrganization) Id() (string, error) {
 		}
 		res, ok = s.Cache.Load("id")
 		if !ok {
-			return "", errors.New("\"gcloud.organization\" calculated \"id\" but didn't find its value in cache.")
+			return "", errors.New("\"gcp.organization\" calculated \"id\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "id")
 	}
@@ -172,13 +163,13 @@ func (s *mqlGcloudOrganization) Id() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.organization\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.organization\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcloudOrganization) Name() (string, error) {
+func (s *mqlGcpOrganization) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
 		if err := s.ComputeName(); err != nil {
@@ -186,7 +177,7 @@ func (s *mqlGcloudOrganization) Name() (string, error) {
 		}
 		res, ok = s.Cache.Load("name")
 		if !ok {
-			return "", errors.New("\"gcloud.organization\" calculated \"name\" but didn't find its value in cache.")
+			return "", errors.New("\"gcp.organization\" calculated \"name\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "name")
 	}
@@ -195,13 +186,13 @@ func (s *mqlGcloudOrganization) Name() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.organization\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.organization\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // LifecycleState accessor autogenerated
-func (s *mqlGcloudOrganization) LifecycleState() (string, error) {
+func (s *mqlGcpOrganization) LifecycleState() (string, error) {
 	res, ok := s.Cache.Load("lifecycleState")
 	if !ok || !res.Valid {
 		if err := s.ComputeLifecycleState(); err != nil {
@@ -209,7 +200,7 @@ func (s *mqlGcloudOrganization) LifecycleState() (string, error) {
 		}
 		res, ok = s.Cache.Load("lifecycleState")
 		if !ok {
-			return "", errors.New("\"gcloud.organization\" calculated \"lifecycleState\" but didn't find its value in cache.")
+			return "", errors.New("\"gcp.organization\" calculated \"lifecycleState\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "lifecycleState")
 	}
@@ -218,13 +209,13 @@ func (s *mqlGcloudOrganization) LifecycleState() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.organization\" failed to cast field \"lifecycleState\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.organization\" failed to cast field \"lifecycleState\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // IamPolicy accessor autogenerated
-func (s *mqlGcloudOrganization) IamPolicy() ([]interface{}, error) {
+func (s *mqlGcpOrganization) IamPolicy() ([]interface{}, error) {
 	res, ok := s.Cache.Load("iamPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeIamPolicy(); err != nil {
@@ -232,7 +223,7 @@ func (s *mqlGcloudOrganization) IamPolicy() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("iamPolicy")
 		if !ok {
-			return nil, errors.New("\"gcloud.organization\" calculated \"iamPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.organization\" calculated \"iamPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "iamPolicy")
 	}
@@ -241,14 +232,14 @@ func (s *mqlGcloudOrganization) IamPolicy() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.organization\" failed to cast field \"iamPolicy\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.organization\" failed to cast field \"iamPolicy\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudOrganization) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.organization].Compute")
+func (s *mqlGcpOrganization) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.organization].Compute")
 	switch name {
 	case "id":
 		return s.ComputeId()
@@ -259,12 +250,12 @@ func (s *mqlGcloudOrganization) Compute(name string) error {
 	case "iamPolicy":
 		return s.ComputeIamPolicy()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.organization\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.organization\" resource")
 	}
 }
 
 // ComputeId computer autogenerated
-func (s *mqlGcloudOrganization) ComputeId() error {
+func (s *mqlGcpOrganization) ComputeId() error {
 	var err error
 	if _, ok := s.Cache.Load("id"); ok {
 		return nil
@@ -278,7 +269,7 @@ func (s *mqlGcloudOrganization) ComputeId() error {
 }
 
 // ComputeName computer autogenerated
-func (s *mqlGcloudOrganization) ComputeName() error {
+func (s *mqlGcpOrganization) ComputeName() error {
 	var err error
 	if _, ok := s.Cache.Load("name"); ok {
 		return nil
@@ -292,7 +283,7 @@ func (s *mqlGcloudOrganization) ComputeName() error {
 }
 
 // ComputeLifecycleState computer autogenerated
-func (s *mqlGcloudOrganization) ComputeLifecycleState() error {
+func (s *mqlGcpOrganization) ComputeLifecycleState() error {
 	var err error
 	if _, ok := s.Cache.Load("lifecycleState"); ok {
 		return nil
@@ -306,7 +297,7 @@ func (s *mqlGcloudOrganization) ComputeLifecycleState() error {
 }
 
 // ComputeIamPolicy computer autogenerated
-func (s *mqlGcloudOrganization) ComputeIamPolicy() error {
+func (s *mqlGcpOrganization) ComputeIamPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("iamPolicy"); ok {
 		return nil
@@ -319,8 +310,8 @@ func (s *mqlGcloudOrganization) ComputeIamPolicy() error {
 	return nil
 }
 
-// GcloudProject resource interface
-type GcloudProject interface {
+// GcpProject resource interface
+type GcpProject interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -335,30 +326,21 @@ type GcloudProject interface {
 	IamPolicy() ([]interface{}, error)
 }
 
-// mqlGcloudProject for the gcloud.project resource
-type mqlGcloudProject struct {
+// mqlGcpProject for the gcp.project resource
+type mqlGcpProject struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudProject) MqlResource() *resources.Resource {
+func (s *mqlGcpProject) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.project resource
-func newGcloudProject(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project resource
+func newGcpProject(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudProject{runtime.NewResource("gcloud.project")}
-	var existing GcloudProject
-	args, existing, err = res.init(args)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
-
+	res := mqlGcpProject{runtime.NewResource("gcp.project")}
 	// assign all named fields
 	var id string
 
@@ -372,40 +354,40 @@ func newGcloudProject(runtime *resources.Runtime, args *resources.Args) (interfa
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "number":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"number\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"number\" argument has the wrong type (expected type \"string\")")
 			}
 		case "lifecycleState":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"lifecycleState\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"lifecycleState\" argument has the wrong type (expected type \"string\")")
 			}
 		case "createTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"createTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"createTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "labels":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "iamPolicy":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"iamPolicy\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"iamPolicy\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.project\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.project with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -423,7 +405,7 @@ func newGcloudProject(runtime *resources.Runtime, args *resources.Args) (interfa
 	return &res, nil
 }
 
-func (s *mqlGcloudProject) Validate() error {
+func (s *mqlGcpProject) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -431,8 +413,8 @@ func (s *mqlGcloudProject) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudProject) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.project].Register")
+func (s *mqlGcpProject) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project].Register")
 	switch name {
 	case "id":
 		return nil
@@ -449,13 +431,13 @@ func (s *mqlGcloudProject) Register(name string) error {
 	case "iamPolicy":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.project\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudProject) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.project].Field")
+func (s *mqlGcpProject) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -472,12 +454,12 @@ func (s *mqlGcloudProject) Field(name string) (interface{}, error) {
 	case "iamPolicy":
 		return s.IamPolicy()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.project\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcloudProject) Id() (string, error) {
+func (s *mqlGcpProject) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
 		if err := s.ComputeId(); err != nil {
@@ -485,7 +467,7 @@ func (s *mqlGcloudProject) Id() (string, error) {
 		}
 		res, ok = s.Cache.Load("id")
 		if !ok {
-			return "", errors.New("\"gcloud.project\" calculated \"id\" but didn't find its value in cache.")
+			return "", errors.New("\"gcp.project\" calculated \"id\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "id")
 	}
@@ -494,13 +476,13 @@ func (s *mqlGcloudProject) Id() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.project\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcloudProject) Name() (string, error) {
+func (s *mqlGcpProject) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
 		if err := s.ComputeName(); err != nil {
@@ -508,7 +490,7 @@ func (s *mqlGcloudProject) Name() (string, error) {
 		}
 		res, ok = s.Cache.Load("name")
 		if !ok {
-			return "", errors.New("\"gcloud.project\" calculated \"name\" but didn't find its value in cache.")
+			return "", errors.New("\"gcp.project\" calculated \"name\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "name")
 	}
@@ -517,13 +499,13 @@ func (s *mqlGcloudProject) Name() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.project\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Number accessor autogenerated
-func (s *mqlGcloudProject) Number() (string, error) {
+func (s *mqlGcpProject) Number() (string, error) {
 	res, ok := s.Cache.Load("number")
 	if !ok || !res.Valid {
 		if err := s.ComputeNumber(); err != nil {
@@ -531,7 +513,7 @@ func (s *mqlGcloudProject) Number() (string, error) {
 		}
 		res, ok = s.Cache.Load("number")
 		if !ok {
-			return "", errors.New("\"gcloud.project\" calculated \"number\" but didn't find its value in cache.")
+			return "", errors.New("\"gcp.project\" calculated \"number\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "number")
 	}
@@ -540,13 +522,13 @@ func (s *mqlGcloudProject) Number() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.project\" failed to cast field \"number\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project\" failed to cast field \"number\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // LifecycleState accessor autogenerated
-func (s *mqlGcloudProject) LifecycleState() (string, error) {
+func (s *mqlGcpProject) LifecycleState() (string, error) {
 	res, ok := s.Cache.Load("lifecycleState")
 	if !ok || !res.Valid {
 		if err := s.ComputeLifecycleState(); err != nil {
@@ -554,7 +536,7 @@ func (s *mqlGcloudProject) LifecycleState() (string, error) {
 		}
 		res, ok = s.Cache.Load("lifecycleState")
 		if !ok {
-			return "", errors.New("\"gcloud.project\" calculated \"lifecycleState\" but didn't find its value in cache.")
+			return "", errors.New("\"gcp.project\" calculated \"lifecycleState\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "lifecycleState")
 	}
@@ -563,13 +545,13 @@ func (s *mqlGcloudProject) LifecycleState() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.project\" failed to cast field \"lifecycleState\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project\" failed to cast field \"lifecycleState\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreateTime accessor autogenerated
-func (s *mqlGcloudProject) CreateTime() (*time.Time, error) {
+func (s *mqlGcpProject) CreateTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createTime")
 	if !ok || !res.Valid {
 		if err := s.ComputeCreateTime(); err != nil {
@@ -577,7 +559,7 @@ func (s *mqlGcloudProject) CreateTime() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("createTime")
 		if !ok {
-			return nil, errors.New("\"gcloud.project\" calculated \"createTime\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.project\" calculated \"createTime\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "createTime")
 	}
@@ -586,13 +568,13 @@ func (s *mqlGcloudProject) CreateTime() (*time.Time, error) {
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.project\" failed to cast field \"createTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project\" failed to cast field \"createTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Labels accessor autogenerated
-func (s *mqlGcloudProject) Labels() (map[string]interface{}, error) {
+func (s *mqlGcpProject) Labels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("labels")
 	if !ok || !res.Valid {
 		if err := s.ComputeLabels(); err != nil {
@@ -600,7 +582,7 @@ func (s *mqlGcloudProject) Labels() (map[string]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("labels")
 		if !ok {
-			return nil, errors.New("\"gcloud.project\" calculated \"labels\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.project\" calculated \"labels\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "labels")
 	}
@@ -609,13 +591,13 @@ func (s *mqlGcloudProject) Labels() (map[string]interface{}, error) {
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.project\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // IamPolicy accessor autogenerated
-func (s *mqlGcloudProject) IamPolicy() ([]interface{}, error) {
+func (s *mqlGcpProject) IamPolicy() ([]interface{}, error) {
 	res, ok := s.Cache.Load("iamPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeIamPolicy(); err != nil {
@@ -623,7 +605,7 @@ func (s *mqlGcloudProject) IamPolicy() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("iamPolicy")
 		if !ok {
-			return nil, errors.New("\"gcloud.project\" calculated \"iamPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.project\" calculated \"iamPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "iamPolicy")
 	}
@@ -632,14 +614,14 @@ func (s *mqlGcloudProject) IamPolicy() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.project\" failed to cast field \"iamPolicy\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project\" failed to cast field \"iamPolicy\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudProject) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.project].Compute")
+func (s *mqlGcpProject) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project].Compute")
 	switch name {
 	case "id":
 		return s.ComputeId()
@@ -656,12 +638,12 @@ func (s *mqlGcloudProject) Compute(name string) error {
 	case "iamPolicy":
 		return s.ComputeIamPolicy()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.project\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project\" resource")
 	}
 }
 
 // ComputeId computer autogenerated
-func (s *mqlGcloudProject) ComputeId() error {
+func (s *mqlGcpProject) ComputeId() error {
 	var err error
 	if _, ok := s.Cache.Load("id"); ok {
 		return nil
@@ -675,7 +657,7 @@ func (s *mqlGcloudProject) ComputeId() error {
 }
 
 // ComputeName computer autogenerated
-func (s *mqlGcloudProject) ComputeName() error {
+func (s *mqlGcpProject) ComputeName() error {
 	var err error
 	if _, ok := s.Cache.Load("name"); ok {
 		return nil
@@ -689,7 +671,7 @@ func (s *mqlGcloudProject) ComputeName() error {
 }
 
 // ComputeNumber computer autogenerated
-func (s *mqlGcloudProject) ComputeNumber() error {
+func (s *mqlGcpProject) ComputeNumber() error {
 	var err error
 	if _, ok := s.Cache.Load("number"); ok {
 		return nil
@@ -703,7 +685,7 @@ func (s *mqlGcloudProject) ComputeNumber() error {
 }
 
 // ComputeLifecycleState computer autogenerated
-func (s *mqlGcloudProject) ComputeLifecycleState() error {
+func (s *mqlGcpProject) ComputeLifecycleState() error {
 	var err error
 	if _, ok := s.Cache.Load("lifecycleState"); ok {
 		return nil
@@ -717,7 +699,7 @@ func (s *mqlGcloudProject) ComputeLifecycleState() error {
 }
 
 // ComputeCreateTime computer autogenerated
-func (s *mqlGcloudProject) ComputeCreateTime() error {
+func (s *mqlGcpProject) ComputeCreateTime() error {
 	var err error
 	if _, ok := s.Cache.Load("createTime"); ok {
 		return nil
@@ -731,7 +713,7 @@ func (s *mqlGcloudProject) ComputeCreateTime() error {
 }
 
 // ComputeLabels computer autogenerated
-func (s *mqlGcloudProject) ComputeLabels() error {
+func (s *mqlGcpProject) ComputeLabels() error {
 	var err error
 	if _, ok := s.Cache.Load("labels"); ok {
 		return nil
@@ -745,7 +727,7 @@ func (s *mqlGcloudProject) ComputeLabels() error {
 }
 
 // ComputeIamPolicy computer autogenerated
-func (s *mqlGcloudProject) ComputeIamPolicy() error {
+func (s *mqlGcpProject) ComputeIamPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("iamPolicy"); ok {
 		return nil
@@ -758,8 +740,8 @@ func (s *mqlGcloudProject) ComputeIamPolicy() error {
 	return nil
 }
 
-// GcloudResourcemanagerBinding resource interface
-type GcloudResourcemanagerBinding interface {
+// GcpResourcemanagerBinding resource interface
+type GcpResourcemanagerBinding interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -770,21 +752,21 @@ type GcloudResourcemanagerBinding interface {
 	Role() (string, error)
 }
 
-// mqlGcloudResourcemanagerBinding for the gcloud.resourcemanager.binding resource
-type mqlGcloudResourcemanagerBinding struct {
+// mqlGcpResourcemanagerBinding for the gcp.resourcemanager.binding resource
+type mqlGcpResourcemanagerBinding struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudResourcemanagerBinding) MqlResource() *resources.Resource {
+func (s *mqlGcpResourcemanagerBinding) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.resourcemanager.binding resource
-func newGcloudResourcemanagerBinding(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.resourcemanager.binding resource
+func newGcpResourcemanagerBinding(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudResourcemanagerBinding{runtime.NewResource("gcloud.resourcemanager.binding")}
+	res := mqlGcpResourcemanagerBinding{runtime.NewResource("gcp.resourcemanager.binding")}
 	// assign all named fields
 	var id string
 
@@ -798,24 +780,24 @@ func newGcloudResourcemanagerBinding(runtime *resources.Runtime, args *resources
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.resourcemanager.binding\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "members":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.resourcemanager.binding\", its \"members\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"members\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "role":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.resourcemanager.binding\", its \"role\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"role\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.resourcemanager.binding\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.resourcemanager.binding with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.resourcemanager.binding with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -833,24 +815,24 @@ func newGcloudResourcemanagerBinding(runtime *resources.Runtime, args *resources
 	return &res, nil
 }
 
-func (s *mqlGcloudResourcemanagerBinding) Validate() error {
+func (s *mqlGcpResourcemanagerBinding) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcloud.resourcemanager.binding\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.resourcemanager.binding\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("members"); !ok {
-		return errors.New("Initialized \"gcloud.resourcemanager.binding\" resource without a \"members\". This field is required.")
+		return errors.New("Initialized \"gcp.resourcemanager.binding\" resource without a \"members\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("role"); !ok {
-		return errors.New("Initialized \"gcloud.resourcemanager.binding\" resource without a \"role\". This field is required.")
+		return errors.New("Initialized \"gcp.resourcemanager.binding\" resource without a \"role\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudResourcemanagerBinding) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.resourcemanager.binding].Register")
+func (s *mqlGcpResourcemanagerBinding) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.resourcemanager.binding].Register")
 	switch name {
 	case "id":
 		return nil
@@ -859,13 +841,13 @@ func (s *mqlGcloudResourcemanagerBinding) Register(name string) error {
 	case "role":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.resourcemanager.binding\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.resourcemanager.binding\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudResourcemanagerBinding) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.resourcemanager.binding].Field")
+func (s *mqlGcpResourcemanagerBinding) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.resourcemanager.binding].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -874,61 +856,61 @@ func (s *mqlGcloudResourcemanagerBinding) Field(name string) (interface{}, error
 	case "role":
 		return s.Role()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.resourcemanager.binding\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.resourcemanager.binding\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcloudResourcemanagerBinding) Id() (string, error) {
+func (s *mqlGcpResourcemanagerBinding) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.resourcemanager.binding\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.resourcemanager.binding\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.resourcemanager.binding\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.resourcemanager.binding\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Members accessor autogenerated
-func (s *mqlGcloudResourcemanagerBinding) Members() ([]interface{}, error) {
+func (s *mqlGcpResourcemanagerBinding) Members() ([]interface{}, error) {
 	res, ok := s.Cache.Load("members")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.resourcemanager.binding\" failed: no value provided for static field \"members\"")
+		return nil, errors.New("\"gcp.resourcemanager.binding\" failed: no value provided for static field \"members\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.resourcemanager.binding\" failed to cast field \"members\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.resourcemanager.binding\" failed to cast field \"members\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Role accessor autogenerated
-func (s *mqlGcloudResourcemanagerBinding) Role() (string, error) {
+func (s *mqlGcpResourcemanagerBinding) Role() (string, error) {
 	res, ok := s.Cache.Load("role")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.resourcemanager.binding\" failed: no value provided for static field \"role\"")
+		return "", errors.New("\"gcp.resourcemanager.binding\" failed: no value provided for static field \"role\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.resourcemanager.binding\" failed to cast field \"role\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.resourcemanager.binding\" failed to cast field \"role\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudResourcemanagerBinding) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.resourcemanager.binding].Compute")
+func (s *mqlGcpResourcemanagerBinding) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.resourcemanager.binding].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -937,12 +919,12 @@ func (s *mqlGcloudResourcemanagerBinding) Compute(name string) error {
 	case "role":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.resourcemanager.binding\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.resourcemanager.binding\" resource")
 	}
 }
 
-// GcloudCompute resource interface
-type GcloudCompute interface {
+// GcpCompute resource interface
+type GcpCompute interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -951,21 +933,21 @@ type GcloudCompute interface {
 	Instances() ([]interface{}, error)
 }
 
-// mqlGcloudCompute for the gcloud.compute resource
-type mqlGcloudCompute struct {
+// mqlGcpCompute for the gcp.compute resource
+type mqlGcpCompute struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudCompute) MqlResource() *resources.Resource {
+func (s *mqlGcpCompute) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.compute resource
-func newGcloudCompute(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.compute resource
+func newGcpCompute(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudCompute{runtime.NewResource("gcloud.compute")}
+	res := mqlGcpCompute{runtime.NewResource("gcp.compute")}
 	// assign all named fields
 	var id string
 
@@ -979,16 +961,16 @@ func newGcloudCompute(runtime *resources.Runtime, args *resources.Args) (interfa
 		switch name {
 		case "instances":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute\", its \"instances\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"instances\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.compute with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.compute with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1006,7 +988,7 @@ func newGcloudCompute(runtime *resources.Runtime, args *resources.Args) (interfa
 	return &res, nil
 }
 
-func (s *mqlGcloudCompute) Validate() error {
+func (s *mqlGcpCompute) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -1014,29 +996,29 @@ func (s *mqlGcloudCompute) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudCompute) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.compute].Register")
+func (s *mqlGcpCompute) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute].Register")
 	switch name {
 	case "instances":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.compute\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudCompute) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.compute].Field")
+func (s *mqlGcpCompute) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute].Field")
 	switch name {
 	case "instances":
 		return s.Instances()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.compute\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute\" resource")
 	}
 }
 
 // Instances accessor autogenerated
-func (s *mqlGcloudCompute) Instances() ([]interface{}, error) {
+func (s *mqlGcpCompute) Instances() ([]interface{}, error) {
 	res, ok := s.Cache.Load("instances")
 	if !ok || !res.Valid {
 		if err := s.ComputeInstances(); err != nil {
@@ -1044,7 +1026,7 @@ func (s *mqlGcloudCompute) Instances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("instances")
 		if !ok {
-			return nil, errors.New("\"gcloud.compute\" calculated \"instances\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.compute\" calculated \"instances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "instances")
 	}
@@ -1053,24 +1035,24 @@ func (s *mqlGcloudCompute) Instances() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.compute\" failed to cast field \"instances\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"instances\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudCompute) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.compute].Compute")
+func (s *mqlGcpCompute) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute].Compute")
 	switch name {
 	case "instances":
 		return s.ComputeInstances()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.compute\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute\" resource")
 	}
 }
 
 // ComputeInstances computer autogenerated
-func (s *mqlGcloudCompute) ComputeInstances() error {
+func (s *mqlGcpCompute) ComputeInstances() error {
 	var err error
 	if _, ok := s.Cache.Load("instances"); ok {
 		return nil
@@ -1083,8 +1065,8 @@ func (s *mqlGcloudCompute) ComputeInstances() error {
 	return nil
 }
 
-// GcloudComputeInstance resource interface
-type GcloudComputeInstance interface {
+// GcpComputeInstance resource interface
+type GcpComputeInstance interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1104,21 +1086,21 @@ type GcloudComputeInstance interface {
 	ServiceAccounts() ([]interface{}, error)
 }
 
-// mqlGcloudComputeInstance for the gcloud.compute.instance resource
-type mqlGcloudComputeInstance struct {
+// mqlGcpComputeInstance for the gcp.compute.instance resource
+type mqlGcpComputeInstance struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudComputeInstance) MqlResource() *resources.Resource {
+func (s *mqlGcpComputeInstance) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.compute.instance resource
-func newGcloudComputeInstance(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.compute.instance resource
+func newGcpComputeInstance(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudComputeInstance{runtime.NewResource("gcloud.compute.instance")}
+	res := mqlGcpComputeInstance{runtime.NewResource("gcp.compute.instance")}
 	// assign all named fields
 	var id string
 
@@ -1132,60 +1114,60 @@ func newGcloudComputeInstance(runtime *resources.Runtime, args *resources.Args) 
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "cpuPlatform":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"cpuPlatform\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"cpuPlatform\" argument has the wrong type (expected type \"string\")")
 			}
 		case "deletionProtection":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"deletionProtection\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"deletionProtection\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "description":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"description\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
 		case "hostname":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"hostname\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"hostname\" argument has the wrong type (expected type \"string\")")
 			}
 		case "labels":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "status":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"status\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"status\" argument has the wrong type (expected type \"string\")")
 			}
 		case "statusMessage":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"statusMessage\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"statusMessage\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"tags\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"tags\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "metadata":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"metadata\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"metadata\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "serviceAccounts":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"serviceAccounts\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"serviceAccounts\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.instance\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.compute.instance with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.compute.instance with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1203,51 +1185,51 @@ func newGcloudComputeInstance(runtime *resources.Runtime, args *resources.Args) 
 	return &res, nil
 }
 
-func (s *mqlGcloudComputeInstance) Validate() error {
+func (s *mqlGcpComputeInstance) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("cpuPlatform"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"cpuPlatform\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"cpuPlatform\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("deletionProtection"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"deletionProtection\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"deletionProtection\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("description"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"description\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"description\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("hostname"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"hostname\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"hostname\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("labels"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"labels\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"labels\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("status"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"status\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"status\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("statusMessage"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"statusMessage\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"statusMessage\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("metadata"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"metadata\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"metadata\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("serviceAccounts"); !ok {
-		return errors.New("Initialized \"gcloud.compute.instance\" resource without a \"serviceAccounts\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"serviceAccounts\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudComputeInstance) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.compute.instance].Register")
+func (s *mqlGcpComputeInstance) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.instance].Register")
 	switch name {
 	case "id":
 		return nil
@@ -1274,13 +1256,13 @@ func (s *mqlGcloudComputeInstance) Register(name string) error {
 	case "serviceAccounts":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.compute.instance\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.instance\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudComputeInstance) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.compute.instance].Field")
+func (s *mqlGcpComputeInstance) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.instance].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -1307,205 +1289,205 @@ func (s *mqlGcloudComputeInstance) Field(name string) (interface{}, error) {
 	case "serviceAccounts":
 		return s.ServiceAccounts()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.compute.instance\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.instance\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcloudComputeInstance) Id() (string, error) {
+func (s *mqlGcpComputeInstance) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcloudComputeInstance) Name() (string, error) {
+func (s *mqlGcpComputeInstance) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CpuPlatform accessor autogenerated
-func (s *mqlGcloudComputeInstance) CpuPlatform() (string, error) {
+func (s *mqlGcpComputeInstance) CpuPlatform() (string, error) {
 	res, ok := s.Cache.Load("cpuPlatform")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"cpuPlatform\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"cpuPlatform\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"cpuPlatform\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"cpuPlatform\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DeletionProtection accessor autogenerated
-func (s *mqlGcloudComputeInstance) DeletionProtection() (bool, error) {
+func (s *mqlGcpComputeInstance) DeletionProtection() (bool, error) {
 	res, ok := s.Cache.Load("deletionProtection")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"deletionProtection\"")
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"deletionProtection\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"deletionProtection\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"deletionProtection\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Description accessor autogenerated
-func (s *mqlGcloudComputeInstance) Description() (string, error) {
+func (s *mqlGcpComputeInstance) Description() (string, error) {
 	res, ok := s.Cache.Load("description")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"description\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"description\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"description\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"description\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Hostname accessor autogenerated
-func (s *mqlGcloudComputeInstance) Hostname() (string, error) {
+func (s *mqlGcpComputeInstance) Hostname() (string, error) {
 	res, ok := s.Cache.Load("hostname")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"hostname\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"hostname\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"hostname\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"hostname\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Labels accessor autogenerated
-func (s *mqlGcloudComputeInstance) Labels() (map[string]interface{}, error) {
+func (s *mqlGcpComputeInstance) Labels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("labels")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"labels\"")
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"labels\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Status accessor autogenerated
-func (s *mqlGcloudComputeInstance) Status() (string, error) {
+func (s *mqlGcpComputeInstance) Status() (string, error) {
 	res, ok := s.Cache.Load("status")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"status\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"status\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"status\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"status\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // StatusMessage accessor autogenerated
-func (s *mqlGcloudComputeInstance) StatusMessage() (string, error) {
+func (s *mqlGcpComputeInstance) StatusMessage() (string, error) {
 	res, ok := s.Cache.Load("statusMessage")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"statusMessage\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"statusMessage\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"statusMessage\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"statusMessage\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlGcloudComputeInstance) Tags() ([]interface{}, error) {
+func (s *mqlGcpComputeInstance) Tags() ([]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"tags\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"tags\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Metadata accessor autogenerated
-func (s *mqlGcloudComputeInstance) Metadata() (map[string]interface{}, error) {
+func (s *mqlGcpComputeInstance) Metadata() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("metadata")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"metadata\"")
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"metadata\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"metadata\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"metadata\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServiceAccounts accessor autogenerated
-func (s *mqlGcloudComputeInstance) ServiceAccounts() ([]interface{}, error) {
+func (s *mqlGcpComputeInstance) ServiceAccounts() ([]interface{}, error) {
 	res, ok := s.Cache.Load("serviceAccounts")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.compute.instance\" failed: no value provided for static field \"serviceAccounts\"")
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"serviceAccounts\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.compute.instance\" failed to cast field \"serviceAccounts\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"serviceAccounts\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudComputeInstance) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.compute.instance].Compute")
+func (s *mqlGcpComputeInstance) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.instance].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -1532,12 +1514,12 @@ func (s *mqlGcloudComputeInstance) Compute(name string) error {
 	case "serviceAccounts":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.compute.instance\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.instance\" resource")
 	}
 }
 
-// GcloudComputeServiceaccount resource interface
-type GcloudComputeServiceaccount interface {
+// GcpComputeServiceaccount resource interface
+type GcpComputeServiceaccount interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1547,21 +1529,21 @@ type GcloudComputeServiceaccount interface {
 	Scopes() ([]interface{}, error)
 }
 
-// mqlGcloudComputeServiceaccount for the gcloud.compute.serviceaccount resource
-type mqlGcloudComputeServiceaccount struct {
+// mqlGcpComputeServiceaccount for the gcp.compute.serviceaccount resource
+type mqlGcpComputeServiceaccount struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudComputeServiceaccount) MqlResource() *resources.Resource {
+func (s *mqlGcpComputeServiceaccount) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.compute.serviceaccount resource
-func newGcloudComputeServiceaccount(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.compute.serviceaccount resource
+func newGcpComputeServiceaccount(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudComputeServiceaccount{runtime.NewResource("gcloud.compute.serviceaccount")}
+	res := mqlGcpComputeServiceaccount{runtime.NewResource("gcp.compute.serviceaccount")}
 	// assign all named fields
 	var id string
 
@@ -1575,20 +1557,20 @@ func newGcloudComputeServiceaccount(runtime *resources.Runtime, args *resources.
 		switch name {
 		case "email":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.serviceaccount\", its \"email\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.serviceaccount\", its \"email\" argument has the wrong type (expected type \"string\")")
 			}
 		case "scopes":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.serviceaccount\", its \"scopes\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.serviceaccount\", its \"scopes\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.compute.serviceaccount\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.compute.serviceaccount\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.compute.serviceaccount with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.compute.serviceaccount with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1606,91 +1588,91 @@ func newGcloudComputeServiceaccount(runtime *resources.Runtime, args *resources.
 	return &res, nil
 }
 
-func (s *mqlGcloudComputeServiceaccount) Validate() error {
+func (s *mqlGcpComputeServiceaccount) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("email"); !ok {
-		return errors.New("Initialized \"gcloud.compute.serviceaccount\" resource without a \"email\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.serviceaccount\" resource without a \"email\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("scopes"); !ok {
-		return errors.New("Initialized \"gcloud.compute.serviceaccount\" resource without a \"scopes\". This field is required.")
+		return errors.New("Initialized \"gcp.compute.serviceaccount\" resource without a \"scopes\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudComputeServiceaccount) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.compute.serviceaccount].Register")
+func (s *mqlGcpComputeServiceaccount) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.serviceaccount].Register")
 	switch name {
 	case "email":
 		return nil
 	case "scopes":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.compute.serviceaccount\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.serviceaccount\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudComputeServiceaccount) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.compute.serviceaccount].Field")
+func (s *mqlGcpComputeServiceaccount) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.serviceaccount].Field")
 	switch name {
 	case "email":
 		return s.Email()
 	case "scopes":
 		return s.Scopes()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.compute.serviceaccount\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.serviceaccount\" resource")
 	}
 }
 
 // Email accessor autogenerated
-func (s *mqlGcloudComputeServiceaccount) Email() (string, error) {
+func (s *mqlGcpComputeServiceaccount) Email() (string, error) {
 	res, ok := s.Cache.Load("email")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.compute.serviceaccount\" failed: no value provided for static field \"email\"")
+		return "", errors.New("\"gcp.compute.serviceaccount\" failed: no value provided for static field \"email\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.compute.serviceaccount\" failed to cast field \"email\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.serviceaccount\" failed to cast field \"email\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Scopes accessor autogenerated
-func (s *mqlGcloudComputeServiceaccount) Scopes() ([]interface{}, error) {
+func (s *mqlGcpComputeServiceaccount) Scopes() ([]interface{}, error) {
 	res, ok := s.Cache.Load("scopes")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.compute.serviceaccount\" failed: no value provided for static field \"scopes\"")
+		return nil, errors.New("\"gcp.compute.serviceaccount\" failed: no value provided for static field \"scopes\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.compute.serviceaccount\" failed to cast field \"scopes\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.compute.serviceaccount\" failed to cast field \"scopes\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudComputeServiceaccount) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.compute.serviceaccount].Compute")
+func (s *mqlGcpComputeServiceaccount) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.serviceaccount].Compute")
 	switch name {
 	case "email":
 		return nil
 	case "scopes":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.compute.serviceaccount\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.serviceaccount\" resource")
 	}
 }
 
-// GcloudStorage resource interface
-type GcloudStorage interface {
+// GcpStorage resource interface
+type GcpStorage interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1699,21 +1681,21 @@ type GcloudStorage interface {
 	Buckets() ([]interface{}, error)
 }
 
-// mqlGcloudStorage for the gcloud.storage resource
-type mqlGcloudStorage struct {
+// mqlGcpStorage for the gcp.storage resource
+type mqlGcpStorage struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudStorage) MqlResource() *resources.Resource {
+func (s *mqlGcpStorage) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.storage resource
-func newGcloudStorage(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.storage resource
+func newGcpStorage(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudStorage{runtime.NewResource("gcloud.storage")}
+	res := mqlGcpStorage{runtime.NewResource("gcp.storage")}
 	// assign all named fields
 	var id string
 
@@ -1727,16 +1709,16 @@ func newGcloudStorage(runtime *resources.Runtime, args *resources.Args) (interfa
 		switch name {
 		case "buckets":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage\", its \"buckets\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage\", its \"buckets\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.storage with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.storage with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1754,7 +1736,7 @@ func newGcloudStorage(runtime *resources.Runtime, args *resources.Args) (interfa
 	return &res, nil
 }
 
-func (s *mqlGcloudStorage) Validate() error {
+func (s *mqlGcpStorage) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -1762,29 +1744,29 @@ func (s *mqlGcloudStorage) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudStorage) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.storage].Register")
+func (s *mqlGcpStorage) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.storage].Register")
 	switch name {
 	case "buckets":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.storage\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.storage\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudStorage) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.storage].Field")
+func (s *mqlGcpStorage) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.storage].Field")
 	switch name {
 	case "buckets":
 		return s.Buckets()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.storage\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.storage\" resource")
 	}
 }
 
 // Buckets accessor autogenerated
-func (s *mqlGcloudStorage) Buckets() ([]interface{}, error) {
+func (s *mqlGcpStorage) Buckets() ([]interface{}, error) {
 	res, ok := s.Cache.Load("buckets")
 	if !ok || !res.Valid {
 		if err := s.ComputeBuckets(); err != nil {
@@ -1792,7 +1774,7 @@ func (s *mqlGcloudStorage) Buckets() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("buckets")
 		if !ok {
-			return nil, errors.New("\"gcloud.storage\" calculated \"buckets\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.storage\" calculated \"buckets\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "buckets")
 	}
@@ -1801,24 +1783,24 @@ func (s *mqlGcloudStorage) Buckets() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.storage\" failed to cast field \"buckets\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.storage\" failed to cast field \"buckets\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudStorage) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.storage].Compute")
+func (s *mqlGcpStorage) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.storage].Compute")
 	switch name {
 	case "buckets":
 		return s.ComputeBuckets()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.storage\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.storage\" resource")
 	}
 }
 
 // ComputeBuckets computer autogenerated
-func (s *mqlGcloudStorage) ComputeBuckets() error {
+func (s *mqlGcpStorage) ComputeBuckets() error {
 	var err error
 	if _, ok := s.Cache.Load("buckets"); ok {
 		return nil
@@ -1831,8 +1813,8 @@ func (s *mqlGcloudStorage) ComputeBuckets() error {
 	return nil
 }
 
-// GcloudStorageBucket resource interface
-type GcloudStorageBucket interface {
+// GcpStorageBucket resource interface
+type GcpStorageBucket interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1851,21 +1833,21 @@ type GcloudStorageBucket interface {
 	IamConfiguration() (interface{}, error)
 }
 
-// mqlGcloudStorageBucket for the gcloud.storage.bucket resource
-type mqlGcloudStorageBucket struct {
+// mqlGcpStorageBucket for the gcp.storage.bucket resource
+type mqlGcpStorageBucket struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudStorageBucket) MqlResource() *resources.Resource {
+func (s *mqlGcpStorageBucket) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.storage.bucket resource
-func newGcloudStorageBucket(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.storage.bucket resource
+func newGcpStorageBucket(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudStorageBucket{runtime.NewResource("gcloud.storage.bucket")}
+	res := mqlGcpStorageBucket{runtime.NewResource("gcp.storage.bucket")}
 	// assign all named fields
 	var id string
 
@@ -1879,56 +1861,56 @@ func newGcloudStorageBucket(runtime *resources.Runtime, args *resources.Args) (i
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "labels":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "locationType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"locationType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"locationType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "projectNumber":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"projectNumber\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"projectNumber\" argument has the wrong type (expected type \"string\")")
 			}
 		case "storageClass":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"storageClass\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"storageClass\" argument has the wrong type (expected type \"string\")")
 			}
 		case "created":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "updated":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "iamPolicy":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"iamPolicy\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"iamPolicy\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "iamConfiguration":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"iamConfiguration\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"iamConfiguration\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.storage.bucket\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.storage.bucket\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.storage.bucket with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.storage.bucket with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1946,45 +1928,45 @@ func newGcloudStorageBucket(runtime *resources.Runtime, args *resources.Args) (i
 	return &res, nil
 }
 
-func (s *mqlGcloudStorageBucket) Validate() error {
+func (s *mqlGcpStorageBucket) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("labels"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"labels\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"labels\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("locationType"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"locationType\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"locationType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("projectNumber"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"projectNumber\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"projectNumber\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("storageClass"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"storageClass\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"storageClass\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("created"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"created\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"created\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("updated"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"updated\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"updated\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("iamConfiguration"); !ok {
-		return errors.New("Initialized \"gcloud.storage.bucket\" resource without a \"iamConfiguration\". This field is required.")
+		return errors.New("Initialized \"gcp.storage.bucket\" resource without a \"iamConfiguration\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudStorageBucket) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.storage.bucket].Register")
+func (s *mqlGcpStorageBucket) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.storage.bucket].Register")
 	switch name {
 	case "id":
 		return nil
@@ -2009,13 +1991,13 @@ func (s *mqlGcloudStorageBucket) Register(name string) error {
 	case "iamConfiguration":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.storage.bucket\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.storage.bucket\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudStorageBucket) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.storage.bucket].Field")
+func (s *mqlGcpStorageBucket) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.storage.bucket].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -2040,156 +2022,156 @@ func (s *mqlGcloudStorageBucket) Field(name string) (interface{}, error) {
 	case "iamConfiguration":
 		return s.IamConfiguration()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.storage.bucket\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.storage.bucket\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcloudStorageBucket) Id() (string, error) {
+func (s *mqlGcpStorageBucket) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcloudStorageBucket) Name() (string, error) {
+func (s *mqlGcpStorageBucket) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Labels accessor autogenerated
-func (s *mqlGcloudStorageBucket) Labels() (map[string]interface{}, error) {
+func (s *mqlGcpStorageBucket) Labels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("labels")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"labels\"")
+		return nil, errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"labels\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlGcloudStorageBucket) Location() (string, error) {
+func (s *mqlGcpStorageBucket) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // LocationType accessor autogenerated
-func (s *mqlGcloudStorageBucket) LocationType() (string, error) {
+func (s *mqlGcpStorageBucket) LocationType() (string, error) {
 	res, ok := s.Cache.Load("locationType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"locationType\"")
+		return "", errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"locationType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"locationType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"locationType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ProjectNumber accessor autogenerated
-func (s *mqlGcloudStorageBucket) ProjectNumber() (string, error) {
+func (s *mqlGcpStorageBucket) ProjectNumber() (string, error) {
 	res, ok := s.Cache.Load("projectNumber")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"projectNumber\"")
+		return "", errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"projectNumber\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"projectNumber\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"projectNumber\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // StorageClass accessor autogenerated
-func (s *mqlGcloudStorageBucket) StorageClass() (string, error) {
+func (s *mqlGcpStorageBucket) StorageClass() (string, error) {
 	res, ok := s.Cache.Load("storageClass")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"storageClass\"")
+		return "", errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"storageClass\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"storageClass\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"storageClass\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Created accessor autogenerated
-func (s *mqlGcloudStorageBucket) Created() (*time.Time, error) {
+func (s *mqlGcpStorageBucket) Created() (*time.Time, error) {
 	res, ok := s.Cache.Load("created")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"created\"")
+		return nil, errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"created\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Updated accessor autogenerated
-func (s *mqlGcloudStorageBucket) Updated() (*time.Time, error) {
+func (s *mqlGcpStorageBucket) Updated() (*time.Time, error) {
 	res, ok := s.Cache.Load("updated")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"updated\"")
+		return nil, errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"updated\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // IamPolicy accessor autogenerated
-func (s *mqlGcloudStorageBucket) IamPolicy() ([]interface{}, error) {
+func (s *mqlGcpStorageBucket) IamPolicy() ([]interface{}, error) {
 	res, ok := s.Cache.Load("iamPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeIamPolicy(); err != nil {
@@ -2197,7 +2179,7 @@ func (s *mqlGcloudStorageBucket) IamPolicy() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("iamPolicy")
 		if !ok {
-			return nil, errors.New("\"gcloud.storage.bucket\" calculated \"iamPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.storage.bucket\" calculated \"iamPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "iamPolicy")
 	}
@@ -2206,30 +2188,30 @@ func (s *mqlGcloudStorageBucket) IamPolicy() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"iamPolicy\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"iamPolicy\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // IamConfiguration accessor autogenerated
-func (s *mqlGcloudStorageBucket) IamConfiguration() (interface{}, error) {
+func (s *mqlGcpStorageBucket) IamConfiguration() (interface{}, error) {
 	res, ok := s.Cache.Load("iamConfiguration")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.storage.bucket\" failed: no value provided for static field \"iamConfiguration\"")
+		return nil, errors.New("\"gcp.storage.bucket\" failed: no value provided for static field \"iamConfiguration\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.storage.bucket\" failed to cast field \"iamConfiguration\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.storage.bucket\" failed to cast field \"iamConfiguration\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudStorageBucket) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.storage.bucket].Compute")
+func (s *mqlGcpStorageBucket) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.storage.bucket].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -2254,12 +2236,12 @@ func (s *mqlGcloudStorageBucket) Compute(name string) error {
 	case "iamConfiguration":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.storage.bucket\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.storage.bucket\" resource")
 	}
 }
 
 // ComputeIamPolicy computer autogenerated
-func (s *mqlGcloudStorageBucket) ComputeIamPolicy() error {
+func (s *mqlGcpStorageBucket) ComputeIamPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("iamPolicy"); ok {
 		return nil
@@ -2272,8 +2254,8 @@ func (s *mqlGcloudStorageBucket) ComputeIamPolicy() error {
 	return nil
 }
 
-// GcloudSql resource interface
-type GcloudSql interface {
+// GcpSql resource interface
+type GcpSql interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -2282,21 +2264,21 @@ type GcloudSql interface {
 	Instances() ([]interface{}, error)
 }
 
-// mqlGcloudSql for the gcloud.sql resource
-type mqlGcloudSql struct {
+// mqlGcpSql for the gcp.sql resource
+type mqlGcpSql struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudSql) MqlResource() *resources.Resource {
+func (s *mqlGcpSql) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.sql resource
-func newGcloudSql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.sql resource
+func newGcpSql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudSql{runtime.NewResource("gcloud.sql")}
+	res := mqlGcpSql{runtime.NewResource("gcp.sql")}
 	// assign all named fields
 	var id string
 
@@ -2310,16 +2292,16 @@ func newGcloudSql(runtime *resources.Runtime, args *resources.Args) (interface{}
 		switch name {
 		case "instances":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql\", its \"instances\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql\", its \"instances\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.sql with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.sql with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2337,7 +2319,7 @@ func newGcloudSql(runtime *resources.Runtime, args *resources.Args) (interface{}
 	return &res, nil
 }
 
-func (s *mqlGcloudSql) Validate() error {
+func (s *mqlGcpSql) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -2345,29 +2327,29 @@ func (s *mqlGcloudSql) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudSql) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.sql].Register")
+func (s *mqlGcpSql) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.sql].Register")
 	switch name {
 	case "instances":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.sql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.sql\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudSql) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.sql].Field")
+func (s *mqlGcpSql) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.sql].Field")
 	switch name {
 	case "instances":
 		return s.Instances()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.sql\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.sql\" resource")
 	}
 }
 
 // Instances accessor autogenerated
-func (s *mqlGcloudSql) Instances() ([]interface{}, error) {
+func (s *mqlGcpSql) Instances() ([]interface{}, error) {
 	res, ok := s.Cache.Load("instances")
 	if !ok || !res.Valid {
 		if err := s.ComputeInstances(); err != nil {
@@ -2375,7 +2357,7 @@ func (s *mqlGcloudSql) Instances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("instances")
 		if !ok {
-			return nil, errors.New("\"gcloud.sql\" calculated \"instances\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.sql\" calculated \"instances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "instances")
 	}
@@ -2384,24 +2366,24 @@ func (s *mqlGcloudSql) Instances() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.sql\" failed to cast field \"instances\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.sql\" failed to cast field \"instances\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudSql) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.sql].Compute")
+func (s *mqlGcpSql) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.sql].Compute")
 	switch name {
 	case "instances":
 		return s.ComputeInstances()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.sql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.sql\" resource")
 	}
 }
 
 // ComputeInstances computer autogenerated
-func (s *mqlGcloudSql) ComputeInstances() error {
+func (s *mqlGcpSql) ComputeInstances() error {
 	var err error
 	if _, ok := s.Cache.Load("instances"); ok {
 		return nil
@@ -2414,8 +2396,8 @@ func (s *mqlGcloudSql) ComputeInstances() error {
 	return nil
 }
 
-// GcloudSqlInstance resource interface
-type GcloudSqlInstance interface {
+// GcpSqlInstance resource interface
+type GcpSqlInstance interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -2437,21 +2419,21 @@ type GcloudSqlInstance interface {
 	Settings() (interface{}, error)
 }
 
-// mqlGcloudSqlInstance for the gcloud.sql.instance resource
-type mqlGcloudSqlInstance struct {
+// mqlGcpSqlInstance for the gcp.sql.instance resource
+type mqlGcpSqlInstance struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcloudSqlInstance) MqlResource() *resources.Resource {
+func (s *mqlGcpSqlInstance) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcloud.sql.instance resource
-func newGcloudSqlInstance(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.sql.instance resource
+func newGcpSqlInstance(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcloudSqlInstance{runtime.NewResource("gcloud.sql.instance")}
+	res := mqlGcpSqlInstance{runtime.NewResource("gcp.sql.instance")}
 	// assign all named fields
 	var id string
 
@@ -2465,68 +2447,68 @@ func newGcloudSqlInstance(runtime *resources.Runtime, args *resources.Args) (int
 		switch name {
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "backendType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"backendType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"backendType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "connectionName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"connectionName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"connectionName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "databaseVersion":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"databaseVersion\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"databaseVersion\" argument has the wrong type (expected type \"string\")")
 			}
 		case "gceZone":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"gceZone\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"gceZone\" argument has the wrong type (expected type \"string\")")
 			}
 		case "instanceType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"instanceType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"instanceType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kind":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"kind\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"kind\" argument has the wrong type (expected type \"string\")")
 			}
 		case "currentDiskSize":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"currentDiskSize\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"currentDiskSize\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "maxDiskSize":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"maxDiskSize\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"maxDiskSize\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "state":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"state\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"state\" argument has the wrong type (expected type \"string\")")
 			}
 		case "project":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"project\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"project\" argument has the wrong type (expected type \"string\")")
 			}
 		case "region":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"region\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"region\" argument has the wrong type (expected type \"string\")")
 			}
 		case "serviceAccountEmailAddress":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"serviceAccountEmailAddress\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"serviceAccountEmailAddress\" argument has the wrong type (expected type \"string\")")
 			}
 		case "settings":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"settings\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"settings\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcloud.sql.instance\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.sql.instance\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcloud.sql.instance with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.sql.instance with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2544,57 +2526,57 @@ func newGcloudSqlInstance(runtime *resources.Runtime, args *resources.Args) (int
 	return &res, nil
 }
 
-func (s *mqlGcloudSqlInstance) Validate() error {
+func (s *mqlGcpSqlInstance) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("backendType"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"backendType\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"backendType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("connectionName"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"connectionName\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"connectionName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("databaseVersion"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"databaseVersion\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"databaseVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("gceZone"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"gceZone\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"gceZone\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("instanceType"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"instanceType\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"instanceType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kind"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"kind\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"kind\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("currentDiskSize"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"currentDiskSize\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"currentDiskSize\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("maxDiskSize"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"maxDiskSize\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"maxDiskSize\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("state"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"state\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"state\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("project"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"project\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"project\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("region"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"region\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"region\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("serviceAccountEmailAddress"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"serviceAccountEmailAddress\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"serviceAccountEmailAddress\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("settings"); !ok {
-		return errors.New("Initialized \"gcloud.sql.instance\" resource without a \"settings\". This field is required.")
+		return errors.New("Initialized \"gcp.sql.instance\" resource without a \"settings\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcloudSqlInstance) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.sql.instance].Register")
+func (s *mqlGcpSqlInstance) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.sql.instance].Register")
 	switch name {
 	case "name":
 		return nil
@@ -2625,13 +2607,13 @@ func (s *mqlGcloudSqlInstance) Register(name string) error {
 	case "settings":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.sql.instance\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.sql.instance\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcloudSqlInstance) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcloud.sql.instance].Field")
+func (s *mqlGcpSqlInstance) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.sql.instance].Field")
 	switch name {
 	case "name":
 		return s.Name()
@@ -2662,237 +2644,237 @@ func (s *mqlGcloudSqlInstance) Field(name string) (interface{}, error) {
 	case "settings":
 		return s.Settings()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcloud.sql.instance\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.sql.instance\" resource")
 	}
 }
 
 // Name accessor autogenerated
-func (s *mqlGcloudSqlInstance) Name() (string, error) {
+func (s *mqlGcpSqlInstance) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // BackendType accessor autogenerated
-func (s *mqlGcloudSqlInstance) BackendType() (string, error) {
+func (s *mqlGcpSqlInstance) BackendType() (string, error) {
 	res, ok := s.Cache.Load("backendType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"backendType\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"backendType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"backendType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"backendType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ConnectionName accessor autogenerated
-func (s *mqlGcloudSqlInstance) ConnectionName() (string, error) {
+func (s *mqlGcpSqlInstance) ConnectionName() (string, error) {
 	res, ok := s.Cache.Load("connectionName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"connectionName\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"connectionName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"connectionName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"connectionName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DatabaseVersion accessor autogenerated
-func (s *mqlGcloudSqlInstance) DatabaseVersion() (string, error) {
+func (s *mqlGcpSqlInstance) DatabaseVersion() (string, error) {
 	res, ok := s.Cache.Load("databaseVersion")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"databaseVersion\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"databaseVersion\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"databaseVersion\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"databaseVersion\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // GceZone accessor autogenerated
-func (s *mqlGcloudSqlInstance) GceZone() (string, error) {
+func (s *mqlGcpSqlInstance) GceZone() (string, error) {
 	res, ok := s.Cache.Load("gceZone")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"gceZone\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"gceZone\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"gceZone\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"gceZone\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // InstanceType accessor autogenerated
-func (s *mqlGcloudSqlInstance) InstanceType() (string, error) {
+func (s *mqlGcpSqlInstance) InstanceType() (string, error) {
 	res, ok := s.Cache.Load("instanceType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"instanceType\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"instanceType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"instanceType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"instanceType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Kind accessor autogenerated
-func (s *mqlGcloudSqlInstance) Kind() (string, error) {
+func (s *mqlGcpSqlInstance) Kind() (string, error) {
 	res, ok := s.Cache.Load("kind")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"kind\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"kind\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"kind\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"kind\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CurrentDiskSize accessor autogenerated
-func (s *mqlGcloudSqlInstance) CurrentDiskSize() (int64, error) {
+func (s *mqlGcpSqlInstance) CurrentDiskSize() (int64, error) {
 	res, ok := s.Cache.Load("currentDiskSize")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"currentDiskSize\"")
+		return 0, errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"currentDiskSize\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"currentDiskSize\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"currentDiskSize\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // MaxDiskSize accessor autogenerated
-func (s *mqlGcloudSqlInstance) MaxDiskSize() (int64, error) {
+func (s *mqlGcpSqlInstance) MaxDiskSize() (int64, error) {
 	res, ok := s.Cache.Load("maxDiskSize")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"maxDiskSize\"")
+		return 0, errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"maxDiskSize\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"maxDiskSize\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"maxDiskSize\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // State accessor autogenerated
-func (s *mqlGcloudSqlInstance) State() (string, error) {
+func (s *mqlGcpSqlInstance) State() (string, error) {
 	res, ok := s.Cache.Load("state")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"state\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"state\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"state\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"state\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Project accessor autogenerated
-func (s *mqlGcloudSqlInstance) Project() (string, error) {
+func (s *mqlGcpSqlInstance) Project() (string, error) {
 	res, ok := s.Cache.Load("project")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"project\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"project\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"project\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"project\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Region accessor autogenerated
-func (s *mqlGcloudSqlInstance) Region() (string, error) {
+func (s *mqlGcpSqlInstance) Region() (string, error) {
 	res, ok := s.Cache.Load("region")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"region\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"region\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"region\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"region\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServiceAccountEmailAddress accessor autogenerated
-func (s *mqlGcloudSqlInstance) ServiceAccountEmailAddress() (string, error) {
+func (s *mqlGcpSqlInstance) ServiceAccountEmailAddress() (string, error) {
 	res, ok := s.Cache.Load("serviceAccountEmailAddress")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"serviceAccountEmailAddress\"")
+		return "", errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"serviceAccountEmailAddress\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"serviceAccountEmailAddress\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"serviceAccountEmailAddress\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Settings accessor autogenerated
-func (s *mqlGcloudSqlInstance) Settings() (interface{}, error) {
+func (s *mqlGcpSqlInstance) Settings() (interface{}, error) {
 	res, ok := s.Cache.Load("settings")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcloud.sql.instance\" failed: no value provided for static field \"settings\"")
+		return nil, errors.New("\"gcp.sql.instance\" failed: no value provided for static field \"settings\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcloud.sql.instance\" failed to cast field \"settings\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.sql.instance\" failed to cast field \"settings\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcloudSqlInstance) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcloud.sql.instance].Compute")
+func (s *mqlGcpSqlInstance) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.sql.instance].Compute")
 	switch name {
 	case "name":
 		return nil
@@ -2923,7 +2905,7 @@ func (s *mqlGcloudSqlInstance) Compute(name string) error {
 	case "settings":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcloud.sql.instance\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.sql.instance\" resource")
 	}
 }
 
