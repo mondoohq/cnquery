@@ -113,7 +113,7 @@ terraform.state.output {
   type() dict
 }
 
-// Terraform state module
+// Terraform State Module
 terraform.state.module {
   init(identifier string)
   // Module identifier address
@@ -124,7 +124,7 @@ terraform.state.module {
   childModules() []terraform.state.module
 }
 
-// Terraform state resource
+// Terraform State Resource
 terraform.state.resource {
   // Address is the absolute resource address
   address string

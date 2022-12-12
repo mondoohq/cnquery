@@ -35,13 +35,13 @@ private git.gpgSignature {
   signature string
 }
 
-// GitHub resource
+// GitHub Resource
 github {
   repositories() []github.repository
   user() github.user
 }
 
-// GitHub organization
+// GitHub Organization
 github.organization {
   login string
   id int
@@ -73,7 +73,7 @@ github.organization {
   billingEmail string
   // GitHub plan the organization is subscribed to
   plan dict
-  // Two factor authentication required for all members
+  // Two-factor authentication required for all members
   twoFactorRequirementEnabled bool
   // Verified organization by GitHub
   isVerified bool
@@ -96,7 +96,7 @@ github.organization {
   packages() []github.package
 }
 
-// GitHub user
+// GitHub User
 private github.user {
   id int
   // User login
@@ -117,7 +117,7 @@ private github.user {
   company string
 }
 
-// GitHub team
+// GitHub Team
 private github.team {
   id int
   // Team name
@@ -135,14 +135,14 @@ private github.team {
   organization github.organization
 }
 
-// GitHub collaborator
+// GitHub Collaborator
 private github.collaborator {
   id int
   user github.user
   permissions []string
 }
 
-// GitHub package
+// GitHub Package
 private github.package {
   id int
   name string
@@ -155,7 +155,7 @@ private github.package {
   repository() github.repository
 }
 
-// GitHub repository
+// GitHub Repository
 github.repository {
   init(name string) // can only be used when logged in to github as a user
   id int
@@ -189,7 +189,7 @@ github.repository {
   workflows() []github.workflow
 }
 
-// GitHub repository file
+// GitHub Repository File
 private github.file {
   path string
   name string
@@ -202,7 +202,7 @@ private github.file {
   content() string
 }
 
-// GitHub release
+// GitHub Release
 private github.release {
   url string
   name string
@@ -210,7 +210,7 @@ private github.release {
   preRelease bool
 }
 
-// GitHub webhook
+// GitHub Webhook
 private github.webhook {
   id int
   name string
@@ -220,7 +220,7 @@ private github.webhook {
   active bool
 }
 
-// GitHub workflow
+// GitHub Workflow
 private github.workflow {
   id int
   name string

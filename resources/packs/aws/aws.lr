@@ -46,9 +46,9 @@ aws.organization {
   arn string
   // Specifies the functionality available to org (ALL or CONSOLIDATED_BILLING)
   featureSet string
-  // ID of the organization master account
+  // ID of the organization's master account
   masterAccountId string
-  // Email owner of the organization master account
+  // Email owner of the organization's master account
   masterAccountEmail string
 }
 
@@ -880,7 +880,7 @@ aws.dynamodb {
   globalTables() []aws.dynamodb.globaltable
   // List of tables for DynamoDB
   tables() []aws.dynamodb.table
-  // List of dynamodb settings across all regions
+  // List of DynamoDB settings across all regions
   limits() []aws.dynamodb.limit
 }
 
