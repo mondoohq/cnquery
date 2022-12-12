@@ -94,7 +94,10 @@ func (p *progressbar) Open() error {
 				time.Sleep(time.Second / progressPipedFps)
 				o.ClearLines(2)
 				o.WriteString(p.View())
-				if p.Data.complete {
+				p.lock.Lock()
+				complete := p.Data.complete
+				p.lock.Unlock()
+				if complete {
 					break
 				}
 			}
@@ -149,7 +152,10 @@ func (p *progressbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return p, nil
 
 	case tickMsg:
-		if p.Data.complete {
+		p.lock.Lock()
+		complete := p.Data.complete
+		p.lock.Unlock()
+		if complete {
 			return p, tea.Quit
 		}
 		return p, tickCmd()
