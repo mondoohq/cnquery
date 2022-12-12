@@ -187,6 +187,16 @@ func (w *WinPkgManager) Format() string {
 	return "win"
 }
 
+const installedAppsScript = `
+Get-ItemProperty (@(
+  'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKLM:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKCU:\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+) | Where-Object { Test-Path $_ }) |
+Select-Object -Property DisplayName,DisplayVersion,Publisher,EstimatedSize,InstallSource,UninstallString | ConvertTo-Json -Compress
+`
+
 // returns installed appx packages as well as hot fixes
 func (w *WinPkgManager) List() ([]Package, error) {
 	b, err := windows.Version(w.platform.Version)
@@ -196,11 +206,21 @@ func (w *WinPkgManager) List() ([]Package, error) {
 
 	pkgs := []Package{}
 
+	cmd, err := w.provider.RunCommand(powershell.Encode(installedAppsScript))
+	if err != nil {
+		return nil, fmt.Errorf("could not read app package list")
+	}
+	appPkgs, err := ParseWindowsAppPackages(cmd.Stdout)
+	if err != nil {
+		return nil, fmt.Errorf("could not read app package list")
+	}
+	pkgs = append(pkgs, appPkgs...)
+
 	// only win 10+ are compatible with app x packages
 	if b.Build > 10240 {
 		cmd, err := w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
 		if err != nil {
-			return nil, fmt.Errorf("could not read package list")
+			return nil, fmt.Errorf("could not read appx package list")
 		}
 		appxPkgs, err := ParseWindowsAppxPackages(cmd.Stdout)
 		if err != nil {
@@ -210,7 +230,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	}
 
 	// hotfixes
-	cmd, err := w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
+	cmd, err = w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch hotfixes")
 	}
@@ -221,6 +241,49 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	hotfixAsPkgs := HotFixesToPackages(hotfixes)
 
 	pkgs = append(pkgs, hotfixAsPkgs...)
+
+	return pkgs, nil
+}
+
+func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
+	data, err := io.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
+
+	// for empty result set do not get the '{}', therefore lets abort here
+	if len(data) == 0 {
+		return []Package{}, nil
+	}
+
+	type pwershellUninstallEntry struct {
+		DisplayName     string `json:"DisplayName"`
+		DisplayVersion  string `json:"DisplayVersion"`
+		Publisher       string `json:"Publisher"`
+		InstallSource   string `json:"InstallSource"`
+		EstimatedSize   int    `json:"EstimatedSize"`
+		UninstallString string `json:"UninstallString"`
+	}
+
+	var entries []pwershellUninstallEntry
+	err = json.Unmarshal(data, &entries)
+	if err != nil {
+		return nil, err
+	}
+	log.Info().Int("pkgs", len(entries)).Msg("parsed apps")
+
+	pkgs := []Package{}
+	for i := range entries {
+		entry := entries[i]
+		if entry.UninstallString == "" {
+			continue
+		}
+		pkgs = append(pkgs, Package{
+			Name:    entry.DisplayName,
+			Version: entry.DisplayVersion,
+			Format:  "windows/app",
+		})
+	}
 
 	return pkgs, nil
 }
