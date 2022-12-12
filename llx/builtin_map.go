@@ -877,6 +877,9 @@ func boolNotDictV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*
 // dict ==/!= int   (embedded: string + float)
 
 func opDictCmpInt(left interface{}, right interface{}) bool {
+	if _, ok := left.(int32); ok {
+		left = int64(left.(int32))
+	}
 	switch x := left.(type) {
 	case int64:
 		return x == right.(int64)
@@ -890,6 +893,9 @@ func opDictCmpInt(left interface{}, right interface{}) bool {
 }
 
 func opIntCmpDict(left interface{}, right interface{}) bool {
+	if _, ok := right.(int32); ok {
+		right = int64(right.(int32))
+	}
 	switch x := right.(type) {
 	case int64:
 		return left.(int64) == x
