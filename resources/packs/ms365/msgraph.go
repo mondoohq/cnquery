@@ -341,7 +341,7 @@ func (m *mqlMsgraphDomain) GetServiceConfigurationRecords() ([]interface{}, erro
 	records := resp.GetValue()
 	for i := range records {
 		record := records[i]
-		properties, _ := core.JsonToDict(record.GetAdditionalData())
+		properties := getDomainsDnsRecordProperties(record)
 
 		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.domaindnsrecord",
 			"id", core.ToString(record.GetId()),
@@ -359,6 +359,56 @@ func (m *mqlMsgraphDomain) GetServiceConfigurationRecords() ([]interface{}, erro
 	}
 
 	return res, nil
+}
+
+func getDomainsDnsRecordProperties(record models.DomainDnsRecordable) map[string]interface{} {
+	props := map[string]interface{}{}
+	if record.GetOdataType() != nil {
+		props["@odata.type"] = *record.GetOdataType()
+	}
+	txtRecord, ok := record.(*models.DomainDnsTxtRecord)
+	if ok {
+		if txtRecord.GetText() != nil {
+			props["text"] = *txtRecord.GetText()
+		}
+	}
+	mxRecord, ok := record.(*models.DomainDnsMxRecord)
+	if ok {
+		if mxRecord.GetMailExchange() != nil {
+			props["mailExchange"] = *mxRecord.GetMailExchange()
+		}
+		if mxRecord.GetPreference() != nil {
+			props["preference"] = *mxRecord.GetPreference()
+		}
+	}
+	cNameRecord, ok := record.(*models.DomainDnsCnameRecord)
+	if ok {
+		if cNameRecord.GetCanonicalName() != nil {
+			props["canonicalName"] = *cNameRecord.GetCanonicalName()
+		}
+	}
+	srvRecord, ok := record.(*models.DomainDnsSrvRecord)
+	if ok {
+		if srvRecord.GetNameTarget() != nil {
+			props["nameTarget"] = *srvRecord.GetNameTarget()
+		}
+		if srvRecord.GetPort() != nil {
+			props["port"] = *srvRecord.GetPort()
+		}
+		if srvRecord.GetPriority() != nil {
+			props["priority"] = *srvRecord.GetPriority()
+		}
+		if srvRecord.GetProtocol() != nil {
+			props["protocol"] = *srvRecord.GetProtocol()
+		}
+		if srvRecord.GetService() != nil {
+			props["service"] = *srvRecord.GetService()
+		}
+		if srvRecord.GetWeight() != nil {
+			props["weight"] = *srvRecord.GetWeight()
+		}
+	}
+	return props
 }
 
 func (m *mqlMsgraphApplication) id() (string, error) {
