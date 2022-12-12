@@ -9,6 +9,7 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-sdk-go/domains"
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
+	"github.com/microsoftgraph/msgraph-sdk-go/groupsettings"
 	"github.com/microsoftgraph/msgraph-sdk-go/organization"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
 	"github.com/microsoftgraph/msgraph-sdk-go/rolemanagement"
@@ -114,4 +115,8 @@ func (m *GraphServiceClient) RoleManagement() *rolemanagement.RoleManagementRequ
 
 func (m *GraphServiceClient) DeviceManagement() *devicemanagement.DeviceManagementRequestBuilder {
 	return devicemanagement.NewDeviceManagementRequestBuilderInternal(m.pathParameters, m.requestAdapter)
+}
+
+func (m *GraphServiceClient) GroupSettings() *groupsettings.GroupSettingsRequestBuilder {
+	return groupsettings.NewGroupSettingsRequestBuilderInternal(m.pathParameters, m.requestAdapter)
 }

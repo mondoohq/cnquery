@@ -83,6 +83,42 @@ func NewUnifiedRolePermission(p models.UnifiedRolePermissionable) UnifiedRolePer
 	}
 }
 
+type GroupSetting struct {
+	DisplayName string         `json:"displayName"`
+	TemplateId  string         `json:"templateId"`
+	Values      []SettingValue `json:"values"`
+}
+
+type SettingValue struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+func NewSettings(p []models.GroupSettingable) []GroupSetting {
+	res := []GroupSetting{}
+	for i := range p {
+		res = append(res, NewSetting(p[i]))
+	}
+	return res
+}
+
+func NewSetting(p models.GroupSettingable) GroupSetting {
+	values := []SettingValue{}
+	entries := p.GetValues()
+	for i := range entries {
+		values = append(values, SettingValue{
+			Name:  core.ToString(entries[i].GetName()),
+			Value: core.ToString(entries[i].GetValue()),
+		})
+	}
+
+	return GroupSetting{
+		DisplayName: core.ToString(p.GetDisplayName()),
+		TemplateId:  core.ToString(p.GetTemplateId()),
+		Values:      values,
+	}
+}
+
 // structs for AuthorizationPolicy
 
 type Entity struct {
