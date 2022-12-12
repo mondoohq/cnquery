@@ -6,6 +6,7 @@ import (
 
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
+
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +34,11 @@ func (k *mqlK8s) GetIngresses() ([]interface{}, error) {
 			return nil, err
 		}
 
+		certificates, err := getCertificates(ingress, k.GetSecrets)
+		if err != nil {
+			return nil, err
+		}
+
 		r, err := k.MotorRuntime.CreateResource("k8s.ingress",
 			"id", objId,
 			"uid", string(obj.GetUID()),
@@ -43,6 +49,7 @@ func (k *mqlK8s) GetIngresses() ([]interface{}, error) {
 			"created", &ts.Time,
 			"manifest", manifest,
 			"rules", rules,
+			"certificates", certificates,
 		)
 		if err != nil {
 			return nil, err
@@ -224,4 +231,64 @@ func (k *mqlK8sIngressservicebackend) id() (string, error) {
 
 func (k *mqlK8sIngressresourceref) id() (string, error) {
 	return k.Id()
+}
+
+func getCertificates(ingress *networkingv1.Ingress, getSecrets func() ([]interface{}, error)) ([]interface{}, error) {
+	certificates := []interface{}{}
+	if len(ingress.Spec.TLS) > 0 {
+		// This returns ALL Secrets found in the cluster!
+		secretsInterface, err := getSecrets()
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch Secrets referenced in Ingress: %s", err)
+		}
+
+		secrets := []*mqlK8sSecret{}
+		for _, secInterface := range secretsInterface {
+			secret, ok := secInterface.(*mqlK8sSecret)
+			if !ok {
+				return nil, errors.New("returned list of Secrets failed type assertion")
+			}
+
+			secrets = append(secrets, secret)
+		}
+
+		for _, tls := range ingress.Spec.TLS {
+
+			tlsSecretFound := false
+
+			for _, secret := range secrets {
+				name, err := secret.Name()
+				if err != nil {
+					return nil, err
+				}
+
+				if tls.SecretName == name {
+					tlsSecretFound = true
+
+					certs, err := secret.GetCertificates()
+					if err != nil {
+						return nil, errors.New("error getting certificate data from Secret")
+					}
+					if certs == nil {
+						// no TLS data in Secret referenced
+						// Put a blank certificate in the list of certificates?
+						return nil, fmt.Errorf("no certificates in Secret referenced by Ingress")
+					}
+
+					certList, ok := certs.([]interface{})
+					if !ok {
+						return nil, fmt.Errorf("expected a list of Certificates")
+					}
+					certificates = append(certificates, certList...)
+				}
+			}
+			if !tlsSecretFound {
+				// Ingress references a Secret that was not found
+				// Put a blank certificate in the list of certificates?
+			}
+
+		}
+	}
+
+	return certificates, nil
 }

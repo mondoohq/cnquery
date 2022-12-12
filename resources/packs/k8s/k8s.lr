@@ -622,6 +622,8 @@ private k8s.ingress @defaults("namespace name created") {
   manifest dict
   // Ingress rules
   rules []k8s.ingressrule
+  // Certificates referenced by Ingress
+  certificates []core.certificate
 }
 
 // Kubernetes Network Policy
