@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/motor/discovery/docker_engine"
+	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -365,8 +365,10 @@ func dockerProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runF
 				log.Error().Err(err).Msg("failed to retrieve discover flag")
 				return
 			}
-			if len(args) == 0 && !strings.Contains(discover, docker_engine.DiscoveryContainerRunning) {
-				log.Error().Msg("either a target or the \"container\" discovery flag must be provided for docker scans")
+
+			// If no target is provided and the discovery flag is empty or auto, then error out since there is nothing to scan.
+			if len(args) == 0 && (len(discover) == 0 || strings.Contains(discover, common.DiscoveryAuto)) {
+				log.Error().Msg("either a target or a discovery flag different from \"auto\" must be provided for docker scans")
 				return
 			}
 
