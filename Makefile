@@ -114,7 +114,6 @@ lr/build:
 	./lr go resources/packs/vcd/vcd.lr
 	./lr docs yaml resources/packs/vcd/vcd.lr --docs-file resources/packs/vcd/vcd.lr.manifest.yaml
 	./lr docs json resources/packs/vcd/vcd.lr.manifest.yaml
-	./lr go resources/mock/mochi.lr
 
 lr/release:
 	export GOPRIVATE="github.com/mondoohq"

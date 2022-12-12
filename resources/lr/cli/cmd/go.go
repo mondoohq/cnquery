@@ -23,36 +23,36 @@ var goCmd = &cobra.Command{
 			return os.ReadFile(path)
 		})
 		if err != nil {
-			log.Error().Err(err).Msg("failed to resolve")
+			log.Fatal().Err(err).Msg("failed to resolve")
 			return
 		}
 
 		collector := lr.NewCollector(args[0])
 		godata, err := lr.Go(packageName, res, collector)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to compile go code")
+			log.Fatal().Err(err).Msg("failed to compile go code")
 		}
 
 		err = os.WriteFile(args[0]+".go", []byte(godata), 0o644)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to write to go file")
+			log.Fatal().Err(err).Msg("failed to write to go file")
 		}
 
 		schema, err := lr.Schema(res)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to generate schema")
+			log.Fatal().Err(err).Msg("failed to generate schema")
 		}
 
 		schemaData, err := json.Marshal(schema)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to generate schema json")
+			log.Fatal().Err(err).Msg("failed to generate schema json")
 		}
 
 		infoFolder := ensureInfoFolder(file)
 		infoFile := path.Join(infoFolder, path.Base(args[0])+".json")
 		err = os.WriteFile(infoFile, []byte(schemaData), 0o644)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to write schema json")
+			log.Fatal().Err(err).Msg("failed to write schema json")
 		}
 	},
 }
