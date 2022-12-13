@@ -95,7 +95,7 @@ var reFindSockets = regexp.MustCompile(
 		"\\d+:\\d+\\s+" + // time
 		"/proc/(\\d+)/fd/\\d+\\s+" + // path
 		"->\\s+" +
-		"socket:\\[(\\d+)\\]\\s*") // target
+		".*socket:\\[(\\d+)\\].*\\s*") // target
 
 var TCP_STATES = map[int64]string{
 	1:  "established",
@@ -228,26 +228,11 @@ func (p *mqlPorts) processesBySocket() (map[int64]Process, error) {
 		scanner := bufio.NewScanner(c.Stdout)
 		for scanner.Scan() {
 			line := scanner.Text()
-			if strings.HasSuffix(line, "Permission denied") || strings.HasSuffix(line, "No such file or directory") {
+			pid, inode, err := parseLinuxFindLine(line)
+			if err != nil || (pid == 0 && inode == 0) {
 				continue
 			}
 
-			m := reFindSockets.FindStringSubmatch(line)
-			if len(m) == 0 {
-				continue
-			}
-
-			pid, err := strconv.ParseInt(m[1], 10, 64)
-			if err != nil {
-				log.Error().Err(err).Msg("cannot parse unix pid " + m[1])
-				continue
-			}
-
-			inode, err := strconv.ParseInt(m[2], 10, 64)
-			if err != nil {
-				log.Error().Err(err).Msg("cannot parse socket inode " + m[2])
-				continue
-			}
 			processesBySocket[inode] = processesByPid[pid]
 		}
 		processes.MqlResource().Cache.Store("_socketsMap", &resources.CacheEntry{Data: processesBySocket, Error: nil})
@@ -255,6 +240,31 @@ func (p *mqlPorts) processesBySocket() (map[int64]Process, error) {
 	}
 
 	return res, err
+}
+
+func parseLinuxFindLine(line string) (int64, int64, error) {
+	if strings.HasSuffix(line, "Permission denied") || strings.HasSuffix(line, "No such file or directory") {
+		return 0, 0, nil
+	}
+
+	m := reFindSockets.FindStringSubmatch(line)
+	if len(m) == 0 {
+		return 0, 0, nil
+	}
+
+	pid, err := strconv.ParseInt(m[1], 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot parse unix pid " + m[1])
+		return 0, 0, err
+	}
+
+	inode, err := strconv.ParseInt(m[2], 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot parse socket inode " + m[2])
+		return 0, 0, err
+	}
+
+	return pid, inode, nil
 }
 
 // See:

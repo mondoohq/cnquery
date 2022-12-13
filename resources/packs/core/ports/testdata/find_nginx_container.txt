@@ -1,0 +1,5 @@
+lrwx------ 1 0 0 64 Dec 13 05:40 /proc/1/fd/0 -> /dev/null
+l-wx------ 1 0 0 64 Dec 13 05:40 /proc/1/fd/1 -> 'pipe:[41866636]'
+lrwx------ 1 0 0 64 Dec 13 05:40 /proc/1/fd/3 -> 'socket:[41866685]'
+ls: cannot read symbolic link '/proc/29/fd/0': Permission denied
+lrwx------ 1 101 101 64 Dec 13 05:41 /proc/29/fd/0
