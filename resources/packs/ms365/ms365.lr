@@ -2,38 +2,37 @@ import "../core/core.lr"
 
 option go_package = "go.mondoo.com/cnquery/resources/packs/ms365"
 
-alias msgraph.beta = msgraph
-alias msgraph.beta.user = msgraph.user
-alias msgraph.beta.group = msgraph.group
-alias msgraph.beta.domain = msgraph.domain
-alias msgraph.beta.application = msgraph.application
-alias msgraph.beta.serviceprincipal = msgraph.serviceprincipal
-alias msgraph.beta.organization = msgraph.organization
-alias msgraph.beta.domaindnsrecord = msgraph.domaindnsrecord
-alias msgraph.beta.security = msgraph.security
-alias msgraph.beta.security.securityscore = msgraph.security.securityscore
-alias msgraph.beta.policies = msgraph.policies
-alias msgraph.beta.rolemanagement = msgraph.rolemanagement
-alias msgraph.beta.rolemanagement.roledefinition = msgraph.rolemanagement.roledefinition
-alias msgraph.beta.rolemanagement.roleassignment = msgraph.rolemanagement.roleassignment
-alias msgraph.beta.devicemanagement = msgraph.devicemanagement
-alias msgraph.beta.devicemanagement.deviceconfiguration = msgraph.devicemanagement.deviceconfiguration
-alias msgraph.beta.devicemanagement.devicecompliancepolicy = msgraph.devicemanagement.devicecompliancepolicy
+alias msgraph.beta = microsoft
+alias msgraph.beta.user = microsoft.user
+alias msgraph.beta.group = microsoft.group
+alias msgraph.beta.domain = microsoft.domain
+alias msgraph.beta.application = microsoft.application
+alias msgraph.beta.serviceprincipal = microsoft.serviceprincipal
+alias msgraph.beta.organization = microsoft.organization
+alias msgraph.beta.domaindnsrecord = microsoft.domaindnsrecord
+alias msgraph.beta.security = microsoft.security
+alias msgraph.beta.security.securityscore = microsoft.security.securityscore
+alias msgraph.beta.policies = microsoft.policies
+alias msgraph.beta.rolemanagement = microsoft.rolemanagement
+alias msgraph.beta.rolemanagement.roledefinition = microsoft.rolemanagement.roledefinition
+alias msgraph.beta.rolemanagement.roleassignment = microsoft.rolemanagement.roleassignment
+alias msgraph.beta.devicemanagement = microsoft.devicemanagement
+alias msgraph.beta.devicemanagement.deviceconfiguration = microsoft.devicemanagement.deviceconfiguration
+alias msgraph.beta.devicemanagement.devicecompliancepolicy = microsoft.devicemanagement.devicecompliancepolicy
 
-// Microsoft Graph
-msgraph {
-  organizations() []msgraph.organization
-  users() []msgraph.user
-  groups() []msgraph.group
-  domains() []msgraph.domain
-  applications() []msgraph.application
-  serviceprincipals() []msgraph.serviceprincipal
-  // deprecated, kept for backwards compatability. always returns an empty dictionary.
+// Microsoft
+microsoft {
+  organizations() []microsoft.organization
+  users() []microsoft.user
+  groups() []microsoft.group
+  domains() []microsoft.domain
+  applications() []microsoft.application
+  serviceprincipals() []microsoft.serviceprincipal
   settings() dict
 }
 
-// Microsoft Graph Organization
-msgraph.organization {
+// Microsoft Organization
+microsoft.organization {
   id string
   assignedPlans []dict
   createdDateTime time
@@ -41,8 +40,8 @@ msgraph.organization {
   verifiedDomains []dict
 }
 
-// Microsoft Graph User
-msgraph.user {
+// Microsoft User
+microsoft.user {
   id string
   accountEnabled bool
   city string
@@ -67,19 +66,19 @@ msgraph.user {
   settings() dict
 }
 
-// Microsoft Graph Group
-msgraph.group {
+// Microsoft Group
+microsoft.group {
   id string
   displayName string
   securityEnabled bool
   mailEnabled bool
   mailNickname string
   mail string
-  members() []msgraph.user
+  members() []microsoft.user
 }
 
-// Microsoft Graph Domain
-msgraph.domain {
+// Microsoft Domain
+microsoft.domain {
   id string
   authenticationType string
   availabilityStatus string
@@ -91,11 +90,11 @@ msgraph.domain {
   passwordNotificationWindowInDays int
   passwordValidityPeriodInDays int
   supportedServices []string
-  serviceConfigurationRecords() []msgraph.domaindnsrecord
+  serviceConfigurationRecords() []microsoft.domaindnsrecord
 }
 
-// Microsoft Graph Domain DNS Record
-msgraph.domaindnsrecord {
+// Microsoft Domain DNS Record
+microsoft.domaindnsrecord {
   id string
   isOptional bool
   label string
@@ -106,8 +105,8 @@ msgraph.domaindnsrecord {
   properties dict
 }
 
-// Microsoft Graph Application
-msgraph.application {
+// Microsoft Application
+microsoft.application {
   id string
   appId string
   createdDateTime time
@@ -117,19 +116,19 @@ msgraph.application {
   signInAudience string
 }
 
-// Microsoft Graph Service Principal
-msgraph.serviceprincipal {
+// Microsoft Service Principal
+microsoft.serviceprincipal {
   id string
 }
 
-// Microsoft Graph Security
-msgraph.security {
-  secureScores() []msgraph.security.securityscore
-  latestSecureScores() msgraph.security.securityscore
+// Microsoft Security
+microsoft.security {
+  secureScores() []microsoft.security.securityscore
+  latestSecureScores() microsoft.security.securityscore
 }
 
-// Microsoft Graph Security Score
-msgraph.security.securityscore {
+// Microsoft Security Score
+microsoft.security.securityscore {
   id string
   activeUserCount int
   averageComparativeScores []dict
@@ -143,21 +142,21 @@ msgraph.security.securityscore {
   vendorInformation dict
 }
 
-// Microsoft Graph Policies
-msgraph.policies {
+// Microsoft Policies
+microsoft.policies {
   authorizationPolicy() dict
   identitySecurityDefaultsEnforcementPolicy() dict
   adminConsentRequestPolicy() dict
   permissionGrantPolicies() []dict
 }
 
-// Microsoft Graph Role Management
-msgraph.rolemanagement {
-  roleDefinitions() []msgraph.rolemanagement.roledefinition
+// Microsoft Role Management
+microsoft.rolemanagement {
+  roleDefinitions() []microsoft.rolemanagement.roledefinition
 }
 
-// Microsoft Graph Role Definition
-msgraph.rolemanagement.roledefinition {
+// Microsoft Role Definition
+microsoft.rolemanagement.roledefinition {
   id string
   description string
   displayName string
@@ -166,25 +165,25 @@ msgraph.rolemanagement.roledefinition {
   rolePermissions []dict
   templateId string
   version string
-  assignments() []msgraph.rolemanagement.roleassignment
+  assignments() []microsoft.rolemanagement.roleassignment
 }
 
-// Microsoft Graph Role Assignment
-msgraph.rolemanagement.roleassignment {
+// Microsoft Role Assignment
+microsoft.rolemanagement.roleassignment {
   id string
   roleDefinitionId string
   principalId string
   principal dict
 }
 
-// Microsoft Graph Device Management
-msgraph.devicemanagement {
-  deviceConfigurations() []msgraph.devicemanagement.deviceconfiguration
-  deviceCompliancePolicies() []msgraph.devicemanagement.devicecompliancepolicy
+// Microsoft Device Management
+microsoft.devicemanagement {
+  deviceConfigurations() []microsoft.devicemanagement.deviceconfiguration
+  deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
 }
 
-// Microsoft Graph Device Configuration
-msgraph.devicemanagement.deviceconfiguration {
+// Microsoft Device Configuration
+microsoft.devicemanagement.deviceconfiguration {
   id string
   lastModifiedDateTime time
   createdDateTime time
@@ -195,8 +194,8 @@ msgraph.devicemanagement.deviceconfiguration {
   properties dict
 }
 
-// Microsoft Graph Device Compliance Policy
-msgraph.devicemanagement.devicecompliancepolicy {
+// Microsoft Device Compliance Policy
+microsoft.devicemanagement.devicecompliancepolicy {
   id string
   createdDateTime time
   description string

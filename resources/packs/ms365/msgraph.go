@@ -26,15 +26,15 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (m *mqlMsgraph) id() (string, error) {
+func (m *mqlMicrosoft) id() (string, error) {
 	return "msgraph", nil
 }
 
-func (m *mqlMsgraphOrganization) id() (string, error) {
+func (m *mqlMicrosoftOrganization) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraph) GetSettings() ([]interface{}, error) {
+func (m *mqlMicrosoft) GetSettings() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (m *mqlMsgraph) GetSettings() ([]interface{}, error) {
 	return core.JsonToDictSlice(msgraphconv.NewSettings(settings.GetValue()))
 }
 
-func (m *mqlMsgraph) GetOrganizations() ([]interface{}, error) {
+func (m *mqlMicrosoft) GetOrganizations() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (m *mqlMsgraph) GetOrganizations() ([]interface{}, error) {
 		assignedPlans, _ := core.JsonToDictSlice(msgraphconv.NewAssignedPlans(org.GetAssignedPlans()))
 		verifiedDomains, _ := core.JsonToDictSlice(msgraphconv.NewVerifiedDomains(org.GetVerifiedDomains()))
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.organization",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.organization",
 			"id", core.ToString(org.GetId()),
 			"assignedPlans", assignedPlans,
 			"createdDateTime", org.GetCreatedDateTime(),
@@ -99,15 +99,15 @@ func (m *mqlMsgraph) GetOrganizations() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlMsgraphGroup) id() (string, error) {
+func (a *mqlMicrosoftGroup) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlMsgraphGroup) GetMembers() ([]interface{}, error) {
+func (a *mqlMicrosoftGroup) GetMembers() ([]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *mqlMsgraph) GetGroups() ([]interface{}, error) {
+func (m *mqlMicrosoft) GetGroups() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (m *mqlMsgraph) GetGroups() ([]interface{}, error) {
 	res := []interface{}{}
 	grps := resp.GetValue()
 	for _, grp := range grps {
-		graphGrp, err := m.MotorRuntime.CreateResource("msgraph.group",
+		graphGrp, err := m.MotorRuntime.CreateResource("microsoft.group",
 			"id", core.ToString(grp.GetId()),
 			"displayName", core.ToString(grp.GetDisplayName()),
 			"securityEnabled", core.ToBool(grp.GetSecurityEnabled()),
@@ -148,11 +148,11 @@ func (m *mqlMsgraph) GetGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphUser) id() (string, error) {
+func (m *mqlMicrosoftUser) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraph) GetUsers() ([]interface{}, error) {
+func (m *mqlMicrosoft) GetUsers() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (m *mqlMsgraph) GetUsers() ([]interface{}, error) {
 	for i := range users {
 		user := users[i]
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.user",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.user",
 			"id", core.ToString(user.GetId()),
 			"accountEnabled", core.ToBool(user.GetAccountEnabled()),
 			"city", core.ToString(user.GetCity()),
@@ -211,11 +211,11 @@ func (m *mqlMsgraph) GetUsers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphServiceprincipal) id() (string, error) {
+func (m *mqlMicrosoftServiceprincipal) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraph) GetServiceprincipals() ([]interface{}, error) {
+func (m *mqlMicrosoft) GetServiceprincipals() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -241,7 +241,7 @@ func (m *mqlMsgraph) GetServiceprincipals() ([]interface{}, error) {
 	res := []interface{}{}
 	sps := resp.GetValue()
 	for _, sp := range sps {
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.serviceprincipal",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.serviceprincipal",
 			"id", core.ToString(sp.GetId()),
 		)
 		if err != nil {
@@ -253,11 +253,11 @@ func (m *mqlMsgraph) GetServiceprincipals() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphDomain) id() (string, error) {
+func (m *mqlMicrosoftDomain) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraph) GetDomains() ([]interface{}, error) {
+func (m *mqlMicrosoft) GetDomains() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -284,7 +284,7 @@ func (m *mqlMsgraph) GetDomains() ([]interface{}, error) {
 	for i := range domains {
 		domain := domains[i]
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.domain",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.domain",
 			"id", core.ToString(domain.GetId()),
 			"authenticationType", core.ToString(domain.GetAuthenticationType()),
 			"availabilityStatus", core.ToString(domain.GetAvailabilityStatus()),
@@ -306,11 +306,11 @@ func (m *mqlMsgraph) GetDomains() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphDomaindnsrecord) id() (string, error) {
+func (m *mqlMicrosoftDomaindnsrecord) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
+func (m *mqlMicrosoftDomain) GetServiceConfigurationRecords() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -343,7 +343,7 @@ func (m *mqlMsgraphDomain) GetServiceConfigurationRecords() ([]interface{}, erro
 		record := records[i]
 		properties := getDomainsDnsRecordProperties(record)
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.domaindnsrecord",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.domaindnsrecord",
 			"id", core.ToString(record.GetId()),
 			"isOptional", core.ToBool(record.GetIsOptional()),
 			"label", core.ToString(record.GetLabel()),
@@ -411,11 +411,11 @@ func getDomainsDnsRecordProperties(record models.DomainDnsRecordable) map[string
 	return props
 }
 
-func (m *mqlMsgraphApplication) id() (string, error) {
+func (m *mqlMicrosoftApplication) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraph) GetApplications() ([]interface{}, error) {
+func (m *mqlMicrosoft) GetApplications() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -442,7 +442,7 @@ func (m *mqlMsgraph) GetApplications() ([]interface{}, error) {
 	for i := range apps {
 		app := apps[i]
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.application",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.application",
 			"id", core.ToString(app.GetId()),
 			"appId", core.ToString(app.GetAppId()),
 			"createdDateTime", app.GetCreatedDateTime(),
@@ -460,7 +460,7 @@ func (m *mqlMsgraph) GetApplications() ([]interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphUser) GetSettings() (interface{}, error) {
+func (m *mqlMicrosoftUser) GetSettings() (interface{}, error) {
 	id, err := m.Id()
 	if err != nil {
 		return nil, err
@@ -490,8 +490,8 @@ func (m *mqlMsgraphUser) GetSettings() (interface{}, error) {
 	return core.JsonToDict(msgraphconv.NewUserSettings(userSettings))
 }
 
-func (m *mqlMsgraphSecurity) id() (string, error) {
-	return "msgraph.security", nil
+func (m *mqlMicrosoftSecurity) id() (string, error) {
+	return "microsoft.security", nil
 }
 
 func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable) (interface{}, error) {
@@ -523,7 +523,7 @@ func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable
 		return nil, err
 	}
 
-	mqlResource, err := runtime.CreateResource("msgraph.security.securityscore",
+	mqlResource, err := runtime.CreateResource("microsoft.security.securityscore",
 		"id", core.ToString(score.GetId()),
 		"activeUserCount", core.ToInt64From32(score.GetActiveUserCount()),
 		"averageComparativeScores", averageComparativeScores,
@@ -542,7 +542,7 @@ func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable
 	return mqlResource, nil
 }
 
-func (m *mqlMsgraphSecurity) GetLatestSecureScores() (interface{}, error) {
+func (m *mqlMicrosoftSecurity) GetLatestSecureScores() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -581,7 +581,7 @@ func (m *mqlMsgraphSecurity) GetLatestSecureScores() (interface{}, error) {
 }
 
 // see https://docs.microsoft.com/en-us/graph/api/securescore-get?view=graph-rest-1.0&tabs=http
-func (m *mqlMsgraphSecurity) GetSecureScores() ([]interface{}, error) {
+func (m *mqlMicrosoftSecurity) GetSecureScores() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -616,15 +616,15 @@ func (m *mqlMsgraphSecurity) GetSecureScores() ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlMsgraphSecuritySecurityscore) id() (string, error) {
+func (s *mqlMicrosoftSecuritySecurityscore) id() (string, error) {
 	return s.Id()
 }
 
-func (s *mqlMsgraphPolicies) id() (string, error) {
-	return "msgraph.policies", nil
+func (s *mqlMicrosoftPolicies) id() (string, error) {
+	return "microsoft.policies", nil
 }
 
-func (m *mqlMsgraphPolicies) GetAuthorizationPolicy() (interface{}, error) {
+func (m *mqlMicrosoftPolicies) GetAuthorizationPolicy() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -648,7 +648,7 @@ func (m *mqlMsgraphPolicies) GetAuthorizationPolicy() (interface{}, error) {
 	return core.JsonToDict(msgraphconv.NewAuthorizationPolicy(resp))
 }
 
-func (m *mqlMsgraphPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
+func (m *mqlMicrosoftPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -674,7 +674,7 @@ func (m *mqlMsgraphPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (int
 }
 
 // https://docs.microsoft.com/en-us/graph/api/adminconsentrequestpolicy-get?view=graph-rest-
-func (m *mqlMsgraphPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
+func (m *mqlMicrosoftPolicies) GetAdminConsentRequestPolicy() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -700,7 +700,7 @@ func (m *mqlMsgraphPolicies) GetAdminConsentRequestPolicy() (interface{}, error)
 
 // https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/configure-user-consent?tabs=azure-powershell
 // https://docs.microsoft.com/en-us/graph/api/permissiongrantpolicy-list?view=graph-rest-1.0&tabs=http
-func (m *mqlMsgraphPolicies) GetPermissionGrantPolicies() (interface{}, error) {
+func (m *mqlMicrosoftPolicies) GetPermissionGrantPolicies() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -723,11 +723,11 @@ func (m *mqlMsgraphPolicies) GetPermissionGrantPolicies() (interface{}, error) {
 	return core.JsonToDictSlice(msgraphconv.NewPermissionGrantPolicies(resp.GetValue()))
 }
 
-func (m *mqlMsgraphRolemanagement) id() (string, error) {
-	return "msgraph.rolemanagement", nil
+func (m *mqlMicrosoftRolemanagement) id() (string, error) {
+	return "microsoft.rolemanagement", nil
 }
 
-func (m *mqlMsgraphRolemanagement) GetRoleDefinitions() (interface{}, error) {
+func (m *mqlMicrosoftRolemanagement) GetRoleDefinitions() (interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -756,7 +756,7 @@ func (m *mqlMsgraphRolemanagement) GetRoleDefinitions() (interface{}, error) {
 
 		rolePermissions, _ := core.JsonToDictSlice(msgraphconv.NewUnifiedRolePermissions(role.GetRolePermissions()))
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.rolemanagement.roledefinition",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.rolemanagement.roledefinition",
 			"id", core.ToString(role.GetId()),
 			"description", core.ToString(role.GetDescription()),
 			"displayName", core.ToString(role.GetDisplayName()),
@@ -775,11 +775,11 @@ func (m *mqlMsgraphRolemanagement) GetRoleDefinitions() (interface{}, error) {
 	return res, nil
 }
 
-func (m *mqlMsgraphRolemanagementRoledefinition) id() (string, error) {
+func (m *mqlMicrosoftRolemanagementRoledefinition) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphRolemanagementRoledefinition) GetAssignments() ([]interface{}, error) {
+func (m *mqlMicrosoftRolemanagementRoledefinition) GetAssignments() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -819,7 +819,7 @@ func (m *mqlMsgraphRolemanagementRoledefinition) GetAssignments() ([]interface{}
 	for i := range roleAssignments {
 		roleAssignment := roleAssignments[i]
 		principal, _ := core.JsonToDict(msgraphconv.NewDirectoryPrincipal(roleAssignment.GetPrincipal()))
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.rolemanagement.roleassignment",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.rolemanagement.roleassignment",
 			"id", core.ToString(roleAssignment.GetId()),
 			"roleDefinitionId", core.ToString(roleAssignment.GetRoleDefinitionId()),
 			"principalId", core.ToString(roleAssignment.GetPrincipalId()),
@@ -834,15 +834,15 @@ func (m *mqlMsgraphRolemanagementRoledefinition) GetAssignments() ([]interface{}
 	return res, nil
 }
 
-func (m *mqlMsgraphRolemanagementRoleassignment) id() (string, error) {
+func (m *mqlMicrosoftRolemanagementRoleassignment) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphDevicemanagement) id() (string, error) {
-	return "msgraph.devicemanagement", nil
+func (m *mqlMicrosoftDevicemanagement) id() (string, error) {
+	return "microsoft.devicemanagement", nil
 }
 
-func (m *mqlMsgraphDevicemanagement) GetDeviceConfigurations() ([]interface{}, error) {
+func (m *mqlMicrosoftDevicemanagement) GetDeviceConfigurations() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -869,7 +869,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceConfigurations() ([]interface{}, e
 	for i := range configurations {
 		configuration := configurations[i]
 		properties := getConfigurationProperties(configuration)
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.deviceconfiguration",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.devicemanagement.deviceconfiguration",
 			"id", core.ToString(configuration.GetId()),
 			"lastModifiedDateTime", configuration.GetLastModifiedDateTime(),
 			"createdDateTime", configuration.GetCreatedDateTime(),
@@ -1024,7 +1024,7 @@ func getConfigurationProperties(config models.DeviceConfigurationable) map[strin
 	return props
 }
 
-func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
+func (m *mqlMicrosoftDevicemanagement) GetDeviceCompliancePolicies() ([]interface{}, error) {
 	provider, err := microsoftProvider(m.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -1059,7 +1059,7 @@ func (m *mqlMsgraphDevicemanagement) GetDeviceCompliancePolicies() ([]interface{
 		assignments, _ := core.JsonToDictSlice(msgraphconv.NewDeviceCompliancePolicyAssignments(compliancePolicy.GetAssignments()))
 		properties := getComplianceProperties(compliancePolicy)
 
-		mqlResource, err := m.MotorRuntime.CreateResource("msgraph.devicemanagement.devicecompliancepolicy",
+		mqlResource, err := m.MotorRuntime.CreateResource("microsoft.devicemanagement.devicecompliancepolicy",
 			"id", core.ToString(compliancePolicy.GetId()),
 			"createdDateTime", compliancePolicy.GetCreatedDateTime(),
 			"description", core.ToString(compliancePolicy.GetDescription()),
@@ -1109,11 +1109,11 @@ func getComplianceProperties(compliance models.DeviceCompliancePolicyable) map[s
 	return props
 }
 
-func (m *mqlMsgraphDevicemanagementDeviceconfiguration) id() (string, error) {
+func (m *mqlMicrosoftDevicemanagementDeviceconfiguration) id() (string, error) {
 	return m.Id()
 }
 
-func (m *mqlMsgraphDevicemanagementDevicecompliancepolicy) id() (string, error) {
+func (m *mqlMicrosoftDevicemanagementDevicecompliancepolicy) id() (string, error) {
 	return m.Id()
 }
 
