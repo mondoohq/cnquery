@@ -9,19 +9,19 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermMysql) id() (string, error) {
-	return "azurerm.mysql", nil
+func (a *mqlAzureMysql) id() (string, error) {
+	return "azure.mysql", nil
 }
 
-func (a *mqlAzurermMysqlServer) id() (string, error) {
+func (a *mqlAzureMysqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermMysqlDatabase) id() (string, error) {
+func (a *mqlAzureMysqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermMysql) GetServers() ([]interface{}, error) {
+func (a *mqlAzureMysql) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (a *mqlAzurermMysql) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mysql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mysql.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -67,7 +67,7 @@ func (a *mqlAzurermMysql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureMysqlServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (a *mqlAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -127,7 +127,7 @@ func (a *mqlAzurermMysqlServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureMysqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -167,7 +167,7 @@ func (a *mqlAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mysql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mysql.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -184,7 +184,7 @@ func (a *mqlAzurermMysqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureMysqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func (a *mqlAzurermMysqlServer) GetFirewallRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

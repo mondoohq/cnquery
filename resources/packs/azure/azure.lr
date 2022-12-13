@@ -1,6 +1,48 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/azure"
 
-// Azure Active Directory (deprecated, use msgraph resource pack instead)
+alias azurerm = azure
+alias azurerm.resource = azure.resource
+alias azurerm.compute = azure.compute
+alias azurerm.compute.vm = azure.compute.vm
+alias azurerm.compute.disk = azure.compute.disk
+alias azurerm.network  = azure.network
+alias azurerm.network.interface = azure.network.interface
+alias azurerm.network.securitygroup = azure.network.securitygroup
+alias azurerm.network.securityrule = azure.network.securityrule
+alias azurerm.network.watcher = azure.network.watcher
+alias azurerm.storage = azure.storage
+alias azurerm.storage.account = azure.storage.account
+alias azurerm.storage.container = azure.storage.container
+alias azurerm.web = azure.web
+alias azurerm.web.appsite = azure.web.appsite
+alias azurerm.web.appsiteauthsettings = azure.web.appsiteauthsettings
+alias azurerm.web.appsiteconfig = azure.web.appsiteconfig
+alias azurerm.sql = azure.sql
+alias azurerm.sql.server = azure.sql.server
+alias azurerm.sql.server.administrator = azure.sql.server.administrator
+alias azurerm.sql.database = azure.sql.database
+alias azurerm.sql.databaseusage = azure.sql.databaseusage
+alias azurerm.postgresql = azure.postgresql
+alias azurerm.postgresql.server = azure.postgresql.server
+alias azurerm.postgresql.database = azure.postgresql.database
+alias azurerm.mysql = azure.mysql
+alias azurerm.mysql.server = azure.mysql.server
+alias azurerm.mysql.database = azure.mysql.database
+alias azurerm.mariadb = azure.mariadb
+alias azurerm.mariadb.server = azure.mariadb.server
+alias azurerm.mariadb.database = azure.mariadb.database
+alias azurerm.sql.configuration = azure.sql.configuration 
+alias azurerm.sql.firewallrule = azure.sql.firewallrule
+alias azurerm.keyvault = azure.keyvault
+alias azurerm.keyvault.vault = azure.keyvault.vault
+alias azurerm.keyvault.key = azure.keyvault.key
+alias azurerm.keyvault.certificate = azure.keyvault.certificate
+alias azurerm.keyvault.secret = azure.keyvault.secret
+alias azurerm.monitor = azure.monitor
+alias azurerm.monitor.logprofile = azure.monitor.logprofile 
+alias azurerm.monitor.diagnosticsetting = azure.monitor.diagnosticsetting
+
+// Azure Active Directory (deprecated, use microsoft resource pack instead)
 azuread {
   // deprecated, use microsoft.user
   users() []azuread.user
@@ -67,13 +109,13 @@ azuread.serviceprincipal {
 }
 
 // Azure Resource Manager
-azurerm {
+azure {
   // Get all the resources in a subscription
-  resources() []azurerm.resource
+  resources() []azure.resource
 }
 
-// AzureRM Resource
-azurerm.resource {
+// azure Resource
+azure.resource {
   id string
   name string
   kind string
@@ -91,15 +133,15 @@ azurerm.resource {
   changedTime time
 }
 
-// AzureRM Compute
-azurerm.compute {
-  vms() []azurerm.compute.vm
+// azure Compute
+azure.compute {
+  vms() []azure.compute.vm
   // Lists all the disks under a subscription
-  disks() []azurerm.compute.disk
+  disks() []azure.compute.disk
 }
 
-// AzureRM Compute VM
-azurerm.compute.vm {
+// azure Compute VM
+azure.compute.vm {
   id string
   name string
   location string
@@ -107,12 +149,12 @@ azurerm.compute.vm {
   type string
   properties dict
   extensions() []dict
-  osDisk() azurerm.compute.disk
-  dataDisks() []azurerm.compute.disk
+  osDisk() azure.compute.disk
+  dataDisks() []azure.compute.disk
 }
 
-// AzureRM Disk Resource
-azurerm.compute.disk {
+// azure Disk Resource
+azure.compute.disk {
   // Disk resource id
   id string
   // Disk resource name
@@ -135,15 +177,15 @@ azurerm.compute.disk {
   properties dict
 }
 
-// AzureRM Network
-azurerm.network {
-  interfaces() []azurerm.network.interface
-  securityGroups() []azurerm.network.securitygroup
-  watchers() []azurerm.network.watcher
+// azure Network
+azure.network {
+  interfaces() []azure.network.interface
+  securityGroups() []azure.network.securitygroup
+  watchers() []azure.network.watcher
 }
 
-// AzureRM Network Interface
-azurerm.network.interface {
+// azure Network Interface
+azure.network.interface {
   id string
   name string
   location string
@@ -151,11 +193,11 @@ azurerm.network.interface {
   type string
   etag string
   properties dict
-  vm() azurerm.compute.vm
+  vm() azure.compute.vm
 }
 
-// AzureRM Network Security Group
-azurerm.network.securitygroup {
+// azure Network Security Group
+azure.network.securitygroup {
   id string
   name string
   location string
@@ -164,12 +206,12 @@ azurerm.network.securitygroup {
   etag string
   properties dict
   interfaces []azure.network.interface
-  securityRules []azurerm.network.securityrule
-  defaultSecurityRules []azurerm.network.securityrule
+  securityRules []azure.network.securityrule
+  defaultSecurityRules []azure.network.securityrule
 }
 
-// AzureRM Network Security Rule
-azurerm.network.securityrule {
+// azure Network Security Rule
+azure.network.securityrule {
   id string
   name string
   etag string
@@ -177,8 +219,8 @@ azurerm.network.securityrule {
   destinationPortRange []dict
 }
 
-// AzureRM Network Watcher
-azurerm.network.watcher {
+// azure Network Watcher
+azure.network.watcher {
   id string
   name string
   location string
@@ -188,13 +230,13 @@ azurerm.network.watcher {
   properties dict
 }
 
-// AzureRM Storage
-azurerm.storage {
-  accounts() []azurerm.storage.account
+// azure Storage
+azure.storage {
+  accounts() []azure.storage.account
 }
 
-// AzureRM Storage Account
-azurerm.storage.account {
+// azure Storage Account
+azure.storage.account {
   id string
   name string
   location string
@@ -204,11 +246,11 @@ azurerm.storage.account {
   identity dict
   sku dict
   kind string
-  containers() []azurerm.storage.container
+  containers() []azure.storage.container
 }
 
-// AzureRM Storage Container
-azurerm.storage.container {
+// azure Storage Container
+azure.storage.container {
   id string
   name string
   type string
@@ -216,14 +258,14 @@ azurerm.storage.container {
   properties dict
 }
 
-// AzureRM Web
-azurerm.web {
-  apps() []azurerm.web.appsite
+// azure Web
+azure.web {
+  apps() []azure.web.appsite
   availableRuntimes() []dict
 }
 
-// AzureRM Web App Site
-azurerm.web.appsite {
+// azure Web App Site
+azure.web.appsite {
   id string
   name string
   kind string
@@ -233,16 +275,16 @@ azurerm.web.appsite {
   properties dict
   identity dict
 
-  configuration() azurerm.web.appsiteconfig
-  authenticationSettings() azurerm.web.appsiteauthsettings
+  configuration() azure.web.appsiteconfig
+  authenticationSettings() azure.web.appsiteauthsettings
   metadata() dict
   applicationSettings() dict
   connectionSettings() dict
   stack() dict
 }
 
-// AzureRM AppSite Authentication Settings
-azurerm.web.appsiteauthsettings {
+// azure AppSite Authentication Settings
+azure.web.appsiteauthsettings {
   id string
   name string
   kind string
@@ -250,8 +292,8 @@ azurerm.web.appsiteauthsettings {
   properties dict
 }
 
-// AzureRM AppSite Config
-azurerm.web.appsiteconfig {
+// azure AppSite Config
+azure.web.appsiteconfig {
   id string
   name string
   kind string
@@ -259,30 +301,30 @@ azurerm.web.appsiteconfig {
   properties dict
 }
 
-// AzureRM SQL
-azurerm.sql {
-  servers() []azurerm.sql.server
+// azure SQL
+azure.sql {
+  servers() []azure.sql.server
 }
 
-// AzureRM Sql Server
-azurerm.sql.server {
+// azure Sql Server
+azure.sql.server {
   id string
   name string
   location string
   tags map[string]string
   type string
   properties dict
-  databases() []azurerm.sql.database
-  firewallRules() []azurerm.sql.firewallrule
-  azureAdAdministrators() []azurerm.sql.server.administrator
+  databases() []azure.sql.database
+  firewallRules() []azure.sql.firewallrule
+  azureAdAdministrators() []azure.sql.server.administrator
   connectionPolicy() dict
   auditingPolicy() dict
   securityAlertPolicy() dict
   encryptionProtector() dict
 }
 
-// AzureRM Sql Server Administrator
-azurerm.sql.server.administrator {
+// azure Sql Server Administrator
+azure.sql.server.administrator {
   id string
   name string
   type string
@@ -292,8 +334,8 @@ azurerm.sql.server.administrator {
   tenantId string
 }
 
-// AzureRM Sql Server Database
-azurerm.sql.database {
+// azure Sql Server Database
+azure.sql.database {
   id string
   name string
   type string
@@ -333,11 +375,11 @@ azurerm.sql.database {
   threatDetectionPolicy() dict
   connectionPolicy() dict
   auditingPolicy() dict
-  usage() []azurerm.sql.databaseusage
+  usage() []azure.sql.databaseusage
 }
 
-// AzureRM MS Database Usage
-azurerm.sql.databaseusage {
+// azure MS Database Usage
+azure.sql.databaseusage {
   id string
   name string
   resourceName string
@@ -349,26 +391,26 @@ azurerm.sql.databaseusage {
   nextResetTime() time
 }
 
-// AzureRM PostgreSQL
-azurerm.postgresql {
-   servers() []azurerm.postgresql.server
+// azure PostgreSQL
+azure.postgresql {
+   servers() []azure.postgresql.server
 }
 
-// AzureRM PostgreSQL Server
-azurerm.postgresql.server {
+// azure PostgreSQL Server
+azure.postgresql.server {
   id string
   name string
   location string
   tags map[string]string
   type string
   properties dict
-  configuration() []azurerm.sql.configuration
-  databases() []azurerm.postgresql.database
-  firewallRules() []azurerm.sql.firewallrule
+  configuration() []azure.sql.configuration
+  databases() []azure.postgresql.database
+  firewallRules() []azure.sql.firewallrule
 }
 
-// AzureRM PostgreSQL Database
-azurerm.postgresql.database {
+// azure PostgreSQL Database
+azure.postgresql.database {
   id string
   name string
   type string
@@ -376,26 +418,26 @@ azurerm.postgresql.database {
   collation string
 }
 
-// AzureRM MySQL
-azurerm.mysql {
-  servers() []azurerm.mysql.server
+// azure MySQL
+azure.mysql {
+  servers() []azure.mysql.server
 }
 
-// AzureRM MySQL Server
-azurerm.mysql.server {
+// azure MySQL Server
+azure.mysql.server {
   id string
   name string
   location string
   tags map[string]string
   type string
   properties dict
-  configuration() []azurerm.sql.configuration
-  databases() []azurerm.mysql.database
-  firewallRules() []azurerm.sql.firewallrule
+  configuration() []azure.sql.configuration
+  databases() []azure.mysql.database
+  firewallRules() []azure.sql.firewallrule
 }
 
-// AzureRM MySQL Database
-azurerm.mysql.database {
+// azure MySQL Database
+azure.mysql.database {
   id string
   name string
   type string
@@ -403,26 +445,26 @@ azurerm.mysql.database {
   collation string
 }
 
-// AzureRM MariaDB
-azurerm.mariadb {
-  servers() []azurerm.mariadb.server
+// azure MariaDB
+azure.mariadb {
+  servers() []azure.mariadb.server
 }
 
-// AzureRM MariaDB Server
-azurerm.mariadb.server {
+// azure MariaDB Server
+azure.mariadb.server {
   id string
   name string
   location string
   tags map[string]string
   type string
   properties dict
-  configuration() []azurerm.sql.configuration
-  databases() []azurerm.mariadb.database
-  firewallRules() []azurerm.sql.firewallrule
+  configuration() []azure.sql.configuration
+  databases() []azure.mariadb.database
+  firewallRules() []azure.sql.firewallrule
 }
 
-// AzureRM MariaDB Database
-azurerm.mariadb.database {
+// azure MariaDB Database
+azure.mariadb.database {
   id string
   name string
   type string
@@ -430,8 +472,8 @@ azurerm.mariadb.database {
   collation string
 }
 
-// AzureRM SQL Configuration
-azurerm.sql.configuration {
+// azure SQL Configuration
+azure.sql.configuration {
   id string
   name string
   type string
@@ -443,8 +485,8 @@ azurerm.sql.configuration {
   source string
 }
 
-// AzureRM SQL Firewall Rule
-azurerm.sql.firewallrule {
+// azure SQL Firewall Rule
+azure.sql.firewallrule {
   id string
   name string
   type string
@@ -452,13 +494,13 @@ azurerm.sql.firewallrule {
   endIpAddress string
 }
 
-// AzureRM Key Vault
-azurerm.keyvault {
-  vaults() []azurerm.keyvault.vault
+// azure Key Vault
+azure.keyvault {
+  vaults() []azure.keyvault.vault
 }
 
-// AzureRM Key Vault Vault
-azurerm.keyvault.vault {
+// azure Key Vault Vault
+azure.keyvault.vault {
   id string
   vaultName string
   type string
@@ -468,14 +510,14 @@ azurerm.keyvault.vault {
   vaultUri() string
   properties() dict
 
-  keys() []azurerm.keyvault.key
-  certificates() []azurerm.keyvault.certificate
-  secrets() []azurerm.keyvault.secret
-  diagnosticSettings() []azurerm.monitor.diagnosticsetting
+  keys() []azure.keyvault.key
+  certificates() []azure.keyvault.certificate
+  secrets() []azure.keyvault.secret
+  diagnosticSettings() []azure.monitor.diagnosticsetting
 }
 
-// AzureRM Key Vault Key
-azurerm.keyvault.key {
+// azure Key Vault Key
+azure.keyvault.key {
   kid string
   tags map[string]string
   managed bool
@@ -489,11 +531,11 @@ azurerm.keyvault.key {
 
   keyName() string
   version() string
-  versions() []azurerm.keyvault.key
+  versions() []azure.keyvault.key
 }
 
-// AzureRM Key Vault Certificate
-azurerm.keyvault.certificate {
+// azure Key Vault Certificate
+azure.keyvault.certificate {
   id string
   tags map[string]string
   x5t string
@@ -507,11 +549,11 @@ azurerm.keyvault.certificate {
 
   certName() string
   version() string
-  versions() []azurerm.keyvault.certificate
+  versions() []azure.keyvault.certificate
 }
 
-// AzureRM Key Vault Secret
-azurerm.keyvault.secret {
+// azure Key Vault Secret
+azure.keyvault.secret {
   id string
   tags map[string]string
   contentType string
@@ -525,30 +567,30 @@ azurerm.keyvault.secret {
 
   secretName() string
   version() string
-  versions() []azurerm.keyvault.secret
+  versions() []azure.keyvault.secret
 }
 
-// AzureRM Monitor
-azurerm.monitor {
-  logProfiles() []azurerm.monitor.logprofile
+// azure Monitor
+azure.monitor {
+  logProfiles() []azure.monitor.logprofile
 }
 
-// AzureRM Monitor Log Profile
-azurerm.monitor.logprofile {
+// azure Monitor Log Profile
+azure.monitor.logprofile {
   id string
   name string
   location string
   type string
   tags map[string]string
   properties dict
-  storageAccount azurerm.storage.account
+  storageAccount azure.storage.account
 }
 
-// AzureRM Monitor Diagnostic Setting
-azurerm.monitor.diagnosticsetting {
+// azure Monitor Diagnostic Setting
+azure.monitor.diagnosticsetting {
   id string
   name string
   type string
   properties dict
-  storageAccount azurerm.storage.account
+  storageAccount azure.storage.account
 }

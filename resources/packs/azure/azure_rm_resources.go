@@ -8,7 +8,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurerm) GetResources() ([]interface{}, error) {
+func (a *mqlAzure) GetResources() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (a *mqlAzurerm) GetResources() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.resource",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.resource",
 				"id", core.ToString(resource.ID),
 				"name", core.ToString(resource.Name),
 				"kind", core.ToString(resource.Location),
@@ -79,6 +79,6 @@ func (a *mqlAzurerm) GetResources() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermResource) id() (string, error) {
+func (a *mqlAzureResource) id() (string, error) {
 	return a.Id()
 }

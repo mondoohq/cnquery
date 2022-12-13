@@ -9,11 +9,11 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermMonitor) id() (string, error) {
-	return "azurerm.monitor", nil
+func (a *mqlAzureMonitor) id() (string, error) {
+	return "azure.monitor", nil
 }
 
-func (a *mqlAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
+func (a *mqlAzureMonitor) GetLogProfiles() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (a *mqlAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 			var mqlAzureStorageAccount interface{}
 			if entry.Properties != nil && entry.Properties.StorageAccountID != nil {
 				// the resource fetches the data itself
-				mqlAzureStorageAccount, err = a.MotorRuntime.CreateResource("azurerm.storage.account",
+				mqlAzureStorageAccount, err = a.MotorRuntime.CreateResource("azure.storage.account",
 					"id", core.ToString(entry.Properties.StorageAccountID),
 				)
 				if err != nil {
@@ -55,7 +55,7 @@ func (a *mqlAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 				}
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.monitor.logprofile",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.monitor.logprofile",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"location", core.ToString(entry.Location),
@@ -73,7 +73,7 @@ func (a *mqlAzurermMonitor) GetLogProfiles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermMonitorLogprofile) id() (string, error) {
+func (a *mqlAzureMonitorLogprofile) id() (string, error) {
 	return a.Id()
 }
 
@@ -110,7 +110,7 @@ func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, 
 			var mqlAzureStorageAccount interface{}
 			if entry.Properties != nil && entry.Properties.StorageAccountID != nil {
 				// the resource fetches the data itself
-				mqlAzureStorageAccount, err = runtime.CreateResource("azurerm.storage.account",
+				mqlAzureStorageAccount, err = runtime.CreateResource("azure.storage.account",
 					"id", core.ToString(entry.Properties.StorageAccountID),
 				)
 				if err != nil {
@@ -118,7 +118,7 @@ func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, 
 				}
 			}
 
-			mqlAzure, err := runtime.CreateResource("azurerm.monitor.diagnosticsetting",
+			mqlAzure, err := runtime.CreateResource("azure.monitor.diagnosticsetting",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -135,6 +135,6 @@ func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, 
 	return res, nil
 }
 
-func (a *mqlAzurermMonitorDiagnosticsetting) id() (string, error) {
+func (a *mqlAzureMonitorDiagnosticsetting) id() (string, error) {
 	return a.Id()
 }

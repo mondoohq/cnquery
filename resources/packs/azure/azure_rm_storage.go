@@ -10,15 +10,15 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermStorage) id() (string, error) {
-	return "azurerm.storage", nil
+func (a *mqlAzureStorage) id() (string, error) {
+	return "azure.storage", nil
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 type AzureStorageAccountProperties storage.AccountProperties
 type Kind storage.Kind
 
-func (a *mqlAzurermStorage) GetAccounts() ([]interface{}, error) {
+func (a *mqlAzureStorage) GetAccounts() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (a *mqlAzurermStorage) GetAccounts() ([]interface{}, error) {
 			if account.Kind != nil {
 				kind = string(*account.Kind)
 			}
-			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.account",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.storage.account",
 				"id", core.ToString(account.ID),
 				"name", core.ToString(account.Name),
 				"location", core.ToString(account.Location),
@@ -87,11 +87,11 @@ func (a *mqlAzurermStorage) GetAccounts() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermStorageAccount) id() (string, error) {
+func (a *mqlAzureStorageAccount) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermStorageAccount) init(args *resources.Args) (*resources.Args, AzurermStorageAccount, error) {
+func (a *mqlAzureStorageAccount) init(args *resources.Args) (*resources.Args, AzureStorageAccount, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -173,7 +173,7 @@ func (a *mqlAzurermStorageAccount) init(args *resources.Args) (*resources.Args, 
 	return args, nil, nil
 }
 
-func (a *mqlAzurermStorageAccount) GetContainers() ([]interface{}, error) {
+func (a *mqlAzureStorageAccount) GetContainers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -221,7 +221,7 @@ func (a *mqlAzurermStorageAccount) GetContainers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.storage.container",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.storage.container",
 				"id", core.ToString(container.ID),
 				"name", core.ToString(container.Name),
 				"etag", core.ToString(container.Etag),
@@ -238,6 +238,6 @@ func (a *mqlAzurermStorageAccount) GetContainers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermStorageContainer) id() (string, error) {
+func (a *mqlAzureStorageContainer) id() (string, error) {
 	return a.Id()
 }

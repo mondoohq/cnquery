@@ -11,23 +11,23 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermSql) id() (string, error) {
-	return "azurerm.sql", nil
+func (a *mqlAzureSql) id() (string, error) {
+	return "azure.sql", nil
 }
 
-func (a *mqlAzurermSqlConfiguration) id() (string, error) {
+func (a *mqlAzureSqlConfiguration) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermSqlFirewallrule) id() (string, error) {
+func (a *mqlAzureSqlFirewallrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermSqlServerAdministrator) id() (string, error) {
+func (a *mqlAzureSqlServerAdministrator) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermSql) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSql) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (a *mqlAzurermSql) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.sql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.sql.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -74,11 +74,11 @@ func (a *mqlAzurermSql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermSqlServer) id() (string, error) {
+func (a *mqlAzureSqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermSqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (a *mqlAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.sql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.sql.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -152,7 +152,7 @@ func (a *mqlAzurermSqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -194,7 +194,7 @@ func (a *mqlAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 		}
 		for _, entry := range page.Value {
 
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -210,7 +210,7 @@ func (a *mqlAzurermSqlServer) GetFirewallRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
+func (a *mqlAzureSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ func (a *mqlAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) 
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureSqlAdministrator, err := a.MotorRuntime.CreateResource("azurerm.sql.server.administrator",
+			mqlAzureSqlAdministrator, err := a.MotorRuntime.CreateResource("azure.sql.server.administrator",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -269,7 +269,7 @@ func (a *mqlAzurermSqlServer) GetAzureAdAdministrators() ([]interface{}, error) 
 	return res, nil
 }
 
-func (a *mqlAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSqlServer) GetConnectionPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -309,7 +309,7 @@ func (a *mqlAzurermSqlServer) GetConnectionPolicy() (map[string]interface{}, err
 	return core.JsonToDict(policy.Properties)
 }
 
-func (a *mqlAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -349,7 +349,7 @@ func (a *mqlAzurermSqlServer) GetAuditingPolicy() (map[string]interface{}, error
 	return core.JsonToDict(policy.ServerBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -389,7 +389,7 @@ func (a *mqlAzurermSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, 
 	return core.JsonToDict(policy.ServerSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
+func (a *mqlAzureSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -429,11 +429,11 @@ func (a *mqlAzurermSqlServer) GetEncryptionProtector() (map[string]interface{}, 
 	return core.JsonToDict(policy.EncryptionProtector.Properties)
 }
 
-func (a *mqlAzurermSqlDatabase) id() (string, error) {
+func (a *mqlAzureSqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetUsage() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -478,7 +478,7 @@ func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureSqlUsage, err := a.MotorRuntime.CreateResource("azurerm.sql.databaseusage",
+			mqlAzureSqlUsage, err := a.MotorRuntime.CreateResource("azure.sql.databaseusage",
 				"id", id+"/metrics/"+core.ToString(entry.Name),
 				"name", core.ToString(entry.Name),
 				"resourceName", core.ToString(entry.Name),
@@ -498,15 +498,15 @@ func (a *mqlAzurermSqlDatabase) GetUsage() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermSqlDatabaseusage) id() (string, error) {
+func (a *mqlAzureSqlDatabaseusage) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermSqlDatabaseusage) GetNextResetTime() (interface{}, error) {
+func (a *mqlAzureSqlDatabaseusage) GetNextResetTime() (interface{}, error) {
 	return nil, errors.New("deprecated, no longer supported")
 }
 
-func (a *mqlAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetAdvisor() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -574,7 +574,7 @@ func (a *mqlAzurermSqlDatabase) GetAdvisor() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermSqlDatabase) GetThreatDetectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetThreatDetectionPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -620,7 +620,7 @@ func (a *mqlAzurermSqlDatabase) GetThreatDetectionPolicy() (map[string]interface
 	return core.JsonToDict(policy.DatabaseSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -660,7 +660,7 @@ func (a *mqlAzurermSqlDatabase) GetConnectionPolicy() (map[string]interface{}, e
 	return core.JsonToDict(policy.ServerConnectionPolicy.Properties)
 }
 
-func (a *mqlAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -706,7 +706,7 @@ func (a *mqlAzurermSqlDatabase) GetAuditingPolicy() (map[string]interface{}, err
 	return core.JsonToDict(policy.DatabaseBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -752,22 +752,22 @@ func (a *mqlAzurermSqlDatabase) GetTransparentDataEncryption() (map[string]inter
 	return core.JsonToDict(policy.LogicalDatabaseTransparentDataEncryption.Properties)
 }
 
-func (a *mqlAzurermSqlDatabase) GetCurrentServiceObjectiveId() (interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetCurrentServiceObjectiveId() (interface{}, error) {
 	return nil, errors.New("deprecated, use 'serviceLevelObjective'")
 }
 
-func (a *mqlAzurermSqlDatabase) GetContainmentState() (interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetContainmentState() (interface{}, error) {
 	return nil, errors.New("deprecated, no longer supported")
 }
 
-func (a *mqlAzurermSqlDatabase) GetRequestedServiceObjectiveId() (interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetRequestedServiceObjectiveId() (interface{}, error) {
 	return nil, errors.New("deprecated, use 'requestedServiceObjectiveName'")
 }
 
-func (a *mqlAzurermSqlDatabase) GetRecommendedIndex() (interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetRecommendedIndex() (interface{}, error) {
 	return nil, errors.New("deprecated, use 'advisor.recommendedActions'")
 }
 
-func (a *mqlAzurermSqlDatabase) GetServiceTierAdvisors() (interface{}, error) {
+func (a *mqlAzureSqlDatabase) GetServiceTierAdvisors() (interface{}, error) {
 	return nil, errors.New("deprecated, no longer supported")
 }
