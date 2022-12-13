@@ -216,3 +216,140 @@ private gcp.sql.instance @defaults("name") {
   settings dict
 }
 
+// GCP Big Query
+gcp.bigquery {
+  // List of Datasets
+  datasets() []gcp.bigquery.dataset
+}
+
+// GCP BigQuery dataset
+gcp.bigquery.dataset @defaults("id"){
+  // Dataset ID
+  id string
+  // Project ID
+  projectId string
+  // User-friendly name for this dataset
+  name string
+  // User-friendly description of this dataset
+  description string
+  // Geo location of the dataset
+  location string
+  // User-provided labels
+  labels map[string]string
+  // Creation timestamp
+  created time
+  // Modified timestamp
+  modified time
+  // Tags associated with this dataset
+  tags map[string]string
+  // Cloud KMS encryption key that will be used to protect BigQuery table
+  kmsName string
+  // Returns tables in the Dataset
+  tables() []gcp.bigquery.table
+  // Returns models in the Dataset
+  models() []gcp.bigquery.model
+  // Returns routines in the Dataset
+  routines() []gcp.bigquery.routine
+}
+
+// GCP BigQuery table
+private gcp.bigquery.table @defaults("id") {
+  // Table ID
+  id string
+  // Project ID
+  projectId string
+  // Dataset ID
+  datasetId string
+  // The user-friendly name for the table
+  name string
+  // Location of the table
+  location string
+  // User-friendly description of the table
+  description string
+  // User-provided labels
+  labels map[string]string
+  // Indicates if Legacy SQL is used for the view query
+  useLegacySQL bool
+  // Indicates if queries that reference this table must specify a partition filter
+  requirePartitionFilter bool
+  // Creation timestamp
+  created time
+  // Modified timestamp
+  modified time
+  // Size of the table in bytes
+  numBytes int
+  // Number of bytes in the table considered "long-term storage" for reduced billing purposes
+  numLongTermBytes int
+  // Number of rows of data in this table
+  numRows int
+  // Table Type
+  type string
+  // Time when this table expires
+  expirationTime time
+  // Cloud KMS encryption key that will be used to protect BigQuery table
+  kmsName string
+  // Indicates when the base table was snapshot
+  snapshotTime time
+  // Query to use for a logical view
+  viewQuery string
+  // Data clustering configuration
+  clusteringFields dict
+  // Information about table stored outside of BigQuery.
+  externalDataConfig dict
+  // Information for materialized views
+  materializedView dict
+  //  integer-range based partitioning on a table
+  rangePartitioning dict
+  // time-based date partitioning on a table
+  timePartitioning dict
+  // Table schema
+  schema []dict
+}
+
+// GCP BigQuery ML model
+private gcp.bigquery.model @defaults("id") {
+  // Model ID
+  id string
+  // Dataset ID
+  datasetId string
+  // Project ID
+  projectId string
+  // User-friendly name of the model
+  name string
+  // Geographic location
+  location string
+  // User-friendly description of the model
+  description string
+  // User-provided labels
+  labels map[string]string
+  // Creation timestamp
+  created time
+  // Modified timestamp
+  modified time
+  // Type of the mode
+  type string
+  // Expiration time of the model
+  expirationTime time
+  // Cloud KMS encryption key that will be used to protect BigQuery model
+  kmsName string
+}
+
+// GCP BigQuery routine
+private gcp.bigquery.routine @defaults("id") {
+  // Routine ID
+  id string
+  // Dataset ID
+  datasetId string
+  // Project ID
+  projectId string
+  // Language of the routine, such as SQL or JAVASCRIPT
+  language string
+  // User-friendly description of the routine
+  description string
+  // Creation timestamp
+  created time
+  // Modified timestamp
+  modified time
+  // Type of routine
+  type string
+}
