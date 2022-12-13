@@ -27,7 +27,7 @@ import (
 )
 
 func (m *mqlMicrosoft) id() (string, error) {
-	return "msgraph", nil
+	return "microsoft", nil
 }
 
 func (m *mqlMicrosoftOrganization) id() (string, error) {
