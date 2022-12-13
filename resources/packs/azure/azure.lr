@@ -2,19 +2,19 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/azure"
 
 // Azure Active Directory (deprecated, use msgraph resource pack instead)
 azuread {
-  // deprecated, use msgraph.user
+  // deprecated, use microsoft.user
   users() []azuread.user
-  // deprecated, use msgraph.group
+  // deprecated, use microsoft.group
   groups() []azuread.group
-  // deprecated, use msgraph.domain
+  // deprecated, use microsoft.domain
   domains() []azuread.domain
-  // deprecated, use msgraph.application
+  // deprecated, use microsoft.application
   applications() []azuread.application
-  // deprecated, use msgraph.serviceprincipal
+  // deprecated, use microsoft.serviceprincipal
   servicePrincipals() []azuread.serviceprincipal
 }
 
-// Azure Active Directory User (deprecated, use msgraph.user instead)
+// Azure Active Directory User (deprecated, use microsoft.user instead)
 azuread.user {
   id string
   displayName string
@@ -31,7 +31,7 @@ azuread.user {
   properties() dict
 }
 
-// Azure Active Directory Group (deprecated, use msgraph.group instead)
+// Azure Active Directory Group (deprecated, use microsoft.group instead)
 azuread.group {
   id string
   displayName string
@@ -46,7 +46,7 @@ azuread.group {
   members() []azuread.user
 }
 
-// Azure Active Directory Domain (deprecated, use msgraph.domain instead)
+// Azure Active Directory Domain (deprecated, use microsoft.domain instead)
 azuread.domain {
   name string
   isVerified bool
@@ -56,12 +56,12 @@ azuread.domain {
   properties() dict
 }
 
-// Azure Active Directory Application (deprecated, use msgraph.application instead))
+// Azure Active Directory Application (deprecated, use microsoft.application instead))
 azuread.application {
   id string
 }
 
-// Azure Active Directory Service Principal (deprecated, use msgraph.serviceprincipal instead))
+// Azure Active Directory Service Principal (deprecated, use microsoft.serviceprincipal instead))
 azuread.serviceprincipal {
   id string
 }
