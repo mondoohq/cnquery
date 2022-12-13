@@ -15,11 +15,11 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermWeb) id() (string, error) {
-	return "azurerm.web", nil
+func (a *mqlAzureWeb) id() (string, error) {
+	return "azure.web", nil
 }
 
-func (a *mqlAzurermWeb) GetApps() ([]interface{}, error) {
+func (a *mqlAzureWeb) GetApps() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (a *mqlAzurermWeb) GetApps() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.web.appsite",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.web.appsite",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"location", core.ToString(entry.Location),
@@ -104,7 +104,7 @@ func isPlatformEol(platform string, version string) bool {
 }
 
 // all runtimes that are returned here are not EOL and are supported
-func (a *mqlAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
+func (a *mqlAzureWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -232,11 +232,11 @@ func (a *mqlAzurermWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermWebAppsite) id() (string, error) {
+func (a *mqlAzureWebAppsite) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
+func (a *mqlAzureWebAppsite) GetConfiguration() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -280,7 +280,7 @@ func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 		return nil, err
 	}
 
-	return a.MotorRuntime.CreateResource("azurerm.web.appsiteconfig",
+	return a.MotorRuntime.CreateResource("azure.web.appsiteconfig",
 		"id", core.ToString(entry.ID),
 		"name", core.ToString(entry.Name),
 		"kind", core.ToString(entry.Kind),
@@ -289,7 +289,7 @@ func (a *mqlAzurermWebAppsite) GetConfiguration() (interface{}, error) {
 	)
 }
 
-func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) {
+func (a *mqlAzureWebAppsite) GetAuthenticationSettings() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -333,7 +333,7 @@ func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) 
 		return nil, err
 	}
 
-	return a.MotorRuntime.CreateResource("azurerm.web.appsiteauthsettings",
+	return a.MotorRuntime.CreateResource("azure.web.appsiteauthsettings",
 		"id", core.ToString(entry.ID),
 		"name", core.ToString(entry.Name),
 		"kind", core.ToString(entry.Kind),
@@ -342,7 +342,7 @@ func (a *mqlAzurermWebAppsite) GetAuthenticationSettings() (interface{}, error) 
 	)
 }
 
-func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
+func (a *mqlAzureWebAppsite) GetApplicationSettings() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -389,7 +389,7 @@ func (a *mqlAzurermWebAppsite) GetApplicationSettings() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
+func (a *mqlAzureWebAppsite) GetMetadata() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -436,7 +436,7 @@ func (a *mqlAzurermWebAppsite) GetMetadata() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
+func (a *mqlAzureWebAppsite) GetConnectionSettings() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -489,7 +489,7 @@ func (a *mqlAzurermWebAppsite) GetConnectionSettings() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
+func (a *mqlAzureWebAppsite) GetStack() (map[string]interface{}, error) {
 	config, err := a.Configuration()
 	if err != nil {
 		return nil, err
@@ -581,11 +581,11 @@ func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 	// fetch available runtimes and check if they are included
 	// if they are included, leverage their additional properties
 	// if they are not included they are either eol or custom
-	obj, err := a.MotorRuntime.CreateResource("azurerm.web")
+	obj, err := a.MotorRuntime.CreateResource("azure.web")
 	if err != nil {
 		return nil, err
 	}
-	azureWeb := obj.(AzurermWeb)
+	azureWeb := obj.(AzureWeb)
 	runtimes, err := azureWeb.AvailableRuntimes()
 	if err != nil {
 		return nil, err
@@ -618,10 +618,10 @@ func (a *mqlAzurermWebAppsite) GetStack() (map[string]interface{}, error) {
 	return core.JsonToDict(runtime)
 }
 
-func (a *mqlAzurermWebAppsiteconfig) id() (string, error) {
+func (a *mqlAzureWebAppsiteconfig) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermWebAppsiteauthsettings) id() (string, error) {
+func (a *mqlAzureWebAppsiteauthsettings) id() (string, error) {
 	return a.Id()
 }

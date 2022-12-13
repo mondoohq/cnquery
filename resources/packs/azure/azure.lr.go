@@ -18,47 +18,47 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("azuread.domain", newAzureadDomain)
 	registry.AddFactory("azuread.application", newAzureadApplication)
 	registry.AddFactory("azuread.serviceprincipal", newAzureadServiceprincipal)
-	registry.AddFactory("azurerm", newAzurerm)
-	registry.AddFactory("azurerm.resource", newAzurermResource)
-	registry.AddFactory("azurerm.compute", newAzurermCompute)
-	registry.AddFactory("azurerm.compute.vm", newAzurermComputeVm)
-	registry.AddFactory("azurerm.compute.disk", newAzurermComputeDisk)
-	registry.AddFactory("azurerm.network", newAzurermNetwork)
-	registry.AddFactory("azurerm.network.interface", newAzurermNetworkInterface)
-	registry.AddFactory("azurerm.network.securitygroup", newAzurermNetworkSecuritygroup)
-	registry.AddFactory("azurerm.network.securityrule", newAzurermNetworkSecurityrule)
-	registry.AddFactory("azurerm.network.watcher", newAzurermNetworkWatcher)
-	registry.AddFactory("azurerm.storage", newAzurermStorage)
-	registry.AddFactory("azurerm.storage.account", newAzurermStorageAccount)
-	registry.AddFactory("azurerm.storage.container", newAzurermStorageContainer)
-	registry.AddFactory("azurerm.web", newAzurermWeb)
-	registry.AddFactory("azurerm.web.appsite", newAzurermWebAppsite)
-	registry.AddFactory("azurerm.web.appsiteauthsettings", newAzurermWebAppsiteauthsettings)
-	registry.AddFactory("azurerm.web.appsiteconfig", newAzurermWebAppsiteconfig)
-	registry.AddFactory("azurerm.sql", newAzurermSql)
-	registry.AddFactory("azurerm.sql.server", newAzurermSqlServer)
-	registry.AddFactory("azurerm.sql.server.administrator", newAzurermSqlServerAdministrator)
-	registry.AddFactory("azurerm.sql.database", newAzurermSqlDatabase)
-	registry.AddFactory("azurerm.sql.databaseusage", newAzurermSqlDatabaseusage)
-	registry.AddFactory("azurerm.postgresql", newAzurermPostgresql)
-	registry.AddFactory("azurerm.postgresql.server", newAzurermPostgresqlServer)
-	registry.AddFactory("azurerm.postgresql.database", newAzurermPostgresqlDatabase)
-	registry.AddFactory("azurerm.mysql", newAzurermMysql)
-	registry.AddFactory("azurerm.mysql.server", newAzurermMysqlServer)
-	registry.AddFactory("azurerm.mysql.database", newAzurermMysqlDatabase)
-	registry.AddFactory("azurerm.mariadb", newAzurermMariadb)
-	registry.AddFactory("azurerm.mariadb.server", newAzurermMariadbServer)
-	registry.AddFactory("azurerm.mariadb.database", newAzurermMariadbDatabase)
-	registry.AddFactory("azurerm.sql.configuration", newAzurermSqlConfiguration)
-	registry.AddFactory("azurerm.sql.firewallrule", newAzurermSqlFirewallrule)
-	registry.AddFactory("azurerm.keyvault", newAzurermKeyvault)
-	registry.AddFactory("azurerm.keyvault.vault", newAzurermKeyvaultVault)
-	registry.AddFactory("azurerm.keyvault.key", newAzurermKeyvaultKey)
-	registry.AddFactory("azurerm.keyvault.certificate", newAzurermKeyvaultCertificate)
-	registry.AddFactory("azurerm.keyvault.secret", newAzurermKeyvaultSecret)
-	registry.AddFactory("azurerm.monitor", newAzurermMonitor)
-	registry.AddFactory("azurerm.monitor.logprofile", newAzurermMonitorLogprofile)
-	registry.AddFactory("azurerm.monitor.diagnosticsetting", newAzurermMonitorDiagnosticsetting)
+	registry.AddFactory("azure", newAzure)
+	registry.AddFactory("azure.resource", newAzureResource)
+	registry.AddFactory("azure.compute", newAzureCompute)
+	registry.AddFactory("azure.compute.vm", newAzureComputeVm)
+	registry.AddFactory("azure.compute.disk", newAzureComputeDisk)
+	registry.AddFactory("azure.network", newAzureNetwork)
+	registry.AddFactory("azure.network.interface", newAzureNetworkInterface)
+	registry.AddFactory("azure.network.securitygroup", newAzureNetworkSecuritygroup)
+	registry.AddFactory("azure.network.securityrule", newAzureNetworkSecurityrule)
+	registry.AddFactory("azure.network.watcher", newAzureNetworkWatcher)
+	registry.AddFactory("azure.storage", newAzureStorage)
+	registry.AddFactory("azure.storage.account", newAzureStorageAccount)
+	registry.AddFactory("azure.storage.container", newAzureStorageContainer)
+	registry.AddFactory("azure.web", newAzureWeb)
+	registry.AddFactory("azure.web.appsite", newAzureWebAppsite)
+	registry.AddFactory("azure.web.appsiteauthsettings", newAzureWebAppsiteauthsettings)
+	registry.AddFactory("azure.web.appsiteconfig", newAzureWebAppsiteconfig)
+	registry.AddFactory("azure.sql", newAzureSql)
+	registry.AddFactory("azure.sql.server", newAzureSqlServer)
+	registry.AddFactory("azure.sql.server.administrator", newAzureSqlServerAdministrator)
+	registry.AddFactory("azure.sql.database", newAzureSqlDatabase)
+	registry.AddFactory("azure.sql.databaseusage", newAzureSqlDatabaseusage)
+	registry.AddFactory("azure.postgresql", newAzurePostgresql)
+	registry.AddFactory("azure.postgresql.server", newAzurePostgresqlServer)
+	registry.AddFactory("azure.postgresql.database", newAzurePostgresqlDatabase)
+	registry.AddFactory("azure.mysql", newAzureMysql)
+	registry.AddFactory("azure.mysql.server", newAzureMysqlServer)
+	registry.AddFactory("azure.mysql.database", newAzureMysqlDatabase)
+	registry.AddFactory("azure.mariadb", newAzureMariadb)
+	registry.AddFactory("azure.mariadb.server", newAzureMariadbServer)
+	registry.AddFactory("azure.mariadb.database", newAzureMariadbDatabase)
+	registry.AddFactory("azure.sql.configuration", newAzureSqlConfiguration)
+	registry.AddFactory("azure.sql.firewallrule", newAzureSqlFirewallrule)
+	registry.AddFactory("azure.keyvault", newAzureKeyvault)
+	registry.AddFactory("azure.keyvault.vault", newAzureKeyvaultVault)
+	registry.AddFactory("azure.keyvault.key", newAzureKeyvaultKey)
+	registry.AddFactory("azure.keyvault.certificate", newAzureKeyvaultCertificate)
+	registry.AddFactory("azure.keyvault.secret", newAzureKeyvaultSecret)
+	registry.AddFactory("azure.monitor", newAzureMonitor)
+	registry.AddFactory("azure.monitor.logprofile", newAzureMonitorLogprofile)
+	registry.AddFactory("azure.monitor.diagnosticsetting", newAzureMonitorDiagnosticsetting)
 }
 
 // Azuread resource interface
@@ -1778,8 +1778,8 @@ func (s *mqlAzureadServiceprincipal) Compute(name string) error {
 	}
 }
 
-// Azurerm resource interface
-type Azurerm interface {
+// Azure resource interface
+type Azure interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1788,21 +1788,21 @@ type Azurerm interface {
 	Resources() ([]interface{}, error)
 }
 
-// mqlAzurerm for the azurerm resource
-type mqlAzurerm struct {
+// mqlAzure for the azure resource
+type mqlAzure struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurerm) MqlResource() *resources.Resource {
+func (s *mqlAzure) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm resource
-func newAzurerm(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure resource
+func newAzure(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurerm{runtime.NewResource("azurerm")}
+	res := mqlAzure{runtime.NewResource("azure")}
 	// assign all named fields
 	var id string
 
@@ -1816,16 +1816,16 @@ func newAzurerm(runtime *resources.Runtime, args *resources.Args) (interface{}, 
 		switch name {
 		case "resources":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm\", its \"resources\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure\", its \"resources\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm with unknown argument " + name)
+			return nil, errors.New("Initialized azure with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -1843,7 +1843,7 @@ func newAzurerm(runtime *resources.Runtime, args *resources.Args) (interface{}, 
 	return &res, nil
 }
 
-func (s *mqlAzurerm) Validate() error {
+func (s *mqlAzure) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -1851,29 +1851,29 @@ func (s *mqlAzurerm) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurerm) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm].Register")
+func (s *mqlAzure) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure].Register")
 	switch name {
 	case "resources":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurerm) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm].Field")
+func (s *mqlAzure) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure].Field")
 	switch name {
 	case "resources":
 		return s.Resources()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure\" resource")
 	}
 }
 
 // Resources accessor autogenerated
-func (s *mqlAzurerm) Resources() ([]interface{}, error) {
+func (s *mqlAzure) Resources() ([]interface{}, error) {
 	res, ok := s.Cache.Load("resources")
 	if !ok || !res.Valid {
 		if err := s.ComputeResources(); err != nil {
@@ -1881,7 +1881,7 @@ func (s *mqlAzurerm) Resources() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("resources")
 		if !ok {
-			return nil, errors.New("\"azurerm\" calculated \"resources\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure\" calculated \"resources\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "resources")
 	}
@@ -1890,24 +1890,24 @@ func (s *mqlAzurerm) Resources() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm\" failed to cast field \"resources\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure\" failed to cast field \"resources\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurerm) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm].Compute")
+func (s *mqlAzure) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure].Compute")
 	switch name {
 	case "resources":
 		return s.ComputeResources()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure\" resource")
 	}
 }
 
 // ComputeResources computer autogenerated
-func (s *mqlAzurerm) ComputeResources() error {
+func (s *mqlAzure) ComputeResources() error {
 	var err error
 	if _, ok := s.Cache.Load("resources"); ok {
 		return nil
@@ -1920,8 +1920,8 @@ func (s *mqlAzurerm) ComputeResources() error {
 	return nil
 }
 
-// AzurermResource resource interface
-type AzurermResource interface {
+// AzureResource resource interface
+type AzureResource interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -1942,21 +1942,21 @@ type AzurermResource interface {
 	ChangedTime() (*time.Time, error)
 }
 
-// mqlAzurermResource for the azurerm.resource resource
-type mqlAzurermResource struct {
+// mqlAzureResource for the azure.resource resource
+type mqlAzureResource struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermResource) MqlResource() *resources.Resource {
+func (s *mqlAzureResource) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.resource resource
-func newAzurermResource(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.resource resource
+func newAzureResource(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermResource{runtime.NewResource("azurerm.resource")}
+	res := mqlAzureResource{runtime.NewResource("azure.resource")}
 	// assign all named fields
 	var id string
 
@@ -1970,64 +1970,64 @@ func newAzurermResource(runtime *resources.Runtime, args *resources.Args) (inter
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kind":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"kind\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"kind\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "managedBy":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"managedBy\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"managedBy\" argument has the wrong type (expected type \"string\")")
 			}
 		case "sku":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"sku\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"sku\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "plan":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"plan\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"plan\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "identity":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"identity\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"identity\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "provisioningState":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"provisioningState\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"provisioningState\" argument has the wrong type (expected type \"string\")")
 			}
 		case "createdTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"createdTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"createdTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "changedTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"changedTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"changedTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.resource\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.resource\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.resource with unknown argument " + name)
+			return nil, errors.New("Initialized azure.resource with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2045,54 +2045,54 @@ func newAzurermResource(runtime *resources.Runtime, args *resources.Args) (inter
 	return &res, nil
 }
 
-func (s *mqlAzurermResource) Validate() error {
+func (s *mqlAzureResource) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kind"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"kind\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"kind\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("managedBy"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"managedBy\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"managedBy\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sku"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"sku\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"sku\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("plan"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"plan\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"plan\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("identity"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"identity\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"identity\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("provisioningState"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"provisioningState\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"provisioningState\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createdTime"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"createdTime\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"createdTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("changedTime"); !ok {
-		return errors.New("Initialized \"azurerm.resource\" resource without a \"changedTime\". This field is required.")
+		return errors.New("Initialized \"azure.resource\" resource without a \"changedTime\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermResource) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.resource].Register")
+func (s *mqlAzureResource) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.resource].Register")
 	switch name {
 	case "id":
 		return nil
@@ -2121,13 +2121,13 @@ func (s *mqlAzurermResource) Register(name string) error {
 	case "changedTime":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.resource\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.resource\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermResource) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.resource].Field")
+func (s *mqlAzureResource) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.resource].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -2156,221 +2156,221 @@ func (s *mqlAzurermResource) Field(name string) (interface{}, error) {
 	case "changedTime":
 		return s.ChangedTime()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.resource\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.resource\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermResource) Id() (string, error) {
+func (s *mqlAzureResource) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.resource\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.resource\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.resource\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.resource\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermResource) Name() (string, error) {
+func (s *mqlAzureResource) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.resource\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.resource\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.resource\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.resource\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Kind accessor autogenerated
-func (s *mqlAzurermResource) Kind() (string, error) {
+func (s *mqlAzureResource) Kind() (string, error) {
 	res, ok := s.Cache.Load("kind")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.resource\" failed: no value provided for static field \"kind\"")
+		return "", errors.New("\"azure.resource\" failed: no value provided for static field \"kind\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.resource\" failed to cast field \"kind\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.resource\" failed to cast field \"kind\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermResource) Location() (string, error) {
+func (s *mqlAzureResource) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.resource\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.resource\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.resource\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.resource\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermResource) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureResource) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.resource\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.resource\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.resource\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.resource\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermResource) Type() (string, error) {
+func (s *mqlAzureResource) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.resource\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.resource\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.resource\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.resource\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ManagedBy accessor autogenerated
-func (s *mqlAzurermResource) ManagedBy() (string, error) {
+func (s *mqlAzureResource) ManagedBy() (string, error) {
 	res, ok := s.Cache.Load("managedBy")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.resource\" failed: no value provided for static field \"managedBy\"")
+		return "", errors.New("\"azure.resource\" failed: no value provided for static field \"managedBy\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.resource\" failed to cast field \"managedBy\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.resource\" failed to cast field \"managedBy\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Sku accessor autogenerated
-func (s *mqlAzurermResource) Sku() (interface{}, error) {
+func (s *mqlAzureResource) Sku() (interface{}, error) {
 	res, ok := s.Cache.Load("sku")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.resource\" failed: no value provided for static field \"sku\"")
+		return nil, errors.New("\"azure.resource\" failed: no value provided for static field \"sku\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.resource\" failed to cast field \"sku\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.resource\" failed to cast field \"sku\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Plan accessor autogenerated
-func (s *mqlAzurermResource) Plan() (interface{}, error) {
+func (s *mqlAzureResource) Plan() (interface{}, error) {
 	res, ok := s.Cache.Load("plan")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.resource\" failed: no value provided for static field \"plan\"")
+		return nil, errors.New("\"azure.resource\" failed: no value provided for static field \"plan\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.resource\" failed to cast field \"plan\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.resource\" failed to cast field \"plan\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Identity accessor autogenerated
-func (s *mqlAzurermResource) Identity() (interface{}, error) {
+func (s *mqlAzureResource) Identity() (interface{}, error) {
 	res, ok := s.Cache.Load("identity")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.resource\" failed: no value provided for static field \"identity\"")
+		return nil, errors.New("\"azure.resource\" failed: no value provided for static field \"identity\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.resource\" failed to cast field \"identity\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.resource\" failed to cast field \"identity\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ProvisioningState accessor autogenerated
-func (s *mqlAzurermResource) ProvisioningState() (string, error) {
+func (s *mqlAzureResource) ProvisioningState() (string, error) {
 	res, ok := s.Cache.Load("provisioningState")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.resource\" failed: no value provided for static field \"provisioningState\"")
+		return "", errors.New("\"azure.resource\" failed: no value provided for static field \"provisioningState\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.resource\" failed to cast field \"provisioningState\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.resource\" failed to cast field \"provisioningState\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreatedTime accessor autogenerated
-func (s *mqlAzurermResource) CreatedTime() (*time.Time, error) {
+func (s *mqlAzureResource) CreatedTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("createdTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.resource\" failed: no value provided for static field \"createdTime\"")
+		return nil, errors.New("\"azure.resource\" failed: no value provided for static field \"createdTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.resource\" failed to cast field \"createdTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.resource\" failed to cast field \"createdTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // ChangedTime accessor autogenerated
-func (s *mqlAzurermResource) ChangedTime() (*time.Time, error) {
+func (s *mqlAzureResource) ChangedTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("changedTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.resource\" failed: no value provided for static field \"changedTime\"")
+		return nil, errors.New("\"azure.resource\" failed: no value provided for static field \"changedTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.resource\" failed to cast field \"changedTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.resource\" failed to cast field \"changedTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermResource) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.resource].Compute")
+func (s *mqlAzureResource) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.resource].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -2399,12 +2399,12 @@ func (s *mqlAzurermResource) Compute(name string) error {
 	case "changedTime":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.resource\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.resource\" resource")
 	}
 }
 
-// AzurermCompute resource interface
-type AzurermCompute interface {
+// AzureCompute resource interface
+type AzureCompute interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -2414,21 +2414,21 @@ type AzurermCompute interface {
 	Disks() ([]interface{}, error)
 }
 
-// mqlAzurermCompute for the azurerm.compute resource
-type mqlAzurermCompute struct {
+// mqlAzureCompute for the azure.compute resource
+type mqlAzureCompute struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermCompute) MqlResource() *resources.Resource {
+func (s *mqlAzureCompute) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.compute resource
-func newAzurermCompute(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.compute resource
+func newAzureCompute(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermCompute{runtime.NewResource("azurerm.compute")}
+	res := mqlAzureCompute{runtime.NewResource("azure.compute")}
 	// assign all named fields
 	var id string
 
@@ -2442,20 +2442,20 @@ func newAzurermCompute(runtime *resources.Runtime, args *resources.Args) (interf
 		switch name {
 		case "vms":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute\", its \"vms\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute\", its \"vms\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "disks":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute\", its \"disks\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute\", its \"disks\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.compute with unknown argument " + name)
+			return nil, errors.New("Initialized azure.compute with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2473,7 +2473,7 @@ func newAzurermCompute(runtime *resources.Runtime, args *resources.Args) (interf
 	return &res, nil
 }
 
-func (s *mqlAzurermCompute) Validate() error {
+func (s *mqlAzureCompute) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -2481,33 +2481,33 @@ func (s *mqlAzurermCompute) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermCompute) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.compute].Register")
+func (s *mqlAzureCompute) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.compute].Register")
 	switch name {
 	case "vms":
 		return nil
 	case "disks":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.compute\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.compute\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermCompute) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.compute].Field")
+func (s *mqlAzureCompute) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.compute].Field")
 	switch name {
 	case "vms":
 		return s.Vms()
 	case "disks":
 		return s.Disks()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.compute\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.compute\" resource")
 	}
 }
 
 // Vms accessor autogenerated
-func (s *mqlAzurermCompute) Vms() ([]interface{}, error) {
+func (s *mqlAzureCompute) Vms() ([]interface{}, error) {
 	res, ok := s.Cache.Load("vms")
 	if !ok || !res.Valid {
 		if err := s.ComputeVms(); err != nil {
@@ -2515,7 +2515,7 @@ func (s *mqlAzurermCompute) Vms() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vms")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute\" calculated \"vms\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.compute\" calculated \"vms\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vms")
 	}
@@ -2524,13 +2524,13 @@ func (s *mqlAzurermCompute) Vms() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute\" failed to cast field \"vms\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute\" failed to cast field \"vms\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Disks accessor autogenerated
-func (s *mqlAzurermCompute) Disks() ([]interface{}, error) {
+func (s *mqlAzureCompute) Disks() ([]interface{}, error) {
 	res, ok := s.Cache.Load("disks")
 	if !ok || !res.Valid {
 		if err := s.ComputeDisks(); err != nil {
@@ -2538,7 +2538,7 @@ func (s *mqlAzurermCompute) Disks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("disks")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute\" calculated \"disks\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.compute\" calculated \"disks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "disks")
 	}
@@ -2547,26 +2547,26 @@ func (s *mqlAzurermCompute) Disks() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute\" failed to cast field \"disks\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute\" failed to cast field \"disks\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermCompute) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.compute].Compute")
+func (s *mqlAzureCompute) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.compute].Compute")
 	switch name {
 	case "vms":
 		return s.ComputeVms()
 	case "disks":
 		return s.ComputeDisks()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.compute\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.compute\" resource")
 	}
 }
 
 // ComputeVms computer autogenerated
-func (s *mqlAzurermCompute) ComputeVms() error {
+func (s *mqlAzureCompute) ComputeVms() error {
 	var err error
 	if _, ok := s.Cache.Load("vms"); ok {
 		return nil
@@ -2580,7 +2580,7 @@ func (s *mqlAzurermCompute) ComputeVms() error {
 }
 
 // ComputeDisks computer autogenerated
-func (s *mqlAzurermCompute) ComputeDisks() error {
+func (s *mqlAzureCompute) ComputeDisks() error {
 	var err error
 	if _, ok := s.Cache.Load("disks"); ok {
 		return nil
@@ -2593,8 +2593,8 @@ func (s *mqlAzurermCompute) ComputeDisks() error {
 	return nil
 }
 
-// AzurermComputeVm resource interface
-type AzurermComputeVm interface {
+// AzureComputeVm resource interface
+type AzureComputeVm interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -2607,25 +2607,25 @@ type AzurermComputeVm interface {
 	Type() (string, error)
 	Properties() (interface{}, error)
 	Extensions() ([]interface{}, error)
-	OsDisk() (AzurermComputeDisk, error)
+	OsDisk() (AzureComputeDisk, error)
 	DataDisks() ([]interface{}, error)
 }
 
-// mqlAzurermComputeVm for the azurerm.compute.vm resource
-type mqlAzurermComputeVm struct {
+// mqlAzureComputeVm for the azure.compute.vm resource
+type mqlAzureComputeVm struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermComputeVm) MqlResource() *resources.Resource {
+func (s *mqlAzureComputeVm) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.compute.vm resource
-func newAzurermComputeVm(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.compute.vm resource
+func newAzureComputeVm(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermComputeVm{runtime.NewResource("azurerm.compute.vm")}
+	res := mqlAzureComputeVm{runtime.NewResource("azure.compute.vm")}
 	// assign all named fields
 	var id string
 
@@ -2639,48 +2639,48 @@ func newAzurermComputeVm(runtime *resources.Runtime, args *resources.Args) (inte
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "extensions":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"extensions\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"extensions\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "osDisk":
-			if _, ok := val.(AzurermComputeDisk); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"osDisk\" argument has the wrong type (expected type \"AzurermComputeDisk\")")
+			if _, ok := val.(AzureComputeDisk); !ok {
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"osDisk\" argument has the wrong type (expected type \"AzureComputeDisk\")")
 			}
 		case "dataDisks":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"dataDisks\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"dataDisks\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.vm\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.vm\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.compute.vm with unknown argument " + name)
+			return nil, errors.New("Initialized azure.compute.vm with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2698,33 +2698,33 @@ func newAzurermComputeVm(runtime *resources.Runtime, args *resources.Args) (inte
 	return &res, nil
 }
 
-func (s *mqlAzurermComputeVm) Validate() error {
+func (s *mqlAzureComputeVm) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.compute.vm\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.compute.vm\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.compute.vm\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.compute.vm\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.compute.vm\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.compute.vm\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.compute.vm\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.compute.vm\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.compute.vm\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.compute.vm\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.compute.vm\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.compute.vm\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermComputeVm) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.compute.vm].Register")
+func (s *mqlAzureComputeVm) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.compute.vm].Register")
 	switch name {
 	case "id":
 		return nil
@@ -2745,13 +2745,13 @@ func (s *mqlAzurermComputeVm) Register(name string) error {
 	case "dataDisks":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.compute.vm\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.compute.vm\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermComputeVm) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.compute.vm].Field")
+func (s *mqlAzureComputeVm) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.compute.vm].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -2772,108 +2772,108 @@ func (s *mqlAzurermComputeVm) Field(name string) (interface{}, error) {
 	case "dataDisks":
 		return s.DataDisks()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.compute.vm\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.compute.vm\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermComputeVm) Id() (string, error) {
+func (s *mqlAzureComputeVm) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.vm\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.compute.vm\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.vm\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermComputeVm) Name() (string, error) {
+func (s *mqlAzureComputeVm) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.vm\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.compute.vm\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.vm\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermComputeVm) Location() (string, error) {
+func (s *mqlAzureComputeVm) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.vm\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.compute.vm\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.vm\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermComputeVm) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureComputeVm) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.compute.vm\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.compute.vm\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.vm\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermComputeVm) Type() (string, error) {
+func (s *mqlAzureComputeVm) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.vm\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.compute.vm\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.vm\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermComputeVm) Properties() (interface{}, error) {
+func (s *mqlAzureComputeVm) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.compute.vm\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.compute.vm\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.vm\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Extensions accessor autogenerated
-func (s *mqlAzurermComputeVm) Extensions() ([]interface{}, error) {
+func (s *mqlAzureComputeVm) Extensions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("extensions")
 	if !ok || !res.Valid {
 		if err := s.ComputeExtensions(); err != nil {
@@ -2881,7 +2881,7 @@ func (s *mqlAzurermComputeVm) Extensions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("extensions")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute.vm\" calculated \"extensions\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.compute.vm\" calculated \"extensions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "extensions")
 	}
@@ -2890,13 +2890,13 @@ func (s *mqlAzurermComputeVm) Extensions() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"extensions\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.vm\" failed to cast field \"extensions\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // OsDisk accessor autogenerated
-func (s *mqlAzurermComputeVm) OsDisk() (AzurermComputeDisk, error) {
+func (s *mqlAzureComputeVm) OsDisk() (AzureComputeDisk, error) {
 	res, ok := s.Cache.Load("osDisk")
 	if !ok || !res.Valid {
 		if err := s.ComputeOsDisk(); err != nil {
@@ -2904,22 +2904,22 @@ func (s *mqlAzurermComputeVm) OsDisk() (AzurermComputeDisk, error) {
 		}
 		res, ok = s.Cache.Load("osDisk")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute.vm\" calculated \"osDisk\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.compute.vm\" calculated \"osDisk\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "osDisk")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(AzurermComputeDisk)
+	tres, ok := res.Data.(AzureComputeDisk)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"osDisk\" to the right type (AzurermComputeDisk): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.vm\" failed to cast field \"osDisk\" to the right type (AzureComputeDisk): %#v", res)
 	}
 	return tres, nil
 }
 
 // DataDisks accessor autogenerated
-func (s *mqlAzurermComputeVm) DataDisks() ([]interface{}, error) {
+func (s *mqlAzureComputeVm) DataDisks() ([]interface{}, error) {
 	res, ok := s.Cache.Load("dataDisks")
 	if !ok || !res.Valid {
 		if err := s.ComputeDataDisks(); err != nil {
@@ -2927,7 +2927,7 @@ func (s *mqlAzurermComputeVm) DataDisks() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("dataDisks")
 		if !ok {
-			return nil, errors.New("\"azurerm.compute.vm\" calculated \"dataDisks\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.compute.vm\" calculated \"dataDisks\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "dataDisks")
 	}
@@ -2936,14 +2936,14 @@ func (s *mqlAzurermComputeVm) DataDisks() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.vm\" failed to cast field \"dataDisks\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.vm\" failed to cast field \"dataDisks\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermComputeVm) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.compute.vm].Compute")
+func (s *mqlAzureComputeVm) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.compute.vm].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -2964,12 +2964,12 @@ func (s *mqlAzurermComputeVm) Compute(name string) error {
 	case "dataDisks":
 		return s.ComputeDataDisks()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.compute.vm\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.compute.vm\" resource")
 	}
 }
 
 // ComputeExtensions computer autogenerated
-func (s *mqlAzurermComputeVm) ComputeExtensions() error {
+func (s *mqlAzureComputeVm) ComputeExtensions() error {
 	var err error
 	if _, ok := s.Cache.Load("extensions"); ok {
 		return nil
@@ -2983,7 +2983,7 @@ func (s *mqlAzurermComputeVm) ComputeExtensions() error {
 }
 
 // ComputeOsDisk computer autogenerated
-func (s *mqlAzurermComputeVm) ComputeOsDisk() error {
+func (s *mqlAzureComputeVm) ComputeOsDisk() error {
 	var err error
 	if _, ok := s.Cache.Load("osDisk"); ok {
 		return nil
@@ -2997,7 +2997,7 @@ func (s *mqlAzurermComputeVm) ComputeOsDisk() error {
 }
 
 // ComputeDataDisks computer autogenerated
-func (s *mqlAzurermComputeVm) ComputeDataDisks() error {
+func (s *mqlAzureComputeVm) ComputeDataDisks() error {
 	var err error
 	if _, ok := s.Cache.Load("dataDisks"); ok {
 		return nil
@@ -3010,8 +3010,8 @@ func (s *mqlAzurermComputeVm) ComputeDataDisks() error {
 	return nil
 }
 
-// AzurermComputeDisk resource interface
-type AzurermComputeDisk interface {
+// AzureComputeDisk resource interface
+type AzureComputeDisk interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -3029,21 +3029,21 @@ type AzurermComputeDisk interface {
 	Properties() (interface{}, error)
 }
 
-// mqlAzurermComputeDisk for the azurerm.compute.disk resource
-type mqlAzurermComputeDisk struct {
+// mqlAzureComputeDisk for the azure.compute.disk resource
+type mqlAzureComputeDisk struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermComputeDisk) MqlResource() *resources.Resource {
+func (s *mqlAzureComputeDisk) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.compute.disk resource
-func newAzurermComputeDisk(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.compute.disk resource
+func newAzureComputeDisk(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermComputeDisk{runtime.NewResource("azurerm.compute.disk")}
+	res := mqlAzureComputeDisk{runtime.NewResource("azure.compute.disk")}
 	// assign all named fields
 	var id string
 
@@ -3057,52 +3057,52 @@ func newAzurermComputeDisk(runtime *resources.Runtime, args *resources.Args) (in
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "managedBy":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"managedBy\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"managedBy\" argument has the wrong type (expected type \"string\")")
 			}
 		case "managedByExtended":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"managedByExtended\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"managedByExtended\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "zones":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"zones\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"zones\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "sku":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"sku\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"sku\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.compute.disk\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.compute.disk\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.compute.disk with unknown argument " + name)
+			return nil, errors.New("Initialized azure.compute.disk with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -3120,45 +3120,45 @@ func newAzurermComputeDisk(runtime *resources.Runtime, args *resources.Args) (in
 	return &res, nil
 }
 
-func (s *mqlAzurermComputeDisk) Validate() error {
+func (s *mqlAzureComputeDisk) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("managedBy"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"managedBy\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"managedBy\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("managedByExtended"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"managedByExtended\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"managedByExtended\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("zones"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"zones\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"zones\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sku"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"sku\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"sku\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.compute.disk\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.compute.disk\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermComputeDisk) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.compute.disk].Register")
+func (s *mqlAzureComputeDisk) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.compute.disk].Register")
 	switch name {
 	case "id":
 		return nil
@@ -3181,13 +3181,13 @@ func (s *mqlAzurermComputeDisk) Register(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.compute.disk\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.compute.disk\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermComputeDisk) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.compute.disk].Field")
+func (s *mqlAzureComputeDisk) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.compute.disk].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -3210,173 +3210,173 @@ func (s *mqlAzurermComputeDisk) Field(name string) (interface{}, error) {
 	case "properties":
 		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.compute.disk\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.compute.disk\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermComputeDisk) Id() (string, error) {
+func (s *mqlAzureComputeDisk) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.compute.disk\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.disk\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermComputeDisk) Name() (string, error) {
+func (s *mqlAzureComputeDisk) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.compute.disk\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.disk\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermComputeDisk) Location() (string, error) {
+func (s *mqlAzureComputeDisk) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.compute.disk\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.disk\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermComputeDisk) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureComputeDisk) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.compute.disk\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.disk\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermComputeDisk) Type() (string, error) {
+func (s *mqlAzureComputeDisk) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.compute.disk\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.disk\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ManagedBy accessor autogenerated
-func (s *mqlAzurermComputeDisk) ManagedBy() (string, error) {
+func (s *mqlAzureComputeDisk) ManagedBy() (string, error) {
 	res, ok := s.Cache.Load("managedBy")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"managedBy\"")
+		return "", errors.New("\"azure.compute.disk\" failed: no value provided for static field \"managedBy\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"managedBy\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.compute.disk\" failed to cast field \"managedBy\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ManagedByExtended accessor autogenerated
-func (s *mqlAzurermComputeDisk) ManagedByExtended() ([]interface{}, error) {
+func (s *mqlAzureComputeDisk) ManagedByExtended() ([]interface{}, error) {
 	res, ok := s.Cache.Load("managedByExtended")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"managedByExtended\"")
+		return nil, errors.New("\"azure.compute.disk\" failed: no value provided for static field \"managedByExtended\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"managedByExtended\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.disk\" failed to cast field \"managedByExtended\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Zones accessor autogenerated
-func (s *mqlAzurermComputeDisk) Zones() ([]interface{}, error) {
+func (s *mqlAzureComputeDisk) Zones() ([]interface{}, error) {
 	res, ok := s.Cache.Load("zones")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"zones\"")
+		return nil, errors.New("\"azure.compute.disk\" failed: no value provided for static field \"zones\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"zones\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.disk\" failed to cast field \"zones\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Sku accessor autogenerated
-func (s *mqlAzurermComputeDisk) Sku() (interface{}, error) {
+func (s *mqlAzureComputeDisk) Sku() (interface{}, error) {
 	res, ok := s.Cache.Load("sku")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"sku\"")
+		return nil, errors.New("\"azure.compute.disk\" failed: no value provided for static field \"sku\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"sku\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.disk\" failed to cast field \"sku\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermComputeDisk) Properties() (interface{}, error) {
+func (s *mqlAzureComputeDisk) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.compute.disk\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.compute.disk\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.compute.disk\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.compute.disk\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermComputeDisk) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.compute.disk].Compute")
+func (s *mqlAzureComputeDisk) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.compute.disk].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -3399,12 +3399,12 @@ func (s *mqlAzurermComputeDisk) Compute(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.compute.disk\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.compute.disk\" resource")
 	}
 }
 
-// AzurermNetwork resource interface
-type AzurermNetwork interface {
+// AzureNetwork resource interface
+type AzureNetwork interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -3415,21 +3415,21 @@ type AzurermNetwork interface {
 	Watchers() ([]interface{}, error)
 }
 
-// mqlAzurermNetwork for the azurerm.network resource
-type mqlAzurermNetwork struct {
+// mqlAzureNetwork for the azure.network resource
+type mqlAzureNetwork struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermNetwork) MqlResource() *resources.Resource {
+func (s *mqlAzureNetwork) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.network resource
-func newAzurermNetwork(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.network resource
+func newAzureNetwork(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermNetwork{runtime.NewResource("azurerm.network")}
+	res := mqlAzureNetwork{runtime.NewResource("azure.network")}
 	// assign all named fields
 	var id string
 
@@ -3443,24 +3443,24 @@ func newAzurermNetwork(runtime *resources.Runtime, args *resources.Args) (interf
 		switch name {
 		case "interfaces":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network\", its \"interfaces\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network\", its \"interfaces\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "securityGroups":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network\", its \"securityGroups\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network\", its \"securityGroups\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "watchers":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network\", its \"watchers\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network\", its \"watchers\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.network with unknown argument " + name)
+			return nil, errors.New("Initialized azure.network with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -3478,7 +3478,7 @@ func newAzurermNetwork(runtime *resources.Runtime, args *resources.Args) (interf
 	return &res, nil
 }
 
-func (s *mqlAzurermNetwork) Validate() error {
+func (s *mqlAzureNetwork) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -3486,8 +3486,8 @@ func (s *mqlAzurermNetwork) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermNetwork) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network].Register")
+func (s *mqlAzureNetwork) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network].Register")
 	switch name {
 	case "interfaces":
 		return nil
@@ -3496,13 +3496,13 @@ func (s *mqlAzurermNetwork) Register(name string) error {
 	case "watchers":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermNetwork) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.network].Field")
+func (s *mqlAzureNetwork) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.network].Field")
 	switch name {
 	case "interfaces":
 		return s.Interfaces()
@@ -3511,12 +3511,12 @@ func (s *mqlAzurermNetwork) Field(name string) (interface{}, error) {
 	case "watchers":
 		return s.Watchers()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.network\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.network\" resource")
 	}
 }
 
 // Interfaces accessor autogenerated
-func (s *mqlAzurermNetwork) Interfaces() ([]interface{}, error) {
+func (s *mqlAzureNetwork) Interfaces() ([]interface{}, error) {
 	res, ok := s.Cache.Load("interfaces")
 	if !ok || !res.Valid {
 		if err := s.ComputeInterfaces(); err != nil {
@@ -3524,7 +3524,7 @@ func (s *mqlAzurermNetwork) Interfaces() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("interfaces")
 		if !ok {
-			return nil, errors.New("\"azurerm.network\" calculated \"interfaces\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.network\" calculated \"interfaces\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "interfaces")
 	}
@@ -3533,13 +3533,13 @@ func (s *mqlAzurermNetwork) Interfaces() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network\" failed to cast field \"interfaces\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network\" failed to cast field \"interfaces\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // SecurityGroups accessor autogenerated
-func (s *mqlAzurermNetwork) SecurityGroups() ([]interface{}, error) {
+func (s *mqlAzureNetwork) SecurityGroups() ([]interface{}, error) {
 	res, ok := s.Cache.Load("securityGroups")
 	if !ok || !res.Valid {
 		if err := s.ComputeSecurityGroups(); err != nil {
@@ -3547,7 +3547,7 @@ func (s *mqlAzurermNetwork) SecurityGroups() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("securityGroups")
 		if !ok {
-			return nil, errors.New("\"azurerm.network\" calculated \"securityGroups\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.network\" calculated \"securityGroups\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "securityGroups")
 	}
@@ -3556,13 +3556,13 @@ func (s *mqlAzurermNetwork) SecurityGroups() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network\" failed to cast field \"securityGroups\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network\" failed to cast field \"securityGroups\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Watchers accessor autogenerated
-func (s *mqlAzurermNetwork) Watchers() ([]interface{}, error) {
+func (s *mqlAzureNetwork) Watchers() ([]interface{}, error) {
 	res, ok := s.Cache.Load("watchers")
 	if !ok || !res.Valid {
 		if err := s.ComputeWatchers(); err != nil {
@@ -3570,7 +3570,7 @@ func (s *mqlAzurermNetwork) Watchers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("watchers")
 		if !ok {
-			return nil, errors.New("\"azurerm.network\" calculated \"watchers\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.network\" calculated \"watchers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "watchers")
 	}
@@ -3579,14 +3579,14 @@ func (s *mqlAzurermNetwork) Watchers() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network\" failed to cast field \"watchers\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network\" failed to cast field \"watchers\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermNetwork) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network].Compute")
+func (s *mqlAzureNetwork) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network].Compute")
 	switch name {
 	case "interfaces":
 		return s.ComputeInterfaces()
@@ -3595,12 +3595,12 @@ func (s *mqlAzurermNetwork) Compute(name string) error {
 	case "watchers":
 		return s.ComputeWatchers()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network\" resource")
 	}
 }
 
 // ComputeInterfaces computer autogenerated
-func (s *mqlAzurermNetwork) ComputeInterfaces() error {
+func (s *mqlAzureNetwork) ComputeInterfaces() error {
 	var err error
 	if _, ok := s.Cache.Load("interfaces"); ok {
 		return nil
@@ -3614,7 +3614,7 @@ func (s *mqlAzurermNetwork) ComputeInterfaces() error {
 }
 
 // ComputeSecurityGroups computer autogenerated
-func (s *mqlAzurermNetwork) ComputeSecurityGroups() error {
+func (s *mqlAzureNetwork) ComputeSecurityGroups() error {
 	var err error
 	if _, ok := s.Cache.Load("securityGroups"); ok {
 		return nil
@@ -3628,7 +3628,7 @@ func (s *mqlAzurermNetwork) ComputeSecurityGroups() error {
 }
 
 // ComputeWatchers computer autogenerated
-func (s *mqlAzurermNetwork) ComputeWatchers() error {
+func (s *mqlAzureNetwork) ComputeWatchers() error {
 	var err error
 	if _, ok := s.Cache.Load("watchers"); ok {
 		return nil
@@ -3641,8 +3641,8 @@ func (s *mqlAzurermNetwork) ComputeWatchers() error {
 	return nil
 }
 
-// AzurermNetworkInterface resource interface
-type AzurermNetworkInterface interface {
+// AzureNetworkInterface resource interface
+type AzureNetworkInterface interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -3655,24 +3655,24 @@ type AzurermNetworkInterface interface {
 	Type() (string, error)
 	Etag() (string, error)
 	Properties() (interface{}, error)
-	Vm() (AzurermComputeVm, error)
+	Vm() (AzureComputeVm, error)
 }
 
-// mqlAzurermNetworkInterface for the azurerm.network.interface resource
-type mqlAzurermNetworkInterface struct {
+// mqlAzureNetworkInterface for the azure.network.interface resource
+type mqlAzureNetworkInterface struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermNetworkInterface) MqlResource() *resources.Resource {
+func (s *mqlAzureNetworkInterface) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.network.interface resource
-func newAzurermNetworkInterface(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.network.interface resource
+func newAzureNetworkInterface(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermNetworkInterface{runtime.NewResource("azurerm.network.interface")}
+	res := mqlAzureNetworkInterface{runtime.NewResource("azure.network.interface")}
 	// assign all named fields
 	var id string
 
@@ -3686,44 +3686,44 @@ func newAzurermNetworkInterface(runtime *resources.Runtime, args *resources.Args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "etag":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"etag\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"etag\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "vm":
-			if _, ok := val.(AzurermComputeVm); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"vm\" argument has the wrong type (expected type \"AzurermComputeVm\")")
+			if _, ok := val.(AzureComputeVm); !ok {
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"vm\" argument has the wrong type (expected type \"AzureComputeVm\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.interface\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.interface\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.network.interface with unknown argument " + name)
+			return nil, errors.New("Initialized azure.network.interface with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -3741,36 +3741,36 @@ func newAzurermNetworkInterface(runtime *resources.Runtime, args *resources.Args
 	return &res, nil
 }
 
-func (s *mqlAzurermNetworkInterface) Validate() error {
+func (s *mqlAzureNetworkInterface) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.network.interface\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.network.interface\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.network.interface\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.network.interface\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.network.interface\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.network.interface\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.network.interface\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.network.interface\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.network.interface\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.network.interface\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("etag"); !ok {
-		return errors.New("Initialized \"azurerm.network.interface\" resource without a \"etag\". This field is required.")
+		return errors.New("Initialized \"azure.network.interface\" resource without a \"etag\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.network.interface\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.network.interface\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.interface].Register")
+func (s *mqlAzureNetworkInterface) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.interface].Register")
 	switch name {
 	case "id":
 		return nil
@@ -3789,13 +3789,13 @@ func (s *mqlAzurermNetworkInterface) Register(name string) error {
 	case "vm":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.interface\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.interface\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.network.interface].Field")
+func (s *mqlAzureNetworkInterface) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.network.interface].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -3814,124 +3814,124 @@ func (s *mqlAzurermNetworkInterface) Field(name string) (interface{}, error) {
 	case "vm":
 		return s.Vm()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.network.interface\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.network.interface\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Id() (string, error) {
+func (s *mqlAzureNetworkInterface) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.interface\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.network.interface\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.interface\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Name() (string, error) {
+func (s *mqlAzureNetworkInterface) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.interface\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.network.interface\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.interface\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Location() (string, error) {
+func (s *mqlAzureNetworkInterface) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.interface\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.network.interface\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.interface\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureNetworkInterface) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.interface\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.network.interface\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.interface\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Type() (string, error) {
+func (s *mqlAzureNetworkInterface) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.interface\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.network.interface\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.interface\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Etag accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Etag() (string, error) {
+func (s *mqlAzureNetworkInterface) Etag() (string, error) {
 	res, ok := s.Cache.Load("etag")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.interface\" failed: no value provided for static field \"etag\"")
+		return "", errors.New("\"azure.network.interface\" failed: no value provided for static field \"etag\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"etag\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.interface\" failed to cast field \"etag\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Properties() (interface{}, error) {
+func (s *mqlAzureNetworkInterface) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.interface\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.network.interface\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.interface\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Vm accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Vm() (AzurermComputeVm, error) {
+func (s *mqlAzureNetworkInterface) Vm() (AzureComputeVm, error) {
 	res, ok := s.Cache.Load("vm")
 	if !ok || !res.Valid {
 		if err := s.ComputeVm(); err != nil {
@@ -3939,23 +3939,23 @@ func (s *mqlAzurermNetworkInterface) Vm() (AzurermComputeVm, error) {
 		}
 		res, ok = s.Cache.Load("vm")
 		if !ok {
-			return nil, errors.New("\"azurerm.network.interface\" calculated \"vm\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.network.interface\" calculated \"vm\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vm")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(AzurermComputeVm)
+	tres, ok := res.Data.(AzureComputeVm)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.interface\" failed to cast field \"vm\" to the right type (AzurermComputeVm): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.interface\" failed to cast field \"vm\" to the right type (AzureComputeVm): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermNetworkInterface) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.interface].Compute")
+func (s *mqlAzureNetworkInterface) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.interface].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -3974,12 +3974,12 @@ func (s *mqlAzurermNetworkInterface) Compute(name string) error {
 	case "vm":
 		return s.ComputeVm()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.interface\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.interface\" resource")
 	}
 }
 
 // ComputeVm computer autogenerated
-func (s *mqlAzurermNetworkInterface) ComputeVm() error {
+func (s *mqlAzureNetworkInterface) ComputeVm() error {
 	var err error
 	if _, ok := s.Cache.Load("vm"); ok {
 		return nil
@@ -3992,8 +3992,8 @@ func (s *mqlAzurermNetworkInterface) ComputeVm() error {
 	return nil
 }
 
-// AzurermNetworkSecuritygroup resource interface
-type AzurermNetworkSecuritygroup interface {
+// AzureNetworkSecuritygroup resource interface
+type AzureNetworkSecuritygroup interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4011,21 +4011,21 @@ type AzurermNetworkSecuritygroup interface {
 	DefaultSecurityRules() ([]interface{}, error)
 }
 
-// mqlAzurermNetworkSecuritygroup for the azurerm.network.securitygroup resource
-type mqlAzurermNetworkSecuritygroup struct {
+// mqlAzureNetworkSecuritygroup for the azure.network.securitygroup resource
+type mqlAzureNetworkSecuritygroup struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermNetworkSecuritygroup) MqlResource() *resources.Resource {
+func (s *mqlAzureNetworkSecuritygroup) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.network.securitygroup resource
-func newAzurermNetworkSecuritygroup(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.network.securitygroup resource
+func newAzureNetworkSecuritygroup(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermNetworkSecuritygroup{runtime.NewResource("azurerm.network.securitygroup")}
+	res := mqlAzureNetworkSecuritygroup{runtime.NewResource("azure.network.securitygroup")}
 	// assign all named fields
 	var id string
 
@@ -4039,52 +4039,52 @@ func newAzurermNetworkSecuritygroup(runtime *resources.Runtime, args *resources.
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "etag":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"etag\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"etag\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "interfaces":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"interfaces\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"interfaces\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "securityRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"securityRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"securityRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "defaultSecurityRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"defaultSecurityRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"defaultSecurityRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securitygroup\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securitygroup\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.network.securitygroup with unknown argument " + name)
+			return nil, errors.New("Initialized azure.network.securitygroup with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4102,45 +4102,45 @@ func newAzurermNetworkSecuritygroup(runtime *resources.Runtime, args *resources.
 	return &res, nil
 }
 
-func (s *mqlAzurermNetworkSecuritygroup) Validate() error {
+func (s *mqlAzureNetworkSecuritygroup) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("etag"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"etag\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"etag\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("interfaces"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"interfaces\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"interfaces\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("securityRules"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"securityRules\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"securityRules\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("defaultSecurityRules"); !ok {
-		return errors.New("Initialized \"azurerm.network.securitygroup\" resource without a \"defaultSecurityRules\". This field is required.")
+		return errors.New("Initialized \"azure.network.securitygroup\" resource without a \"defaultSecurityRules\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.securitygroup].Register")
+func (s *mqlAzureNetworkSecuritygroup) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.securitygroup].Register")
 	switch name {
 	case "id":
 		return nil
@@ -4163,13 +4163,13 @@ func (s *mqlAzurermNetworkSecuritygroup) Register(name string) error {
 	case "defaultSecurityRules":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.securitygroup\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.securitygroup\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.network.securitygroup].Field")
+func (s *mqlAzureNetworkSecuritygroup) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.network.securitygroup].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -4192,173 +4192,173 @@ func (s *mqlAzurermNetworkSecuritygroup) Field(name string) (interface{}, error)
 	case "defaultSecurityRules":
 		return s.DefaultSecurityRules()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.network.securitygroup\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.network.securitygroup\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Id() (string, error) {
+func (s *mqlAzureNetworkSecuritygroup) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Name() (string, error) {
+func (s *mqlAzureNetworkSecuritygroup) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Location() (string, error) {
+func (s *mqlAzureNetworkSecuritygroup) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureNetworkSecuritygroup) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Type() (string, error) {
+func (s *mqlAzureNetworkSecuritygroup) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Etag accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Etag() (string, error) {
+func (s *mqlAzureNetworkSecuritygroup) Etag() (string, error) {
 	res, ok := s.Cache.Load("etag")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"etag\"")
+		return "", errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"etag\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"etag\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"etag\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Properties() (interface{}, error) {
+func (s *mqlAzureNetworkSecuritygroup) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Interfaces accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Interfaces() ([]interface{}, error) {
+func (s *mqlAzureNetworkSecuritygroup) Interfaces() ([]interface{}, error) {
 	res, ok := s.Cache.Load("interfaces")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"interfaces\"")
+		return nil, errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"interfaces\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"interfaces\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"interfaces\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // SecurityRules accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) SecurityRules() ([]interface{}, error) {
+func (s *mqlAzureNetworkSecuritygroup) SecurityRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("securityRules")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"securityRules\"")
+		return nil, errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"securityRules\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"securityRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"securityRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DefaultSecurityRules accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) DefaultSecurityRules() ([]interface{}, error) {
+func (s *mqlAzureNetworkSecuritygroup) DefaultSecurityRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("defaultSecurityRules")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.securitygroup\" failed: no value provided for static field \"defaultSecurityRules\"")
+		return nil, errors.New("\"azure.network.securitygroup\" failed: no value provided for static field \"defaultSecurityRules\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.securitygroup\" failed to cast field \"defaultSecurityRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.securitygroup\" failed to cast field \"defaultSecurityRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermNetworkSecuritygroup) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.securitygroup].Compute")
+func (s *mqlAzureNetworkSecuritygroup) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.securitygroup].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -4381,12 +4381,12 @@ func (s *mqlAzurermNetworkSecuritygroup) Compute(name string) error {
 	case "defaultSecurityRules":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.securitygroup\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.securitygroup\" resource")
 	}
 }
 
-// AzurermNetworkSecurityrule resource interface
-type AzurermNetworkSecurityrule interface {
+// AzureNetworkSecurityrule resource interface
+type AzureNetworkSecurityrule interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4399,21 +4399,21 @@ type AzurermNetworkSecurityrule interface {
 	DestinationPortRange() ([]interface{}, error)
 }
 
-// mqlAzurermNetworkSecurityrule for the azurerm.network.securityrule resource
-type mqlAzurermNetworkSecurityrule struct {
+// mqlAzureNetworkSecurityrule for the azure.network.securityrule resource
+type mqlAzureNetworkSecurityrule struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermNetworkSecurityrule) MqlResource() *resources.Resource {
+func (s *mqlAzureNetworkSecurityrule) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.network.securityrule resource
-func newAzurermNetworkSecurityrule(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.network.securityrule resource
+func newAzureNetworkSecurityrule(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermNetworkSecurityrule{runtime.NewResource("azurerm.network.securityrule")}
+	res := mqlAzureNetworkSecurityrule{runtime.NewResource("azure.network.securityrule")}
 	// assign all named fields
 	var id string
 
@@ -4427,32 +4427,32 @@ func newAzurermNetworkSecurityrule(runtime *resources.Runtime, args *resources.A
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securityrule\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securityrule\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securityrule\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securityrule\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "etag":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securityrule\", its \"etag\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securityrule\", its \"etag\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securityrule\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securityrule\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "destinationPortRange":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securityrule\", its \"destinationPortRange\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securityrule\", its \"destinationPortRange\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.securityrule\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.securityrule\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.network.securityrule with unknown argument " + name)
+			return nil, errors.New("Initialized azure.network.securityrule with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4470,30 +4470,30 @@ func newAzurermNetworkSecurityrule(runtime *resources.Runtime, args *resources.A
 	return &res, nil
 }
 
-func (s *mqlAzurermNetworkSecurityrule) Validate() error {
+func (s *mqlAzureNetworkSecurityrule) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.network.securityrule\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.network.securityrule\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.network.securityrule\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.network.securityrule\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("etag"); !ok {
-		return errors.New("Initialized \"azurerm.network.securityrule\" resource without a \"etag\". This field is required.")
+		return errors.New("Initialized \"azure.network.securityrule\" resource without a \"etag\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.network.securityrule\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.network.securityrule\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("destinationPortRange"); !ok {
-		return errors.New("Initialized \"azurerm.network.securityrule\" resource without a \"destinationPortRange\". This field is required.")
+		return errors.New("Initialized \"azure.network.securityrule\" resource without a \"destinationPortRange\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.securityrule].Register")
+func (s *mqlAzureNetworkSecurityrule) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.securityrule].Register")
 	switch name {
 	case "id":
 		return nil
@@ -4506,13 +4506,13 @@ func (s *mqlAzurermNetworkSecurityrule) Register(name string) error {
 	case "destinationPortRange":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.securityrule\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.securityrule\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.network.securityrule].Field")
+func (s *mqlAzureNetworkSecurityrule) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.network.securityrule].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -4525,93 +4525,93 @@ func (s *mqlAzurermNetworkSecurityrule) Field(name string) (interface{}, error) 
 	case "destinationPortRange":
 		return s.DestinationPortRange()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.network.securityrule\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.network.securityrule\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) Id() (string, error) {
+func (s *mqlAzureNetworkSecurityrule) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securityrule\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.network.securityrule\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securityrule\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securityrule\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) Name() (string, error) {
+func (s *mqlAzureNetworkSecurityrule) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securityrule\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.network.securityrule\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securityrule\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securityrule\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Etag accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) Etag() (string, error) {
+func (s *mqlAzureNetworkSecurityrule) Etag() (string, error) {
 	res, ok := s.Cache.Load("etag")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.securityrule\" failed: no value provided for static field \"etag\"")
+		return "", errors.New("\"azure.network.securityrule\" failed: no value provided for static field \"etag\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.securityrule\" failed to cast field \"etag\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.securityrule\" failed to cast field \"etag\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) Properties() (interface{}, error) {
+func (s *mqlAzureNetworkSecurityrule) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.securityrule\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.network.securityrule\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.securityrule\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.securityrule\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DestinationPortRange accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) DestinationPortRange() ([]interface{}, error) {
+func (s *mqlAzureNetworkSecurityrule) DestinationPortRange() ([]interface{}, error) {
 	res, ok := s.Cache.Load("destinationPortRange")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.securityrule\" failed: no value provided for static field \"destinationPortRange\"")
+		return nil, errors.New("\"azure.network.securityrule\" failed: no value provided for static field \"destinationPortRange\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.securityrule\" failed to cast field \"destinationPortRange\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.securityrule\" failed to cast field \"destinationPortRange\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermNetworkSecurityrule) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.securityrule].Compute")
+func (s *mqlAzureNetworkSecurityrule) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.securityrule].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -4624,12 +4624,12 @@ func (s *mqlAzurermNetworkSecurityrule) Compute(name string) error {
 	case "destinationPortRange":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.securityrule\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.securityrule\" resource")
 	}
 }
 
-// AzurermNetworkWatcher resource interface
-type AzurermNetworkWatcher interface {
+// AzureNetworkWatcher resource interface
+type AzureNetworkWatcher interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4644,21 +4644,21 @@ type AzurermNetworkWatcher interface {
 	Properties() (interface{}, error)
 }
 
-// mqlAzurermNetworkWatcher for the azurerm.network.watcher resource
-type mqlAzurermNetworkWatcher struct {
+// mqlAzureNetworkWatcher for the azure.network.watcher resource
+type mqlAzureNetworkWatcher struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermNetworkWatcher) MqlResource() *resources.Resource {
+func (s *mqlAzureNetworkWatcher) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.network.watcher resource
-func newAzurermNetworkWatcher(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.network.watcher resource
+func newAzureNetworkWatcher(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermNetworkWatcher{runtime.NewResource("azurerm.network.watcher")}
+	res := mqlAzureNetworkWatcher{runtime.NewResource("azure.network.watcher")}
 	// assign all named fields
 	var id string
 
@@ -4672,40 +4672,40 @@ func newAzurermNetworkWatcher(runtime *resources.Runtime, args *resources.Args) 
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "etag":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"etag\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"etag\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.network.watcher\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.network.watcher\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.network.watcher with unknown argument " + name)
+			return nil, errors.New("Initialized azure.network.watcher with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4723,36 +4723,36 @@ func newAzurermNetworkWatcher(runtime *resources.Runtime, args *resources.Args) 
 	return &res, nil
 }
 
-func (s *mqlAzurermNetworkWatcher) Validate() error {
+func (s *mqlAzureNetworkWatcher) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.network.watcher\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.network.watcher\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.network.watcher\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.network.watcher\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.network.watcher\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.network.watcher\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.network.watcher\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.network.watcher\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.network.watcher\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.network.watcher\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("etag"); !ok {
-		return errors.New("Initialized \"azurerm.network.watcher\" resource without a \"etag\". This field is required.")
+		return errors.New("Initialized \"azure.network.watcher\" resource without a \"etag\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.network.watcher\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.network.watcher\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.watcher].Register")
+func (s *mqlAzureNetworkWatcher) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.watcher].Register")
 	switch name {
 	case "id":
 		return nil
@@ -4769,13 +4769,13 @@ func (s *mqlAzurermNetworkWatcher) Register(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.watcher\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.watcher\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.network.watcher].Field")
+func (s *mqlAzureNetworkWatcher) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.network.watcher].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -4792,125 +4792,125 @@ func (s *mqlAzurermNetworkWatcher) Field(name string) (interface{}, error) {
 	case "properties":
 		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.network.watcher\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.network.watcher\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Id() (string, error) {
+func (s *mqlAzureNetworkWatcher) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.watcher\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.network.watcher\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.watcher\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.watcher\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Name() (string, error) {
+func (s *mqlAzureNetworkWatcher) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.watcher\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.network.watcher\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.watcher\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.watcher\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Location() (string, error) {
+func (s *mqlAzureNetworkWatcher) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.watcher\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.network.watcher\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.watcher\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.watcher\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureNetworkWatcher) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.watcher\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.network.watcher\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.watcher\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.watcher\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Type() (string, error) {
+func (s *mqlAzureNetworkWatcher) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.watcher\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.network.watcher\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.watcher\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.watcher\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Etag accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Etag() (string, error) {
+func (s *mqlAzureNetworkWatcher) Etag() (string, error) {
 	res, ok := s.Cache.Load("etag")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.network.watcher\" failed: no value provided for static field \"etag\"")
+		return "", errors.New("\"azure.network.watcher\" failed: no value provided for static field \"etag\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.network.watcher\" failed to cast field \"etag\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.network.watcher\" failed to cast field \"etag\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Properties() (interface{}, error) {
+func (s *mqlAzureNetworkWatcher) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.network.watcher\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.network.watcher\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.network.watcher\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.network.watcher\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermNetworkWatcher) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.network.watcher].Compute")
+func (s *mqlAzureNetworkWatcher) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.network.watcher].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -4927,12 +4927,12 @@ func (s *mqlAzurermNetworkWatcher) Compute(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.network.watcher\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.network.watcher\" resource")
 	}
 }
 
-// AzurermStorage resource interface
-type AzurermStorage interface {
+// AzureStorage resource interface
+type AzureStorage interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -4941,21 +4941,21 @@ type AzurermStorage interface {
 	Accounts() ([]interface{}, error)
 }
 
-// mqlAzurermStorage for the azurerm.storage resource
-type mqlAzurermStorage struct {
+// mqlAzureStorage for the azure.storage resource
+type mqlAzureStorage struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermStorage) MqlResource() *resources.Resource {
+func (s *mqlAzureStorage) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.storage resource
-func newAzurermStorage(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.storage resource
+func newAzureStorage(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermStorage{runtime.NewResource("azurerm.storage")}
+	res := mqlAzureStorage{runtime.NewResource("azure.storage")}
 	// assign all named fields
 	var id string
 
@@ -4969,16 +4969,16 @@ func newAzurermStorage(runtime *resources.Runtime, args *resources.Args) (interf
 		switch name {
 		case "accounts":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage\", its \"accounts\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.storage\", its \"accounts\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.storage with unknown argument " + name)
+			return nil, errors.New("Initialized azure.storage with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -4996,7 +4996,7 @@ func newAzurermStorage(runtime *resources.Runtime, args *resources.Args) (interf
 	return &res, nil
 }
 
-func (s *mqlAzurermStorage) Validate() error {
+func (s *mqlAzureStorage) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -5004,29 +5004,29 @@ func (s *mqlAzurermStorage) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermStorage) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.storage].Register")
+func (s *mqlAzureStorage) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.storage].Register")
 	switch name {
 	case "accounts":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.storage\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.storage\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermStorage) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.storage].Field")
+func (s *mqlAzureStorage) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.storage].Field")
 	switch name {
 	case "accounts":
 		return s.Accounts()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.storage\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.storage\" resource")
 	}
 }
 
 // Accounts accessor autogenerated
-func (s *mqlAzurermStorage) Accounts() ([]interface{}, error) {
+func (s *mqlAzureStorage) Accounts() ([]interface{}, error) {
 	res, ok := s.Cache.Load("accounts")
 	if !ok || !res.Valid {
 		if err := s.ComputeAccounts(); err != nil {
@@ -5034,7 +5034,7 @@ func (s *mqlAzurermStorage) Accounts() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("accounts")
 		if !ok {
-			return nil, errors.New("\"azurerm.storage\" calculated \"accounts\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.storage\" calculated \"accounts\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "accounts")
 	}
@@ -5043,24 +5043,24 @@ func (s *mqlAzurermStorage) Accounts() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.storage\" failed to cast field \"accounts\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.storage\" failed to cast field \"accounts\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermStorage) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.storage].Compute")
+func (s *mqlAzureStorage) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.storage].Compute")
 	switch name {
 	case "accounts":
 		return s.ComputeAccounts()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.storage\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.storage\" resource")
 	}
 }
 
 // ComputeAccounts computer autogenerated
-func (s *mqlAzurermStorage) ComputeAccounts() error {
+func (s *mqlAzureStorage) ComputeAccounts() error {
 	var err error
 	if _, ok := s.Cache.Load("accounts"); ok {
 		return nil
@@ -5073,8 +5073,8 @@ func (s *mqlAzurermStorage) ComputeAccounts() error {
 	return nil
 }
 
-// AzurermStorageAccount resource interface
-type AzurermStorageAccount interface {
+// AzureStorageAccount resource interface
+type AzureStorageAccount interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -5092,22 +5092,22 @@ type AzurermStorageAccount interface {
 	Containers() ([]interface{}, error)
 }
 
-// mqlAzurermStorageAccount for the azurerm.storage.account resource
-type mqlAzurermStorageAccount struct {
+// mqlAzureStorageAccount for the azure.storage.account resource
+type mqlAzureStorageAccount struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermStorageAccount) MqlResource() *resources.Resource {
+func (s *mqlAzureStorageAccount) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.storage.account resource
-func newAzurermStorageAccount(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.storage.account resource
+func newAzureStorageAccount(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermStorageAccount{runtime.NewResource("azurerm.storage.account")}
-	var existing AzurermStorageAccount
+	res := mqlAzureStorageAccount{runtime.NewResource("azure.storage.account")}
+	var existing AzureStorageAccount
 	args, existing, err = res.init(args)
 	if err != nil {
 		return nil, err
@@ -5129,52 +5129,52 @@ func newAzurermStorageAccount(runtime *resources.Runtime, args *resources.Args) 
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "identity":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"identity\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"identity\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "sku":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"sku\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"sku\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "kind":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"kind\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"kind\" argument has the wrong type (expected type \"string\")")
 			}
 		case "containers":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"containers\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"containers\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.account\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.account\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.storage.account with unknown argument " + name)
+			return nil, errors.New("Initialized azure.storage.account with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -5192,42 +5192,42 @@ func newAzurermStorageAccount(runtime *resources.Runtime, args *resources.Args) 
 	return &res, nil
 }
 
-func (s *mqlAzurermStorageAccount) Validate() error {
+func (s *mqlAzureStorageAccount) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("identity"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"identity\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"identity\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sku"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"sku\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"sku\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kind"); !ok {
-		return errors.New("Initialized \"azurerm.storage.account\" resource without a \"kind\". This field is required.")
+		return errors.New("Initialized \"azure.storage.account\" resource without a \"kind\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermStorageAccount) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.storage.account].Register")
+func (s *mqlAzureStorageAccount) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.storage.account].Register")
 	switch name {
 	case "id":
 		return nil
@@ -5250,13 +5250,13 @@ func (s *mqlAzurermStorageAccount) Register(name string) error {
 	case "containers":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.storage.account\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.storage.account\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermStorageAccount) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.storage.account].Field")
+func (s *mqlAzureStorageAccount) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.storage.account].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -5279,156 +5279,156 @@ func (s *mqlAzurermStorageAccount) Field(name string) (interface{}, error) {
 	case "containers":
 		return s.Containers()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.storage.account\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.storage.account\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermStorageAccount) Id() (string, error) {
+func (s *mqlAzureStorageAccount) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.storage.account\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.account\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermStorageAccount) Name() (string, error) {
+func (s *mqlAzureStorageAccount) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.storage.account\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.account\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermStorageAccount) Location() (string, error) {
+func (s *mqlAzureStorageAccount) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.storage.account\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.account\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermStorageAccount) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureStorageAccount) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.storage.account\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.storage.account\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermStorageAccount) Type() (string, error) {
+func (s *mqlAzureStorageAccount) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.storage.account\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.account\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermStorageAccount) Properties() (interface{}, error) {
+func (s *mqlAzureStorageAccount) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.storage.account\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.storage.account\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Identity accessor autogenerated
-func (s *mqlAzurermStorageAccount) Identity() (interface{}, error) {
+func (s *mqlAzureStorageAccount) Identity() (interface{}, error) {
 	res, ok := s.Cache.Load("identity")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"identity\"")
+		return nil, errors.New("\"azure.storage.account\" failed: no value provided for static field \"identity\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"identity\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.storage.account\" failed to cast field \"identity\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Sku accessor autogenerated
-func (s *mqlAzurermStorageAccount) Sku() (interface{}, error) {
+func (s *mqlAzureStorageAccount) Sku() (interface{}, error) {
 	res, ok := s.Cache.Load("sku")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"sku\"")
+		return nil, errors.New("\"azure.storage.account\" failed: no value provided for static field \"sku\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"sku\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.storage.account\" failed to cast field \"sku\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Kind accessor autogenerated
-func (s *mqlAzurermStorageAccount) Kind() (string, error) {
+func (s *mqlAzureStorageAccount) Kind() (string, error) {
 	res, ok := s.Cache.Load("kind")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.account\" failed: no value provided for static field \"kind\"")
+		return "", errors.New("\"azure.storage.account\" failed: no value provided for static field \"kind\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"kind\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.account\" failed to cast field \"kind\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Containers accessor autogenerated
-func (s *mqlAzurermStorageAccount) Containers() ([]interface{}, error) {
+func (s *mqlAzureStorageAccount) Containers() ([]interface{}, error) {
 	res, ok := s.Cache.Load("containers")
 	if !ok || !res.Valid {
 		if err := s.ComputeContainers(); err != nil {
@@ -5436,7 +5436,7 @@ func (s *mqlAzurermStorageAccount) Containers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("containers")
 		if !ok {
-			return nil, errors.New("\"azurerm.storage.account\" calculated \"containers\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.storage.account\" calculated \"containers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "containers")
 	}
@@ -5445,14 +5445,14 @@ func (s *mqlAzurermStorageAccount) Containers() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.storage.account\" failed to cast field \"containers\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.storage.account\" failed to cast field \"containers\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermStorageAccount) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.storage.account].Compute")
+func (s *mqlAzureStorageAccount) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.storage.account].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -5475,12 +5475,12 @@ func (s *mqlAzurermStorageAccount) Compute(name string) error {
 	case "containers":
 		return s.ComputeContainers()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.storage.account\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.storage.account\" resource")
 	}
 }
 
 // ComputeContainers computer autogenerated
-func (s *mqlAzurermStorageAccount) ComputeContainers() error {
+func (s *mqlAzureStorageAccount) ComputeContainers() error {
 	var err error
 	if _, ok := s.Cache.Load("containers"); ok {
 		return nil
@@ -5493,8 +5493,8 @@ func (s *mqlAzurermStorageAccount) ComputeContainers() error {
 	return nil
 }
 
-// AzurermStorageContainer resource interface
-type AzurermStorageContainer interface {
+// AzureStorageContainer resource interface
+type AzureStorageContainer interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -5507,21 +5507,21 @@ type AzurermStorageContainer interface {
 	Properties() (interface{}, error)
 }
 
-// mqlAzurermStorageContainer for the azurerm.storage.container resource
-type mqlAzurermStorageContainer struct {
+// mqlAzureStorageContainer for the azure.storage.container resource
+type mqlAzureStorageContainer struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermStorageContainer) MqlResource() *resources.Resource {
+func (s *mqlAzureStorageContainer) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.storage.container resource
-func newAzurermStorageContainer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.storage.container resource
+func newAzureStorageContainer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermStorageContainer{runtime.NewResource("azurerm.storage.container")}
+	res := mqlAzureStorageContainer{runtime.NewResource("azure.storage.container")}
 	// assign all named fields
 	var id string
 
@@ -5535,32 +5535,32 @@ func newAzurermStorageContainer(runtime *resources.Runtime, args *resources.Args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.container\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.container\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.container\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.container\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.container\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.container\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "etag":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.container\", its \"etag\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.container\", its \"etag\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.container\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.container\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.storage.container\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.storage.container\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.storage.container with unknown argument " + name)
+			return nil, errors.New("Initialized azure.storage.container with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -5578,30 +5578,30 @@ func newAzurermStorageContainer(runtime *resources.Runtime, args *resources.Args
 	return &res, nil
 }
 
-func (s *mqlAzurermStorageContainer) Validate() error {
+func (s *mqlAzureStorageContainer) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.storage.container\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.storage.container\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.storage.container\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.storage.container\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.storage.container\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.storage.container\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("etag"); !ok {
-		return errors.New("Initialized \"azurerm.storage.container\" resource without a \"etag\". This field is required.")
+		return errors.New("Initialized \"azure.storage.container\" resource without a \"etag\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.storage.container\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.storage.container\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermStorageContainer) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.storage.container].Register")
+func (s *mqlAzureStorageContainer) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.storage.container].Register")
 	switch name {
 	case "id":
 		return nil
@@ -5614,13 +5614,13 @@ func (s *mqlAzurermStorageContainer) Register(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.storage.container\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.storage.container\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermStorageContainer) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.storage.container].Field")
+func (s *mqlAzureStorageContainer) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.storage.container].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -5633,93 +5633,93 @@ func (s *mqlAzurermStorageContainer) Field(name string) (interface{}, error) {
 	case "properties":
 		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.storage.container\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.storage.container\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermStorageContainer) Id() (string, error) {
+func (s *mqlAzureStorageContainer) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.container\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.storage.container\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.container\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.container\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermStorageContainer) Name() (string, error) {
+func (s *mqlAzureStorageContainer) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.container\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.storage.container\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.container\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.container\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermStorageContainer) Type() (string, error) {
+func (s *mqlAzureStorageContainer) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.container\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.storage.container\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.container\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.container\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Etag accessor autogenerated
-func (s *mqlAzurermStorageContainer) Etag() (string, error) {
+func (s *mqlAzureStorageContainer) Etag() (string, error) {
 	res, ok := s.Cache.Load("etag")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.storage.container\" failed: no value provided for static field \"etag\"")
+		return "", errors.New("\"azure.storage.container\" failed: no value provided for static field \"etag\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.storage.container\" failed to cast field \"etag\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.storage.container\" failed to cast field \"etag\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermStorageContainer) Properties() (interface{}, error) {
+func (s *mqlAzureStorageContainer) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.storage.container\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.storage.container\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.storage.container\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.storage.container\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermStorageContainer) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.storage.container].Compute")
+func (s *mqlAzureStorageContainer) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.storage.container].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -5732,12 +5732,12 @@ func (s *mqlAzurermStorageContainer) Compute(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.storage.container\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.storage.container\" resource")
 	}
 }
 
-// AzurermWeb resource interface
-type AzurermWeb interface {
+// AzureWeb resource interface
+type AzureWeb interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -5747,21 +5747,21 @@ type AzurermWeb interface {
 	AvailableRuntimes() ([]interface{}, error)
 }
 
-// mqlAzurermWeb for the azurerm.web resource
-type mqlAzurermWeb struct {
+// mqlAzureWeb for the azure.web resource
+type mqlAzureWeb struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermWeb) MqlResource() *resources.Resource {
+func (s *mqlAzureWeb) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.web resource
-func newAzurermWeb(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.web resource
+func newAzureWeb(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermWeb{runtime.NewResource("azurerm.web")}
+	res := mqlAzureWeb{runtime.NewResource("azure.web")}
 	// assign all named fields
 	var id string
 
@@ -5775,20 +5775,20 @@ func newAzurermWeb(runtime *resources.Runtime, args *resources.Args) (interface{
 		switch name {
 		case "apps":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web\", its \"apps\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web\", its \"apps\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "availableRuntimes":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web\", its \"availableRuntimes\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web\", its \"availableRuntimes\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.web with unknown argument " + name)
+			return nil, errors.New("Initialized azure.web with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -5806,7 +5806,7 @@ func newAzurermWeb(runtime *resources.Runtime, args *resources.Args) (interface{
 	return &res, nil
 }
 
-func (s *mqlAzurermWeb) Validate() error {
+func (s *mqlAzureWeb) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -5814,33 +5814,33 @@ func (s *mqlAzurermWeb) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermWeb) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web].Register")
+func (s *mqlAzureWeb) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web].Register")
 	switch name {
 	case "apps":
 		return nil
 	case "availableRuntimes":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermWeb) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.web].Field")
+func (s *mqlAzureWeb) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.web].Field")
 	switch name {
 	case "apps":
 		return s.Apps()
 	case "availableRuntimes":
 		return s.AvailableRuntimes()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.web\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.web\" resource")
 	}
 }
 
 // Apps accessor autogenerated
-func (s *mqlAzurermWeb) Apps() ([]interface{}, error) {
+func (s *mqlAzureWeb) Apps() ([]interface{}, error) {
 	res, ok := s.Cache.Load("apps")
 	if !ok || !res.Valid {
 		if err := s.ComputeApps(); err != nil {
@@ -5848,7 +5848,7 @@ func (s *mqlAzurermWeb) Apps() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("apps")
 		if !ok {
-			return nil, errors.New("\"azurerm.web\" calculated \"apps\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web\" calculated \"apps\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "apps")
 	}
@@ -5857,13 +5857,13 @@ func (s *mqlAzurermWeb) Apps() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web\" failed to cast field \"apps\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web\" failed to cast field \"apps\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // AvailableRuntimes accessor autogenerated
-func (s *mqlAzurermWeb) AvailableRuntimes() ([]interface{}, error) {
+func (s *mqlAzureWeb) AvailableRuntimes() ([]interface{}, error) {
 	res, ok := s.Cache.Load("availableRuntimes")
 	if !ok || !res.Valid {
 		if err := s.ComputeAvailableRuntimes(); err != nil {
@@ -5871,7 +5871,7 @@ func (s *mqlAzurermWeb) AvailableRuntimes() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("availableRuntimes")
 		if !ok {
-			return nil, errors.New("\"azurerm.web\" calculated \"availableRuntimes\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web\" calculated \"availableRuntimes\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "availableRuntimes")
 	}
@@ -5880,26 +5880,26 @@ func (s *mqlAzurermWeb) AvailableRuntimes() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web\" failed to cast field \"availableRuntimes\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web\" failed to cast field \"availableRuntimes\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermWeb) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web].Compute")
+func (s *mqlAzureWeb) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web].Compute")
 	switch name {
 	case "apps":
 		return s.ComputeApps()
 	case "availableRuntimes":
 		return s.ComputeAvailableRuntimes()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web\" resource")
 	}
 }
 
 // ComputeApps computer autogenerated
-func (s *mqlAzurermWeb) ComputeApps() error {
+func (s *mqlAzureWeb) ComputeApps() error {
 	var err error
 	if _, ok := s.Cache.Load("apps"); ok {
 		return nil
@@ -5913,7 +5913,7 @@ func (s *mqlAzurermWeb) ComputeApps() error {
 }
 
 // ComputeAvailableRuntimes computer autogenerated
-func (s *mqlAzurermWeb) ComputeAvailableRuntimes() error {
+func (s *mqlAzureWeb) ComputeAvailableRuntimes() error {
 	var err error
 	if _, ok := s.Cache.Load("availableRuntimes"); ok {
 		return nil
@@ -5926,8 +5926,8 @@ func (s *mqlAzurermWeb) ComputeAvailableRuntimes() error {
 	return nil
 }
 
-// AzurermWebAppsite resource interface
-type AzurermWebAppsite interface {
+// AzureWebAppsite resource interface
+type AzureWebAppsite interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -5941,29 +5941,29 @@ type AzurermWebAppsite interface {
 	Tags() (map[string]interface{}, error)
 	Properties() (interface{}, error)
 	Identity() (interface{}, error)
-	Configuration() (AzurermWebAppsiteconfig, error)
-	AuthenticationSettings() (AzurermWebAppsiteauthsettings, error)
+	Configuration() (AzureWebAppsiteconfig, error)
+	AuthenticationSettings() (AzureWebAppsiteauthsettings, error)
 	Metadata() (interface{}, error)
 	ApplicationSettings() (interface{}, error)
 	ConnectionSettings() (interface{}, error)
 	Stack() (interface{}, error)
 }
 
-// mqlAzurermWebAppsite for the azurerm.web.appsite resource
-type mqlAzurermWebAppsite struct {
+// mqlAzureWebAppsite for the azure.web.appsite resource
+type mqlAzureWebAppsite struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermWebAppsite) MqlResource() *resources.Resource {
+func (s *mqlAzureWebAppsite) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.web.appsite resource
-func newAzurermWebAppsite(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.web.appsite resource
+func newAzureWebAppsite(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermWebAppsite{runtime.NewResource("azurerm.web.appsite")}
+	res := mqlAzureWebAppsite{runtime.NewResource("azure.web.appsite")}
 	// assign all named fields
 	var id string
 
@@ -5977,68 +5977,68 @@ func newAzurermWebAppsite(runtime *resources.Runtime, args *resources.Args) (int
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kind":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"kind\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"kind\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "identity":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"identity\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"identity\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "configuration":
-			if _, ok := val.(AzurermWebAppsiteconfig); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"configuration\" argument has the wrong type (expected type \"AzurermWebAppsiteconfig\")")
+			if _, ok := val.(AzureWebAppsiteconfig); !ok {
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"configuration\" argument has the wrong type (expected type \"AzureWebAppsiteconfig\")")
 			}
 		case "authenticationSettings":
-			if _, ok := val.(AzurermWebAppsiteauthsettings); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"authenticationSettings\" argument has the wrong type (expected type \"AzurermWebAppsiteauthsettings\")")
+			if _, ok := val.(AzureWebAppsiteauthsettings); !ok {
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"authenticationSettings\" argument has the wrong type (expected type \"AzureWebAppsiteauthsettings\")")
 			}
 		case "metadata":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"metadata\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"metadata\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "applicationSettings":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"applicationSettings\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"applicationSettings\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "connectionSettings":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"connectionSettings\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"connectionSettings\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "stack":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"stack\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"stack\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsite\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsite\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.web.appsite with unknown argument " + name)
+			return nil, errors.New("Initialized azure.web.appsite with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -6056,39 +6056,39 @@ func newAzurermWebAppsite(runtime *resources.Runtime, args *resources.Args) (int
 	return &res, nil
 }
 
-func (s *mqlAzurermWebAppsite) Validate() error {
+func (s *mqlAzureWebAppsite) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kind"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"kind\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"kind\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("identity"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsite\" resource without a \"identity\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsite\" resource without a \"identity\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermWebAppsite) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsite].Register")
+func (s *mqlAzureWebAppsite) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web.appsite].Register")
 	switch name {
 	case "id":
 		return nil
@@ -6119,13 +6119,13 @@ func (s *mqlAzurermWebAppsite) Register(name string) error {
 	case "stack":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web.appsite\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web.appsite\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermWebAppsite) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsite].Field")
+func (s *mqlAzureWebAppsite) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.web.appsite].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -6156,140 +6156,140 @@ func (s *mqlAzurermWebAppsite) Field(name string) (interface{}, error) {
 	case "stack":
 		return s.Stack()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.web.appsite\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.web.appsite\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermWebAppsite) Id() (string, error) {
+func (s *mqlAzureWebAppsite) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.web.appsite\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsite\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermWebAppsite) Name() (string, error) {
+func (s *mqlAzureWebAppsite) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.web.appsite\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsite\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Kind accessor autogenerated
-func (s *mqlAzurermWebAppsite) Kind() (string, error) {
+func (s *mqlAzureWebAppsite) Kind() (string, error) {
 	res, ok := s.Cache.Load("kind")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"kind\"")
+		return "", errors.New("\"azure.web.appsite\" failed: no value provided for static field \"kind\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"kind\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsite\" failed to cast field \"kind\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermWebAppsite) Location() (string, error) {
+func (s *mqlAzureWebAppsite) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.web.appsite\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsite\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermWebAppsite) Type() (string, error) {
+func (s *mqlAzureWebAppsite) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.web.appsite\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsite\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermWebAppsite) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureWebAppsite) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.web.appsite\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermWebAppsite) Properties() (interface{}, error) {
+func (s *mqlAzureWebAppsite) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.web.appsite\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Identity accessor autogenerated
-func (s *mqlAzurermWebAppsite) Identity() (interface{}, error) {
+func (s *mqlAzureWebAppsite) Identity() (interface{}, error) {
 	res, ok := s.Cache.Load("identity")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.web.appsite\" failed: no value provided for static field \"identity\"")
+		return nil, errors.New("\"azure.web.appsite\" failed: no value provided for static field \"identity\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"identity\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"identity\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Configuration accessor autogenerated
-func (s *mqlAzurermWebAppsite) Configuration() (AzurermWebAppsiteconfig, error) {
+func (s *mqlAzureWebAppsite) Configuration() (AzureWebAppsiteconfig, error) {
 	res, ok := s.Cache.Load("configuration")
 	if !ok || !res.Valid {
 		if err := s.ComputeConfiguration(); err != nil {
@@ -6297,22 +6297,22 @@ func (s *mqlAzurermWebAppsite) Configuration() (AzurermWebAppsiteconfig, error) 
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"configuration\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web.appsite\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(AzurermWebAppsiteconfig)
+	tres, ok := res.Data.(AzureWebAppsiteconfig)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"configuration\" to the right type (AzurermWebAppsiteconfig): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"configuration\" to the right type (AzureWebAppsiteconfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // AuthenticationSettings accessor autogenerated
-func (s *mqlAzurermWebAppsite) AuthenticationSettings() (AzurermWebAppsiteauthsettings, error) {
+func (s *mqlAzureWebAppsite) AuthenticationSettings() (AzureWebAppsiteauthsettings, error) {
 	res, ok := s.Cache.Load("authenticationSettings")
 	if !ok || !res.Valid {
 		if err := s.ComputeAuthenticationSettings(); err != nil {
@@ -6320,22 +6320,22 @@ func (s *mqlAzurermWebAppsite) AuthenticationSettings() (AzurermWebAppsiteauthse
 		}
 		res, ok = s.Cache.Load("authenticationSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"authenticationSettings\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web.appsite\" calculated \"authenticationSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "authenticationSettings")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(AzurermWebAppsiteauthsettings)
+	tres, ok := res.Data.(AzureWebAppsiteauthsettings)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"authenticationSettings\" to the right type (AzurermWebAppsiteauthsettings): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"authenticationSettings\" to the right type (AzureWebAppsiteauthsettings): %#v", res)
 	}
 	return tres, nil
 }
 
 // Metadata accessor autogenerated
-func (s *mqlAzurermWebAppsite) Metadata() (interface{}, error) {
+func (s *mqlAzureWebAppsite) Metadata() (interface{}, error) {
 	res, ok := s.Cache.Load("metadata")
 	if !ok || !res.Valid {
 		if err := s.ComputeMetadata(); err != nil {
@@ -6343,7 +6343,7 @@ func (s *mqlAzurermWebAppsite) Metadata() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("metadata")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"metadata\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web.appsite\" calculated \"metadata\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "metadata")
 	}
@@ -6352,13 +6352,13 @@ func (s *mqlAzurermWebAppsite) Metadata() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"metadata\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"metadata\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ApplicationSettings accessor autogenerated
-func (s *mqlAzurermWebAppsite) ApplicationSettings() (interface{}, error) {
+func (s *mqlAzureWebAppsite) ApplicationSettings() (interface{}, error) {
 	res, ok := s.Cache.Load("applicationSettings")
 	if !ok || !res.Valid {
 		if err := s.ComputeApplicationSettings(); err != nil {
@@ -6366,7 +6366,7 @@ func (s *mqlAzurermWebAppsite) ApplicationSettings() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("applicationSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"applicationSettings\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web.appsite\" calculated \"applicationSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "applicationSettings")
 	}
@@ -6375,13 +6375,13 @@ func (s *mqlAzurermWebAppsite) ApplicationSettings() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"applicationSettings\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"applicationSettings\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ConnectionSettings accessor autogenerated
-func (s *mqlAzurermWebAppsite) ConnectionSettings() (interface{}, error) {
+func (s *mqlAzureWebAppsite) ConnectionSettings() (interface{}, error) {
 	res, ok := s.Cache.Load("connectionSettings")
 	if !ok || !res.Valid {
 		if err := s.ComputeConnectionSettings(); err != nil {
@@ -6389,7 +6389,7 @@ func (s *mqlAzurermWebAppsite) ConnectionSettings() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("connectionSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"connectionSettings\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web.appsite\" calculated \"connectionSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "connectionSettings")
 	}
@@ -6398,13 +6398,13 @@ func (s *mqlAzurermWebAppsite) ConnectionSettings() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"connectionSettings\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"connectionSettings\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Stack accessor autogenerated
-func (s *mqlAzurermWebAppsite) Stack() (interface{}, error) {
+func (s *mqlAzureWebAppsite) Stack() (interface{}, error) {
 	res, ok := s.Cache.Load("stack")
 	if !ok || !res.Valid {
 		if err := s.ComputeStack(); err != nil {
@@ -6412,7 +6412,7 @@ func (s *mqlAzurermWebAppsite) Stack() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("stack")
 		if !ok {
-			return nil, errors.New("\"azurerm.web.appsite\" calculated \"stack\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.web.appsite\" calculated \"stack\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "stack")
 	}
@@ -6421,14 +6421,14 @@ func (s *mqlAzurermWebAppsite) Stack() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsite\" failed to cast field \"stack\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsite\" failed to cast field \"stack\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermWebAppsite) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsite].Compute")
+func (s *mqlAzureWebAppsite) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web.appsite].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -6459,12 +6459,12 @@ func (s *mqlAzurermWebAppsite) Compute(name string) error {
 	case "stack":
 		return s.ComputeStack()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web.appsite\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web.appsite\" resource")
 	}
 }
 
 // ComputeConfiguration computer autogenerated
-func (s *mqlAzurermWebAppsite) ComputeConfiguration() error {
+func (s *mqlAzureWebAppsite) ComputeConfiguration() error {
 	var err error
 	if _, ok := s.Cache.Load("configuration"); ok {
 		return nil
@@ -6478,7 +6478,7 @@ func (s *mqlAzurermWebAppsite) ComputeConfiguration() error {
 }
 
 // ComputeAuthenticationSettings computer autogenerated
-func (s *mqlAzurermWebAppsite) ComputeAuthenticationSettings() error {
+func (s *mqlAzureWebAppsite) ComputeAuthenticationSettings() error {
 	var err error
 	if _, ok := s.Cache.Load("authenticationSettings"); ok {
 		return nil
@@ -6492,7 +6492,7 @@ func (s *mqlAzurermWebAppsite) ComputeAuthenticationSettings() error {
 }
 
 // ComputeMetadata computer autogenerated
-func (s *mqlAzurermWebAppsite) ComputeMetadata() error {
+func (s *mqlAzureWebAppsite) ComputeMetadata() error {
 	var err error
 	if _, ok := s.Cache.Load("metadata"); ok {
 		return nil
@@ -6506,7 +6506,7 @@ func (s *mqlAzurermWebAppsite) ComputeMetadata() error {
 }
 
 // ComputeApplicationSettings computer autogenerated
-func (s *mqlAzurermWebAppsite) ComputeApplicationSettings() error {
+func (s *mqlAzureWebAppsite) ComputeApplicationSettings() error {
 	var err error
 	if _, ok := s.Cache.Load("applicationSettings"); ok {
 		return nil
@@ -6520,7 +6520,7 @@ func (s *mqlAzurermWebAppsite) ComputeApplicationSettings() error {
 }
 
 // ComputeConnectionSettings computer autogenerated
-func (s *mqlAzurermWebAppsite) ComputeConnectionSettings() error {
+func (s *mqlAzureWebAppsite) ComputeConnectionSettings() error {
 	var err error
 	if _, ok := s.Cache.Load("connectionSettings"); ok {
 		return nil
@@ -6534,7 +6534,7 @@ func (s *mqlAzurermWebAppsite) ComputeConnectionSettings() error {
 }
 
 // ComputeStack computer autogenerated
-func (s *mqlAzurermWebAppsite) ComputeStack() error {
+func (s *mqlAzureWebAppsite) ComputeStack() error {
 	var err error
 	if _, ok := s.Cache.Load("stack"); ok {
 		return nil
@@ -6547,8 +6547,8 @@ func (s *mqlAzurermWebAppsite) ComputeStack() error {
 	return nil
 }
 
-// AzurermWebAppsiteauthsettings resource interface
-type AzurermWebAppsiteauthsettings interface {
+// AzureWebAppsiteauthsettings resource interface
+type AzureWebAppsiteauthsettings interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -6561,21 +6561,21 @@ type AzurermWebAppsiteauthsettings interface {
 	Properties() (interface{}, error)
 }
 
-// mqlAzurermWebAppsiteauthsettings for the azurerm.web.appsiteauthsettings resource
-type mqlAzurermWebAppsiteauthsettings struct {
+// mqlAzureWebAppsiteauthsettings for the azure.web.appsiteauthsettings resource
+type mqlAzureWebAppsiteauthsettings struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermWebAppsiteauthsettings) MqlResource() *resources.Resource {
+func (s *mqlAzureWebAppsiteauthsettings) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.web.appsiteauthsettings resource
-func newAzurermWebAppsiteauthsettings(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.web.appsiteauthsettings resource
+func newAzureWebAppsiteauthsettings(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermWebAppsiteauthsettings{runtime.NewResource("azurerm.web.appsiteauthsettings")}
+	res := mqlAzureWebAppsiteauthsettings{runtime.NewResource("azure.web.appsiteauthsettings")}
 	// assign all named fields
 	var id string
 
@@ -6589,32 +6589,32 @@ func newAzurermWebAppsiteauthsettings(runtime *resources.Runtime, args *resource
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteauthsettings\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteauthsettings\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteauthsettings\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteauthsettings\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kind":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteauthsettings\", its \"kind\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteauthsettings\", its \"kind\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteauthsettings\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteauthsettings\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteauthsettings\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteauthsettings\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteauthsettings\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteauthsettings\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.web.appsiteauthsettings with unknown argument " + name)
+			return nil, errors.New("Initialized azure.web.appsiteauthsettings with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -6632,30 +6632,30 @@ func newAzurermWebAppsiteauthsettings(runtime *resources.Runtime, args *resource
 	return &res, nil
 }
 
-func (s *mqlAzurermWebAppsiteauthsettings) Validate() error {
+func (s *mqlAzureWebAppsiteauthsettings) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteauthsettings\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteauthsettings\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteauthsettings\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteauthsettings\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kind"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteauthsettings\" resource without a \"kind\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteauthsettings\" resource without a \"kind\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteauthsettings\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteauthsettings\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteauthsettings\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteauthsettings\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsiteauthsettings].Register")
+func (s *mqlAzureWebAppsiteauthsettings) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web.appsiteauthsettings].Register")
 	switch name {
 	case "id":
 		return nil
@@ -6668,13 +6668,13 @@ func (s *mqlAzurermWebAppsiteauthsettings) Register(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web.appsiteauthsettings\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web.appsiteauthsettings\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsiteauthsettings].Field")
+func (s *mqlAzureWebAppsiteauthsettings) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.web.appsiteauthsettings].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -6687,93 +6687,93 @@ func (s *mqlAzurermWebAppsiteauthsettings) Field(name string) (interface{}, erro
 	case "properties":
 		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.web.appsiteauthsettings\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.web.appsiteauthsettings\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Id() (string, error) {
+func (s *mqlAzureWebAppsiteauthsettings) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteauthsettings\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.web.appsiteauthsettings\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteauthsettings\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteauthsettings\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Name() (string, error) {
+func (s *mqlAzureWebAppsiteauthsettings) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteauthsettings\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.web.appsiteauthsettings\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteauthsettings\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteauthsettings\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Kind accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Kind() (string, error) {
+func (s *mqlAzureWebAppsiteauthsettings) Kind() (string, error) {
 	res, ok := s.Cache.Load("kind")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteauthsettings\" failed: no value provided for static field \"kind\"")
+		return "", errors.New("\"azure.web.appsiteauthsettings\" failed: no value provided for static field \"kind\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteauthsettings\" failed to cast field \"kind\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteauthsettings\" failed to cast field \"kind\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Type() (string, error) {
+func (s *mqlAzureWebAppsiteauthsettings) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteauthsettings\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.web.appsiteauthsettings\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteauthsettings\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteauthsettings\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Properties() (interface{}, error) {
+func (s *mqlAzureWebAppsiteauthsettings) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.web.appsiteauthsettings\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.web.appsiteauthsettings\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsiteauthsettings\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsiteauthsettings\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermWebAppsiteauthsettings) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsiteauthsettings].Compute")
+func (s *mqlAzureWebAppsiteauthsettings) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web.appsiteauthsettings].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -6786,12 +6786,12 @@ func (s *mqlAzurermWebAppsiteauthsettings) Compute(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web.appsiteauthsettings\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web.appsiteauthsettings\" resource")
 	}
 }
 
-// AzurermWebAppsiteconfig resource interface
-type AzurermWebAppsiteconfig interface {
+// AzureWebAppsiteconfig resource interface
+type AzureWebAppsiteconfig interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -6804,21 +6804,21 @@ type AzurermWebAppsiteconfig interface {
 	Properties() (interface{}, error)
 }
 
-// mqlAzurermWebAppsiteconfig for the azurerm.web.appsiteconfig resource
-type mqlAzurermWebAppsiteconfig struct {
+// mqlAzureWebAppsiteconfig for the azure.web.appsiteconfig resource
+type mqlAzureWebAppsiteconfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermWebAppsiteconfig) MqlResource() *resources.Resource {
+func (s *mqlAzureWebAppsiteconfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.web.appsiteconfig resource
-func newAzurermWebAppsiteconfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.web.appsiteconfig resource
+func newAzureWebAppsiteconfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermWebAppsiteconfig{runtime.NewResource("azurerm.web.appsiteconfig")}
+	res := mqlAzureWebAppsiteconfig{runtime.NewResource("azure.web.appsiteconfig")}
 	// assign all named fields
 	var id string
 
@@ -6832,32 +6832,32 @@ func newAzurermWebAppsiteconfig(runtime *resources.Runtime, args *resources.Args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteconfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteconfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteconfig\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteconfig\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kind":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteconfig\", its \"kind\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteconfig\", its \"kind\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteconfig\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteconfig\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteconfig\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteconfig\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.web.appsiteconfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.web.appsiteconfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.web.appsiteconfig with unknown argument " + name)
+			return nil, errors.New("Initialized azure.web.appsiteconfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -6875,30 +6875,30 @@ func newAzurermWebAppsiteconfig(runtime *resources.Runtime, args *resources.Args
 	return &res, nil
 }
 
-func (s *mqlAzurermWebAppsiteconfig) Validate() error {
+func (s *mqlAzureWebAppsiteconfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteconfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteconfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteconfig\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteconfig\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kind"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteconfig\" resource without a \"kind\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteconfig\" resource without a \"kind\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteconfig\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteconfig\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.web.appsiteconfig\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.web.appsiteconfig\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsiteconfig].Register")
+func (s *mqlAzureWebAppsiteconfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web.appsiteconfig].Register")
 	switch name {
 	case "id":
 		return nil
@@ -6911,13 +6911,13 @@ func (s *mqlAzurermWebAppsiteconfig) Register(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web.appsiteconfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web.appsiteconfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsiteconfig].Field")
+func (s *mqlAzureWebAppsiteconfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.web.appsiteconfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -6930,93 +6930,93 @@ func (s *mqlAzurermWebAppsiteconfig) Field(name string) (interface{}, error) {
 	case "properties":
 		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.web.appsiteconfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.web.appsiteconfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Id() (string, error) {
+func (s *mqlAzureWebAppsiteconfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteconfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.web.appsiteconfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteconfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteconfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Name() (string, error) {
+func (s *mqlAzureWebAppsiteconfig) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteconfig\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.web.appsiteconfig\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteconfig\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteconfig\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Kind accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Kind() (string, error) {
+func (s *mqlAzureWebAppsiteconfig) Kind() (string, error) {
 	res, ok := s.Cache.Load("kind")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteconfig\" failed: no value provided for static field \"kind\"")
+		return "", errors.New("\"azure.web.appsiteconfig\" failed: no value provided for static field \"kind\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteconfig\" failed to cast field \"kind\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteconfig\" failed to cast field \"kind\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Type() (string, error) {
+func (s *mqlAzureWebAppsiteconfig) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.web.appsiteconfig\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.web.appsiteconfig\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.web.appsiteconfig\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.web.appsiteconfig\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Properties() (interface{}, error) {
+func (s *mqlAzureWebAppsiteconfig) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.web.appsiteconfig\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.web.appsiteconfig\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.web.appsiteconfig\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.web.appsiteconfig\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermWebAppsiteconfig) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.web.appsiteconfig].Compute")
+func (s *mqlAzureWebAppsiteconfig) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.web.appsiteconfig].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -7029,12 +7029,12 @@ func (s *mqlAzurermWebAppsiteconfig) Compute(name string) error {
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.web.appsiteconfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.web.appsiteconfig\" resource")
 	}
 }
 
-// AzurermSql resource interface
-type AzurermSql interface {
+// AzureSql resource interface
+type AzureSql interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -7043,21 +7043,21 @@ type AzurermSql interface {
 	Servers() ([]interface{}, error)
 }
 
-// mqlAzurermSql for the azurerm.sql resource
-type mqlAzurermSql struct {
+// mqlAzureSql for the azure.sql resource
+type mqlAzureSql struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermSql) MqlResource() *resources.Resource {
+func (s *mqlAzureSql) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.sql resource
-func newAzurermSql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.sql resource
+func newAzureSql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermSql{runtime.NewResource("azurerm.sql")}
+	res := mqlAzureSql{runtime.NewResource("azure.sql")}
 	// assign all named fields
 	var id string
 
@@ -7071,16 +7071,16 @@ func newAzurermSql(runtime *resources.Runtime, args *resources.Args) (interface{
 		switch name {
 		case "servers":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.sql with unknown argument " + name)
+			return nil, errors.New("Initialized azure.sql with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -7098,7 +7098,7 @@ func newAzurermSql(runtime *resources.Runtime, args *resources.Args) (interface{
 	return &res, nil
 }
 
-func (s *mqlAzurermSql) Validate() error {
+func (s *mqlAzureSql) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -7106,29 +7106,29 @@ func (s *mqlAzurermSql) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermSql) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql].Register")
+func (s *mqlAzureSql) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql].Register")
 	switch name {
 	case "servers":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermSql) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.sql].Field")
+func (s *mqlAzureSql) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.sql].Field")
 	switch name {
 	case "servers":
 		return s.Servers()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.sql\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.sql\" resource")
 	}
 }
 
 // Servers accessor autogenerated
-func (s *mqlAzurermSql) Servers() ([]interface{}, error) {
+func (s *mqlAzureSql) Servers() ([]interface{}, error) {
 	res, ok := s.Cache.Load("servers")
 	if !ok || !res.Valid {
 		if err := s.ComputeServers(); err != nil {
@@ -7136,7 +7136,7 @@ func (s *mqlAzurermSql) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql\" calculated \"servers\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -7145,24 +7145,24 @@ func (s *mqlAzurermSql) Servers() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermSql) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql].Compute")
+func (s *mqlAzureSql) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql].Compute")
 	switch name {
 	case "servers":
 		return s.ComputeServers()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql\" resource")
 	}
 }
 
 // ComputeServers computer autogenerated
-func (s *mqlAzurermSql) ComputeServers() error {
+func (s *mqlAzureSql) ComputeServers() error {
 	var err error
 	if _, ok := s.Cache.Load("servers"); ok {
 		return nil
@@ -7175,8 +7175,8 @@ func (s *mqlAzurermSql) ComputeServers() error {
 	return nil
 }
 
-// AzurermSqlServer resource interface
-type AzurermSqlServer interface {
+// AzureSqlServer resource interface
+type AzureSqlServer interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -7197,21 +7197,21 @@ type AzurermSqlServer interface {
 	EncryptionProtector() (interface{}, error)
 }
 
-// mqlAzurermSqlServer for the azurerm.sql.server resource
-type mqlAzurermSqlServer struct {
+// mqlAzureSqlServer for the azure.sql.server resource
+type mqlAzureSqlServer struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermSqlServer) MqlResource() *resources.Resource {
+func (s *mqlAzureSqlServer) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.sql.server resource
-func newAzurermSqlServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.sql.server resource
+func newAzureSqlServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermSqlServer{runtime.NewResource("azurerm.sql.server")}
+	res := mqlAzureSqlServer{runtime.NewResource("azure.sql.server")}
 	// assign all named fields
 	var id string
 
@@ -7225,64 +7225,64 @@ func newAzurermSqlServer(runtime *resources.Runtime, args *resources.Args) (inte
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "databases":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "firewallRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "azureAdAdministrators":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"azureAdAdministrators\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"azureAdAdministrators\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "connectionPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"connectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"connectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "auditingPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"auditingPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"auditingPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "securityAlertPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"securityAlertPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"securityAlertPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "encryptionProtector":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"encryptionProtector\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"encryptionProtector\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.sql.server with unknown argument " + name)
+			return nil, errors.New("Initialized azure.sql.server with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -7300,33 +7300,33 @@ func newAzurermSqlServer(runtime *resources.Runtime, args *resources.Args) (inte
 	return &res, nil
 }
 
-func (s *mqlAzurermSqlServer) Validate() error {
+func (s *mqlAzureSqlServer) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermSqlServer) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.server].Register")
+func (s *mqlAzureSqlServer) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.server].Register")
 	switch name {
 	case "id":
 		return nil
@@ -7355,13 +7355,13 @@ func (s *mqlAzurermSqlServer) Register(name string) error {
 	case "encryptionProtector":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.server\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermSqlServer) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.server].Field")
+func (s *mqlAzureSqlServer) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.sql.server].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -7390,108 +7390,108 @@ func (s *mqlAzurermSqlServer) Field(name string) (interface{}, error) {
 	case "encryptionProtector":
 		return s.EncryptionProtector()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.sql.server\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.sql.server\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermSqlServer) Id() (string, error) {
+func (s *mqlAzureSqlServer) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.sql.server\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermSqlServer) Name() (string, error) {
+func (s *mqlAzureSqlServer) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.sql.server\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermSqlServer) Location() (string, error) {
+func (s *mqlAzureSqlServer) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.sql.server\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermSqlServer) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureSqlServer) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.server\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.sql.server\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermSqlServer) Type() (string, error) {
+func (s *mqlAzureSqlServer) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.sql.server\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermSqlServer) Properties() (interface{}, error) {
+func (s *mqlAzureSqlServer) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.server\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.sql.server\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Databases accessor autogenerated
-func (s *mqlAzurermSqlServer) Databases() ([]interface{}, error) {
+func (s *mqlAzureSqlServer) Databases() ([]interface{}, error) {
 	res, ok := s.Cache.Load("databases")
 	if !ok || !res.Valid {
 		if err := s.ComputeDatabases(); err != nil {
@@ -7499,7 +7499,7 @@ func (s *mqlAzurermSqlServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"databases\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -7508,13 +7508,13 @@ func (s *mqlAzurermSqlServer) Databases() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // FirewallRules accessor autogenerated
-func (s *mqlAzurermSqlServer) FirewallRules() ([]interface{}, error) {
+func (s *mqlAzureSqlServer) FirewallRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("firewallRules")
 	if !ok || !res.Valid {
 		if err := s.ComputeFirewallRules(); err != nil {
@@ -7522,7 +7522,7 @@ func (s *mqlAzurermSqlServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -7531,13 +7531,13 @@ func (s *mqlAzurermSqlServer) FirewallRules() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // AzureAdAdministrators accessor autogenerated
-func (s *mqlAzurermSqlServer) AzureAdAdministrators() ([]interface{}, error) {
+func (s *mqlAzureSqlServer) AzureAdAdministrators() ([]interface{}, error) {
 	res, ok := s.Cache.Load("azureAdAdministrators")
 	if !ok || !res.Valid {
 		if err := s.ComputeAzureAdAdministrators(); err != nil {
@@ -7545,7 +7545,7 @@ func (s *mqlAzurermSqlServer) AzureAdAdministrators() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("azureAdAdministrators")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"azureAdAdministrators\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.server\" calculated \"azureAdAdministrators\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "azureAdAdministrators")
 	}
@@ -7554,13 +7554,13 @@ func (s *mqlAzurermSqlServer) AzureAdAdministrators() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"azureAdAdministrators\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"azureAdAdministrators\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ConnectionPolicy accessor autogenerated
-func (s *mqlAzurermSqlServer) ConnectionPolicy() (interface{}, error) {
+func (s *mqlAzureSqlServer) ConnectionPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("connectionPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeConnectionPolicy(); err != nil {
@@ -7568,7 +7568,7 @@ func (s *mqlAzurermSqlServer) ConnectionPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("connectionPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"connectionPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.server\" calculated \"connectionPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "connectionPolicy")
 	}
@@ -7577,13 +7577,13 @@ func (s *mqlAzurermSqlServer) ConnectionPolicy() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"connectionPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"connectionPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // AuditingPolicy accessor autogenerated
-func (s *mqlAzurermSqlServer) AuditingPolicy() (interface{}, error) {
+func (s *mqlAzureSqlServer) AuditingPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("auditingPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeAuditingPolicy(); err != nil {
@@ -7591,7 +7591,7 @@ func (s *mqlAzurermSqlServer) AuditingPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("auditingPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"auditingPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.server\" calculated \"auditingPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "auditingPolicy")
 	}
@@ -7600,13 +7600,13 @@ func (s *mqlAzurermSqlServer) AuditingPolicy() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"auditingPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"auditingPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // SecurityAlertPolicy accessor autogenerated
-func (s *mqlAzurermSqlServer) SecurityAlertPolicy() (interface{}, error) {
+func (s *mqlAzureSqlServer) SecurityAlertPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("securityAlertPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeSecurityAlertPolicy(); err != nil {
@@ -7614,7 +7614,7 @@ func (s *mqlAzurermSqlServer) SecurityAlertPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("securityAlertPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"securityAlertPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.server\" calculated \"securityAlertPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "securityAlertPolicy")
 	}
@@ -7623,13 +7623,13 @@ func (s *mqlAzurermSqlServer) SecurityAlertPolicy() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"securityAlertPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"securityAlertPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // EncryptionProtector accessor autogenerated
-func (s *mqlAzurermSqlServer) EncryptionProtector() (interface{}, error) {
+func (s *mqlAzureSqlServer) EncryptionProtector() (interface{}, error) {
 	res, ok := s.Cache.Load("encryptionProtector")
 	if !ok || !res.Valid {
 		if err := s.ComputeEncryptionProtector(); err != nil {
@@ -7637,7 +7637,7 @@ func (s *mqlAzurermSqlServer) EncryptionProtector() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("encryptionProtector")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.server\" calculated \"encryptionProtector\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.server\" calculated \"encryptionProtector\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "encryptionProtector")
 	}
@@ -7646,14 +7646,14 @@ func (s *mqlAzurermSqlServer) EncryptionProtector() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.server\" failed to cast field \"encryptionProtector\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.server\" failed to cast field \"encryptionProtector\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermSqlServer) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.server].Compute")
+func (s *mqlAzureSqlServer) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.server].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -7682,12 +7682,12 @@ func (s *mqlAzurermSqlServer) Compute(name string) error {
 	case "encryptionProtector":
 		return s.ComputeEncryptionProtector()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.server\" resource")
 	}
 }
 
 // ComputeDatabases computer autogenerated
-func (s *mqlAzurermSqlServer) ComputeDatabases() error {
+func (s *mqlAzureSqlServer) ComputeDatabases() error {
 	var err error
 	if _, ok := s.Cache.Load("databases"); ok {
 		return nil
@@ -7701,7 +7701,7 @@ func (s *mqlAzurermSqlServer) ComputeDatabases() error {
 }
 
 // ComputeFirewallRules computer autogenerated
-func (s *mqlAzurermSqlServer) ComputeFirewallRules() error {
+func (s *mqlAzureSqlServer) ComputeFirewallRules() error {
 	var err error
 	if _, ok := s.Cache.Load("firewallRules"); ok {
 		return nil
@@ -7715,7 +7715,7 @@ func (s *mqlAzurermSqlServer) ComputeFirewallRules() error {
 }
 
 // ComputeAzureAdAdministrators computer autogenerated
-func (s *mqlAzurermSqlServer) ComputeAzureAdAdministrators() error {
+func (s *mqlAzureSqlServer) ComputeAzureAdAdministrators() error {
 	var err error
 	if _, ok := s.Cache.Load("azureAdAdministrators"); ok {
 		return nil
@@ -7729,7 +7729,7 @@ func (s *mqlAzurermSqlServer) ComputeAzureAdAdministrators() error {
 }
 
 // ComputeConnectionPolicy computer autogenerated
-func (s *mqlAzurermSqlServer) ComputeConnectionPolicy() error {
+func (s *mqlAzureSqlServer) ComputeConnectionPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("connectionPolicy"); ok {
 		return nil
@@ -7743,7 +7743,7 @@ func (s *mqlAzurermSqlServer) ComputeConnectionPolicy() error {
 }
 
 // ComputeAuditingPolicy computer autogenerated
-func (s *mqlAzurermSqlServer) ComputeAuditingPolicy() error {
+func (s *mqlAzureSqlServer) ComputeAuditingPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("auditingPolicy"); ok {
 		return nil
@@ -7757,7 +7757,7 @@ func (s *mqlAzurermSqlServer) ComputeAuditingPolicy() error {
 }
 
 // ComputeSecurityAlertPolicy computer autogenerated
-func (s *mqlAzurermSqlServer) ComputeSecurityAlertPolicy() error {
+func (s *mqlAzureSqlServer) ComputeSecurityAlertPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("securityAlertPolicy"); ok {
 		return nil
@@ -7771,7 +7771,7 @@ func (s *mqlAzurermSqlServer) ComputeSecurityAlertPolicy() error {
 }
 
 // ComputeEncryptionProtector computer autogenerated
-func (s *mqlAzurermSqlServer) ComputeEncryptionProtector() error {
+func (s *mqlAzureSqlServer) ComputeEncryptionProtector() error {
 	var err error
 	if _, ok := s.Cache.Load("encryptionProtector"); ok {
 		return nil
@@ -7784,8 +7784,8 @@ func (s *mqlAzurermSqlServer) ComputeEncryptionProtector() error {
 	return nil
 }
 
-// AzurermSqlServerAdministrator resource interface
-type AzurermSqlServerAdministrator interface {
+// AzureSqlServerAdministrator resource interface
+type AzureSqlServerAdministrator interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -7800,21 +7800,21 @@ type AzurermSqlServerAdministrator interface {
 	TenantId() (string, error)
 }
 
-// mqlAzurermSqlServerAdministrator for the azurerm.sql.server.administrator resource
-type mqlAzurermSqlServerAdministrator struct {
+// mqlAzureSqlServerAdministrator for the azure.sql.server.administrator resource
+type mqlAzureSqlServerAdministrator struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermSqlServerAdministrator) MqlResource() *resources.Resource {
+func (s *mqlAzureSqlServerAdministrator) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.sql.server.administrator resource
-func newAzurermSqlServerAdministrator(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.sql.server.administrator resource
+func newAzureSqlServerAdministrator(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermSqlServerAdministrator{runtime.NewResource("azurerm.sql.server.administrator")}
+	res := mqlAzureSqlServerAdministrator{runtime.NewResource("azure.sql.server.administrator")}
 	// assign all named fields
 	var id string
 
@@ -7828,40 +7828,40 @@ func newAzurermSqlServerAdministrator(runtime *resources.Runtime, args *resource
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "administratorType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"administratorType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"administratorType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "login":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"login\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"login\" argument has the wrong type (expected type \"string\")")
 			}
 		case "sid":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"sid\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"sid\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tenantId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"tenantId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"tenantId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.server.administrator\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.server.administrator\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.sql.server.administrator with unknown argument " + name)
+			return nil, errors.New("Initialized azure.sql.server.administrator with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -7879,36 +7879,36 @@ func newAzurermSqlServerAdministrator(runtime *resources.Runtime, args *resource
 	return &res, nil
 }
 
-func (s *mqlAzurermSqlServerAdministrator) Validate() error {
+func (s *mqlAzureSqlServerAdministrator) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server.administrator\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server.administrator\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server.administrator\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server.administrator\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server.administrator\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server.administrator\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("administratorType"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server.administrator\" resource without a \"administratorType\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server.administrator\" resource without a \"administratorType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("login"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server.administrator\" resource without a \"login\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server.administrator\" resource without a \"login\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sid"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server.administrator\" resource without a \"sid\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server.administrator\" resource without a \"sid\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tenantId"); !ok {
-		return errors.New("Initialized \"azurerm.sql.server.administrator\" resource without a \"tenantId\". This field is required.")
+		return errors.New("Initialized \"azure.sql.server.administrator\" resource without a \"tenantId\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.server.administrator].Register")
+func (s *mqlAzureSqlServerAdministrator) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.server.administrator].Register")
 	switch name {
 	case "id":
 		return nil
@@ -7925,13 +7925,13 @@ func (s *mqlAzurermSqlServerAdministrator) Register(name string) error {
 	case "tenantId":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.server.administrator\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.server.administrator\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.server.administrator].Field")
+func (s *mqlAzureSqlServerAdministrator) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.sql.server.administrator].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -7948,125 +7948,125 @@ func (s *mqlAzurermSqlServerAdministrator) Field(name string) (interface{}, erro
 	case "tenantId":
 		return s.TenantId()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.sql.server.administrator\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.sql.server.administrator\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Id() (string, error) {
+func (s *mqlAzureSqlServerAdministrator) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server.administrator\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.sql.server.administrator\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server.administrator\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server.administrator\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Name() (string, error) {
+func (s *mqlAzureSqlServerAdministrator) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server.administrator\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.sql.server.administrator\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server.administrator\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server.administrator\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Type() (string, error) {
+func (s *mqlAzureSqlServerAdministrator) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server.administrator\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.sql.server.administrator\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server.administrator\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server.administrator\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AdministratorType accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) AdministratorType() (string, error) {
+func (s *mqlAzureSqlServerAdministrator) AdministratorType() (string, error) {
 	res, ok := s.Cache.Load("administratorType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server.administrator\" failed: no value provided for static field \"administratorType\"")
+		return "", errors.New("\"azure.sql.server.administrator\" failed: no value provided for static field \"administratorType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server.administrator\" failed to cast field \"administratorType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server.administrator\" failed to cast field \"administratorType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Login accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Login() (string, error) {
+func (s *mqlAzureSqlServerAdministrator) Login() (string, error) {
 	res, ok := s.Cache.Load("login")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server.administrator\" failed: no value provided for static field \"login\"")
+		return "", errors.New("\"azure.sql.server.administrator\" failed: no value provided for static field \"login\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server.administrator\" failed to cast field \"login\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server.administrator\" failed to cast field \"login\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Sid accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Sid() (string, error) {
+func (s *mqlAzureSqlServerAdministrator) Sid() (string, error) {
 	res, ok := s.Cache.Load("sid")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server.administrator\" failed: no value provided for static field \"sid\"")
+		return "", errors.New("\"azure.sql.server.administrator\" failed: no value provided for static field \"sid\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server.administrator\" failed to cast field \"sid\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server.administrator\" failed to cast field \"sid\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // TenantId accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) TenantId() (string, error) {
+func (s *mqlAzureSqlServerAdministrator) TenantId() (string, error) {
 	res, ok := s.Cache.Load("tenantId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.server.administrator\" failed: no value provided for static field \"tenantId\"")
+		return "", errors.New("\"azure.sql.server.administrator\" failed: no value provided for static field \"tenantId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.server.administrator\" failed to cast field \"tenantId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.server.administrator\" failed to cast field \"tenantId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermSqlServerAdministrator) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.server.administrator].Compute")
+func (s *mqlAzureSqlServerAdministrator) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.server.administrator].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -8083,12 +8083,12 @@ func (s *mqlAzurermSqlServerAdministrator) Compute(name string) error {
 	case "tenantId":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.server.administrator\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.server.administrator\" resource")
 	}
 }
 
-// AzurermSqlDatabase resource interface
-type AzurermSqlDatabase interface {
+// AzureSqlDatabase resource interface
+type AzureSqlDatabase interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -8130,21 +8130,21 @@ type AzurermSqlDatabase interface {
 	Usage() ([]interface{}, error)
 }
 
-// mqlAzurermSqlDatabase for the azurerm.sql.database resource
-type mqlAzurermSqlDatabase struct {
+// mqlAzureSqlDatabase for the azure.sql.database resource
+type mqlAzureSqlDatabase struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermSqlDatabase) MqlResource() *resources.Resource {
+func (s *mqlAzureSqlDatabase) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.sql.database resource
-func newAzurermSqlDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.sql.database resource
+func newAzureSqlDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermSqlDatabase{runtime.NewResource("azurerm.sql.database")}
+	res := mqlAzureSqlDatabase{runtime.NewResource("azure.sql.database")}
 	// assign all named fields
 	var id string
 
@@ -8158,148 +8158,148 @@ func newAzurermSqlDatabase(runtime *resources.Runtime, args *resources.Args) (in
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "collation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "creationDate":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"creationDate\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"creationDate\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "containmentState":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"containmentState\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"containmentState\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "currentServiceObjectiveId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"currentServiceObjectiveId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"currentServiceObjectiveId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "databaseId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"databaseId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"databaseId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "earliestRestoreDate":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"earliestRestoreDate\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"earliestRestoreDate\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "createMode":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"createMode\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"createMode\" argument has the wrong type (expected type \"string\")")
 			}
 		case "sourceDatabaseId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"sourceDatabaseId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"sourceDatabaseId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "sourceDatabaseDeletionDate":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"sourceDatabaseDeletionDate\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"sourceDatabaseDeletionDate\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "restorePointInTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"restorePointInTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"restorePointInTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "recoveryServicesRecoveryPointResourceId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"recoveryServicesRecoveryPointResourceId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"recoveryServicesRecoveryPointResourceId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "edition":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"edition\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"edition\" argument has the wrong type (expected type \"string\")")
 			}
 		case "maxSizeBytes":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"maxSizeBytes\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"maxSizeBytes\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "requestedServiceObjectiveId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"requestedServiceObjectiveId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"requestedServiceObjectiveId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "requestedServiceObjectiveName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"requestedServiceObjectiveName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"requestedServiceObjectiveName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "serviceLevelObjective":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"serviceLevelObjective\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"serviceLevelObjective\" argument has the wrong type (expected type \"string\")")
 			}
 		case "status":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"status\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"status\" argument has the wrong type (expected type \"string\")")
 			}
 		case "elasticPoolName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"elasticPoolName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"elasticPoolName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "defaultSecondaryLocation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"defaultSecondaryLocation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"defaultSecondaryLocation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "serviceTierAdvisors":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"serviceTierAdvisors\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"serviceTierAdvisors\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "recommendedIndex":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"recommendedIndex\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"recommendedIndex\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "failoverGroupId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"failoverGroupId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"failoverGroupId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "readScale":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"readScale\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"readScale\" argument has the wrong type (expected type \"string\")")
 			}
 		case "sampleName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"sampleName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"sampleName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "zoneRedundant":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"zoneRedundant\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"zoneRedundant\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "transparentDataEncryption":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"transparentDataEncryption\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"transparentDataEncryption\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "advisor":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"advisor\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"advisor\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "threatDetectionPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"threatDetectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"threatDetectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "connectionPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"connectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"connectionPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "auditingPolicy":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"auditingPolicy\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"auditingPolicy\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "usage":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"usage\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"usage\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.sql.database with unknown argument " + name)
+			return nil, errors.New("Initialized azure.sql.database with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -8317,84 +8317,84 @@ func newAzurermSqlDatabase(runtime *resources.Runtime, args *resources.Args) (in
 	return &res, nil
 }
 
-func (s *mqlAzurermSqlDatabase) Validate() error {
+func (s *mqlAzureSqlDatabase) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("collation"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"collation\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"collation\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("creationDate"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"creationDate\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"creationDate\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("databaseId"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"databaseId\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"databaseId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("earliestRestoreDate"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"earliestRestoreDate\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"earliestRestoreDate\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("createMode"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"createMode\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"createMode\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sourceDatabaseId"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"sourceDatabaseId\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"sourceDatabaseId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sourceDatabaseDeletionDate"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"sourceDatabaseDeletionDate\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"sourceDatabaseDeletionDate\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("restorePointInTime"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"restorePointInTime\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"restorePointInTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("recoveryServicesRecoveryPointResourceId"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"recoveryServicesRecoveryPointResourceId\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"recoveryServicesRecoveryPointResourceId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("edition"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"edition\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"edition\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("maxSizeBytes"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"maxSizeBytes\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"maxSizeBytes\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("requestedServiceObjectiveName"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"requestedServiceObjectiveName\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"requestedServiceObjectiveName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("serviceLevelObjective"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"serviceLevelObjective\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"serviceLevelObjective\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("status"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"status\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"status\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("elasticPoolName"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"elasticPoolName\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"elasticPoolName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("defaultSecondaryLocation"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"defaultSecondaryLocation\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"defaultSecondaryLocation\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("failoverGroupId"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"failoverGroupId\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"failoverGroupId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("readScale"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"readScale\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"readScale\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sampleName"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"sampleName\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"sampleName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("zoneRedundant"); !ok {
-		return errors.New("Initialized \"azurerm.sql.database\" resource without a \"zoneRedundant\". This field is required.")
+		return errors.New("Initialized \"azure.sql.database\" resource without a \"zoneRedundant\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.database].Register")
+func (s *mqlAzureSqlDatabase) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.database].Register")
 	switch name {
 	case "id":
 		return nil
@@ -8465,13 +8465,13 @@ func (s *mqlAzurermSqlDatabase) Register(name string) error {
 	case "usage":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.database\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.database].Field")
+func (s *mqlAzureSqlDatabase) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.sql.database].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -8542,92 +8542,92 @@ func (s *mqlAzurermSqlDatabase) Field(name string) (interface{}, error) {
 	case "usage":
 		return s.Usage()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.sql.database\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.sql.database\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Id() (string, error) {
+func (s *mqlAzureSqlDatabase) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Name() (string, error) {
+func (s *mqlAzureSqlDatabase) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Type() (string, error) {
+func (s *mqlAzureSqlDatabase) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Collation accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Collation() (string, error) {
+func (s *mqlAzureSqlDatabase) Collation() (string, error) {
 	res, ok := s.Cache.Load("collation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"collation\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"collation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreationDate accessor autogenerated
-func (s *mqlAzurermSqlDatabase) CreationDate() (*time.Time, error) {
+func (s *mqlAzureSqlDatabase) CreationDate() (*time.Time, error) {
 	res, ok := s.Cache.Load("creationDate")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"creationDate\"")
+		return nil, errors.New("\"azure.sql.database\" failed: no value provided for static field \"creationDate\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"creationDate\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"creationDate\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // ContainmentState accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ContainmentState() (int64, error) {
+func (s *mqlAzureSqlDatabase) ContainmentState() (int64, error) {
 	res, ok := s.Cache.Load("containmentState")
 	if !ok || !res.Valid {
 		if err := s.ComputeContainmentState(); err != nil {
@@ -8635,7 +8635,7 @@ func (s *mqlAzurermSqlDatabase) ContainmentState() (int64, error) {
 		}
 		res, ok = s.Cache.Load("containmentState")
 		if !ok {
-			return 0, errors.New("\"azurerm.sql.database\" calculated \"containmentState\" but didn't find its value in cache.")
+			return 0, errors.New("\"azure.sql.database\" calculated \"containmentState\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "containmentState")
 	}
@@ -8644,13 +8644,13 @@ func (s *mqlAzurermSqlDatabase) ContainmentState() (int64, error) {
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"containmentState\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"azure.sql.database\" failed to cast field \"containmentState\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // CurrentServiceObjectiveId accessor autogenerated
-func (s *mqlAzurermSqlDatabase) CurrentServiceObjectiveId() (string, error) {
+func (s *mqlAzureSqlDatabase) CurrentServiceObjectiveId() (string, error) {
 	res, ok := s.Cache.Load("currentServiceObjectiveId")
 	if !ok || !res.Valid {
 		if err := s.ComputeCurrentServiceObjectiveId(); err != nil {
@@ -8658,7 +8658,7 @@ func (s *mqlAzurermSqlDatabase) CurrentServiceObjectiveId() (string, error) {
 		}
 		res, ok = s.Cache.Load("currentServiceObjectiveId")
 		if !ok {
-			return "", errors.New("\"azurerm.sql.database\" calculated \"currentServiceObjectiveId\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.sql.database\" calculated \"currentServiceObjectiveId\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "currentServiceObjectiveId")
 	}
@@ -8667,157 +8667,157 @@ func (s *mqlAzurermSqlDatabase) CurrentServiceObjectiveId() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"currentServiceObjectiveId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"currentServiceObjectiveId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DatabaseId accessor autogenerated
-func (s *mqlAzurermSqlDatabase) DatabaseId() (string, error) {
+func (s *mqlAzureSqlDatabase) DatabaseId() (string, error) {
 	res, ok := s.Cache.Load("databaseId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"databaseId\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"databaseId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"databaseId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"databaseId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // EarliestRestoreDate accessor autogenerated
-func (s *mqlAzurermSqlDatabase) EarliestRestoreDate() (*time.Time, error) {
+func (s *mqlAzureSqlDatabase) EarliestRestoreDate() (*time.Time, error) {
 	res, ok := s.Cache.Load("earliestRestoreDate")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"earliestRestoreDate\"")
+		return nil, errors.New("\"azure.sql.database\" failed: no value provided for static field \"earliestRestoreDate\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"earliestRestoreDate\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"earliestRestoreDate\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // CreateMode accessor autogenerated
-func (s *mqlAzurermSqlDatabase) CreateMode() (string, error) {
+func (s *mqlAzureSqlDatabase) CreateMode() (string, error) {
 	res, ok := s.Cache.Load("createMode")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"createMode\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"createMode\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"createMode\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"createMode\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SourceDatabaseId accessor autogenerated
-func (s *mqlAzurermSqlDatabase) SourceDatabaseId() (string, error) {
+func (s *mqlAzureSqlDatabase) SourceDatabaseId() (string, error) {
 	res, ok := s.Cache.Load("sourceDatabaseId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"sourceDatabaseId\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"sourceDatabaseId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"sourceDatabaseId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"sourceDatabaseId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SourceDatabaseDeletionDate accessor autogenerated
-func (s *mqlAzurermSqlDatabase) SourceDatabaseDeletionDate() (*time.Time, error) {
+func (s *mqlAzureSqlDatabase) SourceDatabaseDeletionDate() (*time.Time, error) {
 	res, ok := s.Cache.Load("sourceDatabaseDeletionDate")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"sourceDatabaseDeletionDate\"")
+		return nil, errors.New("\"azure.sql.database\" failed: no value provided for static field \"sourceDatabaseDeletionDate\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"sourceDatabaseDeletionDate\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"sourceDatabaseDeletionDate\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // RestorePointInTime accessor autogenerated
-func (s *mqlAzurermSqlDatabase) RestorePointInTime() (*time.Time, error) {
+func (s *mqlAzureSqlDatabase) RestorePointInTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("restorePointInTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"restorePointInTime\"")
+		return nil, errors.New("\"azure.sql.database\" failed: no value provided for static field \"restorePointInTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"restorePointInTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"restorePointInTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecoveryServicesRecoveryPointResourceId accessor autogenerated
-func (s *mqlAzurermSqlDatabase) RecoveryServicesRecoveryPointResourceId() (string, error) {
+func (s *mqlAzureSqlDatabase) RecoveryServicesRecoveryPointResourceId() (string, error) {
 	res, ok := s.Cache.Load("recoveryServicesRecoveryPointResourceId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"recoveryServicesRecoveryPointResourceId\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"recoveryServicesRecoveryPointResourceId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"recoveryServicesRecoveryPointResourceId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"recoveryServicesRecoveryPointResourceId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Edition accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Edition() (string, error) {
+func (s *mqlAzureSqlDatabase) Edition() (string, error) {
 	res, ok := s.Cache.Load("edition")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"edition\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"edition\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"edition\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"edition\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MaxSizeBytes accessor autogenerated
-func (s *mqlAzurermSqlDatabase) MaxSizeBytes() (int64, error) {
+func (s *mqlAzureSqlDatabase) MaxSizeBytes() (int64, error) {
 	res, ok := s.Cache.Load("maxSizeBytes")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"maxSizeBytes\"")
+		return 0, errors.New("\"azure.sql.database\" failed: no value provided for static field \"maxSizeBytes\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"maxSizeBytes\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"azure.sql.database\" failed to cast field \"maxSizeBytes\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // RequestedServiceObjectiveId accessor autogenerated
-func (s *mqlAzurermSqlDatabase) RequestedServiceObjectiveId() (string, error) {
+func (s *mqlAzureSqlDatabase) RequestedServiceObjectiveId() (string, error) {
 	res, ok := s.Cache.Load("requestedServiceObjectiveId")
 	if !ok || !res.Valid {
 		if err := s.ComputeRequestedServiceObjectiveId(); err != nil {
@@ -8825,7 +8825,7 @@ func (s *mqlAzurermSqlDatabase) RequestedServiceObjectiveId() (string, error) {
 		}
 		res, ok = s.Cache.Load("requestedServiceObjectiveId")
 		if !ok {
-			return "", errors.New("\"azurerm.sql.database\" calculated \"requestedServiceObjectiveId\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.sql.database\" calculated \"requestedServiceObjectiveId\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "requestedServiceObjectiveId")
 	}
@@ -8834,93 +8834,93 @@ func (s *mqlAzurermSqlDatabase) RequestedServiceObjectiveId() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"requestedServiceObjectiveId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"requestedServiceObjectiveId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // RequestedServiceObjectiveName accessor autogenerated
-func (s *mqlAzurermSqlDatabase) RequestedServiceObjectiveName() (string, error) {
+func (s *mqlAzureSqlDatabase) RequestedServiceObjectiveName() (string, error) {
 	res, ok := s.Cache.Load("requestedServiceObjectiveName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"requestedServiceObjectiveName\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"requestedServiceObjectiveName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"requestedServiceObjectiveName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"requestedServiceObjectiveName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServiceLevelObjective accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ServiceLevelObjective() (string, error) {
+func (s *mqlAzureSqlDatabase) ServiceLevelObjective() (string, error) {
 	res, ok := s.Cache.Load("serviceLevelObjective")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"serviceLevelObjective\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"serviceLevelObjective\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"serviceLevelObjective\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"serviceLevelObjective\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Status accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Status() (string, error) {
+func (s *mqlAzureSqlDatabase) Status() (string, error) {
 	res, ok := s.Cache.Load("status")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"status\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"status\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"status\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"status\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ElasticPoolName accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ElasticPoolName() (string, error) {
+func (s *mqlAzureSqlDatabase) ElasticPoolName() (string, error) {
 	res, ok := s.Cache.Load("elasticPoolName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"elasticPoolName\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"elasticPoolName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"elasticPoolName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"elasticPoolName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DefaultSecondaryLocation accessor autogenerated
-func (s *mqlAzurermSqlDatabase) DefaultSecondaryLocation() (string, error) {
+func (s *mqlAzureSqlDatabase) DefaultSecondaryLocation() (string, error) {
 	res, ok := s.Cache.Load("defaultSecondaryLocation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"defaultSecondaryLocation\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"defaultSecondaryLocation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"defaultSecondaryLocation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"defaultSecondaryLocation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServiceTierAdvisors accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ServiceTierAdvisors() (interface{}, error) {
+func (s *mqlAzureSqlDatabase) ServiceTierAdvisors() (interface{}, error) {
 	res, ok := s.Cache.Load("serviceTierAdvisors")
 	if !ok || !res.Valid {
 		if err := s.ComputeServiceTierAdvisors(); err != nil {
@@ -8928,7 +8928,7 @@ func (s *mqlAzurermSqlDatabase) ServiceTierAdvisors() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("serviceTierAdvisors")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"serviceTierAdvisors\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"serviceTierAdvisors\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "serviceTierAdvisors")
 	}
@@ -8937,13 +8937,13 @@ func (s *mqlAzurermSqlDatabase) ServiceTierAdvisors() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"serviceTierAdvisors\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"serviceTierAdvisors\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecommendedIndex accessor autogenerated
-func (s *mqlAzurermSqlDatabase) RecommendedIndex() (interface{}, error) {
+func (s *mqlAzureSqlDatabase) RecommendedIndex() (interface{}, error) {
 	res, ok := s.Cache.Load("recommendedIndex")
 	if !ok || !res.Valid {
 		if err := s.ComputeRecommendedIndex(); err != nil {
@@ -8951,7 +8951,7 @@ func (s *mqlAzurermSqlDatabase) RecommendedIndex() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("recommendedIndex")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"recommendedIndex\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"recommendedIndex\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "recommendedIndex")
 	}
@@ -8960,77 +8960,77 @@ func (s *mqlAzurermSqlDatabase) RecommendedIndex() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"recommendedIndex\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"recommendedIndex\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // FailoverGroupId accessor autogenerated
-func (s *mqlAzurermSqlDatabase) FailoverGroupId() (string, error) {
+func (s *mqlAzureSqlDatabase) FailoverGroupId() (string, error) {
 	res, ok := s.Cache.Load("failoverGroupId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"failoverGroupId\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"failoverGroupId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"failoverGroupId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"failoverGroupId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ReadScale accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ReadScale() (string, error) {
+func (s *mqlAzureSqlDatabase) ReadScale() (string, error) {
 	res, ok := s.Cache.Load("readScale")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"readScale\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"readScale\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"readScale\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"readScale\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SampleName accessor autogenerated
-func (s *mqlAzurermSqlDatabase) SampleName() (string, error) {
+func (s *mqlAzureSqlDatabase) SampleName() (string, error) {
 	res, ok := s.Cache.Load("sampleName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"sampleName\"")
+		return "", errors.New("\"azure.sql.database\" failed: no value provided for static field \"sampleName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"sampleName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.database\" failed to cast field \"sampleName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ZoneRedundant accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ZoneRedundant() (bool, error) {
+func (s *mqlAzureSqlDatabase) ZoneRedundant() (bool, error) {
 	res, ok := s.Cache.Load("zoneRedundant")
 	if !ok || !res.Valid {
-		return false, errors.New("\"azurerm.sql.database\" failed: no value provided for static field \"zoneRedundant\"")
+		return false, errors.New("\"azure.sql.database\" failed: no value provided for static field \"zoneRedundant\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"zoneRedundant\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"azure.sql.database\" failed to cast field \"zoneRedundant\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // TransparentDataEncryption accessor autogenerated
-func (s *mqlAzurermSqlDatabase) TransparentDataEncryption() (interface{}, error) {
+func (s *mqlAzureSqlDatabase) TransparentDataEncryption() (interface{}, error) {
 	res, ok := s.Cache.Load("transparentDataEncryption")
 	if !ok || !res.Valid {
 		if err := s.ComputeTransparentDataEncryption(); err != nil {
@@ -9038,7 +9038,7 @@ func (s *mqlAzurermSqlDatabase) TransparentDataEncryption() (interface{}, error)
 		}
 		res, ok = s.Cache.Load("transparentDataEncryption")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"transparentDataEncryption\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"transparentDataEncryption\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "transparentDataEncryption")
 	}
@@ -9047,13 +9047,13 @@ func (s *mqlAzurermSqlDatabase) TransparentDataEncryption() (interface{}, error)
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"transparentDataEncryption\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"transparentDataEncryption\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Advisor accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Advisor() ([]interface{}, error) {
+func (s *mqlAzureSqlDatabase) Advisor() ([]interface{}, error) {
 	res, ok := s.Cache.Load("advisor")
 	if !ok || !res.Valid {
 		if err := s.ComputeAdvisor(); err != nil {
@@ -9061,7 +9061,7 @@ func (s *mqlAzurermSqlDatabase) Advisor() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("advisor")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"advisor\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"advisor\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "advisor")
 	}
@@ -9070,13 +9070,13 @@ func (s *mqlAzurermSqlDatabase) Advisor() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"advisor\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"advisor\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ThreatDetectionPolicy accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ThreatDetectionPolicy() (interface{}, error) {
+func (s *mqlAzureSqlDatabase) ThreatDetectionPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("threatDetectionPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeThreatDetectionPolicy(); err != nil {
@@ -9084,7 +9084,7 @@ func (s *mqlAzurermSqlDatabase) ThreatDetectionPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("threatDetectionPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"threatDetectionPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"threatDetectionPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "threatDetectionPolicy")
 	}
@@ -9093,13 +9093,13 @@ func (s *mqlAzurermSqlDatabase) ThreatDetectionPolicy() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"threatDetectionPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"threatDetectionPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ConnectionPolicy accessor autogenerated
-func (s *mqlAzurermSqlDatabase) ConnectionPolicy() (interface{}, error) {
+func (s *mqlAzureSqlDatabase) ConnectionPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("connectionPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeConnectionPolicy(); err != nil {
@@ -9107,7 +9107,7 @@ func (s *mqlAzurermSqlDatabase) ConnectionPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("connectionPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"connectionPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"connectionPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "connectionPolicy")
 	}
@@ -9116,13 +9116,13 @@ func (s *mqlAzurermSqlDatabase) ConnectionPolicy() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"connectionPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"connectionPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // AuditingPolicy accessor autogenerated
-func (s *mqlAzurermSqlDatabase) AuditingPolicy() (interface{}, error) {
+func (s *mqlAzureSqlDatabase) AuditingPolicy() (interface{}, error) {
 	res, ok := s.Cache.Load("auditingPolicy")
 	if !ok || !res.Valid {
 		if err := s.ComputeAuditingPolicy(); err != nil {
@@ -9130,7 +9130,7 @@ func (s *mqlAzurermSqlDatabase) AuditingPolicy() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("auditingPolicy")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"auditingPolicy\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"auditingPolicy\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "auditingPolicy")
 	}
@@ -9139,13 +9139,13 @@ func (s *mqlAzurermSqlDatabase) AuditingPolicy() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"auditingPolicy\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"auditingPolicy\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Usage accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Usage() ([]interface{}, error) {
+func (s *mqlAzureSqlDatabase) Usage() ([]interface{}, error) {
 	res, ok := s.Cache.Load("usage")
 	if !ok || !res.Valid {
 		if err := s.ComputeUsage(); err != nil {
@@ -9153,7 +9153,7 @@ func (s *mqlAzurermSqlDatabase) Usage() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("usage")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.database\" calculated \"usage\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.database\" calculated \"usage\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "usage")
 	}
@@ -9162,14 +9162,14 @@ func (s *mqlAzurermSqlDatabase) Usage() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.database\" failed to cast field \"usage\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.database\" failed to cast field \"usage\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermSqlDatabase) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.database].Compute")
+func (s *mqlAzureSqlDatabase) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.database].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -9240,12 +9240,12 @@ func (s *mqlAzurermSqlDatabase) Compute(name string) error {
 	case "usage":
 		return s.ComputeUsage()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.database\" resource")
 	}
 }
 
 // ComputeContainmentState computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeContainmentState() error {
+func (s *mqlAzureSqlDatabase) ComputeContainmentState() error {
 	var err error
 	if _, ok := s.Cache.Load("containmentState"); ok {
 		return nil
@@ -9259,7 +9259,7 @@ func (s *mqlAzurermSqlDatabase) ComputeContainmentState() error {
 }
 
 // ComputeCurrentServiceObjectiveId computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeCurrentServiceObjectiveId() error {
+func (s *mqlAzureSqlDatabase) ComputeCurrentServiceObjectiveId() error {
 	var err error
 	if _, ok := s.Cache.Load("currentServiceObjectiveId"); ok {
 		return nil
@@ -9273,7 +9273,7 @@ func (s *mqlAzurermSqlDatabase) ComputeCurrentServiceObjectiveId() error {
 }
 
 // ComputeRequestedServiceObjectiveId computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeRequestedServiceObjectiveId() error {
+func (s *mqlAzureSqlDatabase) ComputeRequestedServiceObjectiveId() error {
 	var err error
 	if _, ok := s.Cache.Load("requestedServiceObjectiveId"); ok {
 		return nil
@@ -9287,7 +9287,7 @@ func (s *mqlAzurermSqlDatabase) ComputeRequestedServiceObjectiveId() error {
 }
 
 // ComputeServiceTierAdvisors computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeServiceTierAdvisors() error {
+func (s *mqlAzureSqlDatabase) ComputeServiceTierAdvisors() error {
 	var err error
 	if _, ok := s.Cache.Load("serviceTierAdvisors"); ok {
 		return nil
@@ -9301,7 +9301,7 @@ func (s *mqlAzurermSqlDatabase) ComputeServiceTierAdvisors() error {
 }
 
 // ComputeRecommendedIndex computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeRecommendedIndex() error {
+func (s *mqlAzureSqlDatabase) ComputeRecommendedIndex() error {
 	var err error
 	if _, ok := s.Cache.Load("recommendedIndex"); ok {
 		return nil
@@ -9315,7 +9315,7 @@ func (s *mqlAzurermSqlDatabase) ComputeRecommendedIndex() error {
 }
 
 // ComputeTransparentDataEncryption computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeTransparentDataEncryption() error {
+func (s *mqlAzureSqlDatabase) ComputeTransparentDataEncryption() error {
 	var err error
 	if _, ok := s.Cache.Load("transparentDataEncryption"); ok {
 		return nil
@@ -9329,7 +9329,7 @@ func (s *mqlAzurermSqlDatabase) ComputeTransparentDataEncryption() error {
 }
 
 // ComputeAdvisor computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeAdvisor() error {
+func (s *mqlAzureSqlDatabase) ComputeAdvisor() error {
 	var err error
 	if _, ok := s.Cache.Load("advisor"); ok {
 		return nil
@@ -9343,7 +9343,7 @@ func (s *mqlAzurermSqlDatabase) ComputeAdvisor() error {
 }
 
 // ComputeThreatDetectionPolicy computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeThreatDetectionPolicy() error {
+func (s *mqlAzureSqlDatabase) ComputeThreatDetectionPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("threatDetectionPolicy"); ok {
 		return nil
@@ -9357,7 +9357,7 @@ func (s *mqlAzurermSqlDatabase) ComputeThreatDetectionPolicy() error {
 }
 
 // ComputeConnectionPolicy computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeConnectionPolicy() error {
+func (s *mqlAzureSqlDatabase) ComputeConnectionPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("connectionPolicy"); ok {
 		return nil
@@ -9371,7 +9371,7 @@ func (s *mqlAzurermSqlDatabase) ComputeConnectionPolicy() error {
 }
 
 // ComputeAuditingPolicy computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeAuditingPolicy() error {
+func (s *mqlAzureSqlDatabase) ComputeAuditingPolicy() error {
 	var err error
 	if _, ok := s.Cache.Load("auditingPolicy"); ok {
 		return nil
@@ -9385,7 +9385,7 @@ func (s *mqlAzurermSqlDatabase) ComputeAuditingPolicy() error {
 }
 
 // ComputeUsage computer autogenerated
-func (s *mqlAzurermSqlDatabase) ComputeUsage() error {
+func (s *mqlAzureSqlDatabase) ComputeUsage() error {
 	var err error
 	if _, ok := s.Cache.Load("usage"); ok {
 		return nil
@@ -9398,8 +9398,8 @@ func (s *mqlAzurermSqlDatabase) ComputeUsage() error {
 	return nil
 }
 
-// AzurermSqlDatabaseusage resource interface
-type AzurermSqlDatabaseusage interface {
+// AzureSqlDatabaseusage resource interface
+type AzureSqlDatabaseusage interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -9415,21 +9415,21 @@ type AzurermSqlDatabaseusage interface {
 	NextResetTime() (*time.Time, error)
 }
 
-// mqlAzurermSqlDatabaseusage for the azurerm.sql.databaseusage resource
-type mqlAzurermSqlDatabaseusage struct {
+// mqlAzureSqlDatabaseusage for the azure.sql.databaseusage resource
+type mqlAzureSqlDatabaseusage struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermSqlDatabaseusage) MqlResource() *resources.Resource {
+func (s *mqlAzureSqlDatabaseusage) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.sql.databaseusage resource
-func newAzurermSqlDatabaseusage(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.sql.databaseusage resource
+func newAzureSqlDatabaseusage(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermSqlDatabaseusage{runtime.NewResource("azurerm.sql.databaseusage")}
+	res := mqlAzureSqlDatabaseusage{runtime.NewResource("azure.sql.databaseusage")}
 	// assign all named fields
 	var id string
 
@@ -9443,44 +9443,44 @@ func newAzurermSqlDatabaseusage(runtime *resources.Runtime, args *resources.Args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "resourceName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"resourceName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"resourceName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "displayName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"displayName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"displayName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "currentValue":
 			if _, ok := val.(float64); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"currentValue\" argument has the wrong type (expected type \"float64\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"currentValue\" argument has the wrong type (expected type \"float64\")")
 			}
 		case "limit":
 			if _, ok := val.(float64); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"limit\" argument has the wrong type (expected type \"float64\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"limit\" argument has the wrong type (expected type \"float64\")")
 			}
 		case "unit":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"unit\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"unit\" argument has the wrong type (expected type \"string\")")
 			}
 		case "nextResetTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"nextResetTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"nextResetTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.databaseusage\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.databaseusage\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.sql.databaseusage with unknown argument " + name)
+			return nil, errors.New("Initialized azure.sql.databaseusage with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -9498,36 +9498,36 @@ func newAzurermSqlDatabaseusage(runtime *resources.Runtime, args *resources.Args
 	return &res, nil
 }
 
-func (s *mqlAzurermSqlDatabaseusage) Validate() error {
+func (s *mqlAzureSqlDatabaseusage) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.sql.databaseusage\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.sql.databaseusage\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.sql.databaseusage\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.sql.databaseusage\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("resourceName"); !ok {
-		return errors.New("Initialized \"azurerm.sql.databaseusage\" resource without a \"resourceName\". This field is required.")
+		return errors.New("Initialized \"azure.sql.databaseusage\" resource without a \"resourceName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"azurerm.sql.databaseusage\" resource without a \"displayName\". This field is required.")
+		return errors.New("Initialized \"azure.sql.databaseusage\" resource without a \"displayName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("currentValue"); !ok {
-		return errors.New("Initialized \"azurerm.sql.databaseusage\" resource without a \"currentValue\". This field is required.")
+		return errors.New("Initialized \"azure.sql.databaseusage\" resource without a \"currentValue\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("limit"); !ok {
-		return errors.New("Initialized \"azurerm.sql.databaseusage\" resource without a \"limit\". This field is required.")
+		return errors.New("Initialized \"azure.sql.databaseusage\" resource without a \"limit\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("unit"); !ok {
-		return errors.New("Initialized \"azurerm.sql.databaseusage\" resource without a \"unit\". This field is required.")
+		return errors.New("Initialized \"azure.sql.databaseusage\" resource without a \"unit\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.databaseusage].Register")
+func (s *mqlAzureSqlDatabaseusage) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.databaseusage].Register")
 	switch name {
 	case "id":
 		return nil
@@ -9546,13 +9546,13 @@ func (s *mqlAzurermSqlDatabaseusage) Register(name string) error {
 	case "nextResetTime":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.databaseusage\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.databaseusage\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.databaseusage].Field")
+func (s *mqlAzureSqlDatabaseusage) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.sql.databaseusage].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -9571,124 +9571,124 @@ func (s *mqlAzurermSqlDatabaseusage) Field(name string) (interface{}, error) {
 	case "nextResetTime":
 		return s.NextResetTime()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.sql.databaseusage\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.sql.databaseusage\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) Id() (string, error) {
+func (s *mqlAzureSqlDatabaseusage) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.databaseusage\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.sql.databaseusage\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) Name() (string, error) {
+func (s *mqlAzureSqlDatabaseusage) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.databaseusage\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.sql.databaseusage\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ResourceName accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) ResourceName() (string, error) {
+func (s *mqlAzureSqlDatabaseusage) ResourceName() (string, error) {
 	res, ok := s.Cache.Load("resourceName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.databaseusage\" failed: no value provided for static field \"resourceName\"")
+		return "", errors.New("\"azure.sql.databaseusage\" failed: no value provided for static field \"resourceName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"resourceName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"resourceName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisplayName accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) DisplayName() (string, error) {
+func (s *mqlAzureSqlDatabaseusage) DisplayName() (string, error) {
 	res, ok := s.Cache.Load("displayName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.databaseusage\" failed: no value provided for static field \"displayName\"")
+		return "", errors.New("\"azure.sql.databaseusage\" failed: no value provided for static field \"displayName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"displayName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"displayName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CurrentValue accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) CurrentValue() (float64, error) {
+func (s *mqlAzureSqlDatabaseusage) CurrentValue() (float64, error) {
 	res, ok := s.Cache.Load("currentValue")
 	if !ok || !res.Valid {
-		return 0.0, errors.New("\"azurerm.sql.databaseusage\" failed: no value provided for static field \"currentValue\"")
+		return 0.0, errors.New("\"azure.sql.databaseusage\" failed: no value provided for static field \"currentValue\"")
 	}
 	if res.Error != nil {
 		return 0.0, res.Error
 	}
 	tres, ok := res.Data.(float64)
 	if !ok {
-		return 0.0, fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"currentValue\" to the right type (float64): %#v", res)
+		return 0.0, fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"currentValue\" to the right type (float64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Limit accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) Limit() (float64, error) {
+func (s *mqlAzureSqlDatabaseusage) Limit() (float64, error) {
 	res, ok := s.Cache.Load("limit")
 	if !ok || !res.Valid {
-		return 0.0, errors.New("\"azurerm.sql.databaseusage\" failed: no value provided for static field \"limit\"")
+		return 0.0, errors.New("\"azure.sql.databaseusage\" failed: no value provided for static field \"limit\"")
 	}
 	if res.Error != nil {
 		return 0.0, res.Error
 	}
 	tres, ok := res.Data.(float64)
 	if !ok {
-		return 0.0, fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"limit\" to the right type (float64): %#v", res)
+		return 0.0, fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"limit\" to the right type (float64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Unit accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) Unit() (string, error) {
+func (s *mqlAzureSqlDatabaseusage) Unit() (string, error) {
 	res, ok := s.Cache.Load("unit")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.databaseusage\" failed: no value provided for static field \"unit\"")
+		return "", errors.New("\"azure.sql.databaseusage\" failed: no value provided for static field \"unit\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"unit\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"unit\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // NextResetTime accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) NextResetTime() (*time.Time, error) {
+func (s *mqlAzureSqlDatabaseusage) NextResetTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("nextResetTime")
 	if !ok || !res.Valid {
 		if err := s.ComputeNextResetTime(); err != nil {
@@ -9696,7 +9696,7 @@ func (s *mqlAzurermSqlDatabaseusage) NextResetTime() (*time.Time, error) {
 		}
 		res, ok = s.Cache.Load("nextResetTime")
 		if !ok {
-			return nil, errors.New("\"azurerm.sql.databaseusage\" calculated \"nextResetTime\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.sql.databaseusage\" calculated \"nextResetTime\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "nextResetTime")
 	}
@@ -9705,14 +9705,14 @@ func (s *mqlAzurermSqlDatabaseusage) NextResetTime() (*time.Time, error) {
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.sql.databaseusage\" failed to cast field \"nextResetTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.sql.databaseusage\" failed to cast field \"nextResetTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermSqlDatabaseusage) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.databaseusage].Compute")
+func (s *mqlAzureSqlDatabaseusage) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.databaseusage].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -9731,12 +9731,12 @@ func (s *mqlAzurermSqlDatabaseusage) Compute(name string) error {
 	case "nextResetTime":
 		return s.ComputeNextResetTime()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.databaseusage\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.databaseusage\" resource")
 	}
 }
 
 // ComputeNextResetTime computer autogenerated
-func (s *mqlAzurermSqlDatabaseusage) ComputeNextResetTime() error {
+func (s *mqlAzureSqlDatabaseusage) ComputeNextResetTime() error {
 	var err error
 	if _, ok := s.Cache.Load("nextResetTime"); ok {
 		return nil
@@ -9749,8 +9749,8 @@ func (s *mqlAzurermSqlDatabaseusage) ComputeNextResetTime() error {
 	return nil
 }
 
-// AzurermPostgresql resource interface
-type AzurermPostgresql interface {
+// AzurePostgresql resource interface
+type AzurePostgresql interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -9759,21 +9759,21 @@ type AzurermPostgresql interface {
 	Servers() ([]interface{}, error)
 }
 
-// mqlAzurermPostgresql for the azurerm.postgresql resource
-type mqlAzurermPostgresql struct {
+// mqlAzurePostgresql for the azure.postgresql resource
+type mqlAzurePostgresql struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermPostgresql) MqlResource() *resources.Resource {
+func (s *mqlAzurePostgresql) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.postgresql resource
-func newAzurermPostgresql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.postgresql resource
+func newAzurePostgresql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermPostgresql{runtime.NewResource("azurerm.postgresql")}
+	res := mqlAzurePostgresql{runtime.NewResource("azure.postgresql")}
 	// assign all named fields
 	var id string
 
@@ -9787,16 +9787,16 @@ func newAzurermPostgresql(runtime *resources.Runtime, args *resources.Args) (int
 		switch name {
 		case "servers":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.postgresql with unknown argument " + name)
+			return nil, errors.New("Initialized azure.postgresql with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -9814,7 +9814,7 @@ func newAzurermPostgresql(runtime *resources.Runtime, args *resources.Args) (int
 	return &res, nil
 }
 
-func (s *mqlAzurermPostgresql) Validate() error {
+func (s *mqlAzurePostgresql) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -9822,29 +9822,29 @@ func (s *mqlAzurermPostgresql) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermPostgresql) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql].Register")
+func (s *mqlAzurePostgresql) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.postgresql].Register")
 	switch name {
 	case "servers":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.postgresql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.postgresql\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermPostgresql) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql].Field")
+func (s *mqlAzurePostgresql) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.postgresql].Field")
 	switch name {
 	case "servers":
 		return s.Servers()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.postgresql\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.postgresql\" resource")
 	}
 }
 
 // Servers accessor autogenerated
-func (s *mqlAzurermPostgresql) Servers() ([]interface{}, error) {
+func (s *mqlAzurePostgresql) Servers() ([]interface{}, error) {
 	res, ok := s.Cache.Load("servers")
 	if !ok || !res.Valid {
 		if err := s.ComputeServers(); err != nil {
@@ -9852,7 +9852,7 @@ func (s *mqlAzurermPostgresql) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql\" calculated \"servers\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.postgresql\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -9861,24 +9861,24 @@ func (s *mqlAzurermPostgresql) Servers() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.postgresql\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.postgresql\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermPostgresql) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql].Compute")
+func (s *mqlAzurePostgresql) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.postgresql].Compute")
 	switch name {
 	case "servers":
 		return s.ComputeServers()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.postgresql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.postgresql\" resource")
 	}
 }
 
 // ComputeServers computer autogenerated
-func (s *mqlAzurermPostgresql) ComputeServers() error {
+func (s *mqlAzurePostgresql) ComputeServers() error {
 	var err error
 	if _, ok := s.Cache.Load("servers"); ok {
 		return nil
@@ -9891,8 +9891,8 @@ func (s *mqlAzurermPostgresql) ComputeServers() error {
 	return nil
 }
 
-// AzurermPostgresqlServer resource interface
-type AzurermPostgresqlServer interface {
+// AzurePostgresqlServer resource interface
+type AzurePostgresqlServer interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -9909,21 +9909,21 @@ type AzurermPostgresqlServer interface {
 	FirewallRules() ([]interface{}, error)
 }
 
-// mqlAzurermPostgresqlServer for the azurerm.postgresql.server resource
-type mqlAzurermPostgresqlServer struct {
+// mqlAzurePostgresqlServer for the azure.postgresql.server resource
+type mqlAzurePostgresqlServer struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermPostgresqlServer) MqlResource() *resources.Resource {
+func (s *mqlAzurePostgresqlServer) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.postgresql.server resource
-func newAzurermPostgresqlServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.postgresql.server resource
+func newAzurePostgresqlServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermPostgresqlServer{runtime.NewResource("azurerm.postgresql.server")}
+	res := mqlAzurePostgresqlServer{runtime.NewResource("azure.postgresql.server")}
 	// assign all named fields
 	var id string
 
@@ -9937,48 +9937,48 @@ func newAzurermPostgresqlServer(runtime *resources.Runtime, args *resources.Args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "configuration":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"configuration\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"configuration\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "databases":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "firewallRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.postgresql.server with unknown argument " + name)
+			return nil, errors.New("Initialized azure.postgresql.server with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -9996,33 +9996,33 @@ func newAzurermPostgresqlServer(runtime *resources.Runtime, args *resources.Args
 	return &res, nil
 }
 
-func (s *mqlAzurermPostgresqlServer) Validate() error {
+func (s *mqlAzurePostgresqlServer) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.server\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.server\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.server\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.server\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.server\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.server\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.server\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.server\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.server\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.server\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.server\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.server\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql.server].Register")
+func (s *mqlAzurePostgresqlServer) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.postgresql.server].Register")
 	switch name {
 	case "id":
 		return nil
@@ -10043,13 +10043,13 @@ func (s *mqlAzurermPostgresqlServer) Register(name string) error {
 	case "firewallRules":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.postgresql.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.postgresql.server\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql.server].Field")
+func (s *mqlAzurePostgresqlServer) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.postgresql.server].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -10070,108 +10070,108 @@ func (s *mqlAzurermPostgresqlServer) Field(name string) (interface{}, error) {
 	case "firewallRules":
 		return s.FirewallRules()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.postgresql.server\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.postgresql.server\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Id() (string, error) {
+func (s *mqlAzurePostgresqlServer) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.server\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.postgresql.server\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Name() (string, error) {
+func (s *mqlAzurePostgresqlServer) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.server\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.postgresql.server\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Location() (string, error) {
+func (s *mqlAzurePostgresqlServer) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.server\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.postgresql.server\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Tags() (map[string]interface{}, error) {
+func (s *mqlAzurePostgresqlServer) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.postgresql.server\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.postgresql.server\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Type() (string, error) {
+func (s *mqlAzurePostgresqlServer) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.server\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.postgresql.server\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Properties() (interface{}, error) {
+func (s *mqlAzurePostgresqlServer) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.postgresql.server\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.postgresql.server\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Configuration accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Configuration() ([]interface{}, error) {
+func (s *mqlAzurePostgresqlServer) Configuration() ([]interface{}, error) {
 	res, ok := s.Cache.Load("configuration")
 	if !ok || !res.Valid {
 		if err := s.ComputeConfiguration(); err != nil {
@@ -10179,7 +10179,7 @@ func (s *mqlAzurermPostgresqlServer) Configuration() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"configuration\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.postgresql.server\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -10188,13 +10188,13 @@ func (s *mqlAzurermPostgresqlServer) Configuration() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"configuration\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"configuration\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Databases accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Databases() ([]interface{}, error) {
+func (s *mqlAzurePostgresqlServer) Databases() ([]interface{}, error) {
 	res, ok := s.Cache.Load("databases")
 	if !ok || !res.Valid {
 		if err := s.ComputeDatabases(); err != nil {
@@ -10202,7 +10202,7 @@ func (s *mqlAzurermPostgresqlServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"databases\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.postgresql.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -10211,13 +10211,13 @@ func (s *mqlAzurermPostgresqlServer) Databases() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // FirewallRules accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) FirewallRules() ([]interface{}, error) {
+func (s *mqlAzurePostgresqlServer) FirewallRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("firewallRules")
 	if !ok || !res.Valid {
 		if err := s.ComputeFirewallRules(); err != nil {
@@ -10225,7 +10225,7 @@ func (s *mqlAzurermPostgresqlServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.postgresql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.postgresql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -10234,14 +10234,14 @@ func (s *mqlAzurermPostgresqlServer) FirewallRules() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.postgresql.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.postgresql.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermPostgresqlServer) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql.server].Compute")
+func (s *mqlAzurePostgresqlServer) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.postgresql.server].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -10262,12 +10262,12 @@ func (s *mqlAzurermPostgresqlServer) Compute(name string) error {
 	case "firewallRules":
 		return s.ComputeFirewallRules()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.postgresql.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.postgresql.server\" resource")
 	}
 }
 
 // ComputeConfiguration computer autogenerated
-func (s *mqlAzurermPostgresqlServer) ComputeConfiguration() error {
+func (s *mqlAzurePostgresqlServer) ComputeConfiguration() error {
 	var err error
 	if _, ok := s.Cache.Load("configuration"); ok {
 		return nil
@@ -10281,7 +10281,7 @@ func (s *mqlAzurermPostgresqlServer) ComputeConfiguration() error {
 }
 
 // ComputeDatabases computer autogenerated
-func (s *mqlAzurermPostgresqlServer) ComputeDatabases() error {
+func (s *mqlAzurePostgresqlServer) ComputeDatabases() error {
 	var err error
 	if _, ok := s.Cache.Load("databases"); ok {
 		return nil
@@ -10295,7 +10295,7 @@ func (s *mqlAzurermPostgresqlServer) ComputeDatabases() error {
 }
 
 // ComputeFirewallRules computer autogenerated
-func (s *mqlAzurermPostgresqlServer) ComputeFirewallRules() error {
+func (s *mqlAzurePostgresqlServer) ComputeFirewallRules() error {
 	var err error
 	if _, ok := s.Cache.Load("firewallRules"); ok {
 		return nil
@@ -10308,8 +10308,8 @@ func (s *mqlAzurermPostgresqlServer) ComputeFirewallRules() error {
 	return nil
 }
 
-// AzurermPostgresqlDatabase resource interface
-type AzurermPostgresqlDatabase interface {
+// AzurePostgresqlDatabase resource interface
+type AzurePostgresqlDatabase interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -10322,21 +10322,21 @@ type AzurermPostgresqlDatabase interface {
 	Collation() (string, error)
 }
 
-// mqlAzurermPostgresqlDatabase for the azurerm.postgresql.database resource
-type mqlAzurermPostgresqlDatabase struct {
+// mqlAzurePostgresqlDatabase for the azure.postgresql.database resource
+type mqlAzurePostgresqlDatabase struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermPostgresqlDatabase) MqlResource() *resources.Resource {
+func (s *mqlAzurePostgresqlDatabase) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.postgresql.database resource
-func newAzurermPostgresqlDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.postgresql.database resource
+func newAzurePostgresqlDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermPostgresqlDatabase{runtime.NewResource("azurerm.postgresql.database")}
+	res := mqlAzurePostgresqlDatabase{runtime.NewResource("azure.postgresql.database")}
 	// assign all named fields
 	var id string
 
@@ -10350,32 +10350,32 @@ func newAzurermPostgresqlDatabase(runtime *resources.Runtime, args *resources.Ar
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.database\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.database\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.database\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.database\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.database\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.database\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "charset":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
 			}
 		case "collation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.postgresql.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.postgresql.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.postgresql.database with unknown argument " + name)
+			return nil, errors.New("Initialized azure.postgresql.database with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -10393,30 +10393,30 @@ func newAzurermPostgresqlDatabase(runtime *resources.Runtime, args *resources.Ar
 	return &res, nil
 }
 
-func (s *mqlAzurermPostgresqlDatabase) Validate() error {
+func (s *mqlAzurePostgresqlDatabase) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.database\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.database\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.database\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.database\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.database\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.database\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("charset"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.database\" resource without a \"charset\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.database\" resource without a \"charset\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("collation"); !ok {
-		return errors.New("Initialized \"azurerm.postgresql.database\" resource without a \"collation\". This field is required.")
+		return errors.New("Initialized \"azure.postgresql.database\" resource without a \"collation\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql.database].Register")
+func (s *mqlAzurePostgresqlDatabase) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.postgresql.database].Register")
 	switch name {
 	case "id":
 		return nil
@@ -10429,13 +10429,13 @@ func (s *mqlAzurermPostgresqlDatabase) Register(name string) error {
 	case "collation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.postgresql.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.postgresql.database\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql.database].Field")
+func (s *mqlAzurePostgresqlDatabase) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.postgresql.database].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -10448,93 +10448,93 @@ func (s *mqlAzurermPostgresqlDatabase) Field(name string) (interface{}, error) {
 	case "collation":
 		return s.Collation()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.postgresql.database\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.postgresql.database\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Id() (string, error) {
+func (s *mqlAzurePostgresqlDatabase) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.database\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.postgresql.database\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.database\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.database\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Name() (string, error) {
+func (s *mqlAzurePostgresqlDatabase) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.database\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.postgresql.database\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.database\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.database\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Type() (string, error) {
+func (s *mqlAzurePostgresqlDatabase) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.database\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.postgresql.database\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.database\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.database\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Charset accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Charset() (string, error) {
+func (s *mqlAzurePostgresqlDatabase) Charset() (string, error) {
 	res, ok := s.Cache.Load("charset")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.database\" failed: no value provided for static field \"charset\"")
+		return "", errors.New("\"azure.postgresql.database\" failed: no value provided for static field \"charset\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Collation accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Collation() (string, error) {
+func (s *mqlAzurePostgresqlDatabase) Collation() (string, error) {
 	res, ok := s.Cache.Load("collation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.postgresql.database\" failed: no value provided for static field \"collation\"")
+		return "", errors.New("\"azure.postgresql.database\" failed: no value provided for static field \"collation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.postgresql.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.postgresql.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermPostgresqlDatabase) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.postgresql.database].Compute")
+func (s *mqlAzurePostgresqlDatabase) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.postgresql.database].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -10547,12 +10547,12 @@ func (s *mqlAzurermPostgresqlDatabase) Compute(name string) error {
 	case "collation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.postgresql.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.postgresql.database\" resource")
 	}
 }
 
-// AzurermMysql resource interface
-type AzurermMysql interface {
+// AzureMysql resource interface
+type AzureMysql interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -10561,21 +10561,21 @@ type AzurermMysql interface {
 	Servers() ([]interface{}, error)
 }
 
-// mqlAzurermMysql for the azurerm.mysql resource
-type mqlAzurermMysql struct {
+// mqlAzureMysql for the azure.mysql resource
+type mqlAzureMysql struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMysql) MqlResource() *resources.Resource {
+func (s *mqlAzureMysql) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.mysql resource
-func newAzurermMysql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.mysql resource
+func newAzureMysql(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMysql{runtime.NewResource("azurerm.mysql")}
+	res := mqlAzureMysql{runtime.NewResource("azure.mysql")}
 	// assign all named fields
 	var id string
 
@@ -10589,16 +10589,16 @@ func newAzurermMysql(runtime *resources.Runtime, args *resources.Args) (interfac
 		switch name {
 		case "servers":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.mysql with unknown argument " + name)
+			return nil, errors.New("Initialized azure.mysql with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -10616,7 +10616,7 @@ func newAzurermMysql(runtime *resources.Runtime, args *resources.Args) (interfac
 	return &res, nil
 }
 
-func (s *mqlAzurermMysql) Validate() error {
+func (s *mqlAzureMysql) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -10624,29 +10624,29 @@ func (s *mqlAzurermMysql) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMysql) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql].Register")
+func (s *mqlAzureMysql) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mysql].Register")
 	switch name {
 	case "servers":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mysql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mysql\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMysql) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql].Field")
+func (s *mqlAzureMysql) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.mysql].Field")
 	switch name {
 	case "servers":
 		return s.Servers()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.mysql\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.mysql\" resource")
 	}
 }
 
 // Servers accessor autogenerated
-func (s *mqlAzurermMysql) Servers() ([]interface{}, error) {
+func (s *mqlAzureMysql) Servers() ([]interface{}, error) {
 	res, ok := s.Cache.Load("servers")
 	if !ok || !res.Valid {
 		if err := s.ComputeServers(); err != nil {
@@ -10654,7 +10654,7 @@ func (s *mqlAzurermMysql) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql\" calculated \"servers\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mysql\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -10663,24 +10663,24 @@ func (s *mqlAzurermMysql) Servers() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mysql\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mysql\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMysql) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql].Compute")
+func (s *mqlAzureMysql) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mysql].Compute")
 	switch name {
 	case "servers":
 		return s.ComputeServers()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mysql\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mysql\" resource")
 	}
 }
 
 // ComputeServers computer autogenerated
-func (s *mqlAzurermMysql) ComputeServers() error {
+func (s *mqlAzureMysql) ComputeServers() error {
 	var err error
 	if _, ok := s.Cache.Load("servers"); ok {
 		return nil
@@ -10693,8 +10693,8 @@ func (s *mqlAzurermMysql) ComputeServers() error {
 	return nil
 }
 
-// AzurermMysqlServer resource interface
-type AzurermMysqlServer interface {
+// AzureMysqlServer resource interface
+type AzureMysqlServer interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -10711,21 +10711,21 @@ type AzurermMysqlServer interface {
 	FirewallRules() ([]interface{}, error)
 }
 
-// mqlAzurermMysqlServer for the azurerm.mysql.server resource
-type mqlAzurermMysqlServer struct {
+// mqlAzureMysqlServer for the azure.mysql.server resource
+type mqlAzureMysqlServer struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMysqlServer) MqlResource() *resources.Resource {
+func (s *mqlAzureMysqlServer) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.mysql.server resource
-func newAzurermMysqlServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.mysql.server resource
+func newAzureMysqlServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMysqlServer{runtime.NewResource("azurerm.mysql.server")}
+	res := mqlAzureMysqlServer{runtime.NewResource("azure.mysql.server")}
 	// assign all named fields
 	var id string
 
@@ -10739,48 +10739,48 @@ func newAzurermMysqlServer(runtime *resources.Runtime, args *resources.Args) (in
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "configuration":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"configuration\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"configuration\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "databases":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "firewallRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.mysql.server with unknown argument " + name)
+			return nil, errors.New("Initialized azure.mysql.server with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -10798,33 +10798,33 @@ func newAzurermMysqlServer(runtime *resources.Runtime, args *resources.Args) (in
 	return &res, nil
 }
 
-func (s *mqlAzurermMysqlServer) Validate() error {
+func (s *mqlAzureMysqlServer) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.server\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.server\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.server\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.server\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.server\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.server\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.server\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.server\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.server\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.server\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.server\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.server\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMysqlServer) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql.server].Register")
+func (s *mqlAzureMysqlServer) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mysql.server].Register")
 	switch name {
 	case "id":
 		return nil
@@ -10845,13 +10845,13 @@ func (s *mqlAzurermMysqlServer) Register(name string) error {
 	case "firewallRules":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mysql.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mysql.server\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMysqlServer) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql.server].Field")
+func (s *mqlAzureMysqlServer) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.mysql.server].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -10872,108 +10872,108 @@ func (s *mqlAzurermMysqlServer) Field(name string) (interface{}, error) {
 	case "firewallRules":
 		return s.FirewallRules()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.mysql.server\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.mysql.server\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermMysqlServer) Id() (string, error) {
+func (s *mqlAzureMysqlServer) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.server\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.mysql.server\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.server\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermMysqlServer) Name() (string, error) {
+func (s *mqlAzureMysqlServer) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.server\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.mysql.server\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.server\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermMysqlServer) Location() (string, error) {
+func (s *mqlAzureMysqlServer) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.server\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.mysql.server\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.server\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermMysqlServer) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureMysqlServer) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.mysql.server\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.mysql.server\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mysql.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermMysqlServer) Type() (string, error) {
+func (s *mqlAzureMysqlServer) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.server\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.mysql.server\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.server\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermMysqlServer) Properties() (interface{}, error) {
+func (s *mqlAzureMysqlServer) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.mysql.server\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.mysql.server\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mysql.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Configuration accessor autogenerated
-func (s *mqlAzurermMysqlServer) Configuration() ([]interface{}, error) {
+func (s *mqlAzureMysqlServer) Configuration() ([]interface{}, error) {
 	res, ok := s.Cache.Load("configuration")
 	if !ok || !res.Valid {
 		if err := s.ComputeConfiguration(); err != nil {
@@ -10981,7 +10981,7 @@ func (s *mqlAzurermMysqlServer) Configuration() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql.server\" calculated \"configuration\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mysql.server\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -10990,13 +10990,13 @@ func (s *mqlAzurermMysqlServer) Configuration() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"configuration\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mysql.server\" failed to cast field \"configuration\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Databases accessor autogenerated
-func (s *mqlAzurermMysqlServer) Databases() ([]interface{}, error) {
+func (s *mqlAzureMysqlServer) Databases() ([]interface{}, error) {
 	res, ok := s.Cache.Load("databases")
 	if !ok || !res.Valid {
 		if err := s.ComputeDatabases(); err != nil {
@@ -11004,7 +11004,7 @@ func (s *mqlAzurermMysqlServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql.server\" calculated \"databases\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mysql.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -11013,13 +11013,13 @@ func (s *mqlAzurermMysqlServer) Databases() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mysql.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // FirewallRules accessor autogenerated
-func (s *mqlAzurermMysqlServer) FirewallRules() ([]interface{}, error) {
+func (s *mqlAzureMysqlServer) FirewallRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("firewallRules")
 	if !ok || !res.Valid {
 		if err := s.ComputeFirewallRules(); err != nil {
@@ -11027,7 +11027,7 @@ func (s *mqlAzurermMysqlServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.mysql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mysql.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -11036,14 +11036,14 @@ func (s *mqlAzurermMysqlServer) FirewallRules() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mysql.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mysql.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMysqlServer) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql.server].Compute")
+func (s *mqlAzureMysqlServer) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mysql.server].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -11064,12 +11064,12 @@ func (s *mqlAzurermMysqlServer) Compute(name string) error {
 	case "firewallRules":
 		return s.ComputeFirewallRules()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mysql.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mysql.server\" resource")
 	}
 }
 
 // ComputeConfiguration computer autogenerated
-func (s *mqlAzurermMysqlServer) ComputeConfiguration() error {
+func (s *mqlAzureMysqlServer) ComputeConfiguration() error {
 	var err error
 	if _, ok := s.Cache.Load("configuration"); ok {
 		return nil
@@ -11083,7 +11083,7 @@ func (s *mqlAzurermMysqlServer) ComputeConfiguration() error {
 }
 
 // ComputeDatabases computer autogenerated
-func (s *mqlAzurermMysqlServer) ComputeDatabases() error {
+func (s *mqlAzureMysqlServer) ComputeDatabases() error {
 	var err error
 	if _, ok := s.Cache.Load("databases"); ok {
 		return nil
@@ -11097,7 +11097,7 @@ func (s *mqlAzurermMysqlServer) ComputeDatabases() error {
 }
 
 // ComputeFirewallRules computer autogenerated
-func (s *mqlAzurermMysqlServer) ComputeFirewallRules() error {
+func (s *mqlAzureMysqlServer) ComputeFirewallRules() error {
 	var err error
 	if _, ok := s.Cache.Load("firewallRules"); ok {
 		return nil
@@ -11110,8 +11110,8 @@ func (s *mqlAzurermMysqlServer) ComputeFirewallRules() error {
 	return nil
 }
 
-// AzurermMysqlDatabase resource interface
-type AzurermMysqlDatabase interface {
+// AzureMysqlDatabase resource interface
+type AzureMysqlDatabase interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -11124,21 +11124,21 @@ type AzurermMysqlDatabase interface {
 	Collation() (string, error)
 }
 
-// mqlAzurermMysqlDatabase for the azurerm.mysql.database resource
-type mqlAzurermMysqlDatabase struct {
+// mqlAzureMysqlDatabase for the azure.mysql.database resource
+type mqlAzureMysqlDatabase struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMysqlDatabase) MqlResource() *resources.Resource {
+func (s *mqlAzureMysqlDatabase) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.mysql.database resource
-func newAzurermMysqlDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.mysql.database resource
+func newAzureMysqlDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMysqlDatabase{runtime.NewResource("azurerm.mysql.database")}
+	res := mqlAzureMysqlDatabase{runtime.NewResource("azure.mysql.database")}
 	// assign all named fields
 	var id string
 
@@ -11152,32 +11152,32 @@ func newAzurermMysqlDatabase(runtime *resources.Runtime, args *resources.Args) (
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.database\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.database\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.database\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.database\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.database\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.database\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "charset":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
 			}
 		case "collation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mysql.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mysql.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.mysql.database with unknown argument " + name)
+			return nil, errors.New("Initialized azure.mysql.database with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11195,30 +11195,30 @@ func newAzurermMysqlDatabase(runtime *resources.Runtime, args *resources.Args) (
 	return &res, nil
 }
 
-func (s *mqlAzurermMysqlDatabase) Validate() error {
+func (s *mqlAzureMysqlDatabase) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.database\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.database\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.database\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.database\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.database\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.database\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("charset"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.database\" resource without a \"charset\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.database\" resource without a \"charset\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("collation"); !ok {
-		return errors.New("Initialized \"azurerm.mysql.database\" resource without a \"collation\". This field is required.")
+		return errors.New("Initialized \"azure.mysql.database\" resource without a \"collation\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql.database].Register")
+func (s *mqlAzureMysqlDatabase) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mysql.database].Register")
 	switch name {
 	case "id":
 		return nil
@@ -11231,13 +11231,13 @@ func (s *mqlAzurermMysqlDatabase) Register(name string) error {
 	case "collation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mysql.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mysql.database\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql.database].Field")
+func (s *mqlAzureMysqlDatabase) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.mysql.database].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -11250,93 +11250,93 @@ func (s *mqlAzurermMysqlDatabase) Field(name string) (interface{}, error) {
 	case "collation":
 		return s.Collation()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.mysql.database\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.mysql.database\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Id() (string, error) {
+func (s *mqlAzureMysqlDatabase) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.database\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.mysql.database\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.database\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.database\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Name() (string, error) {
+func (s *mqlAzureMysqlDatabase) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.database\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.mysql.database\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.database\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.database\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Type() (string, error) {
+func (s *mqlAzureMysqlDatabase) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.database\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.mysql.database\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.database\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.database\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Charset accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Charset() (string, error) {
+func (s *mqlAzureMysqlDatabase) Charset() (string, error) {
 	res, ok := s.Cache.Load("charset")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.database\" failed: no value provided for static field \"charset\"")
+		return "", errors.New("\"azure.mysql.database\" failed: no value provided for static field \"charset\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Collation accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Collation() (string, error) {
+func (s *mqlAzureMysqlDatabase) Collation() (string, error) {
 	res, ok := s.Cache.Load("collation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mysql.database\" failed: no value provided for static field \"collation\"")
+		return "", errors.New("\"azure.mysql.database\" failed: no value provided for static field \"collation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mysql.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mysql.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMysqlDatabase) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mysql.database].Compute")
+func (s *mqlAzureMysqlDatabase) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mysql.database].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -11349,12 +11349,12 @@ func (s *mqlAzurermMysqlDatabase) Compute(name string) error {
 	case "collation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mysql.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mysql.database\" resource")
 	}
 }
 
-// AzurermMariadb resource interface
-type AzurermMariadb interface {
+// AzureMariadb resource interface
+type AzureMariadb interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -11363,21 +11363,21 @@ type AzurermMariadb interface {
 	Servers() ([]interface{}, error)
 }
 
-// mqlAzurermMariadb for the azurerm.mariadb resource
-type mqlAzurermMariadb struct {
+// mqlAzureMariadb for the azure.mariadb resource
+type mqlAzureMariadb struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMariadb) MqlResource() *resources.Resource {
+func (s *mqlAzureMariadb) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.mariadb resource
-func newAzurermMariadb(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.mariadb resource
+func newAzureMariadb(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMariadb{runtime.NewResource("azurerm.mariadb")}
+	res := mqlAzureMariadb{runtime.NewResource("azure.mariadb")}
 	// assign all named fields
 	var id string
 
@@ -11391,16 +11391,16 @@ func newAzurermMariadb(runtime *resources.Runtime, args *resources.Args) (interf
 		switch name {
 		case "servers":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb\", its \"servers\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.mariadb with unknown argument " + name)
+			return nil, errors.New("Initialized azure.mariadb with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11418,7 +11418,7 @@ func newAzurermMariadb(runtime *resources.Runtime, args *resources.Args) (interf
 	return &res, nil
 }
 
-func (s *mqlAzurermMariadb) Validate() error {
+func (s *mqlAzureMariadb) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -11426,29 +11426,29 @@ func (s *mqlAzurermMariadb) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMariadb) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb].Register")
+func (s *mqlAzureMariadb) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mariadb].Register")
 	switch name {
 	case "servers":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mariadb\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mariadb\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMariadb) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb].Field")
+func (s *mqlAzureMariadb) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.mariadb].Field")
 	switch name {
 	case "servers":
 		return s.Servers()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.mariadb\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.mariadb\" resource")
 	}
 }
 
 // Servers accessor autogenerated
-func (s *mqlAzurermMariadb) Servers() ([]interface{}, error) {
+func (s *mqlAzureMariadb) Servers() ([]interface{}, error) {
 	res, ok := s.Cache.Load("servers")
 	if !ok || !res.Valid {
 		if err := s.ComputeServers(); err != nil {
@@ -11456,7 +11456,7 @@ func (s *mqlAzurermMariadb) Servers() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("servers")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb\" calculated \"servers\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mariadb\" calculated \"servers\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "servers")
 	}
@@ -11465,24 +11465,24 @@ func (s *mqlAzurermMariadb) Servers() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mariadb\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mariadb\" failed to cast field \"servers\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMariadb) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb].Compute")
+func (s *mqlAzureMariadb) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mariadb].Compute")
 	switch name {
 	case "servers":
 		return s.ComputeServers()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mariadb\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mariadb\" resource")
 	}
 }
 
 // ComputeServers computer autogenerated
-func (s *mqlAzurermMariadb) ComputeServers() error {
+func (s *mqlAzureMariadb) ComputeServers() error {
 	var err error
 	if _, ok := s.Cache.Load("servers"); ok {
 		return nil
@@ -11495,8 +11495,8 @@ func (s *mqlAzurermMariadb) ComputeServers() error {
 	return nil
 }
 
-// AzurermMariadbServer resource interface
-type AzurermMariadbServer interface {
+// AzureMariadbServer resource interface
+type AzureMariadbServer interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -11513,21 +11513,21 @@ type AzurermMariadbServer interface {
 	FirewallRules() ([]interface{}, error)
 }
 
-// mqlAzurermMariadbServer for the azurerm.mariadb.server resource
-type mqlAzurermMariadbServer struct {
+// mqlAzureMariadbServer for the azure.mariadb.server resource
+type mqlAzureMariadbServer struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMariadbServer) MqlResource() *resources.Resource {
+func (s *mqlAzureMariadbServer) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.mariadb.server resource
-func newAzurermMariadbServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.mariadb.server resource
+func newAzureMariadbServer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMariadbServer{runtime.NewResource("azurerm.mariadb.server")}
+	res := mqlAzureMariadbServer{runtime.NewResource("azure.mariadb.server")}
 	// assign all named fields
 	var id string
 
@@ -11541,48 +11541,48 @@ func newAzurermMariadbServer(runtime *resources.Runtime, args *resources.Args) (
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "configuration":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"configuration\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"configuration\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "databases":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "firewallRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"firewallRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.server\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.mariadb.server with unknown argument " + name)
+			return nil, errors.New("Initialized azure.mariadb.server with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11600,33 +11600,33 @@ func newAzurermMariadbServer(runtime *resources.Runtime, args *resources.Args) (
 	return &res, nil
 }
 
-func (s *mqlAzurermMariadbServer) Validate() error {
+func (s *mqlAzureMariadbServer) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.server\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.server\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.server\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.server\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.server\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.server\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.server\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.server\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.server\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.server\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.server\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.server\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMariadbServer) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb.server].Register")
+func (s *mqlAzureMariadbServer) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mariadb.server].Register")
 	switch name {
 	case "id":
 		return nil
@@ -11647,13 +11647,13 @@ func (s *mqlAzurermMariadbServer) Register(name string) error {
 	case "firewallRules":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mariadb.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mariadb.server\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMariadbServer) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb.server].Field")
+func (s *mqlAzureMariadbServer) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.mariadb.server].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -11674,108 +11674,108 @@ func (s *mqlAzurermMariadbServer) Field(name string) (interface{}, error) {
 	case "firewallRules":
 		return s.FirewallRules()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.mariadb.server\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.mariadb.server\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermMariadbServer) Id() (string, error) {
+func (s *mqlAzureMariadbServer) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.server\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.mariadb.server\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermMariadbServer) Name() (string, error) {
+func (s *mqlAzureMariadbServer) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.server\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.mariadb.server\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermMariadbServer) Location() (string, error) {
+func (s *mqlAzureMariadbServer) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.server\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.mariadb.server\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermMariadbServer) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureMariadbServer) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.mariadb.server\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.mariadb.server\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermMariadbServer) Type() (string, error) {
+func (s *mqlAzureMariadbServer) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.server\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.mariadb.server\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermMariadbServer) Properties() (interface{}, error) {
+func (s *mqlAzureMariadbServer) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.mariadb.server\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.mariadb.server\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Configuration accessor autogenerated
-func (s *mqlAzurermMariadbServer) Configuration() ([]interface{}, error) {
+func (s *mqlAzureMariadbServer) Configuration() ([]interface{}, error) {
 	res, ok := s.Cache.Load("configuration")
 	if !ok || !res.Valid {
 		if err := s.ComputeConfiguration(); err != nil {
@@ -11783,7 +11783,7 @@ func (s *mqlAzurermMariadbServer) Configuration() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("configuration")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"configuration\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mariadb.server\" calculated \"configuration\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "configuration")
 	}
@@ -11792,13 +11792,13 @@ func (s *mqlAzurermMariadbServer) Configuration() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"configuration\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"configuration\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Databases accessor autogenerated
-func (s *mqlAzurermMariadbServer) Databases() ([]interface{}, error) {
+func (s *mqlAzureMariadbServer) Databases() ([]interface{}, error) {
 	res, ok := s.Cache.Load("databases")
 	if !ok || !res.Valid {
 		if err := s.ComputeDatabases(); err != nil {
@@ -11806,7 +11806,7 @@ func (s *mqlAzurermMariadbServer) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"databases\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mariadb.server\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -11815,13 +11815,13 @@ func (s *mqlAzurermMariadbServer) Databases() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // FirewallRules accessor autogenerated
-func (s *mqlAzurermMariadbServer) FirewallRules() ([]interface{}, error) {
+func (s *mqlAzureMariadbServer) FirewallRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("firewallRules")
 	if !ok || !res.Valid {
 		if err := s.ComputeFirewallRules(); err != nil {
@@ -11829,7 +11829,7 @@ func (s *mqlAzurermMariadbServer) FirewallRules() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("firewallRules")
 		if !ok {
-			return nil, errors.New("\"azurerm.mariadb.server\" calculated \"firewallRules\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.mariadb.server\" calculated \"firewallRules\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "firewallRules")
 	}
@@ -11838,14 +11838,14 @@ func (s *mqlAzurermMariadbServer) FirewallRules() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.mariadb.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.mariadb.server\" failed to cast field \"firewallRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMariadbServer) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb.server].Compute")
+func (s *mqlAzureMariadbServer) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mariadb.server].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -11866,12 +11866,12 @@ func (s *mqlAzurermMariadbServer) Compute(name string) error {
 	case "firewallRules":
 		return s.ComputeFirewallRules()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mariadb.server\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mariadb.server\" resource")
 	}
 }
 
 // ComputeConfiguration computer autogenerated
-func (s *mqlAzurermMariadbServer) ComputeConfiguration() error {
+func (s *mqlAzureMariadbServer) ComputeConfiguration() error {
 	var err error
 	if _, ok := s.Cache.Load("configuration"); ok {
 		return nil
@@ -11885,7 +11885,7 @@ func (s *mqlAzurermMariadbServer) ComputeConfiguration() error {
 }
 
 // ComputeDatabases computer autogenerated
-func (s *mqlAzurermMariadbServer) ComputeDatabases() error {
+func (s *mqlAzureMariadbServer) ComputeDatabases() error {
 	var err error
 	if _, ok := s.Cache.Load("databases"); ok {
 		return nil
@@ -11899,7 +11899,7 @@ func (s *mqlAzurermMariadbServer) ComputeDatabases() error {
 }
 
 // ComputeFirewallRules computer autogenerated
-func (s *mqlAzurermMariadbServer) ComputeFirewallRules() error {
+func (s *mqlAzureMariadbServer) ComputeFirewallRules() error {
 	var err error
 	if _, ok := s.Cache.Load("firewallRules"); ok {
 		return nil
@@ -11912,8 +11912,8 @@ func (s *mqlAzurermMariadbServer) ComputeFirewallRules() error {
 	return nil
 }
 
-// AzurermMariadbDatabase resource interface
-type AzurermMariadbDatabase interface {
+// AzureMariadbDatabase resource interface
+type AzureMariadbDatabase interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -11926,21 +11926,21 @@ type AzurermMariadbDatabase interface {
 	Collation() (string, error)
 }
 
-// mqlAzurermMariadbDatabase for the azurerm.mariadb.database resource
-type mqlAzurermMariadbDatabase struct {
+// mqlAzureMariadbDatabase for the azure.mariadb.database resource
+type mqlAzureMariadbDatabase struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMariadbDatabase) MqlResource() *resources.Resource {
+func (s *mqlAzureMariadbDatabase) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.mariadb.database resource
-func newAzurermMariadbDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.mariadb.database resource
+func newAzureMariadbDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMariadbDatabase{runtime.NewResource("azurerm.mariadb.database")}
+	res := mqlAzureMariadbDatabase{runtime.NewResource("azure.mariadb.database")}
 	// assign all named fields
 	var id string
 
@@ -11954,32 +11954,32 @@ func newAzurermMariadbDatabase(runtime *resources.Runtime, args *resources.Args)
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.database\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.database\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.database\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.database\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.database\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.database\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "charset":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
 			}
 		case "collation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.mariadb.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.mariadb.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.mariadb.database with unknown argument " + name)
+			return nil, errors.New("Initialized azure.mariadb.database with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11997,30 +11997,30 @@ func newAzurermMariadbDatabase(runtime *resources.Runtime, args *resources.Args)
 	return &res, nil
 }
 
-func (s *mqlAzurermMariadbDatabase) Validate() error {
+func (s *mqlAzureMariadbDatabase) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.database\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.database\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.database\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.database\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.database\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.database\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("charset"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.database\" resource without a \"charset\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.database\" resource without a \"charset\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("collation"); !ok {
-		return errors.New("Initialized \"azurerm.mariadb.database\" resource without a \"collation\". This field is required.")
+		return errors.New("Initialized \"azure.mariadb.database\" resource without a \"collation\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb.database].Register")
+func (s *mqlAzureMariadbDatabase) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mariadb.database].Register")
 	switch name {
 	case "id":
 		return nil
@@ -12033,13 +12033,13 @@ func (s *mqlAzurermMariadbDatabase) Register(name string) error {
 	case "collation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mariadb.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mariadb.database\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb.database].Field")
+func (s *mqlAzureMariadbDatabase) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.mariadb.database].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -12052,93 +12052,93 @@ func (s *mqlAzurermMariadbDatabase) Field(name string) (interface{}, error) {
 	case "collation":
 		return s.Collation()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.mariadb.database\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.mariadb.database\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Id() (string, error) {
+func (s *mqlAzureMariadbDatabase) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.database\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.mariadb.database\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.database\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.database\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Name() (string, error) {
+func (s *mqlAzureMariadbDatabase) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.database\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.mariadb.database\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.database\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.database\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Type() (string, error) {
+func (s *mqlAzureMariadbDatabase) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.database\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.mariadb.database\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.database\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.database\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Charset accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Charset() (string, error) {
+func (s *mqlAzureMariadbDatabase) Charset() (string, error) {
 	res, ok := s.Cache.Load("charset")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.database\" failed: no value provided for static field \"charset\"")
+		return "", errors.New("\"azure.mariadb.database\" failed: no value provided for static field \"charset\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Collation accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Collation() (string, error) {
+func (s *mqlAzureMariadbDatabase) Collation() (string, error) {
 	res, ok := s.Cache.Load("collation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.mariadb.database\" failed: no value provided for static field \"collation\"")
+		return "", errors.New("\"azure.mariadb.database\" failed: no value provided for static field \"collation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.mariadb.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.mariadb.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMariadbDatabase) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.mariadb.database].Compute")
+func (s *mqlAzureMariadbDatabase) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.mariadb.database].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -12151,12 +12151,12 @@ func (s *mqlAzurermMariadbDatabase) Compute(name string) error {
 	case "collation":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.mariadb.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.mariadb.database\" resource")
 	}
 }
 
-// AzurermSqlConfiguration resource interface
-type AzurermSqlConfiguration interface {
+// AzureSqlConfiguration resource interface
+type AzureSqlConfiguration interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -12173,21 +12173,21 @@ type AzurermSqlConfiguration interface {
 	Source() (string, error)
 }
 
-// mqlAzurermSqlConfiguration for the azurerm.sql.configuration resource
-type mqlAzurermSqlConfiguration struct {
+// mqlAzureSqlConfiguration for the azure.sql.configuration resource
+type mqlAzureSqlConfiguration struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermSqlConfiguration) MqlResource() *resources.Resource {
+func (s *mqlAzureSqlConfiguration) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.sql.configuration resource
-func newAzurermSqlConfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.sql.configuration resource
+func newAzureSqlConfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermSqlConfiguration{runtime.NewResource("azurerm.sql.configuration")}
+	res := mqlAzureSqlConfiguration{runtime.NewResource("azure.sql.configuration")}
 	// assign all named fields
 	var id string
 
@@ -12201,48 +12201,48 @@ func newAzurermSqlConfiguration(runtime *resources.Runtime, args *resources.Args
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "value":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"value\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"value\" argument has the wrong type (expected type \"string\")")
 			}
 		case "description":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"description\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
 		case "defaultValue":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"defaultValue\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"defaultValue\" argument has the wrong type (expected type \"string\")")
 			}
 		case "dataType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"dataType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"dataType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "allowedValues":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"allowedValues\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"allowedValues\" argument has the wrong type (expected type \"string\")")
 			}
 		case "source":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"source\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"source\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.configuration\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.configuration\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.sql.configuration with unknown argument " + name)
+			return nil, errors.New("Initialized azure.sql.configuration with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -12260,42 +12260,42 @@ func newAzurermSqlConfiguration(runtime *resources.Runtime, args *resources.Args
 	return &res, nil
 }
 
-func (s *mqlAzurermSqlConfiguration) Validate() error {
+func (s *mqlAzureSqlConfiguration) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("value"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"value\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"value\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("description"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"description\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"description\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("defaultValue"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"defaultValue\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"defaultValue\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("dataType"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"dataType\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"dataType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("allowedValues"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"allowedValues\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"allowedValues\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("source"); !ok {
-		return errors.New("Initialized \"azurerm.sql.configuration\" resource without a \"source\". This field is required.")
+		return errors.New("Initialized \"azure.sql.configuration\" resource without a \"source\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.configuration].Register")
+func (s *mqlAzureSqlConfiguration) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.configuration].Register")
 	switch name {
 	case "id":
 		return nil
@@ -12316,13 +12316,13 @@ func (s *mqlAzurermSqlConfiguration) Register(name string) error {
 	case "source":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.configuration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.configuration\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.configuration].Field")
+func (s *mqlAzureSqlConfiguration) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.sql.configuration].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -12343,157 +12343,157 @@ func (s *mqlAzurermSqlConfiguration) Field(name string) (interface{}, error) {
 	case "source":
 		return s.Source()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.sql.configuration\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.sql.configuration\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Id() (string, error) {
+func (s *mqlAzureSqlConfiguration) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Name() (string, error) {
+func (s *mqlAzureSqlConfiguration) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Type() (string, error) {
+func (s *mqlAzureSqlConfiguration) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Value accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Value() (string, error) {
+func (s *mqlAzureSqlConfiguration) Value() (string, error) {
 	res, ok := s.Cache.Load("value")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"value\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"value\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"value\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"value\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Description accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Description() (string, error) {
+func (s *mqlAzureSqlConfiguration) Description() (string, error) {
 	res, ok := s.Cache.Load("description")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"description\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"description\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"description\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"description\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DefaultValue accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) DefaultValue() (string, error) {
+func (s *mqlAzureSqlConfiguration) DefaultValue() (string, error) {
 	res, ok := s.Cache.Load("defaultValue")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"defaultValue\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"defaultValue\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"defaultValue\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"defaultValue\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DataType accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) DataType() (string, error) {
+func (s *mqlAzureSqlConfiguration) DataType() (string, error) {
 	res, ok := s.Cache.Load("dataType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"dataType\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"dataType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"dataType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"dataType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AllowedValues accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) AllowedValues() (string, error) {
+func (s *mqlAzureSqlConfiguration) AllowedValues() (string, error) {
 	res, ok := s.Cache.Load("allowedValues")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"allowedValues\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"allowedValues\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"allowedValues\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"allowedValues\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Source accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Source() (string, error) {
+func (s *mqlAzureSqlConfiguration) Source() (string, error) {
 	res, ok := s.Cache.Load("source")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.configuration\" failed: no value provided for static field \"source\"")
+		return "", errors.New("\"azure.sql.configuration\" failed: no value provided for static field \"source\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.configuration\" failed to cast field \"source\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.configuration\" failed to cast field \"source\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermSqlConfiguration) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.configuration].Compute")
+func (s *mqlAzureSqlConfiguration) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.configuration].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -12514,12 +12514,12 @@ func (s *mqlAzurermSqlConfiguration) Compute(name string) error {
 	case "source":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.configuration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.configuration\" resource")
 	}
 }
 
-// AzurermSqlFirewallrule resource interface
-type AzurermSqlFirewallrule interface {
+// AzureSqlFirewallrule resource interface
+type AzureSqlFirewallrule interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -12532,21 +12532,21 @@ type AzurermSqlFirewallrule interface {
 	EndIpAddress() (string, error)
 }
 
-// mqlAzurermSqlFirewallrule for the azurerm.sql.firewallrule resource
-type mqlAzurermSqlFirewallrule struct {
+// mqlAzureSqlFirewallrule for the azure.sql.firewallrule resource
+type mqlAzureSqlFirewallrule struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermSqlFirewallrule) MqlResource() *resources.Resource {
+func (s *mqlAzureSqlFirewallrule) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.sql.firewallrule resource
-func newAzurermSqlFirewallrule(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.sql.firewallrule resource
+func newAzureSqlFirewallrule(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermSqlFirewallrule{runtime.NewResource("azurerm.sql.firewallrule")}
+	res := mqlAzureSqlFirewallrule{runtime.NewResource("azure.sql.firewallrule")}
 	// assign all named fields
 	var id string
 
@@ -12560,32 +12560,32 @@ func newAzurermSqlFirewallrule(runtime *resources.Runtime, args *resources.Args)
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.firewallrule\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.firewallrule\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.firewallrule\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.firewallrule\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.firewallrule\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.firewallrule\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "startIpAddress":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.firewallrule\", its \"startIpAddress\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.firewallrule\", its \"startIpAddress\" argument has the wrong type (expected type \"string\")")
 			}
 		case "endIpAddress":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.firewallrule\", its \"endIpAddress\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.firewallrule\", its \"endIpAddress\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.sql.firewallrule\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.sql.firewallrule\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.sql.firewallrule with unknown argument " + name)
+			return nil, errors.New("Initialized azure.sql.firewallrule with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -12603,30 +12603,30 @@ func newAzurermSqlFirewallrule(runtime *resources.Runtime, args *resources.Args)
 	return &res, nil
 }
 
-func (s *mqlAzurermSqlFirewallrule) Validate() error {
+func (s *mqlAzureSqlFirewallrule) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.sql.firewallrule\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.sql.firewallrule\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.sql.firewallrule\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.sql.firewallrule\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.sql.firewallrule\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.sql.firewallrule\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("startIpAddress"); !ok {
-		return errors.New("Initialized \"azurerm.sql.firewallrule\" resource without a \"startIpAddress\". This field is required.")
+		return errors.New("Initialized \"azure.sql.firewallrule\" resource without a \"startIpAddress\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("endIpAddress"); !ok {
-		return errors.New("Initialized \"azurerm.sql.firewallrule\" resource without a \"endIpAddress\". This field is required.")
+		return errors.New("Initialized \"azure.sql.firewallrule\" resource without a \"endIpAddress\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.firewallrule].Register")
+func (s *mqlAzureSqlFirewallrule) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.firewallrule].Register")
 	switch name {
 	case "id":
 		return nil
@@ -12639,13 +12639,13 @@ func (s *mqlAzurermSqlFirewallrule) Register(name string) error {
 	case "endIpAddress":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.firewallrule\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.firewallrule\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.firewallrule].Field")
+func (s *mqlAzureSqlFirewallrule) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.sql.firewallrule].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -12658,93 +12658,93 @@ func (s *mqlAzurermSqlFirewallrule) Field(name string) (interface{}, error) {
 	case "endIpAddress":
 		return s.EndIpAddress()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.sql.firewallrule\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.sql.firewallrule\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) Id() (string, error) {
+func (s *mqlAzureSqlFirewallrule) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.firewallrule\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.sql.firewallrule\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.firewallrule\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.firewallrule\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) Name() (string, error) {
+func (s *mqlAzureSqlFirewallrule) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.firewallrule\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.sql.firewallrule\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.firewallrule\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.firewallrule\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) Type() (string, error) {
+func (s *mqlAzureSqlFirewallrule) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.firewallrule\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.sql.firewallrule\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.firewallrule\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.firewallrule\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // StartIpAddress accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) StartIpAddress() (string, error) {
+func (s *mqlAzureSqlFirewallrule) StartIpAddress() (string, error) {
 	res, ok := s.Cache.Load("startIpAddress")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.firewallrule\" failed: no value provided for static field \"startIpAddress\"")
+		return "", errors.New("\"azure.sql.firewallrule\" failed: no value provided for static field \"startIpAddress\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.firewallrule\" failed to cast field \"startIpAddress\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.firewallrule\" failed to cast field \"startIpAddress\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // EndIpAddress accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) EndIpAddress() (string, error) {
+func (s *mqlAzureSqlFirewallrule) EndIpAddress() (string, error) {
 	res, ok := s.Cache.Load("endIpAddress")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.sql.firewallrule\" failed: no value provided for static field \"endIpAddress\"")
+		return "", errors.New("\"azure.sql.firewallrule\" failed: no value provided for static field \"endIpAddress\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.sql.firewallrule\" failed to cast field \"endIpAddress\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.sql.firewallrule\" failed to cast field \"endIpAddress\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermSqlFirewallrule) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.sql.firewallrule].Compute")
+func (s *mqlAzureSqlFirewallrule) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.sql.firewallrule].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -12757,12 +12757,12 @@ func (s *mqlAzurermSqlFirewallrule) Compute(name string) error {
 	case "endIpAddress":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.sql.firewallrule\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.sql.firewallrule\" resource")
 	}
 }
 
-// AzurermKeyvault resource interface
-type AzurermKeyvault interface {
+// AzureKeyvault resource interface
+type AzureKeyvault interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -12771,21 +12771,21 @@ type AzurermKeyvault interface {
 	Vaults() ([]interface{}, error)
 }
 
-// mqlAzurermKeyvault for the azurerm.keyvault resource
-type mqlAzurermKeyvault struct {
+// mqlAzureKeyvault for the azure.keyvault resource
+type mqlAzureKeyvault struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermKeyvault) MqlResource() *resources.Resource {
+func (s *mqlAzureKeyvault) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.keyvault resource
-func newAzurermKeyvault(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.keyvault resource
+func newAzureKeyvault(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermKeyvault{runtime.NewResource("azurerm.keyvault")}
+	res := mqlAzureKeyvault{runtime.NewResource("azure.keyvault")}
 	// assign all named fields
 	var id string
 
@@ -12799,16 +12799,16 @@ func newAzurermKeyvault(runtime *resources.Runtime, args *resources.Args) (inter
 		switch name {
 		case "vaults":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault\", its \"vaults\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault\", its \"vaults\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.keyvault with unknown argument " + name)
+			return nil, errors.New("Initialized azure.keyvault with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -12826,7 +12826,7 @@ func newAzurermKeyvault(runtime *resources.Runtime, args *resources.Args) (inter
 	return &res, nil
 }
 
-func (s *mqlAzurermKeyvault) Validate() error {
+func (s *mqlAzureKeyvault) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -12834,29 +12834,29 @@ func (s *mqlAzurermKeyvault) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermKeyvault) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault].Register")
+func (s *mqlAzureKeyvault) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault].Register")
 	switch name {
 	case "vaults":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermKeyvault) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault].Field")
+func (s *mqlAzureKeyvault) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.keyvault].Field")
 	switch name {
 	case "vaults":
 		return s.Vaults()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.keyvault\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.keyvault\" resource")
 	}
 }
 
 // Vaults accessor autogenerated
-func (s *mqlAzurermKeyvault) Vaults() ([]interface{}, error) {
+func (s *mqlAzureKeyvault) Vaults() ([]interface{}, error) {
 	res, ok := s.Cache.Load("vaults")
 	if !ok || !res.Valid {
 		if err := s.ComputeVaults(); err != nil {
@@ -12864,7 +12864,7 @@ func (s *mqlAzurermKeyvault) Vaults() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("vaults")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault\" calculated \"vaults\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault\" calculated \"vaults\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vaults")
 	}
@@ -12873,24 +12873,24 @@ func (s *mqlAzurermKeyvault) Vaults() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault\" failed to cast field \"vaults\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault\" failed to cast field \"vaults\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermKeyvault) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault].Compute")
+func (s *mqlAzureKeyvault) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault].Compute")
 	switch name {
 	case "vaults":
 		return s.ComputeVaults()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault\" resource")
 	}
 }
 
 // ComputeVaults computer autogenerated
-func (s *mqlAzurermKeyvault) ComputeVaults() error {
+func (s *mqlAzureKeyvault) ComputeVaults() error {
 	var err error
 	if _, ok := s.Cache.Load("vaults"); ok {
 		return nil
@@ -12903,8 +12903,8 @@ func (s *mqlAzurermKeyvault) ComputeVaults() error {
 	return nil
 }
 
-// AzurermKeyvaultVault resource interface
-type AzurermKeyvaultVault interface {
+// AzureKeyvaultVault resource interface
+type AzureKeyvaultVault interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -12923,21 +12923,21 @@ type AzurermKeyvaultVault interface {
 	DiagnosticSettings() ([]interface{}, error)
 }
 
-// mqlAzurermKeyvaultVault for the azurerm.keyvault.vault resource
-type mqlAzurermKeyvaultVault struct {
+// mqlAzureKeyvaultVault for the azure.keyvault.vault resource
+type mqlAzureKeyvaultVault struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermKeyvaultVault) MqlResource() *resources.Resource {
+func (s *mqlAzureKeyvaultVault) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.keyvault.vault resource
-func newAzurermKeyvaultVault(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.keyvault.vault resource
+func newAzureKeyvaultVault(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermKeyvaultVault{runtime.NewResource("azurerm.keyvault.vault")}
+	res := mqlAzureKeyvaultVault{runtime.NewResource("azure.keyvault.vault")}
 	// assign all named fields
 	var id string
 
@@ -12951,56 +12951,56 @@ func newAzurermKeyvaultVault(runtime *resources.Runtime, args *resources.Args) (
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "vaultName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"vaultName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"vaultName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "vaultUri":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"vaultUri\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"vaultUri\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "keys":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"keys\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"keys\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "certificates":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"certificates\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"certificates\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "secrets":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"secrets\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"secrets\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "diagnosticSettings":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"diagnosticSettings\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"diagnosticSettings\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.vault\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.vault\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.keyvault.vault with unknown argument " + name)
+			return nil, errors.New("Initialized azure.keyvault.vault with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -13018,30 +13018,30 @@ func newAzurermKeyvaultVault(runtime *resources.Runtime, args *resources.Args) (
 	return &res, nil
 }
 
-func (s *mqlAzurermKeyvaultVault) Validate() error {
+func (s *mqlAzureKeyvaultVault) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.vault\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.vault\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("vaultName"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.vault\" resource without a \"vaultName\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.vault\" resource without a \"vaultName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.vault\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.vault\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.vault\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.vault\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.vault\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.vault\" resource without a \"tags\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.vault].Register")
+func (s *mqlAzureKeyvaultVault) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.vault].Register")
 	switch name {
 	case "id":
 		return nil
@@ -13066,13 +13066,13 @@ func (s *mqlAzurermKeyvaultVault) Register(name string) error {
 	case "diagnosticSettings":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.vault\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.vault\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.vault].Field")
+func (s *mqlAzureKeyvaultVault) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.vault].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -13097,92 +13097,92 @@ func (s *mqlAzurermKeyvaultVault) Field(name string) (interface{}, error) {
 	case "diagnosticSettings":
 		return s.DiagnosticSettings()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.keyvault.vault\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.keyvault.vault\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Id() (string, error) {
+func (s *mqlAzureKeyvaultVault) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.vault\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.keyvault.vault\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // VaultName accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) VaultName() (string, error) {
+func (s *mqlAzureKeyvaultVault) VaultName() (string, error) {
 	res, ok := s.Cache.Load("vaultName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.vault\" failed: no value provided for static field \"vaultName\"")
+		return "", errors.New("\"azure.keyvault.vault\" failed: no value provided for static field \"vaultName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"vaultName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"vaultName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Type() (string, error) {
+func (s *mqlAzureKeyvaultVault) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.vault\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.keyvault.vault\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Location() (string, error) {
+func (s *mqlAzureKeyvaultVault) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.vault\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.keyvault.vault\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureKeyvaultVault) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.vault\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.keyvault.vault\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // VaultUri accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) VaultUri() (string, error) {
+func (s *mqlAzureKeyvaultVault) VaultUri() (string, error) {
 	res, ok := s.Cache.Load("vaultUri")
 	if !ok || !res.Valid {
 		if err := s.ComputeVaultUri(); err != nil {
@@ -13190,7 +13190,7 @@ func (s *mqlAzurermKeyvaultVault) VaultUri() (string, error) {
 		}
 		res, ok = s.Cache.Load("vaultUri")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.vault\" calculated \"vaultUri\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.keyvault.vault\" calculated \"vaultUri\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "vaultUri")
 	}
@@ -13199,13 +13199,13 @@ func (s *mqlAzurermKeyvaultVault) VaultUri() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"vaultUri\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"vaultUri\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Properties() (interface{}, error) {
+func (s *mqlAzureKeyvaultVault) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
 		if err := s.ComputeProperties(); err != nil {
@@ -13213,7 +13213,7 @@ func (s *mqlAzurermKeyvaultVault) Properties() (interface{}, error) {
 		}
 		res, ok = s.Cache.Load("properties")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"properties\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.vault\" calculated \"properties\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "properties")
 	}
@@ -13222,13 +13222,13 @@ func (s *mqlAzurermKeyvaultVault) Properties() (interface{}, error) {
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Keys accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Keys() ([]interface{}, error) {
+func (s *mqlAzureKeyvaultVault) Keys() ([]interface{}, error) {
 	res, ok := s.Cache.Load("keys")
 	if !ok || !res.Valid {
 		if err := s.ComputeKeys(); err != nil {
@@ -13236,7 +13236,7 @@ func (s *mqlAzurermKeyvaultVault) Keys() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("keys")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"keys\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.vault\" calculated \"keys\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keys")
 	}
@@ -13245,13 +13245,13 @@ func (s *mqlAzurermKeyvaultVault) Keys() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"keys\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"keys\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Certificates accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Certificates() ([]interface{}, error) {
+func (s *mqlAzureKeyvaultVault) Certificates() ([]interface{}, error) {
 	res, ok := s.Cache.Load("certificates")
 	if !ok || !res.Valid {
 		if err := s.ComputeCertificates(); err != nil {
@@ -13259,7 +13259,7 @@ func (s *mqlAzurermKeyvaultVault) Certificates() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("certificates")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"certificates\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.vault\" calculated \"certificates\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "certificates")
 	}
@@ -13268,13 +13268,13 @@ func (s *mqlAzurermKeyvaultVault) Certificates() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"certificates\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"certificates\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Secrets accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Secrets() ([]interface{}, error) {
+func (s *mqlAzureKeyvaultVault) Secrets() ([]interface{}, error) {
 	res, ok := s.Cache.Load("secrets")
 	if !ok || !res.Valid {
 		if err := s.ComputeSecrets(); err != nil {
@@ -13282,7 +13282,7 @@ func (s *mqlAzurermKeyvaultVault) Secrets() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("secrets")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"secrets\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.vault\" calculated \"secrets\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "secrets")
 	}
@@ -13291,13 +13291,13 @@ func (s *mqlAzurermKeyvaultVault) Secrets() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"secrets\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"secrets\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DiagnosticSettings accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) DiagnosticSettings() ([]interface{}, error) {
+func (s *mqlAzureKeyvaultVault) DiagnosticSettings() ([]interface{}, error) {
 	res, ok := s.Cache.Load("diagnosticSettings")
 	if !ok || !res.Valid {
 		if err := s.ComputeDiagnosticSettings(); err != nil {
@@ -13305,7 +13305,7 @@ func (s *mqlAzurermKeyvaultVault) DiagnosticSettings() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("diagnosticSettings")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.vault\" calculated \"diagnosticSettings\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.vault\" calculated \"diagnosticSettings\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "diagnosticSettings")
 	}
@@ -13314,14 +13314,14 @@ func (s *mqlAzurermKeyvaultVault) DiagnosticSettings() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.vault\" failed to cast field \"diagnosticSettings\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.vault\" failed to cast field \"diagnosticSettings\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermKeyvaultVault) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.vault].Compute")
+func (s *mqlAzureKeyvaultVault) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.vault].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -13346,12 +13346,12 @@ func (s *mqlAzurermKeyvaultVault) Compute(name string) error {
 	case "diagnosticSettings":
 		return s.ComputeDiagnosticSettings()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.vault\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.vault\" resource")
 	}
 }
 
 // ComputeVaultUri computer autogenerated
-func (s *mqlAzurermKeyvaultVault) ComputeVaultUri() error {
+func (s *mqlAzureKeyvaultVault) ComputeVaultUri() error {
 	var err error
 	if _, ok := s.Cache.Load("vaultUri"); ok {
 		return nil
@@ -13365,7 +13365,7 @@ func (s *mqlAzurermKeyvaultVault) ComputeVaultUri() error {
 }
 
 // ComputeProperties computer autogenerated
-func (s *mqlAzurermKeyvaultVault) ComputeProperties() error {
+func (s *mqlAzureKeyvaultVault) ComputeProperties() error {
 	var err error
 	if _, ok := s.Cache.Load("properties"); ok {
 		return nil
@@ -13379,7 +13379,7 @@ func (s *mqlAzurermKeyvaultVault) ComputeProperties() error {
 }
 
 // ComputeKeys computer autogenerated
-func (s *mqlAzurermKeyvaultVault) ComputeKeys() error {
+func (s *mqlAzureKeyvaultVault) ComputeKeys() error {
 	var err error
 	if _, ok := s.Cache.Load("keys"); ok {
 		return nil
@@ -13393,7 +13393,7 @@ func (s *mqlAzurermKeyvaultVault) ComputeKeys() error {
 }
 
 // ComputeCertificates computer autogenerated
-func (s *mqlAzurermKeyvaultVault) ComputeCertificates() error {
+func (s *mqlAzureKeyvaultVault) ComputeCertificates() error {
 	var err error
 	if _, ok := s.Cache.Load("certificates"); ok {
 		return nil
@@ -13407,7 +13407,7 @@ func (s *mqlAzurermKeyvaultVault) ComputeCertificates() error {
 }
 
 // ComputeSecrets computer autogenerated
-func (s *mqlAzurermKeyvaultVault) ComputeSecrets() error {
+func (s *mqlAzureKeyvaultVault) ComputeSecrets() error {
 	var err error
 	if _, ok := s.Cache.Load("secrets"); ok {
 		return nil
@@ -13421,7 +13421,7 @@ func (s *mqlAzurermKeyvaultVault) ComputeSecrets() error {
 }
 
 // ComputeDiagnosticSettings computer autogenerated
-func (s *mqlAzurermKeyvaultVault) ComputeDiagnosticSettings() error {
+func (s *mqlAzureKeyvaultVault) ComputeDiagnosticSettings() error {
 	var err error
 	if _, ok := s.Cache.Load("diagnosticSettings"); ok {
 		return nil
@@ -13434,8 +13434,8 @@ func (s *mqlAzurermKeyvaultVault) ComputeDiagnosticSettings() error {
 	return nil
 }
 
-// AzurermKeyvaultKey resource interface
-type AzurermKeyvaultKey interface {
+// AzureKeyvaultKey resource interface
+type AzureKeyvaultKey interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -13455,21 +13455,21 @@ type AzurermKeyvaultKey interface {
 	Versions() ([]interface{}, error)
 }
 
-// mqlAzurermKeyvaultKey for the azurerm.keyvault.key resource
-type mqlAzurermKeyvaultKey struct {
+// mqlAzureKeyvaultKey for the azure.keyvault.key resource
+type mqlAzureKeyvaultKey struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermKeyvaultKey) MqlResource() *resources.Resource {
+func (s *mqlAzureKeyvaultKey) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.keyvault.key resource
-func newAzurermKeyvaultKey(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.keyvault.key resource
+func newAzureKeyvaultKey(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermKeyvaultKey{runtime.NewResource("azurerm.keyvault.key")}
+	res := mqlAzureKeyvaultKey{runtime.NewResource("azure.keyvault.key")}
 	// assign all named fields
 	var id string
 
@@ -13483,60 +13483,60 @@ func newAzurermKeyvaultKey(runtime *resources.Runtime, args *resources.Args) (in
 		switch name {
 		case "kid":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"kid\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"kid\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "managed":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"managed\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"managed\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "notBefore":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"notBefore\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"notBefore\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "expires":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"expires\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"expires\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "created":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "updated":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "recoveryLevel":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"recoveryLevel\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"recoveryLevel\" argument has the wrong type (expected type \"string\")")
 			}
 		case "keyName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"keyName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"keyName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "version":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"version\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"version\" argument has the wrong type (expected type \"string\")")
 			}
 		case "versions":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"versions\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"versions\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.key\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.key\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.keyvault.key with unknown argument " + name)
+			return nil, errors.New("Initialized azure.keyvault.key with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -13554,42 +13554,42 @@ func newAzurermKeyvaultKey(runtime *resources.Runtime, args *resources.Args) (in
 	return &res, nil
 }
 
-func (s *mqlAzurermKeyvaultKey) Validate() error {
+func (s *mqlAzureKeyvaultKey) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("kid"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"kid\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"kid\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("managed"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"managed\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"managed\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabled"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"enabled\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"enabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("notBefore"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"notBefore\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"notBefore\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("expires"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"expires\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"expires\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("created"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"created\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"created\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("updated"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"updated\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"updated\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("recoveryLevel"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.key\" resource without a \"recoveryLevel\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.key\" resource without a \"recoveryLevel\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.key].Register")
+func (s *mqlAzureKeyvaultKey) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.key].Register")
 	switch name {
 	case "kid":
 		return nil
@@ -13616,13 +13616,13 @@ func (s *mqlAzurermKeyvaultKey) Register(name string) error {
 	case "versions":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.key\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.key\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.key].Field")
+func (s *mqlAzureKeyvaultKey) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.key].Field")
 	switch name {
 	case "kid":
 		return s.Kid()
@@ -13649,156 +13649,156 @@ func (s *mqlAzurermKeyvaultKey) Field(name string) (interface{}, error) {
 	case "versions":
 		return s.Versions()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.keyvault.key\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.keyvault.key\" resource")
 	}
 }
 
 // Kid accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Kid() (string, error) {
+func (s *mqlAzureKeyvaultKey) Kid() (string, error) {
 	res, ok := s.Cache.Load("kid")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"kid\"")
+		return "", errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"kid\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"kid\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"kid\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureKeyvaultKey) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Managed accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Managed() (bool, error) {
+func (s *mqlAzureKeyvaultKey) Managed() (bool, error) {
 	res, ok := s.Cache.Load("managed")
 	if !ok || !res.Valid {
-		return false, errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"managed\"")
+		return false, errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"managed\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"managed\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"managed\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Enabled accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Enabled() (bool, error) {
+func (s *mqlAzureKeyvaultKey) Enabled() (bool, error) {
 	res, ok := s.Cache.Load("enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"enabled\"")
+		return false, errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // NotBefore accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) NotBefore() (*time.Time, error) {
+func (s *mqlAzureKeyvaultKey) NotBefore() (*time.Time, error) {
 	res, ok := s.Cache.Load("notBefore")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"notBefore\"")
+		return nil, errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"notBefore\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"notBefore\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"notBefore\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Expires accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Expires() (*time.Time, error) {
+func (s *mqlAzureKeyvaultKey) Expires() (*time.Time, error) {
 	res, ok := s.Cache.Load("expires")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"expires\"")
+		return nil, errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"expires\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"expires\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"expires\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Created accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Created() (*time.Time, error) {
+func (s *mqlAzureKeyvaultKey) Created() (*time.Time, error) {
 	res, ok := s.Cache.Load("created")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"created\"")
+		return nil, errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"created\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Updated accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Updated() (*time.Time, error) {
+func (s *mqlAzureKeyvaultKey) Updated() (*time.Time, error) {
 	res, ok := s.Cache.Load("updated")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"updated\"")
+		return nil, errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"updated\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecoveryLevel accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) RecoveryLevel() (string, error) {
+func (s *mqlAzureKeyvaultKey) RecoveryLevel() (string, error) {
 	res, ok := s.Cache.Load("recoveryLevel")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.key\" failed: no value provided for static field \"recoveryLevel\"")
+		return "", errors.New("\"azure.keyvault.key\" failed: no value provided for static field \"recoveryLevel\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"recoveryLevel\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"recoveryLevel\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // KeyName accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) KeyName() (string, error) {
+func (s *mqlAzureKeyvaultKey) KeyName() (string, error) {
 	res, ok := s.Cache.Load("keyName")
 	if !ok || !res.Valid {
 		if err := s.ComputeKeyName(); err != nil {
@@ -13806,7 +13806,7 @@ func (s *mqlAzurermKeyvaultKey) KeyName() (string, error) {
 		}
 		res, ok = s.Cache.Load("keyName")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.key\" calculated \"keyName\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.keyvault.key\" calculated \"keyName\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "keyName")
 	}
@@ -13815,13 +13815,13 @@ func (s *mqlAzurermKeyvaultKey) KeyName() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"keyName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"keyName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Version accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Version() (string, error) {
+func (s *mqlAzureKeyvaultKey) Version() (string, error) {
 	res, ok := s.Cache.Load("version")
 	if !ok || !res.Valid {
 		if err := s.ComputeVersion(); err != nil {
@@ -13829,7 +13829,7 @@ func (s *mqlAzurermKeyvaultKey) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.key\" calculated \"version\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.keyvault.key\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -13838,13 +13838,13 @@ func (s *mqlAzurermKeyvaultKey) Version() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"version\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"version\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Versions accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Versions() ([]interface{}, error) {
+func (s *mqlAzureKeyvaultKey) Versions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("versions")
 	if !ok || !res.Valid {
 		if err := s.ComputeVersions(); err != nil {
@@ -13852,7 +13852,7 @@ func (s *mqlAzurermKeyvaultKey) Versions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versions")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.key\" calculated \"versions\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.key\" calculated \"versions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versions")
 	}
@@ -13861,14 +13861,14 @@ func (s *mqlAzurermKeyvaultKey) Versions() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.key\" failed to cast field \"versions\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.key\" failed to cast field \"versions\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermKeyvaultKey) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.key].Compute")
+func (s *mqlAzureKeyvaultKey) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.key].Compute")
 	switch name {
 	case "kid":
 		return nil
@@ -13895,12 +13895,12 @@ func (s *mqlAzurermKeyvaultKey) Compute(name string) error {
 	case "versions":
 		return s.ComputeVersions()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.key\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.key\" resource")
 	}
 }
 
 // ComputeKeyName computer autogenerated
-func (s *mqlAzurermKeyvaultKey) ComputeKeyName() error {
+func (s *mqlAzureKeyvaultKey) ComputeKeyName() error {
 	var err error
 	if _, ok := s.Cache.Load("keyName"); ok {
 		return nil
@@ -13914,7 +13914,7 @@ func (s *mqlAzurermKeyvaultKey) ComputeKeyName() error {
 }
 
 // ComputeVersion computer autogenerated
-func (s *mqlAzurermKeyvaultKey) ComputeVersion() error {
+func (s *mqlAzureKeyvaultKey) ComputeVersion() error {
 	var err error
 	if _, ok := s.Cache.Load("version"); ok {
 		return nil
@@ -13928,7 +13928,7 @@ func (s *mqlAzurermKeyvaultKey) ComputeVersion() error {
 }
 
 // ComputeVersions computer autogenerated
-func (s *mqlAzurermKeyvaultKey) ComputeVersions() error {
+func (s *mqlAzureKeyvaultKey) ComputeVersions() error {
 	var err error
 	if _, ok := s.Cache.Load("versions"); ok {
 		return nil
@@ -13941,8 +13941,8 @@ func (s *mqlAzurermKeyvaultKey) ComputeVersions() error {
 	return nil
 }
 
-// AzurermKeyvaultCertificate resource interface
-type AzurermKeyvaultCertificate interface {
+// AzureKeyvaultCertificate resource interface
+type AzureKeyvaultCertificate interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -13962,21 +13962,21 @@ type AzurermKeyvaultCertificate interface {
 	Versions() ([]interface{}, error)
 }
 
-// mqlAzurermKeyvaultCertificate for the azurerm.keyvault.certificate resource
-type mqlAzurermKeyvaultCertificate struct {
+// mqlAzureKeyvaultCertificate for the azure.keyvault.certificate resource
+type mqlAzureKeyvaultCertificate struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermKeyvaultCertificate) MqlResource() *resources.Resource {
+func (s *mqlAzureKeyvaultCertificate) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.keyvault.certificate resource
-func newAzurermKeyvaultCertificate(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.keyvault.certificate resource
+func newAzureKeyvaultCertificate(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermKeyvaultCertificate{runtime.NewResource("azurerm.keyvault.certificate")}
+	res := mqlAzureKeyvaultCertificate{runtime.NewResource("azure.keyvault.certificate")}
 	// assign all named fields
 	var id string
 
@@ -13990,60 +13990,60 @@ func newAzurermKeyvaultCertificate(runtime *resources.Runtime, args *resources.A
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "x5t":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"x5t\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"x5t\" argument has the wrong type (expected type \"string\")")
 			}
 		case "enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "notBefore":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"notBefore\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"notBefore\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "expires":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"expires\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"expires\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "created":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "updated":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "recoveryLevel":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"recoveryLevel\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"recoveryLevel\" argument has the wrong type (expected type \"string\")")
 			}
 		case "certName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"certName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"certName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "version":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"version\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"version\" argument has the wrong type (expected type \"string\")")
 			}
 		case "versions":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"versions\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"versions\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.certificate\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.certificate\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.keyvault.certificate with unknown argument " + name)
+			return nil, errors.New("Initialized azure.keyvault.certificate with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -14061,42 +14061,42 @@ func newAzurermKeyvaultCertificate(runtime *resources.Runtime, args *resources.A
 	return &res, nil
 }
 
-func (s *mqlAzurermKeyvaultCertificate) Validate() error {
+func (s *mqlAzureKeyvaultCertificate) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("x5t"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"x5t\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"x5t\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabled"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"enabled\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"enabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("notBefore"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"notBefore\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"notBefore\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("expires"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"expires\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"expires\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("created"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"created\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"created\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("updated"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"updated\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"updated\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("recoveryLevel"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.certificate\" resource without a \"recoveryLevel\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.certificate\" resource without a \"recoveryLevel\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.certificate].Register")
+func (s *mqlAzureKeyvaultCertificate) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.certificate].Register")
 	switch name {
 	case "id":
 		return nil
@@ -14123,13 +14123,13 @@ func (s *mqlAzurermKeyvaultCertificate) Register(name string) error {
 	case "versions":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.certificate\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.certificate\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.certificate].Field")
+func (s *mqlAzureKeyvaultCertificate) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.certificate].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -14156,156 +14156,156 @@ func (s *mqlAzurermKeyvaultCertificate) Field(name string) (interface{}, error) 
 	case "versions":
 		return s.Versions()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.keyvault.certificate\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.keyvault.certificate\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Id() (string, error) {
+func (s *mqlAzureKeyvaultCertificate) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureKeyvaultCertificate) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // X5t accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) X5t() (string, error) {
+func (s *mqlAzureKeyvaultCertificate) X5t() (string, error) {
 	res, ok := s.Cache.Load("x5t")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"x5t\"")
+		return "", errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"x5t\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"x5t\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"x5t\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Enabled accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Enabled() (bool, error) {
+func (s *mqlAzureKeyvaultCertificate) Enabled() (bool, error) {
 	res, ok := s.Cache.Load("enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"enabled\"")
+		return false, errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // NotBefore accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) NotBefore() (*time.Time, error) {
+func (s *mqlAzureKeyvaultCertificate) NotBefore() (*time.Time, error) {
 	res, ok := s.Cache.Load("notBefore")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"notBefore\"")
+		return nil, errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"notBefore\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"notBefore\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"notBefore\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Expires accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Expires() (*time.Time, error) {
+func (s *mqlAzureKeyvaultCertificate) Expires() (*time.Time, error) {
 	res, ok := s.Cache.Load("expires")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"expires\"")
+		return nil, errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"expires\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"expires\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"expires\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Created accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Created() (*time.Time, error) {
+func (s *mqlAzureKeyvaultCertificate) Created() (*time.Time, error) {
 	res, ok := s.Cache.Load("created")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"created\"")
+		return nil, errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"created\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Updated accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Updated() (*time.Time, error) {
+func (s *mqlAzureKeyvaultCertificate) Updated() (*time.Time, error) {
 	res, ok := s.Cache.Load("updated")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"updated\"")
+		return nil, errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"updated\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecoveryLevel accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) RecoveryLevel() (string, error) {
+func (s *mqlAzureKeyvaultCertificate) RecoveryLevel() (string, error) {
 	res, ok := s.Cache.Load("recoveryLevel")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.certificate\" failed: no value provided for static field \"recoveryLevel\"")
+		return "", errors.New("\"azure.keyvault.certificate\" failed: no value provided for static field \"recoveryLevel\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"recoveryLevel\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"recoveryLevel\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CertName accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) CertName() (string, error) {
+func (s *mqlAzureKeyvaultCertificate) CertName() (string, error) {
 	res, ok := s.Cache.Load("certName")
 	if !ok || !res.Valid {
 		if err := s.ComputeCertName(); err != nil {
@@ -14313,7 +14313,7 @@ func (s *mqlAzurermKeyvaultCertificate) CertName() (string, error) {
 		}
 		res, ok = s.Cache.Load("certName")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.certificate\" calculated \"certName\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.keyvault.certificate\" calculated \"certName\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "certName")
 	}
@@ -14322,13 +14322,13 @@ func (s *mqlAzurermKeyvaultCertificate) CertName() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"certName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"certName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Version accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Version() (string, error) {
+func (s *mqlAzureKeyvaultCertificate) Version() (string, error) {
 	res, ok := s.Cache.Load("version")
 	if !ok || !res.Valid {
 		if err := s.ComputeVersion(); err != nil {
@@ -14336,7 +14336,7 @@ func (s *mqlAzurermKeyvaultCertificate) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.certificate\" calculated \"version\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.keyvault.certificate\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -14345,13 +14345,13 @@ func (s *mqlAzurermKeyvaultCertificate) Version() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"version\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"version\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Versions accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Versions() ([]interface{}, error) {
+func (s *mqlAzureKeyvaultCertificate) Versions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("versions")
 	if !ok || !res.Valid {
 		if err := s.ComputeVersions(); err != nil {
@@ -14359,7 +14359,7 @@ func (s *mqlAzurermKeyvaultCertificate) Versions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versions")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.certificate\" calculated \"versions\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.certificate\" calculated \"versions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versions")
 	}
@@ -14368,14 +14368,14 @@ func (s *mqlAzurermKeyvaultCertificate) Versions() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.certificate\" failed to cast field \"versions\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.certificate\" failed to cast field \"versions\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermKeyvaultCertificate) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.certificate].Compute")
+func (s *mqlAzureKeyvaultCertificate) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.certificate].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -14402,12 +14402,12 @@ func (s *mqlAzurermKeyvaultCertificate) Compute(name string) error {
 	case "versions":
 		return s.ComputeVersions()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.certificate\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.certificate\" resource")
 	}
 }
 
 // ComputeCertName computer autogenerated
-func (s *mqlAzurermKeyvaultCertificate) ComputeCertName() error {
+func (s *mqlAzureKeyvaultCertificate) ComputeCertName() error {
 	var err error
 	if _, ok := s.Cache.Load("certName"); ok {
 		return nil
@@ -14421,7 +14421,7 @@ func (s *mqlAzurermKeyvaultCertificate) ComputeCertName() error {
 }
 
 // ComputeVersion computer autogenerated
-func (s *mqlAzurermKeyvaultCertificate) ComputeVersion() error {
+func (s *mqlAzureKeyvaultCertificate) ComputeVersion() error {
 	var err error
 	if _, ok := s.Cache.Load("version"); ok {
 		return nil
@@ -14435,7 +14435,7 @@ func (s *mqlAzurermKeyvaultCertificate) ComputeVersion() error {
 }
 
 // ComputeVersions computer autogenerated
-func (s *mqlAzurermKeyvaultCertificate) ComputeVersions() error {
+func (s *mqlAzureKeyvaultCertificate) ComputeVersions() error {
 	var err error
 	if _, ok := s.Cache.Load("versions"); ok {
 		return nil
@@ -14448,8 +14448,8 @@ func (s *mqlAzurermKeyvaultCertificate) ComputeVersions() error {
 	return nil
 }
 
-// AzurermKeyvaultSecret resource interface
-type AzurermKeyvaultSecret interface {
+// AzureKeyvaultSecret resource interface
+type AzureKeyvaultSecret interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -14469,21 +14469,21 @@ type AzurermKeyvaultSecret interface {
 	Versions() ([]interface{}, error)
 }
 
-// mqlAzurermKeyvaultSecret for the azurerm.keyvault.secret resource
-type mqlAzurermKeyvaultSecret struct {
+// mqlAzureKeyvaultSecret for the azure.keyvault.secret resource
+type mqlAzureKeyvaultSecret struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermKeyvaultSecret) MqlResource() *resources.Resource {
+func (s *mqlAzureKeyvaultSecret) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.keyvault.secret resource
-func newAzurermKeyvaultSecret(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.keyvault.secret resource
+func newAzureKeyvaultSecret(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermKeyvaultSecret{runtime.NewResource("azurerm.keyvault.secret")}
+	res := mqlAzureKeyvaultSecret{runtime.NewResource("azure.keyvault.secret")}
 	// assign all named fields
 	var id string
 
@@ -14497,60 +14497,60 @@ func newAzurermKeyvaultSecret(runtime *resources.Runtime, args *resources.Args) 
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "contentType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"contentType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"contentType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "managed":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"managed\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"managed\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "notBefore":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"notBefore\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"notBefore\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "expires":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"expires\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"expires\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "created":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "updated":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "secretName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"secretName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"secretName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "version":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"version\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"version\" argument has the wrong type (expected type \"string\")")
 			}
 		case "versions":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"versions\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"versions\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.keyvault.secret\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.keyvault.secret\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.keyvault.secret with unknown argument " + name)
+			return nil, errors.New("Initialized azure.keyvault.secret with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -14568,42 +14568,42 @@ func newAzurermKeyvaultSecret(runtime *resources.Runtime, args *resources.Args) 
 	return &res, nil
 }
 
-func (s *mqlAzurermKeyvaultSecret) Validate() error {
+func (s *mqlAzureKeyvaultSecret) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("contentType"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"contentType\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"contentType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("managed"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"managed\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"managed\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabled"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"enabled\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"enabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("notBefore"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"notBefore\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"notBefore\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("expires"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"expires\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"expires\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("created"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"created\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"created\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("updated"); !ok {
-		return errors.New("Initialized \"azurerm.keyvault.secret\" resource without a \"updated\". This field is required.")
+		return errors.New("Initialized \"azure.keyvault.secret\" resource without a \"updated\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.secret].Register")
+func (s *mqlAzureKeyvaultSecret) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.secret].Register")
 	switch name {
 	case "id":
 		return nil
@@ -14630,13 +14630,13 @@ func (s *mqlAzurermKeyvaultSecret) Register(name string) error {
 	case "versions":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.secret\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.secret\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.secret].Field")
+func (s *mqlAzureKeyvaultSecret) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.secret].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -14663,156 +14663,156 @@ func (s *mqlAzurermKeyvaultSecret) Field(name string) (interface{}, error) {
 	case "versions":
 		return s.Versions()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.keyvault.secret\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.keyvault.secret\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Id() (string, error) {
+func (s *mqlAzureKeyvaultSecret) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureKeyvaultSecret) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ContentType accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) ContentType() (string, error) {
+func (s *mqlAzureKeyvaultSecret) ContentType() (string, error) {
 	res, ok := s.Cache.Load("contentType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"contentType\"")
+		return "", errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"contentType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"contentType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"contentType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Managed accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Managed() (bool, error) {
+func (s *mqlAzureKeyvaultSecret) Managed() (bool, error) {
 	res, ok := s.Cache.Load("managed")
 	if !ok || !res.Valid {
-		return false, errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"managed\"")
+		return false, errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"managed\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"managed\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"managed\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Enabled accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Enabled() (bool, error) {
+func (s *mqlAzureKeyvaultSecret) Enabled() (bool, error) {
 	res, ok := s.Cache.Load("enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"enabled\"")
+		return false, errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // NotBefore accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) NotBefore() (*time.Time, error) {
+func (s *mqlAzureKeyvaultSecret) NotBefore() (*time.Time, error) {
 	res, ok := s.Cache.Load("notBefore")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"notBefore\"")
+		return nil, errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"notBefore\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"notBefore\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"notBefore\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Expires accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Expires() (*time.Time, error) {
+func (s *mqlAzureKeyvaultSecret) Expires() (*time.Time, error) {
 	res, ok := s.Cache.Load("expires")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"expires\"")
+		return nil, errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"expires\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"expires\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"expires\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Created accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Created() (*time.Time, error) {
+func (s *mqlAzureKeyvaultSecret) Created() (*time.Time, error) {
 	res, ok := s.Cache.Load("created")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"created\"")
+		return nil, errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"created\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Updated accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Updated() (*time.Time, error) {
+func (s *mqlAzureKeyvaultSecret) Updated() (*time.Time, error) {
 	res, ok := s.Cache.Load("updated")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.keyvault.secret\" failed: no value provided for static field \"updated\"")
+		return nil, errors.New("\"azure.keyvault.secret\" failed: no value provided for static field \"updated\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // SecretName accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) SecretName() (string, error) {
+func (s *mqlAzureKeyvaultSecret) SecretName() (string, error) {
 	res, ok := s.Cache.Load("secretName")
 	if !ok || !res.Valid {
 		if err := s.ComputeSecretName(); err != nil {
@@ -14820,7 +14820,7 @@ func (s *mqlAzurermKeyvaultSecret) SecretName() (string, error) {
 		}
 		res, ok = s.Cache.Load("secretName")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.secret\" calculated \"secretName\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.keyvault.secret\" calculated \"secretName\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "secretName")
 	}
@@ -14829,13 +14829,13 @@ func (s *mqlAzurermKeyvaultSecret) SecretName() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"secretName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"secretName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Version accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Version() (string, error) {
+func (s *mqlAzureKeyvaultSecret) Version() (string, error) {
 	res, ok := s.Cache.Load("version")
 	if !ok || !res.Valid {
 		if err := s.ComputeVersion(); err != nil {
@@ -14843,7 +14843,7 @@ func (s *mqlAzurermKeyvaultSecret) Version() (string, error) {
 		}
 		res, ok = s.Cache.Load("version")
 		if !ok {
-			return "", errors.New("\"azurerm.keyvault.secret\" calculated \"version\" but didn't find its value in cache.")
+			return "", errors.New("\"azure.keyvault.secret\" calculated \"version\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "version")
 	}
@@ -14852,13 +14852,13 @@ func (s *mqlAzurermKeyvaultSecret) Version() (string, error) {
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"version\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"version\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Versions accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Versions() ([]interface{}, error) {
+func (s *mqlAzureKeyvaultSecret) Versions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("versions")
 	if !ok || !res.Valid {
 		if err := s.ComputeVersions(); err != nil {
@@ -14866,7 +14866,7 @@ func (s *mqlAzurermKeyvaultSecret) Versions() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("versions")
 		if !ok {
-			return nil, errors.New("\"azurerm.keyvault.secret\" calculated \"versions\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.keyvault.secret\" calculated \"versions\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "versions")
 	}
@@ -14875,14 +14875,14 @@ func (s *mqlAzurermKeyvaultSecret) Versions() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.keyvault.secret\" failed to cast field \"versions\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.keyvault.secret\" failed to cast field \"versions\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermKeyvaultSecret) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.keyvault.secret].Compute")
+func (s *mqlAzureKeyvaultSecret) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.keyvault.secret].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -14909,12 +14909,12 @@ func (s *mqlAzurermKeyvaultSecret) Compute(name string) error {
 	case "versions":
 		return s.ComputeVersions()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.keyvault.secret\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.keyvault.secret\" resource")
 	}
 }
 
 // ComputeSecretName computer autogenerated
-func (s *mqlAzurermKeyvaultSecret) ComputeSecretName() error {
+func (s *mqlAzureKeyvaultSecret) ComputeSecretName() error {
 	var err error
 	if _, ok := s.Cache.Load("secretName"); ok {
 		return nil
@@ -14928,7 +14928,7 @@ func (s *mqlAzurermKeyvaultSecret) ComputeSecretName() error {
 }
 
 // ComputeVersion computer autogenerated
-func (s *mqlAzurermKeyvaultSecret) ComputeVersion() error {
+func (s *mqlAzureKeyvaultSecret) ComputeVersion() error {
 	var err error
 	if _, ok := s.Cache.Load("version"); ok {
 		return nil
@@ -14942,7 +14942,7 @@ func (s *mqlAzurermKeyvaultSecret) ComputeVersion() error {
 }
 
 // ComputeVersions computer autogenerated
-func (s *mqlAzurermKeyvaultSecret) ComputeVersions() error {
+func (s *mqlAzureKeyvaultSecret) ComputeVersions() error {
 	var err error
 	if _, ok := s.Cache.Load("versions"); ok {
 		return nil
@@ -14955,8 +14955,8 @@ func (s *mqlAzurermKeyvaultSecret) ComputeVersions() error {
 	return nil
 }
 
-// AzurermMonitor resource interface
-type AzurermMonitor interface {
+// AzureMonitor resource interface
+type AzureMonitor interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -14965,21 +14965,21 @@ type AzurermMonitor interface {
 	LogProfiles() ([]interface{}, error)
 }
 
-// mqlAzurermMonitor for the azurerm.monitor resource
-type mqlAzurermMonitor struct {
+// mqlAzureMonitor for the azure.monitor resource
+type mqlAzureMonitor struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMonitor) MqlResource() *resources.Resource {
+func (s *mqlAzureMonitor) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.monitor resource
-func newAzurermMonitor(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.monitor resource
+func newAzureMonitor(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMonitor{runtime.NewResource("azurerm.monitor")}
+	res := mqlAzureMonitor{runtime.NewResource("azure.monitor")}
 	// assign all named fields
 	var id string
 
@@ -14993,16 +14993,16 @@ func newAzurermMonitor(runtime *resources.Runtime, args *resources.Args) (interf
 		switch name {
 		case "logProfiles":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor\", its \"logProfiles\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor\", its \"logProfiles\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.monitor with unknown argument " + name)
+			return nil, errors.New("Initialized azure.monitor with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -15020,7 +15020,7 @@ func newAzurermMonitor(runtime *resources.Runtime, args *resources.Args) (interf
 	return &res, nil
 }
 
-func (s *mqlAzurermMonitor) Validate() error {
+func (s *mqlAzureMonitor) Validate() error {
 	// required arguments
 	// no required fields found
 
@@ -15028,29 +15028,29 @@ func (s *mqlAzurermMonitor) Validate() error {
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMonitor) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor].Register")
+func (s *mqlAzureMonitor) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.monitor].Register")
 	switch name {
 	case "logProfiles":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.monitor\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.monitor\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMonitor) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor].Field")
+func (s *mqlAzureMonitor) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.monitor].Field")
 	switch name {
 	case "logProfiles":
 		return s.LogProfiles()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.monitor\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.monitor\" resource")
 	}
 }
 
 // LogProfiles accessor autogenerated
-func (s *mqlAzurermMonitor) LogProfiles() ([]interface{}, error) {
+func (s *mqlAzureMonitor) LogProfiles() ([]interface{}, error) {
 	res, ok := s.Cache.Load("logProfiles")
 	if !ok || !res.Valid {
 		if err := s.ComputeLogProfiles(); err != nil {
@@ -15058,7 +15058,7 @@ func (s *mqlAzurermMonitor) LogProfiles() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("logProfiles")
 		if !ok {
-			return nil, errors.New("\"azurerm.monitor\" calculated \"logProfiles\" but didn't find its value in cache.")
+			return nil, errors.New("\"azure.monitor\" calculated \"logProfiles\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "logProfiles")
 	}
@@ -15067,24 +15067,24 @@ func (s *mqlAzurermMonitor) LogProfiles() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.monitor\" failed to cast field \"logProfiles\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.monitor\" failed to cast field \"logProfiles\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMonitor) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor].Compute")
+func (s *mqlAzureMonitor) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.monitor].Compute")
 	switch name {
 	case "logProfiles":
 		return s.ComputeLogProfiles()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.monitor\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.monitor\" resource")
 	}
 }
 
 // ComputeLogProfiles computer autogenerated
-func (s *mqlAzurermMonitor) ComputeLogProfiles() error {
+func (s *mqlAzureMonitor) ComputeLogProfiles() error {
 	var err error
 	if _, ok := s.Cache.Load("logProfiles"); ok {
 		return nil
@@ -15097,8 +15097,8 @@ func (s *mqlAzurermMonitor) ComputeLogProfiles() error {
 	return nil
 }
 
-// AzurermMonitorLogprofile resource interface
-type AzurermMonitorLogprofile interface {
+// AzureMonitorLogprofile resource interface
+type AzureMonitorLogprofile interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -15110,24 +15110,24 @@ type AzurermMonitorLogprofile interface {
 	Type() (string, error)
 	Tags() (map[string]interface{}, error)
 	Properties() (interface{}, error)
-	StorageAccount() (AzurermStorageAccount, error)
+	StorageAccount() (AzureStorageAccount, error)
 }
 
-// mqlAzurermMonitorLogprofile for the azurerm.monitor.logprofile resource
-type mqlAzurermMonitorLogprofile struct {
+// mqlAzureMonitorLogprofile for the azure.monitor.logprofile resource
+type mqlAzureMonitorLogprofile struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMonitorLogprofile) MqlResource() *resources.Resource {
+func (s *mqlAzureMonitorLogprofile) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.monitor.logprofile resource
-func newAzurermMonitorLogprofile(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.monitor.logprofile resource
+func newAzureMonitorLogprofile(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMonitorLogprofile{runtime.NewResource("azurerm.monitor.logprofile")}
+	res := mqlAzureMonitorLogprofile{runtime.NewResource("azure.monitor.logprofile")}
 	// assign all named fields
 	var id string
 
@@ -15141,40 +15141,40 @@ func newAzurermMonitorLogprofile(runtime *resources.Runtime, args *resources.Arg
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "storageAccount":
-			if _, ok := val.(AzurermStorageAccount); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"storageAccount\" argument has the wrong type (expected type \"AzurermStorageAccount\")")
+			if _, ok := val.(AzureStorageAccount); !ok {
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"storageAccount\" argument has the wrong type (expected type \"AzureStorageAccount\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.logprofile\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.logprofile\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.monitor.logprofile with unknown argument " + name)
+			return nil, errors.New("Initialized azure.monitor.logprofile with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -15192,36 +15192,36 @@ func newAzurermMonitorLogprofile(runtime *resources.Runtime, args *resources.Arg
 	return &res, nil
 }
 
-func (s *mqlAzurermMonitorLogprofile) Validate() error {
+func (s *mqlAzureMonitorLogprofile) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.logprofile\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.logprofile\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.logprofile\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.logprofile\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.logprofile\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.logprofile\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.logprofile\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.logprofile\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.logprofile\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.logprofile\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.logprofile\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.logprofile\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("storageAccount"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.logprofile\" resource without a \"storageAccount\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.logprofile\" resource without a \"storageAccount\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor.logprofile].Register")
+func (s *mqlAzureMonitorLogprofile) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.monitor.logprofile].Register")
 	switch name {
 	case "id":
 		return nil
@@ -15238,13 +15238,13 @@ func (s *mqlAzurermMonitorLogprofile) Register(name string) error {
 	case "storageAccount":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.monitor.logprofile\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.monitor.logprofile\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor.logprofile].Field")
+func (s *mqlAzureMonitorLogprofile) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.monitor.logprofile].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -15261,125 +15261,125 @@ func (s *mqlAzurermMonitorLogprofile) Field(name string) (interface{}, error) {
 	case "storageAccount":
 		return s.StorageAccount()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.monitor.logprofile\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.monitor.logprofile\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Id() (string, error) {
+func (s *mqlAzureMonitorLogprofile) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.monitor.logprofile\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.monitor.logprofile\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.monitor.logprofile\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.monitor.logprofile\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Name() (string, error) {
+func (s *mqlAzureMonitorLogprofile) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.monitor.logprofile\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.monitor.logprofile\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.monitor.logprofile\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.monitor.logprofile\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Location() (string, error) {
+func (s *mqlAzureMonitorLogprofile) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.monitor.logprofile\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.monitor.logprofile\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.monitor.logprofile\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.monitor.logprofile\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Type() (string, error) {
+func (s *mqlAzureMonitorLogprofile) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.monitor.logprofile\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.monitor.logprofile\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.monitor.logprofile\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.monitor.logprofile\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureMonitorLogprofile) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.monitor.logprofile\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.monitor.logprofile\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.monitor.logprofile\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.monitor.logprofile\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Properties() (interface{}, error) {
+func (s *mqlAzureMonitorLogprofile) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.monitor.logprofile\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.monitor.logprofile\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.monitor.logprofile\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.monitor.logprofile\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // StorageAccount accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) StorageAccount() (AzurermStorageAccount, error) {
+func (s *mqlAzureMonitorLogprofile) StorageAccount() (AzureStorageAccount, error) {
 	res, ok := s.Cache.Load("storageAccount")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.monitor.logprofile\" failed: no value provided for static field \"storageAccount\"")
+		return nil, errors.New("\"azure.monitor.logprofile\" failed: no value provided for static field \"storageAccount\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(AzurermStorageAccount)
+	tres, ok := res.Data.(AzureStorageAccount)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.monitor.logprofile\" failed to cast field \"storageAccount\" to the right type (AzurermStorageAccount): %#v", res)
+		return nil, fmt.Errorf("\"azure.monitor.logprofile\" failed to cast field \"storageAccount\" to the right type (AzureStorageAccount): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMonitorLogprofile) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor.logprofile].Compute")
+func (s *mqlAzureMonitorLogprofile) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.monitor.logprofile].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -15396,12 +15396,12 @@ func (s *mqlAzurermMonitorLogprofile) Compute(name string) error {
 	case "storageAccount":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.monitor.logprofile\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.monitor.logprofile\" resource")
 	}
 }
 
-// AzurermMonitorDiagnosticsetting resource interface
-type AzurermMonitorDiagnosticsetting interface {
+// AzureMonitorDiagnosticsetting resource interface
+type AzureMonitorDiagnosticsetting interface {
 	MqlResource() (*resources.Resource)
 	Compute(string) error
 	Field(string) (interface{}, error)
@@ -15411,24 +15411,24 @@ type AzurermMonitorDiagnosticsetting interface {
 	Name() (string, error)
 	Type() (string, error)
 	Properties() (interface{}, error)
-	StorageAccount() (AzurermStorageAccount, error)
+	StorageAccount() (AzureStorageAccount, error)
 }
 
-// mqlAzurermMonitorDiagnosticsetting for the azurerm.monitor.diagnosticsetting resource
-type mqlAzurermMonitorDiagnosticsetting struct {
+// mqlAzureMonitorDiagnosticsetting for the azure.monitor.diagnosticsetting resource
+type mqlAzureMonitorDiagnosticsetting struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzurermMonitorDiagnosticsetting) MqlResource() *resources.Resource {
+func (s *mqlAzureMonitorDiagnosticsetting) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azurerm.monitor.diagnosticsetting resource
-func newAzurermMonitorDiagnosticsetting(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.monitor.diagnosticsetting resource
+func newAzureMonitorDiagnosticsetting(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzurermMonitorDiagnosticsetting{runtime.NewResource("azurerm.monitor.diagnosticsetting")}
+	res := mqlAzureMonitorDiagnosticsetting{runtime.NewResource("azure.monitor.diagnosticsetting")}
 	// assign all named fields
 	var id string
 
@@ -15442,32 +15442,32 @@ func newAzurermMonitorDiagnosticsetting(runtime *resources.Runtime, args *resour
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.diagnosticsetting\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.diagnosticsetting\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.diagnosticsetting\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.diagnosticsetting\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.diagnosticsetting\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.diagnosticsetting\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.diagnosticsetting\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.diagnosticsetting\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "storageAccount":
-			if _, ok := val.(AzurermStorageAccount); !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.diagnosticsetting\", its \"storageAccount\" argument has the wrong type (expected type \"AzurermStorageAccount\")")
+			if _, ok := val.(AzureStorageAccount); !ok {
+				return nil, errors.New("Failed to initialize \"azure.monitor.diagnosticsetting\", its \"storageAccount\" argument has the wrong type (expected type \"AzureStorageAccount\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azurerm.monitor.diagnosticsetting\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.monitor.diagnosticsetting\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azurerm.monitor.diagnosticsetting with unknown argument " + name)
+			return nil, errors.New("Initialized azure.monitor.diagnosticsetting with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -15485,30 +15485,30 @@ func newAzurermMonitorDiagnosticsetting(runtime *resources.Runtime, args *resour
 	return &res, nil
 }
 
-func (s *mqlAzurermMonitorDiagnosticsetting) Validate() error {
+func (s *mqlAzureMonitorDiagnosticsetting) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.diagnosticsetting\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.diagnosticsetting\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.diagnosticsetting\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.diagnosticsetting\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.diagnosticsetting\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.diagnosticsetting\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.diagnosticsetting\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.diagnosticsetting\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("storageAccount"); !ok {
-		return errors.New("Initialized \"azurerm.monitor.diagnosticsetting\" resource without a \"storageAccount\". This field is required.")
+		return errors.New("Initialized \"azure.monitor.diagnosticsetting\" resource without a \"storageAccount\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor.diagnosticsetting].Register")
+func (s *mqlAzureMonitorDiagnosticsetting) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.monitor.diagnosticsetting].Register")
 	switch name {
 	case "id":
 		return nil
@@ -15521,13 +15521,13 @@ func (s *mqlAzurermMonitorDiagnosticsetting) Register(name string) error {
 	case "storageAccount":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.monitor.diagnosticsetting\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.monitor.diagnosticsetting\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor.diagnosticsetting].Field")
+func (s *mqlAzureMonitorDiagnosticsetting) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.monitor.diagnosticsetting].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -15540,93 +15540,93 @@ func (s *mqlAzurermMonitorDiagnosticsetting) Field(name string) (interface{}, er
 	case "storageAccount":
 		return s.StorageAccount()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azurerm.monitor.diagnosticsetting\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.monitor.diagnosticsetting\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) Id() (string, error) {
+func (s *mqlAzureMonitorDiagnosticsetting) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.monitor.diagnosticsetting\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.monitor.diagnosticsetting\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.monitor.diagnosticsetting\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.monitor.diagnosticsetting\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) Name() (string, error) {
+func (s *mqlAzureMonitorDiagnosticsetting) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.monitor.diagnosticsetting\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.monitor.diagnosticsetting\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.monitor.diagnosticsetting\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.monitor.diagnosticsetting\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) Type() (string, error) {
+func (s *mqlAzureMonitorDiagnosticsetting) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azurerm.monitor.diagnosticsetting\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.monitor.diagnosticsetting\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azurerm.monitor.diagnosticsetting\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.monitor.diagnosticsetting\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) Properties() (interface{}, error) {
+func (s *mqlAzureMonitorDiagnosticsetting) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.monitor.diagnosticsetting\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.monitor.diagnosticsetting\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.monitor.diagnosticsetting\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.monitor.diagnosticsetting\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // StorageAccount accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) StorageAccount() (AzurermStorageAccount, error) {
+func (s *mqlAzureMonitorDiagnosticsetting) StorageAccount() (AzureStorageAccount, error) {
 	res, ok := s.Cache.Load("storageAccount")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azurerm.monitor.diagnosticsetting\" failed: no value provided for static field \"storageAccount\"")
+		return nil, errors.New("\"azure.monitor.diagnosticsetting\" failed: no value provided for static field \"storageAccount\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(AzurermStorageAccount)
+	tres, ok := res.Data.(AzureStorageAccount)
 	if !ok {
-		return nil, fmt.Errorf("\"azurerm.monitor.diagnosticsetting\" failed to cast field \"storageAccount\" to the right type (AzurermStorageAccount): %#v", res)
+		return nil, fmt.Errorf("\"azure.monitor.diagnosticsetting\" failed to cast field \"storageAccount\" to the right type (AzureStorageAccount): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzurermMonitorDiagnosticsetting) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[azurerm.monitor.diagnosticsetting].Compute")
+func (s *mqlAzureMonitorDiagnosticsetting) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.monitor.diagnosticsetting].Compute")
 	switch name {
 	case "id":
 		return nil
@@ -15639,7 +15639,7 @@ func (s *mqlAzurermMonitorDiagnosticsetting) Compute(name string) error {
 	case "storageAccount":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azurerm.monitor.diagnosticsetting\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.monitor.diagnosticsetting\" resource")
 	}
 }
 

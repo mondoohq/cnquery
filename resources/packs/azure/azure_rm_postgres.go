@@ -11,15 +11,15 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermPostgresql) id() (string, error) {
-	return "azurerm.postgresql", nil
+func (a *mqlAzurePostgresql) id() (string, error) {
+	return "azure.postgresql", nil
 }
 
-func (a *mqlAzurermPostgresqlDatabase) id() (string, error) {
+func (a *mqlAzurePostgresqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermPostgresql) GetServers() ([]interface{}, error) {
+func (a *mqlAzurePostgresql) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (a *mqlAzurermPostgresql) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.postgresql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.postgresql.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -74,11 +74,11 @@ func (a *mqlAzurermPostgresql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermPostgresqlServer) id() (string, error) {
+func (a *mqlAzurePostgresqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzurePostgresqlServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -141,7 +141,7 @@ func (a *mqlAzurermPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzurePostgresqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -181,7 +181,7 @@ func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.postgresql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.postgresql.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -198,7 +198,7 @@ func (a *mqlAzurermPostgresqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzurePostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ func (a *mqlAzurermPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

@@ -4,8 +4,8 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurerm) id() (string, error) {
-	return "azurerm", nil
+func (a *mqlAzure) id() (string, error) {
+	return "azure", nil
 }
 
 func azureTagsToInterface(data map[string]*string) map[string]interface{} {

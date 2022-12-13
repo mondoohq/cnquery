@@ -11,11 +11,11 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermNetwork) id() (string, error) {
-	return "azurerm.network", nil
+func (a *mqlAzureNetwork) id() (string, error) {
+	return "azure.network", nil
 }
 
-func (a *mqlAzurermNetwork) GetInterfaces() ([]interface{}, error) {
+func (a *mqlAzureNetwork) GetInterfaces() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resou
 		return nil, err
 	}
 
-	return runtime.CreateResource("azurerm.network.interface",
+	return runtime.CreateResource("azure.network.interface",
 		"id", core.ToString(iface.ID),
 		"name", core.ToString(iface.Name),
 		"location", core.ToString(iface.Location),
@@ -70,7 +70,7 @@ func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resou
 	)
 }
 
-func (a *mqlAzurermNetwork) GetSecurityGroups() ([]interface{}, error) {
+func (a *mqlAzureNetwork) GetSecurityGroups() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -168,7 +168,7 @@ func azureSecGroupToMql(runtime *resources.Runtime, secGroup network.SecurityGro
 		}
 	}
 
-	return runtime.CreateResource("azurerm.network.securitygroup",
+	return runtime.CreateResource("azure.network.securitygroup",
 		"id", core.ToString(secGroup.ID),
 		"name", core.ToString(secGroup.Name),
 		"location", core.ToString(secGroup.Location),
@@ -200,7 +200,7 @@ func azureSecurityRuleToMql(runtime *resources.Runtime, secRule network.Security
 		}
 	}
 
-	return runtime.CreateResource("azurerm.network.securityrule",
+	return runtime.CreateResource("azure.network.securityrule",
 		"id", core.ToString(secRule.ID),
 		"name", core.ToString(secRule.Name),
 		"etag", core.ToString(secRule.Etag),
@@ -229,23 +229,23 @@ func parseAzureSecurityRulePortRange(portRange string) []AzureSecurityRulePortRa
 	return res
 }
 
-func (a *mqlAzurermNetworkInterface) id() (string, error) {
+func (a *mqlAzureNetworkInterface) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermNetworkInterface) GetVm() (interface{}, error) {
+func (a *mqlAzureNetworkInterface) GetVm() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *mqlAzurermNetworkSecuritygroup) id() (string, error) {
+func (a *mqlAzureNetworkSecuritygroup) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermNetworkSecurityrule) id() (string, error) {
+func (a *mqlAzureNetworkSecurityrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermNetwork) GetWatchers() ([]interface{}, error) {
+func (a *mqlAzureNetwork) GetWatchers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -274,7 +274,7 @@ func (a *mqlAzurermNetwork) GetWatchers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azurerm.network.watcher",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.network.watcher",
 				"id", core.ToString(watcher.ID),
 				"name", core.ToString(watcher.Name),
 				"location", core.ToString(watcher.Location),
@@ -293,6 +293,6 @@ func (a *mqlAzurermNetwork) GetWatchers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermNetworkWatcher) id() (string, error) {
+func (a *mqlAzureNetworkWatcher) id() (string, error) {
 	return a.Id()
 }

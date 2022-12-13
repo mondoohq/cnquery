@@ -10,19 +10,19 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurermMariadb) id() (string, error) {
-	return "azurerm.mariadb", nil
+func (a *mqlAzureMariadb) id() (string, error) {
+	return "azure.mariadb", nil
 }
 
-func (a *mqlAzurermMariadbServer) id() (string, error) {
+func (a *mqlAzureMariadbServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermMariadbDatabase) id() (string, error) {
+func (a *mqlAzureMariadbDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurermMariadb) GetServers() ([]interface{}, error) {
+func (a *mqlAzureMariadb) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (a *mqlAzurermMariadb) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azurerm.mariadb.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mariadb.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -68,7 +68,7 @@ func (a *mqlAzurermMariadb) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureMariadbServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -129,7 +129,7 @@ func (a *mqlAzurermMariadbServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureMariadbServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azurerm.mariadb.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mariadb.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -186,7 +186,7 @@ func (a *mqlAzurermMariadbServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureMariadbServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -227,7 +227,7 @@ func (a *mqlAzurermMariadbServer) GetFirewallRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azurerm.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
