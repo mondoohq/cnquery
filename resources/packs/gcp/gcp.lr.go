@@ -20,8 +20,17 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.compute", newGcpCompute)
 	registry.AddFactory("gcp.compute.region", newGcpComputeRegion)
 	registry.AddFactory("gcp.compute.zone", newGcpComputeZone)
+	registry.AddFactory("gcp.compute.machineType", newGcpComputeMachineType)
 	registry.AddFactory("gcp.compute.instance", newGcpComputeInstance)
 	registry.AddFactory("gcp.compute.serviceaccount", newGcpComputeServiceaccount)
+	registry.AddFactory("gcp.compute.disk", newGcpComputeDisk)
+	registry.AddFactory("gcp.compute.attachedDisk", newGcpComputeAttachedDisk)
+	registry.AddFactory("gcp.compute.snapshot", newGcpComputeSnapshot)
+	registry.AddFactory("gcp.compute.image", newGcpComputeImage)
+	registry.AddFactory("gcp.compute.firewall", newGcpComputeFirewall)
+	registry.AddFactory("gcp.compute.network", newGcpComputeNetwork)
+	registry.AddFactory("gcp.compute.subnetwork", newGcpComputeSubnetwork)
+	registry.AddFactory("gcp.compute.router", newGcpComputeRouter)
 	registry.AddFactory("gcp.storage", newGcpStorage)
 	registry.AddFactory("gcp.storage.bucket", newGcpStorageBucket)
 	registry.AddFactory("gcp.sql", newGcpSql)
@@ -1624,6 +1633,14 @@ type GcpCompute interface {
 	Validate() error
 	ProjectId() (string, error)
 	Instances() ([]interface{}, error)
+	Snapshots() ([]interface{}, error)
+	Disks() ([]interface{}, error)
+	Images() ([]interface{}, error)
+	Firewalls() ([]interface{}, error)
+	Networks() ([]interface{}, error)
+	Subnetworks() ([]interface{}, error)
+	Routers() ([]interface{}, error)
+	MachineTypes() ([]interface{}, error)
 	Regions() ([]interface{}, error)
 	Zones() ([]interface{}, error)
 }
@@ -1670,6 +1687,38 @@ func newGcpCompute(runtime *resources.Runtime, args *resources.Args) (interface{
 		case "instances":
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"instances\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "snapshots":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"snapshots\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "disks":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"disks\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "images":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"images\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "firewalls":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"firewalls\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "networks":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"networks\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "subnetworks":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"subnetworks\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "routers":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"routers\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "machineTypes":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute\", its \"machineTypes\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "regions":
 			if _, ok := val.([]interface{}); !ok {
@@ -1721,6 +1770,22 @@ func (s *mqlGcpCompute) Register(name string) error {
 		return nil
 	case "instances":
 		return nil
+	case "snapshots":
+		return nil
+	case "disks":
+		return nil
+	case "images":
+		return nil
+	case "firewalls":
+		return nil
+	case "networks":
+		return nil
+	case "subnetworks":
+		return nil
+	case "routers":
+		return nil
+	case "machineTypes":
+		return nil
 	case "regions":
 		return nil
 	case "zones":
@@ -1738,6 +1803,22 @@ func (s *mqlGcpCompute) Field(name string) (interface{}, error) {
 		return s.ProjectId()
 	case "instances":
 		return s.Instances()
+	case "snapshots":
+		return s.Snapshots()
+	case "disks":
+		return s.Disks()
+	case "images":
+		return s.Images()
+	case "firewalls":
+		return s.Firewalls()
+	case "networks":
+		return s.Networks()
+	case "subnetworks":
+		return s.Subnetworks()
+	case "routers":
+		return s.Routers()
+	case "machineTypes":
+		return s.MachineTypes()
 	case "regions":
 		return s.Regions()
 	case "zones":
@@ -1782,6 +1863,190 @@ func (s *mqlGcpCompute) Instances() ([]interface{}, error) {
 	tres, ok := res.Data.([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"instances\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Snapshots accessor autogenerated
+func (s *mqlGcpCompute) Snapshots() ([]interface{}, error) {
+	res, ok := s.Cache.Load("snapshots")
+	if !ok || !res.Valid {
+		if err := s.ComputeSnapshots(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("snapshots")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"snapshots\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "snapshots")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"snapshots\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Disks accessor autogenerated
+func (s *mqlGcpCompute) Disks() ([]interface{}, error) {
+	res, ok := s.Cache.Load("disks")
+	if !ok || !res.Valid {
+		if err := s.ComputeDisks(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("disks")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"disks\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "disks")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"disks\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Images accessor autogenerated
+func (s *mqlGcpCompute) Images() ([]interface{}, error) {
+	res, ok := s.Cache.Load("images")
+	if !ok || !res.Valid {
+		if err := s.ComputeImages(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("images")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"images\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "images")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"images\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Firewalls accessor autogenerated
+func (s *mqlGcpCompute) Firewalls() ([]interface{}, error) {
+	res, ok := s.Cache.Load("firewalls")
+	if !ok || !res.Valid {
+		if err := s.ComputeFirewalls(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("firewalls")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"firewalls\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "firewalls")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"firewalls\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Networks accessor autogenerated
+func (s *mqlGcpCompute) Networks() ([]interface{}, error) {
+	res, ok := s.Cache.Load("networks")
+	if !ok || !res.Valid {
+		if err := s.ComputeNetworks(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("networks")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"networks\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "networks")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"networks\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Subnetworks accessor autogenerated
+func (s *mqlGcpCompute) Subnetworks() ([]interface{}, error) {
+	res, ok := s.Cache.Load("subnetworks")
+	if !ok || !res.Valid {
+		if err := s.ComputeSubnetworks(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("subnetworks")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"subnetworks\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "subnetworks")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"subnetworks\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Routers accessor autogenerated
+func (s *mqlGcpCompute) Routers() ([]interface{}, error) {
+	res, ok := s.Cache.Load("routers")
+	if !ok || !res.Valid {
+		if err := s.ComputeRouters(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("routers")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"routers\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "routers")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"routers\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// MachineTypes accessor autogenerated
+func (s *mqlGcpCompute) MachineTypes() ([]interface{}, error) {
+	res, ok := s.Cache.Load("machineTypes")
+	if !ok || !res.Valid {
+		if err := s.ComputeMachineTypes(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("machineTypes")
+		if !ok {
+			return nil, errors.New("\"gcp.compute\" calculated \"machineTypes\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "machineTypes")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute\" failed to cast field \"machineTypes\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
@@ -1840,6 +2105,22 @@ func (s *mqlGcpCompute) Compute(name string) error {
 		return nil
 	case "instances":
 		return s.ComputeInstances()
+	case "snapshots":
+		return s.ComputeSnapshots()
+	case "disks":
+		return s.ComputeDisks()
+	case "images":
+		return s.ComputeImages()
+	case "firewalls":
+		return s.ComputeFirewalls()
+	case "networks":
+		return s.ComputeNetworks()
+	case "subnetworks":
+		return s.ComputeSubnetworks()
+	case "routers":
+		return s.ComputeRouters()
+	case "machineTypes":
+		return s.ComputeMachineTypes()
 	case "regions":
 		return s.ComputeRegions()
 	case "zones":
@@ -1860,6 +2141,118 @@ func (s *mqlGcpCompute) ComputeInstances() error {
 		return err
 	}
 	s.Cache.Store("instances", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeSnapshots computer autogenerated
+func (s *mqlGcpCompute) ComputeSnapshots() error {
+	var err error
+	if _, ok := s.Cache.Load("snapshots"); ok {
+		return nil
+	}
+	vres, err := s.GetSnapshots()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("snapshots", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeDisks computer autogenerated
+func (s *mqlGcpCompute) ComputeDisks() error {
+	var err error
+	if _, ok := s.Cache.Load("disks"); ok {
+		return nil
+	}
+	vres, err := s.GetDisks()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("disks", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeImages computer autogenerated
+func (s *mqlGcpCompute) ComputeImages() error {
+	var err error
+	if _, ok := s.Cache.Load("images"); ok {
+		return nil
+	}
+	vres, err := s.GetImages()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("images", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeFirewalls computer autogenerated
+func (s *mqlGcpCompute) ComputeFirewalls() error {
+	var err error
+	if _, ok := s.Cache.Load("firewalls"); ok {
+		return nil
+	}
+	vres, err := s.GetFirewalls()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("firewalls", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeNetworks computer autogenerated
+func (s *mqlGcpCompute) ComputeNetworks() error {
+	var err error
+	if _, ok := s.Cache.Load("networks"); ok {
+		return nil
+	}
+	vres, err := s.GetNetworks()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("networks", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeSubnetworks computer autogenerated
+func (s *mqlGcpCompute) ComputeSubnetworks() error {
+	var err error
+	if _, ok := s.Cache.Load("subnetworks"); ok {
+		return nil
+	}
+	vres, err := s.GetSubnetworks()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("subnetworks", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeRouters computer autogenerated
+func (s *mqlGcpCompute) ComputeRouters() error {
+	var err error
+	if _, ok := s.Cache.Load("routers"); ok {
+		return nil
+	}
+	vres, err := s.GetRouters()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("routers", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeMachineTypes computer autogenerated
+func (s *mqlGcpCompute) ComputeMachineTypes() error {
+	var err error
+	if _, ok := s.Cache.Load("machineTypes"); ok {
+		return nil
+	}
+	vres, err := s.GetMachineTypes()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("machineTypes", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
 	return nil
 }
 
@@ -2494,6 +2887,447 @@ func (s *mqlGcpComputeZone) ComputeRegion() error {
 	return nil
 }
 
+// GcpComputeMachineType resource interface
+type GcpComputeMachineType interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	ProjectId() (string, error)
+	Name() (string, error)
+	Description() (string, error)
+	GuestCpus() (int64, error)
+	IsSharedCpu() (bool, error)
+	MaximumPersistentDisks() (int64, error)
+	MaximumPersistentDisksSizeGb() (int64, error)
+	MemoryMb() (int64, error)
+	Created() (*time.Time, error)
+	Zone() (GcpComputeZone, error)
+}
+
+// mqlGcpComputeMachineType for the gcp.compute.machineType resource
+type mqlGcpComputeMachineType struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeMachineType) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.machineType resource
+func newGcpComputeMachineType(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeMachineType{runtime.NewResource("gcp.compute.machineType")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "guestCpus":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"guestCpus\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "isSharedCpu":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"isSharedCpu\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "maximumPersistentDisks":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"maximumPersistentDisks\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "maximumPersistentDisksSizeGb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"maximumPersistentDisksSizeGb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "memoryMb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"memoryMb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "zone":
+			if _, ok := val.(GcpComputeZone); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"zone\" argument has the wrong type (expected type \"GcpComputeZone\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.machineType\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.machineType with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeMachineType) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"projectId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("guestCpus"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"guestCpus\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("isSharedCpu"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"isSharedCpu\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("maximumPersistentDisks"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"maximumPersistentDisks\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("maximumPersistentDisksSizeGb"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"maximumPersistentDisksSizeGb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("memoryMb"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"memoryMb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.machineType\" resource without a \"created\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeMachineType) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.machineType].Register")
+	switch name {
+	case "id":
+		return nil
+	case "projectId":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "guestCpus":
+		return nil
+	case "isSharedCpu":
+		return nil
+	case "maximumPersistentDisks":
+		return nil
+	case "maximumPersistentDisksSizeGb":
+		return nil
+	case "memoryMb":
+		return nil
+	case "created":
+		return nil
+	case "zone":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.machineType\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeMachineType) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.machineType].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "projectId":
+		return s.ProjectId()
+	case "name":
+		return s.Name()
+	case "description":
+		return s.Description()
+	case "guestCpus":
+		return s.GuestCpus()
+	case "isSharedCpu":
+		return s.IsSharedCpu()
+	case "maximumPersistentDisks":
+		return s.MaximumPersistentDisks()
+	case "maximumPersistentDisksSizeGb":
+		return s.MaximumPersistentDisksSizeGb()
+	case "memoryMb":
+		return s.MemoryMb()
+	case "created":
+		return s.Created()
+	case "zone":
+		return s.Zone()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.machineType\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeMachineType) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpComputeMachineType) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeMachineType) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeMachineType) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// GuestCpus accessor autogenerated
+func (s *mqlGcpComputeMachineType) GuestCpus() (int64, error) {
+	res, ok := s.Cache.Load("guestCpus")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"guestCpus\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"guestCpus\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// IsSharedCpu accessor autogenerated
+func (s *mqlGcpComputeMachineType) IsSharedCpu() (bool, error) {
+	res, ok := s.Cache.Load("isSharedCpu")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"isSharedCpu\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"isSharedCpu\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// MaximumPersistentDisks accessor autogenerated
+func (s *mqlGcpComputeMachineType) MaximumPersistentDisks() (int64, error) {
+	res, ok := s.Cache.Load("maximumPersistentDisks")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"maximumPersistentDisks\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"maximumPersistentDisks\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// MaximumPersistentDisksSizeGb accessor autogenerated
+func (s *mqlGcpComputeMachineType) MaximumPersistentDisksSizeGb() (int64, error) {
+	res, ok := s.Cache.Load("maximumPersistentDisksSizeGb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"maximumPersistentDisksSizeGb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"maximumPersistentDisksSizeGb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// MemoryMb accessor autogenerated
+func (s *mqlGcpComputeMachineType) MemoryMb() (int64, error) {
+	res, ok := s.Cache.Load("memoryMb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"memoryMb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"memoryMb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeMachineType) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.machineType\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Zone accessor autogenerated
+func (s *mqlGcpComputeMachineType) Zone() (GcpComputeZone, error) {
+	res, ok := s.Cache.Load("zone")
+	if !ok || !res.Valid {
+		if err := s.ComputeZone(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("zone")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.machineType\" calculated \"zone\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "zone")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeZone)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.machineType\" failed to cast field \"zone\" to the right type (GcpComputeZone): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeMachineType) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.machineType].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "projectId":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "guestCpus":
+		return nil
+	case "isSharedCpu":
+		return nil
+	case "maximumPersistentDisks":
+		return nil
+	case "maximumPersistentDisksSizeGb":
+		return nil
+	case "memoryMb":
+		return nil
+	case "created":
+		return nil
+	case "zone":
+		return s.ComputeZone()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.machineType\" resource")
+	}
+}
+
+// ComputeZone computer autogenerated
+func (s *mqlGcpComputeMachineType) ComputeZone() error {
+	var err error
+	if _, ok := s.Cache.Load("zone"); ok {
+		return nil
+	}
+	vres, err := s.GetZone()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("zone", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
 // GcpComputeInstance resource interface
 type GcpComputeInstance interface {
 	MqlResource() (*resources.Resource)
@@ -2502,17 +3336,43 @@ type GcpComputeInstance interface {
 	Register(string) error
 	Validate() error
 	Id() (string, error)
+	ProjectId() (string, error)
 	Name() (string, error)
-	CpuPlatform() (string, error)
-	DeletionProtection() (bool, error)
 	Description() (string, error)
+	CanIpForward() (bool, error)
+	CpuPlatform() (string, error)
+	Created() (*time.Time, error)
+	DeletionProtection() (bool, error)
+	EnableDisplay() (bool, error)
+	GuestAccelerators() ([]interface{}, error)
+	Fingerprint() (string, error)
 	Hostname() (string, error)
+	KeyRevocationActionType() (string, error)
 	Labels() (map[string]interface{}, error)
+	LastStartTimestamp() (*time.Time, error)
+	LastStopTimestamp() (*time.Time, error)
+	LastSuspendedTimestamp() (*time.Time, error)
+	Metadata() (map[string]interface{}, error)
+	MinCpuPlatform() (string, error)
+	NetworkInterfaces() ([]interface{}, error)
+	PrivateIpv6GoogleAccess() (string, error)
+	ReservationAffinity() (interface{}, error)
+	ResourcePolicies() ([]interface{}, error)
+	PhysicalHostResourceStatus() (string, error)
+	Scheduling() (interface{}, error)
+	EnableIntegrityMonitoring() (bool, error)
+	EnableSecureBoot() (bool, error)
+	EnableVtpm() (bool, error)
+	StartRestricted() (bool, error)
 	Status() (string, error)
 	StatusMessage() (string, error)
+	SourceMachineImage() (string, error)
 	Tags() ([]interface{}, error)
-	Metadata() (map[string]interface{}, error)
+	TotalEgressBandwidthTier() (string, error)
 	ServiceAccounts() ([]interface{}, error)
+	Disks() ([]interface{}, error)
+	MachineType() (GcpComputeMachineType, error)
+	Zone() (GcpComputeZone, error)
 }
 
 // mqlGcpComputeInstance for the gcp.compute.instance resource
@@ -2545,29 +3405,117 @@ func newGcpComputeInstance(runtime *resources.Runtime, args *resources.Args) (in
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
 		case "name":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"name\" argument has the wrong type (expected type \"string\")")
-			}
-		case "cpuPlatform":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"cpuPlatform\" argument has the wrong type (expected type \"string\")")
-			}
-		case "deletionProtection":
-			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"deletionProtection\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "description":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
+		case "canIpForward":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"canIpForward\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "cpuPlatform":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"cpuPlatform\" argument has the wrong type (expected type \"string\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "deletionProtection":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"deletionProtection\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "enableDisplay":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"enableDisplay\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "guestAccelerators":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"guestAccelerators\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "fingerprint":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"fingerprint\" argument has the wrong type (expected type \"string\")")
+			}
 		case "hostname":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"hostname\" argument has the wrong type (expected type \"string\")")
 			}
+		case "keyRevocationActionType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"keyRevocationActionType\" argument has the wrong type (expected type \"string\")")
+			}
 		case "labels":
 			if _, ok := val.(map[string]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "lastStartTimestamp":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"lastStartTimestamp\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "lastStopTimestamp":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"lastStopTimestamp\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "lastSuspendedTimestamp":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"lastSuspendedTimestamp\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "metadata":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"metadata\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "minCpuPlatform":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"minCpuPlatform\" argument has the wrong type (expected type \"string\")")
+			}
+		case "networkInterfaces":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"networkInterfaces\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "privateIpv6GoogleAccess":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"privateIpv6GoogleAccess\" argument has the wrong type (expected type \"string\")")
+			}
+		case "reservationAffinity":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"reservationAffinity\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "resourcePolicies":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"resourcePolicies\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "physicalHostResourceStatus":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"physicalHostResourceStatus\" argument has the wrong type (expected type \"string\")")
+			}
+		case "scheduling":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"scheduling\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "enableIntegrityMonitoring":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"enableIntegrityMonitoring\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "enableSecureBoot":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"enableSecureBoot\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "enableVtpm":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"enableVtpm\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "startRestricted":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"startRestricted\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "status":
 			if _, ok := val.(string); !ok {
@@ -2577,17 +3525,33 @@ func newGcpComputeInstance(runtime *resources.Runtime, args *resources.Args) (in
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"statusMessage\" argument has the wrong type (expected type \"string\")")
 			}
+		case "sourceMachineImage":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"sourceMachineImage\" argument has the wrong type (expected type \"string\")")
+			}
 		case "tags":
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"tags\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
-		case "metadata":
-			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"metadata\" argument has the wrong type (expected type \"map[string]interface{}\")")
+		case "totalEgressBandwidthTier":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"totalEgressBandwidthTier\" argument has the wrong type (expected type \"string\")")
 			}
 		case "serviceAccounts":
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"serviceAccounts\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "disks":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"disks\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "machineType":
+			if _, ok := val.(GcpComputeMachineType); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"machineType\" argument has the wrong type (expected type \"GcpComputeMachineType\")")
+			}
+		case "zone":
+			if _, ok := val.(GcpComputeZone); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.instance\", its \"zone\" argument has the wrong type (expected type \"GcpComputeZone\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
@@ -2619,23 +3583,89 @@ func (s *mqlGcpComputeInstance) Validate() error {
 	if _, ok := s.Cache.Load("id"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"id\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"projectId\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("name"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"name\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("cpuPlatform"); !ok {
-		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"cpuPlatform\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("deletionProtection"); !ok {
-		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"deletionProtection\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("description"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"description\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("canIpForward"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"canIpForward\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("cpuPlatform"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"cpuPlatform\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"created\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("deletionProtection"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"deletionProtection\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableDisplay"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"enableDisplay\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("guestAccelerators"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"guestAccelerators\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("fingerprint"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"fingerprint\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("hostname"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"hostname\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("keyRevocationActionType"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"keyRevocationActionType\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("labels"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"labels\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("lastStartTimestamp"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"lastStartTimestamp\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("lastStopTimestamp"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"lastStopTimestamp\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("lastSuspendedTimestamp"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"lastSuspendedTimestamp\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("metadata"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"metadata\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("minCpuPlatform"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"minCpuPlatform\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("networkInterfaces"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"networkInterfaces\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("privateIpv6GoogleAccess"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"privateIpv6GoogleAccess\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("reservationAffinity"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"reservationAffinity\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("resourcePolicies"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"resourcePolicies\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("physicalHostResourceStatus"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"physicalHostResourceStatus\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("scheduling"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"scheduling\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableIntegrityMonitoring"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"enableIntegrityMonitoring\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableSecureBoot"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"enableSecureBoot\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableVtpm"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"enableVtpm\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("startRestricted"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"startRestricted\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("status"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"status\". This field is required.")
@@ -2643,14 +3673,23 @@ func (s *mqlGcpComputeInstance) Validate() error {
 	if _, ok := s.Cache.Load("statusMessage"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"statusMessage\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("sourceMachineImage"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"sourceMachineImage\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("tags"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"tags\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("metadata"); !ok {
-		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"metadata\". This field is required.")
+	if _, ok := s.Cache.Load("totalEgressBandwidthTier"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"totalEgressBandwidthTier\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("serviceAccounts"); !ok {
 		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"serviceAccounts\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("disks"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"disks\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("zone"); !ok {
+		return errors.New("Initialized \"gcp.compute.instance\" resource without a \"zone\". This field is required.")
 	}
 
 	return nil
@@ -2662,27 +3701,79 @@ func (s *mqlGcpComputeInstance) Register(name string) error {
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "name":
-		return nil
-	case "cpuPlatform":
-		return nil
-	case "deletionProtection":
 		return nil
 	case "description":
 		return nil
+	case "canIpForward":
+		return nil
+	case "cpuPlatform":
+		return nil
+	case "created":
+		return nil
+	case "deletionProtection":
+		return nil
+	case "enableDisplay":
+		return nil
+	case "guestAccelerators":
+		return nil
+	case "fingerprint":
+		return nil
 	case "hostname":
 		return nil
+	case "keyRevocationActionType":
+		return nil
 	case "labels":
+		return nil
+	case "lastStartTimestamp":
+		return nil
+	case "lastStopTimestamp":
+		return nil
+	case "lastSuspendedTimestamp":
+		return nil
+	case "metadata":
+		return nil
+	case "minCpuPlatform":
+		return nil
+	case "networkInterfaces":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "reservationAffinity":
+		return nil
+	case "resourcePolicies":
+		return nil
+	case "physicalHostResourceStatus":
+		return nil
+	case "scheduling":
+		return nil
+	case "enableIntegrityMonitoring":
+		return nil
+	case "enableSecureBoot":
+		return nil
+	case "enableVtpm":
+		return nil
+	case "startRestricted":
 		return nil
 	case "status":
 		return nil
 	case "statusMessage":
 		return nil
+	case "sourceMachineImage":
+		return nil
 	case "tags":
 		return nil
-	case "metadata":
+	case "totalEgressBandwidthTier":
 		return nil
 	case "serviceAccounts":
+		return nil
+	case "disks":
+		return nil
+	case "machineType":
+		return nil
+	case "zone":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.instance\" resource")
@@ -2695,28 +3786,80 @@ func (s *mqlGcpComputeInstance) Field(name string) (interface{}, error) {
 	switch name {
 	case "id":
 		return s.Id()
+	case "projectId":
+		return s.ProjectId()
 	case "name":
 		return s.Name()
-	case "cpuPlatform":
-		return s.CpuPlatform()
-	case "deletionProtection":
-		return s.DeletionProtection()
 	case "description":
 		return s.Description()
+	case "canIpForward":
+		return s.CanIpForward()
+	case "cpuPlatform":
+		return s.CpuPlatform()
+	case "created":
+		return s.Created()
+	case "deletionProtection":
+		return s.DeletionProtection()
+	case "enableDisplay":
+		return s.EnableDisplay()
+	case "guestAccelerators":
+		return s.GuestAccelerators()
+	case "fingerprint":
+		return s.Fingerprint()
 	case "hostname":
 		return s.Hostname()
+	case "keyRevocationActionType":
+		return s.KeyRevocationActionType()
 	case "labels":
 		return s.Labels()
+	case "lastStartTimestamp":
+		return s.LastStartTimestamp()
+	case "lastStopTimestamp":
+		return s.LastStopTimestamp()
+	case "lastSuspendedTimestamp":
+		return s.LastSuspendedTimestamp()
+	case "metadata":
+		return s.Metadata()
+	case "minCpuPlatform":
+		return s.MinCpuPlatform()
+	case "networkInterfaces":
+		return s.NetworkInterfaces()
+	case "privateIpv6GoogleAccess":
+		return s.PrivateIpv6GoogleAccess()
+	case "reservationAffinity":
+		return s.ReservationAffinity()
+	case "resourcePolicies":
+		return s.ResourcePolicies()
+	case "physicalHostResourceStatus":
+		return s.PhysicalHostResourceStatus()
+	case "scheduling":
+		return s.Scheduling()
+	case "enableIntegrityMonitoring":
+		return s.EnableIntegrityMonitoring()
+	case "enableSecureBoot":
+		return s.EnableSecureBoot()
+	case "enableVtpm":
+		return s.EnableVtpm()
+	case "startRestricted":
+		return s.StartRestricted()
 	case "status":
 		return s.Status()
 	case "statusMessage":
 		return s.StatusMessage()
+	case "sourceMachineImage":
+		return s.SourceMachineImage()
 	case "tags":
 		return s.Tags()
-	case "metadata":
-		return s.Metadata()
+	case "totalEgressBandwidthTier":
+		return s.TotalEgressBandwidthTier()
 	case "serviceAccounts":
 		return s.ServiceAccounts()
+	case "disks":
+		return s.Disks()
+	case "machineType":
+		return s.MachineType()
+	case "zone":
+		return s.Zone()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.instance\" resource")
 	}
@@ -2738,6 +3881,22 @@ func (s *mqlGcpComputeInstance) Id() (string, error) {
 	return tres, nil
 }
 
+// ProjectId accessor autogenerated
+func (s *mqlGcpComputeInstance) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Name accessor autogenerated
 func (s *mqlGcpComputeInstance) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
@@ -2750,38 +3909,6 @@ func (s *mqlGcpComputeInstance) Name() (string, error) {
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"name\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// CpuPlatform accessor autogenerated
-func (s *mqlGcpComputeInstance) CpuPlatform() (string, error) {
-	res, ok := s.Cache.Load("cpuPlatform")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"cpuPlatform\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"cpuPlatform\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// DeletionProtection accessor autogenerated
-func (s *mqlGcpComputeInstance) DeletionProtection() (bool, error) {
-	res, ok := s.Cache.Load("deletionProtection")
-	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"deletionProtection\"")
-	}
-	if res.Error != nil {
-		return false, res.Error
-	}
-	tres, ok := res.Data.(bool)
-	if !ok {
-		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"deletionProtection\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
@@ -2802,6 +3929,118 @@ func (s *mqlGcpComputeInstance) Description() (string, error) {
 	return tres, nil
 }
 
+// CanIpForward accessor autogenerated
+func (s *mqlGcpComputeInstance) CanIpForward() (bool, error) {
+	res, ok := s.Cache.Load("canIpForward")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"canIpForward\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"canIpForward\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// CpuPlatform accessor autogenerated
+func (s *mqlGcpComputeInstance) CpuPlatform() (string, error) {
+	res, ok := s.Cache.Load("cpuPlatform")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"cpuPlatform\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"cpuPlatform\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeInstance) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// DeletionProtection accessor autogenerated
+func (s *mqlGcpComputeInstance) DeletionProtection() (bool, error) {
+	res, ok := s.Cache.Load("deletionProtection")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"deletionProtection\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"deletionProtection\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableDisplay accessor autogenerated
+func (s *mqlGcpComputeInstance) EnableDisplay() (bool, error) {
+	res, ok := s.Cache.Load("enableDisplay")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"enableDisplay\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"enableDisplay\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// GuestAccelerators accessor autogenerated
+func (s *mqlGcpComputeInstance) GuestAccelerators() ([]interface{}, error) {
+	res, ok := s.Cache.Load("guestAccelerators")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"guestAccelerators\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"guestAccelerators\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Fingerprint accessor autogenerated
+func (s *mqlGcpComputeInstance) Fingerprint() (string, error) {
+	res, ok := s.Cache.Load("fingerprint")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"fingerprint\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"fingerprint\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Hostname accessor autogenerated
 func (s *mqlGcpComputeInstance) Hostname() (string, error) {
 	res, ok := s.Cache.Load("hostname")
@@ -2818,6 +4057,22 @@ func (s *mqlGcpComputeInstance) Hostname() (string, error) {
 	return tres, nil
 }
 
+// KeyRevocationActionType accessor autogenerated
+func (s *mqlGcpComputeInstance) KeyRevocationActionType() (string, error) {
+	res, ok := s.Cache.Load("keyRevocationActionType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"keyRevocationActionType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"keyRevocationActionType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Labels accessor autogenerated
 func (s *mqlGcpComputeInstance) Labels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("labels")
@@ -2830,6 +4085,246 @@ func (s *mqlGcpComputeInstance) Labels() (map[string]interface{}, error) {
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// LastStartTimestamp accessor autogenerated
+func (s *mqlGcpComputeInstance) LastStartTimestamp() (*time.Time, error) {
+	res, ok := s.Cache.Load("lastStartTimestamp")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"lastStartTimestamp\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"lastStartTimestamp\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// LastStopTimestamp accessor autogenerated
+func (s *mqlGcpComputeInstance) LastStopTimestamp() (*time.Time, error) {
+	res, ok := s.Cache.Load("lastStopTimestamp")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"lastStopTimestamp\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"lastStopTimestamp\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// LastSuspendedTimestamp accessor autogenerated
+func (s *mqlGcpComputeInstance) LastSuspendedTimestamp() (*time.Time, error) {
+	res, ok := s.Cache.Load("lastSuspendedTimestamp")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"lastSuspendedTimestamp\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"lastSuspendedTimestamp\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Metadata accessor autogenerated
+func (s *mqlGcpComputeInstance) Metadata() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("metadata")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"metadata\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"metadata\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// MinCpuPlatform accessor autogenerated
+func (s *mqlGcpComputeInstance) MinCpuPlatform() (string, error) {
+	res, ok := s.Cache.Load("minCpuPlatform")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"minCpuPlatform\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"minCpuPlatform\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// NetworkInterfaces accessor autogenerated
+func (s *mqlGcpComputeInstance) NetworkInterfaces() ([]interface{}, error) {
+	res, ok := s.Cache.Load("networkInterfaces")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"networkInterfaces\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"networkInterfaces\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// PrivateIpv6GoogleAccess accessor autogenerated
+func (s *mqlGcpComputeInstance) PrivateIpv6GoogleAccess() (string, error) {
+	res, ok := s.Cache.Load("privateIpv6GoogleAccess")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"privateIpv6GoogleAccess\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"privateIpv6GoogleAccess\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ReservationAffinity accessor autogenerated
+func (s *mqlGcpComputeInstance) ReservationAffinity() (interface{}, error) {
+	res, ok := s.Cache.Load("reservationAffinity")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"reservationAffinity\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"reservationAffinity\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ResourcePolicies accessor autogenerated
+func (s *mqlGcpComputeInstance) ResourcePolicies() ([]interface{}, error) {
+	res, ok := s.Cache.Load("resourcePolicies")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"resourcePolicies\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"resourcePolicies\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// PhysicalHostResourceStatus accessor autogenerated
+func (s *mqlGcpComputeInstance) PhysicalHostResourceStatus() (string, error) {
+	res, ok := s.Cache.Load("physicalHostResourceStatus")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"physicalHostResourceStatus\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"physicalHostResourceStatus\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Scheduling accessor autogenerated
+func (s *mqlGcpComputeInstance) Scheduling() (interface{}, error) {
+	res, ok := s.Cache.Load("scheduling")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"scheduling\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"scheduling\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableIntegrityMonitoring accessor autogenerated
+func (s *mqlGcpComputeInstance) EnableIntegrityMonitoring() (bool, error) {
+	res, ok := s.Cache.Load("enableIntegrityMonitoring")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"enableIntegrityMonitoring\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"enableIntegrityMonitoring\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableSecureBoot accessor autogenerated
+func (s *mqlGcpComputeInstance) EnableSecureBoot() (bool, error) {
+	res, ok := s.Cache.Load("enableSecureBoot")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"enableSecureBoot\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"enableSecureBoot\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableVtpm accessor autogenerated
+func (s *mqlGcpComputeInstance) EnableVtpm() (bool, error) {
+	res, ok := s.Cache.Load("enableVtpm")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"enableVtpm\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"enableVtpm\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// StartRestricted accessor autogenerated
+func (s *mqlGcpComputeInstance) StartRestricted() (bool, error) {
+	res, ok := s.Cache.Load("startRestricted")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"startRestricted\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"startRestricted\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
@@ -2866,6 +4361,22 @@ func (s *mqlGcpComputeInstance) StatusMessage() (string, error) {
 	return tres, nil
 }
 
+// SourceMachineImage accessor autogenerated
+func (s *mqlGcpComputeInstance) SourceMachineImage() (string, error) {
+	res, ok := s.Cache.Load("sourceMachineImage")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"sourceMachineImage\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"sourceMachineImage\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Tags accessor autogenerated
 func (s *mqlGcpComputeInstance) Tags() ([]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
@@ -2882,18 +4393,18 @@ func (s *mqlGcpComputeInstance) Tags() ([]interface{}, error) {
 	return tres, nil
 }
 
-// Metadata accessor autogenerated
-func (s *mqlGcpComputeInstance) Metadata() (map[string]interface{}, error) {
-	res, ok := s.Cache.Load("metadata")
+// TotalEgressBandwidthTier accessor autogenerated
+func (s *mqlGcpComputeInstance) TotalEgressBandwidthTier() (string, error) {
+	res, ok := s.Cache.Load("totalEgressBandwidthTier")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"metadata\"")
+		return "", errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"totalEgressBandwidthTier\"")
 	}
 	if res.Error != nil {
-		return nil, res.Error
+		return "", res.Error
 	}
-	tres, ok := res.Data.(map[string]interface{})
+	tres, ok := res.Data.(string)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"metadata\" to the right type (map[string]interface{}): %#v", res)
+		return "", fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"totalEgressBandwidthTier\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -2914,37 +4425,158 @@ func (s *mqlGcpComputeInstance) ServiceAccounts() ([]interface{}, error) {
 	return tres, nil
 }
 
+// Disks accessor autogenerated
+func (s *mqlGcpComputeInstance) Disks() ([]interface{}, error) {
+	res, ok := s.Cache.Load("disks")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"disks\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"disks\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// MachineType accessor autogenerated
+func (s *mqlGcpComputeInstance) MachineType() (GcpComputeMachineType, error) {
+	res, ok := s.Cache.Load("machineType")
+	if !ok || !res.Valid {
+		if err := s.ComputeMachineType(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("machineType")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.instance\" calculated \"machineType\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "machineType")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeMachineType)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"machineType\" to the right type (GcpComputeMachineType): %#v", res)
+	}
+	return tres, nil
+}
+
+// Zone accessor autogenerated
+func (s *mqlGcpComputeInstance) Zone() (GcpComputeZone, error) {
+	res, ok := s.Cache.Load("zone")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.instance\" failed: no value provided for static field \"zone\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeZone)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.instance\" failed to cast field \"zone\" to the right type (GcpComputeZone): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpComputeInstance) Compute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.compute.instance].Compute")
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "name":
-		return nil
-	case "cpuPlatform":
-		return nil
-	case "deletionProtection":
 		return nil
 	case "description":
 		return nil
+	case "canIpForward":
+		return nil
+	case "cpuPlatform":
+		return nil
+	case "created":
+		return nil
+	case "deletionProtection":
+		return nil
+	case "enableDisplay":
+		return nil
+	case "guestAccelerators":
+		return nil
+	case "fingerprint":
+		return nil
 	case "hostname":
 		return nil
+	case "keyRevocationActionType":
+		return nil
 	case "labels":
+		return nil
+	case "lastStartTimestamp":
+		return nil
+	case "lastStopTimestamp":
+		return nil
+	case "lastSuspendedTimestamp":
+		return nil
+	case "metadata":
+		return nil
+	case "minCpuPlatform":
+		return nil
+	case "networkInterfaces":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "reservationAffinity":
+		return nil
+	case "resourcePolicies":
+		return nil
+	case "physicalHostResourceStatus":
+		return nil
+	case "scheduling":
+		return nil
+	case "enableIntegrityMonitoring":
+		return nil
+	case "enableSecureBoot":
+		return nil
+	case "enableVtpm":
+		return nil
+	case "startRestricted":
 		return nil
 	case "status":
 		return nil
 	case "statusMessage":
 		return nil
+	case "sourceMachineImage":
+		return nil
 	case "tags":
 		return nil
-	case "metadata":
+	case "totalEgressBandwidthTier":
 		return nil
 	case "serviceAccounts":
+		return nil
+	case "disks":
+		return nil
+	case "machineType":
+		return s.ComputeMachineType()
+	case "zone":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.instance\" resource")
 	}
+}
+
+// ComputeMachineType computer autogenerated
+func (s *mqlGcpComputeInstance) ComputeMachineType() error {
+	var err error
+	if _, ok := s.Cache.Load("machineType"); ok {
+		return nil
+	}
+	vres, err := s.GetMachineType()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("machineType", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpComputeServiceaccount resource interface
@@ -3098,6 +4730,4362 @@ func (s *mqlGcpComputeServiceaccount) Compute(name string) error {
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.serviceaccount\" resource")
 	}
+}
+
+// GcpComputeDisk resource interface
+type GcpComputeDisk interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Architecture() (string, error)
+	Description() (string, error)
+	GuestOsFeatures() ([]interface{}, error)
+	Labels() (map[string]interface{}, error)
+	LastAttachTimestamp() (*time.Time, error)
+	LastDetachTimestamp() (*time.Time, error)
+	Licenses() ([]interface{}, error)
+	LocationHint() (string, error)
+	PhysicalBlockSizeBytes() (int64, error)
+	ProvisionedIops() (int64, error)
+	SizeGb() (int64, error)
+	Status() (string, error)
+	Created() (*time.Time, error)
+	Zone() (GcpComputeZone, error)
+}
+
+// mqlGcpComputeDisk for the gcp.compute.disk resource
+type mqlGcpComputeDisk struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeDisk) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.disk resource
+func newGcpComputeDisk(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeDisk{runtime.NewResource("gcp.compute.disk")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "architecture":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"architecture\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "guestOsFeatures":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"guestOsFeatures\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "labels":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "lastAttachTimestamp":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"lastAttachTimestamp\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "lastDetachTimestamp":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"lastDetachTimestamp\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "licenses":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"licenses\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "locationHint":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"locationHint\" argument has the wrong type (expected type \"string\")")
+			}
+		case "physicalBlockSizeBytes":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"physicalBlockSizeBytes\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "provisionedIops":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"provisionedIops\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "sizeGb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"sizeGb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "status":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"status\" argument has the wrong type (expected type \"string\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "zone":
+			if _, ok := val.(GcpComputeZone); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"zone\" argument has the wrong type (expected type \"GcpComputeZone\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.disk\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.disk with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeDisk) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("architecture"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"architecture\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("guestOsFeatures"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"guestOsFeatures\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("labels"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"labels\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("lastAttachTimestamp"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"lastAttachTimestamp\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("lastDetachTimestamp"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"lastDetachTimestamp\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("licenses"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"licenses\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("locationHint"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"locationHint\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("physicalBlockSizeBytes"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"physicalBlockSizeBytes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("provisionedIops"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"provisionedIops\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("sizeGb"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"sizeGb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("status"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"status\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.disk\" resource without a \"created\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeDisk) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.disk].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "architecture":
+		return nil
+	case "description":
+		return nil
+	case "guestOsFeatures":
+		return nil
+	case "labels":
+		return nil
+	case "lastAttachTimestamp":
+		return nil
+	case "lastDetachTimestamp":
+		return nil
+	case "licenses":
+		return nil
+	case "locationHint":
+		return nil
+	case "physicalBlockSizeBytes":
+		return nil
+	case "provisionedIops":
+		return nil
+	case "sizeGb":
+		return nil
+	case "status":
+		return nil
+	case "created":
+		return nil
+	case "zone":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.disk\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeDisk) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.disk].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "architecture":
+		return s.Architecture()
+	case "description":
+		return s.Description()
+	case "guestOsFeatures":
+		return s.GuestOsFeatures()
+	case "labels":
+		return s.Labels()
+	case "lastAttachTimestamp":
+		return s.LastAttachTimestamp()
+	case "lastDetachTimestamp":
+		return s.LastDetachTimestamp()
+	case "licenses":
+		return s.Licenses()
+	case "locationHint":
+		return s.LocationHint()
+	case "physicalBlockSizeBytes":
+		return s.PhysicalBlockSizeBytes()
+	case "provisionedIops":
+		return s.ProvisionedIops()
+	case "sizeGb":
+		return s.SizeGb()
+	case "status":
+		return s.Status()
+	case "created":
+		return s.Created()
+	case "zone":
+		return s.Zone()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.disk\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeDisk) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeDisk) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Architecture accessor autogenerated
+func (s *mqlGcpComputeDisk) Architecture() (string, error) {
+	res, ok := s.Cache.Load("architecture")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"architecture\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"architecture\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeDisk) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// GuestOsFeatures accessor autogenerated
+func (s *mqlGcpComputeDisk) GuestOsFeatures() ([]interface{}, error) {
+	res, ok := s.Cache.Load("guestOsFeatures")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"guestOsFeatures\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"guestOsFeatures\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Labels accessor autogenerated
+func (s *mqlGcpComputeDisk) Labels() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("labels")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"labels\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// LastAttachTimestamp accessor autogenerated
+func (s *mqlGcpComputeDisk) LastAttachTimestamp() (*time.Time, error) {
+	res, ok := s.Cache.Load("lastAttachTimestamp")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"lastAttachTimestamp\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"lastAttachTimestamp\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// LastDetachTimestamp accessor autogenerated
+func (s *mqlGcpComputeDisk) LastDetachTimestamp() (*time.Time, error) {
+	res, ok := s.Cache.Load("lastDetachTimestamp")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"lastDetachTimestamp\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"lastDetachTimestamp\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Licenses accessor autogenerated
+func (s *mqlGcpComputeDisk) Licenses() ([]interface{}, error) {
+	res, ok := s.Cache.Load("licenses")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"licenses\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"licenses\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// LocationHint accessor autogenerated
+func (s *mqlGcpComputeDisk) LocationHint() (string, error) {
+	res, ok := s.Cache.Load("locationHint")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"locationHint\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"locationHint\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// PhysicalBlockSizeBytes accessor autogenerated
+func (s *mqlGcpComputeDisk) PhysicalBlockSizeBytes() (int64, error) {
+	res, ok := s.Cache.Load("physicalBlockSizeBytes")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"physicalBlockSizeBytes\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"physicalBlockSizeBytes\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProvisionedIops accessor autogenerated
+func (s *mqlGcpComputeDisk) ProvisionedIops() (int64, error) {
+	res, ok := s.Cache.Load("provisionedIops")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"provisionedIops\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"provisionedIops\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// SizeGb accessor autogenerated
+func (s *mqlGcpComputeDisk) SizeGb() (int64, error) {
+	res, ok := s.Cache.Load("sizeGb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"sizeGb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"sizeGb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Status accessor autogenerated
+func (s *mqlGcpComputeDisk) Status() (string, error) {
+	res, ok := s.Cache.Load("status")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"status\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"status\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeDisk) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.disk\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Zone accessor autogenerated
+func (s *mqlGcpComputeDisk) Zone() (GcpComputeZone, error) {
+	res, ok := s.Cache.Load("zone")
+	if !ok || !res.Valid {
+		if err := s.ComputeZone(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("zone")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.disk\" calculated \"zone\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "zone")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeZone)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.disk\" failed to cast field \"zone\" to the right type (GcpComputeZone): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeDisk) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.disk].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "architecture":
+		return nil
+	case "description":
+		return nil
+	case "guestOsFeatures":
+		return nil
+	case "labels":
+		return nil
+	case "lastAttachTimestamp":
+		return nil
+	case "lastDetachTimestamp":
+		return nil
+	case "licenses":
+		return nil
+	case "locationHint":
+		return nil
+	case "physicalBlockSizeBytes":
+		return nil
+	case "provisionedIops":
+		return nil
+	case "sizeGb":
+		return nil
+	case "status":
+		return nil
+	case "created":
+		return nil
+	case "zone":
+		return s.ComputeZone()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.disk\" resource")
+	}
+}
+
+// ComputeZone computer autogenerated
+func (s *mqlGcpComputeDisk) ComputeZone() error {
+	var err error
+	if _, ok := s.Cache.Load("zone"); ok {
+		return nil
+	}
+	vres, err := s.GetZone()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("zone", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpComputeAttachedDisk resource interface
+type GcpComputeAttachedDisk interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	ProjectId() (string, error)
+	Architecture() (string, error)
+	AutoDelete() (bool, error)
+	Boot() (bool, error)
+	DeviceName() (string, error)
+	DiskSizeGb() (int64, error)
+	ForceAttach() (bool, error)
+	GuestOsFeatures() ([]interface{}, error)
+	Index() (int64, error)
+	Interface() (string, error)
+	Licenses() ([]interface{}, error)
+	Mode() (string, error)
+	Source() (GcpComputeDisk, error)
+	Type() (string, error)
+}
+
+// mqlGcpComputeAttachedDisk for the gcp.compute.attachedDisk resource
+type mqlGcpComputeAttachedDisk struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeAttachedDisk) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.attachedDisk resource
+func newGcpComputeAttachedDisk(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeAttachedDisk{runtime.NewResource("gcp.compute.attachedDisk")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "architecture":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"architecture\" argument has the wrong type (expected type \"string\")")
+			}
+		case "autoDelete":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"autoDelete\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "boot":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"boot\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "deviceName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"deviceName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "diskSizeGb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"diskSizeGb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "forceAttach":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"forceAttach\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "guestOsFeatures":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"guestOsFeatures\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "index":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"index\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "interface":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"interface\" argument has the wrong type (expected type \"string\")")
+			}
+		case "licenses":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"licenses\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "mode":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"mode\" argument has the wrong type (expected type \"string\")")
+			}
+		case "source":
+			if _, ok := val.(GcpComputeDisk); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"source\" argument has the wrong type (expected type \"GcpComputeDisk\")")
+			}
+		case "type":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"type\" argument has the wrong type (expected type \"string\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.attachedDisk\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.attachedDisk with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeAttachedDisk) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"projectId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("architecture"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"architecture\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("autoDelete"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"autoDelete\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("boot"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"boot\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("deviceName"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"deviceName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("diskSizeGb"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"diskSizeGb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("forceAttach"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"forceAttach\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("guestOsFeatures"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"guestOsFeatures\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("index"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"index\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("interface"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"interface\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("licenses"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"licenses\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("mode"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"mode\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("type"); !ok {
+		return errors.New("Initialized \"gcp.compute.attachedDisk\" resource without a \"type\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.attachedDisk].Register")
+	switch name {
+	case "id":
+		return nil
+	case "projectId":
+		return nil
+	case "architecture":
+		return nil
+	case "autoDelete":
+		return nil
+	case "boot":
+		return nil
+	case "deviceName":
+		return nil
+	case "diskSizeGb":
+		return nil
+	case "forceAttach":
+		return nil
+	case "guestOsFeatures":
+		return nil
+	case "index":
+		return nil
+	case "interface":
+		return nil
+	case "licenses":
+		return nil
+	case "mode":
+		return nil
+	case "source":
+		return nil
+	case "type":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.attachedDisk\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.attachedDisk].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "projectId":
+		return s.ProjectId()
+	case "architecture":
+		return s.Architecture()
+	case "autoDelete":
+		return s.AutoDelete()
+	case "boot":
+		return s.Boot()
+	case "deviceName":
+		return s.DeviceName()
+	case "diskSizeGb":
+		return s.DiskSizeGb()
+	case "forceAttach":
+		return s.ForceAttach()
+	case "guestOsFeatures":
+		return s.GuestOsFeatures()
+	case "index":
+		return s.Index()
+	case "interface":
+		return s.Interface()
+	case "licenses":
+		return s.Licenses()
+	case "mode":
+		return s.Mode()
+	case "source":
+		return s.Source()
+	case "type":
+		return s.Type()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.attachedDisk\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Architecture accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Architecture() (string, error) {
+	res, ok := s.Cache.Load("architecture")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"architecture\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"architecture\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// AutoDelete accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) AutoDelete() (bool, error) {
+	res, ok := s.Cache.Load("autoDelete")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"autoDelete\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"autoDelete\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// Boot accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Boot() (bool, error) {
+	res, ok := s.Cache.Load("boot")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"boot\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"boot\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// DeviceName accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) DeviceName() (string, error) {
+	res, ok := s.Cache.Load("deviceName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"deviceName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"deviceName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// DiskSizeGb accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) DiskSizeGb() (int64, error) {
+	res, ok := s.Cache.Load("diskSizeGb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"diskSizeGb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"diskSizeGb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// ForceAttach accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) ForceAttach() (bool, error) {
+	res, ok := s.Cache.Load("forceAttach")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"forceAttach\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"forceAttach\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// GuestOsFeatures accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) GuestOsFeatures() ([]interface{}, error) {
+	res, ok := s.Cache.Load("guestOsFeatures")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"guestOsFeatures\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"guestOsFeatures\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Index accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Index() (int64, error) {
+	res, ok := s.Cache.Load("index")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"index\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"index\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Interface accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Interface() (string, error) {
+	res, ok := s.Cache.Load("interface")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"interface\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"interface\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Licenses accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Licenses() ([]interface{}, error) {
+	res, ok := s.Cache.Load("licenses")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"licenses\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"licenses\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Mode accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Mode() (string, error) {
+	res, ok := s.Cache.Load("mode")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"mode\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"mode\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Source accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Source() (GcpComputeDisk, error) {
+	res, ok := s.Cache.Load("source")
+	if !ok || !res.Valid {
+		if err := s.ComputeSource(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("source")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.attachedDisk\" calculated \"source\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "source")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeDisk)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"source\" to the right type (GcpComputeDisk): %#v", res)
+	}
+	return tres, nil
+}
+
+// Type accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Type() (string, error) {
+	res, ok := s.Cache.Load("type")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.attachedDisk\" failed: no value provided for static field \"type\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.attachedDisk\" failed to cast field \"type\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeAttachedDisk) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.attachedDisk].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "projectId":
+		return nil
+	case "architecture":
+		return nil
+	case "autoDelete":
+		return nil
+	case "boot":
+		return nil
+	case "deviceName":
+		return nil
+	case "diskSizeGb":
+		return nil
+	case "forceAttach":
+		return nil
+	case "guestOsFeatures":
+		return nil
+	case "index":
+		return nil
+	case "interface":
+		return nil
+	case "licenses":
+		return nil
+	case "mode":
+		return nil
+	case "source":
+		return s.ComputeSource()
+	case "type":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.attachedDisk\" resource")
+	}
+}
+
+// ComputeSource computer autogenerated
+func (s *mqlGcpComputeAttachedDisk) ComputeSource() error {
+	var err error
+	if _, ok := s.Cache.Load("source"); ok {
+		return nil
+	}
+	vres, err := s.GetSource()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("source", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpComputeSnapshot resource interface
+type GcpComputeSnapshot interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Description() (string, error)
+	Architecture() (string, error)
+	AutoCreated() (bool, error)
+	ChainName() (string, error)
+	CreationSizeBytes() (int64, error)
+	DiskSizeGb() (int64, error)
+	DownloadBytes() (int64, error)
+	StorageBytes() (int64, error)
+	StorageBytesStatus() (string, error)
+	SnapshotType() (string, error)
+	Licenses() ([]interface{}, error)
+	Labels() (map[string]interface{}, error)
+	Created() (*time.Time, error)
+	Status() (string, error)
+	SourceDisk() (GcpComputeDisk, error)
+}
+
+// mqlGcpComputeSnapshot for the gcp.compute.snapshot resource
+type mqlGcpComputeSnapshot struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeSnapshot) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.snapshot resource
+func newGcpComputeSnapshot(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeSnapshot{runtime.NewResource("gcp.compute.snapshot")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "architecture":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"architecture\" argument has the wrong type (expected type \"string\")")
+			}
+		case "autoCreated":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"autoCreated\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "chainName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"chainName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "creationSizeBytes":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"creationSizeBytes\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "diskSizeGb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"diskSizeGb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "downloadBytes":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"downloadBytes\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "storageBytes":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"storageBytes\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "storageBytesStatus":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"storageBytesStatus\" argument has the wrong type (expected type \"string\")")
+			}
+		case "snapshotType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"snapshotType\" argument has the wrong type (expected type \"string\")")
+			}
+		case "licenses":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"licenses\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "labels":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "status":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"status\" argument has the wrong type (expected type \"string\")")
+			}
+		case "sourceDisk":
+			if _, ok := val.(GcpComputeDisk); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"sourceDisk\" argument has the wrong type (expected type \"GcpComputeDisk\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.snapshot\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.snapshot with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeSnapshot) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("architecture"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"architecture\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("autoCreated"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"autoCreated\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("chainName"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"chainName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("creationSizeBytes"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"creationSizeBytes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("diskSizeGb"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"diskSizeGb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("downloadBytes"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"downloadBytes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("storageBytes"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"storageBytes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("storageBytesStatus"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"storageBytesStatus\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("snapshotType"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"snapshotType\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("licenses"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"licenses\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("labels"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"labels\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"created\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("status"); !ok {
+		return errors.New("Initialized \"gcp.compute.snapshot\" resource without a \"status\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.snapshot].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "architecture":
+		return nil
+	case "autoCreated":
+		return nil
+	case "chainName":
+		return nil
+	case "creationSizeBytes":
+		return nil
+	case "diskSizeGb":
+		return nil
+	case "downloadBytes":
+		return nil
+	case "storageBytes":
+		return nil
+	case "storageBytesStatus":
+		return nil
+	case "snapshotType":
+		return nil
+	case "licenses":
+		return nil
+	case "labels":
+		return nil
+	case "created":
+		return nil
+	case "status":
+		return nil
+	case "sourceDisk":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.snapshot\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.snapshot].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "description":
+		return s.Description()
+	case "architecture":
+		return s.Architecture()
+	case "autoCreated":
+		return s.AutoCreated()
+	case "chainName":
+		return s.ChainName()
+	case "creationSizeBytes":
+		return s.CreationSizeBytes()
+	case "diskSizeGb":
+		return s.DiskSizeGb()
+	case "downloadBytes":
+		return s.DownloadBytes()
+	case "storageBytes":
+		return s.StorageBytes()
+	case "storageBytesStatus":
+		return s.StorageBytesStatus()
+	case "snapshotType":
+		return s.SnapshotType()
+	case "licenses":
+		return s.Licenses()
+	case "labels":
+		return s.Labels()
+	case "created":
+		return s.Created()
+	case "status":
+		return s.Status()
+	case "sourceDisk":
+		return s.SourceDisk()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.snapshot\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Architecture accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Architecture() (string, error) {
+	res, ok := s.Cache.Load("architecture")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"architecture\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"architecture\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// AutoCreated accessor autogenerated
+func (s *mqlGcpComputeSnapshot) AutoCreated() (bool, error) {
+	res, ok := s.Cache.Load("autoCreated")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"autoCreated\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"autoCreated\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// ChainName accessor autogenerated
+func (s *mqlGcpComputeSnapshot) ChainName() (string, error) {
+	res, ok := s.Cache.Load("chainName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"chainName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"chainName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// CreationSizeBytes accessor autogenerated
+func (s *mqlGcpComputeSnapshot) CreationSizeBytes() (int64, error) {
+	res, ok := s.Cache.Load("creationSizeBytes")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"creationSizeBytes\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"creationSizeBytes\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// DiskSizeGb accessor autogenerated
+func (s *mqlGcpComputeSnapshot) DiskSizeGb() (int64, error) {
+	res, ok := s.Cache.Load("diskSizeGb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"diskSizeGb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"diskSizeGb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// DownloadBytes accessor autogenerated
+func (s *mqlGcpComputeSnapshot) DownloadBytes() (int64, error) {
+	res, ok := s.Cache.Load("downloadBytes")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"downloadBytes\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"downloadBytes\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// StorageBytes accessor autogenerated
+func (s *mqlGcpComputeSnapshot) StorageBytes() (int64, error) {
+	res, ok := s.Cache.Load("storageBytes")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"storageBytes\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"storageBytes\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// StorageBytesStatus accessor autogenerated
+func (s *mqlGcpComputeSnapshot) StorageBytesStatus() (string, error) {
+	res, ok := s.Cache.Load("storageBytesStatus")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"storageBytesStatus\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"storageBytesStatus\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// SnapshotType accessor autogenerated
+func (s *mqlGcpComputeSnapshot) SnapshotType() (string, error) {
+	res, ok := s.Cache.Load("snapshotType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"snapshotType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"snapshotType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Licenses accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Licenses() ([]interface{}, error) {
+	res, ok := s.Cache.Load("licenses")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"licenses\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"licenses\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Labels accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Labels() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("labels")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"labels\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Status accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Status() (string, error) {
+	res, ok := s.Cache.Load("status")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.snapshot\" failed: no value provided for static field \"status\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"status\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// SourceDisk accessor autogenerated
+func (s *mqlGcpComputeSnapshot) SourceDisk() (GcpComputeDisk, error) {
+	res, ok := s.Cache.Load("sourceDisk")
+	if !ok || !res.Valid {
+		if err := s.ComputeSourceDisk(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("sourceDisk")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.snapshot\" calculated \"sourceDisk\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "sourceDisk")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeDisk)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.snapshot\" failed to cast field \"sourceDisk\" to the right type (GcpComputeDisk): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeSnapshot) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.snapshot].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "architecture":
+		return nil
+	case "autoCreated":
+		return nil
+	case "chainName":
+		return nil
+	case "creationSizeBytes":
+		return nil
+	case "diskSizeGb":
+		return nil
+	case "downloadBytes":
+		return nil
+	case "storageBytes":
+		return nil
+	case "storageBytesStatus":
+		return nil
+	case "snapshotType":
+		return nil
+	case "licenses":
+		return nil
+	case "labels":
+		return nil
+	case "created":
+		return nil
+	case "status":
+		return nil
+	case "sourceDisk":
+		return s.ComputeSourceDisk()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.snapshot\" resource")
+	}
+}
+
+// ComputeSourceDisk computer autogenerated
+func (s *mqlGcpComputeSnapshot) ComputeSourceDisk() error {
+	var err error
+	if _, ok := s.Cache.Load("sourceDisk"); ok {
+		return nil
+	}
+	vres, err := s.GetSourceDisk()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("sourceDisk", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpComputeImage resource interface
+type GcpComputeImage interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Description() (string, error)
+	Architecture() (string, error)
+	ArchiveSizeBytes() (int64, error)
+	DiskSizeGb() (int64, error)
+	Family() (string, error)
+	Licenses() ([]interface{}, error)
+	Labels() (map[string]interface{}, error)
+	Created() (*time.Time, error)
+	Status() (string, error)
+	SourceDisk() (GcpComputeDisk, error)
+}
+
+// mqlGcpComputeImage for the gcp.compute.image resource
+type mqlGcpComputeImage struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeImage) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.image resource
+func newGcpComputeImage(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeImage{runtime.NewResource("gcp.compute.image")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "architecture":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"architecture\" argument has the wrong type (expected type \"string\")")
+			}
+		case "archiveSizeBytes":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"archiveSizeBytes\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "diskSizeGb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"diskSizeGb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "family":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"family\" argument has the wrong type (expected type \"string\")")
+			}
+		case "licenses":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"licenses\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "labels":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "status":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"status\" argument has the wrong type (expected type \"string\")")
+			}
+		case "sourceDisk":
+			if _, ok := val.(GcpComputeDisk); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"sourceDisk\" argument has the wrong type (expected type \"GcpComputeDisk\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.image\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.image with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeImage) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("architecture"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"architecture\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("archiveSizeBytes"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"archiveSizeBytes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("diskSizeGb"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"diskSizeGb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("family"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"family\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("licenses"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"licenses\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("labels"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"labels\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"created\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("status"); !ok {
+		return errors.New("Initialized \"gcp.compute.image\" resource without a \"status\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeImage) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.image].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "architecture":
+		return nil
+	case "archiveSizeBytes":
+		return nil
+	case "diskSizeGb":
+		return nil
+	case "family":
+		return nil
+	case "licenses":
+		return nil
+	case "labels":
+		return nil
+	case "created":
+		return nil
+	case "status":
+		return nil
+	case "sourceDisk":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.image\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeImage) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.image].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "description":
+		return s.Description()
+	case "architecture":
+		return s.Architecture()
+	case "archiveSizeBytes":
+		return s.ArchiveSizeBytes()
+	case "diskSizeGb":
+		return s.DiskSizeGb()
+	case "family":
+		return s.Family()
+	case "licenses":
+		return s.Licenses()
+	case "labels":
+		return s.Labels()
+	case "created":
+		return s.Created()
+	case "status":
+		return s.Status()
+	case "sourceDisk":
+		return s.SourceDisk()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.image\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeImage) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.image\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.image\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeImage) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.image\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.image\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeImage) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.image\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.image\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Architecture accessor autogenerated
+func (s *mqlGcpComputeImage) Architecture() (string, error) {
+	res, ok := s.Cache.Load("architecture")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.image\" failed: no value provided for static field \"architecture\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.image\" failed to cast field \"architecture\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ArchiveSizeBytes accessor autogenerated
+func (s *mqlGcpComputeImage) ArchiveSizeBytes() (int64, error) {
+	res, ok := s.Cache.Load("archiveSizeBytes")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.image\" failed: no value provided for static field \"archiveSizeBytes\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.image\" failed to cast field \"archiveSizeBytes\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// DiskSizeGb accessor autogenerated
+func (s *mqlGcpComputeImage) DiskSizeGb() (int64, error) {
+	res, ok := s.Cache.Load("diskSizeGb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.image\" failed: no value provided for static field \"diskSizeGb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.image\" failed to cast field \"diskSizeGb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Family accessor autogenerated
+func (s *mqlGcpComputeImage) Family() (string, error) {
+	res, ok := s.Cache.Load("family")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.image\" failed: no value provided for static field \"family\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.image\" failed to cast field \"family\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Licenses accessor autogenerated
+func (s *mqlGcpComputeImage) Licenses() ([]interface{}, error) {
+	res, ok := s.Cache.Load("licenses")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.image\" failed: no value provided for static field \"licenses\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.image\" failed to cast field \"licenses\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Labels accessor autogenerated
+func (s *mqlGcpComputeImage) Labels() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("labels")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.image\" failed: no value provided for static field \"labels\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.image\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeImage) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.image\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.image\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Status accessor autogenerated
+func (s *mqlGcpComputeImage) Status() (string, error) {
+	res, ok := s.Cache.Load("status")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.image\" failed: no value provided for static field \"status\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.image\" failed to cast field \"status\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// SourceDisk accessor autogenerated
+func (s *mqlGcpComputeImage) SourceDisk() (GcpComputeDisk, error) {
+	res, ok := s.Cache.Load("sourceDisk")
+	if !ok || !res.Valid {
+		if err := s.ComputeSourceDisk(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("sourceDisk")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.image\" calculated \"sourceDisk\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "sourceDisk")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeDisk)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.image\" failed to cast field \"sourceDisk\" to the right type (GcpComputeDisk): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeImage) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.image].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "architecture":
+		return nil
+	case "archiveSizeBytes":
+		return nil
+	case "diskSizeGb":
+		return nil
+	case "family":
+		return nil
+	case "licenses":
+		return nil
+	case "labels":
+		return nil
+	case "created":
+		return nil
+	case "status":
+		return nil
+	case "sourceDisk":
+		return s.ComputeSourceDisk()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.image\" resource")
+	}
+}
+
+// ComputeSourceDisk computer autogenerated
+func (s *mqlGcpComputeImage) ComputeSourceDisk() error {
+	var err error
+	if _, ok := s.Cache.Load("sourceDisk"); ok {
+		return nil
+	}
+	vres, err := s.GetSourceDisk()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("sourceDisk", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpComputeFirewall resource interface
+type GcpComputeFirewall interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Description() (string, error)
+	Priority() (int64, error)
+	Direction() (string, error)
+	Disabled() (bool, error)
+	SourceRanges() ([]interface{}, error)
+	SourceServiceAccounts() ([]interface{}, error)
+	SourceTags() ([]interface{}, error)
+	DestinationRanges() ([]interface{}, error)
+	TargetServiceAccounts() ([]interface{}, error)
+	Created() (*time.Time, error)
+	Network() (GcpComputeNetwork, error)
+}
+
+// mqlGcpComputeFirewall for the gcp.compute.firewall resource
+type mqlGcpComputeFirewall struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeFirewall) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.firewall resource
+func newGcpComputeFirewall(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeFirewall{runtime.NewResource("gcp.compute.firewall")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "priority":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"priority\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "direction":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"direction\" argument has the wrong type (expected type \"string\")")
+			}
+		case "disabled":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"disabled\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "sourceRanges":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"sourceRanges\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "sourceServiceAccounts":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"sourceServiceAccounts\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "sourceTags":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"sourceTags\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "destinationRanges":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"destinationRanges\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "targetServiceAccounts":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"targetServiceAccounts\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "network":
+			if _, ok := val.(GcpComputeNetwork); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"network\" argument has the wrong type (expected type \"GcpComputeNetwork\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.firewall\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.firewall with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeFirewall) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("priority"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"priority\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("direction"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"direction\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("disabled"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"disabled\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("sourceRanges"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"sourceRanges\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("sourceServiceAccounts"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"sourceServiceAccounts\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("sourceTags"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"sourceTags\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("destinationRanges"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"destinationRanges\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("targetServiceAccounts"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"targetServiceAccounts\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.firewall\" resource without a \"created\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeFirewall) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.firewall].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "priority":
+		return nil
+	case "direction":
+		return nil
+	case "disabled":
+		return nil
+	case "sourceRanges":
+		return nil
+	case "sourceServiceAccounts":
+		return nil
+	case "sourceTags":
+		return nil
+	case "destinationRanges":
+		return nil
+	case "targetServiceAccounts":
+		return nil
+	case "created":
+		return nil
+	case "network":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.firewall\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeFirewall) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.firewall].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "description":
+		return s.Description()
+	case "priority":
+		return s.Priority()
+	case "direction":
+		return s.Direction()
+	case "disabled":
+		return s.Disabled()
+	case "sourceRanges":
+		return s.SourceRanges()
+	case "sourceServiceAccounts":
+		return s.SourceServiceAccounts()
+	case "sourceTags":
+		return s.SourceTags()
+	case "destinationRanges":
+		return s.DestinationRanges()
+	case "targetServiceAccounts":
+		return s.TargetServiceAccounts()
+	case "created":
+		return s.Created()
+	case "network":
+		return s.Network()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.firewall\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeFirewall) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeFirewall) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeFirewall) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Priority accessor autogenerated
+func (s *mqlGcpComputeFirewall) Priority() (int64, error) {
+	res, ok := s.Cache.Load("priority")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"priority\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"priority\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Direction accessor autogenerated
+func (s *mqlGcpComputeFirewall) Direction() (string, error) {
+	res, ok := s.Cache.Load("direction")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"direction\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"direction\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Disabled accessor autogenerated
+func (s *mqlGcpComputeFirewall) Disabled() (bool, error) {
+	res, ok := s.Cache.Load("disabled")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"disabled\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"disabled\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// SourceRanges accessor autogenerated
+func (s *mqlGcpComputeFirewall) SourceRanges() ([]interface{}, error) {
+	res, ok := s.Cache.Load("sourceRanges")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"sourceRanges\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"sourceRanges\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// SourceServiceAccounts accessor autogenerated
+func (s *mqlGcpComputeFirewall) SourceServiceAccounts() ([]interface{}, error) {
+	res, ok := s.Cache.Load("sourceServiceAccounts")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"sourceServiceAccounts\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"sourceServiceAccounts\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// SourceTags accessor autogenerated
+func (s *mqlGcpComputeFirewall) SourceTags() ([]interface{}, error) {
+	res, ok := s.Cache.Load("sourceTags")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"sourceTags\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"sourceTags\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// DestinationRanges accessor autogenerated
+func (s *mqlGcpComputeFirewall) DestinationRanges() ([]interface{}, error) {
+	res, ok := s.Cache.Load("destinationRanges")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"destinationRanges\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"destinationRanges\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// TargetServiceAccounts accessor autogenerated
+func (s *mqlGcpComputeFirewall) TargetServiceAccounts() ([]interface{}, error) {
+	res, ok := s.Cache.Load("targetServiceAccounts")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"targetServiceAccounts\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"targetServiceAccounts\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeFirewall) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.firewall\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Network accessor autogenerated
+func (s *mqlGcpComputeFirewall) Network() (GcpComputeNetwork, error) {
+	res, ok := s.Cache.Load("network")
+	if !ok || !res.Valid {
+		if err := s.ComputeNetwork(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("network")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.firewall\" calculated \"network\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "network")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeNetwork)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.firewall\" failed to cast field \"network\" to the right type (GcpComputeNetwork): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeFirewall) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.firewall].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "priority":
+		return nil
+	case "direction":
+		return nil
+	case "disabled":
+		return nil
+	case "sourceRanges":
+		return nil
+	case "sourceServiceAccounts":
+		return nil
+	case "sourceTags":
+		return nil
+	case "destinationRanges":
+		return nil
+	case "targetServiceAccounts":
+		return nil
+	case "created":
+		return nil
+	case "network":
+		return s.ComputeNetwork()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.firewall\" resource")
+	}
+}
+
+// ComputeNetwork computer autogenerated
+func (s *mqlGcpComputeFirewall) ComputeNetwork() error {
+	var err error
+	if _, ok := s.Cache.Load("network"); ok {
+		return nil
+	}
+	vres, err := s.GetNetwork()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("network", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpComputeNetwork resource interface
+type GcpComputeNetwork interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Description() (string, error)
+	AutoCreateSubnetworks() (bool, error)
+	EnableUlaInternalIpv6() (bool, error)
+	GatewayIPv4() (string, error)
+	Mtu() (int64, error)
+	NetworkFirewallPolicyEnforcementOrder() (string, error)
+	Created() (*time.Time, error)
+	Peerings() ([]interface{}, error)
+	RoutingMode() (string, error)
+	Subnetworks() ([]interface{}, error)
+}
+
+// mqlGcpComputeNetwork for the gcp.compute.network resource
+type mqlGcpComputeNetwork struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeNetwork) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.network resource
+func newGcpComputeNetwork(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeNetwork{runtime.NewResource("gcp.compute.network")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "autoCreateSubnetworks":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"autoCreateSubnetworks\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "enableUlaInternalIpv6":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"enableUlaInternalIpv6\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "gatewayIPv4":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"gatewayIPv4\" argument has the wrong type (expected type \"string\")")
+			}
+		case "mtu":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"mtu\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "networkFirewallPolicyEnforcementOrder":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"networkFirewallPolicyEnforcementOrder\" argument has the wrong type (expected type \"string\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "peerings":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"peerings\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "routingMode":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"routingMode\" argument has the wrong type (expected type \"string\")")
+			}
+		case "subnetworks":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"subnetworks\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.network\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.network with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeNetwork) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("autoCreateSubnetworks"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"autoCreateSubnetworks\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableUlaInternalIpv6"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"enableUlaInternalIpv6\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gatewayIPv4"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"gatewayIPv4\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("mtu"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"mtu\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("networkFirewallPolicyEnforcementOrder"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"networkFirewallPolicyEnforcementOrder\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"created\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("peerings"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"peerings\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("routingMode"); !ok {
+		return errors.New("Initialized \"gcp.compute.network\" resource without a \"routingMode\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeNetwork) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.network].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "autoCreateSubnetworks":
+		return nil
+	case "enableUlaInternalIpv6":
+		return nil
+	case "gatewayIPv4":
+		return nil
+	case "mtu":
+		return nil
+	case "networkFirewallPolicyEnforcementOrder":
+		return nil
+	case "created":
+		return nil
+	case "peerings":
+		return nil
+	case "routingMode":
+		return nil
+	case "subnetworks":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.network\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeNetwork) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.network].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "description":
+		return s.Description()
+	case "autoCreateSubnetworks":
+		return s.AutoCreateSubnetworks()
+	case "enableUlaInternalIpv6":
+		return s.EnableUlaInternalIpv6()
+	case "gatewayIPv4":
+		return s.GatewayIPv4()
+	case "mtu":
+		return s.Mtu()
+	case "networkFirewallPolicyEnforcementOrder":
+		return s.NetworkFirewallPolicyEnforcementOrder()
+	case "created":
+		return s.Created()
+	case "peerings":
+		return s.Peerings()
+	case "routingMode":
+		return s.RoutingMode()
+	case "subnetworks":
+		return s.Subnetworks()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.network\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeNetwork) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.network\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.network\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeNetwork) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.network\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.network\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeNetwork) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.network\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.network\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// AutoCreateSubnetworks accessor autogenerated
+func (s *mqlGcpComputeNetwork) AutoCreateSubnetworks() (bool, error) {
+	res, ok := s.Cache.Load("autoCreateSubnetworks")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.network\" failed: no value provided for static field \"autoCreateSubnetworks\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.network\" failed to cast field \"autoCreateSubnetworks\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableUlaInternalIpv6 accessor autogenerated
+func (s *mqlGcpComputeNetwork) EnableUlaInternalIpv6() (bool, error) {
+	res, ok := s.Cache.Load("enableUlaInternalIpv6")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.network\" failed: no value provided for static field \"enableUlaInternalIpv6\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.network\" failed to cast field \"enableUlaInternalIpv6\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// GatewayIPv4 accessor autogenerated
+func (s *mqlGcpComputeNetwork) GatewayIPv4() (string, error) {
+	res, ok := s.Cache.Load("gatewayIPv4")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.network\" failed: no value provided for static field \"gatewayIPv4\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.network\" failed to cast field \"gatewayIPv4\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Mtu accessor autogenerated
+func (s *mqlGcpComputeNetwork) Mtu() (int64, error) {
+	res, ok := s.Cache.Load("mtu")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.compute.network\" failed: no value provided for static field \"mtu\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.compute.network\" failed to cast field \"mtu\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// NetworkFirewallPolicyEnforcementOrder accessor autogenerated
+func (s *mqlGcpComputeNetwork) NetworkFirewallPolicyEnforcementOrder() (string, error) {
+	res, ok := s.Cache.Load("networkFirewallPolicyEnforcementOrder")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.network\" failed: no value provided for static field \"networkFirewallPolicyEnforcementOrder\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.network\" failed to cast field \"networkFirewallPolicyEnforcementOrder\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeNetwork) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.network\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.network\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Peerings accessor autogenerated
+func (s *mqlGcpComputeNetwork) Peerings() ([]interface{}, error) {
+	res, ok := s.Cache.Load("peerings")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.network\" failed: no value provided for static field \"peerings\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.network\" failed to cast field \"peerings\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// RoutingMode accessor autogenerated
+func (s *mqlGcpComputeNetwork) RoutingMode() (string, error) {
+	res, ok := s.Cache.Load("routingMode")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.network\" failed: no value provided for static field \"routingMode\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.network\" failed to cast field \"routingMode\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Subnetworks accessor autogenerated
+func (s *mqlGcpComputeNetwork) Subnetworks() ([]interface{}, error) {
+	res, ok := s.Cache.Load("subnetworks")
+	if !ok || !res.Valid {
+		if err := s.ComputeSubnetworks(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("subnetworks")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.network\" calculated \"subnetworks\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "subnetworks")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.network\" failed to cast field \"subnetworks\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeNetwork) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.network].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "autoCreateSubnetworks":
+		return nil
+	case "enableUlaInternalIpv6":
+		return nil
+	case "gatewayIPv4":
+		return nil
+	case "mtu":
+		return nil
+	case "networkFirewallPolicyEnforcementOrder":
+		return nil
+	case "created":
+		return nil
+	case "peerings":
+		return nil
+	case "routingMode":
+		return nil
+	case "subnetworks":
+		return s.ComputeSubnetworks()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.network\" resource")
+	}
+}
+
+// ComputeSubnetworks computer autogenerated
+func (s *mqlGcpComputeNetwork) ComputeSubnetworks() error {
+	var err error
+	if _, ok := s.Cache.Load("subnetworks"); ok {
+		return nil
+	}
+	vres, err := s.GetSubnetworks()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("subnetworks", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpComputeSubnetwork resource interface
+type GcpComputeSubnetwork interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Description() (string, error)
+	EnableFlowLogs() (bool, error)
+	ExternalIpv6Prefix() (string, error)
+	Fingerprint() (string, error)
+	GatewayAddress() (string, error)
+	InternalIpv6Prefix() (string, error)
+	IpCidrRange() (string, error)
+	Ipv6AccessType() (string, error)
+	Ipv6CidrRange() (string, error)
+	PrivateIpGoogleAccess() (bool, error)
+	PrivateIpv6GoogleAccess() (string, error)
+	Purpose() (string, error)
+	Region() (GcpComputeRegion, error)
+	Role() (string, error)
+	StackType() (string, error)
+	State() (string, error)
+	Created() (*time.Time, error)
+	Network() (GcpComputeNetwork, error)
+}
+
+// mqlGcpComputeSubnetwork for the gcp.compute.subnetwork resource
+type mqlGcpComputeSubnetwork struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeSubnetwork) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.subnetwork resource
+func newGcpComputeSubnetwork(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeSubnetwork{runtime.NewResource("gcp.compute.subnetwork")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "enableFlowLogs":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"enableFlowLogs\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "externalIpv6Prefix":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"externalIpv6Prefix\" argument has the wrong type (expected type \"string\")")
+			}
+		case "fingerprint":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"fingerprint\" argument has the wrong type (expected type \"string\")")
+			}
+		case "gatewayAddress":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"gatewayAddress\" argument has the wrong type (expected type \"string\")")
+			}
+		case "internalIpv6Prefix":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"internalIpv6Prefix\" argument has the wrong type (expected type \"string\")")
+			}
+		case "ipCidrRange":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"ipCidrRange\" argument has the wrong type (expected type \"string\")")
+			}
+		case "ipv6AccessType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"ipv6AccessType\" argument has the wrong type (expected type \"string\")")
+			}
+		case "ipv6CidrRange":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"ipv6CidrRange\" argument has the wrong type (expected type \"string\")")
+			}
+		case "privateIpGoogleAccess":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"privateIpGoogleAccess\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "privateIpv6GoogleAccess":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"privateIpv6GoogleAccess\" argument has the wrong type (expected type \"string\")")
+			}
+		case "purpose":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"purpose\" argument has the wrong type (expected type \"string\")")
+			}
+		case "region":
+			if _, ok := val.(GcpComputeRegion); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"region\" argument has the wrong type (expected type \"GcpComputeRegion\")")
+			}
+		case "role":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"role\" argument has the wrong type (expected type \"string\")")
+			}
+		case "stackType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"stackType\" argument has the wrong type (expected type \"string\")")
+			}
+		case "state":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"state\" argument has the wrong type (expected type \"string\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "network":
+			if _, ok := val.(GcpComputeNetwork); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"network\" argument has the wrong type (expected type \"GcpComputeNetwork\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.subnetwork\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.subnetwork with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeSubnetwork) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableFlowLogs"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"enableFlowLogs\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("externalIpv6Prefix"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"externalIpv6Prefix\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("fingerprint"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"fingerprint\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gatewayAddress"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"gatewayAddress\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("internalIpv6Prefix"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"internalIpv6Prefix\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("ipCidrRange"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"ipCidrRange\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("ipv6AccessType"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"ipv6AccessType\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("ipv6CidrRange"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"ipv6CidrRange\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("privateIpGoogleAccess"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"privateIpGoogleAccess\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("privateIpv6GoogleAccess"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"privateIpv6GoogleAccess\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("purpose"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"purpose\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("region"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"region\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("role"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"role\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("stackType"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"stackType\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("state"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"state\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.subnetwork\" resource without a \"created\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.subnetwork].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "enableFlowLogs":
+		return nil
+	case "externalIpv6Prefix":
+		return nil
+	case "fingerprint":
+		return nil
+	case "gatewayAddress":
+		return nil
+	case "internalIpv6Prefix":
+		return nil
+	case "ipCidrRange":
+		return nil
+	case "ipv6AccessType":
+		return nil
+	case "ipv6CidrRange":
+		return nil
+	case "privateIpGoogleAccess":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "purpose":
+		return nil
+	case "region":
+		return nil
+	case "role":
+		return nil
+	case "stackType":
+		return nil
+	case "state":
+		return nil
+	case "created":
+		return nil
+	case "network":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.subnetwork\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.subnetwork].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "description":
+		return s.Description()
+	case "enableFlowLogs":
+		return s.EnableFlowLogs()
+	case "externalIpv6Prefix":
+		return s.ExternalIpv6Prefix()
+	case "fingerprint":
+		return s.Fingerprint()
+	case "gatewayAddress":
+		return s.GatewayAddress()
+	case "internalIpv6Prefix":
+		return s.InternalIpv6Prefix()
+	case "ipCidrRange":
+		return s.IpCidrRange()
+	case "ipv6AccessType":
+		return s.Ipv6AccessType()
+	case "ipv6CidrRange":
+		return s.Ipv6CidrRange()
+	case "privateIpGoogleAccess":
+		return s.PrivateIpGoogleAccess()
+	case "privateIpv6GoogleAccess":
+		return s.PrivateIpv6GoogleAccess()
+	case "purpose":
+		return s.Purpose()
+	case "region":
+		return s.Region()
+	case "role":
+		return s.Role()
+	case "stackType":
+		return s.StackType()
+	case "state":
+		return s.State()
+	case "created":
+		return s.Created()
+	case "network":
+		return s.Network()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.subnetwork\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableFlowLogs accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) EnableFlowLogs() (bool, error) {
+	res, ok := s.Cache.Load("enableFlowLogs")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"enableFlowLogs\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"enableFlowLogs\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// ExternalIpv6Prefix accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) ExternalIpv6Prefix() (string, error) {
+	res, ok := s.Cache.Load("externalIpv6Prefix")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"externalIpv6Prefix\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"externalIpv6Prefix\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Fingerprint accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Fingerprint() (string, error) {
+	res, ok := s.Cache.Load("fingerprint")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"fingerprint\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"fingerprint\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// GatewayAddress accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) GatewayAddress() (string, error) {
+	res, ok := s.Cache.Load("gatewayAddress")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"gatewayAddress\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"gatewayAddress\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// InternalIpv6Prefix accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) InternalIpv6Prefix() (string, error) {
+	res, ok := s.Cache.Load("internalIpv6Prefix")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"internalIpv6Prefix\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"internalIpv6Prefix\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// IpCidrRange accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) IpCidrRange() (string, error) {
+	res, ok := s.Cache.Load("ipCidrRange")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"ipCidrRange\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"ipCidrRange\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Ipv6AccessType accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Ipv6AccessType() (string, error) {
+	res, ok := s.Cache.Load("ipv6AccessType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"ipv6AccessType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"ipv6AccessType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Ipv6CidrRange accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Ipv6CidrRange() (string, error) {
+	res, ok := s.Cache.Load("ipv6CidrRange")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"ipv6CidrRange\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"ipv6CidrRange\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// PrivateIpGoogleAccess accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) PrivateIpGoogleAccess() (bool, error) {
+	res, ok := s.Cache.Load("privateIpGoogleAccess")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"privateIpGoogleAccess\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"privateIpGoogleAccess\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// PrivateIpv6GoogleAccess accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) PrivateIpv6GoogleAccess() (string, error) {
+	res, ok := s.Cache.Load("privateIpv6GoogleAccess")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"privateIpv6GoogleAccess\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"privateIpv6GoogleAccess\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Purpose accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Purpose() (string, error) {
+	res, ok := s.Cache.Load("purpose")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"purpose\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"purpose\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Region accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Region() (GcpComputeRegion, error) {
+	res, ok := s.Cache.Load("region")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"region\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeRegion)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"region\" to the right type (GcpComputeRegion): %#v", res)
+	}
+	return tres, nil
+}
+
+// Role accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Role() (string, error) {
+	res, ok := s.Cache.Load("role")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"role\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"role\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// StackType accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) StackType() (string, error) {
+	res, ok := s.Cache.Load("stackType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"stackType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"stackType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// State accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) State() (string, error) {
+	res, ok := s.Cache.Load("state")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"state\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"state\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.subnetwork\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Network accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Network() (GcpComputeNetwork, error) {
+	res, ok := s.Cache.Load("network")
+	if !ok || !res.Valid {
+		if err := s.ComputeNetwork(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("network")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.subnetwork\" calculated \"network\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "network")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeNetwork)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.subnetwork\" failed to cast field \"network\" to the right type (GcpComputeNetwork): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeSubnetwork) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.subnetwork].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "enableFlowLogs":
+		return nil
+	case "externalIpv6Prefix":
+		return nil
+	case "fingerprint":
+		return nil
+	case "gatewayAddress":
+		return nil
+	case "internalIpv6Prefix":
+		return nil
+	case "ipCidrRange":
+		return nil
+	case "ipv6AccessType":
+		return nil
+	case "ipv6CidrRange":
+		return nil
+	case "privateIpGoogleAccess":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "purpose":
+		return nil
+	case "region":
+		return nil
+	case "role":
+		return nil
+	case "stackType":
+		return nil
+	case "state":
+		return nil
+	case "created":
+		return nil
+	case "network":
+		return s.ComputeNetwork()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.subnetwork\" resource")
+	}
+}
+
+// ComputeNetwork computer autogenerated
+func (s *mqlGcpComputeSubnetwork) ComputeNetwork() error {
+	var err error
+	if _, ok := s.Cache.Load("network"); ok {
+		return nil
+	}
+	vres, err := s.GetNetwork()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("network", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpComputeRouter resource interface
+type GcpComputeRouter interface {
+	MqlResource() (*resources.Resource)
+	Compute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Description() (string, error)
+	Bgp() (interface{}, error)
+	BgpPeers() ([]interface{}, error)
+	EncryptedInterconnectRouter() (bool, error)
+	Nats() ([]interface{}, error)
+	Network() (GcpComputeNetwork, error)
+	Region() (GcpComputeRegion, error)
+	Created() (*time.Time, error)
+}
+
+// mqlGcpComputeRouter for the gcp.compute.router resource
+type mqlGcpComputeRouter struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpComputeRouter) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.compute.router resource
+func newGcpComputeRouter(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpComputeRouter{runtime.NewResource("gcp.compute.router")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "description":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"description\" argument has the wrong type (expected type \"string\")")
+			}
+		case "bgp":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"bgp\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "bgpPeers":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"bgpPeers\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "encryptedInterconnectRouter":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"encryptedInterconnectRouter\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "nats":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"nats\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "network":
+			if _, ok := val.(GcpComputeNetwork); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"network\" argument has the wrong type (expected type \"GcpComputeNetwork\")")
+			}
+		case "region":
+			if _, ok := val.(GcpComputeRegion); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"region\" argument has the wrong type (expected type \"GcpComputeRegion\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.compute.router\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.compute.router with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpComputeRouter) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("description"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"description\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("bgp"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"bgp\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("bgpPeers"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"bgpPeers\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("encryptedInterconnectRouter"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"encryptedInterconnectRouter\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("nats"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"nats\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.compute.router\" resource without a \"created\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpComputeRouter) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.router].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "bgp":
+		return nil
+	case "bgpPeers":
+		return nil
+	case "encryptedInterconnectRouter":
+		return nil
+	case "nats":
+		return nil
+	case "network":
+		return nil
+	case "region":
+		return nil
+	case "created":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.router\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpComputeRouter) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.compute.router].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "description":
+		return s.Description()
+	case "bgp":
+		return s.Bgp()
+	case "bgpPeers":
+		return s.BgpPeers()
+	case "encryptedInterconnectRouter":
+		return s.EncryptedInterconnectRouter()
+	case "nats":
+		return s.Nats()
+	case "network":
+		return s.Network()
+	case "region":
+		return s.Region()
+	case "created":
+		return s.Created()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.compute.router\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpComputeRouter) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.router\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.router\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpComputeRouter) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.router\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.router\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Description accessor autogenerated
+func (s *mqlGcpComputeRouter) Description() (string, error) {
+	res, ok := s.Cache.Load("description")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.compute.router\" failed: no value provided for static field \"description\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.compute.router\" failed to cast field \"description\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Bgp accessor autogenerated
+func (s *mqlGcpComputeRouter) Bgp() (interface{}, error) {
+	res, ok := s.Cache.Load("bgp")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.router\" failed: no value provided for static field \"bgp\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.router\" failed to cast field \"bgp\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// BgpPeers accessor autogenerated
+func (s *mqlGcpComputeRouter) BgpPeers() ([]interface{}, error) {
+	res, ok := s.Cache.Load("bgpPeers")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.router\" failed: no value provided for static field \"bgpPeers\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.router\" failed to cast field \"bgpPeers\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// EncryptedInterconnectRouter accessor autogenerated
+func (s *mqlGcpComputeRouter) EncryptedInterconnectRouter() (bool, error) {
+	res, ok := s.Cache.Load("encryptedInterconnectRouter")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.compute.router\" failed: no value provided for static field \"encryptedInterconnectRouter\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.compute.router\" failed to cast field \"encryptedInterconnectRouter\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// Nats accessor autogenerated
+func (s *mqlGcpComputeRouter) Nats() ([]interface{}, error) {
+	res, ok := s.Cache.Load("nats")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.router\" failed: no value provided for static field \"nats\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.router\" failed to cast field \"nats\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Network accessor autogenerated
+func (s *mqlGcpComputeRouter) Network() (GcpComputeNetwork, error) {
+	res, ok := s.Cache.Load("network")
+	if !ok || !res.Valid {
+		if err := s.ComputeNetwork(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("network")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.router\" calculated \"network\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "network")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeNetwork)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.router\" failed to cast field \"network\" to the right type (GcpComputeNetwork): %#v", res)
+	}
+	return tres, nil
+}
+
+// Region accessor autogenerated
+func (s *mqlGcpComputeRouter) Region() (GcpComputeRegion, error) {
+	res, ok := s.Cache.Load("region")
+	if !ok || !res.Valid {
+		if err := s.ComputeRegion(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("region")
+		if !ok {
+			return nil, errors.New("\"gcp.compute.router\" calculated \"region\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "region")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpComputeRegion)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.router\" failed to cast field \"region\" to the right type (GcpComputeRegion): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpComputeRouter) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.compute.router\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.compute.router\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpComputeRouter) Compute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.compute.router].Compute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "description":
+		return nil
+	case "bgp":
+		return nil
+	case "bgpPeers":
+		return nil
+	case "encryptedInterconnectRouter":
+		return nil
+	case "nats":
+		return nil
+	case "network":
+		return s.ComputeNetwork()
+	case "region":
+		return s.ComputeRegion()
+	case "created":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.compute.router\" resource")
+	}
+}
+
+// ComputeNetwork computer autogenerated
+func (s *mqlGcpComputeRouter) ComputeNetwork() error {
+	var err error
+	if _, ok := s.Cache.Load("network"); ok {
+		return nil
+	}
+	vres, err := s.GetNetwork()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("network", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeRegion computer autogenerated
+func (s *mqlGcpComputeRouter) ComputeRegion() error {
+	var err error
+	if _, ok := s.Cache.Load("region"); ok {
+		return nil
+	}
+	vres, err := s.GetRegion()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("region", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpStorage resource interface
@@ -4489,13 +10477,14 @@ type GcpBigqueryDataset interface {
 	Validate() error
 	Id() (string, error)
 	ProjectId() (string, error)
+	Name() (string, error)
 	Description() (string, error)
 	Location() (string, error)
 	Labels() (map[string]interface{}, error)
 	Created() (*time.Time, error)
 	Modified() (*time.Time, error)
 	Tags() (map[string]interface{}, error)
-	DefaultEncryptionConfig() (interface{}, error)
+	KmsName() (string, error)
 	Tables() ([]interface{}, error)
 	Models() ([]interface{}, error)
 	Routines() ([]interface{}, error)
@@ -4535,6 +10524,10 @@ func newGcpBigqueryDataset(runtime *resources.Runtime, args *resources.Args) (in
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.dataset\", its \"projectId\" argument has the wrong type (expected type \"string\")")
 			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.dataset\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
 		case "description":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.dataset\", its \"description\" argument has the wrong type (expected type \"string\")")
@@ -4559,9 +10552,9 @@ func newGcpBigqueryDataset(runtime *resources.Runtime, args *resources.Args) (in
 			if _, ok := val.(map[string]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.dataset\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
-		case "defaultEncryptionConfig":
-			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.bigquery.dataset\", its \"defaultEncryptionConfig\" argument has the wrong type (expected type \"interface{}\")")
+		case "kmsName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.dataset\", its \"kmsName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tables":
 			if _, ok := val.([]interface{}); !ok {
@@ -4608,6 +10601,9 @@ func (s *mqlGcpBigqueryDataset) Validate() error {
 	if _, ok := s.Cache.Load("projectId"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.dataset\" resource without a \"projectId\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.dataset\" resource without a \"name\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("description"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.dataset\" resource without a \"description\". This field is required.")
 	}
@@ -4626,8 +10622,8 @@ func (s *mqlGcpBigqueryDataset) Validate() error {
 	if _, ok := s.Cache.Load("tags"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.dataset\" resource without a \"tags\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("defaultEncryptionConfig"); !ok {
-		return errors.New("Initialized \"gcp.bigquery.dataset\" resource without a \"defaultEncryptionConfig\". This field is required.")
+	if _, ok := s.Cache.Load("kmsName"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.dataset\" resource without a \"kmsName\". This field is required.")
 	}
 
 	return nil
@@ -4641,6 +10637,8 @@ func (s *mqlGcpBigqueryDataset) Register(name string) error {
 		return nil
 	case "projectId":
 		return nil
+	case "name":
+		return nil
 	case "description":
 		return nil
 	case "location":
@@ -4653,7 +10651,7 @@ func (s *mqlGcpBigqueryDataset) Register(name string) error {
 		return nil
 	case "tags":
 		return nil
-	case "defaultEncryptionConfig":
+	case "kmsName":
 		return nil
 	case "tables":
 		return nil
@@ -4674,6 +10672,8 @@ func (s *mqlGcpBigqueryDataset) Field(name string) (interface{}, error) {
 		return s.Id()
 	case "projectId":
 		return s.ProjectId()
+	case "name":
+		return s.Name()
 	case "description":
 		return s.Description()
 	case "location":
@@ -4686,8 +10686,8 @@ func (s *mqlGcpBigqueryDataset) Field(name string) (interface{}, error) {
 		return s.Modified()
 	case "tags":
 		return s.Tags()
-	case "defaultEncryptionConfig":
-		return s.DefaultEncryptionConfig()
+	case "kmsName":
+		return s.KmsName()
 	case "tables":
 		return s.Tables()
 	case "models":
@@ -4727,6 +10727,22 @@ func (s *mqlGcpBigqueryDataset) ProjectId() (string, error) {
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.bigquery.dataset\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpBigqueryDataset) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.bigquery.dataset\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.bigquery.dataset\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -4827,18 +10843,18 @@ func (s *mqlGcpBigqueryDataset) Tags() (map[string]interface{}, error) {
 	return tres, nil
 }
 
-// DefaultEncryptionConfig accessor autogenerated
-func (s *mqlGcpBigqueryDataset) DefaultEncryptionConfig() (interface{}, error) {
-	res, ok := s.Cache.Load("defaultEncryptionConfig")
+// KmsName accessor autogenerated
+func (s *mqlGcpBigqueryDataset) KmsName() (string, error) {
+	res, ok := s.Cache.Load("kmsName")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.bigquery.dataset\" failed: no value provided for static field \"defaultEncryptionConfig\"")
+		return "", errors.New("\"gcp.bigquery.dataset\" failed: no value provided for static field \"kmsName\"")
 	}
 	if res.Error != nil {
-		return nil, res.Error
+		return "", res.Error
 	}
-	tres, ok := res.Data.(interface{})
+	tres, ok := res.Data.(string)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.bigquery.dataset\" failed to cast field \"defaultEncryptionConfig\" to the right type (interface{}): %#v", res)
+		return "", fmt.Errorf("\"gcp.bigquery.dataset\" failed to cast field \"kmsName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -4920,6 +10936,8 @@ func (s *mqlGcpBigqueryDataset) Compute(name string) error {
 		return nil
 	case "projectId":
 		return nil
+	case "name":
+		return nil
 	case "description":
 		return nil
 	case "location":
@@ -4932,7 +10950,7 @@ func (s *mqlGcpBigqueryDataset) Compute(name string) error {
 		return nil
 	case "tags":
 		return nil
-	case "defaultEncryptionConfig":
+	case "kmsName":
 		return nil
 	case "tables":
 		return s.ComputeTables()
@@ -4994,13 +11012,14 @@ type GcpBigqueryTable interface {
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
+	Id() (string, error)
+	ProjectId() (string, error)
+	DatasetId() (string, error)
 	Name() (string, error)
 	Location() (string, error)
 	Description() (string, error)
-	FullQualifiedName() (string, error)
 	Labels() (map[string]interface{}, error)
 	UseLegacySQL() (bool, error)
-	UseStandardSQL() (bool, error)
 	RequirePartitionFilter() (bool, error)
 	Created() (*time.Time, error)
 	Modified() (*time.Time, error)
@@ -5009,6 +11028,15 @@ type GcpBigqueryTable interface {
 	NumRows() (int64, error)
 	Type() (string, error)
 	ExpirationTime() (*time.Time, error)
+	KmsName() (string, error)
+	SnapshotTime() (*time.Time, error)
+	ViewQuery() (string, error)
+	ClusteringFields() (interface{}, error)
+	ExternalDataConfig() (interface{}, error)
+	MaterializedView() (interface{}, error)
+	RangePartitioning() (interface{}, error)
+	TimePartitioning() (interface{}, error)
+	Schema() ([]interface{}, error)
 }
 
 // mqlGcpBigqueryTable for the gcp.bigquery.table resource
@@ -5037,6 +11065,18 @@ func newGcpBigqueryTable(runtime *resources.Runtime, args *resources.Args) (inte
 		}
 
 		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "datasetId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"datasetId\" argument has the wrong type (expected type \"string\")")
+			}
 		case "name":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"name\" argument has the wrong type (expected type \"string\")")
@@ -5049,10 +11089,6 @@ func newGcpBigqueryTable(runtime *resources.Runtime, args *resources.Args) (inte
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
-		case "fullQualifiedName":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"fullQualifiedName\" argument has the wrong type (expected type \"string\")")
-			}
 		case "labels":
 			if _, ok := val.(map[string]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
@@ -5060,10 +11096,6 @@ func newGcpBigqueryTable(runtime *resources.Runtime, args *resources.Args) (inte
 		case "useLegacySQL":
 			if _, ok := val.(bool); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"useLegacySQL\" argument has the wrong type (expected type \"bool\")")
-			}
-		case "useStandardSQL":
-			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"useStandardSQL\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "requirePartitionFilter":
 			if _, ok := val.(bool); !ok {
@@ -5097,6 +11129,42 @@ func newGcpBigqueryTable(runtime *resources.Runtime, args *resources.Args) (inte
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"expirationTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
+		case "kmsName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"kmsName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "snapshotTime":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"snapshotTime\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "viewQuery":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"viewQuery\" argument has the wrong type (expected type \"string\")")
+			}
+		case "clusteringFields":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"clusteringFields\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "externalDataConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"externalDataConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "materializedView":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"materializedView\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "rangePartitioning":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"rangePartitioning\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "timePartitioning":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"timePartitioning\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "schema":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.table\", its \"schema\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -5124,6 +11192,15 @@ func newGcpBigqueryTable(runtime *resources.Runtime, args *resources.Args) (inte
 
 func (s *mqlGcpBigqueryTable) Validate() error {
 	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"projectId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("datasetId"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"datasetId\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("name"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"name\". This field is required.")
 	}
@@ -5133,17 +11210,11 @@ func (s *mqlGcpBigqueryTable) Validate() error {
 	if _, ok := s.Cache.Load("description"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"description\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("fullQualifiedName"); !ok {
-		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"fullQualifiedName\". This field is required.")
-	}
 	if _, ok := s.Cache.Load("labels"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"labels\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("useLegacySQL"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"useLegacySQL\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("useStandardSQL"); !ok {
-		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"useStandardSQL\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("requirePartitionFilter"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"requirePartitionFilter\". This field is required.")
@@ -5169,6 +11240,33 @@ func (s *mqlGcpBigqueryTable) Validate() error {
 	if _, ok := s.Cache.Load("expirationTime"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"expirationTime\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("kmsName"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"kmsName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("snapshotTime"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"snapshotTime\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("viewQuery"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"viewQuery\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("clusteringFields"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"clusteringFields\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("externalDataConfig"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"externalDataConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("materializedView"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"materializedView\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("rangePartitioning"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"rangePartitioning\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("timePartitioning"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"timePartitioning\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("schema"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.table\" resource without a \"schema\". This field is required.")
+	}
 
 	return nil
 }
@@ -5177,19 +11275,21 @@ func (s *mqlGcpBigqueryTable) Validate() error {
 func (s *mqlGcpBigqueryTable) Register(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.bigquery.table].Register")
 	switch name {
+	case "id":
+		return nil
+	case "projectId":
+		return nil
+	case "datasetId":
+		return nil
 	case "name":
 		return nil
 	case "location":
 		return nil
 	case "description":
 		return nil
-	case "fullQualifiedName":
-		return nil
 	case "labels":
 		return nil
 	case "useLegacySQL":
-		return nil
-	case "useStandardSQL":
 		return nil
 	case "requirePartitionFilter":
 		return nil
@@ -5207,6 +11307,24 @@ func (s *mqlGcpBigqueryTable) Register(name string) error {
 		return nil
 	case "expirationTime":
 		return nil
+	case "kmsName":
+		return nil
+	case "snapshotTime":
+		return nil
+	case "viewQuery":
+		return nil
+	case "clusteringFields":
+		return nil
+	case "externalDataConfig":
+		return nil
+	case "materializedView":
+		return nil
+	case "rangePartitioning":
+		return nil
+	case "timePartitioning":
+		return nil
+	case "schema":
+		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.bigquery.table\" resource")
 	}
@@ -5216,20 +11334,22 @@ func (s *mqlGcpBigqueryTable) Register(name string) error {
 func (s *mqlGcpBigqueryTable) Field(name string) (interface{}, error) {
 	log.Trace().Str("field", name).Msg("[gcp.bigquery.table].Field")
 	switch name {
+	case "id":
+		return s.Id()
+	case "projectId":
+		return s.ProjectId()
+	case "datasetId":
+		return s.DatasetId()
 	case "name":
 		return s.Name()
 	case "location":
 		return s.Location()
 	case "description":
 		return s.Description()
-	case "fullQualifiedName":
-		return s.FullQualifiedName()
 	case "labels":
 		return s.Labels()
 	case "useLegacySQL":
 		return s.UseLegacySQL()
-	case "useStandardSQL":
-		return s.UseStandardSQL()
 	case "requirePartitionFilter":
 		return s.RequirePartitionFilter()
 	case "created":
@@ -5246,9 +11366,75 @@ func (s *mqlGcpBigqueryTable) Field(name string) (interface{}, error) {
 		return s.Type()
 	case "expirationTime":
 		return s.ExpirationTime()
+	case "kmsName":
+		return s.KmsName()
+	case "snapshotTime":
+		return s.SnapshotTime()
+	case "viewQuery":
+		return s.ViewQuery()
+	case "clusteringFields":
+		return s.ClusteringFields()
+	case "externalDataConfig":
+		return s.ExternalDataConfig()
+	case "materializedView":
+		return s.MaterializedView()
+	case "rangePartitioning":
+		return s.RangePartitioning()
+	case "timePartitioning":
+		return s.TimePartitioning()
+	case "schema":
+		return s.Schema()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.bigquery.table\" resource")
 	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpBigqueryTable) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpBigqueryTable) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// DatasetId accessor autogenerated
+func (s *mqlGcpBigqueryTable) DatasetId() (string, error) {
+	res, ok := s.Cache.Load("datasetId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"datasetId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"datasetId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
 }
 
 // Name accessor autogenerated
@@ -5299,22 +11485,6 @@ func (s *mqlGcpBigqueryTable) Description() (string, error) {
 	return tres, nil
 }
 
-// FullQualifiedName accessor autogenerated
-func (s *mqlGcpBigqueryTable) FullQualifiedName() (string, error) {
-	res, ok := s.Cache.Load("fullQualifiedName")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"fullQualifiedName\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"fullQualifiedName\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
 // Labels accessor autogenerated
 func (s *mqlGcpBigqueryTable) Labels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("labels")
@@ -5343,22 +11513,6 @@ func (s *mqlGcpBigqueryTable) UseLegacySQL() (bool, error) {
 	tres, ok := res.Data.(bool)
 	if !ok {
 		return false, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"useLegacySQL\" to the right type (bool): %#v", res)
-	}
-	return tres, nil
-}
-
-// UseStandardSQL accessor autogenerated
-func (s *mqlGcpBigqueryTable) UseStandardSQL() (bool, error) {
-	res, ok := s.Cache.Load("useStandardSQL")
-	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"useStandardSQL\"")
-	}
-	if res.Error != nil {
-		return false, res.Error
-	}
-	tres, ok := res.Data.(bool)
-	if !ok {
-		return false, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"useStandardSQL\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
@@ -5491,23 +11645,169 @@ func (s *mqlGcpBigqueryTable) ExpirationTime() (*time.Time, error) {
 	return tres, nil
 }
 
+// KmsName accessor autogenerated
+func (s *mqlGcpBigqueryTable) KmsName() (string, error) {
+	res, ok := s.Cache.Load("kmsName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"kmsName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"kmsName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// SnapshotTime accessor autogenerated
+func (s *mqlGcpBigqueryTable) SnapshotTime() (*time.Time, error) {
+	res, ok := s.Cache.Load("snapshotTime")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"snapshotTime\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"snapshotTime\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// ViewQuery accessor autogenerated
+func (s *mqlGcpBigqueryTable) ViewQuery() (string, error) {
+	res, ok := s.Cache.Load("viewQuery")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"viewQuery\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"viewQuery\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ClusteringFields accessor autogenerated
+func (s *mqlGcpBigqueryTable) ClusteringFields() (interface{}, error) {
+	res, ok := s.Cache.Load("clusteringFields")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"clusteringFields\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"clusteringFields\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ExternalDataConfig accessor autogenerated
+func (s *mqlGcpBigqueryTable) ExternalDataConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("externalDataConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"externalDataConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"externalDataConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// MaterializedView accessor autogenerated
+func (s *mqlGcpBigqueryTable) MaterializedView() (interface{}, error) {
+	res, ok := s.Cache.Load("materializedView")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"materializedView\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"materializedView\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// RangePartitioning accessor autogenerated
+func (s *mqlGcpBigqueryTable) RangePartitioning() (interface{}, error) {
+	res, ok := s.Cache.Load("rangePartitioning")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"rangePartitioning\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"rangePartitioning\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// TimePartitioning accessor autogenerated
+func (s *mqlGcpBigqueryTable) TimePartitioning() (interface{}, error) {
+	res, ok := s.Cache.Load("timePartitioning")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"timePartitioning\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"timePartitioning\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Schema accessor autogenerated
+func (s *mqlGcpBigqueryTable) Schema() ([]interface{}, error) {
+	res, ok := s.Cache.Load("schema")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.bigquery.table\" failed: no value provided for static field \"schema\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.bigquery.table\" failed to cast field \"schema\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpBigqueryTable) Compute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.bigquery.table].Compute")
 	switch name {
+	case "id":
+		return nil
+	case "projectId":
+		return nil
+	case "datasetId":
+		return nil
 	case "name":
 		return nil
 	case "location":
 		return nil
 	case "description":
 		return nil
-	case "fullQualifiedName":
-		return nil
 	case "labels":
 		return nil
 	case "useLegacySQL":
-		return nil
-	case "useStandardSQL":
 		return nil
 	case "requirePartitionFilter":
 		return nil
@@ -5524,6 +11824,24 @@ func (s *mqlGcpBigqueryTable) Compute(name string) error {
 	case "type":
 		return nil
 	case "expirationTime":
+		return nil
+	case "kmsName":
+		return nil
+	case "snapshotTime":
+		return nil
+	case "viewQuery":
+		return nil
+	case "clusteringFields":
+		return nil
+	case "externalDataConfig":
+		return nil
+	case "materializedView":
+		return nil
+	case "rangePartitioning":
+		return nil
+	case "timePartitioning":
+		return nil
+	case "schema":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.bigquery.table\" resource")
@@ -5543,12 +11861,12 @@ type GcpBigqueryModel interface {
 	Name() (string, error)
 	Location() (string, error)
 	Description() (string, error)
-	FullQualifiedName() (string, error)
 	Labels() (map[string]interface{}, error)
 	Created() (*time.Time, error)
 	Modified() (*time.Time, error)
 	Type() (string, error)
 	ExpirationTime() (*time.Time, error)
+	KmsName() (string, error)
 }
 
 // mqlGcpBigqueryModel for the gcp.bigquery.model resource
@@ -5601,10 +11919,6 @@ func newGcpBigqueryModel(runtime *resources.Runtime, args *resources.Args) (inte
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.model\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
-		case "fullQualifiedName":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.bigquery.model\", its \"fullQualifiedName\" argument has the wrong type (expected type \"string\")")
-			}
 		case "labels":
 			if _, ok := val.(map[string]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.model\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
@@ -5624,6 +11938,10 @@ func newGcpBigqueryModel(runtime *resources.Runtime, args *resources.Args) (inte
 		case "expirationTime":
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.bigquery.model\", its \"expirationTime\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "kmsName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.bigquery.model\", its \"kmsName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
@@ -5670,9 +11988,6 @@ func (s *mqlGcpBigqueryModel) Validate() error {
 	if _, ok := s.Cache.Load("description"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.model\" resource without a \"description\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("fullQualifiedName"); !ok {
-		return errors.New("Initialized \"gcp.bigquery.model\" resource without a \"fullQualifiedName\". This field is required.")
-	}
 	if _, ok := s.Cache.Load("labels"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.model\" resource without a \"labels\". This field is required.")
 	}
@@ -5687,6 +12002,9 @@ func (s *mqlGcpBigqueryModel) Validate() error {
 	}
 	if _, ok := s.Cache.Load("expirationTime"); !ok {
 		return errors.New("Initialized \"gcp.bigquery.model\" resource without a \"expirationTime\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("kmsName"); !ok {
+		return errors.New("Initialized \"gcp.bigquery.model\" resource without a \"kmsName\". This field is required.")
 	}
 
 	return nil
@@ -5708,8 +12026,6 @@ func (s *mqlGcpBigqueryModel) Register(name string) error {
 		return nil
 	case "description":
 		return nil
-	case "fullQualifiedName":
-		return nil
 	case "labels":
 		return nil
 	case "created":
@@ -5719,6 +12035,8 @@ func (s *mqlGcpBigqueryModel) Register(name string) error {
 	case "type":
 		return nil
 	case "expirationTime":
+		return nil
+	case "kmsName":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.bigquery.model\" resource")
@@ -5741,8 +12059,6 @@ func (s *mqlGcpBigqueryModel) Field(name string) (interface{}, error) {
 		return s.Location()
 	case "description":
 		return s.Description()
-	case "fullQualifiedName":
-		return s.FullQualifiedName()
 	case "labels":
 		return s.Labels()
 	case "created":
@@ -5753,6 +12069,8 @@ func (s *mqlGcpBigqueryModel) Field(name string) (interface{}, error) {
 		return s.Type()
 	case "expirationTime":
 		return s.ExpirationTime()
+	case "kmsName":
+		return s.KmsName()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.bigquery.model\" resource")
 	}
@@ -5854,22 +12172,6 @@ func (s *mqlGcpBigqueryModel) Description() (string, error) {
 	return tres, nil
 }
 
-// FullQualifiedName accessor autogenerated
-func (s *mqlGcpBigqueryModel) FullQualifiedName() (string, error) {
-	res, ok := s.Cache.Load("fullQualifiedName")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.bigquery.model\" failed: no value provided for static field \"fullQualifiedName\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.bigquery.model\" failed to cast field \"fullQualifiedName\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
 // Labels accessor autogenerated
 func (s *mqlGcpBigqueryModel) Labels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("labels")
@@ -5950,6 +12252,22 @@ func (s *mqlGcpBigqueryModel) ExpirationTime() (*time.Time, error) {
 	return tres, nil
 }
 
+// KmsName accessor autogenerated
+func (s *mqlGcpBigqueryModel) KmsName() (string, error) {
+	res, ok := s.Cache.Load("kmsName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.bigquery.model\" failed: no value provided for static field \"kmsName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.bigquery.model\" failed to cast field \"kmsName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpBigqueryModel) Compute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.bigquery.model].Compute")
@@ -5966,8 +12284,6 @@ func (s *mqlGcpBigqueryModel) Compute(name string) error {
 		return nil
 	case "description":
 		return nil
-	case "fullQualifiedName":
-		return nil
 	case "labels":
 		return nil
 	case "created":
@@ -5977,6 +12293,8 @@ func (s *mqlGcpBigqueryModel) Compute(name string) error {
 	case "type":
 		return nil
 	case "expirationTime":
+		return nil
+	case "kmsName":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.bigquery.model\" resource")

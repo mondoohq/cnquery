@@ -13,9 +13,13 @@ alias gcloud.sql.instance = gcp.sql.instance
 
 // GCP Cloud Organization
 gcp.organization @defaults("id") {
+  // Organization ID
   id string
+  // Organization Name
   name string
+  // Organization State
   lifecycleState string
+  // Organization IAM Policy
   iamPolicy() []gcp.resourcemanager.binding
 }
 
@@ -38,10 +42,8 @@ gcp.project @defaults("id") {
   iamPolicy() []gcp.resourcemanager.binding
   // List of available and enabled services for project
   services() []gcp.service
-
   // List of recommendations
   recommendations() []gcp.recommendation
-
   // GCP Compute Resources for the Project
   // compute() gcp.compute
 }
@@ -91,19 +93,32 @@ gcp.resourcemanager.binding {
 gcp.compute {
   // Project ID
   projectId string
-
-  // Displays all Google Compute Engine instances in a project
+  // Google Compute Engine instances in a project
   instances() []gcp.compute.instance
-
+  // Google Compute Engine snapshots in a project
+  snapshots() []gcp.compute.snapshot
+  // Google Compute Engine disks in a project
+  disks() []gcp.compute.disk
+  // Google Compute Engine images in a project
+  images() []gcp.compute.image
+  // Google Compute Engine firewalls in a project
+  firewalls() []gcp.compute.firewall
+  // Google Compute Engine VPC Network in a project
+  networks() []gcp.compute.network
+  // Logical partition of a Virtual Private Cloud network
+  subnetworks() []gcp.compute.subnetwork
+  // Cloud Routers in project
+  routers() []gcp.compute.router
+  // Google Compute Engine machine types in a project
+  machineTypes() []gcp.compute.machineType
   // Project Regions
   regions() []gcp.compute.region
-
   // Project Zones
   zones() []gcp.compute.zone
 }
 
 // GCP Compute Region
-gcp.compute.region {
+private gcp.compute.region @defaults("name") {
   // Unique identifier
   id string
   // Name of the resource
@@ -121,7 +136,7 @@ gcp.compute.region {
 }
 
 // GCP Compute Zone
-gcp.compute.zone {
+private gcp.compute.zone @defaults("name") {
   // Unique identifier
   id string
   // Name of the resource
@@ -136,26 +151,378 @@ gcp.compute.zone {
   created time
 }
 
-// GCP Compute Instances
-private gcp.compute.instance @defaults("id name") {
+// GCP Machine Type
+private gcp.compute.machineType @defaults("name") {
+  // Unique identifier
   id string
+  // Project ID
+  projectId string
+  // Name of the resource
   name string
-  cpuPlatform string
-  deletionProtection bool
+  // Resource Description
   description string
+  // Number of virtual CPUs that are available to the instance
+  guestCpus int
+  // Indicates if the machine has a shared CPU
+  isSharedCpu bool
+  // Maximum persistent disks allowed
+  maximumPersistentDisks int
+  // Maximum total persistent disks size (GB) allowed.
+  maximumPersistentDisksSizeGb int
+  // Physical memory available to the instance (MB)
+  memoryMb int
+  // Creation timestamp
+  created time
+  // Zone for this machine
+  zone() gcp.compute.zone
+}
+
+// GCP Compute Instances
+private gcp.compute.instance @defaults("name") {
+  // Unique identifier for the resource
+  id string
+  // Project ID
+  projectId string
+  // User-friendly name for this instance
+  name string
+  // User-friendly name for this instance
+  description string
+  // Indicates if this instance is allowed to send and receive packets with non-matching destination or source IPs
+  canIpForward bool
+  // The CPU platform used by this instance
+  cpuPlatform string
+  // Creation timestamp
+  created time
+  // Indicates if instance is protected against deletion
+  deletionProtection bool
+  // Indicates if the instance instance has Display enabled
+  enableDisplay bool
+  // Attached list of accelerator cards
+  guestAccelerators []dict
+  // Instance Fingerprint
+  fingerprint string
+  // Hostname of the instance
   hostname string
+  // KeyRevocationActionType of the instance
+  keyRevocationActionType string
+  // User-provided labels
   labels map[string]string
-  status string
-  statusMessage string
-  tags []string
+  // Last start timestamp
+  lastStartTimestamp time
+  // Last stop timestamp
+  lastStopTimestamp time
+  // Last suspended timestamp
+  lastSuspendedTimestamp time
+  // Instance Metadata
   metadata map[string]string
+  // Minimum CPU platform for the VM instance
+  minCpuPlatform string
+  // Network configurations for this instance
+  networkInterfaces []dict
+  // private IPv6 google access type for the VM
+  privateIpv6GoogleAccess string
+  // Reservations that this instance can consume from
+  reservationAffinity dict
+  // Resource policies applied to this instance
+  resourcePolicies []string
+  // Resource Status fpr physical host
+  physicalHostResourceStatus string
+  // Scheduling options
+  scheduling dict
+  // Indicates if Shielded Instance integrity monitoring is enabled
+  enableIntegrityMonitoring bool
+  // Indicates if Shielded Instance secure boot is enabled
+  enableSecureBoot bool
+  // Indicates if Shielded Instance vTPM is enabled
+  enableVtpm bool
+  // Indicates if VM has been restricted for start because Compute Engine has detected suspicious activity
+  startRestricted bool
+  // Instance Status
+  status string
+  // Human-readable explanation of the status
+  statusMessage string
+  // Source machine image
+  sourceMachineImage string
+  // Tags associated with this instance
+  tags []string
+  // Network Performance Configuration
+  totalEgressBandwidthTier string
+  // Service accounts authorized for this instance
   serviceAccounts []gcp.compute.serviceaccount
+  // Disks associated with this instance
+  disks []gcp.compute.attachedDisk
+  // Machine Type
+  machineType() gcp.compute.machineType
+  // Instance Zone
+  zone gcp.compute.zone
 }
 
 // GCP Compute Service Account
 private gcp.compute.serviceaccount @defaults("email") {
   email string
   scopes []string
+}
+
+// GCP Compute Persistent Disk
+private gcp.compute.disk @defaults("name") {
+  // Unique identifier for the resource
+  id string
+  // User-friendly name for this disk
+  name string
+  // The architecture of the disk
+  architecture string
+  // Optional description
+  description string
+  // Features to enable on the guest operating
+  guestOsFeatures []string
+  // Labels to apply to this disk
+  labels map[string]string
+  // Last attach timestamp
+  lastAttachTimestamp time
+  // Last detach timestamp
+  lastDetachTimestamp time
+  // Publicly visible licenses
+  licenses []string
+  // An opaque location hint
+  locationHint string
+  // Physical block size of the persistent disk
+  physicalBlockSizeBytes int
+  // Indicates how many IOPS to provision for the disk
+  provisionedIops int
+  // Size, in GB, of the persistent disk
+  sizeGb int
+  // The status of disk creation
+  status string
+  // Creation timestamp
+  created time
+  // GCP Compute Zone
+  zone() gcp.compute.zone
+}
+
+// GCP Compute Attached Disk
+private gcp.compute.attachedDisk {
+  // Attached Disk ID
+  id string
+  // Project ID
+  projectId string
+  // Architecture of the attached disk
+  architecture string
+  // Indicates if disk will be auto-deleted
+  autoDelete bool
+  // Indicates that this is a boot disk
+  boot bool
+  // Unique device name
+  deviceName string
+  // Size of the disk in GB
+  diskSizeGb int
+  // Indicates whether to force attach the regional disk
+  forceAttach bool
+  // Features to enable on the guest operating
+  guestOsFeatures []string
+  // Index to this disk
+  index int
+  // Disk interface
+  interface string
+  // Publicly visible licenses
+  licenses []string
+  // Mode in which to the disk is attached
+  mode string
+  // Attached Persistent Disk resource
+  source() gcp.compute.disk
+  // Disk Type
+  type string
+}
+
+// GCP Compute Persistent Disk Snapshot
+private gcp.compute.snapshot @defaults("name") {
+  // unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Optional description
+  description string
+  // Architecture of the snapshot
+  architecture string
+  // Indicates if snapshot was automatically created
+  autoCreated bool
+  // Snapshot Chain
+  chainName string
+  // Size in bytes of the snapshot at creation time
+  creationSizeBytes int
+  // Size of the source disk, specified in GB
+  diskSizeGb int
+  // Number of bytes downloaded to restore a snapshot to a disk
+  downloadBytes int
+  // Size of the storage used by the snapshot
+  storageBytes int
+  // An indicator whether storageBytes is in a stable state or in storage reallocation
+  storageBytesStatus string
+  // Indicates the type of the snapshot
+  snapshotType string
+  // Public visible licenses
+  licenses []string
+  // Snapshot Labels
+  labels map[string]string
+  // Creation timestamp
+  created time
+  // The status of the snapshot
+  status string
+  // The source disk used to create this snapshot
+  sourceDisk() gcp.compute.disk
+}
+
+// GCP Compute
+private gcp.compute.image @defaults("id name") {
+  // unique identifier
+  id string
+  // Name of the resource
+  name string
+  // Optional description
+  description string
+  // Architecture of the snapshot
+  architecture string
+  // Size of the image tar.gz archive stored in Google Cloud Storage (in bytes)
+  archiveSizeBytes int
+  // Size of the image when restored onto a persistent disk (in GB)
+  diskSizeGb int
+  // The name of the image family to which this image belongs
+  family string
+  // Public visible licenses
+  licenses []string
+  // Snapshot Labels
+  labels map[string]string
+  // Creation timestamp
+  created time
+  // The status of the image
+  status string
+  // The source disk used to create this snapshot
+  sourceDisk() gcp.compute.disk
+}
+
+// GCP Compute Firewall
+private gcp.compute.firewall @defaults("name") {
+  // Unique Identifier
+  id string
+  // User-provided name
+  name string
+  // An optional description of this resource
+  description string
+  // Priority for this rule
+  priority int
+  //  Direction of traffic
+  direction string
+  // Indicates whether the firewall rule is disabled
+  disabled bool
+  // Source Ranges
+  sourceRanges []string
+  // Source Service Accounts
+  sourceServiceAccounts []string
+  // Source Tags
+  sourceTags []string
+  // If defined the rule applies only to traffic that has destination IP address
+  destinationRanges []string
+  // List of service accounts
+  targetServiceAccounts []string
+  // Creation timestamp
+  created time
+  // Network
+  network() gcp.compute.network
+}
+
+// GCP Compute VPC Network resource
+private gcp.compute.network @defaults("name") {
+  // Unique Identifier
+  id string
+  // Name of the resource
+  name string
+  // An optional description of this resource
+  description string
+  // If not set, indicates a legacy network
+  autoCreateSubnetworks bool
+  // Indicates if ULA internal ipv6 is enabled on this network
+  enableUlaInternalIpv6 bool
+  // Gateway address for default routing
+  gatewayIPv4 string
+  // Maximum Transmission Unit in bytes
+  mtu int
+  // Network firewall policy enforcement order
+  networkFirewallPolicyEnforcementOrder string
+  // Creation timestamp
+  created time
+  // Network peerings for the resource
+  peerings []dict
+  // The network-wide routing mode to use
+  routingMode string
+  // Subnetworks in this VPC network
+  subnetworks() []gcp.compute.subnetwork
+}
+
+// GCP Compute VPC Network Partinitioning
+private gcp.compute.subnetwork @defaults("name")  {
+  // Unique Identifier
+  id string
+  // Name of the resource
+  name string
+  // An optional description of this resource
+  description string
+  // Indicates if flow logging for this subnetwork
+  enableFlowLogs bool
+  // External IPv6 address range
+  externalIpv6Prefix string
+  // Fingerprint of this resource
+  fingerprint string
+  // Gateway address for default routes
+  gatewayAddress string
+  // Internal IPv6 address range
+  internalIpv6Prefix string
+  // Range of internal addresses
+  ipCidrRange string
+  // Access type of IPv6 address
+  ipv6AccessType string
+  // Range of internal IPv6 addresses
+  ipv6CidrRange string
+  // VMs in this subnet can access Google services without assigned external IP addresses
+  privateIpGoogleAccess bool
+  // VMs in this subnet can access Google services without assigned external IPv6 addresses
+  privateIpv6GoogleAccess string
+  // Purpose of the resource
+  purpose string
+  // Region
+  region gcp.compute.region
+  // Role of subnetwork
+  role string
+  // Stack type for the subnet
+  stackType string
+  // State of the subnetwork
+  state string
+  // Creation timestamp
+  created time
+  // Network to which this subnetwork belongs
+  network() gcp.compute.network
+}
+
+// GCP Compute Cloud Router
+gcp.compute.router @defaults("name")  {
+  // Unique Identifier
+  id string
+  // Name of the resource
+  name string
+  // An optional description of this resource
+  description string
+  // BGP information
+  bgp dict
+  // BGP routing stack configuration to establish BGP peering
+  bgpPeers []dict
+  // Indicates if a router is dedicated for use with encrypted VLAN attachments
+  encryptedInterconnectRouter bool
+  // NAT services created in this router
+  nats []dict
+  // Network to which this router belongs
+  network() gcp.compute.network
+  // Region where the router resides
+  region() gcp.compute.region
+  // Creation timestamp
+  created time
 }
 
 // GCP Cloud Storage
@@ -166,21 +533,33 @@ gcp.storage {
 
 // GCP Cloud Storage Bucket
 private gcp.storage.bucket @defaults("id") {
+  //
   id string
+  //
   name string
+  //
   labels map[string]string
+  //
   location string
+  //
   locationType string
+  //
   projectNumber string // TODO: project number / project id / project name
+  //
   storageClass string
+  //
   created time
+  //
   updated time
+  //
   iamPolicy() []gcp.resourcemanager.binding
+  //
   iamConfiguration dict
 }
 
 // GCP Cloud SQL
 gcp.sql {
+  //
   instances() []gcp.sql.instance
 }
 
