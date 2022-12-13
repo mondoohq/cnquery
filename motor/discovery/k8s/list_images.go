@@ -18,8 +18,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const dockerPullablePrefix = "docker-pullable://"
-
 // ListPodImages lits all container images for the pods in the cluster. Only unique container images are returned.
 // Uniqueness is determined based on the container digests.
 func ListPodImages(p k8s.KubernetesProvider, nsFilter NamespaceFilterOpts, od *k8s.PlatformIdOwnershipDirectory) ([]*asset.Asset, error) {
@@ -91,61 +89,20 @@ func uniqueImagesForPod(pod v1.Pod, credsStore *credsStore) map[string]container
 	// it is best to read the image from the container status since it is resolved
 	// and more accurate, for static file scan we also need to fall-back to pure spec
 	// since the status will not be set
-	imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImagesFromStatus(pod.Status.InitContainerStatuses, pullSecrets))
+	imagesSet = mergeMaps(imagesSet, ResolveUniqueContainerImagesFromStatus(pod.Status.InitContainerStatuses, pullSecrets))
 
 	// fall-back to spec
 	if len(pod.Spec.InitContainers) > 0 && len(pod.Status.InitContainerStatuses) == 0 {
-		imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImages(pod.Spec.InitContainers, pullSecrets))
+		imagesSet = mergeMaps(imagesSet, ResolveUniqueContainerImages(pod.Spec.InitContainers, pullSecrets))
 	}
 
-	imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImagesFromStatus(pod.Status.ContainerStatuses, pullSecrets))
+	imagesSet = mergeMaps(imagesSet, ResolveUniqueContainerImagesFromStatus(pod.Status.ContainerStatuses, pullSecrets))
 
 	// fall-back to spec
 	if len(pod.Spec.Containers) > 0 && len(pod.Status.ContainerStatuses) == 0 {
-		imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImages(pod.Spec.Containers, pullSecrets))
+		imagesSet = mergeMaps(imagesSet, ResolveUniqueContainerImages(pod.Spec.Containers, pullSecrets))
 	}
 	return imagesSet
-}
-
-type containerImage struct {
-	image         string
-	resolvedImage string
-	pullSecrets   []v1.Secret
-}
-
-func resolveUniqueContainerImages(cs []v1.Container, ps []v1.Secret) map[string]containerImage {
-	imagesSet := make(map[string]containerImage)
-	for _, c := range cs {
-		imagesSet[c.Image] = containerImage{image: c.Image, resolvedImage: c.Image, pullSecrets: ps}
-	}
-	return imagesSet
-}
-
-func resolveUniqueContainerImagesFromStatus(cs []v1.ContainerStatus, ps []v1.Secret) map[string]containerImage {
-	imagesSet := make(map[string]containerImage)
-	for _, c := range cs {
-		image, resolvedImage := resolveContainerImageFromStatus(c, ps)
-		imagesSet[resolvedImage] = containerImage{image: image, resolvedImage: resolvedImage, pullSecrets: ps}
-	}
-	return imagesSet
-}
-
-func resolveContainerImageFromStatus(containerStatus v1.ContainerStatus, ps []v1.Secret) (string, string) {
-	image := containerStatus.Image
-	resolvedImage := containerStatus.ImageID
-	if strings.HasPrefix(resolvedImage, dockerPullablePrefix) {
-		resolvedImage = strings.TrimPrefix(resolvedImage, dockerPullablePrefix)
-	}
-
-	// stopped pods may not include the resolved image
-	// pods with imagePullPolicy: Never do not have a proper ImageId value as it contains only the
-	// sha but not the repository. If we use that value, it will cause issues later because we will
-	// eventually try to pull an image by providing just the sha without a repo.
-	if len(resolvedImage) == 0 || !strings.Contains(resolvedImage, "@") {
-		resolvedImage = containerStatus.Image
-	}
-
-	return image, resolvedImage
 }
 
 func newPodImageAsset(i containerImage) (*asset.Asset, error) {
