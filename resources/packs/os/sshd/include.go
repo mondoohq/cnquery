@@ -17,7 +17,7 @@ import (
 var (
 	// includeStatement is a regexp for checking whether a given sshd configuration line
 	// is an 'Include' statement
-	includeStatement = regexp.MustCompile(`^Include\s+(.*)$`)
+	includeStatement = regexp.MustCompile(`^[I|i]nclude\s+(.*)$`)
 	// includeStatementHasGlob is a regext for checking whether the contents of an 'Include'
 	// statement have a wildcard/glob (ie. a literal '*')
 	includeStatementHasGlob = regexp.MustCompile(`.*\*.*`)
