@@ -237,6 +237,7 @@ type Process struct {
 	GID             string
 	Command         string
 	ParentPID       string
+	SocketInode     string
 	FileDescriptors []FileDescriptor
 }
 
@@ -254,6 +255,8 @@ func (p *Process) parseField(s string) error {
 		p.ParentPID = value
 	case 'g':
 		p.GID = value
+	case 'd':
+		p.SocketInode = value
 	case 'c':
 		p.Command = value
 	case 'u':
@@ -296,6 +299,7 @@ func parseProcessLines(lines []string) (Process, error) {
 			if err != nil {
 				return p, err
 			}
+		} else if strings.HasPrefix(line, "o") {
 			break
 		} else {
 			err := p.parseField(line)
