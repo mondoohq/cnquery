@@ -4,9 +4,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/rs/zerolog/log"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/hcl/v2"
@@ -17,6 +21,8 @@ import (
 var (
 	_ providers.Instance           = (*Provider)(nil)
 	_ providers.PlatformIdentifier = (*Provider)(nil)
+	// e.g. mondoo-operator/.github/terraform/aws/.terraform/modules/vpc/examples/secondary-cidr-blocks/main.tf/1/1
+	MODULE_EXAMPLES = regexp.MustCompile(`^.*/modules/.+/examples/.+`)
 )
 
 type terraformAssetType int32
@@ -79,22 +85,36 @@ func New(tc *providers.Config) (*Provider, error) {
 		}
 
 		if stat.IsDir() {
-			fileList, err := os.ReadDir(path)
-			if err != nil {
-				return nil, err
-			}
+			filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				foundExamples := MODULE_EXAMPLES.FindString(path)
+				if foundExamples != "" {
+					log.Warn().Str("path", path).Msg("ignoring terraform module example")
+					return nil
+				}
+				if !d.IsDir() {
+					log.Debug().Str("path", path).Msg("parsing hcl file")
+					err = loader.ParseHclFile(path)
+					if err != nil {
+						return errors.Wrap(err, "could not parse hcl file")
+					}
 
-			err = loader.ParseHclDirectory(path, fileList)
-			if err != nil {
-				return nil, errors.Wrap(err, "could not parse hcl files")
-			}
-
-			err = ReadTfVarsFromDir(path, fileList, tfVars)
-			if err != nil {
-				return nil, errors.Wrap(err, "could not parse tfvars files")
-			}
-
-			modulesManifest, err = ParseTerraformModuleManifest(path)
+					err = ReadTfVarsFromFile(path, tfVars)
+					if err != nil {
+						return errors.Wrap(err, "could not parse tfvars file")
+					}
+				} else {
+					modulesManifest, err = ParseTerraformModuleManifest(path)
+					if errors.Is(err, os.ErrNotExist) {
+						log.Debug().Str("path", path).Msg("no terraform module manifest found")
+					} else {
+						return errors.Wrap(err, fmt.Sprintf("could not parse terraform module manifest %s", path))
+					}
+				}
+				return nil
+			})
 		} else {
 			err = loader.ParseHclFile(path)
 			if err != nil {

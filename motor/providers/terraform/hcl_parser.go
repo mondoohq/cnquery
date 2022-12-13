@@ -2,7 +2,6 @@ package terraform
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -41,25 +40,6 @@ func (h *hclFileLoader) ParseHclFile(filepath string) error {
 	return nil
 }
 
-// ParseHclDirectory parses all files in a directory
-func (h *hclFileLoader) ParseHclDirectory(path string, fileList []os.DirEntry) error {
-	for i := range fileList {
-		fi := fileList[i]
-
-		if fi.IsDir() {
-			continue
-		}
-
-		path := filepath.Join(path, fi.Name())
-		err := h.ParseHclFile(path)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (h *hclFileLoader) GetParser() *hclparse.Parser {
 	return h.hclParser
 }
@@ -88,21 +68,4 @@ func ReadTfVarsFromFile(filename string, terraformVars map[string]*hcl.Attribute
 	default:
 		return nil
 	}
-}
-
-func ReadTfVarsFromDir(path string, fileList []os.DirEntry, terraformVars map[string]*hcl.Attribute) error {
-	for i := range fileList {
-		fi := fileList[i]
-
-		if fi.IsDir() {
-			continue
-		}
-
-		filename := filepath.Join(path, fi.Name())
-		err := ReadTfVarsFromFile(filename, terraformVars)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
