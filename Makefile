@@ -87,6 +87,7 @@ lr/build:
 	./lr go resources/packs/aws/aws.lr
 	./lr docs json resources/packs/aws/aws.lr.manifest.yaml
 	./lr go resources/packs/azure/azure.lr
+	./lr docs yaml resources/packs/azure/azure.lr --docs-file resources/packs/azure/azure.lr.manifest.yaml
 	./lr docs json resources/packs/azure/azure.lr.manifest.yaml
 	./lr go resources/packs/gcp/gcp.lr
 	./lr docs json resources/packs/gcp/gcp.lr.manifest.yaml
