@@ -1,8 +1,6 @@
 package aws
 
 import (
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 )
 
@@ -60,26 +58,26 @@ type basicInstanceInfo struct {
 	AccountId     string
 }
 
-func ssmInstanceToBasicInstanceInfo(instance types.InstanceInformation, region string, account string) basicInstanceInfo {
+func ssmInstanceToBasicInstanceInfo(instanceInfo ssmInstanceInfo) basicInstanceInfo {
 	return basicInstanceInfo{
-		InstanceId:    instance.InstanceId,
-		IPAddress:     instance.IPAddress,
-		Region:        region,
-		SSMPingStatus: string(instance.PingStatus),
-		PlatformType:  string(instance.PlatformType),
-		AccountId:     account,
+		InstanceId:    instanceInfo.instance.InstanceId,
+		IPAddress:     instanceInfo.instance.IPAddress,
+		Region:        instanceInfo.region,
+		SSMPingStatus: string(instanceInfo.instance.PingStatus),
+		PlatformType:  string(instanceInfo.instance.PlatformType),
+		AccountId:     instanceInfo.account,
 	}
 }
 
-func ec2InstanceToBasicInstanceInfo(instance ec2types.Instance, region string, account string) basicInstanceInfo {
+func ec2InstanceToBasicInstanceInfo(instanceInfo instanceInfo) basicInstanceInfo {
 	return basicInstanceInfo{
-		InstanceId:    instance.InstanceId,
-		IPAddress:     instance.PublicIpAddress,
-		Region:        region,
-		PublicDnsName: instance.PublicDnsName,
-		ImageId:       instance.ImageId,
-		PlatformType:  string(instance.Platform),
-		State:         string(instance.State.Name),
-		AccountId:     account,
+		InstanceId:    instanceInfo.instance.InstanceId,
+		IPAddress:     instanceInfo.instance.PublicIpAddress,
+		Region:        instanceInfo.region,
+		PublicDnsName: instanceInfo.instance.PublicDnsName,
+		ImageId:       instanceInfo.instance.ImageId,
+		PlatformType:  string(instanceInfo.instance.Platform),
+		State:         string(instanceInfo.instance.State.Name),
+		AccountId:     instanceInfo.account,
 	}
 }

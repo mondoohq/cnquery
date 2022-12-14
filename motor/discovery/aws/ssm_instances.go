@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -17,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 )
 
@@ -27,6 +29,7 @@ func NewSSMManagedInstancesDiscovery(cfg aws.Config) (*SSMManagedInstances, erro
 type SSMManagedInstances struct {
 	config        aws.Config
 	FilterOptions Ec2InstancesFilters
+	profile       string
 }
 
 func (ssmi *SSMManagedInstances) Name() string {
@@ -119,7 +122,13 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 				tagsToFilter[ImportedFromAWSTagKeyPrefix+k] = v
 			}
 			for _, instance := range isssmresp.InstanceInformationList {
-				a := ssmInstanceToAsset(account, region, instance, clonedConfig)
+				a := ssmInstanceToAsset(ssmInstanceInfo{
+					account:  account,
+					region:   region,
+					instance: instance,
+					profile:  ssmi.profile,
+				}, clonedConfig)
+
 				if len(tagsToFilter) > 0 {
 					if !assetHasLabels(a, tagsToFilter) {
 						continue
@@ -159,30 +168,50 @@ func mapSmmManagedPingStateCode(pingStatus types.PingStatus) asset.State {
 	}
 }
 
-func ssmInstanceToAsset(account string, region string, instance types.InstanceInformation, clonedConfig aws.Config) *asset.Asset {
+type ssmInstanceInfo struct {
+	account      string
+	region       string
+	instance     types.InstanceInformation
+	insecure     bool
+	passInLabels map[string]string
+	profile      string
+}
+
+func ssmInstanceToAsset(instanceInfo ssmInstanceInfo, cfg aws.Config) *asset.Asset {
 	asset := &asset.Asset{
-		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
-		Name:        *instance.InstanceId,
+		PlatformIds: []string{awsec2.MondooInstanceID(instanceInfo.account, instanceInfo.region, *instanceInfo.instance.InstanceId)},
+		Name:        *instanceInfo.instance.InstanceId,
 		Platform: &platform.Platform{
 			Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
 			Runtime: providers.RUNTIME_AWS_SSM_MANAGED,
 		},
-
 		Connections: []*providers.Config{{
-			Backend: providers.ProviderType_AWS_SSM_RUN_COMMAND,
-			Host:    *instance.InstanceId,
+			Backend:  providers.ProviderType_SSH,
+			Host:     *instanceInfo.instance.InstanceId,
+			Insecure: true,
+			Runtime:  providers.RUNTIME_AWS_EC2,
+			Credentials: []*vault.Credential{
+				{
+					Type: vault.CredentialType_aws_ec2_ssm_session,
+					User: getProbableUsernameFromSSMPlatformName(strings.ToLower(*instanceInfo.instance.PlatformName)),
+				},
+			},
+			Options: map[string]string{
+				"region":  instanceInfo.region,
+				"profile": instanceInfo.profile,
+			},
 		}},
-		State:  mapSmmManagedPingStateCode(instance.PingStatus),
+		State:  mapSmmManagedPingStateCode(instanceInfo.instance.PingStatus),
 		Labels: make(map[string]string),
 	}
 
 	// fetch and add labels from the instance
-	ec2svc := ec2.NewFromConfig(clonedConfig)
+	ec2svc := ec2.NewFromConfig(cfg)
 	tagresp, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{
 		Filters: []ec2types.Filter{
 			{
 				Name:   aws.String("resource-id"),
-				Values: []string{*instance.InstanceId},
+				Values: []string{*instanceInfo.instance.InstanceId},
 			},
 		},
 	})
@@ -202,9 +231,19 @@ func ssmInstanceToAsset(account string, region string, instance types.InstanceIn
 		}
 	}
 	// add AWS metadata labels
-	asset.Labels = addAWSMetadataLabels(asset.Labels, ssmInstanceToBasicInstanceInfo(instance, region, account))
+	asset.Labels = addAWSMetadataLabels(asset.Labels, ssmInstanceToBasicInstanceInfo(instanceInfo))
 	if label, ok := asset.Labels[ImportedFromAWSTagKeyPrefix+AWSNameLabel]; ok {
 		asset.Name = label
 	}
 	return asset
+}
+
+func getProbableUsernameFromSSMPlatformName(name string) string {
+	if strings.HasPrefix(name, "centos") {
+		return "centos"
+	}
+	if strings.HasPrefix(name, "ubuntu") {
+		return "ubuntu"
+	}
+	return "ec2-user"
 }

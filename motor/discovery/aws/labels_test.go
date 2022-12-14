@@ -38,7 +38,12 @@ func TestEc2InstanceToBasicInstanceInfo(t *testing.T) {
 		State:        "terminated",
 		AccountId:    "111111111111",
 	}
-	assert.Equal(t, expected, ec2InstanceToBasicInstanceInfo(i, "us-east-1", "111111111111"))
+
+	assert.Equal(t, expected, ec2InstanceToBasicInstanceInfo(instanceInfo{
+		instance: i,
+		region:   "us-east-1",
+		account:  "111111111111",
+	}))
 }
 
 func TestSSMInstanceToBasicInstanceInfo(t *testing.T) {
@@ -55,6 +60,9 @@ func TestSSMInstanceToBasicInstanceInfo(t *testing.T) {
 		AccountId:     "999999999999",
 	}
 
-	assert.Equal(t, expected, ssmInstanceToBasicInstanceInfo(i, "us-east-1", "999999999999"))
-
+	assert.Equal(t, expected, ssmInstanceToBasicInstanceInfo(ssmInstanceInfo{
+		instance: i,
+		region:   "us-east-1",
+		account:  "999999999999",
+	}))
 }

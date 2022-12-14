@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -15,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 )
 
@@ -34,6 +36,7 @@ type Ec2Instances struct {
 	Insecure      bool
 	FilterOptions Ec2InstancesFilters
 	Labels        map[string]string
+	profile       string
 }
 
 func (ec2i *Ec2Instances) Name() string {
@@ -111,7 +114,16 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 				reservation := resp.Reservations[i]
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
-					res = append(res, instanceToAsset(account, region, instance, ec2i.Insecure, ec2i.Labels))
+					res = append(res, instanceToAsset(instanceInfo{
+						account:      account,
+						region:       region,
+						instance:     instance,
+						insecure:     ec2i.Insecure,
+						passInLabels: ec2i.Labels,
+						profile:      ec2i.profile,
+						imageName:    getImageName(ctx, *instance.ImageId, region, clonedConfig),
+					},
+					))
 				}
 			}
 
@@ -146,33 +158,53 @@ func (ec2i *Ec2Instances) List() ([]*asset.Asset, error) {
 	return instances, nil
 }
 
-func instanceToAsset(account string, region string, instance types.Instance, insecure bool, passInLabels map[string]string) *asset.Asset {
+type instanceInfo struct {
+	account      string
+	region       string
+	instance     types.Instance
+	insecure     bool
+	passInLabels map[string]string
+	profile      string
+	imageName    string
+}
+
+func instanceToAsset(instanceInfo instanceInfo) *asset.Asset {
 	asset := &asset.Asset{
-		PlatformIds: []string{awsec2.MondooInstanceID(account, region, *instance.InstanceId)},
+		PlatformIds: []string{awsec2.MondooInstanceID(instanceInfo.account, instanceInfo.region, *instanceInfo.instance.InstanceId)},
 		Connections: []*providers.Config{},
 		Labels:      make(map[string]string),
 		IdDetector:  []string{"awsec2"},
-		Name:        *instance.InstanceId,
+		Name:        *instanceInfo.instance.InstanceId,
 		Platform: &platform.Platform{
 			Kind:    providers.Kind_KIND_VIRTUAL_MACHINE,
 			Runtime: providers.RUNTIME_AWS_EC2,
 		},
-		State: mapEc2InstanceStateCode(instance.State),
+		State: mapEc2InstanceStateCode(instanceInfo.instance.State),
 	}
 
 	// if there is a public ip, we assume ssh is an option
-	if instance.PublicIpAddress != nil {
+	if instanceInfo.instance.PublicIpAddress != nil {
 		asset.Connections = append(asset.Connections, &providers.Config{
 			Backend:  providers.ProviderType_SSH,
-			Host:     *instance.PublicIpAddress,
-			Insecure: insecure,
+			Host:     *instanceInfo.instance.PublicIpAddress,
+			Insecure: instanceInfo.insecure,
 			Runtime:  providers.RUNTIME_AWS_EC2,
+			Credentials: []*vault.Credential{
+				{
+					Type: vault.CredentialType_aws_ec2_instance_connect,
+					User: getProbableUsernameFromImageName(strings.ToLower(instanceInfo.imageName)),
+				},
+			},
+			Options: map[string]string{
+				"region":  instanceInfo.region,
+				"profile": instanceInfo.profile,
+			},
 		})
 	}
 
 	// add labels from the instance
-	for k := range instance.Tags {
-		tag := instance.Tags[k]
+	for k := range instanceInfo.instance.Tags {
+		tag := instanceInfo.instance.Tags[k]
 		if tag.Key != nil {
 			key := ImportedFromAWSTagKeyPrefix + *tag.Key
 			value := ""
@@ -183,11 +215,11 @@ func instanceToAsset(account string, region string, instance types.Instance, ins
 		}
 	}
 	// add passed in labels
-	for k, v := range passInLabels {
+	for k, v := range instanceInfo.passInLabels {
 		asset.Labels[k] = v
 	}
 	// add AWS metadata labels
-	asset.Labels = addAWSMetadataLabels(asset.Labels, ec2InstanceToBasicInstanceInfo(instance, region, account))
+	asset.Labels = addAWSMetadataLabels(asset.Labels, ec2InstanceToBasicInstanceInfo(instanceInfo))
 	if label, ok := asset.Labels[ImportedFromAWSTagKeyPrefix+AWSNameLabel]; ok {
 		asset.Name = label
 	}
@@ -254,4 +286,31 @@ func InstanceIsInRunningState(state *types.InstanceState) bool {
 		return false
 	}
 	return *state.Code == 16
+}
+
+func getImageName(ctx context.Context, imageId string, region string, cfg aws.Config) string {
+	cfgCopy := cfg
+	cfgCopy.Region = region
+	svc := ec2.NewFromConfig(cfgCopy)
+	images, err := svc.DescribeImages(ctx, &ec2.DescribeImagesInput{ImageIds: []string{imageId}})
+	if err == nil {
+		if len(images.Images) > 0 {
+			// we only gave it one image id
+			imageName := images.Images[0].Name
+			if imageName != nil {
+				return *imageName
+			}
+		}
+	}
+	return ""
+}
+
+func getProbableUsernameFromImageName(name string) string {
+	if strings.Contains(name, "centos") {
+		return "centos"
+	}
+	if strings.Contains(name, "ubuntu") {
+		return "ubuntu"
+	}
+	return "ec2-user"
 }

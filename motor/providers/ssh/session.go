@@ -155,6 +155,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 				loadOpts = append(loadOpts, config.WithSharedConfigProfile(pCfg.Options["profile"]))
 				profile = pCfg.Options["profile"]
 			}
+			log.Debug().Str("profile", pCfg.Options["profile"]).Str("region", pCfg.Options["region"]).Msg("using aws creds")
 
 			cfg, err := config.LoadDefaultConfig(context.Background(), loadOpts...)
 			if err != nil {
@@ -206,7 +207,16 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			signers = append(signers, priv)
 			closer = append(closer, ssmConn)
 		case vault.CredentialType_aws_ec2_instance_connect:
-			cfg, err := config.LoadDefaultConfig(context.Background())
+			log.Debug().Str("profile", pCfg.Options["profile"]).Str("region", pCfg.Options["region"]).Msg("using aws creds")
+
+			loadOpts := []func(*config.LoadOptions) error{}
+			if pCfg.Options != nil && pCfg.Options["region"] != "" {
+				loadOpts = append(loadOpts, config.WithRegion(pCfg.Options["region"]))
+			}
+			if pCfg.Options != nil && pCfg.Options["profile"] != "" {
+				loadOpts = append(loadOpts, config.WithSharedConfigProfile(pCfg.Options["profile"]))
+			}
+			cfg, err := config.LoadDefaultConfig(context.Background(), loadOpts...)
 			if err != nil {
 				return nil, nil, err
 			}
