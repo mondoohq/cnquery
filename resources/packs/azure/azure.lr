@@ -108,13 +108,13 @@ azuread.serviceprincipal {
   id string
 }
 
-// Azure Resource Manager
+// Azure Resources
 azure {
   // Get all the resources in a subscription
   resources() []azure.resource
 }
 
-// azure Resource
+// Azure Resource
 azure.resource {
   id string
   name string
@@ -133,14 +133,14 @@ azure.resource {
   changedTime time
 }
 
-// azure Compute
+// Azure Compute
 azure.compute {
   vms() []azure.compute.vm
   // Lists all the disks under a subscription
   disks() []azure.compute.disk
 }
 
-// azure Compute VM
+// Azure Compute VM
 azure.compute.vm {
   id string
   name string
@@ -153,7 +153,7 @@ azure.compute.vm {
   dataDisks() []azure.compute.disk
 }
 
-// azure Disk Resource
+// Azure Disk Resource
 azure.compute.disk {
   // Disk resource id
   id string
@@ -177,14 +177,14 @@ azure.compute.disk {
   properties dict
 }
 
-// azure Network
+// Azure Network
 azure.network {
   interfaces() []azure.network.interface
   securityGroups() []azure.network.securitygroup
   watchers() []azure.network.watcher
 }
 
-// azure Network Interface
+// Azure Network Interface
 azure.network.interface {
   id string
   name string
@@ -196,7 +196,7 @@ azure.network.interface {
   vm() azure.compute.vm
 }
 
-// azure Network Security Group
+// Azure Network Security Group
 azure.network.securitygroup {
   id string
   name string
@@ -210,7 +210,7 @@ azure.network.securitygroup {
   defaultSecurityRules []azure.network.securityrule
 }
 
-// azure Network Security Rule
+// Azure Network Security Rule
 azure.network.securityrule {
   id string
   name string
@@ -219,7 +219,7 @@ azure.network.securityrule {
   destinationPortRange []dict
 }
 
-// azure Network Watcher
+// Azure Network Watcher
 azure.network.watcher {
   id string
   name string
@@ -230,12 +230,12 @@ azure.network.watcher {
   properties dict
 }
 
-// azure Storage
+// Azure Storage
 azure.storage {
   accounts() []azure.storage.account
 }
 
-// azure Storage Account
+// Azure Storage Account
 azure.storage.account {
   id string
   name string
@@ -249,7 +249,7 @@ azure.storage.account {
   containers() []azure.storage.container
 }
 
-// azure Storage Container
+// Azure Storage Container
 azure.storage.container {
   id string
   name string
@@ -258,13 +258,13 @@ azure.storage.container {
   properties dict
 }
 
-// azure Web
+// Azure Web
 azure.web {
   apps() []azure.web.appsite
   availableRuntimes() []dict
 }
 
-// azure Web App Site
+// Azure Web App Site
 azure.web.appsite {
   id string
   name string
@@ -283,7 +283,7 @@ azure.web.appsite {
   stack() dict
 }
 
-// azure AppSite Authentication Settings
+// Azure AppSite Authentication Settings
 azure.web.appsiteauthsettings {
   id string
   name string
@@ -292,7 +292,7 @@ azure.web.appsiteauthsettings {
   properties dict
 }
 
-// azure AppSite Config
+// Azure AppSite Config
 azure.web.appsiteconfig {
   id string
   name string
@@ -301,12 +301,12 @@ azure.web.appsiteconfig {
   properties dict
 }
 
-// azure SQL
+// Azure SQL
 azure.sql {
   servers() []azure.sql.server
 }
 
-// azure Sql Server
+// Azure Sql Server
 azure.sql.server {
   id string
   name string
@@ -323,7 +323,7 @@ azure.sql.server {
   encryptionProtector() dict
 }
 
-// azure Sql Server Administrator
+// Azure Sql Server Administrator
 azure.sql.server.administrator {
   id string
   name string
@@ -334,7 +334,7 @@ azure.sql.server.administrator {
   tenantId string
 }
 
-// azure Sql Server Database
+// Azure Sql Server Database
 azure.sql.database {
   id string
   name string
@@ -378,7 +378,7 @@ azure.sql.database {
   usage() []azure.sql.databaseusage
 }
 
-// azure MS Database Usage
+// Azure MS Database Usage
 azure.sql.databaseusage {
   id string
   name string
@@ -391,12 +391,12 @@ azure.sql.databaseusage {
   nextResetTime() time
 }
 
-// azure PostgreSQL
+// Azure PostgreSQL
 azure.postgresql {
    servers() []azure.postgresql.server
 }
 
-// azure PostgreSQL Server
+// Azure PostgreSQL Server
 azure.postgresql.server {
   id string
   name string
@@ -409,7 +409,7 @@ azure.postgresql.server {
   firewallRules() []azure.sql.firewallrule
 }
 
-// azure PostgreSQL Database
+// Azure PostgreSQL Database
 azure.postgresql.database {
   id string
   name string
@@ -418,12 +418,12 @@ azure.postgresql.database {
   collation string
 }
 
-// azure MySQL
+// Azure MySQL
 azure.mysql {
   servers() []azure.mysql.server
 }
 
-// azure MySQL Server
+// Azure MySQL Server
 azure.mysql.server {
   id string
   name string
@@ -436,7 +436,7 @@ azure.mysql.server {
   firewallRules() []azure.sql.firewallrule
 }
 
-// azure MySQL Database
+// Azure MySQL Database
 azure.mysql.database {
   id string
   name string
@@ -445,12 +445,12 @@ azure.mysql.database {
   collation string
 }
 
-// azure MariaDB
+// Azure MariaDB
 azure.mariadb {
   servers() []azure.mariadb.server
 }
 
-// azure MariaDB Server
+// Azure MariaDB Server
 azure.mariadb.server {
   id string
   name string
@@ -463,7 +463,7 @@ azure.mariadb.server {
   firewallRules() []azure.sql.firewallrule
 }
 
-// azure MariaDB Database
+// Azure MariaDB Database
 azure.mariadb.database {
   id string
   name string
@@ -472,7 +472,7 @@ azure.mariadb.database {
   collation string
 }
 
-// azure SQL Configuration
+// Azure SQL Configuration
 azure.sql.configuration {
   id string
   name string
@@ -485,7 +485,7 @@ azure.sql.configuration {
   source string
 }
 
-// azure SQL Firewall Rule
+// Azure SQL Firewall Rule
 azure.sql.firewallrule {
   id string
   name string
@@ -494,12 +494,12 @@ azure.sql.firewallrule {
   endIpAddress string
 }
 
-// azure Key Vault
+// Azure Key Vault
 azure.keyvault {
   vaults() []azure.keyvault.vault
 }
 
-// azure Key Vault Vault
+// Azure Key Vault Vault
 azure.keyvault.vault {
   id string
   vaultName string
@@ -516,7 +516,7 @@ azure.keyvault.vault {
   diagnosticSettings() []azure.monitor.diagnosticsetting
 }
 
-// azure Key Vault Key
+// Azure Key Vault Key
 azure.keyvault.key {
   kid string
   tags map[string]string
@@ -534,7 +534,7 @@ azure.keyvault.key {
   versions() []azure.keyvault.key
 }
 
-// azure Key Vault Certificate
+// Azure Key Vault Certificate
 azure.keyvault.certificate {
   id string
   tags map[string]string
@@ -552,7 +552,7 @@ azure.keyvault.certificate {
   versions() []azure.keyvault.certificate
 }
 
-// azure Key Vault Secret
+// Azure Key Vault Secret
 azure.keyvault.secret {
   id string
   tags map[string]string
@@ -570,12 +570,12 @@ azure.keyvault.secret {
   versions() []azure.keyvault.secret
 }
 
-// azure Monitor
+// Azure Monitor
 azure.monitor {
   logProfiles() []azure.monitor.logprofile
 }
 
-// azure Monitor Log Profile
+// Azure Monitor Log Profile
 azure.monitor.logprofile {
   id string
   name string
@@ -586,7 +586,7 @@ azure.monitor.logprofile {
   storageAccount azure.storage.account
 }
 
-// azure Monitor Diagnostic Setting
+// Azure Monitor Diagnostic Setting
 azure.monitor.diagnosticsetting {
   id string
   name string
