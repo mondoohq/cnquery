@@ -178,6 +178,18 @@ type ssmInstanceInfo struct {
 }
 
 func ssmInstanceToAsset(instanceInfo ssmInstanceInfo, cfg aws.Config) *asset.Asset {
+	creds := []*vault.Credential{
+		{
+			User: getProbableUsernameFromSSMPlatformName(strings.ToLower(*instanceInfo.instance.PlatformName)),
+		},
+	}
+	if strings.HasPrefix(*instanceInfo.instance.InstanceId, "i-") {
+		creds[0].Type = vault.CredentialType_aws_ec2_ssm_session // this will only work for ec2 instances
+	}
+	host := *instanceInfo.instance.InstanceId
+	if instanceInfo.instance.IPAddress != nil && *instanceInfo.instance.IPAddress != "" {
+		host = *instanceInfo.instance.IPAddress
+	}
 	asset := &asset.Asset{
 		PlatformIds: []string{awsec2.MondooInstanceID(instanceInfo.account, instanceInfo.region, *instanceInfo.instance.InstanceId)},
 		Name:        *instanceInfo.instance.InstanceId,
@@ -186,16 +198,11 @@ func ssmInstanceToAsset(instanceInfo ssmInstanceInfo, cfg aws.Config) *asset.Ass
 			Runtime: providers.RUNTIME_AWS_SSM_MANAGED,
 		},
 		Connections: []*providers.Config{{
-			Backend:  providers.ProviderType_SSH,
-			Host:     *instanceInfo.instance.InstanceId,
-			Insecure: true,
-			Runtime:  providers.RUNTIME_AWS_EC2,
-			Credentials: []*vault.Credential{
-				{
-					Type: vault.CredentialType_aws_ec2_ssm_session,
-					User: getProbableUsernameFromSSMPlatformName(strings.ToLower(*instanceInfo.instance.PlatformName)),
-				},
-			},
+			Backend:     providers.ProviderType_SSH,
+			Host:        host,
+			Insecure:    true,
+			Runtime:     providers.RUNTIME_AWS_EC2,
+			Credentials: creds,
 			Options: map[string]string{
 				"region":  instanceInfo.region,
 				"profile": instanceInfo.profile,
