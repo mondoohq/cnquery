@@ -143,7 +143,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			// 2. create new ssh key via instance connect so that we do not rely on any pre-existing ssh key
 			err := awsssmsession.CheckPlugin()
 			if err != nil {
-				return nil, nil, errors.New("AWS Session Manager plugin is missing. More information at https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html")
+				return nil, nil, errors.New("Local AWS Session Manager plugin is missing. See https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html for information on the AWS Session Manager plugin and installation instructions")
 			}
 
 			loadOpts := []func(*config.LoadOptions) error{}
