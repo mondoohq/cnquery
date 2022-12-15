@@ -278,7 +278,7 @@ func (fs recordFS) Stat(name string) (os.FileInfo, error) {
 
 	enonet := false
 	stat, err := fs.observe.Stat(name)
-	if err == os.ErrNotExist {
+	if errors.Is(err, os.ErrNotExist) {
 		enonet = true
 	}
 
