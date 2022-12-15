@@ -10,6 +10,7 @@ import (
 
 	"go.mondoo.com/cnquery/motor/discovery/container_registry"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/types"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -17,8 +18,6 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/k8s"
 	v1 "k8s.io/api/core/v1"
 )
-
-const dockerPullablePrefix = "docker-pullable://"
 
 // ListPodImages lits all container images for the pods in the cluster. Only unique container images are returned.
 // Uniqueness is determined based on the container digests.
@@ -29,7 +28,7 @@ func ListPodImages(p k8s.KubernetesProvider, nsFilter NamespaceFilterOpts, od *k
 	}
 
 	// Grab the unique container images in the cluster.
-	runningImages := make(map[string]containerImage)
+	runningImages := make(map[string]ContainerImage)
 	credsStore := NewCredsStore(p)
 	for i := range namespaces {
 		namespace := namespaces[i]
@@ -50,8 +49,8 @@ func ListPodImages(p k8s.KubernetesProvider, nsFilter NamespaceFilterOpts, od *k
 
 		for j := range pods {
 			od.Add(pods[j])
-			podImages := uniqueImagesForPod(*pods[j], credsStore)
-			runningImages = mergeMaps(runningImages, podImages)
+			podImages := UniqueImagesForPod(*pods[j], credsStore)
+			runningImages = types.MergeMaps(runningImages, podImages)
 		}
 	}
 
@@ -72,83 +71,10 @@ func ListPodImages(p k8s.KubernetesProvider, nsFilter NamespaceFilterOpts, od *k
 		log.Debug().Str("name", a.Name).Str("image", a.Connections[0].Host).Msg("resolved pod")
 	}
 
-	return mapValuesToSlice(assets), nil
+	return types.MapValuesToSlice(assets), nil
 }
 
-// uniqueImagesForPod returns the unique container images for a pod. Images are compared based on their digest
-// if that is available in the pod status. If there is no pod status set, the container image tag is used.
-func uniqueImagesForPod(pod v1.Pod, credsStore *credsStore) map[string]containerImage {
-	imagesSet := make(map[string]containerImage)
-
-	pullSecrets := make([]v1.Secret, 0, len(pod.Spec.ImagePullSecrets))
-	for _, ps := range pod.Spec.ImagePullSecrets {
-		s, err := credsStore.Get(pod.Namespace, ps.Name) // TODO: figure out if we want to do anything with the error here
-		if err == nil {
-			pullSecrets = append(pullSecrets, *s)
-		}
-	}
-
-	// it is best to read the image from the container status since it is resolved
-	// and more accurate, for static file scan we also need to fall-back to pure spec
-	// since the status will not be set
-	imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImagesFromStatus(pod.Status.InitContainerStatuses, pullSecrets))
-
-	// fall-back to spec
-	if len(pod.Spec.InitContainers) > 0 && len(pod.Status.InitContainerStatuses) == 0 {
-		imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImages(pod.Spec.InitContainers, pullSecrets))
-	}
-
-	imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImagesFromStatus(pod.Status.ContainerStatuses, pullSecrets))
-
-	// fall-back to spec
-	if len(pod.Spec.Containers) > 0 && len(pod.Status.ContainerStatuses) == 0 {
-		imagesSet = mergeMaps(imagesSet, resolveUniqueContainerImages(pod.Spec.Containers, pullSecrets))
-	}
-	return imagesSet
-}
-
-type containerImage struct {
-	image         string
-	resolvedImage string
-	pullSecrets   []v1.Secret
-}
-
-func resolveUniqueContainerImages(cs []v1.Container, ps []v1.Secret) map[string]containerImage {
-	imagesSet := make(map[string]containerImage)
-	for _, c := range cs {
-		imagesSet[c.Image] = containerImage{image: c.Image, resolvedImage: c.Image, pullSecrets: ps}
-	}
-	return imagesSet
-}
-
-func resolveUniqueContainerImagesFromStatus(cs []v1.ContainerStatus, ps []v1.Secret) map[string]containerImage {
-	imagesSet := make(map[string]containerImage)
-	for _, c := range cs {
-		image, resolvedImage := resolveContainerImageFromStatus(c, ps)
-		imagesSet[resolvedImage] = containerImage{image: image, resolvedImage: resolvedImage, pullSecrets: ps}
-	}
-	return imagesSet
-}
-
-func resolveContainerImageFromStatus(containerStatus v1.ContainerStatus, ps []v1.Secret) (string, string) {
-	image := containerStatus.Image
-	resolvedImage := containerStatus.ImageID
-	if strings.HasPrefix(resolvedImage, dockerPullablePrefix) {
-		resolvedImage = strings.TrimPrefix(resolvedImage, dockerPullablePrefix)
-	}
-
-	// stopped pods may not include the resolved image
-	// pods with imagePullPolicy: Never do not have a proper ImageId value as it contains only the
-	// sha but not the repository. If we use that value, it will cause issues later because we will
-	// eventually try to pull an image by providing just the sha without a repo.
-	if len(resolvedImage) == 0 || !strings.Contains(resolvedImage, "@") {
-		resolvedImage = containerStatus.Image
-	}
-
-	return image, resolvedImage
-}
-
-func newPodImageAsset(i containerImage) (*asset.Asset, error) {
+func newPodImageAsset(i ContainerImage) (*asset.Asset, error) {
 	ccresolver := container_registry.NewContainerRegistryResolver()
 
 	ref, err := name.ParseReference(i.resolvedImage, name.WeakValidation)
@@ -208,24 +134,6 @@ func isIncluded(value string, included []string) bool {
 	}
 
 	return false
-}
-
-// mapValuesToSlice returns a slice with the values of the map
-func mapValuesToSlice[K comparable, V any](m map[K]V) []V {
-	var slice []V
-	for _, v := range m {
-		slice = append(slice, v)
-	}
-	return slice
-}
-
-// mergeMaps merges 2 maps. If there are duplicate keys the values from m2 will override
-// the values from m1.
-func mergeMaps[K comparable, V any](m1 map[K]V, m2 map[K]V) map[K]V {
-	for k, v := range m2 {
-		m1[k] = v
-	}
-	return m1
 }
 
 func toCredential(cfg []byte) ([]*vault.Credential, error) {

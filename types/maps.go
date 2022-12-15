@@ -107,3 +107,21 @@ func (s *StringToStrings) Delete(key string, value string) {
 		s.Map.Delete(key)
 	}
 }
+
+// mapValuesToSlice returns a slice with the values of the map
+func MapValuesToSlice[K comparable, V any](m map[K]V) []V {
+	var slice []V
+	for _, v := range m {
+		slice = append(slice, v)
+	}
+	return slice
+}
+
+// mergeMaps merges 2 maps. If there are duplicate keys the values from m2 will override
+// the values from m1.
+func MergeMaps[K comparable, V any](m1 map[K]V, m2 map[K]V) map[K]V {
+	for k, v := range m2 {
+		m1[k] = v
+	}
+	return m1
+}
