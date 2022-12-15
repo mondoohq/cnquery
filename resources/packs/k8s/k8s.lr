@@ -542,6 +542,7 @@ k8s.service @defaults("namespace name created") {
   spec dict
 }
 
+// Kubernetes Ingress Resource Backend
 private k8s.ingressresourceref {
   // Mondoo ID for Object
   id string
@@ -553,6 +554,7 @@ private k8s.ingressresourceref {
   name string
 }
 
+// Kubernetes Ingress Service Backend
 private k8s.ingressservicebackend {
   // Mondoo ID for Object
   id string
@@ -564,6 +566,7 @@ private k8s.ingressservicebackend {
   portNumber int
 }
 
+// Kubernetes Ingress Backend
 private k8s.ingressbackend {
   // Mondoo Id for Object
   id string
@@ -573,6 +576,7 @@ private k8s.ingressbackend {
   resourceRef k8s.ingressresourceref
 }
 
+// Kubernetes Ingress HTTP Rule
 private k8s.ingresshttprulepath {
   // Mondoo ID for Object
   id string
@@ -584,6 +588,7 @@ private k8s.ingresshttprulepath {
   backend k8s.ingressbackend
 }
 
+// Kubernetes Ingress Rule
 private k8s.ingressrule {
   // Mondoo ID for Object
   id string
