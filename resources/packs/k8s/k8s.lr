@@ -616,8 +616,6 @@ k8s.ingress @defaults("namespace name created") {
   // Full resource manifest
   manifest dict
   // Ingress rules
-  //rules() []k8s.ingressrule
-
   rules []k8s.ingressrule
 }
 
