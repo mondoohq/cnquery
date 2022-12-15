@@ -49,6 +49,8 @@ k8s {
   rolebindings() []k8s.rbac.rolebinding
   // Kubernetes custom resources
   customresources() []k8s.customresource
+  // Kubernetes Ingresses
+  ingresses() []k8s.ingress
 }
 
 // Kubernetes API Resources
@@ -538,6 +540,83 @@ k8s.service @defaults("namespace name created") {
   manifest dict
   // Service Spec
   spec dict
+}
+
+private k8s.ingressresourceref {
+  // Mondoo ID for Object
+  id string
+  // APIGroup specified as part of the resource reference
+  apiGroup string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Name
+  name string
+}
+
+private k8s.ingressservicebackend {
+  // Mondoo ID for Object
+  id string
+  // Kubernetes Service Name
+  name string
+  // Kubernetes Service Port Name
+  portName string
+  // Kubernetes Service Port Number
+  portNumber int
+}
+
+private k8s.ingressbackend {
+  // Mondoo Id for Object
+  id string
+  // Kubernetes Service for Ingress Backend
+  service k8s.ingressservicebackend
+  // Kubernetes Resource Reference for Ingress Backend
+  resourceRef k8s.ingressresourceref
+}
+
+private k8s.ingresshttprulepath {
+  // Mondoo ID for Object
+  id string
+  // HTTP path for Ingress Rule
+  path string
+  // PathType for Ingress Rule
+  pathType string
+  // Backend to forward matching Ingress Traffic
+  backend k8s.ingressbackend
+}
+
+private k8s.ingressrule {
+  // Mondoo ID for Object
+  id string
+  // Hostname to match for Ingress Rule
+  host string
+  // HTTP paths to managed Ingress for
+  httpPaths []k8s.ingresshttprulepath
+}
+
+// Kubernetes Ingress
+k8s.ingress @defaults("namespace name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namesapce
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Ingress rules
+  rules []k8s.ingressrule
 }
 
 // Kubernetes Network Policy

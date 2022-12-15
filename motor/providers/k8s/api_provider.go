@@ -15,6 +15,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
@@ -477,4 +478,28 @@ func (t *apiProvider) Secret(namespace, name string) (*v1.Secret, error) {
 
 func (t *apiProvider) AdmissionReviews() ([]admissionv1.AdmissionReview, error) {
 	return []admissionv1.AdmissionReview{}, nil
+}
+
+func (t *apiProvider) Ingresses(namespace v1.Namespace) ([]*networkingv1.Ingress, error) {
+	ctx := context.Background()
+	list, err := t.clientset.NetworkingV1().Ingresses(namespace.Name).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	for i := range list.Items {
+		list.Items[i].SetGroupVersionKind(networkingv1.SchemeGroupVersion.WithKind("Ingress"))
+	}
+	return sliceToPtrSlice(list.Items), err
+}
+
+func (t *apiProvider) Ingress(namespace, name string) (*networkingv1.Ingress, error) {
+	ctx := context.Background()
+	ingress, err := t.clientset.NetworkingV1().Ingresses(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	ingress.SetGroupVersionKind(networkingv1.SchemeGroupVersion.WithKind("Ingress"))
+	return ingress, err
 }

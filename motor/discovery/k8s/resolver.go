@@ -31,6 +31,7 @@ const (
 	DiscoveryDaemonSets       = "daemonsets"
 	DiscoveryContainerImages  = "container-images"
 	DiscoveryAdmissionReviews = "admissionreviews"
+	DiscoveryIngresses        = "ingresses"
 )
 
 type Resolver struct{}
@@ -53,6 +54,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 		DiscoveryDaemonSets,
 		DiscoveryContainerImages,
 		DiscoveryAdmissionReviews,
+		DiscoveryIngresses,
 	}
 }
 
@@ -349,6 +351,17 @@ func addSeparateAssets(
 			return nil, err
 		}
 		resolved = append(resolved, admissionReviews...)
+	}
+
+	// discover ingresses
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryIngresses) {
+		log.Debug().Msg("search for ingresses")
+		connection := tc.Clone()
+		ingresses, err := ListIngresses(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
+		if err != nil {
+			log.Error().Err(err).Msg("could not fetch k8s ingresses")
+		}
+		resolved = append(resolved, ingresses...)
 	}
 
 	// build a lookup on the k8s uid to look up individual assets to link

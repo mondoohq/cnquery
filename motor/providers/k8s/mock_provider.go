@@ -15,6 +15,7 @@ import (
 	v10 "k8s.io/api/apps/v1"
 	v11 "k8s.io/api/batch/v1"
 	v12 "k8s.io/api/core/v1"
+	v13 "k8s.io/api/networking/v1"
 	version "k8s.io/apimachinery/pkg/version"
 )
 
@@ -200,6 +201,36 @@ func (m *MockKubernetesProvider) Identifier() (string, error) {
 func (mr *MockKubernetesProviderMockRecorder) Identifier() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identifier", reflect.TypeOf((*MockKubernetesProvider)(nil).Identifier))
+}
+
+// Ingress mocks base method.
+func (m *MockKubernetesProvider) Ingress(namespace, name string) (*v13.Ingress, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ingress", namespace, name)
+	ret0, _ := ret[0].(*v13.Ingress)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Ingress indicates an expected call of Ingress.
+func (mr *MockKubernetesProviderMockRecorder) Ingress(namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ingress", reflect.TypeOf((*MockKubernetesProvider)(nil).Ingress), namespace, name)
+}
+
+// Ingresses mocks base method.
+func (m *MockKubernetesProvider) Ingresses(namespace v12.Namespace) ([]*v13.Ingress, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ingresses", namespace)
+	ret0, _ := ret[0].([]*v13.Ingress)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Ingresses indicates an expected call of Ingresses.
+func (mr *MockKubernetesProviderMockRecorder) Ingresses(namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ingresses", reflect.TypeOf((*MockKubernetesProvider)(nil).Ingresses), namespace)
 }
 
 // Job mocks base method.

@@ -59,6 +59,10 @@ func createPlatformData(objectKind, runtime string) (*platform.Platform, error) 
 		platformData.Family = append(platformData.Family, "k8s-admission")
 		platformData.Name = "k8s-admission"
 		platformData.Title = "Kubernetes Admission Review"
+	case "Ingress":
+		platformData.Family = append(platformData.Family, "k8s-ingress")
+		platformData.Name = "k8s-ingress"
+		platformData.Title = "Kubernetes Ingress"
 	default:
 		return nil, fmt.Errorf("could not determine object kind %s", objectKind)
 	}

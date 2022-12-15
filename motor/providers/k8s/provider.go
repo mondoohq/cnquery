@@ -13,6 +13,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/version"
 )
@@ -63,6 +64,8 @@ type KubernetesProvider interface {
 	DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error)
 	Secret(namespace, name string) (*v1.Secret, error)
 	AdmissionReviews() ([]admissionv1.AdmissionReview, error)
+	Ingress(namespace, name string) (*networkingv1.Ingress, error)
+	Ingresses(namespace v1.Namespace) ([]*networkingv1.Ingress, error)
 }
 
 type ClusterInfo struct {
@@ -142,6 +145,10 @@ func getPlatformInfo(objectKind string, runtime string) *platform.Platform {
 	case "daemonset":
 		platformData.Name = "k8s-daemonset"
 		platformData.Title = "Kubernetes DaemonSet"
+		return platformData
+	case "ingress":
+		platformData.Name = "k8s-ingress"
+		platformData.Title = "Kubernetes Ingress"
 		return platformData
 	}
 
