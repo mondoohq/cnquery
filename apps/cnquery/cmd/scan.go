@@ -127,7 +127,7 @@ or container name (e.g. elated_poincare).`,
 or the image name (e.g. ubuntu:latest).`,
 			},
 			"kubernetes": {
-				Short: "Scan a Kubernetes cluster",
+				Short: "Scan a Kubernetes cluster or local manifest file(s)",
 			},
 			"aws": {
 				Short: "Scan an AWS account or instance",
@@ -176,8 +176,20 @@ configure your Azure credentials and have SSH access to your instances.`,
 			"vsphere-vm": {
 				Short: "Scan a VMware vSphere VM",
 			},
+			"vcd": {
+				Short: "Scan a VMware Virtual Cloud Director organization",
+			},
 			"github": {
 				Short: "Scan a GitHub organization or repository",
+			},
+			"okta": {
+				Short: "Scan an Okta organization",
+			},
+			"googleworkspace": {
+				Short: "Scan a Google Workspace organization",
+			},
+			"slack": {
+				Short: "Scan a Slack team",
 			},
 			"github-org": {
 				Short: "Scan a GitHub organization",
@@ -202,7 +214,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 `,
 			},
 			"host": {
-				Short: "Scan a host endpoint",
+				Short: "Scan a host endpoint (domain name)",
 			},
 			"arista": {
 				Short: "Scan an Arista endpoint",
