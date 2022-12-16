@@ -270,7 +270,6 @@ func ParseWindowsAppPackages(input io.Reader) ([]Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info().Int("pkgs", len(entries)).Msg("parsed apps")
 
 	pkgs := []Package{}
 	for i := range entries {
