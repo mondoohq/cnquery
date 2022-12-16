@@ -62,7 +62,7 @@ private googleworkspace.user @defaults("primaryEmail") {
   suspensionReason string
   // Indicates if user is archived
   archived bool
-  // Indicates a user with super admininistrator privileges
+  // Indicates a user with super administrator privileges
   isAdmin bool
   // Is 2-step verification enforced
   isEnforcedIn2Sv bool
