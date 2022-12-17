@@ -44,7 +44,7 @@ gcp.compute {
 }
 
 // GCP Compute Instances
-gcp.compute.instance @defaults("id name") {
+private gcp.compute.instance @defaults("id name") {
   id string
   name string
   cpuPlatform string
@@ -60,7 +60,7 @@ gcp.compute.instance @defaults("id name") {
 }
 
 // GCP Compute Service Account
-gcp.compute.serviceaccount @defaults("email") {
+private gcp.compute.serviceaccount @defaults("email") {
   email string
   scopes []string
 }
@@ -72,7 +72,7 @@ gcp.storage {
 }
 
 // GCP Cloud Storage Bucket
-gcp.storage.bucket @defaults("id") {
+private gcp.storage.bucket @defaults("id") {
   id string
   name string
   labels map[string]string
@@ -92,7 +92,7 @@ gcp.sql {
 }
 
 // GCP Cloud SQL Instance
-gcp.sql.instance @defaults("name") {
+private gcp.sql.instance @defaults("name") {
   // Instance name
   name string
   // Backend type
