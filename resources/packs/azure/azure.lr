@@ -57,7 +57,7 @@ azuread {
 }
 
 // Azure Active Directory User (deprecated, use microsoft.user instead)
-azuread.user {
+private azuread.user {
   id string
   displayName string
   givenName string
@@ -74,7 +74,7 @@ azuread.user {
 }
 
 // Azure Active Directory Group (deprecated, use microsoft.group instead)
-azuread.group {
+private azuread.group {
   id string
   displayName string
   securityEnabled bool
@@ -89,7 +89,7 @@ azuread.group {
 }
 
 // Azure Active Directory Domain (deprecated, use microsoft.domain instead)
-azuread.domain {
+private azuread.domain {
   name string
   isVerified bool
   isDefault bool
@@ -99,12 +99,12 @@ azuread.domain {
 }
 
 // Azure Active Directory Application (deprecated, use microsoft.application instead))
-azuread.application {
+private azuread.application {
   id string
 }
 
 // Azure Active Directory Service Principal (deprecated, use microsoft.serviceprincipal instead))
-azuread.serviceprincipal {
+private azuread.serviceprincipal {
   id string
 }
 
@@ -115,7 +115,7 @@ azure {
 }
 
 // Azure Resource
-azure.resource {
+private azure.resource {
   id string
   name string
   kind string
@@ -141,7 +141,7 @@ azure.compute {
 }
 
 // Azure Compute VM
-azure.compute.vm {
+private azure.compute.vm {
   id string
   name string
   location string
@@ -154,7 +154,7 @@ azure.compute.vm {
 }
 
 // Azure Disk Resource
-azure.compute.disk {
+private azure.compute.disk {
   // Disk resource id
   id string
   // Disk resource name
@@ -185,7 +185,7 @@ azure.network {
 }
 
 // Azure Network Interface
-azure.network.interface {
+private azure.network.interface {
   id string
   name string
   location string
@@ -197,7 +197,7 @@ azure.network.interface {
 }
 
 // Azure Network Security Group
-azure.network.securitygroup {
+private azure.network.securitygroup {
   id string
   name string
   location string
@@ -211,7 +211,7 @@ azure.network.securitygroup {
 }
 
 // Azure Network Security Rule
-azure.network.securityrule {
+private azure.network.securityrule {
   id string
   name string
   etag string
@@ -220,7 +220,7 @@ azure.network.securityrule {
 }
 
 // Azure Network Watcher
-azure.network.watcher {
+private azure.network.watcher {
   id string
   name string
   location string
@@ -236,7 +236,7 @@ azure.storage {
 }
 
 // Azure Storage Account
-azure.storage.account {
+private azure.storage.account {
   id string
   name string
   location string
@@ -250,7 +250,7 @@ azure.storage.account {
 }
 
 // Azure Storage Container
-azure.storage.container {
+private azure.storage.container {
   id string
   name string
   type string
@@ -265,7 +265,7 @@ azure.web {
 }
 
 // Azure Web App Site
-azure.web.appsite {
+private azure.web.appsite {
   id string
   name string
   kind string
@@ -284,7 +284,7 @@ azure.web.appsite {
 }
 
 // Azure AppSite Authentication Settings
-azure.web.appsiteauthsettings {
+private azure.web.appsiteauthsettings {
   id string
   name string
   kind string
@@ -293,7 +293,7 @@ azure.web.appsiteauthsettings {
 }
 
 // Azure AppSite Config
-azure.web.appsiteconfig {
+private azure.web.appsiteconfig {
   id string
   name string
   kind string
@@ -307,7 +307,7 @@ azure.sql {
 }
 
 // Azure Sql Server
-azure.sql.server {
+private azure.sql.server {
   id string
   name string
   location string
@@ -324,7 +324,7 @@ azure.sql.server {
 }
 
 // Azure Sql Server Administrator
-azure.sql.server.administrator {
+private azure.sql.server.administrator {
   id string
   name string
   type string
@@ -335,7 +335,7 @@ azure.sql.server.administrator {
 }
 
 // Azure Sql Server Database
-azure.sql.database {
+private azure.sql.database {
   id string
   name string
   type string
@@ -379,7 +379,7 @@ azure.sql.database {
 }
 
 // Azure MS Database Usage
-azure.sql.databaseusage {
+private azure.sql.databaseusage {
   id string
   name string
   resourceName string
@@ -397,7 +397,7 @@ azure.postgresql {
 }
 
 // Azure PostgreSQL Server
-azure.postgresql.server {
+private azure.postgresql.server {
   id string
   name string
   location string
@@ -410,7 +410,7 @@ azure.postgresql.server {
 }
 
 // Azure PostgreSQL Database
-azure.postgresql.database {
+private azure.postgresql.database {
   id string
   name string
   type string
@@ -424,7 +424,7 @@ azure.mysql {
 }
 
 // Azure MySQL Server
-azure.mysql.server {
+private azure.mysql.server {
   id string
   name string
   location string
@@ -437,7 +437,7 @@ azure.mysql.server {
 }
 
 // Azure MySQL Database
-azure.mysql.database {
+private azure.mysql.database {
   id string
   name string
   type string
@@ -451,7 +451,7 @@ azure.mariadb {
 }
 
 // Azure MariaDB Server
-azure.mariadb.server {
+private azure.mariadb.server {
   id string
   name string
   location string
@@ -464,7 +464,7 @@ azure.mariadb.server {
 }
 
 // Azure MariaDB Database
-azure.mariadb.database {
+private azure.mariadb.database {
   id string
   name string
   type string
@@ -473,7 +473,7 @@ azure.mariadb.database {
 }
 
 // Azure SQL Configuration
-azure.sql.configuration {
+private azure.sql.configuration {
   id string
   name string
   type string
@@ -486,7 +486,7 @@ azure.sql.configuration {
 }
 
 // Azure SQL Firewall Rule
-azure.sql.firewallrule {
+private azure.sql.firewallrule {
   id string
   name string
   type string
@@ -500,7 +500,7 @@ azure.keyvault {
 }
 
 // Azure Key Vault Vault
-azure.keyvault.vault {
+private azure.keyvault.vault {
   id string
   vaultName string
   type string
@@ -517,7 +517,7 @@ azure.keyvault.vault {
 }
 
 // Azure Key Vault Key
-azure.keyvault.key {
+private azure.keyvault.key {
   kid string
   tags map[string]string
   managed bool
@@ -535,7 +535,7 @@ azure.keyvault.key {
 }
 
 // Azure Key Vault Certificate
-azure.keyvault.certificate {
+private azure.keyvault.certificate {
   id string
   tags map[string]string
   x5t string
@@ -553,7 +553,7 @@ azure.keyvault.certificate {
 }
 
 // Azure Key Vault Secret
-azure.keyvault.secret {
+private azure.keyvault.secret {
   id string
   tags map[string]string
   contentType string
@@ -576,7 +576,7 @@ azure.monitor {
 }
 
 // Azure Monitor Log Profile
-azure.monitor.logprofile {
+private azure.monitor.logprofile {
   id string
   name string
   location string
@@ -587,7 +587,7 @@ azure.monitor.logprofile {
 }
 
 // Azure Monitor Diagnostic Setting
-azure.monitor.diagnosticsetting {
+private azure.monitor.diagnosticsetting {
   id string
   name string
   type string

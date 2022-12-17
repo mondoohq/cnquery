@@ -103,7 +103,7 @@ aws.iam {
 }
 
 // Entry in AWS IAM credential report
-aws.iam.usercredentialreportentry @defaults("arn") {
+private aws.iam.usercredentialreportentry @defaults("arn") {
   init(properties map[string]string)
   // properties on the IAM user credential report
   properties map[string]string
@@ -161,7 +161,7 @@ aws.iam.usercredentialreportentry @defaults("arn") {
 }
 
 // AWS IAM User
-aws.iam.user @defaults("arn") {
+private aws.iam.user @defaults("arn") {
   // ARN of the IAM user 
   arn string
   // ID of the IAM user
@@ -185,7 +185,7 @@ aws.iam.user @defaults("arn") {
 }
 
 // AWS IAM Policy
-aws.iam.policy @defaults("arn") {
+private aws.iam.policy @defaults("arn") {
   // ARN of the policy
   arn string
   // ID of the policy
@@ -218,7 +218,7 @@ aws.iam.policy @defaults("arn") {
 }
 
 // AWS IAM Policy Version
-aws.iam.policyversion @defaults("arn") {
+private aws.iam.policyversion @defaults("arn") {
   // ARN of the policy version
   arn string
   // Version ID
@@ -232,7 +232,7 @@ aws.iam.policyversion @defaults("arn") {
 }
 
 // AWS IAM Role
-aws.iam.role @defaults("arn") {
+private aws.iam.role @defaults("arn") {
   // ARN of the role
   arn string
   // ID of the role
@@ -248,7 +248,7 @@ aws.iam.role @defaults("arn") {
 }
 
 // AWS IAM Group
-aws.iam.group @defaults("arn") {
+private aws.iam.group @defaults("arn") {
   // ARN of the group
   arn string
   // ID of the group
