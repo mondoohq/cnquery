@@ -306,7 +306,7 @@ azure.sql {
   servers() []azure.sql.server
 }
 
-// Azure Sql Server
+// Azure SQL Server
 private azure.sql.server {
   id string
   name string
@@ -323,7 +323,7 @@ private azure.sql.server {
   encryptionProtector() dict
 }
 
-// Azure Sql Server Administrator
+// Azure SQL Server Administrator
 private azure.sql.server.administrator {
   id string
   name string
@@ -334,7 +334,7 @@ private azure.sql.server.administrator {
   tenantId string
 }
 
-// Azure Sql Server Database
+// Azure SQL Server Database
 private azure.sql.database {
   id string
   name string

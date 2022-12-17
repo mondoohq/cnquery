@@ -11,7 +11,7 @@ alias gcloud.storage.bucket = gcp.storage.bucket
 alias gcloud.sql = gcp.sql
 alias gcloud.sql.instance = gcp.sql.instance
 
-// GCP Cloud organization
+// GCP Organization
 gcp.organization @defaults("id") {
   id() string
   name() string
@@ -19,7 +19,7 @@ gcp.organization @defaults("id") {
   iamPolicy() []gcp.resourcemanager.binding
 }
 
-// GCP Cloud Project
+// Google Cloud Platform Project
 gcp.project @defaults("id") {
   id() string
   name() string
