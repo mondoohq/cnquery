@@ -598,6 +598,16 @@ private k8s.ingressrule {
   httpPaths []k8s.ingresshttprulepath
 }
 
+// Kubernetes Ingress TLS
+private k8s.ingresstls {
+  // Mondoo ID for Object
+  id string
+  // List of hosts associated with TLS certificate
+  hosts []string
+  // Certificates data from TLS Secret
+  certificates []core.certificate
+}
+
 // Kubernetes Ingress
 private k8s.ingress @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
@@ -622,8 +632,8 @@ private k8s.ingress @defaults("namespace name created") {
   manifest dict
   // Ingress rules
   rules []k8s.ingressrule
-  // Certificates referenced by Ingress
-  certificates []core.certificate
+  // Ingress TLS data
+  tls []k8s.ingresstls
 }
 
 // Kubernetes Network Policy

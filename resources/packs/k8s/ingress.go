@@ -34,7 +34,7 @@ func (k *mqlK8s) GetIngresses() ([]interface{}, error) {
 			return nil, err
 		}
 
-		certificates, err := getCertificates(ingress, k.GetSecrets)
+		tls, err := getTLS(ingress, objId, k.MotorRuntime, k.GetSecrets)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func (k *mqlK8s) GetIngresses() ([]interface{}, error) {
 			"created", &ts.Time,
 			"manifest", manifest,
 			"rules", rules,
-			"certificates", certificates,
+			"tls", tls,
 		)
 		if err != nil {
 			return nil, err
@@ -233,8 +233,12 @@ func (k *mqlK8sIngressresourceref) id() (string, error) {
 	return k.Id()
 }
 
-func getCertificates(ingress *networkingv1.Ingress, getSecrets func() ([]interface{}, error)) ([]interface{}, error) {
-	certificates := []interface{}{}
+func (k *mqlK8sIngresstls) id() (string, error) {
+	return k.Id()
+}
+
+func getTLS(ingress *networkingv1.Ingress, objId string, motorRuntime *resources.Runtime, getSecrets func() ([]interface{}, error)) ([]interface{}, error) {
+	tlsData := []interface{}{}
 	if len(ingress.Spec.TLS) > 0 {
 		// This returns ALL Secrets found in the cluster!
 		secretsInterface, err := getSecrets()
@@ -242,53 +246,73 @@ func getCertificates(ingress *networkingv1.Ingress, getSecrets func() ([]interfa
 			return nil, fmt.Errorf("failed to fetch Secrets referenced in Ingress: %s", err)
 		}
 
-		secrets := []*mqlK8sSecret{}
+		// Build up a map of Secrets found in the same Namespace as this Ingress resource
+		secrets := map[string]*mqlK8sSecret{}
 		for _, secInterface := range secretsInterface {
 			secret, ok := secInterface.(*mqlK8sSecret)
 			if !ok {
 				return nil, errors.New("returned list of Secrets failed type assertion")
 			}
 
-			secrets = append(secrets, secret)
+			ns, err := secret.Namespace()
+			if err != nil {
+				return nil, err
+			}
+
+			if ingress.Namespace != ns {
+				continue
+			}
+			name, err := secret.Name()
+			if err != nil {
+				return nil, err
+			}
+			secrets[name] = secret
 		}
 
-		for _, tls := range ingress.Spec.TLS {
-
-			tlsSecretFound := false
-
-			for _, secret := range secrets {
-				name, err := secret.Name()
-				if err != nil {
-					return nil, err
-				}
-
-				if tls.SecretName == name {
-					tlsSecretFound = true
-
-					certs, err := secret.GetCertificates()
-					if err != nil {
-						return nil, errors.New("error getting certificate data from Secret")
-					}
-					if certs == nil {
-						// no TLS data in Secret referenced
-						// Put a blank certificate in the list of certificates?
-						return nil, fmt.Errorf("no certificates in Secret referenced by Ingress")
-					}
-
-					certList, ok := certs.([]interface{})
-					if !ok {
-						return nil, fmt.Errorf("expected a list of Certificates")
-					}
-					certificates = append(certificates, certList...)
-				}
-			}
-			if !tlsSecretFound {
-				// Ingress references a Secret that was not found
-				// Put a blank certificate in the list of certificates?
+		// There is the potential for no Secret to be found or that a Secret
+		// is found (can happen when scanning static manifest files or simply an Ingress
+		// which references a non-existent Secret) but either improperly-formatted
+		// or simply not containing TLS data. In either event just keep trying to
+		// process as much as we can.
+		for i, tls := range ingress.Spec.TLS {
+			secret, ok := secrets[tls.SecretName]
+			if !ok {
+				continue
 			}
 
+			certs, err := secret.GetCertificates()
+			if err != nil {
+				return nil, errors.New("error getting certificate data from Secret")
+			}
+			if certs == nil {
+				// no TLS data in Secret referenced
+				// k8s will allow this, so we'll just follow along with this being
+				// a non-critical issue and skip processing the Secret
+				continue
+			}
+
+			certList, ok := certs.([]interface{})
+			if !ok {
+				return nil, fmt.Errorf("expected a list of Certificates")
+			}
+
+			hosts := make([]interface{}, len(tls.Hosts))
+			for j, host := range tls.Hosts {
+				hosts[j] = host
+			}
+
+			ingressTls, err := motorRuntime.CreateResource("k8s.ingresstls",
+				"id", fmt.Sprintf("%s-tls%d", objId, i),
+				"hosts", hosts,
+				"certificates", certList,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("error creating k8s.ingresstls: %s", err)
+			}
+
+			tlsData = append(tlsData, ingressTls)
 		}
 	}
 
-	return certificates, nil
+	return tlsData, nil
 }
