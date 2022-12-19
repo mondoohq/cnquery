@@ -147,8 +147,6 @@ private gcp.compute.zone @defaults("name") {
   name string
   // Resource Description
   description string
-  // Region
-  region() gcp.compute.region
   // Status of the zone
   status string
   // Creation timestamp
@@ -177,8 +175,6 @@ private gcp.compute.machineType @defaults("name") {
   memoryMb int
   // Creation timestamp
   created time
-  // Zone for this machine
-  zone() gcp.compute.zone
 }
 
 // GCP Compute Instances
@@ -299,8 +295,6 @@ private gcp.compute.disk @defaults("name") {
   status string
   // Creation timestamp
   created time
-  // GCP Compute Zone
-  zone() gcp.compute.zone
 }
 
 // GCP Compute Attached Disk
@@ -371,8 +365,6 @@ private gcp.compute.snapshot @defaults("name") {
   created time
   // The status of the snapshot
   status string
-  // The source disk used to create this snapshot
-  sourceDisk() gcp.compute.disk
 }
 
 // GCP Compute
@@ -399,8 +391,6 @@ private gcp.compute.image @defaults("id name") {
   created time
   // The status of the image
   status string
-  // The source disk used to create this snapshot
-  sourceDisk() gcp.compute.disk
 }
 
 // GCP Compute Firewall
@@ -429,8 +419,6 @@ private gcp.compute.firewall @defaults("name") {
   targetServiceAccounts []string
   // Creation timestamp
   created time
-  // Network
-  network() gcp.compute.network
 }
 
 // GCP Compute VPC Network resource
@@ -457,8 +445,6 @@ private gcp.compute.network @defaults("name") {
   peerings []dict
   // The network-wide routing mode to use
   routingMode string
-  // Subnetworks in this VPC network
-  subnetworks() []gcp.compute.subnetwork
 }
 
 // GCP Compute VPC Network Partinitioning
@@ -501,8 +487,6 @@ private gcp.compute.subnetwork @defaults("name")  {
   state string
   // Creation timestamp
   created time
-  // Network to which this subnetwork belongs
-  network() gcp.compute.network
 }
 
 // GCP Compute Cloud Router
@@ -521,10 +505,6 @@ gcp.compute.router @defaults("name")  {
   encryptedInterconnectRouter bool
   // NAT services created in this router
   nats []dict
-  // Network to which this router belongs
-  network() gcp.compute.network
-  // Region where the router resides
-  region() gcp.compute.region
   // Creation timestamp
   created time
 }
