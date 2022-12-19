@@ -24,7 +24,7 @@ gcp.organization @defaults("id") {
 }
 
 // Google Cloud Platform Project
-gcp.project @defaults("id") {
+gcp.project @defaults("name") {
   // Unique, user-assigned id of the project
   id() string
   // The unique resource name
@@ -49,15 +49,19 @@ gcp.project @defaults("id") {
 }
 
 // GCP Service
-gcp.service {
+gcp.service @defaults("name") {
+  // Project ID
+  projectId string
   // Service Name
   name string
-  // Service parent
-  parent string
+  // Service parent name
+  parentName string
   // Service title
   title string
   // Service state
   state string
+  // Checks if the service is enabled
+  enabled() bool
 }
 
 // GCP recommendation along with a suggested action
