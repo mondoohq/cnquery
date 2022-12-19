@@ -732,3 +732,69 @@ private gcp.bigquery.routine @defaults("id") {
   // Type of routine
   type string
 }
+
+// GCP Cloud DNS
+gcp.dns {
+  // Project ID
+  projectId string
+  // Cloud DNS ManagedZone in project
+  managedZones() []gcp.dns.managedzone
+  // Cloud DNS rules in project
+  policies() []gcp.dns.policy
+}
+
+// Cloud DNS ManagedZone is a resource that represents a DNS zone hosted by the Cloud DNS service
+private gcp.dns.managedzone @defaults("name") {
+  // Managed Zone ID
+  id string
+  // Project ID
+  projectId string
+  // User-friendly name of the resource
+  name string
+  // User-friendly description of the resource
+  description string
+  // DNS name of this managed zone
+  dnsName string
+  //  Optionally specifies the NameServerSet for this ManagedZone
+  nameServerSet string
+  // Delegated to these virtual name servers
+  nameServers []string
+  // Zone's visibility
+  visibility string
+  // Creation timestamp
+  created time
+  // Cloud DNS RecordSet in zone
+  recordSets() []gcp.dns.recordset
+}
+
+// Cloud DNS RecordSet
+private gcp.dns.recordset @defaults("name") {
+  // Project ID
+  projectId string
+  // User-friendly name of the resource
+  name string
+  // Rrdatas: As defined in RFC 1035 (section 5) and RFC 1034 (section 3.6.1)
+  rrdatas []string
+  // SignatureRrdatas: As defined in RFC 4034
+  signatureRrdatas []string
+  // Number of seconds that this ResourceRecordSet can be cached by resolvers
+  ttl int
+  // The identifier of a supported record type
+  type string
+}
+
+// Cloud DNS rules applied to one or more Virtual Private Cloud resources
+private gcp.dns.policy {
+  // Project ID
+  projectId string
+  // Managed Zone ID
+  id string
+  // User-friendly name of the resource
+  name string
+  // User-friendly description of the resource
+  description string
+  // Indicates if DNS queries sent by VMs or applications over VPN connections are allowed
+  enableInboundForwarding bool
+  // Indicates if logging is enabled
+  enableLogging bool
+}
