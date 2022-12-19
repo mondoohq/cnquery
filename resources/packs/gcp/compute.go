@@ -679,7 +679,7 @@ func (g *mqlGcpCompute) GetDisks() ([]interface{}, error) {
 						"name", disk.Name,
 						"architecture", disk.Architecture,
 						"description", disk.Description,
-						"guestOsFeatures", guestOsFeatures,
+						"guestOsFeatures", core.StrSliceToInterface(guestOsFeatures),
 						"labels", core.StrMapToInterface(disk.Labels),
 						"lastAttachTimestamp", parseTime(disk.LastAttachTimestamp),
 						"lastDetachTimestamp", parseTime(disk.LastDetachTimestamp),

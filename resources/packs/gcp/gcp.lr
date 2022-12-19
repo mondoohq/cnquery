@@ -293,6 +293,8 @@ private gcp.compute.disk @defaults("name") {
   sizeGb int
   // The status of disk creation
   status string
+  // Disk Zone
+  zone gcp.compute.zone
   // Creation timestamp
   created time
 }
