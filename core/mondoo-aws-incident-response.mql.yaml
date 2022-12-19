@@ -1,6 +1,9 @@
 packs:
   - uid: mondoo-incident-response-aws
     name: Mondoo AWS Incident Response
+    tags:
+      mondoo.com/platform: aws,cloud
+      mondoo.com/category: security
     docs:
       desc: |
         ### Overview

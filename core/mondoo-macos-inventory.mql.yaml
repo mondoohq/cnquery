@@ -1,6 +1,9 @@
 packs:
   - uid: mondoo-macos-inventory
-    name: Mondoo macOS Inventory Pack 
+    name: Mondoo macOS Inventory Pack
+    tags:
+      mondoo.com/platform: macos,host
+      mondoo.com/category: best-practices
     docs:
       desc: |
         The Mondoo macOS inventory pack is designed to gather data about macOS hosts for asset inventory. 

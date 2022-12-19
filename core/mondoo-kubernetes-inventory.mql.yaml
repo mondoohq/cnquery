@@ -1,6 +1,9 @@
 packs:
   - uid: mondoo-kubernetes-cluster-inventory
     name: Mondoo Kubernetes Cluster Inventory
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     docs:
       desc: |
         The Mondoo Kubernetes inventory pack is designed to gather data about a Kubernetes Cluster for asset inventory. 

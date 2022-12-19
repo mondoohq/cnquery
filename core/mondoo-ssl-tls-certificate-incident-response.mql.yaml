@@ -1,6 +1,9 @@
 packs:
   - uid: mondoo-ssl-tls-certificate-incident-response
     name: Mondoo SSL/TLS Certificate Incident Response
+    tags:
+      mondoo.com/platform: host,network
+      mondoo.com/category: security
     docs:
       desc: |
         ### Overview

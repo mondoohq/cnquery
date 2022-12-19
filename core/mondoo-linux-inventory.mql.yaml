@@ -1,6 +1,9 @@
 packs:
   - uid: mondoo-linux-inventory
-    name: Mondoo Linux Inventory Pack 
+    name: Mondoo Linux Inventory Pack
+    tags:
+      mondoo.com/platform: linux,host
+      mondoo.com/category: best-practices
     docs:
       desc: |
         The Mondoo Linux inventory pack is designed to gather data about Linux hosts for asset inventory. 

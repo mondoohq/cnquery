@@ -1,6 +1,9 @@
 packs:
   - uid: mondoo-kubernetes-cluster-incident-response
     name: Mondoo Kubernetes Cluster Incident Response
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: security
     filters:
       - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
     queries:
@@ -27,6 +30,9 @@ packs:
           }
   - uid: mondoo-kubernetes-pods-incident-response
     name: Mondoo Kubernetes Pods Incident Response
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: security
     filters:
       - asset.platform == "k8s-pod"
     queries:
@@ -46,6 +52,9 @@ packs:
           }
       - uid: k8s-pod-container
         title: Gather Container Image Information
+        tags:
+          mondoo.com/platform: kubernetes
+          mondoo.com/category: security
         query: |
           k8s.pod { 
             name
@@ -90,6 +99,9 @@ packs:
           }
   - uid: mondoo-kubernetes-cronjobs-incident-response
     name: Mondoo Kubernetes CronJobs Incident Response
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: security
     filters:
       - asset.platform == "k8s-cronjob"
     queries:

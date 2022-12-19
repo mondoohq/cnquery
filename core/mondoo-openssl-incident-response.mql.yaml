@@ -1,6 +1,9 @@
 packs:
   - uid: mondoo-openssl-incident-response
     name: Mondoo OpenSSL Incident Response
+    tags:
+      mondoo.com/platform: linux,host
+      mondoo.com/category: best-practices
     filters:
       - asset.family.contains("linux")
     queries:
