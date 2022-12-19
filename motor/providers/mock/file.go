@@ -70,7 +70,7 @@ func (mf *MockFile) Stat() (os.FileInfo, error) {
 		FMode:    mf.data.StatData.Mode,
 		FIsDir:   mf.data.StatData.IsDir,
 		Uid:      mf.data.StatData.Uid,
-		Gid:      mf.data.StatData.Uid,
+		Gid:      mf.data.StatData.Gid,
 	}, nil
 }
 
