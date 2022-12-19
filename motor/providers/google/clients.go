@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-cleanhttp"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
@@ -14,17 +15,19 @@ import (
 func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, error) {
 	ctx := context.Background()
 
-	if t.serviceAccountSubject == "" {
-		return googleoauth.FindDefaultCredentials(ctx, scopes...)
+	if t.serviceAccountSubject != "" {
+		// use custom service account provided by user
+		credParams := googleoauth.CredentialsParams{
+			Scopes:  scopes,
+			Subject: t.serviceAccountSubject,
+		}
+
+		return googleoauth.CredentialsFromJSONWithParams(ctx, t.serviceAccount, credParams)
 	}
 
-	// use custom service account provided by user
-	credParams := googleoauth.CredentialsParams{
-		Scopes:  scopes,
-		Subject: t.serviceAccountSubject,
-	}
-
-	return googleoauth.CredentialsFromJSONWithParams(ctx, t.serviceAccount, credParams)
+	// otherwise fallback to default google sdk authentication
+	log.Debug().Msg("fallback to default google sdk authentication")
+	return googleoauth.FindDefaultCredentials(ctx, scopes...)
 }
 
 func (t *Provider) Client(scope ...string) (*http.Client, error) {
@@ -36,6 +39,7 @@ func (t *Provider) Client(scope ...string) (*http.Client, error) {
 	}
 
 	// otherwise fallback to default google sdk authentication
+	log.Debug().Msg("fallback to default google sdk authentication")
 	return defaultAuth(ctx, scope...)
 }
 
