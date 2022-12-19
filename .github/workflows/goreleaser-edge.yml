@@ -1,0 +1,111 @@
+name: goreleaser edge containers
+
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+env:
+  REGISTRY: docker.io
+
+jobs:
+  goreleaser:
+    permissions:
+      # Add "contents" to write release
+      contents: 'write'
+      # Add "id-token" for google-github-actions/auth
+      id-token: 'write'
+
+    strategy:
+      matrix:
+        os: [linux]
+        arch: ['amd64', '386', 'arm64', 'arm', 'ppc64le']
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIP }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - id: 'gcp_secrets'
+        uses: 'google-github-actions/get-secretmanager-secrets@v0'
+        with:
+          secrets: |-
+            code_sign_cert_b64:mondoo-base-infra/mondoo_code_sign_certificate_pfx_b64
+            code_sign_cert_challenge:mondoo-base-infra/mondoo_code_sign_challenge
+      - name: "Write RPM Signing Cert"
+        run: |
+          gpgkey="$(mktemp -t gpgkey.XXX)"
+          base64 -d <<<"$GPG_KEY" > "$gpgkey"
+          echo "GPG_KEY_PATH=$gpgkey" >> $GITHUB_ENV
+        env:
+          GPG_KEY: '${{ secrets.GPG_KEY}}'
+      - name: "Write Windows Signing Cert"
+        run: |
+          cert="$(mktemp -t cert.XXX)"
+          base64 -d <<<"$CERT_CONTENTS" > "$cert"
+          echo "CERT_FILE=$cert" >> $GITHUB_ENV
+        env:
+          CERT_CONTENTS: '${{ steps.gcp_secrets.outputs.code_sign_cert_b64 }}'
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --snapshot --id=linux --timeout 5m
+        env:
+          GOARCH: ${{ matrix.arch}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
+          NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Copy Dockerfile
+        run: |
+          cp Dockerfile dist/linux_linux_${{ matrix.arch }}
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=schedule,pattern=main
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+          flavor: |
+            suffix=-${{ matrix.arch }},onlatest=true
+      - name: Build and push operator image
+        id: build-and-push-operator
+        uses: docker/build-push-action@v3
+        with:
+          context: ./dist/linux_linux_${{ matrix.arch }}
+          platforms: ${{ matrix.os }}/${{ matrix.arch }}
+          push: true
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+        
+
