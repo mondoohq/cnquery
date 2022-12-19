@@ -1,0 +1,97 @@
+packs:
+  - uid: mondoo-kubernetes-cluster-inventory
+    name: Mondoo Kubernetes Cluster Inventory
+    docs:
+      desc: |
+        The Mondoo Kubernetes inventory pack is designed to gather data about a Kubernetes Cluster for asset inventory. 
+
+        To run this pack for a Kubernetes Cluster:
+
+        ```bash
+        cnquery scan k8s -f mondoo-kubernetes-inventory.mql.yaml
+        ```
+
+        ## Join the community!
+        Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
+        
+        If you have any suggestions on how to improve this query pack, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
+    filters:
+      - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
+    queries:
+      - uid: k8s-cluster-version
+        title: Gather Kubernetes Cluster Version
+        query: |
+          k8s.serverVersion
+      - uid: k8s-cluster-namespaces
+        title: Gather Kubernetes Cluster Namespaces
+        query: |
+          k8s.namespaces{ * }
+      - uid: k8s-cluster-info
+        title: Gather Cluster Nodes
+        query: |
+          k8s.nodes { * }
+  - uid: mondoo-kubernetes-pods-inventory
+    name: Mondoo Kubernetes Pods Inventory
+    filters:
+      - asset.platform == "k8s-pod"
+    queries:
+      - uid: k8s-pod
+        title: Gather Pod Information
+        query: |
+          k8s.pod { * }
+  - uid: mondoo-kubernetes-deployments-inventory
+    name: Mondoo Kubernetes Deployments Inventory
+    filters:
+      - asset.platform == "k8s-deployment"
+    queries:
+      - uid: k8s-deployment
+        title: Gather Deployment Information
+        query: |
+          k8s.deployment { * }
+  - uid: mondoo-kubernetes-cronjobs-inventory
+    name: Mondoo Kubernetes CronJobs Inventory
+    filters:
+      - asset.platform == "k8s-cronjob"
+    queries:
+      - uid: k8s-cronjob
+        title: Gather CronJob Information
+        query: |
+          k8s.cronjob { * }
+  - uid: mondoo-kubernetes-jobs-inventory
+    name: Mondoo Kubernetes Jobs Inventory
+    filters:
+      - asset.platform == "k8s-job"
+    queries:
+      - uid: k8s-job
+        title: Gather Job Information
+        query: |
+          k8s.job { * }
+  - uid: mondoo-kubernetes-daemonsets-inventory
+    name: Mondoo Kubernetes DaemonSets Inventory
+    filters:
+      - asset.platform == "k8s-daemonset"
+    queries:
+      - uid: k8s-daemonset
+        title: Gather DaemonSet Information
+        query: |
+          k8s.daemonset { * }
+  - uid: mondoo-kubernetes-statefulsets-inventory
+    name: Mondoo Kubernetes StatefulSets Inventory
+    filters:
+      - asset.platform == "k8s-statefulset"
+    queries:
+      - uid: k8s-statefulset
+        title: Gather StatefulSet Information
+        query: |
+          k8s.statefulset { * }
+  - uid: mondoo-kubernetes-replicasets-inventory
+    name: Mondoo Kubernetes ReplicaSets Inventory
+    filters:
+      - asset.platform == "k8s-replicaset"
+    queries:
+      - uid: k8s-replicaset
+        title: Gather ReplicaSet Information
+        query: |
+          k8s.replicaset { * }
+
+
