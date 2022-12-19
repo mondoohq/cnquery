@@ -20,8 +20,9 @@ import (
 )
 
 type variable struct {
-	ref uint64
-	typ types.Type
+	name string
+	ref  uint64
+	typ  types.Type
 }
 
 type varmap struct {
@@ -1748,6 +1749,16 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
 }
 
+func (c *compiler) updateLabels() {
+	for _, v := range c.vars.vars {
+		if v.name == "" {
+			continue
+		}
+
+		c.Result.Vars[v.ref] = v.name
+	}
+}
+
 func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 	// BUG (jaym): collectRefDatapoints prevents us from collecting datapoints.
 	// Collecting datapoints for blocks didn't work correctly until 6.7.0.
@@ -1833,6 +1844,8 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	c.postCompile()
 	c.Result.CodeV2.UpdateID()
 	c.updateEntrypoints(true)
+	c.updateLabels()
+
 	return nil
 }
 
@@ -1883,6 +1896,7 @@ func CompileAST(ast *parser.AST, props map[string]*llx.Primitive, conf compilerC
 		Version:          cnquery.APIVersion(),
 		MinMondooVersion: "",
 		AutoExpand:       map[string]uint64{},
+		Vars:             map[uint64]string{},
 	}
 
 	c := compiler{
@@ -1922,7 +1936,7 @@ func compile(input string, props map[string]*llx.Primitive, conf compilerConfig)
 		return res, err
 	}
 
-	err = UpdateLabels(res.CodeV2, res.Labels, conf.Schema)
+	err = UpdateLabels(res, conf.Schema)
 	if err != nil {
 		return res, err
 	}

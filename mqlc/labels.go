@@ -12,11 +12,24 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resources.Schema) (string, error) {
+func createLabel(res *llx.CodeBundle, ref uint64, schema *resources.Schema) (string, error) {
+	code := res.CodeV2
 	chunk := code.Chunk(ref)
 
 	if chunk.Call == llx.Chunk_PRIMITIVE {
-		return "", nil
+		if chunk.Primitive.Type != string(types.Ref) {
+			return "", nil
+		}
+
+		// In the case of refs, we want to check for the name of the variable,
+		// which is what every final ref should lead to
+		ref, ok := chunk.Primitive.RefV2()
+		if !ok {
+			return "", nil
+		}
+
+		label := res.Vars[ref]
+		return label, nil
 	}
 
 	id := chunk.Id
@@ -34,19 +47,19 @@ func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resou
 	var err error
 	if id == "createResource" {
 		if ref, ok := chunk.Function.Args[0].RefV2(); ok {
-			parentLabel, err = createLabel(code, ref, labels, schema)
+			parentLabel, err = createLabel(res, ref, schema)
 			if err != nil {
 				return "", err
 			}
 		}
 	} else if chunk.Function.Binding != 0 {
-		parentLabel, err = createLabel(code, chunk.Function.Binding, labels, schema)
+		parentLabel, err = createLabel(res, chunk.Function.Binding, schema)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	var res string
+	var label string
 	switch id {
 	case "[]":
 		if len(chunk.Function.Args) != 1 {
@@ -58,34 +71,34 @@ func createLabel(code *llx.CodeV2, ref uint64, labels *llx.Labels, schema *resou
 
 		switch arg.Type {
 		case types.Int:
-			res = "[" + strconv.FormatInt(idx.(int64), 10) + "]"
+			label = "[" + strconv.FormatInt(idx.(int64), 10) + "]"
 		case types.String:
-			res = "[" + idx.(string) + "]"
+			label = "[" + idx.(string) + "]"
 		default:
 			panic("cannot label array index of type " + arg.Type.Label())
 		}
 		if parentLabel != "" {
-			res = parentLabel + res
+			label = parentLabel + label
 		}
 	case "{}", "${}":
-		res = parentLabel
+		label = parentLabel
 	case "createResource":
-		res = parentLabel + "." + string(chunk.Type())
+		label = parentLabel + "." + string(chunk.Type())
 	case "if":
-		res = "if"
+		label = "if"
 	default:
-		if label, ok := llx.ComparableLabel(id); ok {
+		if x, ok := llx.ComparableLabel(id); ok {
 			arg := chunk.Function.Args[0].LabelV2(code)
-			res = parentLabel + " " + label + " " + arg
+			label = parentLabel + " " + x + " " + arg
 		} else if parentLabel == "" {
-			res = id
+			label = id
 		} else {
-			res = parentLabel + "." + id
+			label = parentLabel + "." + id
 		}
 	}
 
 	// TODO: figure out why this string includes control characters in the first place
-	return stripCtlAndExtFromUnicode(res), nil
+	return stripCtlAndExtFromUnicode(label), nil
 }
 
 // Unicode normalization and filtering, see http://blog.golang.org/normalization and
@@ -101,23 +114,28 @@ func stripCtlAndExtFromUnicode(str string) string {
 }
 
 // UpdateLabels for the given code under the schema
-func UpdateLabels(code *llx.CodeV2, labels *llx.Labels, schema *resources.Schema) error {
-	if code == nil {
+func UpdateLabels(res *llx.CodeBundle, schema *resources.Schema) error {
+	if res == nil || res.CodeV2 == nil {
 		return errors.New("cannot create labels without code")
 	}
 
-	for i := range code.Blocks {
-		err := updateLabels(code, code.Blocks[i], labels, schema)
+	for i := range res.CodeV2.Blocks {
+		err := updateLabels(res, res.CodeV2.Blocks[i], schema)
 		if err != nil {
 			return err
 		}
 	}
 
+	// not needed anymore since we have all the info in labels now
+	res.Vars = nil
+
 	return nil
 }
 
-func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema *resources.Schema) error {
+func updateLabels(res *llx.CodeBundle, block *llx.Block, schema *resources.Schema) error {
 	datapoints := block.Datapoints
+	code := res.CodeV2
+	labels := res.Labels.Labels
 
 	// We don't want assertions to become labels. Their data should not be printed
 	// regularly but instead be processed through the assertion itself
@@ -149,11 +167,11 @@ func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema
 			return errors.New("failed to create labels, cannot find checksum for this entrypoint " + strconv.FormatUint(uint64(entrypoint), 10))
 		}
 
-		if _, ok := labels.Labels[checksum]; ok {
+		if _, ok := labels[checksum]; ok {
 			continue
 		}
 
-		labels.Labels[checksum], err = createLabel(code, entrypoint, labels, schema)
+		labels[checksum], err = createLabel(res, entrypoint, schema)
 
 		if err != nil {
 			return err
@@ -168,7 +186,7 @@ func updateLabels(code *llx.CodeV2, block *llx.Block, labels *llx.Labels, schema
 				continue
 			}
 			for i := 0; i < len(assertion.Checksums); i++ {
-				delete(labels.Labels, assertion.Checksums[i])
+				delete(labels, assertion.Checksums[i])
 			}
 		}
 	}
