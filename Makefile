@@ -76,7 +76,6 @@ motor/test:
 lr: | lr/build lr/test
 
 lr/build:
-	export GOPRIVATE="github.com/mondoohq"
 	go generate .
 	go generate ./resources/packs/core/vadvisor/cvss
 	go build -o lr resources/lr/cli/main.go
@@ -117,7 +116,6 @@ lr/build:
 	./lr docs json resources/packs/vcd/vcd.lr.manifest.yaml
 
 lr/release:
-	export GOPRIVATE="github.com/mondoohq"
 	go generate .
 	go build -o lr resources/lr/cli/main.go
 	./lr docs yaml resources/packs/core/core.lr --version ${MANIFEST_VERSION} --docs-file resources/packs/core/core.lr.manifest.yaml
