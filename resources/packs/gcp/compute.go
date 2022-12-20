@@ -150,7 +150,7 @@ func (g *mqlGcpCompute) GetZones() ([]interface{}, error) {
 		return nil, err
 	}
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
 	if err != nil {
 		return nil, err
 	}

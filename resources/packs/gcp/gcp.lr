@@ -68,8 +68,14 @@ gcp.service @defaults("name") {
 gcp.recommendation {
   // Id of recommendation
   id string
+  // Project ID
+  projectId string
+  // Zone Name
+  zoneName string
   // Description of the recommendation
   name string
+  // Recommender
+  recommender string
   // The primary impact that this recommendation can have
   primaryImpact dict
   // Optional set of additional impact that this recommendation may have
