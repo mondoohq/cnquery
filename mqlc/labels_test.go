@@ -150,6 +150,24 @@ func TestLabels(t *testing.T) {
 				},
 			},
 		},
+
+		// vars
+		{
+			"a = 1; a",
+			&llx.Labels{
+				Labels: map[string]string{
+					"M3Zw1U5oVhZQeXdyvlpQc6tJz7LG6NiZ7oGQCr1eDSloV75R7lRObrv53UuaHvBOuZG3zBt5BDx9MRoRJwIlfA==": "a",
+				},
+			},
+		},
+		{
+			"a = 1; b = 2; c = a+b; c",
+			&llx.Labels{
+				Labels: map[string]string{
+					"FU1/hdJ5vadWluEfeQHhklVNU86zhW3zNwxraoHDXJYJj7X2AsjJkhuQjaCfx607pvV/Yjez346tOwzg7i9inQ==": "c",
+				},
+			},
+		},
 	}
 
 	for i := range tests {
