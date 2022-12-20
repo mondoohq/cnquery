@@ -38,7 +38,6 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 		cmd.Flags().String("platform-id", "", "Select an specific asset by providing the platform id for the target")
 		cmd.Flags().Bool("instances", false, "Also scan instances (only applies to api targets like aws, azure or gcp)")
 		cmd.Flags().Bool("host-machines", false, "Also scan host machines like ESXi server")
-
 		cmd.Flags().Bool("record", false, "Record all backend calls")
 		cmd.Flags().MarkHidden("record")
 
@@ -68,7 +67,7 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 	Docs: builder.CommandsDocs{
 		Entries: map[string]builder.CommandDocsEntry{
 			"local": {
-				Short: "Connect to a local machine",
+				Short: "Connect to your local system",
 			},
 			"mock": {
 				Short: "Connect to mock target (a simulated asset)",
@@ -141,7 +140,7 @@ or container name (e.g. elated_poincare).`,
 or the image name (e.g. ubuntu:latest).`,
 			},
 			"kubernetes": {
-				Short: "Connect to a Kubernetes cluster or manifest",
+				Short: "Connect to a Kubernetes cluster or local manifest files(s)",
 			},
 			"aws": {
 				Short: "Connect to an AWS account or instance",
@@ -173,13 +172,13 @@ scan be executed on an instance that is running inside of AWS.`,
 				Short: "Connect to an AWS instance using the AWS Systems Manager to connect",
 			},
 			"azure": {
-				Short: "Connect to a Microsoft Azure account or instance",
-				Long: `Connect to a Microsoft Azure account or instance. It will use your local Azure
-configuration for the account scan. To scan your Azure compute, you need to
-configure your Azure credentials and have SSH access to your instances.`,
+				Short: "Connect to a Microsoft Azure subscription or virtual machines",
+				Long: `Connect to a Microsoft Azure subscriptions or virtual machines. It will use your local Azure
+configuration for the account scan. To scan Azure virtual machines, you will need to
+configure your Azure credentials and have SSH access to your virtual machines.`,
 			},
 			"gcp": {
-				Short: "Connect to a Google Cloud Platform (GCP) account",
+				Short: "Connect to a Google Cloud Platform (GCP) project",
 			},
 			"gcp-gcr": {
 				Short: "Connect to a Google Container Registry (GCR)",
@@ -190,8 +189,20 @@ configure your Azure credentials and have SSH access to your instances.`,
 			"vsphere-vm": {
 				Short: "Connect to a VMware vSphere VM",
 			},
+			"vcd": {
+				Short: "Connect to a VMware Virtual Cloud Director organization",
+			},
 			"github": {
 				Short: "Connect to a GitHub organization or repository",
+			},
+			"okta": {
+				Short: "Connect to an Okta organization",
+			},
+			"googleworkspace": {
+				Short: "Connect to a Google Workspace organization",
+			},
+			"slack": {
+				Short: "Connect to a Slack team",
 			},
 			"github-org": {
 				Short: "Connect to a GitHub organization",

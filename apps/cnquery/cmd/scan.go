@@ -54,7 +54,7 @@ To manually configure a query pack, use this:
 	Docs: builder.CommandsDocs{
 		Entries: map[string]builder.CommandDocsEntry{
 			"local": {
-				Short: "Scan a local target",
+				Short: "Scan your local system",
 			},
 			"mock": {
 				Short: "Scan a mock target (a simulated asset)",
@@ -159,10 +159,10 @@ scan be executed on an instance that is running inside of AWS.`,
 				Short: "Scan an AWS instance using the AWS Systems Manager to connect",
 			},
 			"azure": {
-				Short: "Scan a Microsoft Azure account or instance",
-				Long: `Scan a Microsoft Azure account or instance. It will use your local Azure
-configuration for the account scan. To scan your Azure compute, you need to
-configure your Azure credentials and have SSH access to your instances.`,
+				Short: "Scan a Microsoft Azure subscription or virtual machine",
+				Long: `Scan a Microsoft Azure subscription or virtual machine. It will use your local Azure
+configuration for the account scan. To scan Azure virtual machines, you will need to
+configure your Azure credentials and have SSH access to your virtual machines.`,
 			},
 			"gcp": {
 				Short: "Scan a Google Cloud Platform (GCP) organization or project",
@@ -201,7 +201,7 @@ configure your Azure credentials and have SSH access to your instances.`,
 				Short: "Scan a GitLab group",
 			},
 			"ms365": {
-				Short: "Scan a Microsoft 365 endpoint",
+				Short: "Scan a Microsoft 365 tenant",
 				Long: `
 Here is an example run for Microsoft 365:
 
