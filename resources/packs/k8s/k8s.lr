@@ -612,7 +612,7 @@ k8s.ingress @defaults("namespace name created") {
   annotations() map[string]string
   // Kubernetes Object Name
   name string
-  // Kubernetes Object Namesapce
+  // Kubernetes Object Namespace
   namespace string
   // Kubernetes Object Type
   kind string

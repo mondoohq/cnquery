@@ -201,7 +201,7 @@ private gcp.compute.instance @defaults("name") {
   created time
   // Indicates if instance is protected against deletion
   deletionProtection bool
-  // Indicates if the instance instance has Display enabled
+  // Indicates if the instance has Display enabled
   enableDisplay bool
   // Attached list of accelerator cards
   guestAccelerators []dict
