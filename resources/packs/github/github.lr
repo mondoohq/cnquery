@@ -3,7 +3,7 @@ import "../core/core.lr"
 option go_package = "go.mondoo.com/cnquery/resources/packs/github"
 
 // Git commit
-private git.commit {
+private git.commit @defaults("sha") {
   // Git commit SHA
   sha string
   // Git commit message
@@ -17,21 +17,27 @@ private git.commit {
 }
 
 // Git commit author
-private git.commitAuthor {
+private git.commitAuthor @defaults("name") {
   sha string
   // Author name
   name string
   // Author email
   email string
+  // Date of commit
   date time
 }
 
 // Git GPG signature
-private git.gpgSignature {
+private git.gpgSignature @defaults("sha") {
+  // shasum for GPG signature
   sha string
+  // GPG signature reason
   reason string
+  // Whether GPG signature is verified
   verified bool
+  // GPG signature payload
   payload string
+  // GPG signature
   signature string
 }
 
@@ -42,7 +48,7 @@ github {
 }
 
 // GitHub Organization
-github.organization {
+github.organization @defaults("name") {
   login string
   id int
   nodeId string
@@ -77,27 +83,40 @@ github.organization {
   twoFactorRequirementEnabled bool
   // Verified organization by GitHub
   isVerified bool
-
+  // The default repository permission
   defaultRepositoryPermission string
+  // Whether memebers can create repositories
   membersCanCreateRepositories bool
+  // Whether memebers can create public repositories
   membersCanCreatePublicRepositories bool
+  // Whether memebers can create private repositories
   membersCanCreatePrivateRepositories bool
+  // Whether memebers can create internal repositories
   membersCanCreateInternalRepositories bool
+  // Whether memebers can create pages
   membersCanCreatePages bool
+  // Whether memebers can create public pages
   membersCanCreatePublicPages bool
+  // Whether memebers can create private pages
   membersCanCreatePrivatePages bool
-
+  // List of users that are part of the owners group
   owners() []github.user
+  // List of users that are part of the members group
   members() []github.user
+  // List of users that are part of the teams group
   teams() []github.team
+  // List of repositories
   repositories() []github.repository
+  // List of GitHub installations
   installations() []github.installation
+  // List of webhooks
   webhooks() []github.webhook
+  // List of packages
   packages() []github.package
 }
 
 // GitHub User
-private github.user {
+private github.user @defaults("id name") {
   id int
   // User login
   login string
@@ -118,7 +137,7 @@ private github.user {
 }
 
 // GitHub Team
-private github.team {
+private github.team @defaults("id name") {
   id int
   // Team name
   name string
@@ -136,104 +155,169 @@ private github.team {
 }
 
 // GitHub Collaborator
-private github.collaborator {
+private github.collaborator @defaults("user") {
   id int
   user github.user
   permissions []string
 }
 
 // GitHub Package
-private github.package {
+private github.package @defaults("id name") {
+  // ID of GitHub package
   id int
+  // Name of GitHub package
   name string
+  // GitHub package type
   packageType string
+  // GitHub package owner
   owner github.user
+  // Create time of GitHub package
   createdAt time
+  // Update time of GitHub package
   updatedAt time
+  // Number of version of GitHub package
   versionCount int
+  // Visibility of GitHub package
   visibility string
+  // GitHub repository name for package
   repository() github.repository
 }
 
 // GitHub Repository
-github.repository {
+github.repository @defaults("id name") {
   init(name string) // can only be used when logged in to github as a user
+  // GitHub repository ID
   id int
+  // GitHub repository name
   name string
+  // GitHub repository full name
   fullName string
+  // GitHub repository description
   description string
+  // GitHub repository homepage
   homepage string
+  // GitHub repository create time
   createdAt time
+  // GitHub repository update time
   updatedAt time
+  // Whether the GitHub repository is archived
   archived bool
+  // Whether the GitHub repository is disabled
   disabled bool
+  // Whether the GitHub repository is private
   private bool
+  // GitHub repository visbility status
   visibility string
+  // Whether the GitHub repository allows auto merging
   allowAutoMerge bool
+  // Whether the GitHub repository allows forking
   allowForking bool
+  // Whether the GitHub repository allows merge commit
   allowMergeCommit bool
+  // Whether the GitHub repository allows rebase merge
   allowRebaseMerge bool
+  // Whether the GitHub repository allows squash merge
   allowSquashMerge bool
+  // Whether the GitHub repository has open issues
   hasIssues bool
+  // GitHub repository organization name
   organizationName string
+  // Whether the GitHub repository has open merge requests
   openMergeRequests() []github.mergeRequest
+  // List of GitHub branches for the repository
   branches() []github.branch
+  // Default branch name for the repository
   defaultBranchName string
+  // List of commits for the GitHub repository
   commits() []github.commit
+  // List of contributors for the GitHub repository
   contributors() []github.user
+  // List of collaborators for the GitHub repository
   collaborators() []github.collaborator
+  // List of files in the GitHub repository
   files() []github.file
+  // List of releases for the GitHub repository
   releases() []github.release
+  // GitHub repository owner
   owner github.user
+  // List of webhooks for the GitHub repository
   webhooks() []github.webhook
+  // List of workflows for the GitHub repository
   workflows() []github.workflow
 }
 
 // GitHub Repository File
-private github.file {
+private github.file @defaults("name type") {
+  // Path for the file
   path string
+  // Name of the file
   name string
+  // Type of file
   type string
+  // Shasum of the file
   sha string
+  // Whether the file is a binary
   isBinary bool
+  // List of files in directory
   files() []github.file
+  // Owner name of the file
   ownerName string
+  // Repository name of the file
   repoName string
+  // File content
   content() string
 }
 
 // GitHub Release
-private github.release {
+private github.release @defaults("name tagName") {
+  // URL for release
   url string
+  // Name of release
   name string
+  // Tag name of release
   tagName string
+  // Whether the release is a pre-release
   preRelease bool
 }
 
 // GitHub Webhook
-private github.webhook {
+private github.webhook @defaults("id name") {
+  // ID of webhook
   id int
+  // Name of webhook
   name string
+  // URL of webhook
   url string
+  // List of events for webhook
   events []string
+  // Configuration for webhook
   config dict
+  // Whether the webhook is active
   active bool
 }
 
 // GitHub Workflow
-private github.workflow {
+private github.workflow @defaults("id name") {
+  // ID of workflow
   id int
+  // Name of workflow
   name string
+  // Path for workflow
   path string
+  // State of workflow
   state string
+  // Create time for workflow
   createdAt time
+  // Update time for workflow
   updatedAt time
+  // Workflow file 
   file() github.file
+  // Workflow configuration 
   configuration() dict
 }
 
 // GitHub Repository Branch
-private github.branch {
+private github.branch @defaults("name") {
   // Repository branch name
   name string
   // Is branch protection enabled
@@ -253,7 +337,7 @@ private github.branch {
 }
 
 // GitHub Repository Branch Protection
-private github.branchprotection {
+private github.branchprotection @defaults("id") {
   id string
   // Require status checks to pass before merging
   requiredStatusChecks dict
@@ -276,7 +360,7 @@ private github.branchprotection {
 }
 
 // GitHub Repository Commit
-private github.commit {
+private github.commit @defaults("sha") {
   // Commit owner
   owner string
   // Commit repository
@@ -295,8 +379,8 @@ private github.commit {
   stats dict
 }
 
-// GitHub Repository Pull Request
-private github.mergeRequest {
+// GitHub Repository Pull Request 
+private github.mergeRequest @defaults("id state") {
   // Pull request ID
   id int
   // Pull request number
@@ -324,18 +408,27 @@ private github.mergeRequest {
 }
 
 // GitHub Repository Review
-private github.review {
+private github.review @defaults("url state") {
+  // URL for review
   url string
+  // State of review
   state string
+  // Author association 
   authorAssociation string
+  // User of review
   user github.user
 }
 
 // GitHub App Installation
-private github.installation {
+private github.installation @defaults("id appId") {
+  // ID of application installtion
   id int
+  // ID of application configured
   appId int
+  // Slug of application configured
   appSlug string
+  // Create time of application
   createdAt time
+  // Update time of application
   updatedAt time
 }

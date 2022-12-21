@@ -9,7 +9,7 @@ vsphere {
 }
 
 // vSphere license information
-vsphere.license {
+private vsphere.license @defaults("name") {
   // License name
   name string
   // Total licenses
@@ -27,7 +27,7 @@ esxi {
 }
 
 // vSphere datacenter inventory
-vsphere.datacenter {
+private vsphere.datacenter @defaults("moid name") {
   // vSphere managed object ID
   moid string
   // vSphere datacenter name
@@ -43,7 +43,7 @@ vsphere.datacenter {
 }
 
 // vSphere cluster resource
-vsphere.cluster {
+private vsphere.cluster @defaults("moid name") {
   // vSphere managed object ID
   moid string
   // vSphere resource name
@@ -57,7 +57,7 @@ vsphere.cluster {
 }
 
 // vSphere ESXi host resource
-vsphere.host {
+private vsphere.host @defaults("moid name") {
   // vSphere managed object ID
   moid string
   // vSphere Resource Name
@@ -93,7 +93,7 @@ vsphere.host {
 }
 
 // vSphere VM resource
-vsphere.vm {
+private vsphere.vm @defaults("moid name") {
   // vSphere managed object ID
   moid string
   // vSphere resource name
@@ -107,7 +107,7 @@ vsphere.vm {
 }
 
 // vSphere standard virtual switch
-vsphere.vswitch.standard {
+private vsphere.vswitch.standard @defaults("name") {
   // Virtual switch name
   name string
   // Virtual switch properties
@@ -123,7 +123,7 @@ vsphere.vswitch.standard {
 }
 
 // vSphere distributed virtual switch
-vsphere.vswitch.dvs {
+private vsphere.vswitch.dvs @defaults("name") {
   // Virtual switch name
   name string
   // Virtual switch properties
@@ -133,7 +133,7 @@ vsphere.vswitch.dvs {
 }
 
 // vSphere ESXi physical network interface resource
-vsphere.vmnic {
+private vsphere.vmnic @defaults("name") {
   // NIC name
   name string
   // NIC properties
@@ -145,7 +145,7 @@ vsphere.vmnic {
 }
 
 // vSphere ESXi virtual network interface resource
-vsphere.vmknic {
+private vsphere.vmknic @defaults("name") {
   // Interface name
   name string
   // Interface properties
@@ -170,7 +170,7 @@ esxi.command {
 }
 
 // vSphere installation bundle resource
-esxi.vib {
+private esxi.vib @defaults("id name") {
   id string
   // Bundle name
   name string
@@ -189,7 +189,7 @@ esxi.vib {
 }
 
 // vSphere ESXi kernel module resource
-esxi.kernelmodule {
+private esxi.kernelmodule @defaults("name") {
   // Module name
   name string
   // Module file location
@@ -213,7 +213,7 @@ esxi.kernelmodule {
 }
 
 // vSphere ESXi management service resource
-esxi.service {
+private esxi.service @defaults("key label") {
   // Brief identifier for the service
   key string
   // Display label for the service
@@ -231,7 +231,7 @@ esxi.service {
 }
 
 // vSphere ESXi timezone resource
-esxi.timezone {
+private esxi.timezone @defaults("key name") {
   // Identifier for the time zone
   key string
   // Time zone name.
@@ -243,7 +243,7 @@ esxi.timezone {
 }
 
 // vSphere ESXi NTP configuration resource
-esxi.ntpconfig {
+private esxi.ntpconfig @defaults("id") {
   id string
   // List of time servers, specified as either IP addresses or fully qualified domain names (FQDNs)
   server []string
