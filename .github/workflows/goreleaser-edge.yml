@@ -36,6 +36,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       # Make sure no releases are created in Github
       # Make sure only linux binaries and docker files are built
+      # Do not build and push images for 'latest' and major version tags
       - name: Prepare .goreleaser-edge.yml
         run: |
           cp .goreleaser.yml .goreleaser-edge.yml
@@ -45,6 +46,10 @@ jobs:
           yq -i 'del(.builds[] | select(.id == "macos"))' .goreleaser-edge.yml
           yq -i 'del(.builds[] | select(.id == "windows"))' .goreleaser-edge.yml
           yq -i "del(.archives)" .goreleaser-edge.yml
+          yq -i 'del(.dockers[].image_templates[] | select(. == "*latest*"))' .goreleaser-edge.yml
+          yq -i 'del(.dockers[].image_templates[] | select(. == "*{{ .Major }}*"))' .goreleaser-edge.yml
+          yq -i 'del(.docker_manifests[] | select(.name_template == "*latest*"))' .goreleaser-edge.yml
+          yq -i 'del(.docker_manifests[] | select(.name_template == "*{{ .Major }}*"))' .goreleaser-edge.yml
       - name: Locally tag the current commit
         run: |
           VERSION=$(make version)
