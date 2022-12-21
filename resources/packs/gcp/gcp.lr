@@ -498,7 +498,7 @@ private gcp.compute.subnetwork @defaults("name")  {
 }
 
 // GCP Compute Cloud Router
-gcp.compute.router @defaults("name")  {
+private gcp.compute.router @defaults("name")  {
   // Unique Identifier
   id string
   // Name of the resource
@@ -594,7 +594,7 @@ gcp.bigquery {
 }
 
 // GCP BigQuery dataset
-gcp.bigquery.dataset @defaults("id"){
+private gcp.bigquery.dataset @defaults("id"){
   // Dataset ID
   id string
   // Project ID

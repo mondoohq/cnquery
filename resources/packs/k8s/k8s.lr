@@ -54,7 +54,7 @@ k8s {
 }
 
 // Kubernetes API Resources
-k8s.apiresource {
+private k8s.apiresource @defaults("name kind") {
   // plural name of the resource
   name string
   // singular name of the resource
@@ -74,7 +74,7 @@ k8s.apiresource {
 }
 
 // Kubernetes node
-k8s.node {
+private k8s.node @defaults("name kind") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -92,7 +92,7 @@ k8s.node {
 }
 
 // Kubernetes Kubelet configuration
-k8s.kubelet {
+private k8s.kubelet {
   // Kubelet config file
   configFile core.file
   // Kubelet process
@@ -102,7 +102,7 @@ k8s.kubelet {
 }
 
 // Kubernetes Namespace
-k8s.namespace @defaults("name created") {
+private k8s.namespace @defaults("name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -116,7 +116,7 @@ k8s.namespace @defaults("name created") {
 }
 
 // Kubernetes Pod
-k8s.pod @defaults("namespace name created"){
+private k8s.pod @defaults("namespace name created"){
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -152,7 +152,7 @@ k8s.pod @defaults("namespace name created"){
 }
 
 // Kubernetes workload container
-private k8s.container {
+private k8s.container @defaults("name") {
   uid string
   // Name of the container
   name string
@@ -191,7 +191,7 @@ private k8s.container {
 }
 
 // Kubernetes Init Container
-private k8s.initContainer {
+private k8s.initContainer @defaults("name") {
   uid string
   // Name of the container
   name string
@@ -226,7 +226,7 @@ private k8s.initContainer {
 }
 
 // Kubernetes Ephemeral Container
-private k8s.ephemeralContainer {
+private k8s.ephemeralContainer @defaults("name") {
   uid string
   // Name of the container
   name string
@@ -289,7 +289,7 @@ k8s.deployment @defaults("namespace name created") {
 }
 
 // Kubernetes DaemonSet
-k8s.daemonset @defaults("namespace name created") {
+private k8s.daemonset @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -319,7 +319,7 @@ k8s.daemonset @defaults("namespace name created") {
 }
 
 // Kubernetes StatefulSet
-k8s.statefulset @defaults("namespace name created") {
+private k8s.statefulset @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -349,7 +349,7 @@ k8s.statefulset @defaults("namespace name created") {
 }
 
 // Kubernetes ReplicaSet
-k8s.replicaset @defaults("namespace name created") {
+private k8s.replicaset @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -379,7 +379,7 @@ k8s.replicaset @defaults("namespace name created") {
 }
 
 // Kubernetes Job
-k8s.job @defaults("namespace name created") {
+private k8s.job @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -409,7 +409,7 @@ k8s.job @defaults("namespace name created") {
 }
 
 // Kubernetes CronJob
-k8s.cronjob @defaults("namespace name created") {
+private k8s.cronjob @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -439,7 +439,7 @@ k8s.cronjob @defaults("namespace name created") {
 }
 
 // Kubernetes Secret
-k8s.secret @defaults("namespace name created") {
+private k8s.secret @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -467,7 +467,7 @@ k8s.secret @defaults("namespace name created") {
 }
 
 // Kubernetes PodSecurityPolicy (deprecated as of Kubernetes v1.21)
-k8s.podsecuritypolicy {
+private k8s.podsecuritypolicy {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -491,7 +491,7 @@ k8s.podsecuritypolicy {
 }
 
 // Kubernetes ConfigMap
-k8s.configmap @defaults("namespace name created") {
+private k8s.configmap @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -517,7 +517,7 @@ k8s.configmap @defaults("namespace name created") {
 }
 
 // Kubernetes Service
-k8s.service @defaults("namespace name created") {
+private k8s.service @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -543,7 +543,7 @@ k8s.service @defaults("namespace name created") {
 }
 
 // Kubernetes Ingress Resource Backend
-private k8s.ingressresourceref {
+private k8s.ingressresourceref @defaults("name kind") {
   // Mondoo ID for Object
   id string
   // APIGroup specified as part of the resource reference
@@ -555,7 +555,7 @@ private k8s.ingressresourceref {
 }
 
 // Kubernetes Ingress Service Backend
-private k8s.ingressservicebackend {
+private k8s.ingressservicebackend @defaults("name") {
   // Mondoo ID for Object
   id string
   // Kubernetes Service Name
@@ -567,7 +567,7 @@ private k8s.ingressservicebackend {
 }
 
 // Kubernetes Ingress Backend
-private k8s.ingressbackend {
+private k8s.ingressbackend @defaults("name") {
   // Mondoo Id for Object
   id string
   // Kubernetes Service for Ingress Backend
@@ -599,7 +599,7 @@ private k8s.ingressrule {
 }
 
 // Kubernetes Ingress
-k8s.ingress @defaults("namespace name created") {
+private k8s.ingress @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -625,7 +625,7 @@ k8s.ingress @defaults("namespace name created") {
 }
 
 // Kubernetes Network Policy
-k8s.networkpolicy @defaults("namespace name created") {
+private k8s.networkpolicy @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -651,7 +651,7 @@ k8s.networkpolicy @defaults("namespace name created") {
 }
 
 // Kubernetes Service Account
-k8s.serviceaccount @defaults("namespace name created") {
+private k8s.serviceaccount @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -681,7 +681,7 @@ k8s.serviceaccount @defaults("namespace name created") {
 }
 
 // Kubernetes ClusterRole
-k8s.rbac.clusterrole {
+private k8s.rbac.clusterrole @defaults("name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -707,7 +707,7 @@ k8s.rbac.clusterrole {
 }
 
 // Kubernetes Role
-k8s.rbac.role {
+private k8s.rbac.role @defaults("name namespace") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -733,7 +733,7 @@ k8s.rbac.role {
 }
 
 // Kubernetes ClusterRoleBinding
-k8s.rbac.clusterrolebinding {
+private k8s.rbac.clusterrolebinding @defaults("name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -759,7 +759,7 @@ k8s.rbac.clusterrolebinding {
 }
 
 // Kubernetes RoleBinding
-k8s.rbac.rolebinding {
+private k8s.rbac.rolebinding @defaults("name namespace created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -787,7 +787,7 @@ k8s.rbac.rolebinding {
 }
 
 // Kubernetes CustomResource
-k8s.customresource {
+private k8s.customresource @defaults("name namespace created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
@@ -817,7 +817,7 @@ k8s.admissionreview {
 }
 
 // Kubernetes AdmissionRequest
-private k8s.admissionrequest {
+private k8s.admissionrequest @defaults("name namespace")  {
   // The name of the object presented in the request
   name string
   // The namespace associated with the request (if any)
@@ -833,7 +833,7 @@ private k8s.admissionrequest {
 }
 
 // Kubernetes UserInfo
-private k8s.userinfo {
+private k8s.userinfo @defaults("username") {
   // The username of the user
   username string
   // The UID of the user
