@@ -68,5 +68,4 @@ jobs:
           args: release -f .goreleaser-edge.yml --rm-dist --timeout 120m
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
