@@ -17,11 +17,6 @@ jobs:
       # Add "id-token" for google-github-actions/auth
       id-token: 'write'
 
-    strategy:
-      matrix:
-        os: [linux]
-        arch: ['amd64', '386', 'arm64', 'arm', 'ppc64le']
-
     runs-on: self-hosted
     timeout-minutes: 120
     steps:
