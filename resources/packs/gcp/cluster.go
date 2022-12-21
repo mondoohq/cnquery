@@ -13,11 +13,11 @@ import (
 )
 
 func (g *mqlGcpCluster) id() (string, error) {
-	id, err := g.Name()
+	id, err := g.Id()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.cluster/" + id, nil
+	return id, nil
 }
 
 func (g *mqlGcpCluster) init(args *resources.Args) (*resources.Args, GcpCluster, error) {
@@ -34,6 +34,14 @@ func (g *mqlGcpCluster) init(args *resources.Args) (*resources.Args, GcpCluster,
 	(*args)["projectId"] = projectId
 
 	return args, nil, nil
+}
+
+func (g *mqlGcpClusterNodepool) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
 }
 
 func (g *mqlGcpProject) GetClusters() ([]interface{}, error) {
@@ -70,6 +78,23 @@ func (g *mqlGcpProject) GetClusters() ([]interface{}, error) {
 	for i := range resp.Clusters {
 		c := resp.Clusters[i]
 
+		nodePools := make([]interface{}, 0, len(c.NodePools))
+		for _, np := range c.NodePools {
+			mqlNodePool, err := g.MotorRuntime.CreateResource("gcp.cluster.nodepool",
+				"id", fmt.Sprintf("%s/%s", c.Id, np.Name),
+				"name", np.Name,
+				"initialNodeCount", int64(np.InitialNodeCount),
+				"locations", core.StrSliceToInterface(np.Locations),
+				"version", np.Version,
+				"instanceGroupUrls", core.StrSliceToInterface(np.InstanceGroupUrls),
+				"status", np.Status.String(),
+			)
+			if err != nil {
+				return nil, err
+			}
+			nodePools = append(nodePools, mqlNodePool)
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -80,15 +105,18 @@ func (g *mqlGcpProject) GetClusters() ([]interface{}, error) {
 			"network", c.Network,
 			"clusterIpv4Cidr", c.ClusterIpv4Cidr,
 			"subnetwork", c.Subnetwork,
+			"nodePools", nodePools,
 			"locations", core.StrSliceToInterface(c.Locations),
 			"enableKubernetesAlpha", c.EnableKubernetesAlpha,
 			"autopilotEnabled", c.Autopilot.Enabled,
+			"zone", c.Zone,
+			"endpoint", c.Endpoint,
+			"initialClusterVersion", c.InitialClusterVersion,
+			"currentMasterVersion", c.CurrentMasterVersion,
+			"status", c.Status.String(),
 			"resourceLabels", core.StrMapToInterface(c.ResourceLabels),
 			"created", parseTime(c.CreateTime),
 			"expirationTime", parseTime(c.ExpireTime),
-			// "location", c.Location,
-			// "status", c.Status,
-			// "created", parseTime(c.CreateTime),
 		)
 		if err != nil {
 			return nil, err

@@ -793,7 +793,7 @@ private gcp.dns.policy {
 }
 
 // GKE cluster resource
-private gcp.cluster {
+private gcp.cluster @defaults("name") {
   // Project ID
   projectId string
   // Unique identifier for the cluster
@@ -812,17 +812,47 @@ private gcp.cluster {
   clusterIpv4Cidr string
   // The name of the Google Compute Engine subnetwork to which the cluster is connected.
   subnetwork string
-  // nodepools
+  // The list of node pools for the cluster
+  nodePools []gcp.cluster.nodepool
   // The list of Google Compute Engine zones in which the cluster's nodes should be located.
   locations []string
   // Enable Kubernetes alpha features
   enableKubernetesAlpha bool
   // Whether Autopilot is enabled fpr the cluster
   autopilotEnabled bool
+  // The name of the Google Compute Engine zone in which the cluster resides
+  zone string
+  // The IP address of this cluster's master endpoint
+  endpoint string
+  // The initial Kubernetes version for this cluster
+  initialClusterVersion string
+  // The current software version of the master endpoint
+  currentMasterVersion string
+  // The current status of this cluster
+  status string
   // The resource labels for the cluster to use to annotate any related Google Compute Engine resources.
   resourceLabels map[string]string
   // Creation time
   created time
   // The time the cluster will be automatically deleted in
   expirationTime time
+}
+
+private gcp.cluster.nodepool @defaults("name") {
+  // Internal ID
+  id string
+  // The name of the node pool
+  name string
+  // config
+  // The initial node count for the pool
+  initialNodeCount int
+  // The list of Google Compute Engine zones in which the NodePool's nodes should be located.
+  locations []string
+  // networkconfig
+  // The Kubernetes version
+  version string
+  // The resource URLs of the managed instance groups associated with this node pool
+  instanceGroupUrls []string
+  // The current status of this node pool
+  status string
 }
