@@ -19,25 +19,24 @@ import (
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
-	loginCmd.Flags().StringP("token", "t", "", "Set a client registration token")
-	loginCmd.Flags().String("name", "", "Set asset name")
-	loginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint")
+	loginCmd.Flags().StringP("token", "t", "", "Set a client registration token.")
+	loginCmd.Flags().String("name", "", "Set asset name.")
+	loginCmd.Flags().String("api-endpoint", "", "Set the Mondoo API endpoint.")
 }
 
 var loginCmd = &cobra.Command{
 	Use:     "login",
 	Aliases: []string{"register"},
-	Short:   "Register with Mondoo Platform",
+	Short:   "Register with Mondoo Platform.",
 	Long: `
-Log in to Mondoo platform by using a registration token. To pass in the token, use 
+Log in to Mondoo platform using a registration token. To pass in the token, use 
 the '--token' flag.
 
-You can generate a new registration token via the Mondoo Dashboard
+You can generate a new registration token on the Mondoo Dashboard. Go to
 https://console.mondoo.com -> Space -> Settings -> Registration Token. Copy the token and pass it in 
-as the '--token' argument.
+using the '--token' argument.
 
-Every client remains logged in until you explicitly log out. You can
-log out by using 'logout' subcommand.
+You remain logged in until you explicitly log out using the 'logout' subcommand.
 	`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("api_endpoint", cmd.Flags().Lookup("api-endpoint"))
