@@ -41,31 +41,6 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0'
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WIP }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-      - id: 'gcp_secrets'
-        uses: 'google-github-actions/get-secretmanager-secrets@v0'
-        with:
-          secrets: |-
-            code_sign_cert_b64:mondoo-base-infra/mondoo_code_sign_certificate_pfx_b64
-            code_sign_cert_challenge:mondoo-base-infra/mondoo_code_sign_challenge
-      - name: "Write RPM Signing Cert"
-        run: |
-          gpgkey="$(mktemp -t gpgkey.XXX)"
-          base64 -d <<<"$GPG_KEY" > "$gpgkey"
-          echo "GPG_KEY_PATH=$gpgkey" >> $GITHUB_ENV
-        env:
-          GPG_KEY: '${{ secrets.GPG_KEY}}'
-      - name: "Write Windows Signing Cert"
-        run: |
-          cert="$(mktemp -t cert.XXX)"
-          base64 -d <<<"$CERT_CONTENTS" > "$cert"
-          echo "CERT_FILE=$cert" >> $GITHUB_ENV
-        env:
-          CERT_CONTENTS: '${{ steps.gcp_secrets.outputs.code_sign_cert_b64 }}'
       - name: Log in to the Container registry
         uses: docker/login-action@v2
         with:
@@ -73,11 +48,16 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       # Make sure no releases are created in Github
+      # Make sure only linux binaries and docker files are built
       - name: Prepare .goreleaser-edge.yml
         run: |
           cp .goreleaser.yml .goreleaser-edge.yml
           yq -i ".release.disable = true" .goreleaser-edge.yml
           yq -i ".changelog.skip = true" .goreleaser-edge.yml
+          yq -i "del(.nfpms)" .goreleaser.yml
+          yq -i 'del(.builds[] | select(.id == "macos"))' .goreleaser.yml
+          yq -i 'del(.builds[] | select(.id == "windows"))' .goreleaser.yml
+          yq -i "del(.archives)" .goreleaser.yml
       - name: Locally tag the current commit
         run: git tag $(make version)
       - name: Run GoReleaser
