@@ -35,7 +35,7 @@ func init() {
 var packBundlesCmd = &cobra.Command{
 	Use:     "bundle",
 	Aliases: []string{"pack"},
-	Short:   "Create, upload, and validate query packs",
+	Short:   "Create, upload, and validate query packs.",
 }
 
 //go:embed bundle_querypack-example.mql.yaml
@@ -43,7 +43,7 @@ var embedQueryPackTemplate []byte
 
 var queryPackInitCmd = &cobra.Command{
 	Use:   "init [path]",
-	Short: "Create an example query pack that can be used as a starting point. If no filename is provided, `example-pack.mql.yaml` is used",
+	Short: "Create an example query pack that can be used as a starting point. If you don't provide a filename, cnquery uses `example-pack.mql.yaml`.",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := "example-pack.mql.yaml"
@@ -108,7 +108,7 @@ func validate(queryPackBundle *explorer.Bundle) []string {
 
 var queryPackValidateCmd = &cobra.Command{
 	Use:   "validate [path]",
-	Short: "Validate a query pack",
+	Short: "Validate a query pack.",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info().Str("file", args[0]).Msg("validate query pack")
@@ -132,7 +132,7 @@ var queryPackValidateCmd = &cobra.Command{
 
 var queryPackUploadCmd = &cobra.Command{
 	Use:   "upload [path]",
-	Short: "Add a user-owned pack to Mondoo Platform's Query Hub",
+	Short: "Add a user-owned pack to Mondoo Query Hub.",
 	Args:  cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))
