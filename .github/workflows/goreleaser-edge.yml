@@ -46,7 +46,9 @@ jobs:
           yq -i 'del(.builds[] | select(.id == "windows"))' .goreleaser-edge.yml
           yq -i "del(.archives)" .goreleaser-edge.yml
       - name: Locally tag the current commit
-        run: git tag $(make version)
+        run: |
+          VERSION=$(make version)
+          git tag ${VERSION/\+/-}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
