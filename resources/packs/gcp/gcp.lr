@@ -46,6 +46,7 @@ gcp.project @defaults("name") {
   recommendations() []gcp.recommendation
   // GCP Compute Resources for the Project
   // compute() gcp.compute
+  clusters() []gcp.cluster
 }
 
 // GCP Service
@@ -789,4 +790,39 @@ private gcp.dns.policy {
   enableInboundForwarding bool
   // Indicates if logging is enabled
   enableLogging bool
+}
+
+// GKE cluster resource
+private gcp.cluster {
+  // Project ID
+  projectId string
+  // Unique identifier for the cluster
+  id string
+  // The name of the cluster
+  name string
+  // Optional description for the cluster
+  description string
+  // The logging service the cluster should use to write logs
+  loggingService string
+  // The monitoring service the cluster should use to write metrics
+  monitoringService string
+  // The name of the Google Compute Engine network to which the cluster is connected
+  network string
+  // The IP address range of the container pods in this cluster
+  clusterIpv4Cidr string
+  // The name of the Google Compute Engine subnetwork to which the cluster is connected.
+  subnetwork string
+  // nodepools
+  // The list of Google Compute Engine zones in which the cluster's nodes should be located.
+  locations []string
+  // Enable Kubernetes alpha features
+  enableKubernetesAlpha bool
+  // Whether Autopilot is enabled fpr the cluster
+  autopilotEnabled bool
+  // The resource labels for the cluster to use to annotate any related Google Compute Engine resources.
+  resourceLabels map[string]string
+  // Creation time
+  created time
+  // The time the cluster will be automatically deleted in
+  expirationTime time
 }
