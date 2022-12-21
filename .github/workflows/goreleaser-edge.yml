@@ -22,7 +22,7 @@ jobs:
         os: [linux]
         arch: ['amd64', '386', 'arm64', 'arm', 'ppc64le']
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 120
     steps:
       - name: Checkout
@@ -72,40 +72,21 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      # Make sure no releases are created in Github
+      - name: Prepare .goreleaser-edge.yml
+        run: |
+          cp .goreleaser.yml .goreleaser-edge.yml
+          yq -i ".release.disable = true" .goreleaser-edge.yml
+          yq -i ".changelog.skip = true" .goreleaser-edge.yml
+      - name: Locally tag the current commit
+        run: git tag $(make version)
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
           distribution: goreleaser
           version: latest
-          args: release --rm-dist --snapshot --id=linux --timeout 5m
+          args: release -f .goreleaser-edge.yml --rm-dist --timeout 120m
         env:
-          GOARCH: ${{ matrix.arch}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CERT_PASSWORD: ${{ steps.gcp_secrets.outputs.code_sign_cert_challenge }}
           NFPM_DEFAULT_RPM_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-      - name: Copy Dockerfile
-        run: |
-          cp Dockerfile dist/linux_linux_${{ matrix.arch }}
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=schedule,pattern=main
-            type=ref,event=branch
-            type=ref,event=tag
-            type=ref,event=pr
-          flavor: |
-            suffix=-${{ matrix.arch }},onlatest=true
-      - name: Build and push operator image
-        id: build-and-push-operator
-        uses: docker/build-push-action@v3
-        with:
-          context: ./dist/linux_linux_${{ matrix.arch }}
-          platforms: ${{ matrix.os }}/${{ matrix.arch }}
-          push: true
-          labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
-        
-
