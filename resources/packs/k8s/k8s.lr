@@ -259,7 +259,7 @@ private k8s.ephemeralContainer @defaults("name") {
 }
 
 // Kubernetes Deployment
-k8s.deployment @defaults("namespace name created") {
+private k8s.deployment @defaults("namespace name created") {
   // Mondoo ID for Kubernetes Object
   id string
   // Kubernetes Object UID
