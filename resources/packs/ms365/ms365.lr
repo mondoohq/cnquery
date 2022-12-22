@@ -22,186 +22,299 @@ alias msgraph.beta.devicemanagement.devicecompliancepolicy = microsoft.deviceman
 
 // Microsoft
 microsoft {
+  // List of organizations
   organizations() []microsoft.organization
+  // List of users
   users() []microsoft.user
+  // List of groups
   groups() []microsoft.group
+  // List of domains
   domains() []microsoft.domain
+  // List of applications
   applications() []microsoft.application
+  // List of service principals
   serviceprincipals() []microsoft.serviceprincipal
+  // Microsoft 365 settings
   settings() dict
 }
 
 // Microsoft Organization
-microsoft.organization {
+private microsoft.organization @defaults("displayName") {
+  // Organization ID
   id string
+  // Organization assigned plans
   assignedPlans []dict
+  // Organization creatation date
   createdDateTime time
+  // Organization diplay name
   displayName string
+  // Organization verified domains
   verifiedDomains []dict
 }
 
 // Microsoft User
-microsoft.user {
+private microsoft.user @defaults("id displayName mail") {
+  // User Id
   id string
+  // User account status
   accountEnabled bool
+  // User city
   city string
+  // User company name
   companyName string
+  // User country
   country string
+  // User create time
   createdDateTime time
+  // User department
   department string
+  // User display name
   displayName string
+  // User employee ID
   employeeId string
+  // User given name
   givenName string
+  // User job title
   jobTitle string
+  // User email
   mail string
+  // User mobile phone
   mobilePhone string
+  // List of other email addresses
   otherMails []string
+  // User office location
   officeLocation string
+  // User postal code
   postalCode string
+  // User state
   state string
+  // User street address
   streetAddress string
+  // User surname
   surname string
+  // User service principal name
   userPrincipalName string
+  // User type
   userType string
+  // User settings
   settings() dict
 }
 
 // Microsoft Group
-microsoft.group {
+private microsoft.group @defaults("id displayName") {
+  // Group ID
   id string
+  // Group display name
   displayName string
+  // Group security enabled status
   securityEnabled bool
+  // Group email enabled status
   mailEnabled bool
+  // Group email nickname
   mailNickname string
+  // Group email
   mail string
+  // List of group members
   members() []microsoft.user
 }
 
 // Microsoft Domain
-microsoft.domain {
+private microsoft.domain @defaults("id") {
+  // Domain ID
   id string
+  // Domain authentication type
   authenticationType string
+  // Domain availability status
   availabilityStatus string
+  // Whether domain is admin managed
   isAdminManaged bool
+  // Whether domain is default
   isDefault bool
+  // Whether domain is initial
   isInitial bool
+  // Whether domain is a root domain
   isRoot bool
+  // Whether domain is verified
   isVerified bool
+  // Domain password notification window (days)
   passwordNotificationWindowInDays int
+  // Domain password validity period (days)
   passwordValidityPeriodInDays int
+  // List of supported services
   supportedServices []string
+  // List of service configuration records
   serviceConfigurationRecords() []microsoft.domaindnsrecord
 }
 
 // Microsoft Domain DNS Record
-microsoft.domaindnsrecord {
+private microsoft.domaindnsrecord @defaults("id label") {
+  // Domain record ID
   id string
+  // Whether domain record is optional
   isOptional bool
+  // Domain record label
   label string
+  // Domain record type
   recordType string
+  // Domain record supported service
   supportedService string
+  // Domain record TTL
   ttl int
   // deprecated, kept for backwards compatability.
   properties dict
 }
 
 // Microsoft Application
-microsoft.application {
+private microsoft.application @defaults("id displayName") {
+  // Application ID
   id string
+  // Application app ID
   appId string
+  // Application creation date
   createdDateTime time
+  // Application identifier URIs
   identifierUris []string
+  // Application display name
   displayName string
+  // Application publisher domain
   publisherDomain string
+  // Application sign in audience
   signInAudience string
 }
 
 // Microsoft Service Principal
-microsoft.serviceprincipal {
+private microsoft.serviceprincipal @defaults("id") {
+  // Service principal ID
   id string
 }
 
 // Microsoft Security
 microsoft.security {
+  // List of security scores
   secureScores() []microsoft.security.securityscore
+  // Latest security score
   latestSecureScores() microsoft.security.securityscore
 }
 
 // Microsoft Security Score
-microsoft.security.securityscore {
+private microsoft.security.securityscore @defaults("id azureTenantId") {
+  // Security score ID
   id string
+  // Security score active user count
   activeUserCount int
+  // Security score average comparative score
   averageComparativeScores []dict
+  // Security score tenant ID
   azureTenantId string
+  // Security score control scores
   controlScores []dict
+  // Security score creation time
   createdDateTime time
+  // Security score current score
   currentScore float
+  // Security score enabled services
   enabledServices []string
+  // Security score licensed user count
   licensedUserCount int
+  // Security score max score
   maxScore float
+  // Security score vendor information
   vendorInformation dict
 }
 
 // Microsoft Policies
 microsoft.policies {
+  // Authorization policy
   authorizationPolicy() dict
+  // Identity security default enforcement policy
   identitySecurityDefaultsEnforcementPolicy() dict
+  // Admin consent request policy
   adminConsentRequestPolicy() dict
+  // Permission grant policies
   permissionGrantPolicies() []dict
 }
 
 // Microsoft Role Management
 microsoft.rolemanagement {
+  // List of role definitions
   roleDefinitions() []microsoft.rolemanagement.roledefinition
 }
 
 // Microsoft Role Definition
-microsoft.rolemanagement.roledefinition {
+private microsoft.rolemanagement.roledefinition @defaults("id displayName") {
+  // Role definition ID
   id string
+  // Role definition description
   description string
+  // Role definition display name
   displayName string
+  // Whether the role is built in
   isBuiltIn bool
+  // Whether the role is enabled
   isEnabled bool
+  // Role definition permissions
   rolePermissions []dict
+  // Role definition template ID
   templateId string
+  // Role definition version
   version string
+  // List of role definition assignments
   assignments() []microsoft.rolemanagement.roleassignment
 }
 
 // Microsoft Role Assignment
-microsoft.rolemanagement.roleassignment {
+private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
+  // Role assignment ID
   id string
+  // Role definition ID
   roleDefinitionId string
+  // Service principal ID
   principalId string
+  // Service principal
   principal dict
 }
 
 // Microsoft Device Management
 microsoft.devicemanagement {
+  // List of device configurations
   deviceConfigurations() []microsoft.devicemanagement.deviceconfiguration
+  // List of device compliance policies
   deviceCompliancePolicies() []microsoft.devicemanagement.devicecompliancepolicy
 }
 
 // Microsoft Device Configuration
-microsoft.devicemanagement.deviceconfiguration {
+private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName") {
+  // Device configuration ID
   id string
+  // Device configuration last modify date
   lastModifiedDateTime time
+  // Device configuration creation date
   createdDateTime time
+  // Device configuration description
   description string
+  // Device configuration display name
   displayName string
+  // Device configuration version
   version int
   // deprecated, kept for backwards compatability.
   properties dict
 }
 
 // Microsoft Device Compliance Policy
-microsoft.devicemanagement.devicecompliancepolicy {
+private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayName") {
+  // Device compliance policy ID
   id string
+  // Device compliance policy creation date
   createdDateTime time
+  // Device compliance policy description
   description string
+  // Device compliance policy display name
   displayName string
+  // Device compliance policy last modified date
   lastModifiedDateTime time
+  // Device compliance policy version
   version int
+  // Device compliance policy assignments
   assignments []dict
   // deprecated, kept for backwards compatability.
   properties dict
@@ -209,33 +322,54 @@ microsoft.devicemanagement.devicecompliancepolicy {
 
 // Microsoft 365 ExchangeOnline
 ms365.exchangeonline {
+  // List of malware filter policies
   malwareFilterPolicy []dict
+  // List of hosted outbound spam filter policies
   hostedOutboundSpamFilterPolicy []dict
+  // Transport rules
   transportRule []dict
+  // List of remote domains
   remoteDomain []dict
+  // List of safe links policies
   safeLinksPolicy []dict
+  // List of safe attachment policies
   safeAttachmentPolicy []dict
+  // Organization configurations
   organizationConfig dict
+  // List of authentication policies
   authenticationPolicy []dict
+  // List of anti-phishing policies
   antiPhishPolicy []dict
+  // List of dkim signing configurations
   dkimSigningConfig []dict
+  // List of OWA mailbox policies
   owaMailboxPolicy []dict
+  // Admin audit log configuration
   adminAuditLogConfig dict
+  // List of phishing filter policies
   phishFilterPolicy []dict
+  // List of mailboxes
   mailbox []dict
+  // List of APT policies for Office 365
   atpPolicyForO365 []dict
+  // List of sharing policies
   sharingPolicy []dict
+  // List of role assignment policies
   roleAssignmentPolicy []dict
 }
 
-// Microsoft 365 SharepointOnline
+// Microsoft 365 SharePoint Online
 ms365.sharepointonline {
+  // SharePoint Online tenant
   spoTenant dict
+  // SharePoint Online tenant sync client restriction
   spoTenantSyncClientRestriction dict
 }
 
 // Microsoft 365 Teams
 ms365.teams {
+  // CS Teams client configuration
   csTeamsClientConfiguration dict
+  // List of oauth configurations
   csOAuthConfiguration []dict
 }

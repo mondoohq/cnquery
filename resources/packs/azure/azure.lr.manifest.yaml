@@ -78,6 +78,7 @@ resources:
       created: {}
       enabled: {}
       expires: {}
+      id: {}
       keyName: {}
       kid: {}
       managed: {}
