@@ -57,54 +57,76 @@ azuread {
 }
 
 // Azure Active Directory User (deprecated, use microsoft.user instead)
-private azuread.user {
+private azuread.user @defaults("id displayName") {
+  // User id
   id string
+  // User display name
   displayName string
+  // User given name
   givenName string
+  // User surname
   surname string
+  // User principal name 
   userPrincipalName string
+  // User account status 
   accountEnabled bool
+  // User mail nickname
   mailNickname string
+  // User email
   mail string
   // deprecated, no longer used
   objectType() string
+  // Azure Directory user type
   userType string
   // deprecated, no longer used
   properties() dict
 }
 
 // Azure Active Directory Group (deprecated, use microsoft.group instead)
-private azuread.group {
+private azuread.group @defaults("displayName") {
+  // Group ID
   id string
+  // Group display name
   displayName string
+  // Whether security is enabled for group
   securityEnabled bool
+  // Whether mail is enabled for group
   mailEnabled bool
+  // Group nickname
   mailNickname string
+  // Group email
   mail string
   // deprecated, no longer used
   objectType() string
   // deprecated, no longer used
   properties() dict
+  // Group members
   members() []azuread.user
 }
 
 // Azure Active Directory Domain (deprecated, use microsoft.domain instead)
-private azuread.domain {
+private azuread.domain @defaults("name") {
+  // Domain name
   name string
+  // Whether domain is verified
   isVerified bool
+  // Whether domain is default
   isDefault bool
+  // Domain authentication type
   authenticationType string
   // deprecated, no longer used
   properties() dict
 }
 
 // Azure Active Directory Application (deprecated, use microsoft.application instead))
-private azuread.application {
+private azuread.application @defaults("id") {
+  // Application ID
   id string
 }
 
 // Azure Active Directory Service Principal (deprecated, use microsoft.serviceprincipal instead))
-private azuread.serviceprincipal {
+private azuread.serviceprincipal @defaults("id") {
+  // Service principal ID
   id string
 }
 
@@ -115,46 +137,67 @@ azure {
 }
 
 // Azure Resource
-private azure.resource {
+private azure.resource @defaults("id name location") {
+  // Resource ID
   id string
+  // Resource name
   name string
+  // Resource kind
   kind string
+  // Resource location
   location string
+  // Resource tags
   tags map[string]string
+  // Resource type
   type string
-
+  // Resource managed by
   managedBy string
+  // Resource sku
   sku dict
+  // Resource plan
   plan dict
+  // Resource identity
   identity dict
-
+  // Resource provisioning state
   provisioningState string
+  // Resource create time
   createdTime time
+  // Resource change time
   changedTime time
 }
 
 // Azure Compute
 azure.compute {
+  // Lists all compute instances
   vms() []azure.compute.vm
   // Lists all the disks under a subscription
   disks() []azure.compute.disk
 }
 
-// Azure Compute VM
-private azure.compute.vm {
+// Azure Compute Virtual Machine
+private azure.compute.vm @defaults("id name location ") {
+  // VM ID
   id string
+  // VM name
   name string
+  // VM location
   location string
+  // VM tags
   tags map[string]string
+  // VM type
   type string
+  // VM properties
   properties dict
+  // VM extension
   extensions() []dict
+  // VM compute disk
   osDisk() azure.compute.disk
+  // VM compute data disk
   dataDisks() []azure.compute.disk
 }
 
 // Azure Disk Resource
-private azure.compute.disk {
+private azure.compute.disk @defaults("id name location") {
   // Disk resource id
   id string
   // Disk resource name
@@ -185,48 +228,78 @@ azure.network {
 }
 
 // Azure Network Interface
-private azure.network.interface {
+private azure.network.interface @defaults("id name location") {
+  // Network interface ID
   id string
+  // Network interface name
   name string
+  // Network interface name
   location string
+  // Network interface tags
   tags map[string]string
+  // Network interface type
   type string
+  // Network interface etag
   etag string
+  // Network interface properties
   properties dict
+  // Network interface compute vm
   vm() azure.compute.vm
 }
 
 // Azure Network Security Group
-private azure.network.securitygroup {
+private azure.network.securitygroup @defaults("id name location") {
+  // Security group ID
   id string
+  // Security group name
   name string
+  // Security group location
   location string
+  // Security group tags
   tags map[string]string
+  // Security group type
   type string
+  // Security group etag
   etag string
+  // Security group properties
   properties dict
+  // Security group interfaces
   interfaces []azure.network.interface
+  // Security group rules
   securityRules []azure.network.securityrule
+  // Security group default security rules
   defaultSecurityRules []azure.network.securityrule
 }
 
 // Azure Network Security Rule
-private azure.network.securityrule {
+private azure.network.securityrule @defaults("id name") {
+  // Security rule ID
   id string
+  // Security rule name
   name string
+  // Security rule etag
   etag string
+  // Security rule properties
   properties dict
+  // Security rule destination port range
   destinationPortRange []dict
 }
 
 // Azure Network Watcher
-private azure.network.watcher {
+private azure.network.watcher @defaults("id name location") {
+  // Network watcher ID
   id string
+  // Network watcher name
   name string
+  // Network watcher location
   location string
+  // Network watcher tags
   tags map[string]string
+  // Network watcher type
   type string
+  // Network watcher etag
   etag string
+  // Network watcher properties
   properties dict
 }
 
@@ -236,156 +309,252 @@ azure.storage {
 }
 
 // Azure Storage Account
-private azure.storage.account {
+private azure.storage.account @defaults("id name location") {
+  // Storage account ID
   id string
+  // Storage account name
   name string
+  // Storage account location
   location string
+  // Storage account tags
   tags map[string]string
+  // Storage account type
   type string
+  // Storage account properties
   properties dict
+  // Storage account identity
   identity dict
+  // Storage account sku
   sku dict
+  // Storage account kind
   kind string
+  // Storage account containers
   containers() []azure.storage.container
 }
 
 // Azure Storage Container
-private azure.storage.container {
+private azure.storage.container @defaults("id name") {
+  // Storage container ID
   id string
+  // Storage container name
   name string
+  // Storage container type
   type string
+  // Storage container etag
   etag string
+  // Storage container properties
   properties dict
 }
 
 // Azure Web
 azure.web {
+  // List of web apps
   apps() []azure.web.appsite
+  // Available runtimes 
   availableRuntimes() []dict
 }
 
 // Azure Web App Site
-private azure.web.appsite {
+private azure.web.appsite @defaults("id name location") {
+  // Appsite ID
   id string
+  // Appsite name
   name string
+  // Appsite kind
   kind string
+  // Appsite location
   location string
+  // Appsite type
   type string
+  // Appsite tags
   tags map[string]string
+  // Appsite properties
   properties dict
+  // Appsite identity
   identity dict
-
+  // Appsite configuration
   configuration() azure.web.appsiteconfig
+  // Appsite authentication settings
   authenticationSettings() azure.web.appsiteauthsettings
+  // Appsite metadata
   metadata() dict
+  // Appsite application settings
   applicationSettings() dict
+  // Appsite connection settings
   connectionSettings() dict
+  // Appsite stack
   stack() dict
 }
 
 // Azure AppSite Authentication Settings
-private azure.web.appsiteauthsettings {
+private azure.web.appsiteauthsettings @defaults("id name") {
+  // Auth settings ID
   id string
+  // Auth settings name
   name string
+  // Auth settings kind
   kind string
+  // Auth settings type
   type string
+  // Auth settings properties
   properties dict
 }
 
 // Azure AppSite Config
-private azure.web.appsiteconfig {
+private azure.web.appsiteconfig @defaults("id name") {
+  // Appsite config ID
   id string
+  // Appsite config name 
   name string
+  // Appsite config kind 
   kind string
+  // Appsite config type 
   type string
+  // Appsite config properties
   properties dict
 }
 
 // Azure SQL
 azure.sql {
+  // List of sql servers
   servers() []azure.sql.server
 }
 
 // Azure SQL Server
-private azure.sql.server {
+private azure.sql.server @defaults("id name location") {
+  // SQL server ID
   id string
+  // SQL server name
   name string
+  // SQL server location
   location string
+  // SQL server tags
   tags map[string]string
+  // SQL server type
   type string
+  // SQL server properties
   properties dict
+  // SQL server databases
   databases() []azure.sql.database
+  // SQL server firewall rules
   firewallRules() []azure.sql.firewallrule
+  // SQL server AD administrators
   azureAdAdministrators() []azure.sql.server.administrator
+  // SQL server connection policy
   connectionPolicy() dict
+  // SQL server auditing policy
   auditingPolicy() dict
+  // SQL server security alert policy
   securityAlertPolicy() dict
+  // SQL server encryption protector
   encryptionProtector() dict
 }
 
 // Azure SQL Server Administrator
-private azure.sql.server.administrator {
+private azure.sql.server.administrator @defaults("id name") {
+  // SQL administrator ID
   id string
+  // SQL administrator name
   name string
+  // SQL administrator type
   type string
+  // SQL administrator administrator type
   administratorType string
+  // SQL administrator login
   login string
+  // SQL administrator subscription ID
   sid string
+  // SQL administrator tenant ID
   tenantId string
 }
 
 // Azure SQL Server Database
-private azure.sql.database {
+private azure.sql.database @defaults("id name") {
+  // SQL database ID
   id string
+  // SQL database name
   name string
+  // SQL database type
   type string
+  // SQL database collation
   collation string
+  // SQL database create date
   creationDate time
   // deprecated, no longer used
   containmentState() int
   // deprecated, use serviceLevelObjective instead
   currentServiceObjectiveId() string
+  // Database ID
   databaseId string
+  // SQL database earliest restore date 
   earliestRestoreDate time
+  // SQL database create mode
   createMode string
+  // SQL database source database ID
   sourceDatabaseId string
+  // SQL database deletion date
   sourceDatabaseDeletionDate time
+  // SQL database restore point
   restorePointInTime time
+  // SQL database recovery services recovery point ID
   recoveryServicesRecoveryPointResourceId string
+  // SQL database edition
   edition string
+  // SQL database max byte size
   maxSizeBytes int
   // deprecated, use requestedServiceObjectiveName instead
   requestedServiceObjectiveId() string
+  // SQL database requested objective name
   requestedServiceObjectiveName string
+  // SQL database service level objective 
   serviceLevelObjective string
+  // SQL database status
   status string
+  // SQL database elastic pool name
   elasticPoolName string
+  // SQL database default secondary location
   defaultSecondaryLocation string
   // deprecated, no longer used
   serviceTierAdvisors() dict
   // deprecated, use advisor.recommendedActions instead
   recommendedIndex() dict
+  // SQL database failover group ID
   failoverGroupId string
+  // SQL database read scale
   readScale string
+  // SQL database sample name
   sampleName string
+  // Whether SQL server is zone redundant
   zoneRedundant bool
-
+  // SQL database transparent data encryption
   transparentDataEncryption() dict
+  // SQL database advisor
   advisor() []dict
+  // SQL database threat detection policy
   threatDetectionPolicy() dict
+  // SQL database connection policy
   connectionPolicy() dict
+  // SQL database auditing policy
   auditingPolicy() dict
+  // SQL database usage
   usage() []azure.sql.databaseusage
 }
 
 // Azure MS Database Usage
-private azure.sql.databaseusage {
+private azure.sql.databaseusage @defaults("id name") {
+  // Database usage ID
   id string
+  // Database usage name
   name string
+  // Database usage resource name
   resourceName string
+  // Database usage display name
   displayName string
+  // Database usage current value
   currentValue float
+  // Database usage limit
   limit float
+  // Database usage unit
   unit string
   // deprecated, no longer supported
   nextResetTime() time
@@ -393,204 +562,316 @@ private azure.sql.databaseusage {
 
 // Azure PostgreSQL
 azure.postgresql {
+   // List of PostgreSQL servers
    servers() []azure.postgresql.server
 }
 
 // Azure PostgreSQL Server
-private azure.postgresql.server {
+private azure.postgresql.server  @defaults("id name location") {
+  // PostgreSQL server ID
   id string
+  // PostgreSQL server name
   name string
+  // PostgreSQL server location
   location string
+  // PostgreSQL server tags
   tags map[string]string
+  // PostgreSQL server type
   type string
+  // PostgreSQL server properties
   properties dict
+  // PostgreSQL server configuration
   configuration() []azure.sql.configuration
+  // PostgreSQL server databases
   databases() []azure.postgresql.database
+  // PostgreSQL server firewall rules
   firewallRules() []azure.sql.firewallrule
 }
 
 // Azure PostgreSQL Database
-private azure.postgresql.database {
+private azure.postgresql.database  @defaults("id name") {
+  // PostgreSQL database ID
   id string
+  // PostgreSQL database name
   name string
+  // PostgreSQL database type
   type string
+  // PostgreSQL database charset
   charset string
+  // PostgreSQL database collation
   collation string
 }
 
 // Azure MySQL
 azure.mysql {
+  // List of MySQL servers
   servers() []azure.mysql.server
 }
 
 // Azure MySQL Server
-private azure.mysql.server {
+private azure.mysql.server  @defaults("id name location") {
+  // Mysql server ID
   id string
+  // Mysql server name
   name string
+  // Mysql server location
   location string
+  // Mysql server tags
   tags map[string]string
+  // Mysql server type
   type string
+  // Mysql server properties
   properties dict
+  // Mysql server configuration
   configuration() []azure.sql.configuration
+  // Mysql server databases
   databases() []azure.mysql.database
+  // Mysql server firewall rules
   firewallRules() []azure.sql.firewallrule
 }
 
 // Azure MySQL Database
-private azure.mysql.database {
+private azure.mysql.database  @defaults("id name") {
+  // MySQL database ID
   id string
+  // MySQL database name
   name string
+  // MySQL database type
   type string
+  // MySQL database charset
   charset string
+  // MySQL database collation
   collation string
 }
 
 // Azure MariaDB
 azure.mariadb {
+  // List of MariaDB servers
   servers() []azure.mariadb.server
 }
 
 // Azure MariaDB Server
-private azure.mariadb.server {
+private azure.mariadb.server  @defaults("id name location") {
+  // MariaDB server ID
   id string
+  // MariaDB server name
   name string
+  // MariaDB server location
   location string
+  // MariaDB server tags
   tags map[string]string
+  // MariaDB server type
   type string
+  // MariaDB server properties
   properties dict
+  // MariaDB server configuration
   configuration() []azure.sql.configuration
+  // MariaDB server databases
   databases() []azure.mariadb.database
+  // MariaDB server firewall rules
   firewallRules() []azure.sql.firewallrule
 }
 
 // Azure MariaDB Database
-private azure.mariadb.database {
+private azure.mariadb.database  @defaults("id name") {
+  // MariaDB database ID
   id string
+  // MariaDB database name
   name string
+  // MariaDB database type
   type string
+  // MariaDB database charset
   charset string
+  // MariaDB database collation
   collation string
 }
 
 // Azure SQL Configuration
-private azure.sql.configuration {
+private azure.sql.configuration  @defaults("id name") {
+  // SQL configuration ID
   id string
+  // SQL configuration name
   name string
+  // SQL configuration type
   type string
+  // SQL configuration value
   value string
+  // SQL configuration description
   description string
+  // SQL configuration default value
   defaultValue string
+  // SQL configuration data type
   dataType string
+  // SQL configuration allowed values
   allowedValues string
+  // SQL configuration source
   source string
 }
 
 // Azure SQL Firewall Rule
-private azure.sql.firewallrule {
+private azure.sql.firewallrule  @defaults("id name") {
+  // SQL firewall rule ID
   id string
+  // SQL firewall rule name
   name string
+  // SQL firewall rule type
   type string
+  // SQL firewall rule start IP address
   startIpAddress string
+  // SQL firewall rule end IP address
   endIpAddress string
 }
 
 // Azure Key Vault
 azure.keyvault {
+  // List of Azure key vaults
   vaults() []azure.keyvault.vault
 }
 
 // Azure Key Vault Vault
-private azure.keyvault.vault {
+private azure.keyvault.vault  @defaults("id name location") {
+  // Key vault ID
   id string
+  // Key vault name
   vaultName string
+  // Key vault type
   type string
+  // Key vault location
   location string
+  // Key vault tags
   tags map[string]string
-
+  // Key vault URL 
   vaultUri() string
+  // Key vault properties 
   properties() dict
-
+  // Key vault keys 
   keys() []azure.keyvault.key
+  // Key vault certificates 
   certificates() []azure.keyvault.certificate
+  // Key vault secrets 
   secrets() []azure.keyvault.secret
+  // Key vault diagnostic settings 
   diagnosticSettings() []azure.monitor.diagnosticsetting
 }
 
 // Azure Key Vault Key
-private azure.keyvault.key {
+private azure.keyvault.key  @defaults("id keyName") {
+  // Key ID
   kid string
+  // Key tags
   tags map[string]string
+  // Whether key is managed
   managed bool
-
+  // Whether key is enabled
   enabled bool
+  // Key not before date
   notBefore time
+  // Key expiration date
   expires time
+  // Key creation time
   created time
+  // Key last update time
   updated time
+  // Key recovery level
   recoveryLevel string
-
+  // Key name
   keyName() string
+  // Key version
   version() string
+  // List of key versions
   versions() []azure.keyvault.key
 }
 
 // Azure Key Vault Certificate
-private azure.keyvault.certificate {
+private azure.keyvault.certificate  @defaults("id certName") {
+  // Certificate ID
   id string
+  // Certificate tags
   tags map[string]string
+  // Certificate x5t
   x5t string
-
+  // Whether certificate is enabled
   enabled bool
+  // Certificate not before date
   notBefore time
+  // Certificate expiration date
   expires time
+  // Certificate creation time
   created time
+  // Certificate last update time
   updated time
+  // Certificate recovery level
   recoveryLevel string
-
+  // Certificate name
   certName() string
+  // Certificate version
   version() string
+  // List of certificate versions
   versions() []azure.keyvault.certificate
 }
 
 // Azure Key Vault Secret
-private azure.keyvault.secret {
+private azure.keyvault.secret  @defaults("id secretName") {
+  // Secret ID
   id string
+  // Secret tags
   tags map[string]string
+  // Secret content type
   contentType string
+  // Whether secret is managed
   managed bool
-
+  // Whether secret is enabled
   enabled bool
+  // Secret notBefore date
   notBefore time
+  // Secret expiration date
   expires time
+  // Secret creation date
   created time
+  // Secret last updated date
   updated time
-
+  // Secret name
   secretName() string
+  // Secret version
   version() string
+  // List of secret versions
   versions() []azure.keyvault.secret
 }
 
 // Azure Monitor
 azure.monitor {
+  // List of log profiles
   logProfiles() []azure.monitor.logprofile
 }
 
 // Azure Monitor Log Profile
-private azure.monitor.logprofile {
+private azure.monitor.logprofile  @defaults("id name location") {
+  // Log profile ID
   id string
+  // Log profile name
   name string
+  // Log profile location
   location string
+  // Log profile type
   type string
+  // Log profile tags
   tags map[string]string
+  // Log profile properties
   properties dict
+  // Log profile storage account
   storageAccount azure.storage.account
 }
 
 // Azure Monitor Diagnostic Setting
-private azure.monitor.diagnosticsetting {
+private azure.monitor.diagnosticsetting @defaults("id name") {
+  // Diagnostic setting ID
   id string
+  // Diagnostic setting name
   name string
+  // Diagnostic setting type
   type string
+  // Diagnostic setting properties
   properties dict
+  // Diagnostic setting storage account
   storageAccount azure.storage.account
 }
