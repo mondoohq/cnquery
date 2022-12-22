@@ -17,7 +17,8 @@ private git.commit @defaults("sha") {
 }
 
 // Git commit author
-private git.commitAuthor @defaults("name") {
+private git.commitAuthor @defaults("name email") {
+  // Author shasum
   sha string
   // Author name
   name string
@@ -29,7 +30,7 @@ private git.commitAuthor @defaults("name") {
 
 // Git GPG signature
 private git.gpgSignature @defaults("sha") {
-  // shasum for GPG signature
+  // GPG signature shasum
   sha string
   // GPG signature reason
   reason string
@@ -49,8 +50,11 @@ github {
 
 // GitHub Organization
 github.organization @defaults("name") {
+  // Organization login
   login string
+  // Organization ID
   id int
+  // Organization global node ID
   nodeId string
   // Organization name
   name string
@@ -66,14 +70,19 @@ github.organization @defaults("name") {
   twitterUsername string
   // Organization description
   description string
+  // Create time for the organization
   createdAt time
+  // Update time for the organization
   updatedAt time
   // Number of private repos
   totalPrivateRepos int
+  // Number of owned private repositories for the organization
   ownedPrivateRepos int
   // Number of private gists
   privateGists int
+  // Disk usage for the organization
   diskUsage int
+  // Number of collaborators for the organization
   collaborators int
   // Organization billing email
   billingEmail string
@@ -117,6 +126,7 @@ github.organization @defaults("name") {
 
 // GitHub User
 private github.user @defaults("id name") {
+  // User ID
   id int
   // User login
   login string
@@ -138,13 +148,17 @@ private github.user @defaults("id name") {
 
 // GitHub Team
 private github.team @defaults("id name") {
+  // Team ID
   id int
   // Team name
   name string
   // Team description
   description string
+  // Team slug
   slug string
+  // Team privacy configuration
   privacy string
+  // Team default permission
   defaultPermission string
   // Team members
   members() []github.user
@@ -156,113 +170,116 @@ private github.team @defaults("id name") {
 
 // GitHub Collaborator
 private github.collaborator @defaults("user") {
+  // Collaborator ID
   id int
+  // Collaborator user information
   user github.user
+  // Collaborator permissions
   permissions []string
 }
 
 // GitHub Package
 private github.package @defaults("id name") {
-  // ID of GitHub package
+  // Package ID
   id int
-  // Name of GitHub package
+  // Package name
   name string
-  // GitHub package type
+  // Package type
   packageType string
-  // GitHub package owner
+  // Package owner
   owner github.user
-  // Create time of GitHub package
+  // Package create time
   createdAt time
-  // Update time of GitHub package
+  // Package update time
   updatedAt time
-  // Number of version of GitHub package
+  // Package version numbers
   versionCount int
-  // Visibility of GitHub package
+  // Package visibility
   visibility string
-  // GitHub repository name for package
+  // Package repository information
   repository() github.repository
 }
 
 // GitHub Repository
-github.repository @defaults("id name") {
+private github.repository @defaults("id name") {
   init(name string) // can only be used when logged in to github as a user
-  // GitHub repository ID
+  // Repository ID
   id int
-  // GitHub repository name
+  // Repository name
   name string
-  // GitHub repository full name
+  // Repository full name
   fullName string
-  // GitHub repository description
+  // Repository description
   description string
-  // GitHub repository homepage
+  // Repository homepage
   homepage string
-  // GitHub repository create time
+  // Repository create time
   createdAt time
-  // GitHub repository update time
+  // Repository update time
   updatedAt time
-  // Whether the GitHub repository is archived
+  // Whether the repository is archived
   archived bool
-  // Whether the GitHub repository is disabled
+  // Whether the repository is disabled
   disabled bool
-  // Whether the GitHub repository is private
+  // Whether the repository is private
   private bool
-  // GitHub repository visibility status
+  // Repository visibility
   visibility string
-  // Whether the GitHub repository allows auto merging
+  // Whether the repository allows auto merging
   allowAutoMerge bool
-  // Whether the GitHub repository allows forking
+  // Whether the repository allows forking
   allowForking bool
-  // Whether the GitHub repository allows merge commit
+  // Whether the repository allows merge commit
   allowMergeCommit bool
-  // Whether the GitHub repository allows rebase merge
+  // Whether the repository allows rebase merge
   allowRebaseMerge bool
-  // Whether the GitHub repository allows squash merge
+  // Whether the repository allows squash merge
   allowSquashMerge bool
-  // Whether the GitHub repository has open issues
+  // Whether the repository has open issues
   hasIssues bool
-  // GitHub repository organization name
+  // Repository organization name
   organizationName string
-  // Whether the GitHub repository has open merge requests
+  // Whether the repository has open merge requests
   openMergeRequests() []github.mergeRequest
-  // List of GitHub branches for the repository
+  // List of branches for the repository
   branches() []github.branch
   // Default branch name for the repository
   defaultBranchName string
-  // List of commits for the GitHub repository
+  // List of commits for the repository
   commits() []github.commit
-  // List of contributors for the GitHub repository
+  // List of contributors for the repository
   contributors() []github.user
-  // List of collaborators for the GitHub repository
+  // List of collaborators for the repository
   collaborators() []github.collaborator
-  // List of files in the GitHub repository
+  // List of files in the repository
   files() []github.file
-  // List of releases for the GitHub repository
+  // List of releases for the repository
   releases() []github.release
-  // GitHub repository owner
+  // Repository owner
   owner github.user
-  // List of webhooks for the GitHub repository
+  // List of webhooks for the repository
   webhooks() []github.webhook
-  // List of workflows for the GitHub repository
+  // List of workflows for the repository
   workflows() []github.workflow
 }
 
 // GitHub Repository File
 private github.file @defaults("name type") {
-  // Path for the file
+  // File path
   path string
-  // Name of the file
+  // File name
   name string
-  // Type of file
+  // File type
   type string
-  // Shasum of the file
+  // File shasum
   sha string
-  // Whether the file is a binary
+  // Whether file is a binary
   isBinary bool
   // List of files in directory
   files() []github.file
-  // Owner name of the file
+  // File owner
   ownerName string
-  // Repository name of the file
+  // File repository name
   repoName string
   // File content
   content() string
@@ -270,11 +287,11 @@ private github.file @defaults("name type") {
 
 // GitHub Release
 private github.release @defaults("name tagName") {
-  // URL for release
+  // Release url
   url string
-  // Name of release
+  // Release name
   name string
-  // Tag name of release
+  // Release tag name
   tagName string
   // Whether the release is a pre-release
   preRelease bool
@@ -282,15 +299,15 @@ private github.release @defaults("name tagName") {
 
 // GitHub Webhook
 private github.webhook @defaults("id name") {
-  // ID of webhook
+  // Webhook ID
   id int
-  // Name of webhook
+  // Webhook name
   name string
-  // URL of webhook
+  // Webhook url
   url string
   // List of events for webhook
   events []string
-  // Configuration for webhook
+  // Webhook config
   config dict
   // Whether the webhook is active
   active bool
@@ -298,17 +315,17 @@ private github.webhook @defaults("id name") {
 
 // GitHub Workflow
 private github.workflow @defaults("id name") {
-  // ID of workflow
+  // Workflow ID
   id int
-  // Name of workflow
+  // Workflow name
   name string
-  // Path for workflow
+  // Workflow path
   path string
-  // State of workflow
+  // Workflow state
   state string
-  // Create time for workflow
+  // Workflow create time
   createdAt time
-  // Update time for workflow
+  // Workflow update time
   updatedAt time
   // Workflow file 
   file() github.file
@@ -320,7 +337,7 @@ private github.workflow @defaults("id name") {
 private github.branch @defaults("name") {
   // Repository branch name
   name string
-  // Is branch protection enabled
+  // Whether branch protection is enabled
   protected bool
   // Repository branch HEAD commit
   headCommit github.commit
@@ -332,12 +349,13 @@ private github.branch @defaults("name") {
   repoName string
   // Repository branch owner
   owner github.user
-  // Is this branch the default branch
+  // Whether branch is the default branch
   isDefault bool
 }
 
 // GitHub Repository Branch Protection
 private github.branchprotection @defaults("id") {
+  // Repository branch protection ID
   id string
   // Require status checks to pass before merging
   requiredStatusChecks dict
@@ -409,26 +427,26 @@ private github.mergeRequest @defaults("id state") {
 
 // GitHub Repository Review
 private github.review @defaults("url state") {
-  // URL for review
+  // Review url
   url string
-  // State of review
+  // Review state
   state string
   // Author association 
   authorAssociation string
-  // User of review
+  // Review user information
   user github.user
 }
 
 // GitHub App Installation
 private github.installation @defaults("id appId") {
-  // ID of application installation
+  // Application installation ID
   id int
-  // ID of application configured
+  // Application configured id
   appId int
-  // Slug of application configured
+  // Application configured slug
   appSlug string
-  // Create time of application
+  // Application installation create time
   createdAt time
-  // Update time of application
+  // Application installation update time
   updatedAt time
 }
