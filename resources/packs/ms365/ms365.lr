@@ -46,7 +46,7 @@ private microsoft.organization @defaults("displayName") {
   assignedPlans []dict
   // Organization creatation date
   createdDateTime time
-  // Organization diplay name
+  // Organization display name
   displayName string
   // Organization verified domains
   verifiedDomains []dict
