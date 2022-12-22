@@ -850,13 +850,33 @@ private gcp.cluster.nodepool @defaults("name") {
   initialNodeCount int
   // The list of Google Compute Engine zones in which the NodePool's nodes should be located.
   locations []string
-  // networkconfig
+  // Networking configuration for this node pool.
+  networkConfig gcp.cluster.nodepool.networkConfig
   // The Kubernetes version
   version string
   // The resource URLs of the managed instance groups associated with this node pool
   instanceGroupUrls []string
   // The current status of this node pool
   status string
+}
+
+// Node pool-level network configuration
+private gcp.cluster.nodepool.networkConfig @defaults("podRange podIpv4CidrBlock") {
+  // Internal ID
+  id string
+  // The ID of the secondary range for pod IPs
+  podRange string
+  // The IP address range for pod IPs in this node pool
+  podIpv4CidrBlock string
+  // Network performance tier configuration
+  performanceConfig gcp.cluster.nodepool.networkConfig.performanceConfig
+}
+
+private gcp.cluster.nodepool.networkConfig.performanceConfig @defaults("totalEgressBandwidthTier") {
+  // Internal ID
+  id string
+  // Specifies the total network bandwidth tier for the node pool
+  totalEgressBandwidthTier string
 }
 
 private gcp.cluster.nodepool.config @defaults("machineType diskSizeGb") {

@@ -52,6 +52,22 @@ func (g *mqlGcpClusterNodepoolConfig) id() (string, error) {
 	return id, nil
 }
 
+func (g *mqlGcpClusterNodepoolNetworkConfig) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+func (g *mqlGcpClusterNodepoolNetworkConfigPerformanceConfig) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
 func (g *mqlGcpClusterNodepoolConfigAccelerator) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
@@ -218,6 +234,30 @@ func (g *mqlGcpProject) GetClusters() ([]interface{}, error) {
 func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clusterId string) (resources.ResourceType, error) {
 	nodePoolId := fmt.Sprintf("%s/%s", clusterId, np.Name)
 
+	mqlPoolConfig, err := createMqlNodePoolConfig(runtime, np, nodePoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	mqlPoolNetworkConfig, err := createMqlNodePoolNetworkConfig(runtime, np, nodePoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return runtime.CreateResource("gcp.cluster.nodepool",
+		"id", nodePoolId,
+		"name", np.Name,
+		"config", mqlPoolConfig,
+		"initialNodeCount", int64(np.InitialNodeCount),
+		"locations", core.StrSliceToInterface(np.Locations),
+		"networkConfig", mqlPoolNetworkConfig,
+		"version", np.Version,
+		"instanceGroupUrls", core.StrSliceToInterface(np.InstanceGroupUrls),
+		"status", np.Status.String(),
+	)
+}
+
+func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePool, nodePoolId string) (resources.ResourceType, error) {
 	cfg := np.Config
 	var err error
 	mqlAccelerators := make([]interface{}, 0, len(cfg.Accelerators))
@@ -334,7 +374,7 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		}
 	}
 
-	mqlPoolConfig, err := runtime.CreateResource("gcp.cluster.nodepool.config",
+	return runtime.CreateResource("gcp.cluster.nodepool.config",
 		"id", fmt.Sprintf("%s/config", nodePoolId),
 		"machineType", cfg.MachineType,
 		"diskSizeGb", int64(cfg.DiskSizeGb),
@@ -362,19 +402,33 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		"spot", cfg.Spot,
 		"confidentialNodes", mqlConfidentialNodes,
 	)
-	if err != nil {
-		return nil, err
+}
+
+func createMqlNodePoolNetworkConfig(runtime *resources.Runtime, np *containerpb.NodePool, nodePoolId string) (resources.ResourceType, error) {
+	netCfg := np.NetworkConfig
+	if netCfg == nil {
+		return nil, nil
 	}
 
-	return runtime.CreateResource("gcp.cluster.nodepool",
-		"id", nodePoolId,
-		"name", np.Name,
-		"config", mqlPoolConfig,
-		"initialNodeCount", int64(np.InitialNodeCount),
-		"locations", core.StrSliceToInterface(np.Locations),
-		"version", np.Version,
-		"instanceGroupUrls", core.StrSliceToInterface(np.InstanceGroupUrls),
-		"status", np.Status.String(),
+	netCfgId := fmt.Sprintf("%s/networkConfig", nodePoolId)
+
+	var performanceConfig resources.ResourceType
+	var err error
+	if netCfg.NetworkPerformanceConfig != nil {
+		performanceConfig, err = runtime.CreateResource("gcp.cluster.nodepool.networkConfig.performanceConfig",
+			"id", fmt.Sprintf("%s/performanceConfig", netCfgId),
+			"totalEgressBandwidthTier", netCfg.NetworkPerformanceConfig.TotalEgressBandwidthTier.String(),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return runtime.CreateResource("gcp.cluster.nodepool.networkConfig",
+		"id", netCfgId,
+		"podRange", netCfg.PodRange,
+		"podIpv4CidrBlock", netCfg.PodIpv4CidrBlock,
+		"performanceConfig", performanceConfig,
 	)
 }
 
