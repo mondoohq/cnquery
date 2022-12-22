@@ -316,7 +316,7 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   version int
   // Device compliance policy assignments
   assignments []dict
-  // deprecated, kept for backwards compatability.
+  // deprecated, kept for backwards compatibility.
   properties dict
 }
 
