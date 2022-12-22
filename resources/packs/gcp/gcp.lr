@@ -838,12 +838,14 @@ private gcp.cluster @defaults("name") {
   expirationTime time
 }
 
+// Cluster node pool
 private gcp.cluster.nodepool @defaults("name") {
   // Internal ID
   id string
   // The name of the node pool
   name string
-  // config
+  // The node configuration of the pool
+  config gcp.cluster.nodepool.config
   // The initial node count for the pool
   initialNodeCount int
   // The list of Google Compute Engine zones in which the NodePool's nodes should be located.
@@ -855,4 +857,165 @@ private gcp.cluster.nodepool @defaults("name") {
   instanceGroupUrls []string
   // The current status of this node pool
   status string
+}
+
+private gcp.cluster.nodepool.config @defaults("machineType diskSizeGb") {
+  // Internal ID
+  id string
+  // The name of a Google Compute Engine machine type
+  machineType string
+  // Size of the disk attached to each node, specified in GB
+  diskSizeGb int
+  // The set of Google API scopes to be made available on all of the node VMs under the "default" service account
+  oauthScopes []string
+  // The Google Cloud Platform Service Account to be used by the node VMs
+  serviceAccount string
+  // The metadata key/value pairs assigned to instances in the cluster
+  metadata map[string]string
+  // The image type to use for this node
+  imageType string
+  // The map of Kubernetes labels to be applied to each node
+  labels map[string]string
+  // The number of local SSD disks to be attached to the node
+  localSsdCount int
+  // The list of instance tags applied to all nodes
+  tags []string
+  // Whether the nodes are created as preemptible VM instances.
+  preemptible bool
+  // A list of hardware accelerators to be attached to each node
+  accelerators []gcp.cluster.nodepool.config.accelerator
+  // Type of the disk attached to each node
+  diskType string
+  // Minimum CPU platform to be used by this instance
+  minCpuPlatform string
+  // The workload metadata mode for this node
+  workloadMetadataMode string
+  // List of Kubernetes taints to be applied to each node
+  taints []gcp.cluster.nodepool.config.nodeTaint
+  // Sandbox configuration for this node
+  sandboxConfig gcp.cluster.nodepool.config.sandboxConfig
+  // Shielded instance configuration
+  shieldedInstanceConfig gcp.cluster.nodepool.config.shieldedInstanceConfig
+  // Parameters that can be configured on Linux nodes
+  linuxNodeConfig gcp.cluster.nodepool.config.linuxNodeConfig
+  // Node kubelet configs
+  kubeletConfig gcp.cluster.nodepool.config.kubeletConfig
+  // The Customer Managed Encryption Key used to encrypt the boot disk attached to each node
+  bootDiskKmsKey string
+  // Google Container File System (image streaming) configuration
+  gcfsConfig gcp.cluster.nodepool.config.gcfsConfig
+  // Advanced features for the Compute Engine VM
+  advancedMachineFeatures gcp.cluster.nodepool.config.advancedMachineFeatures
+  // GVNIC configuration
+  gvnicConfig gcp.cluster.nodepool.config.gvnicConfig
+  // Spot flag for enabling Spot VM, which is a rebrand of the existing preemptible flag
+  spot bool
+  // Confidential nodes configuration
+  confidentialNodes gcp.cluster.nodepool.config.confidentialNodes
+}
+
+// A list of hardware accelerators to be attached to each node
+private gcp.cluster.nodepool.config.accelerator @defaults("type count") {
+  // Internal ID
+  id string
+  // The number of the accelerator cards exposed to an instance
+  count int
+  // The accelerator type resource name
+  type string
+  // Size of partitions to create on the GPU
+  gpuPartitionSize string
+  // The configuration for GPU sharing
+  gpuSharingConfig gcp.cluster.nodepool.config.accelerator.gpuSharingConfig
+}
+
+// GPU sharing configuration
+private gcp.cluster.nodepool.config.accelerator.gpuSharingConfig @defaults("strategy") {
+  // Internal ID
+  id string
+  // The max number of containers that can share a GPU
+  maxSharedClientsPerGpu int
+  // The GPU sharing strategy
+  strategy string
+}
+
+// Kubernetes node taint
+private gcp.cluster.nodepool.config.nodeTaint @defaults("key value effect") {
+  // Internal ID
+  id string
+  // Key for the taint
+  key string
+  // Value for the taint
+  value string
+  // Effect for the taint
+  effect string
+}
+
+// Node pool sandbox configuration
+private gcp.cluster.nodepool.config.sandboxConfig @defaults("type") {
+  // Internal ID
+  id string
+  // Type of the sandbox to use for this node
+  type string
+}
+
+// Shielded instance configuration
+private gcp.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
+  // Internal ID
+  id string
+  // Defines whether the instance has Secure Boot enabled
+  enableSecureBoot bool
+  // Defines whether the instance has integrity monitoring enabled
+  enableIntegrityMonitoring bool
+}
+
+// Parameters that can be configured on Linux nodes
+private gcp.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls") {
+  // Internal ID
+  id string
+  // The Linux kernel parameters to be applied to the nodes and all pods running on them
+  sysctls map[string]string
+}
+
+// Node kubelet configuration
+private gcp.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
+  // Internal ID
+  id string
+  // Contol the CPU management policy on the node
+  cpuManagerPolicy string
+  // TODO: this is a pointer to bool because it can be null. Can add it later
+  // cpuCfsQuota bool
+  // Set the CPU CFS quota period value 'cpu.cfs_period_us'
+  cpuCfsQuotaPeriod string
+  // Set the Pod PID limits
+  podPidsLimit int
+}
+
+// Node pool GCFS configuration
+private gcp.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
+  // Internal ID
+  id string
+  // Whether to use GCFS
+  enabled bool
+}
+
+// Advanced machine features configuration
+private gcp.cluster.nodepool.config.advancedMachineFeatures @defaults("threadsPerCore") {
+  // Internal ID
+  id string
+  // The number of threads per physical core. If unset, the maximum number of threads supported per core by the underlying processor is assumed
+  threadsPerCore int
+}
+
+private gcp.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
+  // Internal ID
+  id string
+  // Whether to use GVNIC
+  enabled bool
+}
+
+private gcp.cluster.nodepool.config.confidentialNodes @defaults("enabled") {
+  // Internal ID
+  id string
+  // Whether to use confidential nodes
+  enabled bool
 }
