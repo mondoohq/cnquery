@@ -464,7 +464,7 @@ private azure.sql.server.administrator @defaults("id name") {
   login string
   // SQL administrator subscription ID
   sid string
-  // SQL administrator tentant ID
+  // SQL administrator tenant ID
   tenantId string
 }
 
