@@ -83,7 +83,7 @@ private azuread.user @defaults("id displayName") {
 }
 
 // Azure Active Directory Group (deprecated, use microsoft.group instead)
-private azuread.group @defaults("diplayName") {
+private azuread.group @defaults("displayName") {
   // Group ID
   id string
   // Group display name
