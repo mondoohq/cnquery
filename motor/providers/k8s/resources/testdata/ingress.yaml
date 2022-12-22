@@ -62,6 +62,40 @@ spec:
     - altapi.example.com
     secretName: my-certificates
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-to-non-existent-secret
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.nexus.info
+    http:
+      paths:
+      - backend:
+          resource:
+            apiGroup: k8s.example.io
+            kind: MyKind
+            name: my-resource
+        path: /
+        pathType: Prefix
+  - host: alt.nexus.info
+    http:
+      paths:
+      - backend:
+          service:
+            name: some-service
+            port:
+              name: a-service-name
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - api.example.com
+    - altapi.example.com
+    secretName: my-missing-certificates
+---
 apiVersion: v1
 data:
   tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUQ3ekNDQXRlZ0F3SUJBZ0lVZFZqTmhXZTJmN2ZNd21PT0dBODgycTFETzFrd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0ZqRVVNQklHQTFVRUF3d0xWR1Z6ZENCSmMzTjFaWEl3SUJjTk1qSXhNakl4TWpFeE56UXlXaGdQTWpBMQpNREExTURneU1URTNOREphTUd3eEN6QUpCZ05WQkFZVEFsVlRNUXN3Q1FZRFZRUUlEQUpPV1RFTU1Bb0dBMVVFCkJ3d0RUbGxETVJNd0VRWURWUVFLREFwTmVTQkRiMjF3WVc1NU1SZ3dGZ1lEVlFRTERBOU5lU0JQY21kaGJtbDYKWVhScGIyNHhFekFSQmdOVkJBTU1DazE1SUZObGNuWnBZMlV3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQgpEd0F3Z2dFS0FvSUJBUUNseWlEcEI1dWpKUDAzQ1pDQytZdjU5NmZxS0hKaE5FTnRvdlBTem1iK2xjaWNHYXkwClNOUktVMWVFdk5OT1R0dWcvSkI2WG9EMlNJNHRKRGp3RjJKYmhrUHlRUWJ1TlVRL1lwY3FyNWhPOVkrNlZTblkKd0hhcHlXcXk4TkVYVzhiUktlSktKRTJ3WTlwNTc0NEtmckZUK2laUGh2YUp4QWF1UUV4aU1uZkpaRVNEa0wrSQp3SElBUzRwMEIvRTFRRUhqVWtSOTFZc0RlQW96ZTcrYU1DdXNBSk9vYWU2bms2MnRlQURXeDVDTmt2ZkhBNDVnCm0vWFFXUGdndWhMcjBlVngxUHZRcFRLNHRuN21XWGZwb2F0M3Q3SW1yaG5OZmhmM1FickZab1U0dHVpNW9TQW8KWWVXV1lLRWQwQ1Vlc0pnVW5mTVAxYktXRHB2SkRxa0VEaGdoQWdNQkFBR2pnZHd3Z2Rrd1VRWURWUjBqQkVvdwpTSUFVdU85R2xBMTl4cmlEMlJZWlcrNldaSnkrOWQraEdxUVlNQll4RkRBU0JnTlZCQU1NQzFSbGMzUWdTWE56CmRXVnlnaFFRbDNZOXVUY1BNcTVvNi9pWkozTkNyQ1lTK0RBSkJnTlZIUk1FQWpBQU1Bc0dBMVVkRHdRRUF3SUUKTURBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdMZ1lEVlIwUkJDY3dKWUlQWVhCcApMbVY0WVcxd2JHVXVZMjl0Z2hKaGJIUmhjR2t1WlhoaGJYQnNaUzVqYjIwd0hRWURWUjBPQkJZRUZNY3dOTEhWCkgzeXAzS1dsOUpCNzVWOEdrWDUyTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFBK1p0NjBNYWxNcm5jbkVsYU4KaHVwZ2RrYzRmb1FNdEFNYTY2RE42ZWh3ODU2T0FZcVFORmpwTEcvT1Z1ZHpOQ2FMRCswZ0o3ZG5rV1BBYXc1SQp3TzJUVit0R0V0d203NStzdzc0T0tBZ216dnJLckxhVythNUNaWGhTR0VOZXFPaXE5VTVqbk1YSE5PUG9pS1Q1ClpWaG1tVENjdlNkRlJEaTlxWE84c1lFN1pNaEw3SzUwbDQzRVhEL09US1FweG9pa0IxMjByU3o2aEVrS0xZNU4KKzhWcWZnelFlUlZmbktMcnVydGYrWWVveTEzVDgrK0tOZGZyYWdzRDZSWDJhaTlHMUE1dlRDVS9DbzZFdWZaVwo0clhLS2tmVHVvNW10alpSYVVZVEk1STRMY2w3aHFodTlUdWxGcnFxbmZOQ214RXpMeFZkWXU2c1VnYUpxbitjClpDU2UKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
