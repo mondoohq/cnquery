@@ -151,7 +151,7 @@ scan execute on an instance that is running inside of AWS.`,
 scan execute on an instance that is running inside of AWS.`,
 			},
 			"aws-ec2-ebs-snapshot": {
-				Short: "Scan a specific AWS snapshot uusing an EBS volume scan. This requires an AWS host.",
+				Short: "Scan a specific AWS snapshot using an EBS volume scan. This requires an AWS host.",
 				Long: `Scan a specific AWS snapshot using an EBS volume scan. This requires that the
 				scan execute on an instance that is running inside of AWS.`,
 			},

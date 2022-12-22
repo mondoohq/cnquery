@@ -23,7 +23,7 @@ func init() {
 
 var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 	Use:   "run",
-	Short: "Run an MQL query",
+	Short: "Run an MQL query.",
 	Long:  `Run an MQL query on the CLI and displays its results.`,
 	CommonFlags: func(cmd *cobra.Command) {
 		cmd.Flags().Bool("parse", false, "Parse the query and return the logical structure.")

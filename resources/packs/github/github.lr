@@ -85,19 +85,19 @@ github.organization @defaults("name") {
   isVerified bool
   // The default repository permission
   defaultRepositoryPermission string
-  // Whether memebers can create repositories
+  // Whether members can create repositories
   membersCanCreateRepositories bool
-  // Whether memebers can create public repositories
+  // Whether members can create public repositories
   membersCanCreatePublicRepositories bool
-  // Whether memebers can create private repositories
+  // Whether members can create private repositories
   membersCanCreatePrivateRepositories bool
-  // Whether memebers can create internal repositories
+  // Whether members can create internal repositories
   membersCanCreateInternalRepositories bool
-  // Whether memebers can create pages
+  // Whether members can create pages
   membersCanCreatePages bool
-  // Whether memebers can create public pages
+  // Whether members can create public pages
   membersCanCreatePublicPages bool
-  // Whether memebers can create private pages
+  // Whether members can create private pages
   membersCanCreatePrivatePages bool
   // List of users that are part of the owners group
   owners() []github.user
@@ -206,7 +206,7 @@ github.repository @defaults("id name") {
   disabled bool
   // Whether the GitHub repository is private
   private bool
-  // GitHub repository visbility status
+  // GitHub repository visibility status
   visibility string
   // Whether the GitHub repository allows auto merging
   allowAutoMerge bool
@@ -421,7 +421,7 @@ private github.review @defaults("url state") {
 
 // GitHub App Installation
 private github.installation @defaults("id appId") {
-  // ID of application installtion
+  // ID of application installation
   id int
   // ID of application configured
   appId int
