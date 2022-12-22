@@ -792,7 +792,7 @@ private gcp.dns.policy {
   enableLogging bool
 }
 
-// GKE cluster resource
+// GKE Cluster
 private gcp.cluster @defaults("name") {
   // Project ID
   projectId string
