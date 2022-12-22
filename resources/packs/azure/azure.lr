@@ -174,7 +174,7 @@ azure.compute {
   disks() []azure.compute.disk
 }
 
-// Azure Compute VM
+// Azure Compute Virtual Machine
 private azure.compute.vm @defaults("id name location ") {
   // VM ID
   id string
