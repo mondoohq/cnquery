@@ -455,7 +455,7 @@ private gcp.compute.network @defaults("name") {
   routingMode string
 }
 
-// GCP Compute VPC Network Partinitioning
+// GCP Compute VPC Network Partitioning
 private gcp.compute.subnetwork @defaults("name")  {
   // Unique Identifier
   id string
