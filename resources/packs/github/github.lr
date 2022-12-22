@@ -223,7 +223,7 @@ private github.repository @defaults("id name") {
   disabled bool
   // Whether the repository is private
   private bool
-  // Repository visbility
+  // Repository visibility
   visibility string
   // Whether the repository allows auto merging
   allowAutoMerge bool
