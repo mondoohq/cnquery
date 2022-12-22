@@ -492,7 +492,7 @@ private azure.sql.database @defaults("id name") {
   createMode string
   // SQL database source database ID
   sourceDatabaseId string
-  // SQL database database deletion date
+  // SQL database deletion date
   sourceDatabaseDeletionDate time
   // SQL database restore point
   restorePointInTime time

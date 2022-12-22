@@ -24,10 +24,13 @@ nats
 netfirewallprofile
 netfirewallrule
 peerings
+phishing
 querypack
 recordset
 rrdatas
+runtimes
 serviceprincipals
+spam
 spo
 sshkeys
 transitioning
