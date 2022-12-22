@@ -279,7 +279,7 @@ private azure.network.securityrule @defaults("id name") {
   name string
   // Security rule etag
   etag string
-  // Security rule prperties
+  // Security rule properties
   properties dict
   // Security rule destination port range
   destinationPortRange []dict
