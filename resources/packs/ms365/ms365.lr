@@ -160,7 +160,7 @@ private microsoft.domaindnsrecord @defaults("id label") {
   supportedService string
   // Domain record TTL
   ttl int
-  // deprecated, kept for backwards compatability.
+  // deprecated, kept for backwards compatibility.
   properties dict
 }
 
