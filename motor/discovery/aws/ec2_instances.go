@@ -39,6 +39,20 @@ type Ec2Instances struct {
 	profile       string
 }
 
+type Ec2InstanceState int
+
+const (
+	Running Ec2InstanceState = iota
+	All
+)
+
+type Ec2InstancesFilters struct {
+	InstanceIds   []string
+	Tags          map[string]string
+	Regions       []string
+	InstanceState Ec2InstanceState
+}
+
 func (ec2i *Ec2Instances) Name() string {
 	return "AWS EC2 Discover"
 }
@@ -97,7 +111,10 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 					log.Debug().Msgf("filtering by tag %s:%s", k, v)
 				}
 			}
-
+			if ec2i.FilterOptions.InstanceState == 0 {
+				input.Filters = append(input.Filters, types.Filter{Name: aws.String("instance-state-name"), Values: []string{"running"}})
+				log.Debug().Msg("filtering aws ec2 instances by running state")
+			}
 			nextToken := aws.String("no_token_to_start_with")
 			for nextToken != nil {
 				resp, err := ec2svc.DescribeInstances(ctx, input)
@@ -108,8 +125,8 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 						if ae.ErrorCode() == "InvalidInstanceID.NotFound" {
 							return res, nil
 						}
+						return nil, errors.Wrapf(err, "failed to describe instances, %s", clonedConfig.Region)
 					}
-					return nil, errors.Wrapf(err, "failed to describe instances, %s", clonedConfig.Region)
 				}
 				nextToken = resp.NextToken
 				if resp.NextToken != nil {

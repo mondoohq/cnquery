@@ -109,6 +109,10 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 				input.Filters = append(input.Filters, types.InstanceInformationStringFilter{Key: aws.String("InstanceIds"), Values: ec2InstancesFilters.InstanceIds})
 				log.Debug().Interface("instance ids", ec2InstancesFilters.InstanceIds).Msgf("filtering")
 			}
+			if ec2InstancesFilters.InstanceState == 0 {
+				input.Filters = append(input.Filters, types.InstanceInformationStringFilter{Key: aws.String("PingStatus"), Values: []string{"Online"}})
+				log.Debug().Msg("filtering aws ssm instances by online ping status")
+			}
 			// NOTE: AWS does not support filtering by tags for this api call
 			nextToken := aws.String("no_token_to_start_with")
 			ssminstances := make([]types.InstanceInformation, 0)
