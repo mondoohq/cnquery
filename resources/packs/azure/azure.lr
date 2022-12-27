@@ -458,7 +458,7 @@ private azure.sql.server.administrator @defaults("id name") {
   name string
   // SQL administrator type
   type string
-  // SQL administrator administrator type
+  // SQL administrator type
   administratorType string
   // SQL administrator login
   login string
