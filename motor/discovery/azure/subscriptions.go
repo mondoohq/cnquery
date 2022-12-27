@@ -10,6 +10,10 @@ import (
 type Subscriptions struct {
 	AzureClient *AzureClient
 }
+type subscriptionsFilter struct {
+	exclude []string
+	include []string
+}
 
 func NewSubscriptions(client *AzureClient) *Subscriptions {
 	return &Subscriptions{
@@ -30,7 +34,7 @@ func (client *Subscriptions) GetSubscription(subscriptionId string) (subscriptio
 	return resp.Subscription, nil
 }
 
-func (client *Subscriptions) GetSubscriptions() ([]subscriptions.Subscription, error) {
+func (client *Subscriptions) GetSubscriptions(filter subscriptionsFilter) ([]subscriptions.Subscription, error) {
 	subscriptionsC, err := subscriptions.NewClient(client.AzureClient.Token, &arm.ClientOptions{})
 
 	ctx := context.Background()
@@ -45,8 +49,36 @@ func (client *Subscriptions) GetSubscriptions() ([]subscriptions.Subscription, e
 			return nil, err
 		}
 		for _, s := range page.Value {
-			subs = append(subs, *s)
+			if !skipSub(s, filter) {
+				subs = append(subs, *s)
+			}
 		}
 	}
 	return subs, nil
+}
+
+func skipSub(sub *subscriptions.Subscription, filter subscriptionsFilter) bool {
+	// anything explicitly specified in the list of includes means accept only from that list
+	if len(filter.include) > 0 {
+		for _, s := range filter.include {
+			if s == *sub.SubscriptionID {
+				return false
+			}
+		}
+		// didn't find it, so it must be skipped
+		return true
+	}
+
+	// if nothing explicitly meant to be included, then check whether
+	// it should be excluded
+	if len(filter.exclude) > 0 {
+		for _, s := range filter.exclude {
+			if s == *sub.SubscriptionID {
+				return true
+			}
+		}
+
+		return false
+	}
+	return false
 }

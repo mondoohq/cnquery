@@ -2,8 +2,8 @@ package azure
 
 import (
 	"context"
+	"strings"
 
-	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -33,7 +33,20 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	resolved := []*asset.Asset{}
 	subscriptionID := tc.Options["subscription-id"]
 	clientId := tc.Options["client-id"]
+	subscriptionsInclude := tc.Options["subscriptions"]
+	subscriptionsExclude := tc.Options["subscriptions-exclude"]
 
+	subsToInclude := []string{}
+	subsToExclude := []string{}
+	if len(subscriptionID) > 0 {
+		subsToInclude = append(subsToInclude, subscriptionID)
+	}
+	if len(subscriptionsInclude) > 0 {
+		subsToInclude = append(subsToInclude, strings.Split(subscriptionsInclude, ",")...)
+	}
+	if len(subscriptionsExclude) > 0 {
+		subsToExclude = append(subsToExclude, strings.Split(subscriptionsExclude, ",")...)
+	}
 	// Note: we use the resolver instead of the direct azure_provider.New to resolve credentials properly
 	m, err := resolver.NewMotorConnection(ctx, tc, cfn)
 	if err != nil {
@@ -60,23 +73,15 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 	azureClient := NewAzureClient(token)
 
-	// we either discover all subs (if no filter is provided) or just verify that the provided one exists
-	var subs []subscriptions.Subscription
+	filter := subscriptionsFilter{
+		include: subsToInclude,
+		exclude: subsToExclude,
+	}
+
 	subsClient := NewSubscriptions(azureClient)
-	if subscriptionID != "" {
-		subscription, err := subsClient.GetSubscription(subscriptionID)
-		if err != nil {
-			return nil, err
-		}
-		if tc.Options["tenant-id"] == "" {
-			tc.Options["tenant-id"] = *subscription.TenantID
-		}
-		subs = []subscriptions.Subscription{subscription}
-	} else {
-		subs, err = subsClient.GetSubscriptions()
-		if err != nil {
-			return nil, err
-		}
+	subs, err := subsClient.GetSubscriptions(filter)
+	if err != nil {
+		return nil, err
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions) {
 		for _, sub := range subs {

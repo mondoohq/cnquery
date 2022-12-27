@@ -341,6 +341,9 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		clientSecret, _ := cmd.Flags().GetString("client-secret")
 		certificatePath, _ := cmd.Flags().GetString("certificate-path")
 		certificateSecret, _ := cmd.Flags().GetString("certificate-secret")
+		subsToInclude, _ := cmd.Flags().GetString("subscriptions")
+		subsToExclude, _ := cmd.Flags().GetString("subscriptions-exclude")
+
 		if clientid == "" && (clientSecret == "" || certificatePath == "") {
 			if err != nil {
 				log.Fatal().Err(err).Msg("cannot parse --subscription value")
@@ -355,6 +358,13 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if clientid != "" {
 			connection.Options["client-id"] = clientid
 		}
+		if subsToExclude != "" {
+			connection.Options["subscriptions-exclude"] = subsToExclude
+		}
+		if subsToInclude != "" {
+			connection.Options["subscriptions"] = subsToInclude
+		}
+
 		if clientSecret != "" {
 			connection.Credentials = append(connection.Credentials, &vault.Credential{
 				Type:     vault.CredentialType_password,
