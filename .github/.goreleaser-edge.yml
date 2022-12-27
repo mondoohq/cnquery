@@ -4,7 +4,7 @@ env:
   - CGO_ENABLED=0
 builds:
   - id: linux
-    main: ../apps/cnquery/cnquery.go
+    main: ./apps/cnquery/cnquery.go
     binary: cnquery
     goos:
       - linux
