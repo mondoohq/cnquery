@@ -40,3 +40,11 @@ vmknics
 Vtpm
 wfascimprov
 wil
+nodepool
+Ssd
+preemptible
+gcfs
+GVNIC
+gpu
+sysctls
+pids
