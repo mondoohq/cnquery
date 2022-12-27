@@ -838,9 +838,11 @@ func (e *blockExecutor) runChain(start uint64) {
 			res, nextRef, err = e.runRef(curRef)
 		}
 
-		// stop this chain of execution, if it didn't return anything
+		// stop this chain of execution, if it didn't return anything and
+		// there is nothing else left to process
 		// we need more data ie an event to provide info
-		if res == nil && nextRef == 0 && err == nil {
+		if res == nil && nextRef == 0 && err == nil && len(remaining) == 0 {
+			log.Trace().Uint64("ref", curRef).Msg("exec> stop chain")
 			return
 		}
 

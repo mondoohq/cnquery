@@ -1263,3 +1263,17 @@ func TestBrokenQueryExecution(t *testing.T) {
 	require.Error(t, results[1].Data.Error)
 	require.Error(t, results[2].Data.Error)
 }
+
+func TestBrokenQueryExecutionGH674(t *testing.T) {
+	// See https://github.com/mondoohq/cnquery/issues/674
+	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
+	bundle, err := x.Compile(`
+a = file("/tmp/ref1").content.trim
+file(a).path == "/tmp/ref2"
+file(a).content.trim == "asdf"
+	`)
+	require.NoError(t, err)
+
+	results := x.TestMqlc(t, bundle, nil)
+	require.Len(t, results, 5)
+}
