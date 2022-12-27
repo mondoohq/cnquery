@@ -12,7 +12,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpCluster) id() (string, error) {
+func (g *mqlGcpProjectCluster) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -20,7 +20,7 @@ func (g *mqlGcpCluster) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpCluster) init(args *resources.Args) (*resources.Args, GcpCluster, error) {
+func (g *mqlGcpProjectCluster) init(args *resources.Args) (*resources.Args, GcpProjectCluster, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -36,7 +36,7 @@ func (g *mqlGcpCluster) init(args *resources.Args) (*resources.Args, GcpCluster,
 	return args, nil, nil
 }
 
-func (g *mqlGcpClusterNodepool) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepool) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -44,7 +44,7 @@ func (g *mqlGcpClusterNodepool) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -52,7 +52,7 @@ func (g *mqlGcpClusterNodepoolConfig) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolNetworkConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolNetworkConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -60,7 +60,7 @@ func (g *mqlGcpClusterNodepoolNetworkConfig) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolNetworkConfigPerformanceConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -68,7 +68,7 @@ func (g *mqlGcpClusterNodepoolNetworkConfigPerformanceConfig) id() (string, erro
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigAccelerator) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigAccelerator) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -76,7 +76,7 @@ func (g *mqlGcpClusterNodepoolConfigAccelerator) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigAcceleratorGpuSharingConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -84,7 +84,7 @@ func (g *mqlGcpClusterNodepoolConfigAcceleratorGpuSharingConfig) id() (string, e
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigNodeTaint) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigNodeTaint) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -92,7 +92,7 @@ func (g *mqlGcpClusterNodepoolConfigNodeTaint) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigSandboxConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigSandboxConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -100,7 +100,7 @@ func (g *mqlGcpClusterNodepoolConfigSandboxConfig) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigShieldedInstanceConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -108,7 +108,7 @@ func (g *mqlGcpClusterNodepoolConfigShieldedInstanceConfig) id() (string, error)
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigLinuxNodeConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -116,7 +116,7 @@ func (g *mqlGcpClusterNodepoolConfigLinuxNodeConfig) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigKubeletConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigKubeletConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -124,7 +124,7 @@ func (g *mqlGcpClusterNodepoolConfigKubeletConfig) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigGcfsConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigGcfsConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -132,7 +132,7 @@ func (g *mqlGcpClusterNodepoolConfigGcfsConfig) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigAdvancedMachineFeatures) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -140,7 +140,7 @@ func (g *mqlGcpClusterNodepoolConfigAdvancedMachineFeatures) id() (string, error
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigGvnicConfig) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigGvnicConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -148,7 +148,7 @@ func (g *mqlGcpClusterNodepoolConfigGvnicConfig) id() (string, error) {
 	return id, nil
 }
 
-func (g *mqlGcpClusterNodepoolConfigConfidentialNodes) id() (string, error) {
+func (g *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -199,7 +199,7 @@ func (g *mqlGcpProject) GetClusters() ([]interface{}, error) {
 			nodePools = append(nodePools, mqlNodePool)
 		}
 
-		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.cluster",
+		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.cluster",
 			"projectId", projectId,
 			"id", c.Id,
 			"name", c.Name,
@@ -244,7 +244,7 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		return nil, err
 	}
 
-	return runtime.CreateResource("gcp.cluster.nodepool",
+	return runtime.CreateResource("gcp.project.cluster.nodepool",
 		"id", nodePoolId,
 		"name", np.Name,
 		"config", mqlPoolConfig,
@@ -271,7 +271,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	nodeTaints := make([]interface{}, 0, len(cfg.Taints))
 	for i, taint := range cfg.Taints {
-		mqlNodeTaint, err := runtime.CreateResource("gcp.cluster.nodepool.config.nodeTaint",
+		mqlNodeTaint, err := runtime.CreateResource("gcp.project.cluster.nodepool.config.nodeTaint",
 			"id", fmt.Sprintf("%s/taints/%d", nodePoolId, i),
 			"key", taint.Key,
 			"value", taint.Value,
@@ -285,7 +285,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlSandboxCfg resources.ResourceType
 	if cfg.SandboxConfig != nil {
-		mqlSandboxCfg, err = runtime.CreateResource("gcp.cluster.nodepool.config.sandbox",
+		mqlSandboxCfg, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.sandbox",
 			"id", fmt.Sprintf("%s/sandbox", nodePoolId),
 			"type", cfg.SandboxConfig.Type.String(),
 		)
@@ -296,7 +296,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlShieldedInstanceCfg resources.ResourceType
 	if cfg.ShieldedInstanceConfig != nil {
-		mqlShieldedInstanceCfg, err = runtime.CreateResource("gcp.cluster.nodepool.config.shieldedInstanceConfig",
+		mqlShieldedInstanceCfg, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.shieldedInstanceConfig",
 			"id", fmt.Sprintf("%s/shieldedInstanceConfig", nodePoolId),
 			"enableSecureBoot", cfg.ShieldedInstanceConfig.EnableSecureBoot,
 			"enableIntegrityMonitoring", cfg.ShieldedInstanceConfig.EnableIntegrityMonitoring,
@@ -308,7 +308,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlLinuxNodeCfg resources.ResourceType
 	if cfg.LinuxNodeConfig != nil {
-		mqlLinuxNodeCfg, err = runtime.CreateResource("gcp.cluster.nodepool.config.linuxNodeConfig",
+		mqlLinuxNodeCfg, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.linuxNodeConfig",
 			"id", fmt.Sprintf("%s/linuxNodeConfig", nodePoolId),
 			"sysctls", core.StrMapToInterface(cfg.LinuxNodeConfig.Sysctls),
 		)
@@ -319,7 +319,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlKubeletCfg resources.ResourceType
 	if cfg.KubeletConfig != nil {
-		mqlKubeletCfg, err = runtime.CreateResource("gcp.cluster.nodepool.config.kubeletConfig",
+		mqlKubeletCfg, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.kubeletConfig",
 			"id", fmt.Sprintf("%s/kubeletConfig", nodePoolId),
 			"cpuManagerPolicy", cfg.KubeletConfig.CpuManagerPolicy,
 			"cpuCfsQuotaPeriod", cfg.KubeletConfig.CpuCfsQuotaPeriod,
@@ -332,7 +332,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlGcfsCfg resources.ResourceType
 	if cfg.GcfsConfig != nil {
-		mqlGcfsCfg, err = runtime.CreateResource("gcp.cluster.nodepool.config.gcfsConfig",
+		mqlGcfsCfg, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.gcfsConfig",
 			"id", fmt.Sprintf("%s/gcfsConfig", nodePoolId),
 			"enabled", cfg.GcfsConfig.Enabled,
 		)
@@ -343,7 +343,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlAdvancedMachineFeatures resources.ResourceType
 	if cfg.AdvancedMachineFeatures != nil {
-		mqlAdvancedMachineFeatures, err = runtime.CreateResource("gcp.cluster.nodepool.config.advancedMachineFeatures",
+		mqlAdvancedMachineFeatures, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.advancedMachineFeatures",
 			"id", fmt.Sprintf("%s/advancedMachineFeatures", nodePoolId),
 			"threadsPerCore", cfg.Gvnic.Enabled,
 		)
@@ -354,7 +354,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlGvnicCfg resources.ResourceType
 	if cfg.GcfsConfig != nil {
-		mqlGvnicCfg, err = runtime.CreateResource("gcp.cluster.nodepool.config.gvnicConfig",
+		mqlGvnicCfg, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.gvnicConfig",
 			"id", fmt.Sprintf("%s/gvnicConfig", nodePoolId),
 			"enabled", cfg.Gvnic.Enabled,
 		)
@@ -365,7 +365,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlConfidentialNodes resources.ResourceType
 	if cfg.ConfidentialNodes != nil {
-		mqlConfidentialNodes, err = runtime.CreateResource("gcp.cluster.nodepool.config.confidentialNodes",
+		mqlConfidentialNodes, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.confidentialNodes",
 			"id", fmt.Sprintf("%s/confidentialNodes", nodePoolId),
 			"enabled", cfg.ConfidentialNodes.Enabled,
 		)
@@ -374,7 +374,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 		}
 	}
 
-	return runtime.CreateResource("gcp.cluster.nodepool.config",
+	return runtime.CreateResource("gcp.project.cluster.nodepool.config",
 		"id", fmt.Sprintf("%s/config", nodePoolId),
 		"machineType", cfg.MachineType,
 		"diskSizeGb", int64(cfg.DiskSizeGb),
@@ -415,7 +415,7 @@ func createMqlNodePoolNetworkConfig(runtime *resources.Runtime, np *containerpb.
 	var performanceConfig resources.ResourceType
 	var err error
 	if netCfg.NetworkPerformanceConfig != nil {
-		performanceConfig, err = runtime.CreateResource("gcp.cluster.nodepool.networkConfig.performanceConfig",
+		performanceConfig, err = runtime.CreateResource("gcp.project.cluster.nodepool.networkConfig.performanceConfig",
 			"id", fmt.Sprintf("%s/performanceConfig", netCfgId),
 			"totalEgressBandwidthTier", netCfg.NetworkPerformanceConfig.TotalEgressBandwidthTier.String(),
 		)
@@ -424,7 +424,7 @@ func createMqlNodePoolNetworkConfig(runtime *resources.Runtime, np *containerpb.
 		}
 	}
 
-	return runtime.CreateResource("gcp.cluster.nodepool.networkConfig",
+	return runtime.CreateResource("gcp.project.cluster.nodepool.networkConfig",
 		"id", netCfgId,
 		"podRange", netCfg.PodRange,
 		"podIpv4CidrBlock", netCfg.PodIpv4CidrBlock,
@@ -438,7 +438,7 @@ func createMqlAccelerator(runtime *resources.Runtime, acc *containerpb.Accelerat
 	var gpuSharingConfig resources.ResourceType
 	var err error
 	if acc.GpuSharingConfig != nil {
-		gpuSharingConfig, err = runtime.CreateResource("gcp.cluster.nodepool.config.gpuSharingConfig",
+		gpuSharingConfig, err = runtime.CreateResource("gcp.project.cluster.nodepool.config.gpuSharingConfig",
 			"id", fmt.Sprintf("%s/gpuSharingConfig", accId),
 			"maxSharedClientsPerGpu", acc.GpuSharingConfig.MaxSharedClientsPerGpu,
 			"strategy", acc.GpuSharingConfig.GpuSharingStrategy.String(),
@@ -448,7 +448,7 @@ func createMqlAccelerator(runtime *resources.Runtime, acc *containerpb.Accelerat
 		}
 	}
 
-	return runtime.CreateResource("gcp.cluster.nodepool.config.accelerator",
+	return runtime.CreateResource("gcp.project.cluster.nodepool.config.accelerator",
 		"id", accId,
 		"count", acc.AcceleratorCount,
 		"type", acc.AcceleratorType,
