@@ -9,4 +9,3 @@ id_rsa.pub
 mondoo-test-secret-key
 gha-creds-*.json
 /tools
-.goreleaser-edge.yml
