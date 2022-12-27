@@ -1000,7 +1000,7 @@ private gcp.project.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls")
 private gcp.project.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
   // Internal ID
   id string
-  // Contol the CPU management policy on the node
+  // Control the CPU management policy on the node
   cpuManagerPolicy string
   // TODO: this is a pointer to bool because it can be null. Can add it later
   // cpuCfsQuota bool

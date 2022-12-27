@@ -45,6 +45,8 @@ Ssd
 preemptible
 gcfs
 GVNIC
+gvnic
 gpu
 sysctls
 pids
+Pids
