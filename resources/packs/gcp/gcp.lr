@@ -182,6 +182,8 @@ private gcp.compute.machineType @defaults("name") {
   memoryMb int
   // Creation timestamp
   created time
+  // The zone where the machine type resides
+  zone gcp.compute.zone
 }
 
 // GCP Compute Instances
