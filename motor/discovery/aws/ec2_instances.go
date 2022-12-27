@@ -86,6 +86,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 			res := []*asset.Asset{}
 
 			input := &ec2.DescribeInstancesInput{}
+			reservs := make([]types.Reservation, 0)
 			if len(ec2i.FilterOptions.InstanceIds) > 0 {
 				input.InstanceIds = ec2i.FilterOptions.InstanceIds
 				log.Debug().Msgf("filtering by instance ids %v", input.InstanceIds)
@@ -96,22 +97,32 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 					log.Debug().Msgf("filtering by tag %s:%s", k, v)
 				}
 			}
-			resp, err := ec2svc.DescribeInstances(ctx, input)
-			if err != nil {
-				var ae smithy.APIError
-				if errors.As(err, &ae) {
-					// when filtering for instance ids, we'll get this error in the regions where the instance ids are not found
-					if ae.ErrorCode() == "InvalidInstanceID.NotFound" {
-						return res, nil
+
+			nextToken := aws.String("no_token_to_start_with")
+			for nextToken != nil {
+				resp, err := ec2svc.DescribeInstances(ctx, input)
+				if err != nil {
+					var ae smithy.APIError
+					if errors.As(err, &ae) {
+						// when filtering for instance ids, we'll get this error in the regions where the instance ids are not found
+						if ae.ErrorCode() == "InvalidInstanceID.NotFound" {
+							return res, nil
+						}
 					}
+					return nil, errors.Wrapf(err, "failed to describe instances, %s", clonedConfig.Region)
 				}
-				return nil, errors.Wrapf(err, "failed to describe instances, %s", clonedConfig.Region)
+				nextToken = resp.NextToken
+				if resp.NextToken != nil {
+					input.NextToken = nextToken
+				}
+				reservs = append(reservs, resp.Reservations...)
 			}
-			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Int("instance count", len(resp.Reservations)).Msg("found ec2 instances")
+
+			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Int("instance count", len(reservs)).Msg("found ec2 instances")
 
 			// resolve all ec2 instances
-			for i := range resp.Reservations {
-				reservation := resp.Reservations[i]
+			for i := range reservs {
+				reservation := reservs[i]
 				for j := range reservation.Instances {
 					instance := reservation.Instances[j]
 					res = append(res, instanceToAsset(instanceInfo{
