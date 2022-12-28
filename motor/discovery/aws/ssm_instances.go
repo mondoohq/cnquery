@@ -110,18 +110,27 @@ func (ssmi *SSMManagedInstances) getInstances(account string, ec2InstancesFilter
 				log.Debug().Interface("instance ids", ec2InstancesFilters.InstanceIds).Msgf("filtering")
 			}
 			// NOTE: AWS does not support filtering by tags for this api call
-			isssmresp, err := ssmsvc.DescribeInstanceInformation(ctx, input)
-			if err != nil {
-				return nil, errors.Wrap(err, "could not gather ssm information")
+			nextToken := aws.String("no_token_to_start_with")
+			ssminstances := make([]types.InstanceInformation, 0)
+			for nextToken != nil {
+				isssmresp, err := ssmsvc.DescribeInstanceInformation(ctx, input)
+				if err != nil {
+					return nil, errors.Wrap(err, "could not gather ssm information")
+				}
+				nextToken = isssmresp.NextToken
+				if isssmresp.NextToken != nil {
+					input.NextToken = nextToken
+				}
+				ssminstances = append(ssminstances, isssmresp.InstanceInformationList...)
 			}
 
-			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Int("instance count", len(isssmresp.InstanceInformationList)).Msg("found ec2 ssm instances")
+			log.Debug().Str("account", account).Str("region", clonedConfig.Region).Int("instance count", len(ssminstances)).Msg("found ec2 ssm instances")
 			// the aws tags get a prefix to them so we can build the right map here by prepending the same value to each tag we're searching for
 			tagsToFilter := map[string]string{}
 			for k, v := range ec2InstancesFilters.Tags {
 				tagsToFilter[ImportedFromAWSTagKeyPrefix+k] = v
 			}
-			for _, instance := range isssmresp.InstanceInformationList {
+			for _, instance := range ssminstances {
 				a := ssmInstanceToAsset(ssmInstanceInfo{
 					account:  account,
 					region:   region,
