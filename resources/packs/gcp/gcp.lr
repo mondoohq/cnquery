@@ -840,7 +840,7 @@ private gcp.project.cluster @defaults("name") {
   expirationTime time
 }
 
-// Cluster node pool
+// GKE Cluster Node Pool
 private gcp.project.cluster.nodepool @defaults("name") {
   // Internal ID
   id string
@@ -960,7 +960,7 @@ private gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig @defaul
   strategy string
 }
 
-// Kubernetes node taint
+// GKE node taint
 private gcp.project.cluster.nodepool.config.nodeTaint @defaults("key value effect") {
   // Internal ID
   id string
@@ -972,7 +972,7 @@ private gcp.project.cluster.nodepool.config.nodeTaint @defaults("key value effec
   effect string
 }
 
-// Node pool sandbox configuration
+// GKE node pool sandbox configuration
 private gcp.project.cluster.nodepool.config.sandboxConfig @defaults("type") {
   // Internal ID
   id string

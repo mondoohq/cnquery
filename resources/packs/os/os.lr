@@ -219,8 +219,9 @@ os.base {
   rebootpending() bool
   // Hostname for this OS
   hostname() string
-
+  // User groups
   groups() core.groups
+  // Users
   users() core.users
 }
 
@@ -231,13 +232,15 @@ os.unix {
 os.linux {
   embed os.unix as unix
 
+  // iptables firewall for IPv4
   iptables() iptables
+  // iptables firewall for IPv6
   ip6tables() ip6tables
 }
 
 // Operating system information
 os {
-  // Pretty Hostname on macOS/Linux or device name on Windows
+  // Pretty hostname on macOS/Linux or device name on Windows
   name() string
   // ENV variable contents
   env() map[string]string
@@ -458,9 +461,12 @@ shadow.entry {
 // Windows registry key
 registrykey {
   init(path string)
+  // Registry key path
   path string
   exists() bool
+  // Registry key properties
   properties() map[string]string
+  // Registry key children
   children() []string
 }
 
@@ -660,22 +666,22 @@ arista.eos.spt.mstInterface {
 
 // Windows-specific resource to get operating system details
 windows {
-  // Gets a consolidated object of system and operating system properties
+  // A consolidated object of system and operating system properties
   // 
   // see https://docs.microsoft.com/en-us/dotnet/api/microsoft.powershell.commands.computerinfo?view=powershellsdk-1.1.0 for more information
   computerInfo() dict
 
-  // Gets the hotfixes that are installed on the computer
+  // Hotfixes installed on the computer
   hotfixes() []windows.hotfix
 
-  // Gets information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
+  // Information about Windows Server roles, role services, and features that are available for installation and installed on a specified server.
   features() []windows.feature
 }
 
 // Windows hotfix resource
 windows.hotfix {
   init(hotfixId string)
-  // Hotfix id
+  // Hotfix ID
   hotfixId string
   // Type of hotfix eg. `Update` or `Security Update`
   description string
@@ -708,10 +714,8 @@ windows.feature {
 windows.firewall {
   // Global firewall settings
   settings() dict
-
   // Settings that apply to the per-profile configurations of the Windows Firewall with Advanced Security
   profiles() []windows.firewall.profile
-
   // Firewall rules
   rules() []windows.firewall.rule
 }
@@ -863,28 +867,29 @@ yum {
 // Yum repository resource
 yum.repo {
   init(id string)
+  // Repository ID
   id string
-  // human-readable repository name
+  // Human-readable repository name
   name string
-  // repository status
+  // Repository status
   status string
   // URL where the repodata directory of a repository is located
   baseurl []string
-  // indicator when the repository will expire
+  // Indicator when the repository will expire
   expire string
   // Deprecated: location of the repo configuration file, use file.path
   filename string
-  // file of the repo configuration file
+  // Repository configuration file path
   file core.file
-  // revision for this repository
+  // Repository revision
   revision string
-  // packages in repository
+  // Packages in repository
   pkgs string
-  // file size of this repository
+  // File size of this repository
   size string
-  // mirrors for this repository
+  // Mirrors for this repository
   mirrors string
-  // indicates if this repository is used as package source
+  // Indicates if this repository is used as package source
   enabled() bool
 }
 
