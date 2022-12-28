@@ -47,6 +47,8 @@ gcp.project @defaults("name") {
   // GCP Compute Resources for the Project
   // compute() gcp.compute
   clusters() []gcp.project.cluster
+  // PubSub-related resources
+  pubsub() gcp.project.pubsub
 }
 
 // GCP Service
@@ -1040,4 +1042,43 @@ private gcp.project.cluster.nodepool.config.confidentialNodes @defaults("enabled
   id string
   // Whether to use confidential nodes
   enabled bool
+}
+
+private gcp.project.pubsub {
+  // Project ID
+  projectId string
+  // The list of topics in the current project
+  topics() []gcp.project.pubsub.topic
+}
+
+// PubSub topic
+private gcp.project.pubsub.topic @defaults("name") {
+  // Internal ID
+  id string
+  // Project ID
+  projectId string
+  // The name of the topic
+  name string
+  // The topic configuration
+  config() gcp.project.pubsub.topic.config
+}
+
+// PubSub topic configuration
+private gcp.project.pubsub.topic.config @defaults("kmsKeyName messageStoragePolicy") {
+  // Internal ID
+  id string
+  // The labels associated with this project
+  labels map[string]string
+  // The name of the Cloud KMS key to be used to protect access to messages published to this topic
+  kmsKeyName string
+  // The message storage policy
+  messageStoragePolicy gcp.project.pubsub.topic.config.messagestoragepolicy
+}
+
+// PubSub topic message storage policy
+private gcp.project.pubsub.topic.config.messagestoragepolicy @defaults("allowedPersistenceRegions"){
+  // Internal ID
+  id string
+  // The list of GCP regions where messages that are published to the topic may be persisted in storage
+  allowedPersistenceRegions []string
 }
