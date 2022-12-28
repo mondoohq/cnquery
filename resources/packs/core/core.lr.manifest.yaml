@@ -193,8 +193,7 @@ resources:
     fields: {}
     min_mondoo_version: 5.15.0
     snippets:
-    - query: groups.where(name == 'wheel').list { members.all( name != 'username')
-        }
+    - query: groups.where(name == 'wheel').list { members.all( name != 'username') }
       title: Ensure the user is not part of group
   ipmi:
     fields:
@@ -491,7 +490,7 @@ resources:
     min_mondoo_version: 5.15.0
     snippets:
     - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
-      title: Check the ssh banner setting
+      title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner
   time:
     fields:
       day: {}
@@ -528,7 +527,7 @@ resources:
     min_mondoo_version: 5.15.0
     snippets:
     - query: |
-        user(name: "vagrant") { home uid }
+        user(name: 'vagrant') { home uid }
       title: Display a specific user's home directory and UID
   users:
     fields: {}
@@ -538,7 +537,7 @@ resources:
       title: Display all users and their UID
     - query: users.one( name == 'root')
       title: Ensure user exists
-    - query: users.none(name == "vagrant")
+    - query: users.none(name == 'vagrant')
       title: Ensure user does not exist
     - query: |
         users.where( sid == /S-1-5-21-\d+-\d+-\d+-501/ ).list {

@@ -486,6 +486,7 @@ tls @defaults("socket domainName") {
 // Domain name
 domainName @defaults("fqdn") {
   init(fqdn string)
+  // Fully qualified domain name (FQDN)
   fqdn string
   // effectiveTLDPlusOne returns the effective top level domain plus one more label
   effectiveTLDPlusOne string
@@ -500,8 +501,9 @@ domainName @defaults("fqdn") {
 // DNS resource
 dns @defaults("fqdn") {
   init(fqdn string)
+  // Fully qualified domain name (FQDN)
   fqdn string
-  // Params is a list of all parameters for DNS fqdn
+  // Params is a list of all parameters for DNS FQDN
   params() dict
   // Successful DNS records
   records(params) []dns.record
@@ -567,13 +569,16 @@ yaml.path {
 parse.certificates {
   []certificate(content, path)
   init(path string)
+  // Certificate file path
   path string
   file() file
+  // Certificate file content
   content(file) string
 }
 
 // x509 certificate PKIX name
 pkix.name @defaults("id dn commonName") {
+  // ID
   id string
   // Distinguished Name Qualifier
   dn string
@@ -662,7 +667,9 @@ certificate @defaults("serial subject.commonName subject.dn") {
 
 // Private Key Resource
 privatekey {
+  // PEM data
   pem string
+  // Key path on disk
   path() string
   encrypted() bool
 }
@@ -671,7 +678,7 @@ privatekey {
 //
 // Provides access to BIOS and UEFI configuration
 ipmi {
-  // retrieve the hardware & firmware revision and sensor and event interface
+  // The hardware & firmware device ID
   deviceID() dict
   // GUID (Globally Unique ID) for management controller
   guid() string
@@ -679,9 +686,9 @@ ipmi {
 
 // IPMI system chassis resource
 ipmi.chassis {
-  // high-level status of the system chassis and main power subsystem
+  // High-level status of the system chassis and main power subsystem
   status() dict
-  // retrieve the system boot options
+  // The system boot options
   systemBootOptions() dict
 }
 
@@ -748,7 +755,7 @@ package @defaults("name version") {
   // Package description
   description string
 
-  // Package Origin (optional)
+  // Package origin (optional)
   origin() string
 
   // Available version
