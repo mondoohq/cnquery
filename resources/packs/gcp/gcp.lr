@@ -49,6 +49,8 @@ gcp.project @defaults("name") {
   clusters() []gcp.project.cluster
   // GCP PubSub-related Resources
   pubsub() gcp.project.pubsubService
+  // KMS-related resources
+  kms() gcp.project.kms
 }
 
 // GCP Service
@@ -1142,4 +1144,26 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   topic gcp.project.pubsubService.topic
   // When the snapshot expires
   expiration time
+}
+private gcp.project.kms {
+  // Project ID
+  projectId string
+  // The available locations for the service
+  locations() []string
+  // The list of keyrings in the current project
+  keyrings() []gcp.project.kms.keyring
+}
+
+// GCP KMS keyring
+private gcp.project.kms.keyring @defaults("name") {
+  // Internal ID
+  id string
+  // Project ID
+  projectId string
+  // The name of the keyring
+  name string
+  // Creation timestamp
+  created time
+  // The location of the keyring
+  location string
 }

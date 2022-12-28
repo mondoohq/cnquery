@@ -86,6 +86,20 @@
         "-f",
         "./examples/example-os.mql.yaml"
       ],
+    },
+    // gcp.project.kms.keyrings
+    {
+      "name": "cnquery-gcp-keyring",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "run",
+        "gcp",
+        "-c",
+        "gcp.project.kms.keyrings"
+      ],
     }
   ]
 }
