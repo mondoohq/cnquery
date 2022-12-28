@@ -66,6 +66,30 @@ func (g *mqlGcpProjectPubsubTopicConfigMessagestoragepolicy) id() (string, error
 	return id, nil
 }
 
+func (g *mqlGcpProjectPubsubSubscription) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+func (g *mqlGcpProjectPubsubSubscriptionConfig) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+func (g *mqlGcpProjectPubsubSubscriptionConfigPushconfig) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
 func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -98,7 +122,6 @@ func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
 			break
 		}
 		if err != nil {
-			// TODO: Handle error.
 			return nil, err
 		}
 		mqlTopic, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.topic",
@@ -161,5 +184,110 @@ func (g *mqlGcpProjectPubsubTopic) GetConfig() (interface{}, error) {
 		"labels", core.StrMapToInterface(cfg.Labels),
 		"kmsKeyName", cfg.KMSKeyName,
 		"messageStoragePolicy", messageStoragePolicy,
+	)
+}
+
+func (g *mqlGcpProjectPubsub) GetSubscriptions() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := provider.Credentials(pubsub.ScopePubSub)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+
+	var subs []interface{}
+
+	it := pubsubSvc.Subscriptions(ctx)
+	for {
+		s, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		mqlSub, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.subscription",
+			"id", s.ID(),
+			"projectId", projectId,
+			"name", s.ID(),
+		)
+		if err != nil {
+			return nil, err
+		}
+		subs = append(subs, mqlSub)
+	}
+
+	return subs, nil
+}
+
+func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
+	name, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := provider.Credentials(pubsub.ScopePubSub)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+
+	s := pubsubSvc.Subscription(name)
+	cfg, err := s.Config(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	topic, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.topic",
+		"id", cfg.Topic.ID(),
+		"projectId", projectId,
+		"name", cfg.Topic.ID(),
+	)
+
+	pushConfig, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.subscription.config.pushconfig",
+		"id", fmt.Sprintf("%s/config/messagestoragepolicy", s.ID()),
+		"endpoint", cfg.PushConfig.Endpoint,
+		"attributes", core.StrMapToInterface(cfg.PushConfig.Attributes),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return g.MotorRuntime.CreateResource("gcp.project.pubsub.subscription.config",
+		"id", fmt.Sprintf("%s/config", s.ID()),
+		"topic", topic,
+		"pushConfig", pushConfig,
+		"retainAckedMessages", cfg.RetainAckedMessages,
+		"labels", core.StrMapToInterface(cfg.Labels),
 	)
 }

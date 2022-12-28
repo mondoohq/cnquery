@@ -1049,6 +1049,8 @@ private gcp.project.pubsub {
   projectId string
   // The list of topics in the current project
   topics() []gcp.project.pubsub.topic
+  // The list of subscriptions in the current project
+  subscriptions() []gcp.project.pubsub.subscription
 }
 
 // PubSub topic
@@ -1067,7 +1069,7 @@ private gcp.project.pubsub.topic @defaults("name") {
 private gcp.project.pubsub.topic.config @defaults("kmsKeyName messageStoragePolicy") {
   // Internal ID
   id string
-  // The labels associated with this project
+  // The labels associated with this topic
   labels map[string]string
   // The name of the Cloud KMS key to be used to protect access to messages published to this topic
   kmsKeyName string
@@ -1081,4 +1083,46 @@ private gcp.project.pubsub.topic.config.messagestoragepolicy @defaults("allowedP
   id string
   // The list of GCP regions where messages that are published to the topic may be persisted in storage
   allowedPersistenceRegions []string
+}
+
+// PubSub subscription
+private gcp.project.pubsub.subscription @defaults("name") {
+  // Internal ID
+  id string
+  // Project ID
+  projectId string
+  // The name of the subscription
+  name string
+  // The subscription configuration
+  config() gcp.project.pubsub.subscription.config
+}
+
+// PubSub subscription configuration
+private gcp.project.pubsub.subscription.config @defaults("topic") {
+  // Internal ID
+  id string
+  // The topic to which the subscription points
+  topic gcp.project.pubsub.topic
+  // Configuration for subscriptions that operate in push mode
+  pushConfig gcp.project.pubsub.subscription.config.pushconfig
+  // The default maximum time after a subscriber receives a message before the subscriber should acknowledge the message
+  // ackDeadline time.Duration
+  // Whether to retain acknowledged messages
+  retainAckedMessages bool
+  // How long to retain messages in backlog from the time of publish
+  // retentionDuration time.Duration
+  // Specifies the conditions for a subscription's expiration
+  // expirationPolicy optional.Duration
+  // The labels associated with this subscription
+  labels map[string]string
+}
+
+// Configuration for subscriptions that operate in push mode
+private gcp.project.pubsub.subscription.config.pushconfig {
+  // Internal ID
+  id string
+  // A URL locating the endpoint to which messages should be pushed
+  endpoint string
+  // Endpoint configuration attributes
+  attributes map[string]string
 }
