@@ -3,8 +3,10 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/pubsub"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
@@ -283,11 +285,18 @@ func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	var expPolicy *time.Time
+	if exp, ok := cfg.ExpirationPolicy.(time.Duration); ok {
+		expPolicy = core.MqlTime(llx.DurationToTime(int64(exp.Seconds())))
+	}
 	return g.MotorRuntime.CreateResource("gcp.project.pubsub.subscription.config",
 		"id", fmt.Sprintf("%s/config", s.ID()),
 		"topic", topic,
 		"pushConfig", pushConfig,
+		"ackDeadline", core.MqlTime(llx.DurationToTime(int64(cfg.AckDeadline.Seconds()))),
 		"retainAckedMessages", cfg.RetainAckedMessages,
+		"retentionDuration", core.MqlTime(llx.DurationToTime(int64(cfg.RetentionDuration.Seconds()))),
+		"expirationPolicy", expPolicy,
 		"labels", core.StrMapToInterface(cfg.Labels),
 	)
 }
