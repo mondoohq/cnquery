@@ -1051,6 +1051,8 @@ private gcp.project.pubsub {
   topics() []gcp.project.pubsub.topic
   // The list of subscriptions in the current project
   subscriptions() []gcp.project.pubsub.subscription
+  // The list of snapshots in the current project
+  snapshots() []gcp.project.pubsub.snapshot
 }
 
 // PubSub topic
@@ -1125,4 +1127,18 @@ private gcp.project.pubsub.subscription.config.pushconfig {
   endpoint string
   // Endpoint configuration attributes
   attributes map[string]string
+}
+
+// PubSub snapshot
+private gcp.project.pubsub.snapshot @defaults("name") {
+  // Internal ID
+  id string
+  // Project ID
+  projectId string
+  // The name of the subscription
+  name string
+  // The topic for which the snapshot is
+  topic gcp.project.pubsub.topic
+  // The expiration for the snapshot
+  expiration time
 }

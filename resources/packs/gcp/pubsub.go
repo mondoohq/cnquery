@@ -92,6 +92,14 @@ func (g *mqlGcpProjectPubsubSubscriptionConfigPushconfig) id() (string, error) {
 	return id, nil
 }
 
+func (g *mqlGcpProjectPubsubSnapshot) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
 func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -299,4 +307,64 @@ func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
 		"expirationPolicy", expPolicy,
 		"labels", core.StrMapToInterface(cfg.Labels),
 	)
+}
+
+func (g *mqlGcpProjectPubsub) GetSnapshots() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := provider.Credentials(pubsub.ScopePubSub)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	pubsubSvc, err := pubsub.NewClient(ctx, projectId, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+
+	var subs []interface{}
+
+	it := pubsubSvc.Snapshots(ctx)
+	for {
+		s, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		topic, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.topic",
+			"id", s.Topic.ID(),
+			"projectId", projectId,
+			"name", s.Topic.ID(),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlSub, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.snapshot",
+			"id", s.ID(),
+			"projectId", projectId,
+			"name", s.ID(),
+			"topic", topic,
+			"expirtaion", core.MqlTime(s.Expiration),
+		)
+		if err != nil {
+			return nil, err
+		}
+		subs = append(subs, mqlSub)
+	}
+
+	return subs, nil
 }
