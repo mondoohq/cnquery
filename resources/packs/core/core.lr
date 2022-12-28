@@ -705,7 +705,7 @@ socketstats {
 }
 
 // System kernel information
-kernel {
+kernel @defaults("info") {
   // Active kernel information
   info() dict
   // Kernel parameters map
