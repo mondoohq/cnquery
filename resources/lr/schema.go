@@ -22,9 +22,13 @@ func Schema(ast *LR) (*resources.Schema, error) {
 	}
 
 	for defName, r := range ast.aliases {
-		x, err := resourceSchema(r, ast)
-		if err != nil {
-			return res, err
+		x, ok := res.Resources[r.ID]
+		if !ok {
+			var err error
+			x, err = resourceSchema(r, ast)
+			if err != nil {
+				return res, err
+			}
 		}
 		res.Resources[defName] = x
 	}
