@@ -339,7 +339,7 @@ var ResourceDocs = docs.LrDocs{
 				},
 				{
 					Title: "Ensure user does not exist",
-					Query: "users.none(name == \"vagrant\")",
+					Query: "users.none(name == 'vagrant')",
 				},
 				{
 					Title: "Search for a specific SID and check for its values",

@@ -316,13 +316,13 @@ docker {
 docker.image {
   // Image ID
   id string
-  // Image Size
+  // Image size in kilobytes
   size int
-  // Virtual Image Size
+  // Virtual image size in kilobytes
   virtualsize int
-  // Tags
+  // Tag key value pairs
   tags []string
-  // Labels
+  // Labels key value pairs
   labels map[string]string
 }
 
@@ -332,19 +332,19 @@ docker.container {
 
   // Container ID
   id string
-  // Container Command
+  // Container command
   command string
-  // Container Image
+  // Container image
   image string
   // Image ID
   imageid string
-  // Container Names
+  // Container names
   names []string
-  // Container State
+  // Container state
   state string
-  // Status Message
+  // Status message
   status string
-  // Labels
+  // Label key value pairs
   labels map[string]string
 }
 
