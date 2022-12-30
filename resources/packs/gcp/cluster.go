@@ -178,6 +178,7 @@ func (g *mqlGcpProject) GetClusters() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer containerSvc.Close()
 
 	// List the clusters in the current projects for all locations
 	resp, err := containerSvc.ListClusters(ctx, &containerpb.ListClustersRequest{Parent: fmt.Sprintf("projects/%s/locations/-", projectId)})
