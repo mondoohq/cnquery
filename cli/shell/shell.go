@@ -422,6 +422,13 @@ func (s *Shell) renderResources(schema *resources.Schema, keys []string) {
 			fieldName := "  " + field.Name
 			fieldType := types.Type(field.Type).Label()
 			displayType := ""
+			fieldComment := field.Title
+			if fieldComment == "" && types.Type(field.Type).IsResource() {
+				r, ok := schema.Resources[fieldType]
+				if ok {
+					fieldComment = r.Title
+				}
+			}
 			if len(fieldType) > 0 {
 				fieldType = " " + fieldType
 				displayType = s.Theme.PolicyPrinter.Disabled(fieldType)
@@ -431,7 +438,7 @@ func (s *Shell) renderResources(schema *resources.Schema, keys []string) {
 			rows = append(rows, rowEntry{
 				s.Theme.PolicyPrinter.Secondary(fieldName) + displayType + seperator,
 				keyLength,
-				field.Title,
+				fieldComment,
 			})
 			if maxk < keyLength {
 				maxk = keyLength
