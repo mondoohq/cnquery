@@ -47,7 +47,7 @@ gcp.project @defaults("name") {
   // GCP Compute Resources for the Project
   // compute() gcp.compute
   clusters() []gcp.project.cluster
-  // PubSub-related resources
+  // GCP PubSub-related Resources
   pubsub() gcp.project.pubsub
 }
 
@@ -796,7 +796,7 @@ private gcp.dns.policy {
   enableLogging bool
 }
 
-// GKE Cluster
+// GCP GKE Cluster
 private gcp.project.cluster @defaults("name") {
   // Project ID
   projectId string
@@ -864,7 +864,7 @@ private gcp.project.cluster.nodepool @defaults("name") {
   status string
 }
 
-// Node pool-level network configuration
+// GCP GKE node pool-level network configuration
 private gcp.project.cluster.nodepool.networkConfig @defaults("podRange podIpv4CidrBlock") {
   // Internal ID
   id string
@@ -876,6 +876,7 @@ private gcp.project.cluster.nodepool.networkConfig @defaults("podRange podIpv4Ci
   performanceConfig gcp.project.cluster.nodepool.networkConfig.performanceConfig
 }
 
+// GCP GKE node pool network performance configuration
 private gcp.project.cluster.nodepool.networkConfig.performanceConfig @defaults("totalEgressBandwidthTier") {
   // Internal ID
   id string
@@ -883,6 +884,7 @@ private gcp.project.cluster.nodepool.networkConfig.performanceConfig @defaults("
   totalEgressBandwidthTier string
 }
 
+// GCP GKE node pool configuration
 private gcp.project.cluster.nodepool.config @defaults("machineType diskSizeGb") {
   // Internal ID
   id string
@@ -938,7 +940,7 @@ private gcp.project.cluster.nodepool.config @defaults("machineType diskSizeGb") 
   confidentialNodes gcp.project.cluster.nodepool.config.confidentialNodes
 }
 
-// A list of hardware accelerators to be attached to each node
+// GCP GKE node pool hardware accelerators configuration
 private gcp.project.cluster.nodepool.config.accelerator @defaults("type count") {
   // Internal ID
   id string
@@ -962,7 +964,7 @@ private gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig @defaul
   strategy string
 }
 
-// GKE node taint
+// GCP GKE Kubernetes node taint
 private gcp.project.cluster.nodepool.config.nodeTaint @defaults("key value effect") {
   // Internal ID
   id string
@@ -974,7 +976,7 @@ private gcp.project.cluster.nodepool.config.nodeTaint @defaults("key value effec
   effect string
 }
 
-// GKE node pool sandbox configuration
+// GCP GKE node pool sandbox configuration
 private gcp.project.cluster.nodepool.config.sandboxConfig @defaults("type") {
   // Internal ID
   id string
@@ -982,7 +984,7 @@ private gcp.project.cluster.nodepool.config.sandboxConfig @defaults("type") {
   type string
 }
 
-// Shielded instance configuration
+// GCP GKE node pool shielded instance configuration
 private gcp.project.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
   // Internal ID
   id string
@@ -992,7 +994,7 @@ private gcp.project.cluster.nodepool.config.shieldedInstanceConfig @defaults("en
   enableIntegrityMonitoring bool
 }
 
-// Parameters that can be configured on Linux nodes
+// GCP GKE node pool parameters that can be configured on Linux nodes
 private gcp.project.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls") {
   // Internal ID
   id string
@@ -1000,7 +1002,7 @@ private gcp.project.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls")
   sysctls map[string]string
 }
 
-// Node kubelet configuration
+// GCP GKE node pool kubelet configuration
 private gcp.project.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
   // Internal ID
   id string
@@ -1014,7 +1016,7 @@ private gcp.project.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerP
   podPidsLimit int
 }
 
-// Node pool GCFS configuration
+// GCP GKE node pool GCFS configuration
 private gcp.project.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
   // Internal ID
   id string
@@ -1022,7 +1024,7 @@ private gcp.project.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
   enabled bool
 }
 
-// Advanced machine features configuration
+// GCP GKE node pool advanced machine features configuration
 private gcp.project.cluster.nodepool.config.advancedMachineFeatures @defaults("threadsPerCore") {
   // Internal ID
   id string
@@ -1030,6 +1032,7 @@ private gcp.project.cluster.nodepool.config.advancedMachineFeatures @defaults("t
   threadsPerCore int
 }
 
+// GCP GKE node pool GVNIC configuration
 private gcp.project.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
   // Internal ID
   id string
@@ -1037,6 +1040,7 @@ private gcp.project.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
   enabled bool
 }
 
+// GCP GKE node pool confidential nodes configuration
 private gcp.project.cluster.nodepool.config.confidentialNodes @defaults("enabled") {
   // Internal ID
   id string
@@ -1044,6 +1048,7 @@ private gcp.project.cluster.nodepool.config.confidentialNodes @defaults("enabled
   enabled bool
 }
 
+// GCP PubSub resources
 private gcp.project.pubsub {
   // Project ID
   projectId string
@@ -1055,7 +1060,7 @@ private gcp.project.pubsub {
   snapshots() []gcp.project.pubsub.snapshot
 }
 
-// PubSub topic
+// GCP PubSub topic
 private gcp.project.pubsub.topic @defaults("name") {
   // Internal ID
   id string
@@ -1067,7 +1072,7 @@ private gcp.project.pubsub.topic @defaults("name") {
   config() gcp.project.pubsub.topic.config
 }
 
-// PubSub topic configuration
+// GCP PubSub topic configuration
 private gcp.project.pubsub.topic.config @defaults("kmsKeyName messageStoragePolicy") {
   // Internal ID
   id string
@@ -1079,7 +1084,7 @@ private gcp.project.pubsub.topic.config @defaults("kmsKeyName messageStoragePoli
   messageStoragePolicy gcp.project.pubsub.topic.config.messagestoragepolicy
 }
 
-// PubSub topic message storage policy
+// GCP PubSub topic message storage policy
 private gcp.project.pubsub.topic.config.messagestoragepolicy @defaults("allowedPersistenceRegions"){
   // Internal ID
   id string
@@ -1087,7 +1092,7 @@ private gcp.project.pubsub.topic.config.messagestoragepolicy @defaults("allowedP
   allowedPersistenceRegions []string
 }
 
-// PubSub subscription
+// GCP PubSub subscription
 private gcp.project.pubsub.subscription @defaults("name") {
   // Internal ID
   id string
@@ -1099,7 +1104,7 @@ private gcp.project.pubsub.subscription @defaults("name") {
   config() gcp.project.pubsub.subscription.config
 }
 
-// PubSub subscription configuration
+// GCP PubSub subscription configuration
 private gcp.project.pubsub.subscription.config @defaults("topic") {
   // Internal ID
   id string
@@ -1119,7 +1124,7 @@ private gcp.project.pubsub.subscription.config @defaults("topic") {
   labels map[string]string
 }
 
-// Configuration for subscriptions that operate in push mode
+// GCP PubSub Configuration for subscriptions that operate in push mode
 private gcp.project.pubsub.subscription.config.pushconfig {
   // Internal ID
   id string
@@ -1129,7 +1134,7 @@ private gcp.project.pubsub.subscription.config.pushconfig {
   attributes map[string]string
 }
 
-// PubSub snapshot
+// GCP PubSub snapshot
 private gcp.project.pubsub.snapshot @defaults("name") {
   // Internal ID
   id string
