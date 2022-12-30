@@ -118,6 +118,7 @@ func (g *mqlGcpProjectKms) GetLocations() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer kmsSvc.Close()
 
 	var locations []interface{}
 	it := kmsSvc.ListLocations(ctx, &location.ListLocationsRequest{Name: fmt.Sprintf("projects/%s", projectId)})
@@ -162,6 +163,7 @@ func (g *mqlGcpProjectKms) GetKeyrings() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer kmsSvc.Close()
 
 	var keyrings []interface{}
 	var wg sync.WaitGroup
@@ -227,6 +229,7 @@ func (g *mqlGcpProjectKmsKeyring) GetCryptokeys() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer kmsSvc.Close()
 
 	var keys []interface{}
 
@@ -282,6 +285,7 @@ func (g *mqlGcpProjectKmsKeyringCryptokey) GetVersions() ([]interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
+	defer kmsSvc.Close()
 
 	var versions []interface{}
 
