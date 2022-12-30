@@ -90,7 +90,8 @@ func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
 			}
 		}
 
-		title, desc := extractComments(f.Comments)
+		f.Comments = SanitizeComments(f.Comments)
+		title, desc := extractTitleAndDescription(f.Comments)
 		fields[f.BasicField.ID] = &resources.Field{
 			Name:        f.BasicField.ID,
 			Type:        string(f.BasicField.Type.Type(ast)),
