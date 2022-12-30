@@ -105,7 +105,7 @@ func New(tc *providers.Config) (*Provider, error) {
 					if err != nil {
 						return errors.Wrap(err, "could not parse tfvars file")
 					}
-				} else {
+				} else if modulesManifest == nil {
 					modulesManifest, err = ParseTerraformModuleManifest(path)
 					if errors.Is(err, os.ErrNotExist) {
 						log.Debug().Str("path", path).Msg("no terraform module manifest found")
