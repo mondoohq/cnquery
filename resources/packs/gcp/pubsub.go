@@ -122,6 +122,7 @@ func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer pubsubSvc.Close()
 
 	var topics []interface{}
 
@@ -175,6 +176,7 @@ func (g *mqlGcpProjectPubsubTopic) GetConfig() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer pubsubSvc.Close()
 
 	t := pubsubSvc.Topic(name)
 	cfg, err := t.Config(ctx)
@@ -219,6 +221,7 @@ func (g *mqlGcpProjectPubsub) GetSubscriptions() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer pubsubSvc.Close()
 
 	var subs []interface{}
 
@@ -272,6 +275,7 @@ func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer pubsubSvc.Close()
 
 	s := pubsubSvc.Subscription(name)
 	cfg, err := s.Config(ctx)
@@ -331,6 +335,7 @@ func (g *mqlGcpProjectPubsub) GetSnapshots() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer pubsubSvc.Close()
 
 	var subs []interface{}
 
