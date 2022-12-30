@@ -1145,6 +1145,7 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   // When the snapshot expires
   expiration time
 }
+// GCP KMS resources
 private gcp.project.kms {
   // Project ID
   projectId string
@@ -1166,4 +1167,88 @@ private gcp.project.kms.keyring @defaults("name") {
   created time
   // The location of the keyring
   location string
+  // The list of cryptokeys in the current keyring
+  cryptokeys() []gcp.project.kms.keyring.cryptokey
+}
+
+// GCP KMS crypto key
+private gcp.project.kms.keyring.cryptokey @defaults("name purpose"){
+  // Internal ID
+  id string
+  // The name of the crypto key
+  name string
+  // The primary version that will be used by encrypt when this crypto key is given
+  primary gcp.project.kms.keyring.cryptokey.version
+  // The purpose of the crypto key
+  purpose string
+  // The list of cryptokey versions
+  versions() []gcp.project.kms.keyring.cryptokey.version
+}
+
+// GCP KMS crypto key version
+private gcp.project.kms.keyring.cryptokey.version @defaults("name state") {
+  // Internal ID
+  id string
+  // The name of the crypto key version
+  name string
+  // The current state of the crypto key version
+  state string
+  // The protection level describing how crypto operations are performed with this crypto key version
+  protectionLevel string
+  // The algorithm that this crypto key version supports
+  algorithm string
+  // Statement generated and signed by HSM at key creation time
+  attestation gcp.project.kms.keyring.cryptokey.version.attestation
+  // Creation timestamp
+  created time
+  // Generation timestamp
+  generated time
+  // Destruction timestamp
+  destroyed time
+  // Destroy event timestamp
+  destroyEventTime time
+  // The name of the import job used in the most recent import of this crypto key version
+  importJob string
+  // The time at which this crypto key version's key material was imported
+  importTime time
+  // The root cause of an import failure
+  importFailureReason string
+  // Additional fields for configuring external protection level
+  externalProtectionLevelOptions gcp.project.kms.keyring.cryptokey.version.externalProtectionLevelOptions
+  // Whether or not this crypto key version is eligible for reimport
+  reimportEligible bool
+}
+
+// GCP KMS crypto key version attestation
+private gcp.project.kms.keyring.cryptokey.version.attestation {
+  // Internal ID
+  id string
+  // The format of the attestation data
+  format string
+  // The attestation data provided by the HSM when the key version was created
+  // content ???
+  // The certificate chains needed to validate the attestation
+  certificateChains gcp.project.kms.keyring.cryptokey.version.attestation.certificatechains
+}
+
+// GCP KMS crypto key version attestation certificate chains
+private gcp.project.kms.keyring.cryptokey.version.attestation.certificatechains {
+  // Internal ID
+  id string
+  // Cavium certificate chain corresponding to the attestation
+  caviumCerts []string
+  // Google card certificate chain corresponding to the attestation
+  googleCardCerts []string
+  // Google partition certificate chain corresponding to the attestation
+  googlePartitionCerts []string
+}
+
+// GCP KMS crypto key version external protection level options
+private gcp.project.kms.keyring.cryptokey.version.externalProtectionLevelOptions {
+  // Internal ID
+  id string
+  // The URI for an external resource that the crypto key version represents
+  externalKeyUri string
+  // The path to the external key material on the EKM when using EKM connection
+  ekmConnectionKeyPath string
 }
