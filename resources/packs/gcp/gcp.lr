@@ -47,6 +47,8 @@ gcp.project @defaults("name") {
   // GCP Compute Resources for the Project
   // compute() gcp.compute
   clusters() []gcp.project.cluster
+  // GCP Cloud Run Resources
+  cloudrun() gcp.project.cloudrun
 }
 
 // GCP Service
@@ -1040,4 +1042,20 @@ private gcp.project.cluster.nodepool.config.confidentialNodes @defaults("enabled
   id string
   // Whether to use confidential nodes
   enabled bool
+}
+
+// GCP Cloud Run resources
+private gcp.project.cloudrun {
+  // Project ID
+  projectId string
+  operations() []gcp.project.cloudrun.operation
+}
+
+private gcp.project.cloudrun.operation @defaults("name") {
+  // Internal ID
+  id string
+  // Project ID
+  projectId string
+  // The name of the operation
+  name string
 }
