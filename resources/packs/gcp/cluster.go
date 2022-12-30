@@ -37,123 +37,63 @@ func (g *mqlGcpProjectCluster) init(args *resources.Args) (*resources.Args, GcpP
 }
 
 func (g *mqlGcpProjectClusterNodepool) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolNetworkConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigAccelerator) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigNodeTaint) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigSandboxConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigKubeletConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigGcfsConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigGvnicConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProject) GetClusters() ([]interface{}, error) {
