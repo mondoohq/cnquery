@@ -2,19 +2,37 @@ package gcp
 
 import (
 	"context"
+	"fmt"
 
+	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sqladmin/v1"
 )
 
-func (g *mqlGcpSql) id() (string, error) {
-	return "gcp.sql", nil
+func (g *mqlGcpProjectSql) id() (string, error) {
+	return "gcp.project.sql", nil
 }
 
-func (g *mqlGcpSql) GetInstances() ([]interface{}, error) {
+func (g *mqlGcpProject) GetSql() (interface{}, error) {
+	projectId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.sql",
+		"projectId", projectId,
+	)
+}
+
+func (g *mqlGcpProjectSql) GetInstances() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
 	}
@@ -31,8 +49,7 @@ func (g *mqlGcpSql) GetInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projectName := provider.ResourceID()
-	sqlinstances, err := sqladminSvc.Instances.List(projectName).Do()
+	sqlinstances, err := sqladminSvc.Instances.List(projectId).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -80,22 +97,32 @@ func (g *mqlGcpSql) GetInstances() ([]interface{}, error) {
 			// TODO: handle all other database settings
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.sql.instance",
-			"name", instance.Name,
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.sql.instance",
+			"projectId", projectId,
+			"availableMaintenanceVersions", core.StrSliceToInterface(instance.AvailableMaintenanceVersions),
 			"backendType", instance.BackendType,
 			"connectionName", instance.ConnectionName,
+			"created", parseTime(instance.CreateTime),
+			"currentDiskSize", instance.CurrentDiskSize,
+			"databaseInstalledVersion", instance.DatabaseInstalledVersion,
 			"databaseVersion", instance.DatabaseVersion,
+			"diskEncryptionConfiguration", nil, // TODO
+			"diskEncryptionStatus", nil, // TODO
+			"failoverReplica", nil, // TODO
 			"gceZone", instance.GceZone,
 			"instanceType", instance.InstanceType,
-			"kind", instance.Kind,
-			"currentDiskSize", instance.CurrentDiskSize,
+			"ipAddresses", nil, // TODO
+			"maintenanceVersion", instance.MaintenanceVersion,
+			"masterInstanceName", instance.MasterInstanceName,
 			"maxDiskSize", instance.MaxDiskSize,
-			"state", instance.State,
+			"name", instance.Name,
 			// ref project
 			"project", instance.Project,
 			"region", instance.Region,
+			"replicaNames", core.StrSliceToInterface(instance.ReplicaNames),
+			"settings", nil, // TODO
 			"serviceAccountEmailAddress", instance.ServiceAccountEmailAddress,
-			"settings", settingsDict,
+			"state", instance.State,
 		)
 		if err != nil {
 			return nil, err
@@ -106,7 +133,79 @@ func (g *mqlGcpSql) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpSqlInstance) id() (string, error) {
-	// TODO: instances are scoped in project
-	return g.Name()
+func (g *mqlGcpProjectSqlInstance) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+
+	name, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", projectId, name), nil
+}
+
+func (g *mqlGcpProjectSqlInstanceDiskEncryptionConfiguration) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceDiskEncryptionStatus) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceFailoverReplica) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceIpMapping) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettings) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsActivedirectoryconfig) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsBackupconfiguration) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsBackupconfigurationRetentionsettings) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsDenyMaintenancePeriod) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsInsightsConfig) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsIpConfiguration) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsIpConfigurationAclEntry) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsLocationPreference) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsMaintenanceWindow) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsPasswordValidationPolicy) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlInstanceSettingsSqlServerAuditConfig) id() (string, error) {
+	return g.Id()
 }

@@ -8,8 +8,9 @@ alias gcloud.compute.instance = gcp.compute.instance
 alias gcloud.compute.serviceaccount = gcp.compute.serviceaccount
 alias gcloud.storage = gcp.storage
 alias gcloud.storage.bucket = gcp.storage.bucket
-alias gcloud.sql = gcp.sql
-alias gcloud.sql.instance = gcp.sql.instance
+alias gcloud.sql = gcp.project.sql
+alias gcp.sql = gcp.project.sql
+alias gcloud.sql.instance = gcp.project.sql.instance
 
 // GCP Cloud Organization
 gcp.organization @defaults("id") {
@@ -57,6 +58,8 @@ gcp.project @defaults("name") {
   apiKeys() []gcp.project.apiKey
   // Logging resources
   logging() gcp.project.loggingservice
+  // GCP Cloud SQL Resources
+  sql() gcp.project.sql
 }
 
 // GCP Service
@@ -568,43 +571,311 @@ private gcp.storage.bucket @defaults("id") {
   iamConfiguration dict
 }
 
-// GCP Cloud SQL
-gcp.sql {
-  //
-  instances() []gcp.sql.instance
+// GCP Cloud SQL Resources
+private gcp.project.sql {
+  // Project ID
+  projectId string
+  // The list of Cloud SQL instances in the current project
+  instances() []gcp.project.sql.instance
 }
 
 // GCP Cloud SQL Instance
-private gcp.sql.instance @defaults("name") {
-  // Instance name
-  name string
+private gcp.project.sql.instance @defaults("name") {
+  // Project ID
+  projectId string
+  // All maintenance versions applicable on the instance
+  availableMaintenanceVersions []string
   // Backend type
   backendType string
-  // Connection name
+  // Connection name of the instance used in connection strings
   connectionName string
-  // Database version
+  // Creation timestamp
+  created time
+  // The current disk usage of the instance in bytes. This is deprecated, monitoring should be used instead
+  currentDiskSize int
+  // The current database version running on the instance
+  databaseInstalledVersion string
+  // The database engine type and version
   databaseVersion string
-  // GCE zone
+  // Disk encryption configuration
+  diskEncryptionConfiguration gcp.project.sql.instance.diskEncryptionConfiguration
+  // Disk encryption status
+  diskEncryptionStatus gcp.project.sql.instance.diskEncryptionStatus
+  // The name and status of the failover replica
+  failoverReplica gcp.project.sql.instance.failoverReplica
+  // The Compute Engine zone that the instance is currently service from
   gceZone string
   // Instance type
   instanceType string
-  // Kind
-  kind string
-  // Current disk size
-  currentDiskSize int
-  // Maximum disk size
+  // The assigned IP addresses
+  ipAddresses []gcp.project.sql.instance.ipMapping
+  // The current software version on the instance
+  maintenanceVersion string
+  // The name of the instance which will act as primary in the replica
+  masterInstanceName string
+  // The maximum disk size in bytes
   maxDiskSize int
-  // Instance state
-  state string
+  // Instance name
+  name string
   // Project
   // TODO: should this be id or name
   project string 
   // Region
   region string
-  // Service account email address
-  serviceAccountEmailAddress string
+  // Replicas
+  replicaNames []string
   // Settings
   settings dict
+  // Service account email address
+  serviceAccountEmailAddress string
+  // Instance state
+  state string
+}
+
+// GCP Cloud SQL Instance Disk Encryption Configuration
+private gcp.project.sql.instance.diskEncryptionConfiguration {
+  // Internal ID
+  id string
+  // Name of KMS key for disk encryption
+  kmsKeyName string
+}
+
+// GCP Cloud SQL Instance Disk Encryption Status
+private gcp.project.sql.instance.diskEncryptionStatus {
+  // Internal ID
+  id string
+  // KMS key version used to encrypt the Cloud SQL instance
+  kmsKeyVersionName string
+}
+
+// GCP Cloud SQL Instance Failover Replica
+private gcp.project.sql.instance.failoverReplica @defaults("name available") {
+  // Internal ID
+  id string
+  // The availability status of the failover replica
+  available bool
+  // The name of the failover replica
+  name string
+}
+
+// GCP Cloud SQL Instance IP Mapping
+private gcp.project.sql.instance.ipMapping @defaults("ipAddress") {
+  // Internal ID
+  id string
+  // The IP address assigned
+  ipAddress string
+  // The due time for this IP to be retired
+  timeToRetire time
+  // The type of this IP address
+  type string
+}
+
+// GCP Cloud SQL Instance Settings
+private gcp.project.sql.instance.settings {
+  // Internal ID
+  id string
+  // Specifies when the instance is activated
+  activationPolicy string
+  // Active Directory configuration, relevant only for Cloud SQL for SQL server
+  activeDirectoryConfig gcp.project.sql.instance.settings.activedirectoryconfig
+  // Availability type
+  availabilityType string
+  // The daily backup configuration for the instance
+  backupConfiguration gcp.project.sql.instance.settings.backupconfiguration
+  // The name of the serve collation
+  collation string
+  // Specifies if connections must use Cloud SQL connectors
+  connectorEnforcement string
+  // Indicates whether database flags for crash-safe replication are enabled
+  crashSafeReplicationEnabled bool
+  // The size of data disk, in GB
+  dataDiskSizeGb int
+  // The type of the data disk
+  dataDiskType string
+  // The databse flags passed to the instance at startup
+  databaseFlags []dict
+  // Indicates whether replication is enabled or not
+  databaseReplicationEnabled bool
+  // Whether to protect against accidental instance deletion
+  deletionProtection bool
+  // Deny maintenance periods
+  denyMaintenancePeriods []gcp.project.sql.instance.settings.denyMaintenancePeriod
+  // Insights configuration
+  insightsConfig gcp.project.sql.instance.settings.insightsConfig
+  // The settings for IP Management
+  ipConfiguration gcp.project.sql.instance.settings.ipConfiguration
+  // The location preference settings
+  locationPreference gcp.project.sql.instance.settings.locationPreference
+  // The maintenance window
+  maintenanceWindow gcp.project.sql.instance.settings.maintenanceWindow
+  // The local user password validation policy
+  passwordValidationPolicy gcp.project.sql.instance.settings.passwordValidationPolicy
+  // The pricing plan 
+  pricingPlan string
+  // The type of replication
+  replicationType string
+  // The version of instance settings
+  settingsVersion int
+  // SQL server specific audit configuration
+  sqlserverAuditConfig gcp.project.sql.instance.settings.sqlServerAuditConfig
+  // Configuration to increase storage size automatically
+  storageAutoResize bool
+  // The maximum size to which storage capacity can be automatically increased
+  storageAutoResizeLimit int
+  // The tier of service for this instance
+  tier string
+  // Server timezone
+  timeZone string
+  // User-provided labels
+  userLabels dict
+}
+
+// GCP Cloud SQL Instance Settings Active Directory Configuration
+private gcp.project.sql.instance.settings.activedirectoryconfig @defaults("domain") {
+  // Internal ID
+  id string
+  // The name of the domain
+  domain string
+}
+
+// GCP Cloud SQL Instance Settings Backup Configuration
+private gcp.project.sql.instance.settings.backupconfiguration {
+  // Internal ID
+  id string
+  // Backup retention settings
+  backupRetentionSettings gcp.project.sql.instance.settings.backupconfiguration.retentionsettings
+  // Whether binary log is enabled
+  binaryLogEnabled bool
+  // Whether this configuration is enabled
+  enabled bool
+  // The location of the backup
+  location string
+  // Whether point in time recovery is enabled
+  pointInTimeRecoveryEnabled bool
+  // Start time for the daily backup configuration in UTC timezone in the 24 hour format
+  startTime string
+  // The number of days of transaction logs we retain for point in time restore
+  transactionLogRetentionDays int
+}
+
+// GCP Cloud SQL Instance Settings Backup Configuration retention settings
+private gcp.project.sql.instance.settings.backupconfiguration.retentionsettings {
+  // Internal ID
+  id string
+  // Depending on the value of retentionUnit, this is used to determine if a backup needs to be deleted
+  retainedBackups int
+  // The unit retainedBackups represents
+  retentionUnit string
+}
+
+// GCP Cloud SQL Instance Settings Deny Maintenance Period
+private gcp.project.sql.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
+  // Internal ID
+  id string
+  // Deny maintenance period end date.
+  endDate string
+  // Deny maintenance period start date.
+  startDate string
+  // Time in UTC when the deny maintenance period starts and ends
+  time string
+}
+
+// GCP Cloud SQL Instance Settings Insights Configuration
+private gcp.project.sql.instance.settings.insightsConfig {
+  // Internal ID
+  id string
+  // Whether Query Insights feature is enabled
+  queryInsightsEnabled bool
+  // Number of query execution plans captured by Insights per minute for all queries combined
+  queryPlansPerMinute int
+  //  Maximum query length stored in bytes
+  queryStringLength int
+  // Whether Query Insights will record application tags from query when enabled.
+  recordApplicationTags bool
+  // Whether Query Insights will record client address when enabled.
+  recordClientAddress bool
+}
+
+// GCP Cloud SQL Instance Settings IP Configuration
+private gcp.project.sql.instance.settings.ipConfiguration {
+  // Internal ID
+  id string
+  // The name of the allocated IP range for the private IP Cloud SQL instance
+  allocatedIpRange string
+  // The list of external networks that are allowed to connect to the isntance using the IP
+  authorizedNetworks []gcp.project.sql.instance.settings.ipConfiguration.aclEntry
+  // Whether the instance is assigned a public IP address
+  ipv4Enabled bool
+  // The resource link for the VPC network from which the Cloud SQL instance is accessible for private IP
+  privateNetwork string
+  // Whether SSL connections over IP are enforced or not
+  requireSsl bool
+}
+
+// GCP Cloud SQL Instance Settings IP Configuration Authorized Networks
+private gcp.project.sql.instance.settings.ipConfiguration.aclEntry {
+  // Internal ID
+  id string
+  // The time when this access control entry expires
+  expirationTime time
+  // A label to identify this entry
+  name string
+  // The allowlisted value for the access control list
+  value string
+}
+
+// GCP Cloud SQL Instance Settings Location Preferences
+private gcp.project.sql.instance.settings.locationPreference {
+  // Internal ID
+  id string
+  // The App Engine application to follow
+  followGaeApplication string
+  // The preferred Compute Engine zone for the secondary/failover
+  secondaryZone string
+  // The preferred Compute Engine zone for the primary instance
+  zone string
+}
+
+// GCP Cloud SQL Instance Settings Maintenance Window
+private gcp.project.sql.instance.settings.maintenanceWindow {
+  // Internal ID
+  id string
+  // Day of week (1-7), starting on Monday
+  day int
+  // Hour of day - 0 to 23
+  hour int
+  // Maintenance timing setting: canary (Earlier) or stable (Later)
+  updateTrack string
+}
+
+// GCP Cloud SQL Instance Settings Password Validation Policy
+private gcp.project.sql.instance.settings.passwordValidationPolicy {
+  // Internal ID
+  id string
+  // The complexity of the password
+  complexity string
+  // Disallow username as a part of the password
+  disallowUsernameSubstring bool
+  // Whether the password policy is enabled or not
+  enabledPasswordPolicy bool
+  // Minimum number of characters allowed
+  minLength int
+  // Minimum interval after which the password can be changed
+  passwordChangeInterval string
+  // Number of previous password that cannot be reused
+  reuseInterval int
+}
+
+// GCP Cloud SQL Instance Settings SQL Server Audit Configuration
+private gcp.project.sql.instance.settings.sqlServerAuditConfig {
+  // Internal ID
+  id string
+  // The name of the destination bucket
+  bucket string
+  // How long to keep generated audit files
+  retentionInterval string
+  // How often to upload generated audit files
+  uploadInterval string
 }
 
 // GCP Big Query
