@@ -45,59 +45,31 @@ func (g *mqlGcpProject) GetPubsub() (interface{}, error) {
 }
 
 func (g *mqlGcpProjectPubsubTopic) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectPubsubTopicConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectPubsubTopicConfigMessagestoragepolicy) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectPubsubSubscription) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectPubsubSubscriptionConfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectPubsubSubscriptionConfigPushconfig) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectPubsubSnapshot) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
