@@ -49,51 +49,27 @@ func (g *mqlGcpProject) GetKms() (interface{}, error) {
 }
 
 func (g *mqlGcpProjectKmsKeyring) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectKmsKeyringCryptokey) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectKmsKeyringCryptokeyVersion) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectKmsKeyringCryptokeyVersionAttestation) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectKmsKeyringCryptokeyVersionExternalProtectionLevelOptions) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectKmsKeyringCryptokeyVersionAttestationCertificatechains) id() (string, error) {
-	id, err := g.Id()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectKms) GetLocations() ([]interface{}, error) {
