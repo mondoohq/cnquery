@@ -11,6 +11,7 @@ require (
 	cloud.google.com/go/logging v1.6.1
 	cloud.google.com/go/pubsub v1.28.0
 	cloud.google.com/go/recommender v1.8.0
+	cloud.google.com/go/run v0.3.0
 	cloud.google.com/go/secretmanager v1.9.0
 	cloud.google.com/go/serviceusage v1.4.0
 	github.com/99designs/keyring v1.2.1

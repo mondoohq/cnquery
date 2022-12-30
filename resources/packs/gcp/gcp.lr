@@ -76,6 +76,10 @@ gcp.project @defaults("name") {
   cloudFunctions() []gcp.project.cloudFunction
   // GCP Dataproc resources
   dataproc() gcp.project.dataprocService
+  // compute() gcp.compute
+  clusters() []gcp.project.cluster
+  // GCP Cloud Run Resources
+  cloudrun() gcp.project.cloudrun
 }
 
 // GCP Service
@@ -1947,4 +1951,19 @@ private gcp.project.dataprocService.cluster.virtualClusterConfig {
   kubernetesCluster dict
   // Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
   stagingBucket string
+}
+// GCP Cloud Run resources
+private gcp.project.cloudrun {
+  // Project ID
+  projectId string
+  operations() []gcp.project.cloudrun.operation
+}
+
+private gcp.project.cloudrun.operation @defaults("name") {
+  // Internal ID
+  id string
+  // Project ID
+  projectId string
+  // The name of the operation
+  name string
 }
