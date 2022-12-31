@@ -203,12 +203,6 @@ func AssembleEc2InstancesFilters(opts map[string]string) Ec2InstancesFilters {
 	return ec2InstancesFilters
 }
 
-type Ec2InstancesFilters struct {
-	InstanceIds []string
-	Tags        map[string]string
-	Regions     []string
-}
-
 func AssembleIntegrationName(alias string, id string) string {
 	if alias == "" {
 		return fmt.Sprintf("AWS Account %s", id)
