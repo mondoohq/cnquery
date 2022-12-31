@@ -11,8 +11,8 @@ import (
 	"google.golang.org/api/sqladmin/v1"
 )
 
-func (g *mqlGcpProjectSql) id() (string, error) {
-	return "gcp.project.sql", nil
+func (g *mqlGcpProjectSqlservices) id() (string, error) {
+	return "gcp.project.sqlservices", nil
 }
 
 func (g *mqlGcpProject) GetSql() (interface{}, error) {
@@ -21,12 +21,12 @@ func (g *mqlGcpProject) GetSql() (interface{}, error) {
 		return nil, err
 	}
 
-	return g.MotorRuntime.CreateResource("gcp.project.sql",
+	return g.MotorRuntime.CreateResource("gcp.project.sqlservices",
 		"projectId", projectId,
 	)
 }
 
-func (g *mqlGcpProjectSql) GetInstances() ([]interface{}, error) {
+func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func (g *mqlGcpProjectSql) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProjectSqlInstance) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstance) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -146,66 +146,66 @@ func (g *mqlGcpProjectSqlInstance) id() (string, error) {
 	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectSqlInstanceDiskEncryptionConfiguration) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceDiskEncryptionStatus) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceFailoverReplica) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceFailoverReplica) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceIpMapping) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceIpMapping) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettings) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettings) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsActivedirectoryconfig) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsBackupconfiguration) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsBackupconfigurationRetentionsettings) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsDenyMaintenancePeriod) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsInsightsConfig) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsIpConfiguration) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsIpConfigurationAclEntry) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsLocationPreference) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsMaintenanceWindow) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsPasswordValidationPolicy) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlInstanceSettingsSqlServerAuditConfig) id() (string, error) {
+func (g *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) id() (string, error) {
 	return g.Id()
 }
