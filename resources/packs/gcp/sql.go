@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iam/v1"
@@ -97,7 +98,97 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 			// TODO: handle all other database settings
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.sql.instance",
+		instanceId := fmt.Sprintf("%s/%s", projectId, instance.Name)
+
+		var mqlEncCfg resources.ResourceType
+		if instance.DiskEncryptionConfiguration != nil {
+			mqlEncCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.diskEncryptionConfiguration",
+				"id", fmt.Sprintf("%s/diskEncryptionConfiguration", instanceId),
+				"kmsKeyName", instance.DiskEncryptionConfiguration.KmsKeyName,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlEncStatus resources.ResourceType
+		if instance.DiskEncryptionStatus != nil {
+			mqlEncStatus, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.diskEncryptionConfiguration",
+				"id", fmt.Sprintf("%s/diskEncryptionStatus", instanceId),
+				"kmsKeyVersionName", instance.DiskEncryptionStatus.KmsKeyVersionName,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlFailoverReplica resources.ResourceType
+		if instance.FailoverReplica != nil {
+			mqlEncStatus, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.failoverReplica",
+				"id", fmt.Sprintf("%s/failoverReplica", instanceId),
+				"available", instance.FailoverReplica.Available,
+				"name", instance.FailoverReplica.Name,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		mqlIpAddresses := make([]interface{}, 0, len(instance.IpAddresses))
+		for i, a := range instance.IpAddresses {
+			mqlIpAddress, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.ipMapping",
+				"id", fmt.Sprintf("%s/ipAddresses%d", instanceId, i),
+				"ipAddress", a.IpAddress,
+				"timeToRetire", parseTime(a.TimeToRetire),
+				"type", a.Type,
+			)
+			if err != nil {
+				return nil, err
+			}
+			mqlIpAddresses = append(mqlIpAddresses, mqlIpAddress)
+		}
+
+		s := instance.Settings
+		dbFlags := make(map[string]string)
+		for _, f := range s.DatabaseFlags {
+			dbFlags[f.Name] = f.Value
+		}
+		mqlSettings, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings",
+			"id", fmt.Sprintf("%s/settings", instanceId),
+			"activationPolicy", s.ActivationPolicy,
+			"activeDirectoryConfig", nil, // TODO
+			"availabilityType", s.AvailabilityType,
+			"backupConfiguration", nil, // TODO
+			"collation", s.Collation,
+			"connectorEnforcement", s.ConnectorEnforcement,
+			"crashSafeReplicationEnabled", s.CrashSafeReplicationEnabled,
+			"dataDiskSizeGb", s.DataDiskSizeGb,
+			"dataDiskType", s.DataDiskType,
+			"databaseFlags", core.StrMapToInterface(dbFlags),
+			"databaseReplicationEnabled", s.DatabaseReplicationEnabled,
+			"deletionProtectionEnabled", s.DeletionProtectionEnabled,
+			"denyMaintenancePeriods", nil, // TODO
+			"insightsConfig", nil, // TODO
+			"ipConfiguration", nil, // TODO
+			"locationPreference", nil, // TODO
+			"maintenanceWindow", nil, // TODO
+			"passwordValidationPolicy", nil, // TODO
+			"pricingPlan", s.PricingPlan,
+			"replicationType", s.ReplicationType,
+			"settingsVersion", s.SettingsVersion,
+			"sqlServerAuditConfig", nil, // TODO
+			"storageAutoResize", *s.StorageAutoResize,
+			"storageAutoResizeLimit", s.StorageAutoResizeLimit,
+			"tier", s.Tier,
+			"timeZone", s.TimeZone,
+			"userLabels", core.StrMapToInterface(s.UserLabels),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance",
+			"id", instanceId,
 			"projectId", projectId,
 			"availableMaintenanceVersions", core.StrSliceToInterface(instance.AvailableMaintenanceVersions),
 			"backendType", instance.BackendType,
@@ -106,12 +197,12 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 			"currentDiskSize", instance.CurrentDiskSize,
 			"databaseInstalledVersion", instance.DatabaseInstalledVersion,
 			"databaseVersion", instance.DatabaseVersion,
-			"diskEncryptionConfiguration", nil, // TODO
-			"diskEncryptionStatus", nil, // TODO
-			"failoverReplica", nil, // TODO
+			"diskEncryptionConfiguration", mqlEncCfg,
+			"diskEncryptionStatus", mqlEncStatus,
+			"failoverReplica", mqlFailoverReplica,
 			"gceZone", instance.GceZone,
 			"instanceType", instance.InstanceType,
-			"ipAddresses", nil, // TODO
+			"ipAddresses", mqlIpAddresses,
 			"maintenanceVersion", instance.MaintenanceVersion,
 			"masterInstanceName", instance.MasterInstanceName,
 			"maxDiskSize", instance.MaxDiskSize,
@@ -120,7 +211,7 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 			"project", instance.Project,
 			"region", instance.Region,
 			"replicaNames", core.StrSliceToInterface(instance.ReplicaNames),
-			"settings", nil, // TODO
+			"settings", mqlSettings,
 			"serviceAccountEmailAddress", instance.ServiceAccountEmailAddress,
 			"state", instance.State,
 		)
@@ -134,16 +225,7 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectSqlservicesInstance) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
-	}
-
-	name, err := g.Name()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s/%s", projectId, name), nil
+	return g.Id()
 }
 
 func (g *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) id() (string, error) {

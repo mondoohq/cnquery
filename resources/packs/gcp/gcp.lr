@@ -581,6 +581,8 @@ private gcp.project.sqlservices {
 
 // GCP Cloud SQL Instance
 private gcp.project.sqlservices.instance @defaults("name") {
+  // Internal ID
+  id string
   // Project ID
   projectId string
   // All maintenance versions applicable on the instance
@@ -693,11 +695,11 @@ private gcp.project.sqlservices.instance.settings {
   // The type of the data disk
   dataDiskType string
   // The databse flags passed to the instance at startup
-  databaseFlags []dict
+  databaseFlags map[string]string
   // Indicates whether replication is enabled or not
   databaseReplicationEnabled bool
   // Whether to protect against accidental instance deletion
-  deletionProtection bool
+  deletionProtectionEnabled bool
   // Deny maintenance periods
   denyMaintenancePeriods []gcp.project.sqlservices.instance.settings.denyMaintenancePeriod
   // Insights configuration
@@ -717,7 +719,7 @@ private gcp.project.sqlservices.instance.settings {
   // The version of instance settings
   settingsVersion int
   // SQL server specific audit configuration
-  sqlserverAuditConfig gcp.project.sqlservices.instance.settings.sqlServerAuditConfig
+  sqlServerAuditConfig gcp.project.sqlservices.instance.settings.sqlServerAuditConfig
   // Configuration to increase storage size automatically
   storageAutoResize bool
   // The maximum size to which storage capacity can be automatically increased
@@ -727,7 +729,7 @@ private gcp.project.sqlservices.instance.settings {
   // Server timezone
   timeZone string
   // User-provided labels
-  userLabels dict
+  userLabels map[string]string
 }
 
 // GCP Cloud SQL Instance Settings Active Directory Configuration
