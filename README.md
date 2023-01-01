@@ -125,11 +125,20 @@ Like all other commands, you can specify different providers like `k8s`, `aws`, 
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
 
-## Private query packs 
+## Explore your infrastructure in Mondoo Platform​
+
+To more easily explore your infrastructure, sign up for a free Mondoo Platform account. Mondoo's web-based console allows you to navigate, search, and arrange all of your assets.
+
+Go to [console.mondoo.com](http://console.mondoo.com) to sign up.
+
+To learn about Mondoo Platform, read the [Mondoo Platform docs](../intro.md) or visit [mondoo.com](https://www.mondoo.com).
+
+
+## Private query packs
 
 Distributing cnqueries across your fleet
 
-You can share query packs across your fleet using Mondoo's Query Hub. The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
+You can create and share query packs using the Query Hub feature of the Mondoo Console. The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
 
 To use the Query Hub:
 
