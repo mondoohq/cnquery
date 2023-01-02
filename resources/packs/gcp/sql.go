@@ -153,12 +153,163 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 		for _, f := range s.DatabaseFlags {
 			dbFlags[f.Name] = f.Value
 		}
+
+		var mqlADCfg resources.ResourceType
+		if s.ActiveDirectoryConfig != nil {
+			mqlADCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.activedirectoryconfig",
+				"id", fmt.Sprintf("%s/settings/activeDirectoryConfig", instanceId),
+				"domain", s.ActiveDirectoryConfig.Domain,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlBackupCfg resources.ResourceType
+		if s.BackupConfiguration != nil {
+			mqlRetentionSettings, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings",
+				"id", fmt.Sprintf("%s/settings/backupConfiguration/retentionSettings", instanceId),
+				"retainedBackups", s.BackupConfiguration.BackupRetentionSettings.RetainedBackups,
+				"retentionUnit", s.BackupConfiguration.BackupRetentionSettings.RetentionUnit,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlBackupCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.backupconfiguration",
+				"id", fmt.Sprintf("%s/settings/backupConfiguration", instanceId),
+				"backupRetentionSettings", mqlRetentionSettings,
+				"binaryLogEnabled", s.BackupConfiguration.BinaryLogEnabled,
+				"enabled", s.BackupConfiguration.Enabled,
+				"location", s.BackupConfiguration.Location,
+				"pointInTimeRecoveryEnabled", s.BackupConfiguration.PointInTimeRecoveryEnabled,
+				"startTime", s.BackupConfiguration.StartTime,
+				"transactionLogRetentionDays", s.BackupConfiguration.TransactionLogRetentionDays,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		mqlDenyMaintenancePeriods := make([]interface{}, 0, len(s.DenyMaintenancePeriods))
+		for i, p := range s.DenyMaintenancePeriods {
+			mqlPeriod, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.denyMaintenancePeriod",
+				"id", fmt.Sprintf("%s/settings/denyMaintenancePeriod%d", instanceId, i),
+				"endDate", p.EndDate,
+				"startDate", p.StartDate,
+				"time", p.Time,
+			)
+			if err != nil {
+				return nil, err
+			}
+			mqlDenyMaintenancePeriods = append(mqlDenyMaintenancePeriods, mqlPeriod)
+		}
+
+		var mqlInsightsConfig resources.ResourceType
+		if s.InsightsConfig != nil {
+			mqlInsightsConfig, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.insightsConfig",
+				"id", fmt.Sprintf("%s/settings/insightsConfig", instanceId),
+				"queryInsightsEnabled", s.InsightsConfig.QueryInsightsEnabled,
+				"queryPlansPerMinute", s.InsightsConfig.QueryPlansPerMinute,
+				"queryStringLength", s.InsightsConfig.QueryStringLength,
+				"recordApplicationTags", s.InsightsConfig.RecordApplicationTags,
+				"recordClientAddress", s.InsightsConfig.RecordClientAddress,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlIpCfg resources.ResourceType
+		if s.IpConfiguration != nil {
+			mqlAclEntries := make([]interface{}, 0, len(s.IpConfiguration.AuthorizedNetworks))
+			for i, e := range s.IpConfiguration.AuthorizedNetworks {
+				mqlAclEntry, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.ipConfiguration.authorizedNetworks",
+					"id", fmt.Sprintf("%s/settings/ipConfiguration/authorizedNetworks%d", instanceId, i),
+					"expirationTime", parseTime(e.ExpirationTime),
+					"name", e.Name,
+					"value", e.Value,
+				)
+				if err != nil {
+					return nil, err
+				}
+				mqlAclEntries = append(mqlAclEntries, mqlAclEntry)
+			}
+
+			mqlIpCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.ipConfiguration",
+				"id", fmt.Sprintf("%s/settings/ipConfiguration", instanceId),
+				"allocatedIpRange", s.IpConfiguration.AllocatedIpRange,
+				"authorizedNetworks", mqlAclEntries,
+				"ipv4Enabled", s.IpConfiguration.Ipv4Enabled,
+				"privateNetwork", s.IpConfiguration.PrivateNetwork,
+				"requireSsl", s.IpConfiguration.RequireSsl,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlLocationPref resources.ResourceType
+		if s.LocationPreference != nil {
+			mqlLocationPref, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.locationPreference",
+				"id", fmt.Sprintf("%s/settings/locationPreference", instanceId),
+				"followGaeApplication", s.LocationPreference.FollowGaeApplication,
+				"secondaryZone", s.LocationPreference.SecondaryZone,
+				"zone", s.LocationPreference.Zone,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlMaintenanceWindow resources.ResourceType
+		if s.MaintenanceWindow != nil {
+			mqlMaintenanceWindow, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.maintenanceWindow",
+				"id", fmt.Sprintf("%s/settings/maintenanceWindow", instanceId),
+				"day", s.MaintenanceWindow.Day,
+				"hour", s.MaintenanceWindow.Hour,
+				"updateTrack", s.MaintenanceWindow.UpdateTrack,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlPwdValidationPolicy resources.ResourceType
+		if s.PasswordValidationPolicy != nil {
+			mqlPwdValidationPolicy, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.passwordValidationPolicy",
+				"id", fmt.Sprintf("%s/settings/passwordValidationPolicy", instanceId),
+				"complexity", s.PasswordValidationPolicy.Complexity,
+				"disallowUsernameSubstring", s.PasswordValidationPolicy.DisallowUsernameSubstring,
+				"enabledPasswordPolicy", s.PasswordValidationPolicy.EnablePasswordPolicy,
+				"minLength", s.PasswordValidationPolicy.MinLength,
+				"passwordChangeInterval", s.PasswordValidationPolicy.PasswordChangeInterval,
+				"reuseInterval", s.PasswordValidationPolicy.ReuseInterval,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlSqlServerAuditCfg resources.ResourceType
+		if s.SqlServerAuditConfig != nil {
+			mqlSqlServerAuditCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings.sqlServerAuditConfig",
+				"id", fmt.Sprintf("%s/settings/sqlSertverAuditConfig", instanceId),
+				"bucket", s.SqlServerAuditConfig.Bucket,
+				"retentionInterval", s.SqlServerAuditConfig.RetentionInterval,
+				"uploadInterval", s.SqlServerAuditConfig.UploadInterval,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		mqlSettings, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.settings",
 			"id", fmt.Sprintf("%s/settings", instanceId),
 			"activationPolicy", s.ActivationPolicy,
-			"activeDirectoryConfig", nil, // TODO
+			"activeDirectoryConfig", mqlADCfg,
 			"availabilityType", s.AvailabilityType,
-			"backupConfiguration", nil, // TODO
+			"backupConfiguration", mqlBackupCfg,
 			"collation", s.Collation,
 			"connectorEnforcement", s.ConnectorEnforcement,
 			"crashSafeReplicationEnabled", s.CrashSafeReplicationEnabled,
@@ -167,16 +318,16 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 			"databaseFlags", core.StrMapToInterface(dbFlags),
 			"databaseReplicationEnabled", s.DatabaseReplicationEnabled,
 			"deletionProtectionEnabled", s.DeletionProtectionEnabled,
-			"denyMaintenancePeriods", nil, // TODO
-			"insightsConfig", nil, // TODO
-			"ipConfiguration", nil, // TODO
-			"locationPreference", nil, // TODO
-			"maintenanceWindow", nil, // TODO
-			"passwordValidationPolicy", nil, // TODO
+			"denyMaintenancePeriods", mqlDenyMaintenancePeriods,
+			"insightsConfig", mqlInsightsConfig,
+			"ipConfiguration", mqlIpCfg,
+			"locationPreference", mqlLocationPref,
+			"maintenanceWindow", mqlMaintenanceWindow,
+			"passwordValidationPolicy", mqlPwdValidationPolicy,
 			"pricingPlan", s.PricingPlan,
 			"replicationType", s.ReplicationType,
 			"settingsVersion", s.SettingsVersion,
-			"sqlServerAuditConfig", nil, // TODO
+			"sqlServerAuditConfig", mqlSqlServerAuditCfg,
 			"storageAutoResize", *s.StorageAutoResize,
 			"storageAutoResizeLimit", s.StorageAutoResizeLimit,
 			"tier", s.Tier,
