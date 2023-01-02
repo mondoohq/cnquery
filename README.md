@@ -1,11 +1,11 @@
 # cnquery
 
 ```
-  ___ _ __   __ _ _   _  ___ _ __ _   _ 
+  ___ _ __   __ _ _   _  ___ _ __ _   _
  / __| '_ \ / _` | | | |/ _ \ '__| | | |
 | (__| | | | (_| | |_| |  __/ |  | |_| |
  \___|_| |_|\__, |\__,_|\___|_|   \__, |
-  mondoo™      |_|                |___/ 
+  mondoo™      |_|                |___/
 ```
 
 **Open source, cloud-native asset inventory and discovery**
@@ -43,7 +43,7 @@ bash -c "$(curl -sSL https://install.mondoo.com/sh/cnquery)"
 ```powershell
 Set-ExecutionPolicy Unrestricted -Scope Process -Force;
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-iex ((New-Object System.Net.WebClient).DownloadString('https://install.mondoo.com/ps1/cnquery')); 
+iex ((New-Object System.Net.WebClient).DownloadString('https://install.mondoo.com/ps1/cnquery'));
 Install-Mondoo -Product cnquery;
 ```
 
@@ -63,7 +63,7 @@ Once inside the shell, you can enter MQL queries like this:
 > asset { name title }
 ```
 
-To learn more, use the `help` command. 
+To learn more, use the `help` command.
 
 To exit, either press CTRL + D or type `exit`.
 
@@ -93,7 +93,7 @@ You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other ap
 
 ## Query packs
 
-You can combine multiple queries into query packs, which can run together. `cnquery` comes with default [query packs](https://github.com/mondoohq/cnquery-packs) out of the box for most systems. You can simply run:
+You can combine multiple queries into query packs, which can run together. `cnquery` comes with default [query packs](https://github.com/mondoohq/cnquery-packs) out of the box for most systems. You can run:
 
 ```bash
 cnquery scan
@@ -132,7 +132,6 @@ To more easily explore your infrastructure, sign up for a free Mondoo Platform a
 Go to [console.mondoo.com](http://console.mondoo.com) to sign up.
 
 To learn about Mondoo Platform, read the [Mondoo Platform docs](../intro.md) or visit [mondoo.com](https://www.mondoo.com).
-
 
 ## Private query packs
 
@@ -192,8 +191,7 @@ cnquery bundle upload mypack.mql.yaml
 | VMware vSphere               | `vsphere`                  | `cnquery shell vsphere user@domain@host --ask-pass`                                                                                                         |
 | Windows hosts                | `local`, `ssh`, `winrm`    | `cnquery shell local`,<br></br>`cnquery shell ssh Administrator@IP_ADDRESS --ask-pass` or<br></br>`cnquery shell winrm Administrator@IP_ADDRESS --ask-pass` |
 
-
-## What’s next?
+## What's next?
 
 There are so many things `cnquery` can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, and share data with auditors… `cnquery` is nearly limitless in capabilities.
 
@@ -207,7 +205,7 @@ Explore:
 
 ## Join the community!
 
-Our goal is to become the API for your entire infrastructure. Join our [community](https://github.com/orgs/mondoohq/discussions) today and let’s grow it together!
+Our goal is to become the API for your entire infrastructure. Join our [community](https://github.com/orgs/mondoohq/discussions) today and let's grow it together!
 
 ## Development
 
@@ -215,6 +213,6 @@ See our [development documentation](docs/development.md) for information on buil
 
 ## Legal
 
-- **Copyright:** 2018-2022, Mondoo, Inc.
+- **Copyright:** 2018-2023, Mondoo, Inc.
 - **License:** MPLv2
 - **Authors:** Christoph Hartmann, Dominik Richter
