@@ -59,45 +59,6 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 
 	for i := range sqlinstances.Items {
 		instance := sqlinstances.Items[i]
-
-		settingsDict := map[string]interface{}{}
-		if instance.Settings != nil {
-			settings := instance.Settings
-			if settings.DatabaseFlags != nil {
-				dbFlags := map[string]interface{}{}
-				for di := range settings.DatabaseFlags {
-					flag := settings.DatabaseFlags[di]
-					dbFlags[flag.Name] = flag.Value
-				}
-				settingsDict["databaseFlags"] = dbFlags
-			}
-
-			if settings.IpConfiguration != nil {
-				ipConfig := map[string]interface{}{}
-
-				ipConfig["ipv4Enabled"] = settings.IpConfiguration.Ipv4Enabled
-				ipConfig["requireSsl"] = settings.IpConfiguration.RequireSsl
-				ipConfig["privateNetwork"] = settings.IpConfiguration.PrivateNetwork
-
-				authorizedNetworks := []interface{}{}
-				for ani := range settings.IpConfiguration.AuthorizedNetworks {
-					aclEntry := settings.IpConfiguration.AuthorizedNetworks[ani]
-
-					authorizedNetworks = append(authorizedNetworks, map[string]interface{}{
-						"name":           aclEntry.Name,
-						"value":          aclEntry.Value,
-						"kind":           aclEntry.Kind,
-						"expirationTime": aclEntry.ExpirationTime,
-					})
-				}
-				ipConfig["authorizedNetworks"] = authorizedNetworks
-
-				settingsDict["ipConfiguration"] = ipConfig
-			}
-
-			// TODO: handle all other database settings
-		}
-
 		instanceId := fmt.Sprintf("%s/%s", projectId, instance.Name)
 
 		var mqlEncCfg resources.ResourceType
