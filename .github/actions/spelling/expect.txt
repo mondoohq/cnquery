@@ -54,4 +54,4 @@ ingressresourceref
 ingressrule
 ingressservicebackend
 cmek
-loggingservices
+loggingservice
