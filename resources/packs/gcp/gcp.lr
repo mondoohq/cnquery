@@ -694,7 +694,7 @@ private gcp.project.sqlservices.instance.settings {
   dataDiskSizeGb int
   // The type of the data disk
   dataDiskType string
-  // The databse flags passed to the instance at startup
+  // The database flags passed to the instance at startup
   databaseFlags map[string]string
   // Indicates whether replication is enabled or not
   databaseReplicationEnabled bool
@@ -804,7 +804,7 @@ private gcp.project.sqlservices.instance.settings.ipConfiguration {
   id string
   // The name of the allocated IP range for the private IP Cloud SQL instance
   allocatedIpRange string
-  // The list of external networks that are allowed to connect to the isntance using the IP
+  // The list of external networks that are allowed to connect to the instance using the IP
   authorizedNetworks []gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry
   // Whether the instance is assigned a public IP address
   ipv4Enabled bool
