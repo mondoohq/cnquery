@@ -55,8 +55,7 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
-
+	res := make([]interface{}, 0, len(sqlinstances.Items))
 	for i := range sqlinstances.Items {
 		instance := sqlinstances.Items[i]
 		instanceId := fmt.Sprintf("%s/%s", projectId, instance.Name)
@@ -336,7 +335,80 @@ func (g *mqlGcpProjectSqlservices) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
+func (g *mqlGcpProjectSqlservicesInstance) GetDatabases() ([]interface{}, error) {
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	instanceName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, sqladmin.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	sqladminSvc, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	dbs, err := sqladminSvc.Databases.List(projectId, instanceName).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	mqlDbs := make([]interface{}, 0, len(dbs.Items))
+	for _, db := range dbs.Items {
+		dbId := fmt.Sprintf("%s/%s/%s", projectId, instanceName, db.Name)
+		var sqlServerDbDetails resources.ResourceType
+		if db.SqlserverDatabaseDetails != nil {
+			sqlServerDbDetails, err = g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails",
+				"id", fmt.Sprintf("%s/sqlserverDatabaseDetails", dbId),
+				"compatibilityLevel", db.SqlserverDatabaseDetails.CompatibilityLevel,
+				"recoveryModel", db.SqlserverDatabaseDetails.RecoveryModel,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		mqlDb, err := g.MotorRuntime.CreateResource("gcp.project.sqlservices.instance.database",
+			"id", dbId,
+			"charset", db.Charset,
+			"collation", db.Collation,
+			"instance", instanceName,
+			"name", db.Name,
+			"project", projectId,
+			"sqlserverDatabaseDetails", sqlServerDbDetails,
+		)
+		if err != nil {
+			return nil, err
+		}
+		mqlDbs = append(mqlDbs, mqlDb)
+	}
+	return mqlDbs, nil
+}
+
 func (g *mqlGcpProjectSqlservicesInstance) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlservicesInstanceDatabase) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) id() (string, error) {
 	return g.Id()
 }
 

@@ -632,6 +632,36 @@ private gcp.project.sqlservices.instance @defaults("name") {
   serviceAccountEmailAddress string
   // Instance state
   state string
+  // List of the databases in the current SQL instance
+  databases() []gcp.project.sqlservices.instance.database
+}
+
+// GCP Cloud SQL Instance database
+private gcp.project.sqlservices.instance.database @defaults("name") {
+  // Internal ID
+  id string
+  // Charset value
+  charset string
+  // Collation
+  collation string
+  // Name of the Cloud SQL instance
+  instance string
+  // Name of the database
+  name string
+  // Project
+  project string
+  // SQL Server database details
+  sqlserverDatabaseDetails gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails
+}
+
+// GCP Cloud SQL Instance SQL Server database details
+private gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails {
+  // Internal ID
+  id string
+  // Version of the SQL Server with which the database is to be made compatible
+  compatibilityLevel int
+  // Recovery model
+  recoveryModel string
 }
 
 // GCP Cloud SQL Instance Disk Encryption Configuration
