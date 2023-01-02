@@ -6,6 +6,41 @@ resources:
     platform:
       name:
       - azure
+  azure.authorization:
+    fields:
+      roleDefinitions: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.authorization.roleDefinition:
+    fields:
+      description: {}
+      id: {}
+      isCustom: {}
+      name: {}
+      permissions: {}
+      scopes: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.authorization.roleDefinition.permission:
+    fields:
+      actions: {}
+      allowedActions: {}
+      allowedDataActions: {}
+      dataActions: {}
+      deniedActions: {}
+      deniedDataActions: {}
+      id: {}
+      notActions: {}
+      notDataActions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
   azure.compute:
     fields:
       disks: {}
