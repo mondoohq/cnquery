@@ -55,6 +55,8 @@ gcp.project @defaults("name") {
   essentialContacts() []gcp.essentialContact
   // API keys
   apiKeys() []gcp.project.apiKey
+  // Logging resources
+  logging() gcp.project.loggingservices
 }
 
 // GCP Service
@@ -1310,4 +1312,63 @@ private gcp.project.apiKey.restrictions {
   iosKeyRestrictions dict
   // The IP addresses that are allowed to use the key
   serverKeyRestrictions dict
+}
+// GCP Logging resources
+private gcp.project.loggingservices {
+  // Project ID
+  projectId string
+  // List of logging buckets
+  buckets() []gcp.project.loggingservices.bucket
+}
+
+// GCP Logging bucket
+private gcp.project.loggingservices.bucket @defaults("name") {
+  // Internal ID
+  id string
+  // CMEK settings of the log bucket
+  cmekSettings gcp.project.loggingservices.bucket.cmekSettings
+  // Creation timestamp
+  created time
+  // Description of the bucket
+  description string
+  // List of indexed fields and related configuration data
+  indexConfigs []gcp.project.loggingservices.bucket.indexConfig
+  // Bucket lifecycle state
+  lifecycleState string
+  // Whether the bucket is locked
+  locked bool
+  // Bucket name
+  name string
+  // Log entry field paths that are denied access in this bucket
+  restrictedFields []string
+  // Logs will be retained by default for this amount of time, after which they will automatically be deleted
+  retentionDays int
+  // Last update timestamp of the bucket
+  updated time
+}
+
+// GCP Logging bucket CMEK settings
+private gcp.project.loggingservices.bucket.cmekSettings @defaults("name") {
+  // Internal ID
+  id string
+  // Resource name for the configurated Cloud KMS key
+  kmsKeyName string
+  // Crypto key version name
+  kmsKeyVersionName string
+  // Resource name of the CMEK settings
+  name string
+  // Service account that will be used by the log router to access the Cloud KMS key
+  serviceAccountId string
+}
+
+// GCP Logging bucket index config
+private gcp.project.loggingservices.bucket.indexConfig {
+  // Internal ID
+  id string
+  // Creation timestamp
+  created time
+  // Log entry field path to index
+  fieldPath string
+  // Type of data in this index
+  type string
 }
