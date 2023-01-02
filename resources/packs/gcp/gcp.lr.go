@@ -33,26 +33,26 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.compute.router", newGcpComputeRouter)
 	registry.AddFactory("gcp.storage", newGcpStorage)
 	registry.AddFactory("gcp.storage.bucket", newGcpStorageBucket)
-	registry.AddFactory("gcp.project.sqlservices", newGcpProjectSqlservices)
-	registry.AddFactory("gcp.project.sqlservices.instance", newGcpProjectSqlservicesInstance)
-	registry.AddFactory("gcp.project.sqlservices.instance.database", newGcpProjectSqlservicesInstanceDatabase)
-	registry.AddFactory("gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails", newGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails)
-	registry.AddFactory("gcp.project.sqlservices.instance.diskEncryptionConfiguration", newGcpProjectSqlservicesInstanceDiskEncryptionConfiguration)
-	registry.AddFactory("gcp.project.sqlservices.instance.diskEncryptionStatus", newGcpProjectSqlservicesInstanceDiskEncryptionStatus)
-	registry.AddFactory("gcp.project.sqlservices.instance.failoverReplica", newGcpProjectSqlservicesInstanceFailoverReplica)
-	registry.AddFactory("gcp.project.sqlservices.instance.ipMapping", newGcpProjectSqlservicesInstanceIpMapping)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings", newGcpProjectSqlservicesInstanceSettings)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.activedirectoryconfig", newGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.backupconfiguration", newGcpProjectSqlservicesInstanceSettingsBackupconfiguration)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings", newGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.denyMaintenancePeriod", newGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.insightsConfig", newGcpProjectSqlservicesInstanceSettingsInsightsConfig)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.ipConfiguration", newGcpProjectSqlservicesInstanceSettingsIpConfiguration)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry", newGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.locationPreference", newGcpProjectSqlservicesInstanceSettingsLocationPreference)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.maintenanceWindow", newGcpProjectSqlservicesInstanceSettingsMaintenanceWindow)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.passwordValidationPolicy", newGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy)
-	registry.AddFactory("gcp.project.sqlservices.instance.settings.sqlServerAuditConfig", newGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig)
+	registry.AddFactory("gcp.project.sqlservice", newGcpProjectSqlservice)
+	registry.AddFactory("gcp.project.sqlservice.instance", newGcpProjectSqlserviceInstance)
+	registry.AddFactory("gcp.project.sqlservice.instance.database", newGcpProjectSqlserviceInstanceDatabase)
+	registry.AddFactory("gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails", newGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails)
+	registry.AddFactory("gcp.project.sqlservice.instance.diskEncryptionConfiguration", newGcpProjectSqlserviceInstanceDiskEncryptionConfiguration)
+	registry.AddFactory("gcp.project.sqlservice.instance.diskEncryptionStatus", newGcpProjectSqlserviceInstanceDiskEncryptionStatus)
+	registry.AddFactory("gcp.project.sqlservice.instance.failoverReplica", newGcpProjectSqlserviceInstanceFailoverReplica)
+	registry.AddFactory("gcp.project.sqlservice.instance.ipMapping", newGcpProjectSqlserviceInstanceIpMapping)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings", newGcpProjectSqlserviceInstanceSettings)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.activedirectoryconfig", newGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.backupconfiguration", newGcpProjectSqlserviceInstanceSettingsBackupconfiguration)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings", newGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.denyMaintenancePeriod", newGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.insightsConfig", newGcpProjectSqlserviceInstanceSettingsInsightsConfig)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.ipConfiguration", newGcpProjectSqlserviceInstanceSettingsIpConfiguration)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry", newGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.locationPreference", newGcpProjectSqlserviceInstanceSettingsLocationPreference)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.maintenanceWindow", newGcpProjectSqlserviceInstanceSettingsMaintenanceWindow)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.passwordValidationPolicy", newGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy)
+	registry.AddFactory("gcp.project.sqlservice.instance.settings.sqlServerAuditConfig", newGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig)
 	registry.AddFactory("gcp.bigquery", newGcpBigquery)
 	registry.AddFactory("gcp.bigquery.dataset", newGcpBigqueryDataset)
 	registry.AddFactory("gcp.bigquery.table", newGcpBigqueryTable)
@@ -364,7 +364,7 @@ type GcpProject interface {
 	EssentialContacts() ([]interface{}, error)
 	ApiKeys() ([]interface{}, error)
 	Logging() (GcpProjectLoggingservice, error)
-	Sql() (GcpProjectSqlservices, error)
+	Sql() (GcpProjectSqlservice, error)
 }
 
 // mqlGcpProject for the gcp.project resource
@@ -467,8 +467,8 @@ func newGcpProject(runtime *resources.Runtime, args *resources.Args) (interface{
 				return nil, errors.New("Failed to initialize \"gcp.project\", its \"logging\" argument has the wrong type (expected type \"GcpProjectLoggingservice\")")
 			}
 		case "sql":
-			if _, ok := val.(GcpProjectSqlservices); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project\", its \"sql\" argument has the wrong type (expected type \"GcpProjectSqlservices\")")
+			if _, ok := val.(GcpProjectSqlservice); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"sql\" argument has the wrong type (expected type \"GcpProjectSqlservice\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
@@ -957,7 +957,7 @@ func (s *mqlGcpProject) Logging() (GcpProjectLoggingservice, error) {
 }
 
 // Sql accessor autogenerated
-func (s *mqlGcpProject) Sql() (GcpProjectSqlservices, error) {
+func (s *mqlGcpProject) Sql() (GcpProjectSqlservice, error) {
 	res, ok := s.Cache.Load("sql")
 	if !ok || !res.Valid {
 		if err := s.ComputeSql(); err != nil {
@@ -972,9 +972,9 @@ func (s *mqlGcpProject) Sql() (GcpProjectSqlservices, error) {
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservices)
+	tres, ok := res.Data.(GcpProjectSqlservice)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project\" failed to cast field \"sql\" to the right type (GcpProjectSqlservices): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project\" failed to cast field \"sql\" to the right type (GcpProjectSqlservice): %#v", res)
 	}
 	return tres, nil
 }
@@ -9913,8 +9913,8 @@ func (s *mqlGcpStorageBucket) ComputeIamPolicy() error {
 	return nil
 }
 
-// GcpProjectSqlservices resource interface
-type GcpProjectSqlservices interface {
+// GcpProjectSqlservice resource interface
+type GcpProjectSqlservice interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -9924,21 +9924,21 @@ type GcpProjectSqlservices interface {
 	Instances() ([]interface{}, error)
 }
 
-// mqlGcpProjectSqlservices for the gcp.project.sqlservices resource
-type mqlGcpProjectSqlservices struct {
+// mqlGcpProjectSqlservice for the gcp.project.sqlservice resource
+type mqlGcpProjectSqlservice struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservices) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlservice) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices resource
-func newGcpProjectSqlservices(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice resource
+func newGcpProjectSqlservice(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservices{runtime.NewResource("gcp.project.sqlservices")}
+	res := mqlGcpProjectSqlservice{runtime.NewResource("gcp.project.sqlservice")}
 	// assign all named fields
 	var id string
 
@@ -9952,20 +9952,20 @@ func newGcpProjectSqlservices(runtime *resources.Runtime, args *resources.Args) 
 		switch name {
 		case "projectId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice\", its \"projectId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "instances":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices\", its \"instances\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice\", its \"instances\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -9983,59 +9983,59 @@ func newGcpProjectSqlservices(runtime *resources.Runtime, args *resources.Args) 
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservices) Validate() error {
+func (s *mqlGcpProjectSqlservice) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("projectId"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices\" resource without a \"projectId\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice\" resource without a \"projectId\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservices) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices].Register")
+func (s *mqlGcpProjectSqlservice) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice].Register")
 	switch name {
 	case "projectId":
 		return nil
 	case "instances":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservices) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices].Field")
+func (s *mqlGcpProjectSqlservice) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice].Field")
 	switch name {
 	case "projectId":
 		return s.ProjectId()
 	case "instances":
 		return s.Instances()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice\" resource")
 	}
 }
 
 // ProjectId accessor autogenerated
-func (s *mqlGcpProjectSqlservices) ProjectId() (string, error) {
+func (s *mqlGcpProjectSqlservice) ProjectId() (string, error) {
 	res, ok := s.Cache.Load("projectId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices\" failed: no value provided for static field \"projectId\"")
+		return "", errors.New("\"gcp.project.sqlservice\" failed: no value provided for static field \"projectId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Instances accessor autogenerated
-func (s *mqlGcpProjectSqlservices) Instances() ([]interface{}, error) {
+func (s *mqlGcpProjectSqlservice) Instances() ([]interface{}, error) {
 	res, ok := s.Cache.Load("instances")
 	if !ok || !res.Valid {
 		if err := s.ComputeInstances(); err != nil {
@@ -10043,7 +10043,7 @@ func (s *mqlGcpProjectSqlservices) Instances() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("instances")
 		if !ok {
-			return nil, errors.New("\"gcp.project.sqlservices\" calculated \"instances\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.project.sqlservice\" calculated \"instances\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "instances")
 	}
@@ -10052,26 +10052,26 @@ func (s *mqlGcpProjectSqlservices) Instances() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices\" failed to cast field \"instances\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice\" failed to cast field \"instances\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservices) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices].MqlCompute")
+func (s *mqlGcpProjectSqlservice) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice].MqlCompute")
 	switch name {
 	case "projectId":
 		return nil
 	case "instances":
 		return s.ComputeInstances()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice\" resource")
 	}
 }
 
 // ComputeInstances computer autogenerated
-func (s *mqlGcpProjectSqlservices) ComputeInstances() error {
+func (s *mqlGcpProjectSqlservice) ComputeInstances() error {
 	var err error
 	if _, ok := s.Cache.Load("instances"); ok {
 		return nil
@@ -10084,14 +10084,13 @@ func (s *mqlGcpProjectSqlservices) ComputeInstances() error {
 	return nil
 }
 
-// GcpProjectSqlservicesInstance resource interface
-type GcpProjectSqlservicesInstance interface {
+// GcpProjectSqlserviceInstance resource interface
+type GcpProjectSqlserviceInstance interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
-	Id() (string, error)
 	ProjectId() (string, error)
 	AvailableMaintenanceVersions() ([]interface{}, error)
 	BackendType() (string, error)
@@ -10100,9 +10099,9 @@ type GcpProjectSqlservicesInstance interface {
 	CurrentDiskSize() (int64, error)
 	DatabaseInstalledVersion() (string, error)
 	DatabaseVersion() (string, error)
-	DiskEncryptionConfiguration() (GcpProjectSqlservicesInstanceDiskEncryptionConfiguration, error)
-	DiskEncryptionStatus() (GcpProjectSqlservicesInstanceDiskEncryptionStatus, error)
-	FailoverReplica() (GcpProjectSqlservicesInstanceFailoverReplica, error)
+	DiskEncryptionConfiguration() (GcpProjectSqlserviceInstanceDiskEncryptionConfiguration, error)
+	DiskEncryptionStatus() (GcpProjectSqlserviceInstanceDiskEncryptionStatus, error)
+	FailoverReplica() (GcpProjectSqlserviceInstanceFailoverReplica, error)
 	GceZone() (string, error)
 	InstanceType() (string, error)
 	IpAddresses() ([]interface{}, error)
@@ -10113,27 +10112,27 @@ type GcpProjectSqlservicesInstance interface {
 	Project() (string, error)
 	Region() (string, error)
 	ReplicaNames() ([]interface{}, error)
-	Settings() (interface{}, error)
+	Settings() (GcpProjectSqlserviceInstanceSettings, error)
 	ServiceAccountEmailAddress() (string, error)
 	State() (string, error)
 	Databases() ([]interface{}, error)
 }
 
-// mqlGcpProjectSqlservicesInstance for the gcp.project.sqlservices.instance resource
-type mqlGcpProjectSqlservicesInstance struct {
+// mqlGcpProjectSqlserviceInstance for the gcp.project.sqlservice.instance resource
+type mqlGcpProjectSqlserviceInstance struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstance) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstance) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance resource
-func newGcpProjectSqlservicesInstance(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance resource
+func newGcpProjectSqlserviceInstance(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstance{runtime.NewResource("gcp.project.sqlservices.instance")}
+	res := mqlGcpProjectSqlserviceInstance{runtime.NewResource("gcp.project.sqlservice.instance")}
 	// assign all named fields
 	var id string
 
@@ -10145,118 +10144,114 @@ func newGcpProjectSqlservicesInstance(runtime *resources.Runtime, args *resource
 		}
 
 		switch name {
-		case "id":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"id\" argument has the wrong type (expected type \"string\")")
-			}
 		case "projectId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"projectId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "availableMaintenanceVersions":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"availableMaintenanceVersions\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"availableMaintenanceVersions\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "backendType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"backendType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"backendType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "connectionName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"connectionName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"connectionName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "created":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "currentDiskSize":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"currentDiskSize\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"currentDiskSize\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "databaseInstalledVersion":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"databaseInstalledVersion\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"databaseInstalledVersion\" argument has the wrong type (expected type \"string\")")
 			}
 		case "databaseVersion":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"databaseVersion\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"databaseVersion\" argument has the wrong type (expected type \"string\")")
 			}
 		case "diskEncryptionConfiguration":
-			if _, ok := val.(GcpProjectSqlservicesInstanceDiskEncryptionConfiguration); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"diskEncryptionConfiguration\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceDiskEncryptionConfiguration\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceDiskEncryptionConfiguration); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"diskEncryptionConfiguration\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceDiskEncryptionConfiguration\")")
 			}
 		case "diskEncryptionStatus":
-			if _, ok := val.(GcpProjectSqlservicesInstanceDiskEncryptionStatus); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"diskEncryptionStatus\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceDiskEncryptionStatus\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceDiskEncryptionStatus); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"diskEncryptionStatus\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceDiskEncryptionStatus\")")
 			}
 		case "failoverReplica":
-			if _, ok := val.(GcpProjectSqlservicesInstanceFailoverReplica); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"failoverReplica\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceFailoverReplica\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceFailoverReplica); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"failoverReplica\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceFailoverReplica\")")
 			}
 		case "gceZone":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"gceZone\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"gceZone\" argument has the wrong type (expected type \"string\")")
 			}
 		case "instanceType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"instanceType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"instanceType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "ipAddresses":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"ipAddresses\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"ipAddresses\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "maintenanceVersion":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"maintenanceVersion\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"maintenanceVersion\" argument has the wrong type (expected type \"string\")")
 			}
 		case "masterInstanceName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"masterInstanceName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"masterInstanceName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "maxDiskSize":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"maxDiskSize\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"maxDiskSize\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "project":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"project\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"project\" argument has the wrong type (expected type \"string\")")
 			}
 		case "region":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"region\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"region\" argument has the wrong type (expected type \"string\")")
 			}
 		case "replicaNames":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"replicaNames\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"replicaNames\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "settings":
-			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"settings\" argument has the wrong type (expected type \"interface{}\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettings); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"settings\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettings\")")
 			}
 		case "serviceAccountEmailAddress":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"serviceAccountEmailAddress\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"serviceAccountEmailAddress\" argument has the wrong type (expected type \"string\")")
 			}
 		case "state":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"state\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"state\" argument has the wrong type (expected type \"string\")")
 			}
 		case "databases":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"databases\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -10274,93 +10269,88 @@ func newGcpProjectSqlservicesInstance(runtime *resources.Runtime, args *resource
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstance) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstance) Validate() error {
 	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"id\". This field is required.")
-	}
 	if _, ok := s.Cache.Load("projectId"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"projectId\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"projectId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("availableMaintenanceVersions"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"availableMaintenanceVersions\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"availableMaintenanceVersions\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("backendType"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"backendType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"backendType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("connectionName"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"connectionName\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"connectionName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("created"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"created\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"created\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("currentDiskSize"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"currentDiskSize\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"currentDiskSize\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("databaseInstalledVersion"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"databaseInstalledVersion\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"databaseInstalledVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("databaseVersion"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"databaseVersion\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"databaseVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("diskEncryptionConfiguration"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"diskEncryptionConfiguration\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"diskEncryptionConfiguration\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("diskEncryptionStatus"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"diskEncryptionStatus\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"diskEncryptionStatus\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("failoverReplica"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"failoverReplica\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"failoverReplica\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("gceZone"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"gceZone\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"gceZone\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("instanceType"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"instanceType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"instanceType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("ipAddresses"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"ipAddresses\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"ipAddresses\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("maintenanceVersion"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"maintenanceVersion\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"maintenanceVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("masterInstanceName"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"masterInstanceName\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"masterInstanceName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("maxDiskSize"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"maxDiskSize\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"maxDiskSize\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("project"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"project\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"project\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("region"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"region\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"region\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("replicaNames"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"replicaNames\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"replicaNames\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("settings"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"settings\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"settings\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("serviceAccountEmailAddress"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"serviceAccountEmailAddress\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"serviceAccountEmailAddress\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("state"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance\" resource without a \"state\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance\" resource without a \"state\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance].Register")
+func (s *mqlGcpProjectSqlserviceInstance) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance].Register")
 	switch name {
-	case "id":
-		return nil
 	case "projectId":
 		return nil
 	case "availableMaintenanceVersions":
@@ -10412,16 +10402,14 @@ func (s *mqlGcpProjectSqlservicesInstance) Register(name string) error {
 	case "databases":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance].Field")
+func (s *mqlGcpProjectSqlserviceInstance) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance].Field")
 	switch name {
-	case "id":
-		return s.Id()
 	case "projectId":
 		return s.ProjectId()
 	case "availableMaintenanceVersions":
@@ -10473,412 +10461,396 @@ func (s *mqlGcpProjectSqlservicesInstance) Field(name string) (interface{}, erro
 	case "databases":
 		return s.Databases()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance\" resource")
 	}
-}
-
-// Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"id\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"id\" to the right type (string): %#v", res)
-	}
-	return tres, nil
 }
 
 // ProjectId accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) ProjectId() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) ProjectId() (string, error) {
 	res, ok := s.Cache.Load("projectId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"projectId\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"projectId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AvailableMaintenanceVersions accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) AvailableMaintenanceVersions() ([]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstance) AvailableMaintenanceVersions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("availableMaintenanceVersions")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"availableMaintenanceVersions\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"availableMaintenanceVersions\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"availableMaintenanceVersions\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"availableMaintenanceVersions\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // BackendType accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) BackendType() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) BackendType() (string, error) {
 	res, ok := s.Cache.Load("backendType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"backendType\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"backendType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"backendType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"backendType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ConnectionName accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) ConnectionName() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) ConnectionName() (string, error) {
 	res, ok := s.Cache.Load("connectionName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"connectionName\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"connectionName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"connectionName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"connectionName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Created accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Created() (*time.Time, error) {
+func (s *mqlGcpProjectSqlserviceInstance) Created() (*time.Time, error) {
 	res, ok := s.Cache.Load("created")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"created\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"created\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // CurrentDiskSize accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) CurrentDiskSize() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstance) CurrentDiskSize() (int64, error) {
 	res, ok := s.Cache.Load("currentDiskSize")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"currentDiskSize\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"currentDiskSize\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"currentDiskSize\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"currentDiskSize\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // DatabaseInstalledVersion accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) DatabaseInstalledVersion() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) DatabaseInstalledVersion() (string, error) {
 	res, ok := s.Cache.Load("databaseInstalledVersion")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"databaseInstalledVersion\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"databaseInstalledVersion\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"databaseInstalledVersion\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"databaseInstalledVersion\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DatabaseVersion accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) DatabaseVersion() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) DatabaseVersion() (string, error) {
 	res, ok := s.Cache.Load("databaseVersion")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"databaseVersion\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"databaseVersion\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"databaseVersion\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"databaseVersion\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DiskEncryptionConfiguration accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) DiskEncryptionConfiguration() (GcpProjectSqlservicesInstanceDiskEncryptionConfiguration, error) {
+func (s *mqlGcpProjectSqlserviceInstance) DiskEncryptionConfiguration() (GcpProjectSqlserviceInstanceDiskEncryptionConfiguration, error) {
 	res, ok := s.Cache.Load("diskEncryptionConfiguration")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"diskEncryptionConfiguration\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"diskEncryptionConfiguration\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceDiskEncryptionConfiguration)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceDiskEncryptionConfiguration)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"diskEncryptionConfiguration\" to the right type (GcpProjectSqlservicesInstanceDiskEncryptionConfiguration): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"diskEncryptionConfiguration\" to the right type (GcpProjectSqlserviceInstanceDiskEncryptionConfiguration): %#v", res)
 	}
 	return tres, nil
 }
 
 // DiskEncryptionStatus accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) DiskEncryptionStatus() (GcpProjectSqlservicesInstanceDiskEncryptionStatus, error) {
+func (s *mqlGcpProjectSqlserviceInstance) DiskEncryptionStatus() (GcpProjectSqlserviceInstanceDiskEncryptionStatus, error) {
 	res, ok := s.Cache.Load("diskEncryptionStatus")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"diskEncryptionStatus\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"diskEncryptionStatus\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceDiskEncryptionStatus)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceDiskEncryptionStatus)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"diskEncryptionStatus\" to the right type (GcpProjectSqlservicesInstanceDiskEncryptionStatus): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"diskEncryptionStatus\" to the right type (GcpProjectSqlserviceInstanceDiskEncryptionStatus): %#v", res)
 	}
 	return tres, nil
 }
 
 // FailoverReplica accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) FailoverReplica() (GcpProjectSqlservicesInstanceFailoverReplica, error) {
+func (s *mqlGcpProjectSqlserviceInstance) FailoverReplica() (GcpProjectSqlserviceInstanceFailoverReplica, error) {
 	res, ok := s.Cache.Load("failoverReplica")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"failoverReplica\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"failoverReplica\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceFailoverReplica)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceFailoverReplica)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"failoverReplica\" to the right type (GcpProjectSqlservicesInstanceFailoverReplica): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"failoverReplica\" to the right type (GcpProjectSqlserviceInstanceFailoverReplica): %#v", res)
 	}
 	return tres, nil
 }
 
 // GceZone accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) GceZone() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) GceZone() (string, error) {
 	res, ok := s.Cache.Load("gceZone")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"gceZone\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"gceZone\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"gceZone\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"gceZone\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // InstanceType accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) InstanceType() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) InstanceType() (string, error) {
 	res, ok := s.Cache.Load("instanceType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"instanceType\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"instanceType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"instanceType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"instanceType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // IpAddresses accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) IpAddresses() ([]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstance) IpAddresses() ([]interface{}, error) {
 	res, ok := s.Cache.Load("ipAddresses")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"ipAddresses\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"ipAddresses\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"ipAddresses\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"ipAddresses\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // MaintenanceVersion accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) MaintenanceVersion() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) MaintenanceVersion() (string, error) {
 	res, ok := s.Cache.Load("maintenanceVersion")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"maintenanceVersion\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"maintenanceVersion\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"maintenanceVersion\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"maintenanceVersion\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MasterInstanceName accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) MasterInstanceName() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) MasterInstanceName() (string, error) {
 	res, ok := s.Cache.Load("masterInstanceName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"masterInstanceName\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"masterInstanceName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"masterInstanceName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"masterInstanceName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MaxDiskSize accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) MaxDiskSize() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstance) MaxDiskSize() (int64, error) {
 	res, ok := s.Cache.Load("maxDiskSize")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"maxDiskSize\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"maxDiskSize\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"maxDiskSize\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"maxDiskSize\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Name() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Project accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Project() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) Project() (string, error) {
 	res, ok := s.Cache.Load("project")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"project\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"project\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"project\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"project\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Region accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Region() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) Region() (string, error) {
 	res, ok := s.Cache.Load("region")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"region\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"region\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"region\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"region\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ReplicaNames accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) ReplicaNames() ([]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstance) ReplicaNames() ([]interface{}, error) {
 	res, ok := s.Cache.Load("replicaNames")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"replicaNames\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"replicaNames\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"replicaNames\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"replicaNames\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Settings accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Settings() (interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstance) Settings() (GcpProjectSqlserviceInstanceSettings, error) {
 	res, ok := s.Cache.Load("settings")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"settings\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"settings\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(interface{})
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettings)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"settings\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"settings\" to the right type (GcpProjectSqlserviceInstanceSettings): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServiceAccountEmailAddress accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) ServiceAccountEmailAddress() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) ServiceAccountEmailAddress() (string, error) {
 	res, ok := s.Cache.Load("serviceAccountEmailAddress")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"serviceAccountEmailAddress\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"serviceAccountEmailAddress\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"serviceAccountEmailAddress\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"serviceAccountEmailAddress\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // State accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) State() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstance) State() (string, error) {
 	res, ok := s.Cache.Load("state")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance\" failed: no value provided for static field \"state\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance\" failed: no value provided for static field \"state\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"state\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"state\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Databases accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) Databases() ([]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstance) Databases() ([]interface{}, error) {
 	res, ok := s.Cache.Load("databases")
 	if !ok || !res.Valid {
 		if err := s.ComputeDatabases(); err != nil {
@@ -10886,7 +10858,7 @@ func (s *mqlGcpProjectSqlservicesInstance) Databases() ([]interface{}, error) {
 		}
 		res, ok = s.Cache.Load("databases")
 		if !ok {
-			return nil, errors.New("\"gcp.project.sqlservices.instance\" calculated \"databases\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.project.sqlservice.instance\" calculated \"databases\" but didn't find its value in cache.")
 		}
 		s.MotorRuntime.Trigger(s, "databases")
 	}
@@ -10895,17 +10867,15 @@ func (s *mqlGcpProjectSqlservicesInstance) Databases() ([]interface{}, error) {
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance\" failed to cast field \"databases\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstance) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance].MqlCompute")
 	switch name {
-	case "id":
-		return nil
 	case "projectId":
 		return nil
 	case "availableMaintenanceVersions":
@@ -10957,12 +10927,12 @@ func (s *mqlGcpProjectSqlservicesInstance) MqlCompute(name string) error {
 	case "databases":
 		return s.ComputeDatabases()
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance\" resource")
 	}
 }
 
 // ComputeDatabases computer autogenerated
-func (s *mqlGcpProjectSqlservicesInstance) ComputeDatabases() error {
+func (s *mqlGcpProjectSqlserviceInstance) ComputeDatabases() error {
 	var err error
 	if _, ok := s.Cache.Load("databases"); ok {
 		return nil
@@ -10975,37 +10945,37 @@ func (s *mqlGcpProjectSqlservicesInstance) ComputeDatabases() error {
 	return nil
 }
 
-// GcpProjectSqlservicesInstanceDatabase resource interface
-type GcpProjectSqlservicesInstanceDatabase interface {
+// GcpProjectSqlserviceInstanceDatabase resource interface
+type GcpProjectSqlserviceInstanceDatabase interface {
 	MqlResource() (*resources.Resource)
-	Compute(string) error
+	MqlCompute(string) error
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
-	Id() (string, error)
+	ProjectId() (string, error)
 	Charset() (string, error)
 	Collation() (string, error)
 	Instance() (string, error)
 	Name() (string, error)
 	Project() (string, error)
-	SqlserverDatabaseDetails() (GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails, error)
+	SqlserverDatabaseDetails() (GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceDatabase for the gcp.project.sqlservices.instance.database resource
-type mqlGcpProjectSqlservicesInstanceDatabase struct {
+// mqlGcpProjectSqlserviceInstanceDatabase for the gcp.project.sqlservice.instance.database resource
+type mqlGcpProjectSqlserviceInstanceDatabase struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.database resource
-func newGcpProjectSqlservicesInstanceDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.database resource
+func newGcpProjectSqlserviceInstanceDatabase(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceDatabase{runtime.NewResource("gcp.project.sqlservices.instance.database")}
+	res := mqlGcpProjectSqlserviceInstanceDatabase{runtime.NewResource("gcp.project.sqlservice.instance.database")}
 	// assign all named fields
 	var id string
 
@@ -11017,42 +10987,42 @@ func newGcpProjectSqlservicesInstanceDatabase(runtime *resources.Runtime, args *
 		}
 
 		switch name {
-		case "id":
+		case "projectId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"projectId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "charset":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"charset\" argument has the wrong type (expected type \"string\")")
 			}
 		case "collation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"collation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "instance":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"instance\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"instance\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "project":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"project\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"project\" argument has the wrong type (expected type \"string\")")
 			}
 		case "sqlserverDatabaseDetails":
-			if _, ok := val.(GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"sqlserverDatabaseDetails\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"sqlserverDatabaseDetails\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.database with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.database with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11070,38 +11040,38 @@ func newGcpProjectSqlservicesInstanceDatabase(runtime *resources.Runtime, args *
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Validate() error {
 	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database\" resource without a \"id\". This field is required.")
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database\" resource without a \"projectId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("charset"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database\" resource without a \"charset\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database\" resource without a \"charset\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("collation"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database\" resource without a \"collation\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database\" resource without a \"collation\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("instance"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database\" resource without a \"instance\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database\" resource without a \"instance\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("project"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database\" resource without a \"project\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database\" resource without a \"project\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sqlserverDatabaseDetails"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database\" resource without a \"sqlserverDatabaseDetails\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database\" resource without a \"sqlserverDatabaseDetails\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.database].Register")
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.database].Register")
 	switch name {
-	case "id":
+	case "projectId":
 		return nil
 	case "charset":
 		return nil
@@ -11116,16 +11086,16 @@ func (s *mqlGcpProjectSqlservicesInstanceDatabase) Register(name string) error {
 	case "sqlserverDatabaseDetails":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.database\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.database].Field")
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.database].Field")
 	switch name {
-	case "id":
-		return s.Id()
+	case "projectId":
+		return s.ProjectId()
 	case "charset":
 		return s.Charset()
 	case "collation":
@@ -11139,127 +11109,127 @@ func (s *mqlGcpProjectSqlservicesInstanceDatabase) Field(name string) (interface
 	case "sqlserverDatabaseDetails":
 		return s.SqlserverDatabaseDetails()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.database\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.database\" resource")
 	}
 }
 
-// Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database\" failed: no value provided for static field \"projectId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Charset accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Charset() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Charset() (string, error) {
 	res, ok := s.Cache.Load("charset")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database\" failed: no value provided for static field \"charset\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database\" failed: no value provided for static field \"charset\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database\" failed to cast field \"charset\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Collation accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Collation() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Collation() (string, error) {
 	res, ok := s.Cache.Load("collation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database\" failed: no value provided for static field \"collation\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database\" failed: no value provided for static field \"collation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database\" failed to cast field \"collation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Instance accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Instance() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Instance() (string, error) {
 	res, ok := s.Cache.Load("instance")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database\" failed: no value provided for static field \"instance\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database\" failed: no value provided for static field \"instance\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database\" failed to cast field \"instance\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database\" failed to cast field \"instance\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Name() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Project accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Project() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) Project() (string, error) {
 	res, ok := s.Cache.Load("project")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database\" failed: no value provided for static field \"project\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database\" failed: no value provided for static field \"project\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database\" failed to cast field \"project\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database\" failed to cast field \"project\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SqlserverDatabaseDetails accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) SqlserverDatabaseDetails() (GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) SqlserverDatabaseDetails() (GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails, error) {
 	res, ok := s.Cache.Load("sqlserverDatabaseDetails")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.database\" failed: no value provided for static field \"sqlserverDatabaseDetails\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.database\" failed: no value provided for static field \"sqlserverDatabaseDetails\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.database\" failed to cast field \"sqlserverDatabaseDetails\" to the right type (GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.database\" failed to cast field \"sqlserverDatabaseDetails\" to the right type (GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabase) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.database].Compute")
+func (s *mqlGcpProjectSqlserviceInstanceDatabase) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.database].MqlCompute")
 	switch name {
-	case "id":
+	case "projectId":
 		return nil
 	case "charset":
 		return nil
@@ -11274,14 +11244,14 @@ func (s *mqlGcpProjectSqlservicesInstanceDatabase) Compute(name string) error {
 	case "sqlserverDatabaseDetails":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.database\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.database\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails resource interface
-type GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails interface {
+// GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails resource interface
+type GcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails interface {
 	MqlResource() (*resources.Resource)
-	Compute(string) error
+	MqlCompute(string) error
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
@@ -11290,21 +11260,21 @@ type GcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails interface {
 	RecoveryModel() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails for the gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails resource
-type mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails struct {
+// mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails for the gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails resource
+type mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails resource
-func newGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails resource
+func newGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails{runtime.NewResource("gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails")}
+	res := mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails{runtime.NewResource("gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails")}
 	// assign all named fields
 	var id string
 
@@ -11318,24 +11288,24 @@ func newGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails(runtime *r
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "compatibilityLevel":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\", its \"compatibilityLevel\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\", its \"compatibilityLevel\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "recoveryModel":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\", its \"recoveryModel\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\", its \"recoveryModel\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11353,24 +11323,24 @@ func newGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails(runtime *r
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("compatibilityLevel"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" resource without a \"compatibilityLevel\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" resource without a \"compatibilityLevel\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("recoveryModel"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" resource without a \"recoveryModel\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" resource without a \"recoveryModel\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails].Register")
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails].Register")
 	switch name {
 	case "id":
 		return nil
@@ -11379,13 +11349,13 @@ func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Regis
 	case "recoveryModel":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails].Field")
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -11394,61 +11364,61 @@ func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Field
 	case "recoveryModel":
 		return s.RecoveryModel()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CompatibilityLevel accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) CompatibilityLevel() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) CompatibilityLevel() (int64, error) {
 	res, ok := s.Cache.Load("compatibilityLevel")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" failed: no value provided for static field \"compatibilityLevel\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" failed: no value provided for static field \"compatibilityLevel\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" failed to cast field \"compatibilityLevel\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" failed to cast field \"compatibilityLevel\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecoveryModel accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) RecoveryModel() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) RecoveryModel() (string, error) {
 	res, ok := s.Cache.Load("recoveryModel")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" failed: no value provided for static field \"recoveryModel\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" failed: no value provided for static field \"recoveryModel\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" failed to cast field \"recoveryModel\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" failed to cast field \"recoveryModel\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails].Compute")
+func (s *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -11457,12 +11427,12 @@ func (s *mqlGcpProjectSqlservicesInstanceDatabaseSqlserverDatabaseDetails) Compu
 	case "recoveryModel":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceDiskEncryptionConfiguration resource interface
-type GcpProjectSqlservicesInstanceDiskEncryptionConfiguration interface {
+// GcpProjectSqlserviceInstanceDiskEncryptionConfiguration resource interface
+type GcpProjectSqlserviceInstanceDiskEncryptionConfiguration interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -11472,21 +11442,21 @@ type GcpProjectSqlservicesInstanceDiskEncryptionConfiguration interface {
 	KmsKeyName() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration for the gcp.project.sqlservices.instance.diskEncryptionConfiguration resource
-type mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration struct {
+// mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration for the gcp.project.sqlservice.instance.diskEncryptionConfiguration resource
+type mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.diskEncryptionConfiguration resource
-func newGcpProjectSqlservicesInstanceDiskEncryptionConfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.diskEncryptionConfiguration resource
+func newGcpProjectSqlserviceInstanceDiskEncryptionConfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration{runtime.NewResource("gcp.project.sqlservices.instance.diskEncryptionConfiguration")}
+	res := mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration{runtime.NewResource("gcp.project.sqlservice.instance.diskEncryptionConfiguration")}
 	// assign all named fields
 	var id string
 
@@ -11500,20 +11470,20 @@ func newGcpProjectSqlservicesInstanceDiskEncryptionConfiguration(runtime *resour
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kmsKeyName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\", its \"kmsKeyName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\", its \"kmsKeyName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.diskEncryptionConfiguration with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.diskEncryptionConfiguration with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11531,91 +11501,91 @@ func newGcpProjectSqlservicesInstanceDiskEncryptionConfiguration(runtime *resour
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kmsKeyName"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" resource without a \"kmsKeyName\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" resource without a \"kmsKeyName\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.diskEncryptionConfiguration].Register")
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.diskEncryptionConfiguration].Register")
 	switch name {
 	case "id":
 		return nil
 	case "kmsKeyName":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.diskEncryptionConfiguration].Field")
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.diskEncryptionConfiguration].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "kmsKeyName":
 		return s.KmsKeyName()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // KmsKeyName accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) KmsKeyName() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) KmsKeyName() (string, error) {
 	res, ok := s.Cache.Load("kmsKeyName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" failed: no value provided for static field \"kmsKeyName\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" failed: no value provided for static field \"kmsKeyName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" failed to cast field \"kmsKeyName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" failed to cast field \"kmsKeyName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionConfiguration) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.diskEncryptionConfiguration].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.diskEncryptionConfiguration].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "kmsKeyName":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.diskEncryptionConfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.diskEncryptionConfiguration\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceDiskEncryptionStatus resource interface
-type GcpProjectSqlservicesInstanceDiskEncryptionStatus interface {
+// GcpProjectSqlserviceInstanceDiskEncryptionStatus resource interface
+type GcpProjectSqlserviceInstanceDiskEncryptionStatus interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -11625,21 +11595,21 @@ type GcpProjectSqlservicesInstanceDiskEncryptionStatus interface {
 	KmsKeyVersionName() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus for the gcp.project.sqlservices.instance.diskEncryptionStatus resource
-type mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus struct {
+// mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus for the gcp.project.sqlservice.instance.diskEncryptionStatus resource
+type mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.diskEncryptionStatus resource
-func newGcpProjectSqlservicesInstanceDiskEncryptionStatus(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.diskEncryptionStatus resource
+func newGcpProjectSqlserviceInstanceDiskEncryptionStatus(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus{runtime.NewResource("gcp.project.sqlservices.instance.diskEncryptionStatus")}
+	res := mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus{runtime.NewResource("gcp.project.sqlservice.instance.diskEncryptionStatus")}
 	// assign all named fields
 	var id string
 
@@ -11653,20 +11623,20 @@ func newGcpProjectSqlservicesInstanceDiskEncryptionStatus(runtime *resources.Run
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.diskEncryptionStatus\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.diskEncryptionStatus\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kmsKeyVersionName":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.diskEncryptionStatus\", its \"kmsKeyVersionName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.diskEncryptionStatus\", its \"kmsKeyVersionName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.diskEncryptionStatus\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.diskEncryptionStatus\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.diskEncryptionStatus with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.diskEncryptionStatus with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11684,91 +11654,91 @@ func newGcpProjectSqlservicesInstanceDiskEncryptionStatus(runtime *resources.Run
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.diskEncryptionStatus\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.diskEncryptionStatus\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kmsKeyVersionName"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.diskEncryptionStatus\" resource without a \"kmsKeyVersionName\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.diskEncryptionStatus\" resource without a \"kmsKeyVersionName\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.diskEncryptionStatus].Register")
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.diskEncryptionStatus].Register")
 	switch name {
 	case "id":
 		return nil
 	case "kmsKeyVersionName":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.diskEncryptionStatus\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.diskEncryptionStatus\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.diskEncryptionStatus].Field")
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.diskEncryptionStatus].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "kmsKeyVersionName":
 		return s.KmsKeyVersionName()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.diskEncryptionStatus\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.diskEncryptionStatus\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.diskEncryptionStatus\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.diskEncryptionStatus\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.diskEncryptionStatus\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.diskEncryptionStatus\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // KmsKeyVersionName accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) KmsKeyVersionName() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) KmsKeyVersionName() (string, error) {
 	res, ok := s.Cache.Load("kmsKeyVersionName")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.diskEncryptionStatus\" failed: no value provided for static field \"kmsKeyVersionName\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.diskEncryptionStatus\" failed: no value provided for static field \"kmsKeyVersionName\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.diskEncryptionStatus\" failed to cast field \"kmsKeyVersionName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.diskEncryptionStatus\" failed to cast field \"kmsKeyVersionName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceDiskEncryptionStatus) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.diskEncryptionStatus].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.diskEncryptionStatus].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "kmsKeyVersionName":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.diskEncryptionStatus\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.diskEncryptionStatus\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceFailoverReplica resource interface
-type GcpProjectSqlservicesInstanceFailoverReplica interface {
+// GcpProjectSqlserviceInstanceFailoverReplica resource interface
+type GcpProjectSqlserviceInstanceFailoverReplica interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -11779,21 +11749,21 @@ type GcpProjectSqlservicesInstanceFailoverReplica interface {
 	Name() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceFailoverReplica for the gcp.project.sqlservices.instance.failoverReplica resource
-type mqlGcpProjectSqlservicesInstanceFailoverReplica struct {
+// mqlGcpProjectSqlserviceInstanceFailoverReplica for the gcp.project.sqlservice.instance.failoverReplica resource
+type mqlGcpProjectSqlserviceInstanceFailoverReplica struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.failoverReplica resource
-func newGcpProjectSqlservicesInstanceFailoverReplica(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.failoverReplica resource
+func newGcpProjectSqlserviceInstanceFailoverReplica(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceFailoverReplica{runtime.NewResource("gcp.project.sqlservices.instance.failoverReplica")}
+	res := mqlGcpProjectSqlserviceInstanceFailoverReplica{runtime.NewResource("gcp.project.sqlservice.instance.failoverReplica")}
 	// assign all named fields
 	var id string
 
@@ -11807,24 +11777,24 @@ func newGcpProjectSqlservicesInstanceFailoverReplica(runtime *resources.Runtime,
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.failoverReplica\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.failoverReplica\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "available":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.failoverReplica\", its \"available\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.failoverReplica\", its \"available\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.failoverReplica\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.failoverReplica\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.failoverReplica\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.failoverReplica\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.failoverReplica with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.failoverReplica with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -11842,24 +11812,24 @@ func newGcpProjectSqlservicesInstanceFailoverReplica(runtime *resources.Runtime,
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.failoverReplica\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.failoverReplica\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("available"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.failoverReplica\" resource without a \"available\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.failoverReplica\" resource without a \"available\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.failoverReplica\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.failoverReplica\" resource without a \"name\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.failoverReplica].Register")
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.failoverReplica].Register")
 	switch name {
 	case "id":
 		return nil
@@ -11868,13 +11838,13 @@ func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Register(name string) 
 	case "name":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.failoverReplica\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.failoverReplica\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.failoverReplica].Field")
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.failoverReplica].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -11883,61 +11853,61 @@ func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Field(name string) (in
 	case "name":
 		return s.Name()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.failoverReplica\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.failoverReplica\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.failoverReplica\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.failoverReplica\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.failoverReplica\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.failoverReplica\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Available accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Available() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) Available() (bool, error) {
 	res, ok := s.Cache.Load("available")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.failoverReplica\" failed: no value provided for static field \"available\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.failoverReplica\" failed: no value provided for static field \"available\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.failoverReplica\" failed to cast field \"available\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.failoverReplica\" failed to cast field \"available\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) Name() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.failoverReplica\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.failoverReplica\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.failoverReplica\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.failoverReplica\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.failoverReplica].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceFailoverReplica) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.failoverReplica].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -11946,12 +11916,12 @@ func (s *mqlGcpProjectSqlservicesInstanceFailoverReplica) MqlCompute(name string
 	case "name":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.failoverReplica\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.failoverReplica\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceIpMapping resource interface
-type GcpProjectSqlservicesInstanceIpMapping interface {
+// GcpProjectSqlserviceInstanceIpMapping resource interface
+type GcpProjectSqlserviceInstanceIpMapping interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -11963,21 +11933,21 @@ type GcpProjectSqlservicesInstanceIpMapping interface {
 	Type() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceIpMapping for the gcp.project.sqlservices.instance.ipMapping resource
-type mqlGcpProjectSqlservicesInstanceIpMapping struct {
+// mqlGcpProjectSqlserviceInstanceIpMapping for the gcp.project.sqlservice.instance.ipMapping resource
+type mqlGcpProjectSqlserviceInstanceIpMapping struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.ipMapping resource
-func newGcpProjectSqlservicesInstanceIpMapping(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.ipMapping resource
+func newGcpProjectSqlserviceInstanceIpMapping(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceIpMapping{runtime.NewResource("gcp.project.sqlservices.instance.ipMapping")}
+	res := mqlGcpProjectSqlserviceInstanceIpMapping{runtime.NewResource("gcp.project.sqlservice.instance.ipMapping")}
 	// assign all named fields
 	var id string
 
@@ -11991,28 +11961,28 @@ func newGcpProjectSqlservicesInstanceIpMapping(runtime *resources.Runtime, args 
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.ipMapping\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.ipMapping\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "ipAddress":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.ipMapping\", its \"ipAddress\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.ipMapping\", its \"ipAddress\" argument has the wrong type (expected type \"string\")")
 			}
 		case "timeToRetire":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.ipMapping\", its \"timeToRetire\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.ipMapping\", its \"timeToRetire\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.ipMapping\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.ipMapping\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.ipMapping\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.ipMapping\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.ipMapping with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.ipMapping with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -12030,27 +12000,27 @@ func newGcpProjectSqlservicesInstanceIpMapping(runtime *resources.Runtime, args 
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.ipMapping\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.ipMapping\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("ipAddress"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.ipMapping\" resource without a \"ipAddress\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.ipMapping\" resource without a \"ipAddress\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("timeToRetire"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.ipMapping\" resource without a \"timeToRetire\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.ipMapping\" resource without a \"timeToRetire\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.ipMapping\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.ipMapping\" resource without a \"type\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.ipMapping].Register")
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.ipMapping].Register")
 	switch name {
 	case "id":
 		return nil
@@ -12061,13 +12031,13 @@ func (s *mqlGcpProjectSqlservicesInstanceIpMapping) Register(name string) error 
 	case "type":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.ipMapping\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.ipMapping\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.ipMapping].Field")
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.ipMapping].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -12078,77 +12048,77 @@ func (s *mqlGcpProjectSqlservicesInstanceIpMapping) Field(name string) (interfac
 	case "type":
 		return s.Type()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.ipMapping\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.ipMapping\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.ipMapping\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.ipMapping\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.ipMapping\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.ipMapping\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // IpAddress accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) IpAddress() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) IpAddress() (string, error) {
 	res, ok := s.Cache.Load("ipAddress")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.ipMapping\" failed: no value provided for static field \"ipAddress\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.ipMapping\" failed: no value provided for static field \"ipAddress\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.ipMapping\" failed to cast field \"ipAddress\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.ipMapping\" failed to cast field \"ipAddress\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // TimeToRetire accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) TimeToRetire() (*time.Time, error) {
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) TimeToRetire() (*time.Time, error) {
 	res, ok := s.Cache.Load("timeToRetire")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.ipMapping\" failed: no value provided for static field \"timeToRetire\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.ipMapping\" failed: no value provided for static field \"timeToRetire\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.ipMapping\" failed to cast field \"timeToRetire\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.ipMapping\" failed to cast field \"timeToRetire\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) Type() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.ipMapping\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.ipMapping\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.ipMapping\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.ipMapping\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceIpMapping) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.ipMapping].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceIpMapping) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.ipMapping].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -12159,22 +12129,23 @@ func (s *mqlGcpProjectSqlservicesInstanceIpMapping) MqlCompute(name string) erro
 	case "type":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.ipMapping\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.ipMapping\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettings resource interface
-type GcpProjectSqlservicesInstanceSettings interface {
+// GcpProjectSqlserviceInstanceSettings resource interface
+type GcpProjectSqlserviceInstanceSettings interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
-	Id() (string, error)
+	ProjectId() (string, error)
+	InstanceName() (string, error)
 	ActivationPolicy() (string, error)
-	ActiveDirectoryConfig() (GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig, error)
+	ActiveDirectoryConfig() (GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig, error)
 	AvailabilityType() (string, error)
-	BackupConfiguration() (GcpProjectSqlservicesInstanceSettingsBackupconfiguration, error)
+	BackupConfiguration() (GcpProjectSqlserviceInstanceSettingsBackupconfiguration, error)
 	Collation() (string, error)
 	ConnectorEnforcement() (string, error)
 	CrashSafeReplicationEnabled() (bool, error)
@@ -12184,15 +12155,15 @@ type GcpProjectSqlservicesInstanceSettings interface {
 	DatabaseReplicationEnabled() (bool, error)
 	DeletionProtectionEnabled() (bool, error)
 	DenyMaintenancePeriods() ([]interface{}, error)
-	InsightsConfig() (GcpProjectSqlservicesInstanceSettingsInsightsConfig, error)
-	IpConfiguration() (GcpProjectSqlservicesInstanceSettingsIpConfiguration, error)
-	LocationPreference() (GcpProjectSqlservicesInstanceSettingsLocationPreference, error)
-	MaintenanceWindow() (GcpProjectSqlservicesInstanceSettingsMaintenanceWindow, error)
-	PasswordValidationPolicy() (GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy, error)
+	InsightsConfig() (GcpProjectSqlserviceInstanceSettingsInsightsConfig, error)
+	IpConfiguration() (GcpProjectSqlserviceInstanceSettingsIpConfiguration, error)
+	LocationPreference() (GcpProjectSqlserviceInstanceSettingsLocationPreference, error)
+	MaintenanceWindow() (GcpProjectSqlserviceInstanceSettingsMaintenanceWindow, error)
+	PasswordValidationPolicy() (GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy, error)
 	PricingPlan() (string, error)
 	ReplicationType() (string, error)
 	SettingsVersion() (int64, error)
-	SqlServerAuditConfig() (GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig, error)
+	SqlServerAuditConfig() (GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig, error)
 	StorageAutoResize() (bool, error)
 	StorageAutoResizeLimit() (int64, error)
 	Tier() (string, error)
@@ -12200,21 +12171,21 @@ type GcpProjectSqlservicesInstanceSettings interface {
 	UserLabels() (map[string]interface{}, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettings for the gcp.project.sqlservices.instance.settings resource
-type mqlGcpProjectSqlservicesInstanceSettings struct {
+// mqlGcpProjectSqlserviceInstanceSettings for the gcp.project.sqlservice.instance.settings resource
+type mqlGcpProjectSqlserviceInstanceSettings struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettings) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings resource
-func newGcpProjectSqlservicesInstanceSettings(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings resource
+func newGcpProjectSqlserviceInstanceSettings(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettings{runtime.NewResource("gcp.project.sqlservices.instance.settings")}
+	res := mqlGcpProjectSqlserviceInstanceSettings{runtime.NewResource("gcp.project.sqlservice.instance.settings")}
 	// assign all named fields
 	var id string
 
@@ -12226,126 +12197,130 @@ func newGcpProjectSqlservicesInstanceSettings(runtime *resources.Runtime, args *
 		}
 
 		switch name {
-		case "id":
+		case "projectId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "instanceName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"instanceName\" argument has the wrong type (expected type \"string\")")
 			}
 		case "activationPolicy":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"activationPolicy\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"activationPolicy\" argument has the wrong type (expected type \"string\")")
 			}
 		case "activeDirectoryConfig":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"activeDirectoryConfig\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"activeDirectoryConfig\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig\")")
 			}
 		case "availabilityType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"availabilityType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"availabilityType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "backupConfiguration":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsBackupconfiguration); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"backupConfiguration\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsBackupconfiguration\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsBackupconfiguration); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"backupConfiguration\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsBackupconfiguration\")")
 			}
 		case "collation":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"collation\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"collation\" argument has the wrong type (expected type \"string\")")
 			}
 		case "connectorEnforcement":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"connectorEnforcement\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"connectorEnforcement\" argument has the wrong type (expected type \"string\")")
 			}
 		case "crashSafeReplicationEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"crashSafeReplicationEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"crashSafeReplicationEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "dataDiskSizeGb":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"dataDiskSizeGb\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"dataDiskSizeGb\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "dataDiskType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"dataDiskType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"dataDiskType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "databaseFlags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"databaseFlags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"databaseFlags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "databaseReplicationEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"databaseReplicationEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"databaseReplicationEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "deletionProtectionEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"deletionProtectionEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"deletionProtectionEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "denyMaintenancePeriods":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"denyMaintenancePeriods\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"denyMaintenancePeriods\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "insightsConfig":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsInsightsConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"insightsConfig\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsInsightsConfig\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsInsightsConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"insightsConfig\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsInsightsConfig\")")
 			}
 		case "ipConfiguration":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsIpConfiguration); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"ipConfiguration\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsIpConfiguration\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsIpConfiguration); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"ipConfiguration\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsIpConfiguration\")")
 			}
 		case "locationPreference":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsLocationPreference); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"locationPreference\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsLocationPreference\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsLocationPreference); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"locationPreference\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsLocationPreference\")")
 			}
 		case "maintenanceWindow":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsMaintenanceWindow); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"maintenanceWindow\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsMaintenanceWindow\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsMaintenanceWindow); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"maintenanceWindow\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsMaintenanceWindow\")")
 			}
 		case "passwordValidationPolicy":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"passwordValidationPolicy\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"passwordValidationPolicy\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy\")")
 			}
 		case "pricingPlan":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"pricingPlan\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"pricingPlan\" argument has the wrong type (expected type \"string\")")
 			}
 		case "replicationType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"replicationType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"replicationType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "settingsVersion":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"settingsVersion\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"settingsVersion\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "sqlServerAuditConfig":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"sqlServerAuditConfig\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"sqlServerAuditConfig\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig\")")
 			}
 		case "storageAutoResize":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"storageAutoResize\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"storageAutoResize\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "storageAutoResizeLimit":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"storageAutoResizeLimit\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"storageAutoResizeLimit\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "tier":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"tier\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"tier\" argument has the wrong type (expected type \"string\")")
 			}
 		case "timeZone":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"timeZone\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"timeZone\" argument has the wrong type (expected type \"string\")")
 			}
 		case "userLabels":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"userLabels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"userLabels\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -12363,101 +12338,106 @@ func newGcpProjectSqlservicesInstanceSettings(runtime *resources.Runtime, args *
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettings) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) Validate() error {
 	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"id\". This field is required.")
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"projectId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("instanceName"); !ok {
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"instanceName\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("activationPolicy"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"activationPolicy\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"activationPolicy\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("activeDirectoryConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"activeDirectoryConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"activeDirectoryConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("availabilityType"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"availabilityType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"availabilityType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("backupConfiguration"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"backupConfiguration\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"backupConfiguration\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("collation"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"collation\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"collation\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("connectorEnforcement"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"connectorEnforcement\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"connectorEnforcement\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("crashSafeReplicationEnabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"crashSafeReplicationEnabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"crashSafeReplicationEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("dataDiskSizeGb"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"dataDiskSizeGb\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"dataDiskSizeGb\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("dataDiskType"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"dataDiskType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"dataDiskType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("databaseFlags"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"databaseFlags\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"databaseFlags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("databaseReplicationEnabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"databaseReplicationEnabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"databaseReplicationEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("deletionProtectionEnabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"deletionProtectionEnabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"deletionProtectionEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("denyMaintenancePeriods"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"denyMaintenancePeriods\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"denyMaintenancePeriods\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("insightsConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"insightsConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"insightsConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("ipConfiguration"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"ipConfiguration\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"ipConfiguration\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("locationPreference"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"locationPreference\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"locationPreference\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("maintenanceWindow"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"maintenanceWindow\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"maintenanceWindow\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("passwordValidationPolicy"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"passwordValidationPolicy\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"passwordValidationPolicy\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("pricingPlan"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"pricingPlan\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"pricingPlan\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("replicationType"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"replicationType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"replicationType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("settingsVersion"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"settingsVersion\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"settingsVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sqlServerAuditConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"sqlServerAuditConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"sqlServerAuditConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("storageAutoResize"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"storageAutoResize\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"storageAutoResize\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("storageAutoResizeLimit"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"storageAutoResizeLimit\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"storageAutoResizeLimit\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tier"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"tier\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"tier\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("timeZone"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"timeZone\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"timeZone\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("userLabels"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings\" resource without a \"userLabels\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings\" resource without a \"userLabels\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettings) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings].Register")
 	switch name {
-	case "id":
+	case "projectId":
+		return nil
+	case "instanceName":
 		return nil
 	case "activationPolicy":
 		return nil
@@ -12514,16 +12494,18 @@ func (s *mqlGcpProjectSqlservicesInstanceSettings) Register(name string) error {
 	case "userLabels":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettings) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings].Field")
 	switch name {
-	case "id":
-		return s.Id()
+	case "projectId":
+		return s.ProjectId()
+	case "instanceName":
+		return s.InstanceName()
 	case "activationPolicy":
 		return s.ActivationPolicy()
 	case "activeDirectoryConfig":
@@ -12579,463 +12561,481 @@ func (s *mqlGcpProjectSqlservicesInstanceSettings) Field(name string) (interface
 	case "userLabels":
 		return s.UserLabels()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings\" resource")
 	}
 }
 
-// Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectSqlserviceInstanceSettings) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"projectId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// InstanceName accessor autogenerated
+func (s *mqlGcpProjectSqlserviceInstanceSettings) InstanceName() (string, error) {
+	res, ok := s.Cache.Load("instanceName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"instanceName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"instanceName\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ActivationPolicy accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) ActivationPolicy() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) ActivationPolicy() (string, error) {
 	res, ok := s.Cache.Load("activationPolicy")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"activationPolicy\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"activationPolicy\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"activationPolicy\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"activationPolicy\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ActiveDirectoryConfig accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) ActiveDirectoryConfig() (GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) ActiveDirectoryConfig() (GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig, error) {
 	res, ok := s.Cache.Load("activeDirectoryConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"activeDirectoryConfig\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"activeDirectoryConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"activeDirectoryConfig\" to the right type (GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"activeDirectoryConfig\" to the right type (GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // AvailabilityType accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) AvailabilityType() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) AvailabilityType() (string, error) {
 	res, ok := s.Cache.Load("availabilityType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"availabilityType\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"availabilityType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"availabilityType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"availabilityType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // BackupConfiguration accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) BackupConfiguration() (GcpProjectSqlservicesInstanceSettingsBackupconfiguration, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) BackupConfiguration() (GcpProjectSqlserviceInstanceSettingsBackupconfiguration, error) {
 	res, ok := s.Cache.Load("backupConfiguration")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"backupConfiguration\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"backupConfiguration\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsBackupconfiguration)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsBackupconfiguration)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"backupConfiguration\" to the right type (GcpProjectSqlservicesInstanceSettingsBackupconfiguration): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"backupConfiguration\" to the right type (GcpProjectSqlserviceInstanceSettingsBackupconfiguration): %#v", res)
 	}
 	return tres, nil
 }
 
 // Collation accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) Collation() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) Collation() (string, error) {
 	res, ok := s.Cache.Load("collation")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"collation\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"collation\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"collation\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"collation\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ConnectorEnforcement accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) ConnectorEnforcement() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) ConnectorEnforcement() (string, error) {
 	res, ok := s.Cache.Load("connectorEnforcement")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"connectorEnforcement\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"connectorEnforcement\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"connectorEnforcement\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"connectorEnforcement\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CrashSafeReplicationEnabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) CrashSafeReplicationEnabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) CrashSafeReplicationEnabled() (bool, error) {
 	res, ok := s.Cache.Load("crashSafeReplicationEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"crashSafeReplicationEnabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"crashSafeReplicationEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"crashSafeReplicationEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"crashSafeReplicationEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // DataDiskSizeGb accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) DataDiskSizeGb() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) DataDiskSizeGb() (int64, error) {
 	res, ok := s.Cache.Load("dataDiskSizeGb")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"dataDiskSizeGb\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"dataDiskSizeGb\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"dataDiskSizeGb\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"dataDiskSizeGb\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // DataDiskType accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) DataDiskType() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) DataDiskType() (string, error) {
 	res, ok := s.Cache.Load("dataDiskType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"dataDiskType\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"dataDiskType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"dataDiskType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"dataDiskType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DatabaseFlags accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) DatabaseFlags() (map[string]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) DatabaseFlags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("databaseFlags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"databaseFlags\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"databaseFlags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"databaseFlags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"databaseFlags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DatabaseReplicationEnabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) DatabaseReplicationEnabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) DatabaseReplicationEnabled() (bool, error) {
 	res, ok := s.Cache.Load("databaseReplicationEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"databaseReplicationEnabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"databaseReplicationEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"databaseReplicationEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"databaseReplicationEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // DeletionProtectionEnabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) DeletionProtectionEnabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) DeletionProtectionEnabled() (bool, error) {
 	res, ok := s.Cache.Load("deletionProtectionEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"deletionProtectionEnabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"deletionProtectionEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"deletionProtectionEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"deletionProtectionEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // DenyMaintenancePeriods accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) DenyMaintenancePeriods() ([]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) DenyMaintenancePeriods() ([]interface{}, error) {
 	res, ok := s.Cache.Load("denyMaintenancePeriods")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"denyMaintenancePeriods\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"denyMaintenancePeriods\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"denyMaintenancePeriods\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"denyMaintenancePeriods\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // InsightsConfig accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) InsightsConfig() (GcpProjectSqlservicesInstanceSettingsInsightsConfig, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) InsightsConfig() (GcpProjectSqlserviceInstanceSettingsInsightsConfig, error) {
 	res, ok := s.Cache.Load("insightsConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"insightsConfig\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"insightsConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsInsightsConfig)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsInsightsConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"insightsConfig\" to the right type (GcpProjectSqlservicesInstanceSettingsInsightsConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"insightsConfig\" to the right type (GcpProjectSqlserviceInstanceSettingsInsightsConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // IpConfiguration accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) IpConfiguration() (GcpProjectSqlservicesInstanceSettingsIpConfiguration, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) IpConfiguration() (GcpProjectSqlserviceInstanceSettingsIpConfiguration, error) {
 	res, ok := s.Cache.Load("ipConfiguration")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"ipConfiguration\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"ipConfiguration\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsIpConfiguration)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsIpConfiguration)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"ipConfiguration\" to the right type (GcpProjectSqlservicesInstanceSettingsIpConfiguration): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"ipConfiguration\" to the right type (GcpProjectSqlserviceInstanceSettingsIpConfiguration): %#v", res)
 	}
 	return tres, nil
 }
 
 // LocationPreference accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) LocationPreference() (GcpProjectSqlservicesInstanceSettingsLocationPreference, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) LocationPreference() (GcpProjectSqlserviceInstanceSettingsLocationPreference, error) {
 	res, ok := s.Cache.Load("locationPreference")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"locationPreference\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"locationPreference\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsLocationPreference)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsLocationPreference)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"locationPreference\" to the right type (GcpProjectSqlservicesInstanceSettingsLocationPreference): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"locationPreference\" to the right type (GcpProjectSqlserviceInstanceSettingsLocationPreference): %#v", res)
 	}
 	return tres, nil
 }
 
 // MaintenanceWindow accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) MaintenanceWindow() (GcpProjectSqlservicesInstanceSettingsMaintenanceWindow, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) MaintenanceWindow() (GcpProjectSqlserviceInstanceSettingsMaintenanceWindow, error) {
 	res, ok := s.Cache.Load("maintenanceWindow")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"maintenanceWindow\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"maintenanceWindow\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsMaintenanceWindow)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsMaintenanceWindow)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"maintenanceWindow\" to the right type (GcpProjectSqlservicesInstanceSettingsMaintenanceWindow): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"maintenanceWindow\" to the right type (GcpProjectSqlserviceInstanceSettingsMaintenanceWindow): %#v", res)
 	}
 	return tres, nil
 }
 
 // PasswordValidationPolicy accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) PasswordValidationPolicy() (GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) PasswordValidationPolicy() (GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy, error) {
 	res, ok := s.Cache.Load("passwordValidationPolicy")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"passwordValidationPolicy\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"passwordValidationPolicy\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"passwordValidationPolicy\" to the right type (GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"passwordValidationPolicy\" to the right type (GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy): %#v", res)
 	}
 	return tres, nil
 }
 
 // PricingPlan accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) PricingPlan() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) PricingPlan() (string, error) {
 	res, ok := s.Cache.Load("pricingPlan")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"pricingPlan\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"pricingPlan\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"pricingPlan\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"pricingPlan\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ReplicationType accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) ReplicationType() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) ReplicationType() (string, error) {
 	res, ok := s.Cache.Load("replicationType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"replicationType\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"replicationType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"replicationType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"replicationType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SettingsVersion accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) SettingsVersion() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) SettingsVersion() (int64, error) {
 	res, ok := s.Cache.Load("settingsVersion")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"settingsVersion\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"settingsVersion\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"settingsVersion\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"settingsVersion\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // SqlServerAuditConfig accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) SqlServerAuditConfig() (GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) SqlServerAuditConfig() (GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig, error) {
 	res, ok := s.Cache.Load("sqlServerAuditConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"sqlServerAuditConfig\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"sqlServerAuditConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"sqlServerAuditConfig\" to the right type (GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"sqlServerAuditConfig\" to the right type (GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // StorageAutoResize accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) StorageAutoResize() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) StorageAutoResize() (bool, error) {
 	res, ok := s.Cache.Load("storageAutoResize")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"storageAutoResize\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"storageAutoResize\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"storageAutoResize\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"storageAutoResize\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // StorageAutoResizeLimit accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) StorageAutoResizeLimit() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) StorageAutoResizeLimit() (int64, error) {
 	res, ok := s.Cache.Load("storageAutoResizeLimit")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"storageAutoResizeLimit\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"storageAutoResizeLimit\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"storageAutoResizeLimit\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"storageAutoResizeLimit\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tier accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) Tier() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) Tier() (string, error) {
 	res, ok := s.Cache.Load("tier")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"tier\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"tier\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"tier\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"tier\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // TimeZone accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) TimeZone() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) TimeZone() (string, error) {
 	res, ok := s.Cache.Load("timeZone")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"timeZone\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"timeZone\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"timeZone\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"timeZone\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // UserLabels accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) UserLabels() (map[string]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettings) UserLabels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("userLabels")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings\" failed: no value provided for static field \"userLabels\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings\" failed: no value provided for static field \"userLabels\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings\" failed to cast field \"userLabels\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings\" failed to cast field \"userLabels\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettings) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettings) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings].MqlCompute")
 	switch name {
-	case "id":
+	case "projectId":
+		return nil
+	case "instanceName":
 		return nil
 	case "activationPolicy":
 		return nil
@@ -13092,12 +13092,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettings) MqlCompute(name string) error
 	case "userLabels":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig resource interface
-type GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig interface {
+// GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig resource interface
+type GcpProjectSqlserviceInstanceSettingsActivedirectoryconfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -13107,21 +13107,21 @@ type GcpProjectSqlservicesInstanceSettingsActivedirectoryconfig interface {
 	Domain() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig for the gcp.project.sqlservices.instance.settings.activedirectoryconfig resource
-type mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig struct {
+// mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig for the gcp.project.sqlservice.instance.settings.activedirectoryconfig resource
+type mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.activedirectoryconfig resource
-func newGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.activedirectoryconfig resource
+func newGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig{runtime.NewResource("gcp.project.sqlservices.instance.settings.activedirectoryconfig")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig{runtime.NewResource("gcp.project.sqlservice.instance.settings.activedirectoryconfig")}
 	// assign all named fields
 	var id string
 
@@ -13135,20 +13135,20 @@ func newGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig(runtime *reso
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "domain":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\", its \"domain\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\", its \"domain\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.activedirectoryconfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.activedirectoryconfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -13166,98 +13166,98 @@ func newGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig(runtime *reso
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("domain"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" resource without a \"domain\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" resource without a \"domain\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.activedirectoryconfig].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.activedirectoryconfig].Register")
 	switch name {
 	case "id":
 		return nil
 	case "domain":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.activedirectoryconfig].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.activedirectoryconfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "domain":
 		return s.Domain()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Domain accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) Domain() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) Domain() (string, error) {
 	res, ok := s.Cache.Load("domain")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" failed: no value provided for static field \"domain\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" failed: no value provided for static field \"domain\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" failed to cast field \"domain\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" failed to cast field \"domain\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsActivedirectoryconfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.activedirectoryconfig].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.activedirectoryconfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "domain":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.activedirectoryconfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.activedirectoryconfig\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsBackupconfiguration resource interface
-type GcpProjectSqlservicesInstanceSettingsBackupconfiguration interface {
+// GcpProjectSqlserviceInstanceSettingsBackupconfiguration resource interface
+type GcpProjectSqlserviceInstanceSettingsBackupconfiguration interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
 	Id() (string, error)
-	BackupRetentionSettings() (GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings, error)
+	BackupRetentionSettings() (GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings, error)
 	BinaryLogEnabled() (bool, error)
 	Enabled() (bool, error)
 	Location() (string, error)
@@ -13266,21 +13266,21 @@ type GcpProjectSqlservicesInstanceSettingsBackupconfiguration interface {
 	TransactionLogRetentionDays() (int64, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration for the gcp.project.sqlservices.instance.settings.backupconfiguration resource
-type mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration struct {
+// mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration for the gcp.project.sqlservice.instance.settings.backupconfiguration resource
+type mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.backupconfiguration resource
-func newGcpProjectSqlservicesInstanceSettingsBackupconfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.backupconfiguration resource
+func newGcpProjectSqlserviceInstanceSettingsBackupconfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration{runtime.NewResource("gcp.project.sqlservices.instance.settings.backupconfiguration")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration{runtime.NewResource("gcp.project.sqlservice.instance.settings.backupconfiguration")}
 	// assign all named fields
 	var id string
 
@@ -13294,44 +13294,44 @@ func newGcpProjectSqlservicesInstanceSettingsBackupconfiguration(runtime *resour
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "backupRetentionSettings":
-			if _, ok := val.(GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"backupRetentionSettings\" argument has the wrong type (expected type \"GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings\")")
+			if _, ok := val.(GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"backupRetentionSettings\" argument has the wrong type (expected type \"GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings\")")
 			}
 		case "binaryLogEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"binaryLogEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"binaryLogEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "pointInTimeRecoveryEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"pointInTimeRecoveryEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"pointInTimeRecoveryEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "startTime":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"startTime\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"startTime\" argument has the wrong type (expected type \"string\")")
 			}
 		case "transactionLogRetentionDays":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"transactionLogRetentionDays\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"transactionLogRetentionDays\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.backupconfiguration with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.backupconfiguration with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -13349,39 +13349,39 @@ func newGcpProjectSqlservicesInstanceSettingsBackupconfiguration(runtime *resour
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("backupRetentionSettings"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"backupRetentionSettings\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"backupRetentionSettings\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("binaryLogEnabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"binaryLogEnabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"binaryLogEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"enabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"enabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("pointInTimeRecoveryEnabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"pointInTimeRecoveryEnabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"pointInTimeRecoveryEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("startTime"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"startTime\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"startTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("transactionLogRetentionDays"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource without a \"transactionLogRetentionDays\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource without a \"transactionLogRetentionDays\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.backupconfiguration].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.backupconfiguration].Register")
 	switch name {
 	case "id":
 		return nil
@@ -13400,13 +13400,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Register(n
 	case "transactionLogRetentionDays":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.backupconfiguration].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.backupconfiguration].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -13425,141 +13425,141 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Field(name
 	case "transactionLogRetentionDays":
 		return s.TransactionLogRetentionDays()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // BackupRetentionSettings accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) BackupRetentionSettings() (GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) BackupRetentionSettings() (GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings, error) {
 	res, ok := s.Cache.Load("backupRetentionSettings")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"backupRetentionSettings\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"backupRetentionSettings\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings)
+	tres, ok := res.Data.(GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"backupRetentionSettings\" to the right type (GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"backupRetentionSettings\" to the right type (GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings): %#v", res)
 	}
 	return tres, nil
 }
 
 // BinaryLogEnabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) BinaryLogEnabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) BinaryLogEnabled() (bool, error) {
 	res, ok := s.Cache.Load("binaryLogEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"binaryLogEnabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"binaryLogEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"binaryLogEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"binaryLogEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Enabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Enabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) Enabled() (bool, error) {
 	res, ok := s.Cache.Load("enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"enabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) Location() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PointInTimeRecoveryEnabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) PointInTimeRecoveryEnabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) PointInTimeRecoveryEnabled() (bool, error) {
 	res, ok := s.Cache.Load("pointInTimeRecoveryEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"pointInTimeRecoveryEnabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"pointInTimeRecoveryEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"pointInTimeRecoveryEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"pointInTimeRecoveryEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // StartTime accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) StartTime() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) StartTime() (string, error) {
 	res, ok := s.Cache.Load("startTime")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"startTime\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"startTime\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"startTime\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"startTime\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // TransactionLogRetentionDays accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) TransactionLogRetentionDays() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) TransactionLogRetentionDays() (int64, error) {
 	res, ok := s.Cache.Load("transactionLogRetentionDays")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed: no value provided for static field \"transactionLogRetentionDays\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed: no value provided for static field \"transactionLogRetentionDays\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration\" failed to cast field \"transactionLogRetentionDays\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration\" failed to cast field \"transactionLogRetentionDays\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.backupconfiguration].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.backupconfiguration].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -13578,12 +13578,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfiguration) MqlCompute
 	case "transactionLogRetentionDays":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.backupconfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.backupconfiguration\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings resource interface
-type GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings interface {
+// GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings resource interface
+type GcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -13594,21 +13594,21 @@ type GcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings i
 	RetentionUnit() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings for the gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings resource
-type mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings struct {
+// mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings for the gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings resource
+type mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings resource
-func newGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings resource
+func newGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings{runtime.NewResource("gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings{runtime.NewResource("gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings")}
 	// assign all named fields
 	var id string
 
@@ -13622,24 +13622,24 @@ func newGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsetting
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "retainedBackups":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\", its \"retainedBackups\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\", its \"retainedBackups\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "retentionUnit":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\", its \"retentionUnit\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\", its \"retentionUnit\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -13657,24 +13657,24 @@ func newGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsetting
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("retainedBackups"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" resource without a \"retainedBackups\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" resource without a \"retainedBackups\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("retentionUnit"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" resource without a \"retentionUnit\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" resource without a \"retentionUnit\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings].Register")
 	switch name {
 	case "id":
 		return nil
@@ -13683,13 +13683,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionset
 	case "retentionUnit":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -13698,61 +13698,61 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionset
 	case "retentionUnit":
 		return s.RetentionUnit()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // RetainedBackups accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) RetainedBackups() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) RetainedBackups() (int64, error) {
 	res, ok := s.Cache.Load("retainedBackups")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" failed: no value provided for static field \"retainedBackups\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" failed: no value provided for static field \"retainedBackups\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" failed to cast field \"retainedBackups\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" failed to cast field \"retainedBackups\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // RetentionUnit accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) RetentionUnit() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) RetentionUnit() (string, error) {
 	res, ok := s.Cache.Load("retentionUnit")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" failed: no value provided for static field \"retentionUnit\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" failed: no value provided for static field \"retentionUnit\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" failed to cast field \"retentionUnit\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" failed to cast field \"retentionUnit\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionsettings) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -13761,12 +13761,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsBackupconfigurationRetentionset
 	case "retentionUnit":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod resource interface
-type GcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod interface {
+// GcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod resource interface
+type GcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -13778,21 +13778,21 @@ type GcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod interface {
 	Time() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod for the gcp.project.sqlservices.instance.settings.denyMaintenancePeriod resource
-type mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod struct {
+// mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod for the gcp.project.sqlservice.instance.settings.denyMaintenancePeriod resource
+type mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.denyMaintenancePeriod resource
-func newGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.denyMaintenancePeriod resource
+func newGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod{runtime.NewResource("gcp.project.sqlservices.instance.settings.denyMaintenancePeriod")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod{runtime.NewResource("gcp.project.sqlservice.instance.settings.denyMaintenancePeriod")}
 	// assign all named fields
 	var id string
 
@@ -13806,28 +13806,28 @@ func newGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod(runtime *reso
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "endDate":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\", its \"endDate\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\", its \"endDate\" argument has the wrong type (expected type \"string\")")
 			}
 		case "startDate":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\", its \"startDate\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\", its \"startDate\" argument has the wrong type (expected type \"string\")")
 			}
 		case "time":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\", its \"time\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\", its \"time\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.denyMaintenancePeriod with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.denyMaintenancePeriod with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -13845,27 +13845,27 @@ func newGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod(runtime *reso
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("endDate"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" resource without a \"endDate\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" resource without a \"endDate\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("startDate"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" resource without a \"startDate\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" resource without a \"startDate\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("time"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" resource without a \"time\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" resource without a \"time\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.denyMaintenancePeriod].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.denyMaintenancePeriod].Register")
 	switch name {
 	case "id":
 		return nil
@@ -13876,13 +13876,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) Register
 	case "time":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.denyMaintenancePeriod].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.denyMaintenancePeriod].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -13893,77 +13893,77 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) Field(na
 	case "time":
 		return s.Time()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // EndDate accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) EndDate() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) EndDate() (string, error) {
 	res, ok := s.Cache.Load("endDate")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"endDate\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"endDate\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed to cast field \"endDate\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed to cast field \"endDate\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // StartDate accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) StartDate() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) StartDate() (string, error) {
 	res, ok := s.Cache.Load("startDate")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"startDate\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"startDate\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed to cast field \"startDate\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed to cast field \"startDate\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Time accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) Time() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) Time() (string, error) {
 	res, ok := s.Cache.Load("time")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"time\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed: no value provided for static field \"time\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" failed to cast field \"time\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" failed to cast field \"time\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.denyMaintenancePeriod].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.denyMaintenancePeriod].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -13974,12 +13974,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsDenyMaintenancePeriod) MqlCompu
 	case "time":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.denyMaintenancePeriod\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.denyMaintenancePeriod\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsInsightsConfig resource interface
-type GcpProjectSqlservicesInstanceSettingsInsightsConfig interface {
+// GcpProjectSqlserviceInstanceSettingsInsightsConfig resource interface
+type GcpProjectSqlserviceInstanceSettingsInsightsConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -13993,21 +13993,21 @@ type GcpProjectSqlservicesInstanceSettingsInsightsConfig interface {
 	RecordClientAddress() (bool, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig for the gcp.project.sqlservices.instance.settings.insightsConfig resource
-type mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig struct {
+// mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig for the gcp.project.sqlservice.instance.settings.insightsConfig resource
+type mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.insightsConfig resource
-func newGcpProjectSqlservicesInstanceSettingsInsightsConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.insightsConfig resource
+func newGcpProjectSqlserviceInstanceSettingsInsightsConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig{runtime.NewResource("gcp.project.sqlservices.instance.settings.insightsConfig")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig{runtime.NewResource("gcp.project.sqlservice.instance.settings.insightsConfig")}
 	// assign all named fields
 	var id string
 
@@ -14021,36 +14021,36 @@ func newGcpProjectSqlservicesInstanceSettingsInsightsConfig(runtime *resources.R
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.insightsConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.insightsConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "queryInsightsEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.insightsConfig\", its \"queryInsightsEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.insightsConfig\", its \"queryInsightsEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "queryPlansPerMinute":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.insightsConfig\", its \"queryPlansPerMinute\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.insightsConfig\", its \"queryPlansPerMinute\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "queryStringLength":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.insightsConfig\", its \"queryStringLength\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.insightsConfig\", its \"queryStringLength\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "recordApplicationTags":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.insightsConfig\", its \"recordApplicationTags\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.insightsConfig\", its \"recordApplicationTags\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "recordClientAddress":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.insightsConfig\", its \"recordClientAddress\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.insightsConfig\", its \"recordClientAddress\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.insightsConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.insightsConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.insightsConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.insightsConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -14068,33 +14068,33 @@ func newGcpProjectSqlservicesInstanceSettingsInsightsConfig(runtime *resources.R
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("queryInsightsEnabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource without a \"queryInsightsEnabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource without a \"queryInsightsEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("queryPlansPerMinute"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource without a \"queryPlansPerMinute\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource without a \"queryPlansPerMinute\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("queryStringLength"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource without a \"queryStringLength\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource without a \"queryStringLength\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("recordApplicationTags"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource without a \"recordApplicationTags\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource without a \"recordApplicationTags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("recordClientAddress"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource without a \"recordClientAddress\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource without a \"recordClientAddress\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.insightsConfig].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.insightsConfig].Register")
 	switch name {
 	case "id":
 		return nil
@@ -14109,13 +14109,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) Register(name s
 	case "recordClientAddress":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.insightsConfig].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.insightsConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -14130,109 +14130,109 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) Field(name stri
 	case "recordClientAddress":
 		return s.RecordClientAddress()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // QueryInsightsEnabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) QueryInsightsEnabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) QueryInsightsEnabled() (bool, error) {
 	res, ok := s.Cache.Load("queryInsightsEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed: no value provided for static field \"queryInsightsEnabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed: no value provided for static field \"queryInsightsEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed to cast field \"queryInsightsEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed to cast field \"queryInsightsEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // QueryPlansPerMinute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) QueryPlansPerMinute() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) QueryPlansPerMinute() (int64, error) {
 	res, ok := s.Cache.Load("queryPlansPerMinute")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed: no value provided for static field \"queryPlansPerMinute\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed: no value provided for static field \"queryPlansPerMinute\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed to cast field \"queryPlansPerMinute\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed to cast field \"queryPlansPerMinute\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // QueryStringLength accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) QueryStringLength() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) QueryStringLength() (int64, error) {
 	res, ok := s.Cache.Load("queryStringLength")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed: no value provided for static field \"queryStringLength\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed: no value provided for static field \"queryStringLength\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed to cast field \"queryStringLength\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed to cast field \"queryStringLength\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecordApplicationTags accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) RecordApplicationTags() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) RecordApplicationTags() (bool, error) {
 	res, ok := s.Cache.Load("recordApplicationTags")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed: no value provided for static field \"recordApplicationTags\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed: no value provided for static field \"recordApplicationTags\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed to cast field \"recordApplicationTags\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed to cast field \"recordApplicationTags\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // RecordClientAddress accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) RecordClientAddress() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) RecordClientAddress() (bool, error) {
 	res, ok := s.Cache.Load("recordClientAddress")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed: no value provided for static field \"recordClientAddress\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed: no value provided for static field \"recordClientAddress\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.insightsConfig\" failed to cast field \"recordClientAddress\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.insightsConfig\" failed to cast field \"recordClientAddress\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.insightsConfig].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.insightsConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -14247,12 +14247,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsInsightsConfig) MqlCompute(name
 	case "recordClientAddress":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.insightsConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.insightsConfig\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsIpConfiguration resource interface
-type GcpProjectSqlservicesInstanceSettingsIpConfiguration interface {
+// GcpProjectSqlserviceInstanceSettingsIpConfiguration resource interface
+type GcpProjectSqlserviceInstanceSettingsIpConfiguration interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -14266,21 +14266,21 @@ type GcpProjectSqlservicesInstanceSettingsIpConfiguration interface {
 	RequireSsl() (bool, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration for the gcp.project.sqlservices.instance.settings.ipConfiguration resource
-type mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration struct {
+// mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration for the gcp.project.sqlservice.instance.settings.ipConfiguration resource
+type mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.ipConfiguration resource
-func newGcpProjectSqlservicesInstanceSettingsIpConfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.ipConfiguration resource
+func newGcpProjectSqlserviceInstanceSettingsIpConfiguration(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration{runtime.NewResource("gcp.project.sqlservices.instance.settings.ipConfiguration")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration{runtime.NewResource("gcp.project.sqlservice.instance.settings.ipConfiguration")}
 	// assign all named fields
 	var id string
 
@@ -14294,36 +14294,36 @@ func newGcpProjectSqlservicesInstanceSettingsIpConfiguration(runtime *resources.
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "allocatedIpRange":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration\", its \"allocatedIpRange\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration\", its \"allocatedIpRange\" argument has the wrong type (expected type \"string\")")
 			}
 		case "authorizedNetworks":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration\", its \"authorizedNetworks\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration\", its \"authorizedNetworks\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "ipv4Enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration\", its \"ipv4Enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration\", its \"ipv4Enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "privateNetwork":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration\", its \"privateNetwork\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration\", its \"privateNetwork\" argument has the wrong type (expected type \"string\")")
 			}
 		case "requireSsl":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration\", its \"requireSsl\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration\", its \"requireSsl\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.ipConfiguration with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.ipConfiguration with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -14341,33 +14341,33 @@ func newGcpProjectSqlservicesInstanceSettingsIpConfiguration(runtime *resources.
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("allocatedIpRange"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource without a \"allocatedIpRange\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource without a \"allocatedIpRange\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("authorizedNetworks"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource without a \"authorizedNetworks\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource without a \"authorizedNetworks\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("ipv4Enabled"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource without a \"ipv4Enabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource without a \"ipv4Enabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("privateNetwork"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource without a \"privateNetwork\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource without a \"privateNetwork\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("requireSsl"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource without a \"requireSsl\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource without a \"requireSsl\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.ipConfiguration].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.ipConfiguration].Register")
 	switch name {
 	case "id":
 		return nil
@@ -14382,13 +14382,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) Register(name 
 	case "requireSsl":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.ipConfiguration].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.ipConfiguration].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -14403,109 +14403,109 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) Field(name str
 	case "requireSsl":
 		return s.RequireSsl()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AllocatedIpRange accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) AllocatedIpRange() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) AllocatedIpRange() (string, error) {
 	res, ok := s.Cache.Load("allocatedIpRange")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed: no value provided for static field \"allocatedIpRange\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed: no value provided for static field \"allocatedIpRange\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed to cast field \"allocatedIpRange\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed to cast field \"allocatedIpRange\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // AuthorizedNetworks accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) AuthorizedNetworks() ([]interface{}, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) AuthorizedNetworks() ([]interface{}, error) {
 	res, ok := s.Cache.Load("authorizedNetworks")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed: no value provided for static field \"authorizedNetworks\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed: no value provided for static field \"authorizedNetworks\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed to cast field \"authorizedNetworks\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed to cast field \"authorizedNetworks\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Ipv4Enabled accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) Ipv4Enabled() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) Ipv4Enabled() (bool, error) {
 	res, ok := s.Cache.Load("ipv4Enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed: no value provided for static field \"ipv4Enabled\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed: no value provided for static field \"ipv4Enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed to cast field \"ipv4Enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed to cast field \"ipv4Enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // PrivateNetwork accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) PrivateNetwork() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) PrivateNetwork() (string, error) {
 	res, ok := s.Cache.Load("privateNetwork")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed: no value provided for static field \"privateNetwork\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed: no value provided for static field \"privateNetwork\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed to cast field \"privateNetwork\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed to cast field \"privateNetwork\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // RequireSsl accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) RequireSsl() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) RequireSsl() (bool, error) {
 	res, ok := s.Cache.Load("requireSsl")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed: no value provided for static field \"requireSsl\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed: no value provided for static field \"requireSsl\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration\" failed to cast field \"requireSsl\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration\" failed to cast field \"requireSsl\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.ipConfiguration].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.ipConfiguration].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -14520,12 +14520,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfiguration) MqlCompute(nam
 	case "requireSsl":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.ipConfiguration\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.ipConfiguration\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry resource interface
-type GcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry interface {
+// GcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry resource interface
+type GcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -14537,21 +14537,21 @@ type GcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry interface {
 	Value() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry for the gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry resource
-type mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry struct {
+// mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry for the gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry resource
+type mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry resource
-func newGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry resource
+func newGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry{runtime.NewResource("gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry{runtime.NewResource("gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry")}
 	// assign all named fields
 	var id string
 
@@ -14565,28 +14565,28 @@ func newGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry(runtime *re
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "expirationTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\", its \"expirationTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\", its \"expirationTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "value":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\", its \"value\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\", its \"value\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -14604,27 +14604,27 @@ func newGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry(runtime *re
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("expirationTime"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" resource without a \"expirationTime\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" resource without a \"expirationTime\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("value"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" resource without a \"value\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" resource without a \"value\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry].Register")
 	switch name {
 	case "id":
 		return nil
@@ -14635,13 +14635,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Regist
 	case "value":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -14652,77 +14652,77 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Field(
 	case "value":
 		return s.Value()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ExpirationTime accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) ExpirationTime() (*time.Time, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) ExpirationTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("expirationTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"expirationTime\"")
+		return nil, errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"expirationTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"expirationTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"expirationTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Name() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Value accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) Value() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) Value() (string, error) {
 	res, ok := s.Cache.Load("value")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"value\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed: no value provided for static field \"value\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"value\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" failed to cast field \"value\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -14733,12 +14733,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsIpConfigurationAclEntry) MqlCom
 	case "value":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsLocationPreference resource interface
-type GcpProjectSqlservicesInstanceSettingsLocationPreference interface {
+// GcpProjectSqlserviceInstanceSettingsLocationPreference resource interface
+type GcpProjectSqlserviceInstanceSettingsLocationPreference interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -14750,21 +14750,21 @@ type GcpProjectSqlservicesInstanceSettingsLocationPreference interface {
 	Zone() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsLocationPreference for the gcp.project.sqlservices.instance.settings.locationPreference resource
-type mqlGcpProjectSqlservicesInstanceSettingsLocationPreference struct {
+// mqlGcpProjectSqlserviceInstanceSettingsLocationPreference for the gcp.project.sqlservice.instance.settings.locationPreference resource
+type mqlGcpProjectSqlserviceInstanceSettingsLocationPreference struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.locationPreference resource
-func newGcpProjectSqlservicesInstanceSettingsLocationPreference(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.locationPreference resource
+func newGcpProjectSqlserviceInstanceSettingsLocationPreference(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsLocationPreference{runtime.NewResource("gcp.project.sqlservices.instance.settings.locationPreference")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsLocationPreference{runtime.NewResource("gcp.project.sqlservice.instance.settings.locationPreference")}
 	// assign all named fields
 	var id string
 
@@ -14778,28 +14778,28 @@ func newGcpProjectSqlservicesInstanceSettingsLocationPreference(runtime *resourc
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.locationPreference\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.locationPreference\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "followGaeApplication":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.locationPreference\", its \"followGaeApplication\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.locationPreference\", its \"followGaeApplication\" argument has the wrong type (expected type \"string\")")
 			}
 		case "secondaryZone":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.locationPreference\", its \"secondaryZone\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.locationPreference\", its \"secondaryZone\" argument has the wrong type (expected type \"string\")")
 			}
 		case "zone":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.locationPreference\", its \"zone\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.locationPreference\", its \"zone\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.locationPreference\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.locationPreference\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.locationPreference with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.locationPreference with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -14817,27 +14817,27 @@ func newGcpProjectSqlservicesInstanceSettingsLocationPreference(runtime *resourc
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.locationPreference\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.locationPreference\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("followGaeApplication"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.locationPreference\" resource without a \"followGaeApplication\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.locationPreference\" resource without a \"followGaeApplication\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("secondaryZone"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.locationPreference\" resource without a \"secondaryZone\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.locationPreference\" resource without a \"secondaryZone\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("zone"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.locationPreference\" resource without a \"zone\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.locationPreference\" resource without a \"zone\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.locationPreference].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.locationPreference].Register")
 	switch name {
 	case "id":
 		return nil
@@ -14848,13 +14848,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) Register(na
 	case "zone":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.locationPreference\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.locationPreference\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.locationPreference].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.locationPreference].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -14865,77 +14865,77 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) Field(name 
 	case "zone":
 		return s.Zone()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.locationPreference\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.locationPreference\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // FollowGaeApplication accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) FollowGaeApplication() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) FollowGaeApplication() (string, error) {
 	res, ok := s.Cache.Load("followGaeApplication")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed: no value provided for static field \"followGaeApplication\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed: no value provided for static field \"followGaeApplication\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed to cast field \"followGaeApplication\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed to cast field \"followGaeApplication\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // SecondaryZone accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) SecondaryZone() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) SecondaryZone() (string, error) {
 	res, ok := s.Cache.Load("secondaryZone")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed: no value provided for static field \"secondaryZone\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed: no value provided for static field \"secondaryZone\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed to cast field \"secondaryZone\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed to cast field \"secondaryZone\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Zone accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) Zone() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) Zone() (string, error) {
 	res, ok := s.Cache.Load("zone")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed: no value provided for static field \"zone\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed: no value provided for static field \"zone\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.locationPreference\" failed to cast field \"zone\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.locationPreference\" failed to cast field \"zone\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.locationPreference].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.locationPreference].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -14946,12 +14946,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsLocationPreference) MqlCompute(
 	case "zone":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.locationPreference\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.locationPreference\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsMaintenanceWindow resource interface
-type GcpProjectSqlservicesInstanceSettingsMaintenanceWindow interface {
+// GcpProjectSqlserviceInstanceSettingsMaintenanceWindow resource interface
+type GcpProjectSqlserviceInstanceSettingsMaintenanceWindow interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -14963,21 +14963,21 @@ type GcpProjectSqlservicesInstanceSettingsMaintenanceWindow interface {
 	UpdateTrack() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow for the gcp.project.sqlservices.instance.settings.maintenanceWindow resource
-type mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow struct {
+// mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow for the gcp.project.sqlservice.instance.settings.maintenanceWindow resource
+type mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.maintenanceWindow resource
-func newGcpProjectSqlservicesInstanceSettingsMaintenanceWindow(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.maintenanceWindow resource
+func newGcpProjectSqlserviceInstanceSettingsMaintenanceWindow(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow{runtime.NewResource("gcp.project.sqlservices.instance.settings.maintenanceWindow")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow{runtime.NewResource("gcp.project.sqlservice.instance.settings.maintenanceWindow")}
 	// assign all named fields
 	var id string
 
@@ -14991,28 +14991,28 @@ func newGcpProjectSqlservicesInstanceSettingsMaintenanceWindow(runtime *resource
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.maintenanceWindow\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.maintenanceWindow\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "day":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.maintenanceWindow\", its \"day\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.maintenanceWindow\", its \"day\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "hour":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.maintenanceWindow\", its \"hour\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.maintenanceWindow\", its \"hour\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "updateTrack":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.maintenanceWindow\", its \"updateTrack\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.maintenanceWindow\", its \"updateTrack\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.maintenanceWindow\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.maintenanceWindow\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.maintenanceWindow with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.maintenanceWindow with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -15030,27 +15030,27 @@ func newGcpProjectSqlservicesInstanceSettingsMaintenanceWindow(runtime *resource
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.maintenanceWindow\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.maintenanceWindow\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("day"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.maintenanceWindow\" resource without a \"day\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.maintenanceWindow\" resource without a \"day\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("hour"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.maintenanceWindow\" resource without a \"hour\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.maintenanceWindow\" resource without a \"hour\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("updateTrack"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.maintenanceWindow\" resource without a \"updateTrack\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.maintenanceWindow\" resource without a \"updateTrack\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.maintenanceWindow].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.maintenanceWindow].Register")
 	switch name {
 	case "id":
 		return nil
@@ -15061,13 +15061,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Register(nam
 	case "updateTrack":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.maintenanceWindow\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.maintenanceWindow\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.maintenanceWindow].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.maintenanceWindow].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -15078,77 +15078,77 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Field(name s
 	case "updateTrack":
 		return s.UpdateTrack()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.maintenanceWindow\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.maintenanceWindow\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Day accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Day() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) Day() (int64, error) {
 	res, ok := s.Cache.Load("day")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed: no value provided for static field \"day\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed: no value provided for static field \"day\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed to cast field \"day\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed to cast field \"day\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Hour accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) Hour() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) Hour() (int64, error) {
 	res, ok := s.Cache.Load("hour")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed: no value provided for static field \"hour\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed: no value provided for static field \"hour\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed to cast field \"hour\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed to cast field \"hour\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // UpdateTrack accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) UpdateTrack() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) UpdateTrack() (string, error) {
 	res, ok := s.Cache.Load("updateTrack")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed: no value provided for static field \"updateTrack\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed: no value provided for static field \"updateTrack\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.maintenanceWindow\" failed to cast field \"updateTrack\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.maintenanceWindow\" failed to cast field \"updateTrack\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.maintenanceWindow].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.maintenanceWindow].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -15159,12 +15159,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsMaintenanceWindow) MqlCompute(n
 	case "updateTrack":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.maintenanceWindow\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.maintenanceWindow\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy resource interface
-type GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy interface {
+// GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy resource interface
+type GcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -15179,21 +15179,21 @@ type GcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy interface {
 	ReuseInterval() (int64, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy for the gcp.project.sqlservices.instance.settings.passwordValidationPolicy resource
-type mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy struct {
+// mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy for the gcp.project.sqlservice.instance.settings.passwordValidationPolicy resource
+type mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.passwordValidationPolicy resource
-func newGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.passwordValidationPolicy resource
+func newGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy{runtime.NewResource("gcp.project.sqlservices.instance.settings.passwordValidationPolicy")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy{runtime.NewResource("gcp.project.sqlservice.instance.settings.passwordValidationPolicy")}
 	// assign all named fields
 	var id string
 
@@ -15207,40 +15207,40 @@ func newGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy(runtime *r
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "complexity":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"complexity\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"complexity\" argument has the wrong type (expected type \"string\")")
 			}
 		case "disallowUsernameSubstring":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"disallowUsernameSubstring\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"disallowUsernameSubstring\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "enabledPasswordPolicy":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"enabledPasswordPolicy\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"enabledPasswordPolicy\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "minLength":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"minLength\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"minLength\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "passwordChangeInterval":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"passwordChangeInterval\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"passwordChangeInterval\" argument has the wrong type (expected type \"string\")")
 			}
 		case "reuseInterval":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"reuseInterval\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"reuseInterval\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.passwordValidationPolicy with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.passwordValidationPolicy with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -15258,36 +15258,36 @@ func newGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy(runtime *r
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("complexity"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource without a \"complexity\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource without a \"complexity\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("disallowUsernameSubstring"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource without a \"disallowUsernameSubstring\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource without a \"disallowUsernameSubstring\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabledPasswordPolicy"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource without a \"enabledPasswordPolicy\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource without a \"enabledPasswordPolicy\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("minLength"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource without a \"minLength\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource without a \"minLength\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("passwordChangeInterval"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource without a \"passwordChangeInterval\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource without a \"passwordChangeInterval\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("reuseInterval"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource without a \"reuseInterval\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource without a \"reuseInterval\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.passwordValidationPolicy].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.passwordValidationPolicy].Register")
 	switch name {
 	case "id":
 		return nil
@@ -15304,13 +15304,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) Regis
 	case "reuseInterval":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.passwordValidationPolicy].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.passwordValidationPolicy].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -15327,125 +15327,125 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) Field
 	case "reuseInterval":
 		return s.ReuseInterval()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Complexity accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) Complexity() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) Complexity() (string, error) {
 	res, ok := s.Cache.Load("complexity")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"complexity\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"complexity\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed to cast field \"complexity\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed to cast field \"complexity\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DisallowUsernameSubstring accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) DisallowUsernameSubstring() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) DisallowUsernameSubstring() (bool, error) {
 	res, ok := s.Cache.Load("disallowUsernameSubstring")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"disallowUsernameSubstring\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"disallowUsernameSubstring\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed to cast field \"disallowUsernameSubstring\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed to cast field \"disallowUsernameSubstring\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // EnabledPasswordPolicy accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) EnabledPasswordPolicy() (bool, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) EnabledPasswordPolicy() (bool, error) {
 	res, ok := s.Cache.Load("enabledPasswordPolicy")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"enabledPasswordPolicy\"")
+		return false, errors.New("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"enabledPasswordPolicy\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed to cast field \"enabledPasswordPolicy\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed to cast field \"enabledPasswordPolicy\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // MinLength accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) MinLength() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) MinLength() (int64, error) {
 	res, ok := s.Cache.Load("minLength")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"minLength\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"minLength\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed to cast field \"minLength\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed to cast field \"minLength\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // PasswordChangeInterval accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) PasswordChangeInterval() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) PasswordChangeInterval() (string, error) {
 	res, ok := s.Cache.Load("passwordChangeInterval")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"passwordChangeInterval\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"passwordChangeInterval\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed to cast field \"passwordChangeInterval\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed to cast field \"passwordChangeInterval\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ReuseInterval accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) ReuseInterval() (int64, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) ReuseInterval() (int64, error) {
 	res, ok := s.Cache.Load("reuseInterval")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"reuseInterval\"")
+		return 0, errors.New("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed: no value provided for static field \"reuseInterval\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" failed to cast field \"reuseInterval\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" failed to cast field \"reuseInterval\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.passwordValidationPolicy].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.passwordValidationPolicy].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -15462,12 +15462,12 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsPasswordValidationPolicy) MqlCo
 	case "reuseInterval":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.passwordValidationPolicy\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.passwordValidationPolicy\" resource")
 	}
 }
 
-// GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig resource interface
-type GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig interface {
+// GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig resource interface
+type GcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -15479,21 +15479,21 @@ type GcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig interface {
 	UploadInterval() (string, error)
 }
 
-// mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig for the gcp.project.sqlservices.instance.settings.sqlServerAuditConfig resource
-type mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig struct {
+// mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig for the gcp.project.sqlservice.instance.settings.sqlServerAuditConfig resource
+type mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.sqlservices.instance.settings.sqlServerAuditConfig resource
-func newGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.sqlservice.instance.settings.sqlServerAuditConfig resource
+func newGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig{runtime.NewResource("gcp.project.sqlservices.instance.settings.sqlServerAuditConfig")}
+	res := mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig{runtime.NewResource("gcp.project.sqlservice.instance.settings.sqlServerAuditConfig")}
 	// assign all named fields
 	var id string
 
@@ -15507,28 +15507,28 @@ func newGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig(runtime *resou
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "bucket":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\", its \"bucket\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\", its \"bucket\" argument has the wrong type (expected type \"string\")")
 			}
 		case "retentionInterval":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\", its \"retentionInterval\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\", its \"retentionInterval\" argument has the wrong type (expected type \"string\")")
 			}
 		case "uploadInterval":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\", its \"uploadInterval\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\", its \"uploadInterval\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.sqlservices.instance.settings.sqlServerAuditConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.sqlservice.instance.settings.sqlServerAuditConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -15546,27 +15546,27 @@ func newGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig(runtime *resou
 	return &res, nil
 }
 
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) Validate() error {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("bucket"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" resource without a \"bucket\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" resource without a \"bucket\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("retentionInterval"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" resource without a \"retentionInterval\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" resource without a \"retentionInterval\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("uploadInterval"); !ok {
-		return errors.New("Initialized \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" resource without a \"uploadInterval\". This field is required.")
+		return errors.New("Initialized \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" resource without a \"uploadInterval\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.sqlServerAuditConfig].Register")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.sqlServerAuditConfig].Register")
 	switch name {
 	case "id":
 		return nil
@@ -15577,13 +15577,13 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) Register(
 	case "uploadInterval":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.sqlServerAuditConfig].Field")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.sqlServerAuditConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -15594,77 +15594,77 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) Field(nam
 	case "uploadInterval":
 		return s.UploadInterval()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) Id() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Bucket accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) Bucket() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) Bucket() (string, error) {
 	res, ok := s.Cache.Load("bucket")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"bucket\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"bucket\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed to cast field \"bucket\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed to cast field \"bucket\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // RetentionInterval accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) RetentionInterval() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) RetentionInterval() (string, error) {
 	res, ok := s.Cache.Load("retentionInterval")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"retentionInterval\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"retentionInterval\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed to cast field \"retentionInterval\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed to cast field \"retentionInterval\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // UploadInterval accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) UploadInterval() (string, error) {
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) UploadInterval() (string, error) {
 	res, ok := s.Cache.Load("uploadInterval")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"uploadInterval\"")
+		return "", errors.New("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed: no value provided for static field \"uploadInterval\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" failed to cast field \"uploadInterval\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" failed to cast field \"uploadInterval\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.sqlservices.instance.settings.sqlServerAuditConfig].MqlCompute")
+func (s *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.sqlservice.instance.settings.sqlServerAuditConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -15675,7 +15675,7 @@ func (s *mqlGcpProjectSqlservicesInstanceSettingsSqlServerAuditConfig) MqlComput
 	case "uploadInterval":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservices.instance.settings.sqlServerAuditConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.sqlservice.instance.settings.sqlServerAuditConfig\" resource")
 	}
 }
 

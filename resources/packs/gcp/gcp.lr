@@ -8,9 +8,9 @@ alias gcloud.compute.instance = gcp.compute.instance
 alias gcloud.compute.serviceaccount = gcp.compute.serviceaccount
 alias gcloud.storage = gcp.storage
 alias gcloud.storage.bucket = gcp.storage.bucket
-alias gcloud.sql = gcp.project.sqlservices
-alias gcp.sql = gcp.project.sqlservices
-alias gcloud.sql.instance = gcp.project.sqlservices.instance
+alias gcloud.sql = gcp.project.sqlservice
+alias gcp.sql = gcp.project.sqlservice
+alias gcloud.sql.instance = gcp.project.sqlservice.instance
 
 // GCP Cloud Organization
 gcp.organization @defaults("id") {
@@ -59,7 +59,7 @@ gcp.project @defaults("name") {
   // Logging resources
   logging() gcp.project.loggingservice
   // GCP Cloud SQL Resources
-  sql() gcp.project.sqlservices 
+  sql() gcp.project.sqlservice 
 }
 
 // GCP Service
@@ -572,17 +572,15 @@ private gcp.storage.bucket @defaults("id") {
 }
 
 // GCP Cloud SQL Resources
-private gcp.project.sqlservices {
+private gcp.project.sqlservice {
   // Project ID
   projectId string
   // The list of Cloud SQL instances in the current project
-  instances() []gcp.project.sqlservices.instance
+  instances() []gcp.project.sqlservice.instance
 }
 
 // GCP Cloud SQL Instance
-private gcp.project.sqlservices.instance @defaults("name") {
-  // Internal ID
-  id string
+private gcp.project.sqlservice.instance @defaults("name") {
   // Project ID
   projectId string
   // All maintenance versions applicable on the instance
@@ -600,17 +598,17 @@ private gcp.project.sqlservices.instance @defaults("name") {
   // The database engine type and version
   databaseVersion string
   // Disk encryption configuration
-  diskEncryptionConfiguration gcp.project.sqlservices.instance.diskEncryptionConfiguration
+  diskEncryptionConfiguration gcp.project.sqlservice.instance.diskEncryptionConfiguration
   // Disk encryption status
-  diskEncryptionStatus gcp.project.sqlservices.instance.diskEncryptionStatus
+  diskEncryptionStatus gcp.project.sqlservice.instance.diskEncryptionStatus
   // The name and status of the failover replica
-  failoverReplica gcp.project.sqlservices.instance.failoverReplica
+  failoverReplica gcp.project.sqlservice.instance.failoverReplica
   // The Compute Engine zone that the instance is currently service from
   gceZone string
   // Instance type
   instanceType string
   // The assigned IP addresses
-  ipAddresses []gcp.project.sqlservices.instance.ipMapping
+  ipAddresses []gcp.project.sqlservice.instance.ipMapping
   // The current software version on the instance
   maintenanceVersion string
   // The name of the instance which will act as primary in the replica
@@ -627,19 +625,19 @@ private gcp.project.sqlservices.instance @defaults("name") {
   // Replicas
   replicaNames []string
   // Settings
-  settings dict
+  settings gcp.project.sqlservice.instance.settings
   // Service account email address
   serviceAccountEmailAddress string
   // Instance state
   state string
   // List of the databases in the current SQL instance
-  databases() []gcp.project.sqlservices.instance.database
+  databases() []gcp.project.sqlservice.instance.database
 }
 
 // GCP Cloud SQL Instance database
-private gcp.project.sqlservices.instance.database @defaults("name") {
-  // Internal ID
-  id string
+private gcp.project.sqlservice.instance.database @defaults("name") {
+  // Project ID
+  projectId string
   // Charset value
   charset string
   // Collation
@@ -651,11 +649,11 @@ private gcp.project.sqlservices.instance.database @defaults("name") {
   // Project
   project string
   // SQL Server database details
-  sqlserverDatabaseDetails gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails
+  sqlserverDatabaseDetails gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails
 }
 
 // GCP Cloud SQL Instance SQL Server database details
-private gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails {
+private gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails {
   // Internal ID
   id string
   // Version of the SQL Server with which the database is to be made compatible
@@ -665,7 +663,7 @@ private gcp.project.sqlservices.instance.database.sqlserverDatabaseDetails {
 }
 
 // GCP Cloud SQL Instance Disk Encryption Configuration
-private gcp.project.sqlservices.instance.diskEncryptionConfiguration {
+private gcp.project.sqlservice.instance.diskEncryptionConfiguration {
   // Internal ID
   id string
   // Name of KMS key for disk encryption
@@ -673,7 +671,7 @@ private gcp.project.sqlservices.instance.diskEncryptionConfiguration {
 }
 
 // GCP Cloud SQL Instance Disk Encryption Status
-private gcp.project.sqlservices.instance.diskEncryptionStatus {
+private gcp.project.sqlservice.instance.diskEncryptionStatus {
   // Internal ID
   id string
   // KMS key version used to encrypt the Cloud SQL instance
@@ -681,7 +679,7 @@ private gcp.project.sqlservices.instance.diskEncryptionStatus {
 }
 
 // GCP Cloud SQL Instance Failover Replica
-private gcp.project.sqlservices.instance.failoverReplica @defaults("name available") {
+private gcp.project.sqlservice.instance.failoverReplica @defaults("name available") {
   // Internal ID
   id string
   // The availability status of the failover replica
@@ -691,7 +689,7 @@ private gcp.project.sqlservices.instance.failoverReplica @defaults("name availab
 }
 
 // GCP Cloud SQL Instance IP Mapping
-private gcp.project.sqlservices.instance.ipMapping @defaults("ipAddress") {
+private gcp.project.sqlservice.instance.ipMapping @defaults("ipAddress") {
   // Internal ID
   id string
   // The IP address assigned
@@ -703,17 +701,19 @@ private gcp.project.sqlservices.instance.ipMapping @defaults("ipAddress") {
 }
 
 // GCP Cloud SQL Instance Settings
-private gcp.project.sqlservices.instance.settings {
-  // Internal ID
-  id string
+private gcp.project.sqlservice.instance.settings {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
   // Specifies when the instance is activated
   activationPolicy string
   // Active Directory configuration, relevant only for Cloud SQL for SQL server
-  activeDirectoryConfig gcp.project.sqlservices.instance.settings.activedirectoryconfig
+  activeDirectoryConfig gcp.project.sqlservice.instance.settings.activedirectoryconfig
   // Availability type
   availabilityType string
   // The daily backup configuration for the instance
-  backupConfiguration gcp.project.sqlservices.instance.settings.backupconfiguration
+  backupConfiguration gcp.project.sqlservice.instance.settings.backupconfiguration
   // The name of the serve collation
   collation string
   // Specifies if connections must use Cloud SQL connectors
@@ -731,17 +731,17 @@ private gcp.project.sqlservices.instance.settings {
   // Whether to protect against accidental instance deletion
   deletionProtectionEnabled bool
   // Deny maintenance periods
-  denyMaintenancePeriods []gcp.project.sqlservices.instance.settings.denyMaintenancePeriod
+  denyMaintenancePeriods []gcp.project.sqlservice.instance.settings.denyMaintenancePeriod
   // Insights configuration
-  insightsConfig gcp.project.sqlservices.instance.settings.insightsConfig
+  insightsConfig gcp.project.sqlservice.instance.settings.insightsConfig
   // The settings for IP Management
-  ipConfiguration gcp.project.sqlservices.instance.settings.ipConfiguration
+  ipConfiguration gcp.project.sqlservice.instance.settings.ipConfiguration
   // The location preference settings
-  locationPreference gcp.project.sqlservices.instance.settings.locationPreference
+  locationPreference gcp.project.sqlservice.instance.settings.locationPreference
   // The maintenance window
-  maintenanceWindow gcp.project.sqlservices.instance.settings.maintenanceWindow
+  maintenanceWindow gcp.project.sqlservice.instance.settings.maintenanceWindow
   // The local user password validation policy
-  passwordValidationPolicy gcp.project.sqlservices.instance.settings.passwordValidationPolicy
+  passwordValidationPolicy gcp.project.sqlservice.instance.settings.passwordValidationPolicy
   // The pricing plan 
   pricingPlan string
   // The type of replication
@@ -749,7 +749,7 @@ private gcp.project.sqlservices.instance.settings {
   // The version of instance settings
   settingsVersion int
   // SQL server specific audit configuration
-  sqlServerAuditConfig gcp.project.sqlservices.instance.settings.sqlServerAuditConfig
+  sqlServerAuditConfig gcp.project.sqlservice.instance.settings.sqlServerAuditConfig
   // Configuration to increase storage size automatically
   storageAutoResize bool
   // The maximum size to which storage capacity can be automatically increased
@@ -763,7 +763,7 @@ private gcp.project.sqlservices.instance.settings {
 }
 
 // GCP Cloud SQL Instance Settings Active Directory Configuration
-private gcp.project.sqlservices.instance.settings.activedirectoryconfig @defaults("domain") {
+private gcp.project.sqlservice.instance.settings.activedirectoryconfig @defaults("domain") {
   // Internal ID
   id string
   // The name of the domain
@@ -771,11 +771,11 @@ private gcp.project.sqlservices.instance.settings.activedirectoryconfig @default
 }
 
 // GCP Cloud SQL Instance Settings Backup Configuration
-private gcp.project.sqlservices.instance.settings.backupconfiguration {
+private gcp.project.sqlservice.instance.settings.backupconfiguration {
   // Internal ID
   id string
   // Backup retention settings
-  backupRetentionSettings gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings
+  backupRetentionSettings gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings
   // Whether binary log is enabled
   binaryLogEnabled bool
   // Whether this configuration is enabled
@@ -791,7 +791,7 @@ private gcp.project.sqlservices.instance.settings.backupconfiguration {
 }
 
 // GCP Cloud SQL Instance Settings Backup Configuration retention settings
-private gcp.project.sqlservices.instance.settings.backupconfiguration.retentionsettings {
+private gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings {
   // Internal ID
   id string
   // Depending on the value of retentionUnit, this is used to determine if a backup needs to be deleted
@@ -801,7 +801,7 @@ private gcp.project.sqlservices.instance.settings.backupconfiguration.retentions
 }
 
 // GCP Cloud SQL Instance Settings Deny Maintenance Period
-private gcp.project.sqlservices.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
+private gcp.project.sqlservice.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
   // Internal ID
   id string
   // Deny maintenance period end date.
@@ -813,7 +813,7 @@ private gcp.project.sqlservices.instance.settings.denyMaintenancePeriod @default
 }
 
 // GCP Cloud SQL Instance Settings Insights Configuration
-private gcp.project.sqlservices.instance.settings.insightsConfig {
+private gcp.project.sqlservice.instance.settings.insightsConfig {
   // Internal ID
   id string
   // Whether Query Insights feature is enabled
@@ -829,13 +829,13 @@ private gcp.project.sqlservices.instance.settings.insightsConfig {
 }
 
 // GCP Cloud SQL Instance Settings IP Configuration
-private gcp.project.sqlservices.instance.settings.ipConfiguration {
+private gcp.project.sqlservice.instance.settings.ipConfiguration {
   // Internal ID
   id string
   // The name of the allocated IP range for the private IP Cloud SQL instance
   allocatedIpRange string
   // The list of external networks that are allowed to connect to the instance using the IP
-  authorizedNetworks []gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry
+  authorizedNetworks []gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry
   // Whether the instance is assigned a public IP address
   ipv4Enabled bool
   // The resource link for the VPC network from which the Cloud SQL instance is accessible for private IP
@@ -845,7 +845,7 @@ private gcp.project.sqlservices.instance.settings.ipConfiguration {
 }
 
 // GCP Cloud SQL Instance Settings IP Configuration Authorized Networks
-private gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry {
+private gcp.project.sqlservice.instance.settings.ipConfiguration.aclEntry {
   // Internal ID
   id string
   // The time when this access control entry expires
@@ -857,7 +857,7 @@ private gcp.project.sqlservices.instance.settings.ipConfiguration.aclEntry {
 }
 
 // GCP Cloud SQL Instance Settings Location Preferences
-private gcp.project.sqlservices.instance.settings.locationPreference {
+private gcp.project.sqlservice.instance.settings.locationPreference {
   // Internal ID
   id string
   // The App Engine application to follow
@@ -869,7 +869,7 @@ private gcp.project.sqlservices.instance.settings.locationPreference {
 }
 
 // GCP Cloud SQL Instance Settings Maintenance Window
-private gcp.project.sqlservices.instance.settings.maintenanceWindow {
+private gcp.project.sqlservice.instance.settings.maintenanceWindow {
   // Internal ID
   id string
   // Day of week (1-7), starting on Monday
@@ -881,7 +881,7 @@ private gcp.project.sqlservices.instance.settings.maintenanceWindow {
 }
 
 // GCP Cloud SQL Instance Settings Password Validation Policy
-private gcp.project.sqlservices.instance.settings.passwordValidationPolicy {
+private gcp.project.sqlservice.instance.settings.passwordValidationPolicy {
   // Internal ID
   id string
   // The complexity of the password
@@ -899,7 +899,7 @@ private gcp.project.sqlservices.instance.settings.passwordValidationPolicy {
 }
 
 // GCP Cloud SQL Instance Settings SQL Server Audit Configuration
-private gcp.project.sqlservices.instance.settings.sqlServerAuditConfig {
+private gcp.project.sqlservice.instance.settings.sqlServerAuditConfig {
   // Internal ID
   id string
   // The name of the destination bucket
