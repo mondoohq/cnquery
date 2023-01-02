@@ -56,7 +56,7 @@ gcp.project @defaults("name") {
   // API keys
   apiKeys() []gcp.project.apiKey
   // Logging resources
-  logging() gcp.project.loggingservices
+  logging() gcp.project.loggingservice
 }
 
 // GCP Service
@@ -1314,25 +1314,25 @@ private gcp.project.apiKey.restrictions {
   serverKeyRestrictions dict
 }
 // GCP Logging resources
-private gcp.project.loggingservices {
+private gcp.project.loggingservice {
   // Project ID
   projectId string
   // List of logging buckets
-  buckets() []gcp.project.loggingservices.bucket
+  buckets() []gcp.project.loggingservice.bucket
 }
 
 // GCP Logging bucket
-private gcp.project.loggingservices.bucket @defaults("name") {
-  // Internal ID
-  id string
+private gcp.project.loggingservice.bucket @defaults("name") {
+  // Project ID
+  projectId string
   // CMEK settings of the log bucket
-  cmekSettings gcp.project.loggingservices.bucket.cmekSettings
+  cmekSettings gcp.project.loggingservice.bucket.cmekSettings
   // Creation timestamp
   created time
   // Description of the bucket
   description string
   // List of indexed fields and related configuration data
-  indexConfigs []gcp.project.loggingservices.bucket.indexConfig
+  indexConfigs []gcp.project.loggingservice.bucket.indexConfig
   // Bucket lifecycle state
   lifecycleState string
   // Whether the bucket is locked
@@ -1348,9 +1348,11 @@ private gcp.project.loggingservices.bucket @defaults("name") {
 }
 
 // GCP Logging bucket CMEK settings
-private gcp.project.loggingservices.bucket.cmekSettings @defaults("name") {
-  // Internal ID
-  id string
+private gcp.project.loggingservice.bucket.cmekSettings @defaults("name") {
+  // Project ID
+  projectId string
+  // Bucket name
+  bucketName string
   // Resource name for the configurated Cloud KMS key
   kmsKeyName string
   // Crypto key version name
@@ -1362,7 +1364,7 @@ private gcp.project.loggingservices.bucket.cmekSettings @defaults("name") {
 }
 
 // GCP Logging bucket index config
-private gcp.project.loggingservices.bucket.indexConfig {
+private gcp.project.loggingservice.bucket.indexConfig {
   // Internal ID
   id string
   // Creation timestamp

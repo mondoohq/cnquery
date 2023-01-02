@@ -10,8 +10,12 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProjectLoggingservices) id() (string, error) {
-	return "gcp.project.loggingservices", nil
+func (g *mqlGcpProjectLoggingservice) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/gcp.project.loggingservice", projectId), nil
 }
 
 func (g *mqlGcpProject) GetLogging() (interface{}, error) {
@@ -20,12 +24,12 @@ func (g *mqlGcpProject) GetLogging() (interface{}, error) {
 		return nil, err
 	}
 
-	return g.MotorRuntime.CreateResource("gcp.project.loggingservices",
+	return g.MotorRuntime.CreateResource("gcp.project.loggingservice",
 		"projectId", projectId,
 	)
 }
 
-func (g *mqlGcpProjectLoggingservices) GetBuckets() ([]interface{}, error) {
+func (g *mqlGcpProjectLoggingservice) GetBuckets() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -56,8 +60,9 @@ func (g *mqlGcpProjectLoggingservices) GetBuckets() ([]interface{}, error) {
 
 		var mqlCmekSettings resources.ResourceType
 		if bucket.CmekSettings != nil {
-			mqlCmekSettings, err = g.MotorRuntime.CreateResource("gcp.project.loggingservices.bucket.cmekSettings",
-				"id", fmt.Sprintf("%s/cmekSettings", bucket.Name),
+			mqlCmekSettings, err = g.MotorRuntime.CreateResource("gcp.project.loggingservice.bucket.cmekSettings",
+				"projectId", projectId,
+				"bucketName", bucket.Name,
 				"kmsKeyName", bucket.CmekSettings.KmsKeyName,
 				"kmsKeyVersionName", bucket.CmekSettings.KmsKeyVersionName,
 				"name", bucket.CmekSettings.Name,
@@ -70,7 +75,7 @@ func (g *mqlGcpProjectLoggingservices) GetBuckets() ([]interface{}, error) {
 
 		indexConfigs := make([]interface{}, 0, len(bucket.IndexConfigs))
 		for i, cfg := range bucket.IndexConfigs {
-			mqlIndexConfig, err := g.MotorRuntime.CreateResource("gcp.project.loggingservices.bucket.indexConfigs",
+			mqlIndexConfig, err := g.MotorRuntime.CreateResource("gcp.project.loggingservice.bucket.indexConfigs",
 				"id", fmt.Sprintf("%s/indexConfigs/%d", bucket.Name, i),
 				"created", parseTime(cfg.CreateTime),
 				"fieldPath", cfg.FieldPath,
@@ -82,8 +87,8 @@ func (g *mqlGcpProjectLoggingservices) GetBuckets() ([]interface{}, error) {
 			indexConfigs = append(indexConfigs, mqlIndexConfig)
 		}
 
-		mqlBucket, err := g.MotorRuntime.CreateResource("gcp.project.loggingservices.bucket",
-			"id", bucket.Name,
+		mqlBucket, err := g.MotorRuntime.CreateResource("gcp.project.loggingservice.bucket",
+			"projectId", projectId,
 			"cmekSettings", mqlCmekSettings,
 			"created", parseTime(bucket.CreateTime),
 			"description", bucket.Description,
@@ -103,14 +108,30 @@ func (g *mqlGcpProjectLoggingservices) GetBuckets() ([]interface{}, error) {
 	return mqlBuckets, nil
 }
 
-func (g *mqlGcpProjectLoggingservicesBucket) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectLoggingserviceBucket) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	name, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectLoggingservicesBucketCmekSettings) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectLoggingserviceBucketCmekSettings) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	bucketName, err := g.BucketName()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s/cmekSettings", projectId, bucketName), nil
 }
 
-func (g *mqlGcpProjectLoggingservicesBucketIndexConfig) id() (string, error) {
+func (g *mqlGcpProjectLoggingserviceBucketIndexConfig) id() (string, error) {
 	return g.Id()
 }
