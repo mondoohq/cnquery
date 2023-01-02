@@ -1149,9 +1149,9 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
 private gcp.project.kmsservices {
   // Project ID
   projectId string
-  // The available locations for the service
+  // Available locations for the service
   locations() []string
-  // The list of keyrings in the current project
+  // List of keyrings in the current project
   keyrings() []gcp.project.kmsservices.keyring
 }
 
@@ -1161,13 +1161,13 @@ private gcp.project.kmsservices.keyring @defaults("name") {
   id string
   // Project ID
   projectId string
-  // The name of the keyring
+  // Keyring name
   name string
   // Creation timestamp
   created time
-  // The location of the keyring
+  // Keyring location
   location string
-  // The list of cryptokeys in the current keyring
+  // List of cryptokeys in the current keyring
   cryptokeys() []gcp.project.kmsservices.keyring.cryptokey
 }
 
@@ -1175,13 +1175,13 @@ private gcp.project.kmsservices.keyring @defaults("name") {
 private gcp.project.kmsservices.keyring.cryptokey @defaults("name purpose"){
   // Internal ID
   id string
-  // The name of the crypto key
+  // Crypto key name
   name string
-  // The primary version that will be used by encrypt when this crypto key is given
+  // Primary version for encrypt to use for this crypto key
   primary gcp.project.kmsservices.keyring.cryptokey.version
-  // The purpose of the crypto key
+  // Crypto key purpose
   purpose string
-  // The list of cryptokey versions
+  // List of cryptokey versions
   versions() []gcp.project.kmsservices.keyring.cryptokey.version
 }
 
@@ -1189,13 +1189,13 @@ private gcp.project.kmsservices.keyring.cryptokey @defaults("name purpose"){
 private gcp.project.kmsservices.keyring.cryptokey.version @defaults("name state") {
   // Internal ID
   id string
-  // The name of the crypto key version
+  // Crypto key version name
   name string
-  // The current state of the crypto key version
+  // Crypto key version's current state
   state string
-  // The protection level describing how crypto operations are performed with this crypto key version
+  // The protection level describing how crypto operations perform with this crypto key version
   protectionLevel string
-  // The algorithm that this crypto key version supports
+  // Algorithm that this crypto key version supports
   algorithm string
   // Statement generated and signed by HSM at key creation time
   attestation gcp.project.kmsservices.keyring.cryptokey.version.attestation
@@ -1207,15 +1207,15 @@ private gcp.project.kmsservices.keyring.cryptokey.version @defaults("name state"
   destroyed time
   // Destroy event timestamp
   destroyEventTime time
-  // The name of the import job used in the most recent import of this crypto key version
+  // Name of the import job used in the most recent import of this crypto key version
   importJob string
-  // The time at which this crypto key version's key material was imported
+  // Time at which this crypto key version's key material was imported
   importTime time
   // The root cause of an import failure
   importFailureReason string
   // Additional fields for configuring external protection level
   externalProtectionLevelOptions gcp.project.kmsservices.keyring.cryptokey.version.externalProtectionLevelOptions
-  // Whether or not this crypto key version is eligible for reimport
+  // Whether the crypto key version is eligible for reimport
   reimportEligible bool
 }
 
@@ -1223,11 +1223,11 @@ private gcp.project.kmsservices.keyring.cryptokey.version @defaults("name state"
 private gcp.project.kmsservices.keyring.cryptokey.version.attestation {
   // Internal ID
   id string
-  // The format of the attestation data
+  // Format of the attestation data
   format string
-  // The attestation data provided by the HSM when the key version was created
+  // Attestation data provided by the HSM when the key version was created
   // content ???
-  // The certificate chains needed to validate the attestation
+  // Certificate chains needed to validate the attestation
   certificateChains gcp.project.kmsservices.keyring.cryptokey.version.attestation.certificatechains
 }
 
@@ -1247,8 +1247,8 @@ private gcp.project.kmsservices.keyring.cryptokey.version.attestation.certificat
 private gcp.project.kmsservices.keyring.cryptokey.version.externalProtectionLevelOptions {
   // Internal ID
   id string
-  // The URI for an external resource that the crypto key version represents
+  // URI for an external resource that the crypto key version represents
   externalKeyUri string
-  // The path to the external key material on the EKM when using EKM connection
+  // Path to the external key material on the EKM when using EKM connection
   ekmConnectionKeyPath string
 }
