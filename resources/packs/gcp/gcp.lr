@@ -48,7 +48,7 @@ gcp.project @defaults("name") {
   // compute() gcp.compute
   clusters() []gcp.project.cluster
   // GCP PubSub-related Resources
-  pubsub() gcp.project.pubsub
+  pubsub() gcp.project.pubsubService
 }
 
 // GCP Service
@@ -1049,69 +1049,69 @@ private gcp.project.cluster.nodepool.config.confidentialNodes @defaults("enabled
 }
 
 // GCP PubSub resources
-private gcp.project.pubsub {
+private gcp.project.pubsubService {
   // Project ID
   projectId string
   // List of topics in the current project
-  topics() []gcp.project.pubsub.topic
+  topics() []gcp.project.pubsubService.topic
   // List of subscriptions in the current project
-  subscriptions() []gcp.project.pubsub.subscription
+  subscriptions() []gcp.project.pubsubService.subscription
   // List of snapshots in the current project
-  snapshots() []gcp.project.pubsub.snapshot
+  snapshots() []gcp.project.pubsubService.snapshot
 }
 
 // GCP PubSub topic
-private gcp.project.pubsub.topic @defaults("name") {
-  // Internal ID
-  id string
+private gcp.project.pubsubService.topic @defaults("name") {
   // Project ID
   projectId string
   // Topic name
   name string
   // Topic configuration
-  config() gcp.project.pubsub.topic.config
+  config() gcp.project.pubsubService.topic.config
 }
 
 // GCP PubSub topic configuration
-private gcp.project.pubsub.topic.config @defaults("kmsKeyName messageStoragePolicy") {
-  // Internal ID
-  id string
+private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStoragePolicy") {
+  // Project ID
+  projectId string
+  // Topic name
+  topicName string
   // Labels associated with this topic
   labels map[string]string
   // Cloud KMS key used to protect access to messages published to this topic
   kmsKeyName string
   // Message storage policy
-  messageStoragePolicy gcp.project.pubsub.topic.config.messagestoragepolicy
+  messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
 }
 
 // GCP PubSub topic message storage policy
-private gcp.project.pubsub.topic.config.messagestoragepolicy @defaults("allowedPersistenceRegions"){
-  // Internal ID
-  id string
+private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("allowedPersistenceRegions"){
+  // Parent configuration ID
+  configId string
   // List of GCP regions where messages published to the topic can persist in storage
   allowedPersistenceRegions []string
 }
 
 // GCP PubSub subscription
-private gcp.project.pubsub.subscription @defaults("name") {
-  // Internal ID
-  id string
+private gcp.project.pubsubService.subscription @defaults("name") {
   // Project ID
   projectId string
   // Subscription name
   name string
   // Subscription configuration
-  config() gcp.project.pubsub.subscription.config
+  config() gcp.project.pubsubService.subscription.config
 }
 
 // GCP PubSub subscription configuration
-private gcp.project.pubsub.subscription.config @defaults("topic") {
-  // Internal ID
-  id string
+private gcp.project.pubsubService.subscription.config @defaults("topic") {
+  // Project ID
+  projectId string
+  // Subscription name
+  subscriptionName string
   // Topic to which the subscription points
-  topic gcp.project.pubsub.topic
+  topic gcp.project.pubsubService.topic
   // Configuration for subscriptions that operate in push mode
-  pushConfig gcp.project.pubsub.subscription.config.pushconfig
+  pushConfig gcp.project.pubsubService.subscription.config.pushconfig
   // Default maximum time a subscriber can take to acknowledge a message after receiving it
   ackDeadline time
   // Whether to retain acknowledged messages
@@ -1125,9 +1125,9 @@ private gcp.project.pubsub.subscription.config @defaults("topic") {
 }
 
 // GCP PubSub Configuration for subscriptions that operate in push mode
-private gcp.project.pubsub.subscription.config.pushconfig {
-  // Internal ID
-  id string
+private gcp.project.pubsubService.subscription.config.pushconfig {
+  // Parent configuration ID
+  configId string
   // URL of the endpoint to which to push messages
   endpoint string
   // Endpoint configuration attributes
@@ -1135,15 +1135,13 @@ private gcp.project.pubsub.subscription.config.pushconfig {
 }
 
 // GCP PubSub snapshot
-private gcp.project.pubsub.snapshot @defaults("name") {
-  // Internal ID
-  id string
+private gcp.project.pubsubService.snapshot @defaults("name") {
   // Project ID
   projectId string
   // Subscription name
   name string
   // The topic for which the snapshot is
-  topic gcp.project.pubsub.topic
+  topic gcp.project.pubsubService.topic
   // When the snapshot expires
   expiration time
 }

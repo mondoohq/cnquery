@@ -13,11 +13,15 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProjectPubsub) id() (string, error) {
-	return "gcp.project.pubsub", nil
+func (g *mqlGcpProjectPubsubService) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/gcp.project.pubsubService", projectId), nil
 }
 
-func (g *mqlGcpProjectPubsub) init(args *resources.Args) (*resources.Args, GcpProjectPubsub, error) {
+func (g *mqlGcpProjectPubsubService) init(args *resources.Args) (*resources.Args, GcpProjectPubsubService, error) {
 	if len(*args) > 0 {
 		return args, nil, nil
 	}
@@ -39,40 +43,88 @@ func (g *mqlGcpProject) GetPubsub() (interface{}, error) {
 		return nil, err
 	}
 
-	return g.MotorRuntime.CreateResource("gcp.project.pubsub",
+	return g.MotorRuntime.CreateResource("gcp.project.pubsubService",
 		"projectId", projectId,
 	)
 }
 
-func (g *mqlGcpProjectPubsubTopic) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectPubsubServiceTopic) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	name, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectPubsubTopicConfig) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectPubsubServiceTopicConfig) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	topicName, err := g.TopicName()
+	if err != nil {
+		return "", err
+	}
+	return pubsubConfigId(projectId, topicName), nil
 }
 
-func (g *mqlGcpProjectPubsubTopicConfigMessagestoragepolicy) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectPubsubServiceTopicConfigMessagestoragepolicy) id() (string, error) {
+	configId, err := g.ConfigId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/messageStoragePolicy", configId), nil
 }
 
-func (g *mqlGcpProjectPubsubSubscription) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectPubsubServiceSubscription) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	name, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectPubsubSubscriptionConfig) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfig) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	subscriptionName, err := g.SubscriptionName()
+	if err != nil {
+		return "", err
+	}
+	return pubsubConfigId(projectId, subscriptionName), nil
 }
 
-func (g *mqlGcpProjectPubsubSubscriptionConfigPushconfig) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectPubsubServiceSubscriptionConfigPushconfig) id() (string, error) {
+	configId, err := g.ConfigId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/pushConfig", configId), nil
 }
 
-func (g *mqlGcpProjectPubsubSnapshot) id() (string, error) {
-	return g.Id()
+func (g *mqlGcpProjectPubsubServiceSnapshot) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	name, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
+func (g *mqlGcpProjectPubsubService) GetTopics() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -107,8 +159,7 @@ func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlTopic, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.topic",
-			"id", t.ID(),
+		mqlTopic, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.topic",
 			"projectId", projectId,
 			"name", t.ID(),
 		)
@@ -121,7 +172,7 @@ func (g *mqlGcpProjectPubsub) GetTopics() ([]interface{}, error) {
 	return topics, nil
 }
 
-func (g *mqlGcpProjectPubsubTopic) GetConfig() (interface{}, error) {
+func (g *mqlGcpProjectPubsubServiceTopic) GetConfig() (interface{}, error) {
 	name, err := g.Name()
 	if err != nil {
 		return nil, err
@@ -156,22 +207,23 @@ func (g *mqlGcpProjectPubsubTopic) GetConfig() (interface{}, error) {
 		return nil, err
 	}
 
-	messageStoragePolicy, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.topic.config.messagestoragepolicy",
-		"id", fmt.Sprintf("%s/config/messagestoragepolicy", t.ID()),
+	messageStoragePolicy, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.topic.config.messagestoragepolicy",
+		"configId", pubsubConfigId(projectId, t.ID()),
 		"allowedPersistenceRegions", core.StrSliceToInterface(cfg.MessageStoragePolicy.AllowedPersistenceRegions),
 	)
 	if err != nil {
 		return nil, err
 	}
-	return g.MotorRuntime.CreateResource("gcp.project.pubsub.topic.config",
-		"id", fmt.Sprintf("%s/config", t.ID()),
+	return g.MotorRuntime.CreateResource("gcp.project.pubsubService.topic.config",
+		"projectId", projectId,
+		"topicName", t.ID(),
 		"labels", core.StrMapToInterface(cfg.Labels),
 		"kmsKeyName", cfg.KMSKeyName,
 		"messageStoragePolicy", messageStoragePolicy,
 	)
 }
 
-func (g *mqlGcpProjectPubsub) GetSubscriptions() ([]interface{}, error) {
+func (g *mqlGcpProjectPubsubService) GetSubscriptions() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -206,8 +258,7 @@ func (g *mqlGcpProjectPubsub) GetSubscriptions() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		mqlSub, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.subscription",
-			"id", s.ID(),
+		mqlSub, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.subscription",
 			"projectId", projectId,
 			"name", s.ID(),
 		)
@@ -220,7 +271,7 @@ func (g *mqlGcpProjectPubsub) GetSubscriptions() ([]interface{}, error) {
 	return subs, nil
 }
 
-func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
+func (g *mqlGcpProjectPubsubServiceSubscription) GetConfig() (interface{}, error) {
 	name, err := g.Name()
 	if err != nil {
 		return nil, err
@@ -255,14 +306,13 @@ func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
 		return nil, err
 	}
 
-	topic, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.topic",
-		"id", cfg.Topic.ID(),
+	topic, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.topic",
 		"projectId", projectId,
 		"name", cfg.Topic.ID(),
 	)
 
-	pushConfig, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.subscription.config.pushconfig",
-		"id", fmt.Sprintf("%s/config/messagestoragepolicy", s.ID()),
+	pushConfig, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.subscription.config.pushconfig",
+		"configId", pubsubConfigId(projectId, s.ID()),
 		"endpoint", cfg.PushConfig.Endpoint,
 		"attributes", core.StrMapToInterface(cfg.PushConfig.Attributes),
 	)
@@ -273,8 +323,9 @@ func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
 	if exp, ok := cfg.ExpirationPolicy.(time.Duration); ok {
 		expPolicy = core.MqlTime(llx.DurationToTime(int64(exp.Seconds())))
 	}
-	return g.MotorRuntime.CreateResource("gcp.project.pubsub.subscription.config",
-		"id", fmt.Sprintf("%s/config", s.ID()),
+	return g.MotorRuntime.CreateResource("gcp.project.pubsubService.subscription.config",
+		"projectId", projectId,
+		"subscriptionName", s.ID(),
 		"topic", topic,
 		"pushConfig", pushConfig,
 		"ackDeadline", core.MqlTime(llx.DurationToTime(int64(cfg.AckDeadline.Seconds()))),
@@ -285,7 +336,7 @@ func (g *mqlGcpProjectPubsubSubscription) GetConfig() (interface{}, error) {
 	)
 }
 
-func (g *mqlGcpProjectPubsub) GetSnapshots() ([]interface{}, error) {
+func (g *mqlGcpProjectPubsubService) GetSnapshots() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -321,7 +372,7 @@ func (g *mqlGcpProjectPubsub) GetSnapshots() ([]interface{}, error) {
 			return nil, err
 		}
 
-		topic, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.topic",
+		topic, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.topic",
 			"id", s.Topic.ID(),
 			"projectId", projectId,
 			"name", s.Topic.ID(),
@@ -330,7 +381,7 @@ func (g *mqlGcpProjectPubsub) GetSnapshots() ([]interface{}, error) {
 			return nil, err
 		}
 
-		mqlSub, err := g.MotorRuntime.CreateResource("gcp.project.pubsub.snapshot",
+		mqlSub, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.snapshot",
 			"id", s.ID(),
 			"projectId", projectId,
 			"name", s.ID(),
@@ -344,4 +395,8 @@ func (g *mqlGcpProjectPubsub) GetSnapshots() ([]interface{}, error) {
 	}
 
 	return subs, nil
+}
+
+func pubsubConfigId(projectId, parentName string) string {
+	return fmt.Sprintf("%s/%s/config", projectId, parentName)
 }
