@@ -112,6 +112,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.0.0/go.mod h1:s1tW/At+xHqjNFvWU4G0c0Qv33KOhvbGNj0RCTQDV8s=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.0.0 h1:xXmHA6JxGDHOY2anNQhpgIibZOiEaOvPLZOiAs07/4k=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.0.0/go.mod h1:qkZjuhvy20x2Ckq4BzopZ8UjZLhib6nRJbRQiC6EFXY=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.9.0 h1:leZbYXt1X1+IXOhinVq/eyCu4J/fR/RcgdF6lWeaa5o=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity v0.9.0/go.mod h1:iwDIDV5jIo+eXQf6RA7PwyJnycTQxX4s4MGKSy+m1LA=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql v1.0.0 h1:rycGPpUtVFwM9uLUL2ux8EL8kGfl3qF1u76aEHvB4Qw=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql v1.0.0/go.mod h1:lirt6L2DmxromyM4w5Vd2QPz4PrWRV38Izy43xgkBVI=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.1.0 h1:fsVypuWj+j1xqp8S7t5SyibKxVt5OyjVUHO5rlLkZnw=

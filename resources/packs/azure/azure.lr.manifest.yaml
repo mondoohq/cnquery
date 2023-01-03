@@ -1,6 +1,7 @@
 resources:
   azure:
     fields:
+      cloudDefender: {}
       resources: {}
     min_mondoo_version: latest
     platform:
@@ -27,15 +28,31 @@ resources:
       - azure
   azure.authorization.roleDefinition.permission:
     fields:
-      actions: {}
       allowedActions: {}
       allowedDataActions: {}
-      dataActions: {}
       deniedActions: {}
       deniedDataActions: {}
       id: {}
-      notActions: {}
-      notDataActions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.cloudDefender:
+    fields:
+      monitoringAgentAutoProvision: {}
+      securityContacts: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.cloudDefender.securityContact:
+    fields:
+      alertNotifications: {}
+      emails: {}
+      id: {}
+      name: {}
+      notificationsByRole: {}
     is_private: true
     min_mondoo_version: latest
     platform:
