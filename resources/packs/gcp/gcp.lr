@@ -49,6 +49,8 @@ gcp.project @defaults("name") {
   clusters() []gcp.project.cluster
   // GCP PubSub-related Resources
   pubsub() gcp.project.pubsubService
+  // KMS-related resources
+  kms() gcp.project.kmsService
 }
 
 // GCP Service
@@ -1142,4 +1144,109 @@ private gcp.project.pubsubService.snapshot @defaults("name") {
   topic gcp.project.pubsubService.topic
   // When the snapshot expires
   expiration time
+}
+// GCP KMS resources
+private gcp.project.kmsService {
+  // Project ID
+  projectId string
+  // Available locations for the service
+  locations() []string
+  // List of keyrings in the current project
+  keyrings() []gcp.project.kmsService.keyring
+}
+
+// GCP KMS keyring
+private gcp.project.kmsService.keyring @defaults("name") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // Keyring name
+  name string
+  // Time created
+  created time
+  // Keyring location
+  location string
+  // List of cryptokeys in the current keyring
+  cryptokeys() []gcp.project.kmsService.keyring.cryptokey
+}
+
+// GCP KMS crypto key
+private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
+  // Full resource path
+  resourcePath string
+  // Crypto key name
+  name string
+  // Primary version for encrypt to use for this crypto key
+  primary gcp.project.kmsService.keyring.cryptokey.version
+  // Crypto key purpose
+  purpose string
+  // List of cryptokey versions
+  versions() []gcp.project.kmsService.keyring.cryptokey.version
+}
+
+// GCP KMS crypto key version
+private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state") {
+  // Full resource path
+  resourcePath string
+  // Crypto key version name
+  name string
+  // Crypto key version's current state
+  state string
+  // The protection level describing how crypto operations perform with this crypto key version
+  protectionLevel string
+  // Algorithm that this crypto key version supports
+  algorithm string
+  // Statement generated and signed by HSM at key creation time
+  attestation gcp.project.kmsService.keyring.cryptokey.version.attestation
+  // Time created
+  created time
+  // Time generated
+  generated time
+  // Time destroyed
+  destroyed time
+  // Destroy event timestamp
+  destroyEventTime time
+  // Name of the import job used in the most recent import of this crypto key version
+  importJob string
+  // Time at which this crypto key version's key material was imported
+  importTime time
+  // The root cause of an import failure
+  importFailureReason string
+  // Additional fields for configuring external protection level
+  externalProtectionLevelOptions gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions
+  // Whether the crypto key version is eligible for reimport
+  reimportEligible bool
+}
+
+// GCP KMS crypto key version attestation
+private gcp.project.kmsService.keyring.cryptokey.version.attestation {
+  // Crypto key version name
+  cryptoKeyVersionName string
+  // Format of the attestation data
+  format string
+  // Certificate chains needed to validate the attestation
+  certificateChains gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains
+}
+
+// GCP KMS crypto key version attestation certificate chains
+private gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains {
+  // Crypto key version name
+  cryptoKeyVersionName string
+  // Cavium certificate chain corresponding to the attestation
+  caviumCerts []string
+  // Google card certificate chain corresponding to the attestation
+  googleCardCerts []string
+  // Google partition certificate chain corresponding to the attestation
+  googlePartitionCerts []string
+}
+
+// GCP KMS crypto key version external protection level options
+private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevelOptions {
+  // Crypto key version name
+  cryptoKeyVersionName string
+  // URI for an external resource that the crypto key version represents
+  externalKeyUri string
+  // Path to the external key material on the EKM when using EKM connection
+  ekmConnectionKeyPath string
 }
