@@ -21,7 +21,7 @@ func TestLoadHclBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, tf.parsed)
 	assert.Equal(t, 2, len(tf.tfVars))
-	assert.Equal(t, 4, len(tf.parsed.Files()))
+	assert.Equal(t, 5, len(tf.parsed.Files()))
 }
 
 func TestLoadTfvars(t *testing.T) {

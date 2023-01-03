@@ -19,3 +19,16 @@ func TestTerraform(t *testing.T) {
 	files := p.Parser().Files()
 	assert.Equal(t, len(files), 2)
 }
+
+func TestModuleManifestIssue676(t *testing.T) {
+	// See https://github.com/mondoohq/cnquery/issues/676
+	p, err := New(&providers.Config{
+		Options: map[string]string{
+			"path": "./testdata/issue676",
+		},
+	})
+	require.NoError(t, err)
+
+	require.NotNil(t, p.modulesManifest)
+	require.Len(t, p.modulesManifest.Records, 3)
+}
