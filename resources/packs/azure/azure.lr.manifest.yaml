@@ -1,7 +1,50 @@
 resources:
   azure:
     fields:
+      cloudDefender: {}
       resources: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.cloud.defender:
+    fields:
+      monitoringAgentAutoProvision: {}
+      securityContacts: {}
+      vulnerabilityAssessment: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.cloud.defender.securityContact:
+    fields:
+      alertNotifications: {}
+      alerts: {}
+      emails: {}
+      id: {}
+      name: {}
+      notifications: {}
+      notificationsByRole: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.cloudDefender:
+    fields:
+      monitoringAgentAutoProvision: {}
+      securityContacts: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.cloudDefender.securityContact:
+    fields:
+      alertNotifications: {}
+      emails: {}
+      id: {}
+      name: {}
+      notificationsByRole: {}
+    is_private: true
     min_mondoo_version: latest
     platform:
       name:
