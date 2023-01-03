@@ -47,6 +47,8 @@ gcp.project @defaults("name") {
   // GCP Compute Resources for the Project
   // compute() gcp.compute
   clusters() []gcp.project.cluster
+  // GCP PubSub-related Resources
+  pubsub() gcp.project.pubsubService
 }
 
 // GCP Service
@@ -794,7 +796,7 @@ private gcp.dns.policy {
   enableLogging bool
 }
 
-// GKE Cluster
+// GCP GKE Cluster
 private gcp.project.cluster @defaults("name") {
   // Project ID
   projectId string
@@ -862,7 +864,7 @@ private gcp.project.cluster.nodepool @defaults("name") {
   status string
 }
 
-// Node pool-level network configuration
+// GCP GKE node pool-level network configuration
 private gcp.project.cluster.nodepool.networkConfig @defaults("podRange podIpv4CidrBlock") {
   // Internal ID
   id string
@@ -874,6 +876,7 @@ private gcp.project.cluster.nodepool.networkConfig @defaults("podRange podIpv4Ci
   performanceConfig gcp.project.cluster.nodepool.networkConfig.performanceConfig
 }
 
+// GCP GKE node pool network performance configuration
 private gcp.project.cluster.nodepool.networkConfig.performanceConfig @defaults("totalEgressBandwidthTier") {
   // Internal ID
   id string
@@ -881,6 +884,7 @@ private gcp.project.cluster.nodepool.networkConfig.performanceConfig @defaults("
   totalEgressBandwidthTier string
 }
 
+// GCP GKE node pool configuration
 private gcp.project.cluster.nodepool.config @defaults("machineType diskSizeGb") {
   // Internal ID
   id string
@@ -936,7 +940,7 @@ private gcp.project.cluster.nodepool.config @defaults("machineType diskSizeGb") 
   confidentialNodes gcp.project.cluster.nodepool.config.confidentialNodes
 }
 
-// A list of hardware accelerators to be attached to each node
+// GCP GKE node pool hardware accelerators configuration
 private gcp.project.cluster.nodepool.config.accelerator @defaults("type count") {
   // Internal ID
   id string
@@ -960,7 +964,7 @@ private gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig @defaul
   strategy string
 }
 
-// GKE node taint
+// GCP GKE Kubernetes node taint
 private gcp.project.cluster.nodepool.config.nodeTaint @defaults("key value effect") {
   // Internal ID
   id string
@@ -972,7 +976,7 @@ private gcp.project.cluster.nodepool.config.nodeTaint @defaults("key value effec
   effect string
 }
 
-// GKE node pool sandbox configuration
+// GCP GKE node pool sandbox configuration
 private gcp.project.cluster.nodepool.config.sandboxConfig @defaults("type") {
   // Internal ID
   id string
@@ -980,7 +984,7 @@ private gcp.project.cluster.nodepool.config.sandboxConfig @defaults("type") {
   type string
 }
 
-// Shielded instance configuration
+// GCP GKE node pool shielded instance configuration
 private gcp.project.cluster.nodepool.config.shieldedInstanceConfig @defaults("enableSecureBoot enableIntegrityMonitoring") {
   // Internal ID
   id string
@@ -990,7 +994,7 @@ private gcp.project.cluster.nodepool.config.shieldedInstanceConfig @defaults("en
   enableIntegrityMonitoring bool
 }
 
-// Parameters that can be configured on Linux nodes
+// GCP GKE node pool parameters that can be configured on Linux nodes
 private gcp.project.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls") {
   // Internal ID
   id string
@@ -998,21 +1002,19 @@ private gcp.project.cluster.nodepool.config.linuxNodeConfig @defaults("sysctls")
   sysctls map[string]string
 }
 
-// Node kubelet configuration
+// GCP GKE node pool kubelet configuration
 private gcp.project.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerPolicy podPidsLimit") {
   // Internal ID
   id string
   // Control the CPU management policy on the node
   cpuManagerPolicy string
-  // TODO: this is a pointer to bool because it can be null. Can add it later
-  // cpuCfsQuota bool
   // Set the CPU CFS quota period value 'cpu.cfs_period_us'
   cpuCfsQuotaPeriod string
   // Set the Pod PID limits
   podPidsLimit int
 }
 
-// Node pool GCFS configuration
+// GCP GKE node pool GCFS configuration
 private gcp.project.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
   // Internal ID
   id string
@@ -1020,7 +1022,7 @@ private gcp.project.cluster.nodepool.config.gcfsConfig @defaults("enabled") {
   enabled bool
 }
 
-// Advanced machine features configuration
+// GCP GKE node pool advanced machine features configuration
 private gcp.project.cluster.nodepool.config.advancedMachineFeatures @defaults("threadsPerCore") {
   // Internal ID
   id string
@@ -1028,6 +1030,7 @@ private gcp.project.cluster.nodepool.config.advancedMachineFeatures @defaults("t
   threadsPerCore int
 }
 
+// GCP GKE node pool GVNIC configuration
 private gcp.project.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
   // Internal ID
   id string
@@ -1035,9 +1038,108 @@ private gcp.project.cluster.nodepool.config.gvnicConfig @defaults("enabled") {
   enabled bool
 }
 
+// GCP GKE node pool confidential nodes configuration
 private gcp.project.cluster.nodepool.config.confidentialNodes @defaults("enabled") {
   // Internal ID
   id string
   // Whether to use confidential nodes
   enabled bool
+}
+
+// GCP PubSub resources
+private gcp.project.pubsubService {
+  // Project ID
+  projectId string
+  // List of topics in the current project
+  topics() []gcp.project.pubsubService.topic
+  // List of subscriptions in the current project
+  subscriptions() []gcp.project.pubsubService.subscription
+  // List of snapshots in the current project
+  snapshots() []gcp.project.pubsubService.snapshot
+}
+
+// GCP PubSub topic
+private gcp.project.pubsubService.topic @defaults("name") {
+  // Project ID
+  projectId string
+  // Topic name
+  name string
+  // Topic configuration
+  config() gcp.project.pubsubService.topic.config
+}
+
+// GCP PubSub topic configuration
+private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStoragePolicy") {
+  // Project ID
+  projectId string
+  // Topic name
+  topicName string
+  // Labels associated with this topic
+  labels map[string]string
+  // Cloud KMS key used to protect access to messages published to this topic
+  kmsKeyName string
+  // Message storage policy
+  messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
+}
+
+// GCP PubSub topic message storage policy
+private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("allowedPersistenceRegions"){
+  // Parent configuration ID
+  configId string
+  // List of GCP regions where messages published to the topic can persist in storage
+  allowedPersistenceRegions []string
+}
+
+// GCP PubSub subscription
+private gcp.project.pubsubService.subscription @defaults("name") {
+  // Project ID
+  projectId string
+  // Subscription name
+  name string
+  // Subscription configuration
+  config() gcp.project.pubsubService.subscription.config
+}
+
+// GCP PubSub subscription configuration
+private gcp.project.pubsubService.subscription.config @defaults("topic.name ackDeadline expirationPolicy") {
+  // Project ID
+  projectId string
+  // Subscription name
+  subscriptionName string
+  // Topic to which the subscription points
+  topic gcp.project.pubsubService.topic
+  // Configuration for subscriptions that operate in push mode
+  pushConfig gcp.project.pubsubService.subscription.config.pushconfig
+  // Default maximum time a subscriber can take to acknowledge a message after receiving it
+  ackDeadline time
+  // Whether to retain acknowledged messages
+  retainAckedMessages bool
+  // How long to retain messages in the backlog after they're published
+  retentionDuration time
+  // Specifies the conditions for a subscription's expiration
+  expirationPolicy time
+  // The labels associated with this subscription
+  labels map[string]string
+}
+
+// GCP PubSub Configuration for subscriptions that operate in push mode
+private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attributes") {
+  // Parent configuration ID
+  configId string
+  // URL of the endpoint to which to push messages
+  endpoint string
+  // Endpoint configuration attributes
+  attributes map[string]string
+}
+
+// GCP PubSub snapshot
+private gcp.project.pubsubService.snapshot @defaults("name") {
+  // Project ID
+  projectId string
+  // Subscription name
+  name string
+  // The topic for which the snapshot is
+  topic gcp.project.pubsubService.topic
+  // When the snapshot expires
+  expiration time
 }

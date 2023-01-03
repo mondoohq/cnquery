@@ -5,7 +5,8 @@ go 1.19
 require (
 	cloud.google.com/go/bigquery v1.44.0
 	cloud.google.com/go/container v1.7.0
-	cloud.google.com/go/logging v1.5.0
+	cloud.google.com/go/logging v1.6.1
+	cloud.google.com/go/pubsub v1.28.0
 	cloud.google.com/go/recommender v1.8.0
 	cloud.google.com/go/secretmanager v1.9.0
 	cloud.google.com/go/serviceusage v1.4.0
@@ -160,7 +161,7 @@ require (
 	golang.org/x/text v0.5.0
 	golang.org/x/tools v0.3.0
 	google.golang.org/api v0.103.0
-	google.golang.org/genproto v0.0.0-20221201164419-0e50fba7f41c
+	google.golang.org/genproto v0.0.0-20221202195650-67e5cbc046fd
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/ini.v1 v1.67.0
@@ -182,7 +183,7 @@ require (
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	cloud.google.com/go v0.105.0 // indirect
-	cloud.google.com/go/compute v1.12.1 // indirect
+	cloud.google.com/go/compute v1.13.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	cloud.google.com/go/iam v0.7.0 // indirect
 	cloud.google.com/go/longrunning v0.3.0 // indirect
@@ -469,7 +470,7 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20220827204233-334a2380cb91 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
-	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
+	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
