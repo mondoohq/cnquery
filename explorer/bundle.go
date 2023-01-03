@@ -24,10 +24,10 @@ const (
 
 // BundleMap is a Bundle with easier access to its data
 type BundleMap struct {
-	OwnerMrn string                     `json:"owner_mrn,omitempty"`
-	Packs    map[string]*QueryPack      `json:"packs,omitempty"`
-	Queries  map[string]*Mquery         `json:"queries,omitempty"`
-	Code     map[string]*llx.CodeBundle `json:"code,omitempty"`
+	OwnerMrn string                `json:"owner_mrn,omitempty"`
+	Packs    map[string]*QueryPack `json:"packs,omitempty"`
+	Queries  map[string]*Mquery    `json:"queries,omitempty"`
+	Props    map[string]*Mquery    `json:"props,omitempty"`
 }
 
 // NewBundleMap creates a new empty initialized map
@@ -37,7 +37,7 @@ func NewBundleMap(ownerMrn string) *BundleMap {
 		OwnerMrn: ownerMrn,
 		Packs:    make(map[string]*QueryPack),
 		Queries:  make(map[string]*Mquery),
-		Code:     make(map[string]*llx.CodeBundle),
+		Props:    make(map[string]*Mquery),
 	}
 }
 
@@ -127,6 +127,7 @@ func combineBundles(into *Bundle, other *Bundle) {
 	}
 
 	into.Packs = append(into.Packs, other.Packs...)
+	into.Queries = append(into.Queries, other.Queries...)
 }
 
 // bundleFromSingleFile loads a bundle from a single file
@@ -165,13 +166,14 @@ func (p *Bundle) SourceHash() (string, error) {
 func (p *Bundle) ToMap() *BundleMap {
 	res := NewBundleMap(p.OwnerMrn)
 
+	for i := range p.Queries {
+		q := p.Queries[i]
+		res.Queries[q.Mrn] = q
+	}
+
 	for i := range p.Packs {
 		c := p.Packs[i]
 		res.Packs[c.Mrn] = c
-		for j := range c.Queries {
-			cq := c.Queries[j]
-			res.Queries[cq.Mrn] = cq
-		}
 	}
 
 	return res
@@ -205,12 +207,20 @@ func (p *Bundle) AddBundle(other *Bundle) error {
 	return nil
 }
 
+type queryRef struct {
+	name  string
+	typ   *llx.Primitive
+	query *Mquery
+}
+
 // Compile a bundle
-// Does 4 things:
+// Does a few things:
 // 1. turns it into a map for easier access
-// 2. compile all queries. store code in the bundle map
+// 2. compile all queries and validates them
 // 3. validation of all contents
 // 4. generate MRNs for all packs, queries, and updates referencing local fields
+// 5. snapshot all queries into the packs
+// 6. make queries public that are only embedded
 func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 	ownerMrn := p.OwnerMrn
 	if ownerMrn == "" {
@@ -219,12 +229,76 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 	}
 
 	var warnings []error
+	var err error
 
-	code := map[string]*llx.CodeBundle{}
+	uid2mrn := map[string]string{}
+
+	// Index properties
+	lookup := map[string]queryRef{}
+
+	// Index queries + update MRNs and checksums
+	for i := range p.Queries {
+		query := p.Queries[i]
+		if query == nil {
+			return nil, errors.New("received null query")
+		}
+
+		// remove leading and trailing whitespace of docs, refs and tags
+		query.Sanitize()
+
+		// ensure the correct mrn is set
+		uid := query.Uid
+		if err = query.RefreshMRN(ownerMrn); err != nil {
+			return nil, err
+		}
+		if uid != "" {
+			uid2mrn[uid] = query.Mrn
+		}
+
+		// ensure MRNs for properties
+		for i := range query.Props {
+			prop := query.Props[i]
+			uid := prop.Uid
+			if err = prop.RefreshMRN(ownerMrn); err != nil {
+				return nil, err
+			}
+			if uid != "" {
+				uid2mrn[uid] = prop.Mrn
+			}
+		}
+
+		// ensure MRNs for compositions
+		for i := range query.Compose {
+			comp := query.Compose[i]
+			uid := comp.Uid
+			if err = comp.RefreshMRN(ownerMrn); err != nil {
+				return nil, err
+			}
+			if uid != "" {
+				uid2mrn[uid] = comp.Mrn
+			}
+		}
+
+		// recalculate the checksums
+		_, err := query.RefreshChecksumAndType(lookup)
+		if err != nil {
+			log.Error().Err(err).Msg("could not compile the query")
+			warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
+		}
+
+		lookup[query.Mrn] = queryRef{
+			query: query,
+		}
+	}
 
 	// Index packs + update MRNs and checksums, link properties via MRNs
 	for i := range p.Packs {
 		querypack := p.Packs[i]
+		if querypack.Filters == nil {
+			querypack.Filters = &Filters{
+				Items: map[string]*Mquery{},
+			}
+		}
 
 		// !this is very important to prevent user overrides! vv
 		querypack.InvalidateAllChecksums()
@@ -245,19 +319,30 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 				return nil, err
 			}
 
+			existing, ok := lookup[query.Mrn]
+			if ok {
+				query.Merge(existing.query)
+				query.RefreshChecksumAndType(lookup)
+				continue
+			}
+
 			// recalculate the checksums
-			codeBundle, err := query.RefreshChecksumAndType(nil)
+			_, err := query.RefreshChecksumAndType(lookup)
 			if err != nil {
 				log.Error().Err(err).Msg("could not compile the query")
 				warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
 			}
 
-			code[query.Mrn] = codeBundle
+			lookup[query.Mrn] = queryRef{
+				query: query,
+			}
+
+			// we may have embed-only queries, that we externalize and make available
+			p.Queries = append(p.Queries, query)
 		}
 	}
 
 	res := p.ToMap()
-	res.Code = code
 
 	if len(warnings) != 0 {
 		var msg strings.Builder
@@ -316,10 +401,7 @@ func (p *Bundle) FilterQueryPacks(IDs []string) bool {
 
 	p.Packs = res
 
-	if len(res) == 0 {
-		return true
-	}
-	return false
+	return len(res) == 0
 }
 
 // Makes sure every query in the bundle and every query pack has a UID set,
@@ -340,11 +422,14 @@ func (p *Bundle) EnsureUIDs() {
 	}
 }
 
-func (p *Bundle) AssetFilters() []*Mquery {
+func (p *Bundle) Filters() []*Mquery {
 	uniq := map[string]*Mquery{}
 	for i := range p.Packs {
 		pack := p.Packs[i]
-		for k, v := range pack.AssetFilters {
+		if pack.Filters == nil {
+			continue
+		}
+		for k, v := range pack.Filters.Items {
 			uniq[k] = v
 		}
 	}
