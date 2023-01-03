@@ -330,6 +330,104 @@ private azure.storage.account @defaults("id name location") {
   kind string
   // Storage account containers
   containers() []azure.storage.container
+  // Storage account queue properties
+  queueProperties() azure.storage.account.queueService.properties
+  // Storage account table properties
+  tableProperties() azure.storage.account.tableService.properties
+  // Storage account blob properties
+  blobProperties() azure.storage.account.blobService.properties
+  // Storage account data protection
+  dataProtection() azure.storage.account.dataProtection
+}
+
+// Azure Storage Account Data Protection
+private azure.storage.account.dataProtection {
+  // the identifier of the storage account
+  storageAccountId string
+  // whether soft deletion of blobs is enabled
+  blobSoftDeletionEnabled bool
+  // the retention period in days for deleted blobs
+  blobRetentionDays int
+   // whether soft deletion of containers is enabled
+  containerSoftDeletionEnabled bool
+   // the retention period in days for deleted containers
+  containerRetentionDays int
+}
+
+// Azure Storage Account Blob Service Properties
+private azure.storage.account.blobService.properties {
+  // the identifier of the service
+  id string
+  // the hourly metrics properties
+  hourMetrics azure.storage.account.service.properties.metrics
+  // the minute metrics properties
+  minuteMetrics azure.storage.account.service.properties.metrics
+  // the logging properties
+  logging azure.storage.account.service.properties.logging
+}
+
+// Azure Storage Account Queue Service Properties
+private azure.storage.account.queueService.properties {
+  // the identifier of the service
+  id string
+  // the hourly metrics properties
+  hourMetrics azure.storage.account.service.properties.metrics
+  // the minute metrics properties
+  minuteMetrics azure.storage.account.service.properties.metrics
+  // the logging properties
+  logging azure.storage.account.service.properties.logging
+}
+
+// Azure Storage Account Table Service Properties
+private azure.storage.account.tableService.properties {
+  // the identifier of the service
+  id string
+  // the hourly metrics properties
+  hourMetrics azure.storage.account.service.properties.metrics
+  // the minute metrics properties
+  minuteMetrics azure.storage.account.service.properties.metrics
+  // the logging properties
+  logging azure.storage.account.service.properties.logging
+}
+
+// Azure Storage Account Service Properties Metrics 
+private azure.storage.account.service.properties.metrics {
+  // the identifier of the metrics
+  id string
+  // indicates whether metrics generate summary statistics for called API operations
+  includeAPIs bool
+  // the retention policy for the metrics
+  retentionPolicy azure.storage.account.service.properties.retentionPolicy
+  // indicates whether the metrics are enabled
+  enabled bool
+  // the version of the metrics
+  version string
+}
+
+// Azure Storage Account Service Properties Retention Policy
+private azure.storage.account.service.properties.retentionPolicy {
+  // the identifier of the retention policy
+  id string
+  // indicates the number of days that metrics or logging data is retained
+  retentionDays int
+  // indicates whether a retention policy is enabled for the Azure Storage
+  enabled bool 
+}
+
+// Azure Storage Account Service Properties Logging
+private azure.storage.account.service.properties.logging {
+  // the identifier of the logging configuration
+  id string
+  // indicates whether delete requests are being logged.
+  delete bool
+  // indicates whether read requests are being logged.
+  read bool
+  // indicates whether write requests are being logged.
+  write bool
+  // the logging version
+  version string
+  // the retention policy for the logging metrics
+  retentionPolicy azure.storage.account.service.properties.retentionPolicy
 }
 
 // Azure Storage Container

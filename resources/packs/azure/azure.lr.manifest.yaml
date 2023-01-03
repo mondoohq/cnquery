@@ -541,16 +541,100 @@ resources:
       - azure
   azure.storage.account:
     fields:
+      blobProperties: {}
       containers: {}
+      dataProtection: {}
       id: {}
       identity: {}
       kind: {}
       location: {}
       name: {}
       properties: {}
+      queueProperties: {}
       sku: {}
+      tableProperties: {}
       tags: {}
       type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.blobService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.dataProtection:
+    fields:
+      blobRetentionDays: {}
+      blobSoftDeletionEnabled: {}
+      containerRetentionDays: {}
+      containerSoftDeletionEnabled: {}
+      storageAccountId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.queueService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.service.properties.logging:
+    fields:
+      delete: {}
+      id: {}
+      read: {}
+      retentionPolicy: {}
+      version: {}
+      write: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.service.properties.metrics:
+    fields:
+      enabled: {}
+      id: {}
+      includeAPIs: {}
+      retentionPolicy: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.service.properties.retentionPolicy:
+    fields:
+      enabled: {}
+      id: {}
+      retentionDays: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.tableService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
     is_private: true
     min_mondoo_version: latest
     platform:
