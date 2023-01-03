@@ -1159,6 +1159,8 @@ private gcp.project.kmsService {
 private gcp.project.kmsService.keyring @defaults("name") {
   // Project ID
   projectId string
+  // Full resource path
+  resourcePath string
   // Keyring name
   name string
   // Time created
@@ -1171,6 +1173,8 @@ private gcp.project.kmsService.keyring @defaults("name") {
 
 // GCP KMS crypto key
 private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
+  // Full resource path
+  resourcePath string
   // Crypto key name
   name string
   // Primary version for encrypt to use for this crypto key
@@ -1183,6 +1187,8 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
 
 // GCP KMS crypto key version
 private gcp.project.kmsService.keyring.cryptokey.version @defaults("name state") {
+  // Full resource path
+  resourcePath string
   // Crypto key version name
   name string
   // Crypto key version's current state
@@ -1219,8 +1225,6 @@ private gcp.project.kmsService.keyring.cryptokey.version.attestation {
   cryptoKeyVersionName string
   // Format of the attestation data
   format string
-  // Attestation data provided by the HSM when the key version was created
-  // content ???
   // Certificate chains needed to validate the attestation
   certificateChains gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains
 }

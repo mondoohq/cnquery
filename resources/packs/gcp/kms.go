@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
@@ -14,7 +13,6 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/cloud/location"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (g *mqlGcpProjectKmsService) id() (string, error) {
@@ -53,27 +51,15 @@ func (g *mqlGcpProject) GetKms() (interface{}, error) {
 }
 
 func (g *mqlGcpProjectKmsServiceKeyring) id() (string, error) {
-	name, err := g.Name()
-	if err != nil {
-		return "", err
-	}
-	return name, nil
+	return g.ResourcePath()
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokey) id() (string, error) {
-	name, err := g.Name()
-	if err != nil {
-		return "", err
-	}
-	return name, nil
+	return g.ResourcePath()
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersion) id() (string, error) {
-	name, err := g.Name()
-	if err != nil {
-		return "", err
-	}
-	return name, nil
+	return g.ResourcePath()
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokeyVersionAttestation) id() (string, error) {
@@ -192,7 +178,8 @@ func (g *mqlGcpProjectKmsService) GetKeyrings() ([]interface{}, error) {
 				created := k.CreateTime.AsTime()
 				mqlKeyring, err := g.MotorRuntime.CreateResource("gcp.project.kmsService.keyring",
 					"projectId", projectId,
-					"name", k.Name,
+					"resourcePath", k.Name,
+					"name", parseResourceName(k.Name),
 					"created", &created,
 					"location", location,
 				)
@@ -211,7 +198,7 @@ func (g *mqlGcpProjectKmsService) GetKeyrings() ([]interface{}, error) {
 }
 
 func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) {
-	keyring, err := g.Name()
+	keyring, err := g.ResourcePath()
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +242,8 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 		}
 
 		mqlKey, err := g.MotorRuntime.CreateResource("gcp.project.kmsService.keyring.cryptokey",
-			"name", k.Name,
+			"resourcePath", k.Name,
+			"name", parseResourceName(k.Name),
 			"primary", mqlPrimary,
 			"purpose", k.Purpose.String(),
 		)
@@ -266,7 +254,7 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 }
 
 func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetVersions() ([]interface{}, error) {
-	cryptokey, err := g.Name()
+	cryptokey, err := g.ResourcePath()
 	if err != nil {
 		return nil, err
 	}
@@ -346,7 +334,8 @@ func cryptoKeyVersionToMql(runtime *resources.Runtime, v *kmspb.CryptoKeyVersion
 		}
 	}
 	return runtime.CreateResource("gcp.project.kmsService.keyring.cryptokey.version",
-		"name", v.Name,
+		"resourcePath", v.Name,
+		"name", parseResourceName(v.Name),
 		"state", v.State.String(),
 		"protectionLevel", v.ProtectionLevel.String(),
 		"algorithm", v.Algorithm.String(),
@@ -361,12 +350,4 @@ func cryptoKeyVersionToMql(runtime *resources.Runtime, v *kmspb.CryptoKeyVersion
 		"externalProtectionLevelOptions", mqlExtProtOpts,
 		"reimportEligible", v.ReimportEligible,
 	)
-}
-
-func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
-	if t == nil {
-		return nil
-	}
-	tm := t.AsTime()
-	return &tm
 }
