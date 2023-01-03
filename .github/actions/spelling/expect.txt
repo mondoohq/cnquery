@@ -40,3 +40,8 @@ vmknics
 Vtpm
 wfascimprov
 wil
+cavium
+certificatechains
+cryptokey
+ekm
+kmsService
