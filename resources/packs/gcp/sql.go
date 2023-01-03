@@ -12,12 +12,12 @@ import (
 	"google.golang.org/api/sqladmin/v1"
 )
 
-func (g *mqlGcpProjectSqlservice) id() (string, error) {
+func (g *mqlGcpProjectSqlService) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s/gcp.project.sqlservice", projectId), nil
+	return fmt.Sprintf("%s/gcp.project.sqlService", projectId), nil
 }
 
 func (g *mqlGcpProject) GetSql() (interface{}, error) {
@@ -26,12 +26,12 @@ func (g *mqlGcpProject) GetSql() (interface{}, error) {
 		return nil, err
 	}
 
-	return g.MotorRuntime.CreateResource("gcp.project.sqlservice",
+	return g.MotorRuntime.CreateResource("gcp.project.sqlService",
 		"projectId", projectId,
 	)
 }
 
-func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
+func (g *mqlGcpProjectSqlService) GetInstances() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlEncCfg resources.ResourceType
 		if instance.DiskEncryptionConfiguration != nil {
-			mqlEncCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.diskEncryptionConfiguration",
+			mqlEncCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.diskEncryptionConfiguration",
 				"id", fmt.Sprintf("%s/diskEncryptionConfiguration", instanceId),
 				"kmsKeyName", instance.DiskEncryptionConfiguration.KmsKeyName,
 			)
@@ -77,7 +77,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlEncStatus resources.ResourceType
 		if instance.DiskEncryptionStatus != nil {
-			mqlEncStatus, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.diskEncryptionConfiguration",
+			mqlEncStatus, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.diskEncryptionConfiguration",
 				"id", fmt.Sprintf("%s/diskEncryptionStatus", instanceId),
 				"kmsKeyVersionName", instance.DiskEncryptionStatus.KmsKeyVersionName,
 			)
@@ -88,7 +88,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlFailoverReplica resources.ResourceType
 		if instance.FailoverReplica != nil {
-			mqlEncStatus, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.failoverReplica",
+			mqlEncStatus, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.failoverReplica",
 				"id", fmt.Sprintf("%s/failoverReplica", instanceId),
 				"available", instance.FailoverReplica.Available,
 				"name", instance.FailoverReplica.Name,
@@ -100,7 +100,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		mqlIpAddresses := make([]interface{}, 0, len(instance.IpAddresses))
 		for i, a := range instance.IpAddresses {
-			mqlIpAddress, err := g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.ipMapping",
+			mqlIpAddress, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.ipMapping",
 				"id", fmt.Sprintf("%s/ipAddresses%d", instanceId, i),
 				"ipAddress", a.IpAddress,
 				"timeToRetire", parseTime(a.TimeToRetire),
@@ -120,7 +120,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlADCfg resources.ResourceType
 		if s.ActiveDirectoryConfig != nil {
-			mqlADCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.activedirectoryconfig",
+			mqlADCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.activedirectoryconfig",
 				"id", fmt.Sprintf("%s/settings/activeDirectoryConfig", instanceId),
 				"domain", s.ActiveDirectoryConfig.Domain,
 			)
@@ -131,7 +131,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlBackupCfg resources.ResourceType
 		if s.BackupConfiguration != nil {
-			mqlRetentionSettings, err := g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.backupconfiguration.retentionsettings",
+			mqlRetentionSettings, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.backupconfiguration.retentionsettings",
 				"id", fmt.Sprintf("%s/settings/backupConfiguration/retentionSettings", instanceId),
 				"retainedBackups", s.BackupConfiguration.BackupRetentionSettings.RetainedBackups,
 				"retentionUnit", s.BackupConfiguration.BackupRetentionSettings.RetentionUnit,
@@ -140,7 +140,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlBackupCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.backupconfiguration",
+			mqlBackupCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.backupconfiguration",
 				"id", fmt.Sprintf("%s/settings/backupConfiguration", instanceId),
 				"backupRetentionSettings", mqlRetentionSettings,
 				"binaryLogEnabled", s.BackupConfiguration.BinaryLogEnabled,
@@ -157,7 +157,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		mqlDenyMaintenancePeriods := make([]interface{}, 0, len(s.DenyMaintenancePeriods))
 		for i, p := range s.DenyMaintenancePeriods {
-			mqlPeriod, err := g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.denyMaintenancePeriod",
+			mqlPeriod, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.denyMaintenancePeriod",
 				"id", fmt.Sprintf("%s/settings/denyMaintenancePeriod%d", instanceId, i),
 				"endDate", p.EndDate,
 				"startDate", p.StartDate,
@@ -171,7 +171,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlInsightsConfig resources.ResourceType
 		if s.InsightsConfig != nil {
-			mqlInsightsConfig, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.insightsConfig",
+			mqlInsightsConfig, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.insightsConfig",
 				"id", fmt.Sprintf("%s/settings/insightsConfig", instanceId),
 				"queryInsightsEnabled", s.InsightsConfig.QueryInsightsEnabled,
 				"queryPlansPerMinute", s.InsightsConfig.QueryPlansPerMinute,
@@ -188,7 +188,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 		if s.IpConfiguration != nil {
 			mqlAclEntries := make([]interface{}, 0, len(s.IpConfiguration.AuthorizedNetworks))
 			for i, e := range s.IpConfiguration.AuthorizedNetworks {
-				mqlAclEntry, err := g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.ipConfiguration.authorizedNetworks",
+				mqlAclEntry, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.ipConfiguration.authorizedNetworks",
 					"id", fmt.Sprintf("%s/settings/ipConfiguration/authorizedNetworks%d", instanceId, i),
 					"expirationTime", parseTime(e.ExpirationTime),
 					"name", e.Name,
@@ -200,7 +200,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 				mqlAclEntries = append(mqlAclEntries, mqlAclEntry)
 			}
 
-			mqlIpCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.ipConfiguration",
+			mqlIpCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.ipConfiguration",
 				"id", fmt.Sprintf("%s/settings/ipConfiguration", instanceId),
 				"allocatedIpRange", s.IpConfiguration.AllocatedIpRange,
 				"authorizedNetworks", mqlAclEntries,
@@ -215,7 +215,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlLocationPref resources.ResourceType
 		if s.LocationPreference != nil {
-			mqlLocationPref, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.locationPreference",
+			mqlLocationPref, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.locationPreference",
 				"id", fmt.Sprintf("%s/settings/locationPreference", instanceId),
 				"followGaeApplication", s.LocationPreference.FollowGaeApplication,
 				"secondaryZone", s.LocationPreference.SecondaryZone,
@@ -228,7 +228,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlMaintenanceWindow resources.ResourceType
 		if s.MaintenanceWindow != nil {
-			mqlMaintenanceWindow, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.maintenanceWindow",
+			mqlMaintenanceWindow, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.maintenanceWindow",
 				"id", fmt.Sprintf("%s/settings/maintenanceWindow", instanceId),
 				"day", s.MaintenanceWindow.Day,
 				"hour", s.MaintenanceWindow.Hour,
@@ -241,7 +241,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlPwdValidationPolicy resources.ResourceType
 		if s.PasswordValidationPolicy != nil {
-			mqlPwdValidationPolicy, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.passwordValidationPolicy",
+			mqlPwdValidationPolicy, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.passwordValidationPolicy",
 				"id", fmt.Sprintf("%s/settings/passwordValidationPolicy", instanceId),
 				"complexity", s.PasswordValidationPolicy.Complexity,
 				"disallowUsernameSubstring", s.PasswordValidationPolicy.DisallowUsernameSubstring,
@@ -257,7 +257,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 
 		var mqlSqlServerAuditCfg resources.ResourceType
 		if s.SqlServerAuditConfig != nil {
-			mqlSqlServerAuditCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings.sqlServerAuditConfig",
+			mqlSqlServerAuditCfg, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings.sqlServerAuditConfig",
 				"id", fmt.Sprintf("%s/settings/sqlSertverAuditConfig", instanceId),
 				"bucket", s.SqlServerAuditConfig.Bucket,
 				"retentionInterval", s.SqlServerAuditConfig.RetentionInterval,
@@ -268,7 +268,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 			}
 		}
 
-		mqlSettings, err := g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.settings",
+		mqlSettings, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.settings",
 			"projectId", projectId,
 			"instanceName", instance.Name,
 			"activationPolicy", s.ActivationPolicy,
@@ -303,7 +303,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 			return nil, err
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance",
 			"projectId", projectId,
 			"availableMaintenanceVersions", core.StrSliceToInterface(instance.AvailableMaintenanceVersions),
 			"backendType", instance.BackendType,
@@ -339,7 +339,7 @@ func (g *mqlGcpProjectSqlservice) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpProjectSqlserviceInstance) GetDatabases() ([]interface{}, error) {
+func (g *mqlGcpProjectSqlServiceInstance) GetDatabases() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -377,7 +377,7 @@ func (g *mqlGcpProjectSqlserviceInstance) GetDatabases() ([]interface{}, error) 
 		dbId := fmt.Sprintf("%s/%s/%s", projectId, instanceName, db.Name)
 		var sqlServerDbDetails resources.ResourceType
 		if db.SqlserverDatabaseDetails != nil {
-			sqlServerDbDetails, err = g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.database.sqlserverDatabaseDetails",
+			sqlServerDbDetails, err = g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.database.sqlserverDatabaseDetails",
 				"id", fmt.Sprintf("%s/sqlserverDatabaseDetails", dbId),
 				"compatibilityLevel", db.SqlserverDatabaseDetails.CompatibilityLevel,
 				"recoveryModel", db.SqlserverDatabaseDetails.RecoveryModel,
@@ -387,7 +387,7 @@ func (g *mqlGcpProjectSqlserviceInstance) GetDatabases() ([]interface{}, error) 
 			}
 		}
 
-		mqlDb, err := g.MotorRuntime.CreateResource("gcp.project.sqlservice.instance.database",
+		mqlDb, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance.database",
 			"projectId", projectId,
 			"charset", db.Charset,
 			"collation", db.Collation,
@@ -404,7 +404,7 @@ func (g *mqlGcpProjectSqlserviceInstance) GetDatabases() ([]interface{}, error) 
 	return mqlDbs, nil
 }
 
-func (g *mqlGcpProjectSqlserviceInstance) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstance) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -416,7 +416,7 @@ func (g *mqlGcpProjectSqlserviceInstance) id() (string, error) {
 	return fmt.Sprintf("%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceDatabase) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceDatabase) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -432,27 +432,27 @@ func (g *mqlGcpProjectSqlserviceInstanceDatabase) id() (string, error) {
 	return fmt.Sprintf("%s/%s/%s", projectId, instance, name), nil
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceDatabaseSqlserverDatabaseDetails) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceDatabaseSqlserverDatabaseDetails) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceDiskEncryptionConfiguration) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceDiskEncryptionConfiguration) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceDiskEncryptionStatus) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceDiskEncryptionStatus) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceFailoverReplica) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceFailoverReplica) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceIpMapping) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceIpMapping) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettings) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettings) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -464,46 +464,46 @@ func (g *mqlGcpProjectSqlserviceInstanceSettings) id() (string, error) {
 	return fmt.Sprintf("%s/%s/settings", projectId, name), nil
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsActivedirectoryconfig) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsActivedirectoryconfig) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsBackupconfiguration) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsBackupconfiguration) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsBackupconfigurationRetentionsettings) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsBackupconfigurationRetentionsettings) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsDenyMaintenancePeriod) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsDenyMaintenancePeriod) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsInsightsConfig) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsInsightsConfig) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsIpConfiguration) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsIpConfigurationAclEntry) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfigurationAclEntry) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsLocationPreference) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsLocationPreference) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsMaintenanceWindow) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsMaintenanceWindow) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsPasswordValidationPolicy) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsPasswordValidationPolicy) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectSqlserviceInstanceSettingsSqlServerAuditConfig) id() (string, error) {
+func (g *mqlGcpProjectSqlServiceInstanceSettingsSqlServerAuditConfig) id() (string, error) {
 	return g.Id()
 }

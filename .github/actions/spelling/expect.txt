@@ -60,4 +60,4 @@ activedirectoryconfig
 backupconfiguration
 retentionsettings
 sqlserver
-sqlservice
+sqlService
