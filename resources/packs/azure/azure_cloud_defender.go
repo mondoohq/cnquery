@@ -82,7 +82,7 @@ func (a *mqlAzureCloudDefender) GetSecurityContacts() (interface{}, error) {
 		if contact.Properties.Emails != nil {
 			mails = *contact.Properties.Emails
 		}
-		mqlSecurityContact, err := a.MotorRuntime.CreateResource("azure.cloudDefender.securityContact",
+		mqlSecurityContact, err := a.MotorRuntime.CreateResource("azure.microsoft.cloudDefender.securityContact",
 			"id", core.ToString(contact.ID),
 			"name", core.ToString(contact.Name),
 			"emails", core.StrSliceToInterface(strings.Split(mails, ";")),

@@ -608,15 +608,42 @@ resources:
       - azure
   azure.storage.account:
     fields:
+      blobProperties: {}
       containers: {}
+      fileProperties: {}
       id: {}
       identity: {}
       kind: {}
       location: {}
       name: {}
       properties: {}
+      queueProperties: {}
+      settings: {}
       sku: {}
+      tableProperties: {}
       tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.account.settings:
+    fields:
+      blobProperties: {}
+      fileProperties: {}
+      queueProperties: {}
+      tableProperties: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.blobService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
       type: {}
     is_private: true
     min_mondoo_version: latest
@@ -629,6 +656,81 @@ resources:
       id: {}
       name: {}
       properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.queueService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.service.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
+      storageAccountId: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.service.properties.logging:
+    fields:
+      delete: {}
+      id: {}
+      read: {}
+      retentionPolicy: {}
+      storageAccountId: {}
+      version: {}
+      write: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.service.properties.metrics:
+    fields:
+      enabled: {}
+      id: {}
+      includeAPIs: {}
+      retentionPolicy: {}
+      storageAccountId: {}
+      type: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.service.properties.retentionPolicy:
+    fields:
+      enabled: {}
+      id: {}
+      retentionDays: {}
+      storageAccountId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.storage.tableService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
       type: {}
     is_private: true
     min_mondoo_version: latest

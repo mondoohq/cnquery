@@ -2,8 +2,12 @@ package azure
 
 import (
 	"context"
+	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	table "github.com/Azure/azure-sdk-for-go/sdk/data/aztables"
 	storage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources"
@@ -15,8 +19,10 @@ func (a *mqlAzureStorage) id() (string, error) {
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
-type AzureStorageAccountProperties storage.AccountProperties
-type Kind storage.Kind
+type (
+	AzureStorageAccountProperties storage.AccountProperties
+	Kind                          storage.Kind
+)
 
 func (a *mqlAzureStorage) GetAccounts() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
@@ -238,6 +244,176 @@ func (a *mqlAzureStorageAccount) GetContainers() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAzureStorageAccount) GetQueueProperties() (interface{}, error) {
+	props, err := a.getServiceStorageProperties("queue")
+	if err != nil {
+		return nil, err
+	}
+	parentId, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "queue", parentId)
+}
+
+func (a *mqlAzureStorageAccount) GetTableProperties() (interface{}, error) {
+	props, err := a.getServiceStorageProperties("table")
+	if err != nil {
+		return nil, err
+	}
+	parentId, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "table", parentId)
+}
+
+func (a *mqlAzureStorageAccount) GetBlobProperties() (interface{}, error) {
+	props, err := a.getServiceStorageProperties("blob")
+	if err != nil {
+		return nil, err
+	}
+	parentId, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "blob", parentId)
+}
+
 func (a *mqlAzureStorageContainer) id() (string, error) {
 	return a.Id()
+}
+
+// there seems to be no queue sdk out there, we can reuse the table sdk here as the table/queue properties are identical.
+func (a *mqlAzureStorageAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return table.GetPropertiesResponse{}, err
+	}
+
+	// id is a azure resource id
+	id, err := a.Id()
+	if err != nil {
+		return table.GetPropertiesResponse{}, err
+	}
+
+	resourceID, err := azure.ParseResourceID(id)
+	if err != nil {
+		return table.GetPropertiesResponse{}, err
+	}
+
+	account, err := resourceID.Component("storageAccounts")
+	if err != nil {
+		return table.GetPropertiesResponse{}, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return table.GetPropertiesResponse{}, err
+	}
+	urlPath := "https://{accountName}.{serviceType}.core.windows.net/"
+	urlPath = strings.ReplaceAll(urlPath, "{accountName}", url.PathEscape(account))
+	urlPath = strings.ReplaceAll(urlPath, "{serviceType}", url.PathEscape(serviceType))
+
+	client, err := table.NewServiceClient(urlPath, token, &table.ClientOptions{})
+	if err != nil {
+		return table.GetPropertiesResponse{}, err
+	}
+	props, err := client.GetProperties(ctx, &table.GetPropertiesOptions{})
+	if err != nil {
+		return table.GetPropertiesResponse{}, err
+	}
+	return props, nil
+}
+
+func (a *mqlAzureStorageBlobServiceProperties) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureStorageTableServiceProperties) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureStorageQueueServiceProperties) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureStorageServicePropertiesLogging) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureStorageServicePropertiesMetrics) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureStorageServicePropertiesRetentionPolicy) id() (string, error) {
+	return a.Id()
+}
+
+func toMqlServiceStorageProperties(runtime *resources.Runtime, props table.ServiceProperties, serviceType, parentId string) (interface{}, error) {
+	loggingRetentionPolicy, err := runtime.CreateResource("azure.storage.service.properties.retentionPolicy",
+		"id", fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType),
+		"retentionDays", core.ToInt64From32(props.Logging.RetentionPolicy.Days),
+		"enabled", core.ToBool(props.Logging.RetentionPolicy.Enabled))
+	if err != nil {
+		return nil, err
+	}
+	logging, err := runtime.CreateResource("azure.storage.service.properties.logging",
+		"retentionPolicy", loggingRetentionPolicy,
+		"id", fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType),
+		"delete", core.ToBool(props.Logging.Delete),
+		"write", core.ToBool(props.Logging.Write),
+		"read", core.ToBool(props.Logging.Read),
+		"version", core.ToString(props.Logging.Version),
+	)
+	if err != nil {
+		return nil, err
+	}
+	minuteMetricsRetentionPolicy, err := runtime.CreateResource("azure.storage.service.properties.retentionPolicy",
+		"id", fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType),
+		"retentionDays", core.ToInt64From32(props.MinuteMetrics.RetentionPolicy.Days),
+		"enabled", core.ToBool(props.MinuteMetrics.Enabled),
+	)
+	if err != nil {
+		return nil, err
+	}
+	minuteMetrics, err := runtime.CreateResource("azure.storage.service.properties.metrics",
+		"id", fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType),
+		"retentionPolicy", minuteMetricsRetentionPolicy,
+		"enabled", core.ToBool(props.MinuteMetrics.Enabled),
+		"includeAPIs", core.ToBool(props.MinuteMetrics.IncludeAPIs),
+		"version", core.ToString(props.MinuteMetrics.Version),
+	)
+	if err != nil {
+		return nil, err
+	}
+	hourMetricsRetentionPolicy, err := runtime.CreateResource("azure.storage.service.properties.retentionPolicy",
+		"id", fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType),
+		"retentionDays", core.ToInt64From32(props.HourMetrics.RetentionPolicy.Days),
+		"enabled", core.ToBool(props.HourMetrics.Enabled),
+	)
+	if err != nil {
+		return nil, err
+	}
+	hourMetrics, err := runtime.CreateResource("azure.storage.service.properties.metrics",
+		"id", fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType),
+		"retentionPolicy", hourMetricsRetentionPolicy,
+		"enabled", core.ToBool(props.HourMetrics.Enabled),
+		"includeAPIs", core.ToBool(props.HourMetrics.IncludeAPIs),
+		"version", core.ToString(props.HourMetrics.Version),
+	)
+	if err != nil {
+		return nil, err
+	}
+	settings, err := runtime.CreateResource(fmt.Sprintf("azure.storage.%sService.properties", serviceType),
+		"id", fmt.Sprintf("%s/%s/properties", parentId, serviceType),
+		"minuteMetrics", minuteMetrics,
+		"hourMetrics", hourMetrics,
+		"logging", logging,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return settings, nil
 }
