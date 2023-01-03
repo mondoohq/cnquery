@@ -729,7 +729,7 @@ azure.keyvault {
 }
 
 // Azure Key Vault Vault
-private azure.keyvault.vault  @defaults("id name location") {
+private azure.keyvault.vault  @defaults("id vaultName location") {
   // Key vault ID
   id string
   // Key vault name
@@ -755,7 +755,7 @@ private azure.keyvault.vault  @defaults("id name location") {
 }
 
 // Azure Key Vault Key
-private azure.keyvault.key  @defaults("id keyName") {
+private azure.keyvault.key  @defaults("kid keyName") {
   // Key ID
   kid string
   // Key tags
