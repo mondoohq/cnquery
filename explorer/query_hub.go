@@ -36,22 +36,13 @@ func (s *LocalServices) SetBundle(ctx context.Context, bundle *Bundle) (*Empty, 
 	return globalEmpty, nil
 }
 
-// PreparePack takes a query pack and an optional bundle and gets it
+// preparePack takes a query pack and an optional bundle and gets it
 // ready to be saved in the DB, including asset filters.
-// Note1: The bundle must have been pre-compiled and validated!
-func (s *LocalServices) PreparePack(ctx context.Context, querypack *QueryPack) (*QueryPack, []*Mquery, error) {
+func (s *LocalServices) preparePack(ctx context.Context, querypack *QueryPack) (*QueryPack, []*Mquery, error) {
 	logCtx := logger.FromContext(ctx)
 
 	if querypack == nil || len(querypack.Mrn) == 0 {
 		return nil, nil, status.Error(codes.InvalidArgument, "mrn is required")
-	}
-
-	// store all queries
-	for i := range querypack.Queries {
-		q := querypack.Queries[i]
-		if err := s.setQuery(ctx, q.Mrn, q, false); err != nil {
-			return nil, nil, err
-		}
 	}
 
 	if querypack.LocalExecutionChecksum == "" || querypack.LocalContentChecksum == "" {
@@ -61,21 +52,12 @@ func (s *LocalServices) PreparePack(ctx context.Context, querypack *QueryPack) (
 		}
 	}
 
-	filters, err := querypack.ComputeAssetFilters(ctx, querypack.Mrn)
-	if err != nil {
-		return nil, nil, err
-	}
-	querypack.AssetFilters = map[string]*Mquery{}
-	for i := range filters {
-		cur := filters[i]
-		querypack.AssetFilters[cur.CodeId] = cur
-	}
-
-	return querypack, filters, nil
+	filters, err := querypack.ComputeFilters(ctx, querypack.Mrn)
+	return querypack, filters, err
 }
 
 func (s *LocalServices) setPack(ctx context.Context, querypack *QueryPack) error {
-	querypack, filters, err := s.PreparePack(ctx, querypack)
+	querypack, filters, err := s.preparePack(ctx, querypack)
 	if err != nil {
 		return err
 	}
@@ -92,6 +74,24 @@ func (s *LocalServices) setBundleFromMap(ctx context.Context, bundle *BundleMap)
 	logCtx := logger.FromContext(ctx)
 
 	var err error
+	for i := range bundle.Queries {
+		query := bundle.Queries[i]
+		logCtx.Debug().Str("mrn", query.Mrn).Msg("store query")
+
+		if err := s.setQuery(ctx, query.Mrn, query); err != nil {
+			return err
+		}
+	}
+
+	for i := range bundle.Props {
+		query := bundle.Props[i]
+		logCtx.Debug().Str("mrn", query.Mrn).Msg("store prop")
+
+		if err := s.setQuery(ctx, query.Mrn, query); err != nil {
+			return err
+		}
+	}
+
 	for i := range bundle.Packs {
 		querypack := bundle.Packs[i]
 		logCtx.Debug().Str("owner", querypack.OwnerMrn).Str("uid", querypack.Uid).Str("mrn", querypack.Mrn).Msg("store query pack")
@@ -110,7 +110,7 @@ func (s *LocalServices) setBundleFromMap(ctx context.Context, bundle *BundleMap)
 	return nil
 }
 
-func (s *LocalServices) setQuery(ctx context.Context, mrn string, query *Mquery, isScored bool) error {
+func (s *LocalServices) setQuery(ctx context.Context, mrn string, query *Mquery) error {
 	if query == nil {
 		return errors.New("cannot set query '" + mrn + "' as it is not defined")
 	}

@@ -2,7 +2,9 @@ package explorer
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -91,25 +93,101 @@ func (p *QueryPack) UpdateChecksums() error {
 	return nil
 }
 
-// ComputeAssetFilters into mql
-func (p *QueryPack) ComputeAssetFilters(ctx context.Context, ownerMRN string) ([]*Mquery, error) {
-	res := make([]*Mquery, len(p.Filters))
-	for i := range p.Filters {
-		code := p.Filters[i]
+// ComputeFilters into mql
+func (p *QueryPack) ComputeFilters(ctx context.Context, ownerMRN string) ([]*Mquery, error) {
+	if p.Filters == nil {
+		return nil, nil
+	}
 
-		mquery := &Mquery{
-			Query: code,
+	if err := p.Filters.compile(ownerMRN); err != nil {
+		return nil, err
+	}
+
+	for i := range p.Queries {
+		query := p.Queries[i]
+		if query.Filter == nil {
+			continue
 		}
 
-		bundle, err := mquery.Compile(nil)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to compile asset filter")
+		if err := query.Filter.compile(ownerMRN); err != nil {
+			return nil, err
 		}
-		mquery.Mrn = ownerMRN + "/assetfilter/" + bundle.CodeV2.Id
-		mquery.CodeId = bundle.CodeV2.Id
 
-		res[i] = mquery
+		for k, v := range query.Filter.Items {
+			p.Filters.Items[k] = v
+		}
+	}
+
+	res := make([]*Mquery, len(p.Filters.Items))
+	idx := 0
+	for _, v := range p.Filters.Items {
+		res[idx] = v
+		idx++
 	}
 
 	return res, nil
+}
+
+func (s *Filters) UnmarshalJSON(data []byte) error {
+	var str string
+	err := json.Unmarshal(data, &str)
+	if err == nil {
+		s.Items = map[string]*Mquery{}
+		s.Items[""] = &Mquery{
+			Mql: str,
+		}
+		return nil
+	}
+
+	// FIXME: DEPRECATED, remove in v9.0 vv
+	// This old style of specifying filters is going to be removed, we
+	// have an alternative with list and keys
+	var arr []string
+	err = json.Unmarshal(data, &arr)
+	if err == nil {
+		s.Items = map[string]*Mquery{}
+		for i := range arr {
+			s.Items[strconv.Itoa(i)] = &Mquery{Mql: arr[i]}
+		}
+		return nil
+	}
+	// ^^
+
+	var list []*Mquery
+	err = json.Unmarshal(data, &list)
+	if err == nil {
+		s.Items = map[string]*Mquery{}
+		for i := range list {
+			s.Items[strconv.Itoa(i)] = list[i]
+		}
+		return nil
+	}
+
+	return json.Unmarshal(data, &s.Items)
+}
+
+func (s *Filters) compile(ownerMRN string) error {
+	if s == nil || len(s.Items) == 0 {
+		return nil
+	}
+
+	res := make(map[string]*Mquery, len(s.Items))
+	for _, query := range s.Items {
+		bundle, err := query.Compile(nil)
+		if err != nil {
+			return errors.Wrap(err, "failed to compile asset filter")
+		}
+
+		query.Mrn = ownerMRN + "/assetfilter/" + bundle.CodeV2.Id
+		query.CodeId = bundle.CodeV2.Id
+
+		if _, ok := res[query.CodeId]; ok {
+			continue
+		}
+
+		res[query.CodeId] = query
+	}
+
+	s.Items = res
+	return nil
 }

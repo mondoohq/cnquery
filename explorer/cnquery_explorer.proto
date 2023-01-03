@@ -9,11 +9,20 @@ import "motor/asset/asset.proto";
 message Bundle {
   string owner_mrn = 1; 
   repeated QueryPack packs = 2;
+  repeated Mquery queries = 3;
 }
 
 message QueryPack {
+  // FIXME: DEPRECATED, remove in v9.0 vv
+  // This is replaced by the field "filters"
+  map<string,Mquery> asset_filters = 7; // key == checksum
+  // ^^
+
   // user-defined UID, which is used to generate the MRN
   string uid = 36;
+  // user-defined, only used in query generation
+  string context = 44;
+
   // MRN to universally identify this query.
   // UIDs are local to QueryPacks, MRNs are global
   string mrn = 1;
@@ -23,9 +32,8 @@ message QueryPack {
   string owner_mrn = 4; // auto-generated
   
   repeated Mquery queries = 6;
-  map<string,Mquery> asset_filters = 7; // key == checksum, internal
-  repeated string filters = 43; // user-defined
-  string context = 8;
+  repeated Property props = 35;
+  Filters filters = 43;
   
   bool is_public = 20;
   string license = 21;
@@ -36,8 +44,27 @@ message QueryPack {
   int64 modified = 33;
   map<string,string> tags = 34;
 
+  // internal fields
   string local_content_checksum = 23;
   string local_execution_checksum = 24;
+}
+
+message ObjectRef {
+  string mrn = 1;
+  string uid = 2;
+}
+
+// User-defined and internal filters. Users may use:
+// 1. filters: asset.name == /sth/
+// 2. filters:
+//    - mql: asset.name == /sth/
+//
+// Internally we use:
+// 3. filters:
+//      items:
+//        <checksum>: { ..mquery.. }
+message Filters {
+  map<string,Mquery> items = 1;
 }
 
 message QueryPacks {
@@ -46,31 +73,58 @@ message QueryPacks {
 
 message Docs {
   string desc = 1;
-  repeated Reference refs = 2;
+  repeated MqueryRef refs = 2;
 }
 
-message Reference {
-  string title = 1;
-  string url = 2;
-}
-
-// Mquery is an MQL query representation
-message Mquery {
-  string query = 1;
+// Properties allow users to configure queries and bundles in pre-defined ways.
+// They return one value only, have a type, and may specify which query they
+// target, while used in querypacks (or other groupings like policies).
+// They may contain additional metadata to provide more information.
+//
+// Note: At the time of writing properties do not pull from other properties.
+// They may do that later.
+message Property {
+  string mql = 1;
   string code_id = 2;
   string checksum = 3;
   string mrn = 4;
   // UID is only needed on Mquery upload, when the MRN is computed.
-  // It will not be persisted.
+  // It is not be persisted.
+  string uid = 5;
+  string type = 6;
+  string context = 7;
+  repeated ObjectRef for = 8;
+  string title = 20;
+  string desc = 35;
+}
+
+// Mquery represents the MQL and metadata that form a query
+message Mquery {
+  // FIXME: DEPRECATED, remove in v9.0 vv
+  // This is replaced by the field "mql"
+  string query = 40;
+  // This is moved into docs.refs
+  repeated MqueryRef refs = 22;
+  // ^^
+
+  string mql = 1;
+  string code_id = 2;
+  string checksum = 3;
+  string mrn = 4;
+  // UID is only needed on Mquery upload, when the MRN is computed.
+  // It is not be persisted.
   string uid = 5;
   string type = 6;
   string context = 7;
   string title = 20;
   MqueryDocs docs = 21;
-  string desc = 35; // only used if docs.desc is not defined
-  repeated MqueryRef refs = 22;
+  // Desc is only used if docs.desc is not defined. It is not persisted.
+  string desc = 35;
   ImpactValue impact = 23;
   map<string,string> tags = 34;
+  Filters filter = 37;
+  repeated Property props = 38;
+  repeated Mquery compose = 39;
 }
 
 message ImpactValue {
@@ -85,6 +139,7 @@ message MqueryDocs {
   string desc = 1;
   string audit = 2;
   string remediation = 3;
+  repeated MqueryRef refs = 4;
 }
 
 message Author {
