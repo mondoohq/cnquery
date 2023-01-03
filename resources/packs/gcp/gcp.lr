@@ -1008,8 +1008,6 @@ private gcp.project.cluster.nodepool.config.kubeletConfig @defaults("cpuManagerP
   id string
   // Control the CPU management policy on the node
   cpuManagerPolicy string
-  // TODO: this is a pointer to bool because it can be null. Can add it later
-  // cpuCfsQuota bool
   // Set the CPU CFS quota period value 'cpu.cfs_period_us'
   cpuCfsQuotaPeriod string
   // Set the Pod PID limits
@@ -1103,7 +1101,7 @@ private gcp.project.pubsubService.subscription @defaults("name") {
 }
 
 // GCP PubSub subscription configuration
-private gcp.project.pubsubService.subscription.config @defaults("topic") {
+private gcp.project.pubsubService.subscription.config @defaults("topic.name ackDeadline expirationPolicy") {
   // Project ID
   projectId string
   // Subscription name
@@ -1125,7 +1123,7 @@ private gcp.project.pubsubService.subscription.config @defaults("topic") {
 }
 
 // GCP PubSub Configuration for subscriptions that operate in push mode
-private gcp.project.pubsubService.subscription.config.pushconfig {
+private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attributes") {
   // Parent configuration ID
   configId string
   // URL of the endpoint to which to push messages
