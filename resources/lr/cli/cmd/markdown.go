@@ -279,7 +279,8 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 
 		for k := range basicFields {
 			field := basicFields[k]
-			rows = append(rows, []string{field.ID, renderLrType(field.Type, l.resourceHrefMap), strings.Join(sanitizeComments(comments[k]), ", ")})
+			rows = append(rows, []string{field.ID, renderLrType(field.Type, l.resourceHrefMap),
+				strings.Join(sanitizeComments(comments[k]), ", ")})
 		}
 
 		table := tablewriter.NewWriter(builder)
@@ -360,5 +361,6 @@ func sanitizeComments(c []string) []string {
 	for i := range c {
 		c[i] = strings.TrimPrefix(c[i], "// ")
 	}
+
 	return c
 }

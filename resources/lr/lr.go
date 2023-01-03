@@ -186,18 +186,28 @@ func (r *Resource) GetInitFields() []*Init {
 	return inits
 }
 
-func extractComments(raw []string) (string, string) {
-	if len(raw) == 0 {
-		return "", ""
-	}
-
+func SanitizeComments(raw []string) []string {
+	todoStart := -1
 	for i := range raw {
 		if raw[i] != "" {
 			raw[i] = strings.Trim(raw[i][2:], " \t\n")
 		}
+		if todoStart == -1 && strings.HasPrefix(raw[i], "TODO") {
+			todoStart = i
+		}
 	}
+	if todoStart != -1 {
+		raw = raw[0:todoStart]
+	}
+	return raw
+}
 
+func extractTitleAndDescription(raw []string) (string, string) {
+	if len(raw) == 0 {
+		return "", ""
+	}
 	title, rest := raw[0], raw[1:]
+
 	desc := strings.Join(rest, " ")
 
 	return title, desc
@@ -218,7 +228,8 @@ func Parse(input string) (*LR, error) {
 	for i := range res.Resources {
 		resource := res.Resources[i]
 
-		resource.title, resource.desc = extractComments(resource.Comments)
+		resource.Comments = SanitizeComments(resource.Comments)
+		resource.title, resource.desc = extractTitleAndDescription(resource.Comments)
 		resource.Comments = nil
 
 		// List types have an implicit list field
