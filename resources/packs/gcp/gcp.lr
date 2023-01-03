@@ -1161,7 +1161,7 @@ private gcp.project.kmsservice.keyring @defaults("name") {
   projectId string
   // Keyring name
   name string
-  // Creation timestamp
+  // Time created
   created time
   // Keyring location
   location string
@@ -1193,11 +1193,11 @@ private gcp.project.kmsservice.keyring.cryptokey.version @defaults("name state")
   algorithm string
   // Statement generated and signed by HSM at key creation time
   attestation gcp.project.kmsservice.keyring.cryptokey.version.attestation
-  // Creation timestamp
+  // Time created
   created time
-  // Generation timestamp
+  // Time generated
   generated time
-  // Destruction timestamp
+  // Time destroyed
   destroyed time
   // Destroy event timestamp
   destroyEventTime time
