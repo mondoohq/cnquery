@@ -542,8 +542,8 @@ private gcp.storage.bucket @defaults("id") {
   location string
   //
   locationType string
-  //
-  projectNumber string // TODO: project number / project id / project name
+  // TODO: project number / project id / project name
+  projectNumber string 
   //
   storageClass string
   //
@@ -585,7 +585,8 @@ private gcp.sql.instance @defaults("name") {
   // Instance state
   state string
   // Project
-  project string // TODO: should this be id or name
+  // TODO: should this be id or name
+  project string 
   // Region
   region string
   // Service account email address
