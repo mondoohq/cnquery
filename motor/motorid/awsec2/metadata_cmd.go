@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os"
@@ -51,22 +50,21 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	// Note that the tags metadata service has to be enabled for this to work. If not, we fallback to trying to get the name
 	// via the aws API (if there's a config provided).
 	taggedName, err := m.instanceNameTag()
-	if err == nil {
+	if err == nil && taggedName != "" {
 		name = taggedName
 	} else if m.config != nil {
+		m.config.Region = doc.Region // configs loaded from an aws instance don't have the region set
 		ec2svc := ec2.NewFromConfig(*m.config)
 		ctx := context.Background()
-		filters := []ec2types.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []string{doc.InstanceID},
-			},
-		}
-		tags, err := ec2svc.DescribeTags(ctx, &ec2.DescribeTagsInput{Filters: filters})
-		if err == nil {
-			for _, t := range tags.Tags {
-				if t.Key != nil && *t.Key == "Name" && t.Value != nil {
-					name = *t.Value
+
+		is, err := ec2svc.DescribeInstances(ctx, &ec2.DescribeInstancesInput{InstanceIds: []string{doc.InstanceID}}) // ec2 instances do not, by default, have permission to call DescribeTags, but do for DescribeInstances
+		if err == nil && len(is.Reservations) == 1 {
+			if len(is.Reservations[0].Instances) == 1 {
+				i := is.Reservations[0].Instances[0]
+				for _, t := range i.Tags {
+					if t.Key != nil && *t.Key == "Name" && t.Value != nil {
+						name = *t.Value
+					}
 				}
 			}
 		}
