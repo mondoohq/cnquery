@@ -8,7 +8,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProject) GetContacts() (interface{}, error) {
+func (g *mqlGcpProject) GetEssentialContacts() (interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (g *mqlGcpProject) GetContacts() (interface{}, error) {
 
 	mqlContacts := make([]interface{}, 0, len(contacts.Contacts))
 	for _, c := range contacts.Contacts {
-		mqlC, err := g.MotorRuntime.CreateResource("gcp.contact",
+		mqlC, err := g.MotorRuntime.CreateResource("gcp.essentialContact",
 			"resourcePath", c.Name,
 			"email", c.Email,
 			"languageTag", c.LanguageTag,
@@ -55,6 +55,6 @@ func (g *mqlGcpProject) GetContacts() (interface{}, error) {
 	return mqlContacts, nil
 }
 
-func (g *mqlGcpContact) id() (string, error) {
+func (g *mqlGcpEssentialContact) id() (string, error) {
 	return g.ResourcePath()
 }

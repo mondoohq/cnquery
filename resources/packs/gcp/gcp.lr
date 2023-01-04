@@ -52,7 +52,7 @@ gcp.project @defaults("name") {
   // KMS-related resources
   kms() gcp.project.kmsService
   // GCP Contancts for the project
-  contacts() []gcp.contact
+  essentialContacts() []gcp.essentialContact
 }
 
 // GCP Service
@@ -1255,7 +1255,7 @@ private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevel
 }
 
 // GCP Contact
-private gcp.contact {
+private gcp.essentialContact {
   // Full resource path
   resourcePath string
   // Email address to send notifications to
