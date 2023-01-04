@@ -57,6 +57,21 @@ func ToStringSlice(in *[]string) []interface{} {
 	return res
 }
 
+func PtrSliceToInterface(in []*string) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	res := []interface{}{}
+	for _, v := range in {
+		if v != nil {
+		}
+		res = append(res, *v)
+	}
+
+	return res
+}
+
 func ToFloat64(i *float64) float64 {
 	if i == nil {
 		return 0

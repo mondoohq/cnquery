@@ -45,3 +45,4 @@ certificatechains
 cryptokey
 ekm
 kmsService
+activitylog

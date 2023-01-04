@@ -219,7 +219,71 @@ resources:
       - azure
   azure.monitor:
     fields:
+      activityLog: {}
+      diagnosticSettings: {}
+      diagnosticSettingsForResource: {}
       logProfiles: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.monitor.activityLog:
+    fields:
+      alerts: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.monitor.activityLog.alert:
+    fields:
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.monitor.activitylog:
+    fields:
+      alerts: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.monitor.activitylog.alert:
+    fields:
+      actions: {}
+      conditions: {}
+      description: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      scopes: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.monitor.activitylog.alert.action:
+    fields:
+      actionGroupId: {}
+      webhookProperties: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.monitor.activitylog.alert.condition:
+    fields:
+      anyOf: {}
+      containsAny: {}
+      equals: {}
+      field: {}
+      fieldName: {}
+      id: {}
+    is_private: true
     min_mondoo_version: latest
     platform:
       name:
