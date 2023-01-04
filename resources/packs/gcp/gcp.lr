@@ -51,6 +51,8 @@ gcp.project @defaults("name") {
   pubsub() gcp.project.pubsubService
   // KMS-related resources
   kms() gcp.project.kmsService
+  // GCP Contacts for the project
+  essentialContacts() []gcp.essentialContact
 }
 
 // GCP Service
@@ -1250,4 +1252,22 @@ private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevel
   externalKeyUri string
   // Path to the external key material on the EKM when using EKM connection
   ekmConnectionKeyPath string
+}
+
+// GCP Contact
+private gcp.essentialContact {
+  // Full resource path
+  resourcePath string
+  // Email address to send notifications to
+  email string
+  // Preferred language for notifications, as a ISO 639-1 language code
+  languageTag string
+  // Name of the contact
+  name string
+  // Categories of notifications that the contact will receive communication for
+  notificationCategorySubscriptions []string
+  // Last time the validation state was updated
+  validated time
+  // Validity of the contact
+  validationState string
 }
