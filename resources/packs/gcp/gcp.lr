@@ -51,7 +51,7 @@ gcp.project @defaults("name") {
   pubsub() gcp.project.pubsubService
   // KMS-related resources
   kms() gcp.project.kmsService
-  // GCP Contancts for the project
+  // GCP Contacts for the project
   essentialContacts() []gcp.essentialContact
 }
 
