@@ -617,8 +617,7 @@ private gcp.project.sqlService.instance @defaults("name") {
   maxDiskSize int
   // Instance name
   name string
-  // Project
-  // TODO: should this be id or name
+  // DEPRECATED: use projectId instead
   project string 
   // Region
   region string
@@ -646,8 +645,6 @@ private gcp.project.sqlService.instance.database @defaults("name") {
   instance string
   // Name of the database
   name string
-  // Project
-  project string
   // SQL Server database details
   sqlserverDatabaseDetails gcp.project.sqlService.instance.database.sqlserverDatabaseDetails
 }
@@ -857,7 +854,7 @@ private gcp.project.sqlService.instance.settings.ipConfiguration.aclEntry {
 }
 
 // GCP Cloud SQL Instance Settings Location Preferences
-private gcp.project.sqlService.instance.settings.locationPreference {
+private gcp.project.sqlService.instance.settings.locationPreference @defaults("zone") {
   // Internal ID
   id string
   // The App Engine application to follow
@@ -869,7 +866,7 @@ private gcp.project.sqlService.instance.settings.locationPreference {
 }
 
 // GCP Cloud SQL Instance Settings Maintenance Window
-private gcp.project.sqlService.instance.settings.maintenanceWindow {
+private gcp.project.sqlService.instance.settings.maintenanceWindow @defaults("day hour") {
   // Internal ID
   id string
   // Day of week (1-7), starting on Monday
@@ -881,7 +878,7 @@ private gcp.project.sqlService.instance.settings.maintenanceWindow {
 }
 
 // GCP Cloud SQL Instance Settings Password Validation Policy
-private gcp.project.sqlService.instance.settings.passwordValidationPolicy {
+private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defaults("enabledPasswordPolicy") {
   // Internal ID
   id string
   // The complexity of the password

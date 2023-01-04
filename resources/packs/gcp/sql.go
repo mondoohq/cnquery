@@ -393,7 +393,6 @@ func (g *mqlGcpProjectSqlServiceInstance) GetDatabases() ([]interface{}, error) 
 			"collation", db.Collation,
 			"instance", instanceName,
 			"name", db.Name,
-			"project", projectId,
 			"sqlserverDatabaseDetails", sqlServerDbDetails,
 		)
 		if err != nil {
