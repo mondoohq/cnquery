@@ -1304,7 +1304,7 @@ private gcp.project.apiKey.restriction {
   androidKeyRestrictions gcp.project.apiKey.restriction.androidKeyRestrictions
   // A restriction for a specific service and optionally one or more specific methods
   apiTargets []gcp.project.apiKey.restriction.apiTarget
-  // The HTTP referrers that are allopwed to use the key
+  // The HTTP referrers that are allowed to use the key
   browserKeyRestrictions gcp.project.apiKey.restriction.browserKeyRestrictions
   // The iOS apps that are allowed to use the key
   iosKeyRestrictions gcp.project.apiKey.restriction.iosKeyRestrictions
@@ -1361,5 +1361,5 @@ private gcp.project.apiKey.restriction.serverKeyRestrictions {
   // Internal ID
   id string
   // List of the caller IP addresses that are allowed to make API calls with this key
-  allowqeAddresses []string
+  allowedAddresses []string
 }
