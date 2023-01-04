@@ -53,6 +53,8 @@ gcp.project @defaults("name") {
   kms() gcp.project.kmsService
   // GCP Contacts for the project
   essentialContacts() []gcp.essentialContact
+  // API keys
+  apiKeys() []gcp.project.apiKey
 }
 
 // GCP Service
@@ -1268,4 +1270,96 @@ private gcp.essentialContact @defaults("email notificationCategories") {
   validated time
   // Validity of the contact
   validationState string
+}
+
+// GCP Project API key
+private gcp.project.apiKey @defaults("displayName") {
+  // Project ID
+  projectId string
+  // Full resource path
+  resourcePath string
+  // Annotations
+  annotations map[string]string
+  // Creation timestamp
+  created time
+  // Deletion timestamp
+  deleted time
+  // Human-readable display name of this key
+  displayName string
+  // Encrypted and signed value held by this key
+  keyString string
+  // The name of the key
+  name string
+  // API key restrictions
+  restrictions []gcp.project.apiKey.restrictions
+  // Update timestamp
+  updated time
+}
+
+// GCP Project API key restrictions
+private gcp.project.apiKey.restrictions {
+  // Parent resource path
+  parentResourcePath string
+  // The Android apps that are allowed to use the key
+  androidKeyRestrictions gcp.project.apiKey.restrictions.androidKeyRestrictions
+  // A restriction for a specific service and optionally one or more specific methods
+  apiTargets []gcp.project.apiKey.restrictions.apiTarget
+  // The HTTP referrers that are allopwed to use the key
+  browserKeyRestrictions gcp.project.apiKey.restrictions.browserKeyRestrictions
+  // The iOS apps that are allowed to use the key
+  iosKeyRestrictions gcp.project.apiKey.restrictions.iosKeyRestrictions
+  // The IP addresses that are allowed to use the key
+  serverKeyRestrictions gcp.project.apiKey.restrictions.serverKeyRestrictions
+}
+
+// GCP Project API key restrictions for Android apps
+private gcp.project.apiKey.restrictions.androidKeyRestrictions {
+  // Internal ID
+  id string
+  // A list of android applications that are allowed to make API calls
+  allowedApplications []gcp.project.apiKey.restrictions.androidKeyRestrictions.application
+}
+
+// GCP Project API key Android application
+private gcp.project.apiKey.restrictions.androidKeyRestrictions.application {
+  // Internal ID
+  id string
+  // The package name of the application
+  packageName string
+  // The SHA1 fingerprint of the application
+  sha1Fingerprint string
+}
+
+// GCP Project API key restrictions for API calls
+private gcp.project.apiKey.restrictions.apiTarget {
+  // Internal ID
+  id string
+  // List of methods that can be called
+  methods []string
+  // Service for this restriction
+  service string
+}
+
+// GCP Project API key HTTP referrers
+private gcp.project.apiKey.restrictions.browserKeyRestrictions {
+  // Internal ID
+  id string
+  // List of HTTP referrers that are allowed to make API calls
+  allowedReferrers []string
+}
+
+// GCP Project API key iOS app
+private gcp.project.apiKey.restrictions.iosKeyRestrictions {
+  // Internal ID
+  id string
+  // List of bundle IDs that are allowed when making API calls with this key
+  allowedBundleIds []string
+}
+
+// GCP Project API key IP addresses
+private gcp.project.apiKey.restrictions.serverKeyRestrictions {
+  // Internal ID
+  id string
+  // List of the caller IP addresses that are allowed to make API calls with this key
+  allowqeAddresses []string
 }
