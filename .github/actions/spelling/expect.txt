@@ -48,3 +48,4 @@ kmsService
 vulnerabilityassessmentsettings
 Sas
 retentionpolicy
+activitylog
