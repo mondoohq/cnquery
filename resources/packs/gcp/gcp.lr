@@ -74,6 +74,8 @@ gcp.project @defaults("name") {
   bigquery() gcp.project.bigqueryService
   // GCP Cloud Functions
   cloudFunctions() []gcp.project.cloudFunction
+  // GCP Dataproc resources
+  dataproc() gcp.project.dataprocService
 }
 
 // GCP Service
@@ -1702,4 +1704,59 @@ private gcp.project.cloudFunction {
   dockerRepository string
   // Docker registry to use for this deployment
   dockerRegistry string
+}
+// GCP Dataproc Resources
+private gcp.project.dataprocService {
+  // Project ID
+  projectId string
+  // List of available regions
+  regions() []string
+  // List of Dataproc clusters in the current project
+  clusters() []gcp.project.dataprocService.cluster
+}
+
+// GCP Dataproc cluster
+private gcp.project.dataprocService.cluster @defaults("clusterName") {
+  // Project ID
+  projectId string
+  // Cluster name
+  clusterName string
+  // Cluster UUID
+  clusterUuid string
+  // Cluster configuration
+  config gcp.project.dataprocService.cluster.config
+  // Labels associated with the cluster
+  labels map[string]string
+  // Contains cluster daemon metrics such as HDF and YARN stats
+  metrics gcp.project.dataprocService.cluster.metrics
+  // Cluster status
+  status gcp.project.dataprocService.cluster.status
+  // Previous cluster status
+  statusHistory []gcp.project.dataprocService.cluster.status
+  // Virtual cluster config is used when creating a Dataproc cluster that does not directly control the underlying compute resources
+  virtualClusterConfig gcp.project.dataprocService.cluster.virtualClusterConfig
+}
+
+// GCP Dataproc cluster config
+private gcp.project.dataprocService.cluster.config {
+  // Parent resource path
+  parentResourcePath string
+}
+
+// GCP Dataproc cluster metrics
+private gcp.project.dataprocService.cluster.metrics {
+  // Parent resource path
+  parentResourcePath string
+}
+
+// GCP Dataproc cluster status
+private gcp.project.dataprocService.cluster.status {
+  // Internal ID
+  id string
+}
+
+// GCP Dataproc cluster virtual cluster config
+private gcp.project.dataprocService.cluster.virtualClusterConfig {
+  // Parent resource path
+  parentResourcePath string
 }
