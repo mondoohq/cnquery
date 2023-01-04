@@ -421,7 +421,7 @@ azure.sql {
 }
 
 // Azure SQL Server
-private azure.sql.server @defaults("id name location") {
+private azure.sql.server @defaults("name location") {
   // SQL server ID
   id string
   // SQL server name
@@ -448,8 +448,33 @@ private azure.sql.server @defaults("id name location") {
   securityAlertPolicy() dict
   // SQL server encryption protector
   encryptionProtector() dict
+  // SQL server threat detection policy
+  threatDetectionPolicy() dict
+  // SQL server vulnerability assessment settings
+  vulnerabilityAssessmentSettings() azure.sql.server.vulnerabilityassessmentsettings
 }
 
+// Azure SQL Server Vulnerability Assessment Settings
+private azure.sql.server.vulnerabilityassessmentsettings {
+  // identifier of the vulnerability assessment
+  id string
+  // name of the vulnerability assessment
+  name string
+  // type of the vulnerability assessment
+  type string
+  // a blob storage container path to hold the scan results
+  storageContainerPath string
+  // specifies the identifier key of the storage account for vulnerability assessment scan results
+  storageAccountAccessKey string
+  // a shared access signature key that has write access to the blob container specified in 'storageContainerPath'
+  storageContainerSasKey string
+  // indicates whether recurring scan is enabled
+  recurringScanEnabled bool
+  // specifies an array of e-mail addresses to which the scan notification is sent
+  recurringScanEmails []string
+  // indicates whether the schedule scan notification is also sent to the subscription administrators
+  mailSubscriptionAdmins bool
+}
 // Azure SQL Server Administrator
 private azure.sql.server.administrator @defaults("id name") {
   // SQL administrator ID

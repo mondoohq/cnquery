@@ -43,6 +43,16 @@ func StrSliceToInterface(value []string) []interface{} {
 	return res
 }
 
+func PtrStrSliceToInterface(value []*string) []interface{} {
+	res := make([]interface{}, len(value))
+	for i := range value {
+		if value[i] != nil {
+			res[i] = value[i]
+		}
+	}
+	return res
+}
+
 func ToStringSlice(in *[]string) []interface{} {
 	if in == nil {
 		return []interface{}{}
