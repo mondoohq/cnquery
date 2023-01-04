@@ -164,7 +164,11 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 
 			// we use ec2 instance connect api to create credentials for an aws instance
 			eic := awsinstanceconnect.New(cfg)
-			creds, err := eic.GenerateCredentials(pCfg.Host, credential.User)
+			host := pCfg.Host
+			if id, ok := pCfg.Options["instance"]; ok {
+				host = id
+			}
+			creds, err := eic.GenerateCredentials(host, credential.User)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -222,7 +226,11 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			}
 			log.Debug().Msg("generating instance connect credentials")
 			eic := awsinstanceconnect.New(cfg)
-			creds, err := eic.GenerateCredentials(pCfg.Host, credential.User)
+			host := pCfg.Host
+			if id, ok := pCfg.Options["instance"]; ok {
+				host = id
+			}
+			creds, err := eic.GenerateCredentials(host, credential.User)
 			if err != nil {
 				return nil, nil, err
 			}

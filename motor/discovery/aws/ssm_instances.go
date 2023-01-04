@@ -217,8 +217,9 @@ func ssmInstanceToAsset(instanceInfo ssmInstanceInfo, cfg aws.Config) *asset.Ass
 			Runtime:     providers.RUNTIME_AWS_EC2,
 			Credentials: creds,
 			Options: map[string]string{
-				"region":  instanceInfo.region,
-				"profile": instanceInfo.profile,
+				"region":   instanceInfo.region,
+				"profile":  instanceInfo.profile,
+				"instance": *instanceInfo.instance.InstanceId,
 			},
 		}},
 		State:  mapSmmManagedPingStateCode(instanceInfo.instance.PingStatus),

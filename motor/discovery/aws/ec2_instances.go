@@ -224,8 +224,9 @@ func instanceToAsset(instanceInfo instanceInfo) *asset.Asset {
 				},
 			},
 			Options: map[string]string{
-				"region":  instanceInfo.region,
-				"profile": instanceInfo.profile,
+				"region":   instanceInfo.region,
+				"profile":  instanceInfo.profile,
+				"instance": *instanceInfo.instance.InstanceId,
 			},
 		})
 	}
