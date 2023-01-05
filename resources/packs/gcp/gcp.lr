@@ -1255,7 +1255,7 @@ private gcp.project.kmsService.keyring.cryptokey.version.externalProtectionLevel
 }
 
 // GCP Contact
-private gcp.essentialContact {
+private gcp.essentialContact @defaults("email notificationCategories") {
   // Full resource path
   resourcePath string
   // Email address to send notifications to
@@ -1263,7 +1263,7 @@ private gcp.essentialContact {
   // Preferred language for notifications, as a ISO 639-1 language code
   languageTag string
   // Categories of notifications that the contact will receive communication for
-  notificationCategorySubscriptions []string
+  notificationCategories []string
   // Last time the validation state was updated
   validated time
   // Validity of the contact

@@ -42,7 +42,7 @@ func (g *mqlGcpProject) GetEssentialContacts() (interface{}, error) {
 			"resourcePath", c.Name,
 			"email", c.Email,
 			"languageTag", c.LanguageTag,
-			"notificationCategorySubscriptions", core.StrSliceToInterface(c.NotificationCategorySubscriptions),
+			"notificationCategories", core.StrSliceToInterface(c.NotificationCategorySubscriptions),
 			"validated", parseTime(c.ValidateTime),
 			"validationState", c.ValidationState,
 		)
