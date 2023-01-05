@@ -686,7 +686,7 @@ private azure.mysql.flexibleServer @defaults("id name location") {
   properties dict
   // MySQL flexible server configuration
   configuration() []azure.sql.configuration
-  // Mysql flexible server databases
+  // MySQL flexible server databases
   databases() []azure.mysql.database
   // Mysql flexible server firewall rules
   firewallRules() []azure.sql.firewallrule
