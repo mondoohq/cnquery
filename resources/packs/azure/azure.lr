@@ -925,36 +925,36 @@ private azure.cloudDefender.securityContact {
 
 // Azure Authorization
 azure.authorization {
-  // The role definitions for the Azure subscription
+  // Role definitions for the Azure subscription
   roleDefinitions() []azure.authorization.roleDefinition
 }
 
 // Azure Role Definition
 azure.authorization.roleDefinition @defaults ("id name scopes") {
-  // the identifier of the role definition
+  // ID of the role definition
   id string
-  // the description of the role definition
+  // Description of the role definition
   description string
-  // the name of the role definition
+  // Name of the role definition
   name string
-  // indicates if the role definition is custom, that is if it has been manually created
+  // Whether the role definition is manually created
   isCustom bool
-  // the scopes for which the role definition applies
+  // Scopes for which the role definition applies
   scopes []string
-  // the permissions that are attached to the role definition
+  // Permissions that are attached to the role definition
   permissions []azure.authorization.roleDefinition.permission
 }
 
 // Azure Role Definition Permission
 private azure.authorization.roleDefinition.permission @defaults ("allowedActions deniedActions") {
-  // the identifier of the permission
+  // ID of the permission
   id string
-  // the list of allowed actions that are attached to the permission
+  // List of allowed actions that are attached to the permission
   allowedActions []string
-  // the list of denied actions that are attached to the permission
+  // List of denied actions that are attached to the permission
   deniedActions []string
-  // the list of allowed data actions that are attached to the permission
+  // List of allowed data actions that are attached to the permission
   allowedDataActions []string
-  // the list of denied data actions that are attached to the permission
+  // List of denied data actions that are attached to the permission
   deniedDataActions []string
 }
