@@ -1262,8 +1262,6 @@ private gcp.essentialContact {
   email string
   // Preferred language for notifications, as a ISO 639-1 language code
   languageTag string
-  // Name of the contact
-  name string
   // Categories of notifications that the contact will receive communication for
   notificationCategorySubscriptions []string
   // Last time the validation state was updated
