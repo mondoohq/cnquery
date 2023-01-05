@@ -78,12 +78,6 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.essentialContact", newGcpEssentialContact)
 	registry.AddFactory("gcp.project.apiKey", newGcpProjectApiKey)
 	registry.AddFactory("gcp.project.apiKey.restrictions", newGcpProjectApiKeyRestrictions)
-	registry.AddFactory("gcp.project.apiKey.restrictions.androidKeyRestrictions", newGcpProjectApiKeyRestrictionsAndroidKeyRestrictions)
-	registry.AddFactory("gcp.project.apiKey.restrictions.androidKeyRestrictions.application", newGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication)
-	registry.AddFactory("gcp.project.apiKey.restrictions.apiTarget", newGcpProjectApiKeyRestrictionsApiTarget)
-	registry.AddFactory("gcp.project.apiKey.restrictions.browserKeyRestrictions", newGcpProjectApiKeyRestrictionsBrowserKeyRestrictions)
-	registry.AddFactory("gcp.project.apiKey.restrictions.iosKeyRestrictions", newGcpProjectApiKeyRestrictionsIosKeyRestrictions)
-	registry.AddFactory("gcp.project.apiKey.restrictions.serverKeyRestrictions", newGcpProjectApiKeyRestrictionsServerKeyRestrictions)
 }
 
 // GcpOrganization resource interface
@@ -22162,14 +22156,14 @@ type GcpProjectApiKey interface {
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
+	Id() (string, error)
 	ProjectId() (string, error)
+	Name() (string, error)
 	ResourcePath() (string, error)
 	Annotations() (map[string]interface{}, error)
 	Created() (*time.Time, error)
 	Deleted() (*time.Time, error)
-	DisplayName() (string, error)
 	KeyString() (string, error)
-	Name() (string, error)
 	Restrictions() (GcpProjectApiKeyRestrictions, error)
 	Updated() (*time.Time, error)
 }
@@ -22200,9 +22194,17 @@ func newGcpProjectApiKey(runtime *resources.Runtime, args *resources.Args) (inte
 		}
 
 		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.apiKey\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
 		case "projectId":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.apiKey\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.apiKey\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "resourcePath":
 			if _, ok := val.(string); !ok {
@@ -22220,17 +22222,9 @@ func newGcpProjectApiKey(runtime *resources.Runtime, args *resources.Args) (inte
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.apiKey\", its \"deleted\" argument has the wrong type (expected type \"*time.Time\")")
 			}
-		case "displayName":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey\", its \"displayName\" argument has the wrong type (expected type \"string\")")
-			}
 		case "keyString":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.apiKey\", its \"keyString\" argument has the wrong type (expected type \"string\")")
-			}
-		case "name":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "restrictions":
 			if _, ok := val.(GcpProjectApiKeyRestrictions); !ok {
@@ -22267,8 +22261,14 @@ func newGcpProjectApiKey(runtime *resources.Runtime, args *resources.Args) (inte
 
 func (s *mqlGcpProjectApiKey) Validate() error {
 	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"id\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("projectId"); !ok {
 		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"projectId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("resourcePath"); !ok {
 		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"resourcePath\". This field is required.")
@@ -22282,14 +22282,8 @@ func (s *mqlGcpProjectApiKey) Validate() error {
 	if _, ok := s.Cache.Load("deleted"); !ok {
 		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"deleted\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("displayName"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"displayName\". This field is required.")
-	}
 	if _, ok := s.Cache.Load("keyString"); !ok {
 		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"keyString\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("restrictions"); !ok {
 		return errors.New("Initialized \"gcp.project.apiKey\" resource without a \"restrictions\". This field is required.")
@@ -22305,7 +22299,11 @@ func (s *mqlGcpProjectApiKey) Validate() error {
 func (s *mqlGcpProjectApiKey) Register(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.apiKey].Register")
 	switch name {
+	case "id":
+		return nil
 	case "projectId":
+		return nil
+	case "name":
 		return nil
 	case "resourcePath":
 		return nil
@@ -22315,11 +22313,7 @@ func (s *mqlGcpProjectApiKey) Register(name string) error {
 		return nil
 	case "deleted":
 		return nil
-	case "displayName":
-		return nil
 	case "keyString":
-		return nil
-	case "name":
 		return nil
 	case "restrictions":
 		return nil
@@ -22334,8 +22328,12 @@ func (s *mqlGcpProjectApiKey) Register(name string) error {
 func (s *mqlGcpProjectApiKey) Field(name string) (interface{}, error) {
 	log.Trace().Str("field", name).Msg("[gcp.project.apiKey].Field")
 	switch name {
+	case "id":
+		return s.Id()
 	case "projectId":
 		return s.ProjectId()
+	case "name":
+		return s.Name()
 	case "resourcePath":
 		return s.ResourcePath()
 	case "annotations":
@@ -22344,12 +22342,8 @@ func (s *mqlGcpProjectApiKey) Field(name string) (interface{}, error) {
 		return s.Created()
 	case "deleted":
 		return s.Deleted()
-	case "displayName":
-		return s.DisplayName()
 	case "keyString":
 		return s.KeyString()
-	case "name":
-		return s.Name()
 	case "restrictions":
 		return s.Restrictions()
 	case "updated":
@@ -22357,6 +22351,22 @@ func (s *mqlGcpProjectApiKey) Field(name string) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.apiKey\" resource")
 	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectApiKey) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.apiKey\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.apiKey\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
 }
 
 // ProjectId accessor autogenerated
@@ -22371,6 +22381,22 @@ func (s *mqlGcpProjectApiKey) ProjectId() (string, error) {
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.project.apiKey\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpProjectApiKey) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.apiKey\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.apiKey\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -22439,22 +22465,6 @@ func (s *mqlGcpProjectApiKey) Deleted() (*time.Time, error) {
 	return tres, nil
 }
 
-// DisplayName accessor autogenerated
-func (s *mqlGcpProjectApiKey) DisplayName() (string, error) {
-	res, ok := s.Cache.Load("displayName")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey\" failed: no value provided for static field \"displayName\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey\" failed to cast field \"displayName\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
 // KeyString accessor autogenerated
 func (s *mqlGcpProjectApiKey) KeyString() (string, error) {
 	res, ok := s.Cache.Load("keyString")
@@ -22467,22 +22477,6 @@ func (s *mqlGcpProjectApiKey) KeyString() (string, error) {
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.project.apiKey\" failed to cast field \"keyString\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// Name accessor autogenerated
-func (s *mqlGcpProjectApiKey) Name() (string, error) {
-	res, ok := s.Cache.Load("name")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey\" failed: no value provided for static field \"name\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -22523,7 +22517,11 @@ func (s *mqlGcpProjectApiKey) Updated() (*time.Time, error) {
 func (s *mqlGcpProjectApiKey) Compute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.apiKey].Compute")
 	switch name {
+	case "id":
+		return nil
 	case "projectId":
+		return nil
+	case "name":
 		return nil
 	case "resourcePath":
 		return nil
@@ -22533,11 +22531,7 @@ func (s *mqlGcpProjectApiKey) Compute(name string) error {
 		return nil
 	case "deleted":
 		return nil
-	case "displayName":
-		return nil
 	case "keyString":
-		return nil
-	case "name":
 		return nil
 	case "restrictions":
 		return nil
@@ -22556,11 +22550,11 @@ type GcpProjectApiKeyRestrictions interface {
 	Register(string) error
 	Validate() error
 	ParentResourcePath() (string, error)
-	AndroidKeyRestrictions() (GcpProjectApiKeyRestrictionsAndroidKeyRestrictions, error)
+	AndroidKeyRestrictions() (interface{}, error)
 	ApiTargets() ([]interface{}, error)
-	BrowserKeyRestrictions() (GcpProjectApiKeyRestrictionsBrowserKeyRestrictions, error)
-	IosKeyRestrictions() (GcpProjectApiKeyRestrictionsIosKeyRestrictions, error)
-	ServerKeyRestrictions() (GcpProjectApiKeyRestrictionsServerKeyRestrictions, error)
+	BrowserKeyRestrictions() (interface{}, error)
+	IosKeyRestrictions() (interface{}, error)
+	ServerKeyRestrictions() (interface{}, error)
 }
 
 // mqlGcpProjectApiKeyRestrictions for the gcp.project.apiKey.restrictions resource
@@ -22594,24 +22588,24 @@ func newGcpProjectApiKeyRestrictions(runtime *resources.Runtime, args *resources
 				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"parentResourcePath\" argument has the wrong type (expected type \"string\")")
 			}
 		case "androidKeyRestrictions":
-			if _, ok := val.(GcpProjectApiKeyRestrictionsAndroidKeyRestrictions); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"androidKeyRestrictions\" argument has the wrong type (expected type \"GcpProjectApiKeyRestrictionsAndroidKeyRestrictions\")")
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"androidKeyRestrictions\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "apiTargets":
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"apiTargets\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "browserKeyRestrictions":
-			if _, ok := val.(GcpProjectApiKeyRestrictionsBrowserKeyRestrictions); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"browserKeyRestrictions\" argument has the wrong type (expected type \"GcpProjectApiKeyRestrictionsBrowserKeyRestrictions\")")
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"browserKeyRestrictions\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "iosKeyRestrictions":
-			if _, ok := val.(GcpProjectApiKeyRestrictionsIosKeyRestrictions); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"iosKeyRestrictions\" argument has the wrong type (expected type \"GcpProjectApiKeyRestrictionsIosKeyRestrictions\")")
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"iosKeyRestrictions\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "serverKeyRestrictions":
-			if _, ok := val.(GcpProjectApiKeyRestrictionsServerKeyRestrictions); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"serverKeyRestrictions\" argument has the wrong type (expected type \"GcpProjectApiKeyRestrictionsServerKeyRestrictions\")")
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions\", its \"serverKeyRestrictions\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
@@ -22721,7 +22715,7 @@ func (s *mqlGcpProjectApiKeyRestrictions) ParentResourcePath() (string, error) {
 }
 
 // AndroidKeyRestrictions accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictions) AndroidKeyRestrictions() (GcpProjectApiKeyRestrictionsAndroidKeyRestrictions, error) {
+func (s *mqlGcpProjectApiKeyRestrictions) AndroidKeyRestrictions() (interface{}, error) {
 	res, ok := s.Cache.Load("androidKeyRestrictions")
 	if !ok || !res.Valid {
 		return nil, errors.New("\"gcp.project.apiKey.restrictions\" failed: no value provided for static field \"androidKeyRestrictions\"")
@@ -22729,9 +22723,9 @@ func (s *mqlGcpProjectApiKeyRestrictions) AndroidKeyRestrictions() (GcpProjectAp
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectApiKeyRestrictionsAndroidKeyRestrictions)
+	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"androidKeyRestrictions\" to the right type (GcpProjectApiKeyRestrictionsAndroidKeyRestrictions): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"androidKeyRestrictions\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
@@ -22753,7 +22747,7 @@ func (s *mqlGcpProjectApiKeyRestrictions) ApiTargets() ([]interface{}, error) {
 }
 
 // BrowserKeyRestrictions accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictions) BrowserKeyRestrictions() (GcpProjectApiKeyRestrictionsBrowserKeyRestrictions, error) {
+func (s *mqlGcpProjectApiKeyRestrictions) BrowserKeyRestrictions() (interface{}, error) {
 	res, ok := s.Cache.Load("browserKeyRestrictions")
 	if !ok || !res.Valid {
 		return nil, errors.New("\"gcp.project.apiKey.restrictions\" failed: no value provided for static field \"browserKeyRestrictions\"")
@@ -22761,15 +22755,15 @@ func (s *mqlGcpProjectApiKeyRestrictions) BrowserKeyRestrictions() (GcpProjectAp
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectApiKeyRestrictionsBrowserKeyRestrictions)
+	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"browserKeyRestrictions\" to the right type (GcpProjectApiKeyRestrictionsBrowserKeyRestrictions): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"browserKeyRestrictions\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // IosKeyRestrictions accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictions) IosKeyRestrictions() (GcpProjectApiKeyRestrictionsIosKeyRestrictions, error) {
+func (s *mqlGcpProjectApiKeyRestrictions) IosKeyRestrictions() (interface{}, error) {
 	res, ok := s.Cache.Load("iosKeyRestrictions")
 	if !ok || !res.Valid {
 		return nil, errors.New("\"gcp.project.apiKey.restrictions\" failed: no value provided for static field \"iosKeyRestrictions\"")
@@ -22777,15 +22771,15 @@ func (s *mqlGcpProjectApiKeyRestrictions) IosKeyRestrictions() (GcpProjectApiKey
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectApiKeyRestrictionsIosKeyRestrictions)
+	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"iosKeyRestrictions\" to the right type (GcpProjectApiKeyRestrictionsIosKeyRestrictions): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"iosKeyRestrictions\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServerKeyRestrictions accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictions) ServerKeyRestrictions() (GcpProjectApiKeyRestrictionsServerKeyRestrictions, error) {
+func (s *mqlGcpProjectApiKeyRestrictions) ServerKeyRestrictions() (interface{}, error) {
 	res, ok := s.Cache.Load("serverKeyRestrictions")
 	if !ok || !res.Valid {
 		return nil, errors.New("\"gcp.project.apiKey.restrictions\" failed: no value provided for static field \"serverKeyRestrictions\"")
@@ -22793,9 +22787,9 @@ func (s *mqlGcpProjectApiKeyRestrictions) ServerKeyRestrictions() (GcpProjectApi
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectApiKeyRestrictionsServerKeyRestrictions)
+	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"serverKeyRestrictions\" to the right type (GcpProjectApiKeyRestrictionsServerKeyRestrictions): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions\" failed to cast field \"serverKeyRestrictions\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
@@ -22818,984 +22812,6 @@ func (s *mqlGcpProjectApiKeyRestrictions) Compute(name string) error {
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions\" resource")
-	}
-}
-
-// GcpProjectApiKeyRestrictionsAndroidKeyRestrictions resource interface
-type GcpProjectApiKeyRestrictionsAndroidKeyRestrictions interface {
-	MqlResource() (*resources.Resource)
-	Compute(string) error
-	Field(string) (interface{}, error)
-	Register(string) error
-	Validate() error
-	Id() (string, error)
-	AllowedApplications() ([]interface{}, error)
-}
-
-// mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions for the gcp.project.apiKey.restrictions.androidKeyRestrictions resource
-type mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions struct {
-	*resources.Resource
-}
-
-// MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions) MqlResource() *resources.Resource {
-	return s.Resource
-}
-
-// create a new instance of the gcp.project.apiKey.restrictions.androidKeyRestrictions resource
-func newGcpProjectApiKeyRestrictionsAndroidKeyRestrictions(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
-	// User hooks
-	var err error
-	res := mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions{runtime.NewResource("gcp.project.apiKey.restrictions.androidKeyRestrictions")}
-	// assign all named fields
-	var id string
-
-	now := time.Now().Unix()
-	for name, val := range *args {
-		if val == nil {
-			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-			continue
-		}
-
-		switch name {
-		case "id":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.androidKeyRestrictions\", its \"id\" argument has the wrong type (expected type \"string\")")
-			}
-		case "allowedApplications":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.androidKeyRestrictions\", its \"allowedApplications\" argument has the wrong type (expected type \"[]interface{}\")")
-			}
-		case "__id":
-			idVal, ok := val.(string)
-			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.androidKeyRestrictions\", its \"__id\" argument has the wrong type (expected type \"string\")")
-			}
-			id = idVal
-		default:
-			return nil, errors.New("Initialized gcp.project.apiKey.restrictions.androidKeyRestrictions with unknown argument " + name)
-		}
-		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-	}
-
-	// Get the ID
-	if id == "" {
-		res.Resource.Id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		res.Resource.Id = id
-	}
-
-	return &res, nil
-}
-
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions) Validate() error {
-	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.androidKeyRestrictions\" resource without a \"id\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("allowedApplications"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.androidKeyRestrictions\" resource without a \"allowedApplications\". This field is required.")
-	}
-
-	return nil
-}
-
-// Register accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.androidKeyRestrictions].Register")
-	switch name {
-	case "id":
-		return nil
-	case "allowedApplications":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.androidKeyRestrictions\" resource")
-	}
-}
-
-// Field accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.androidKeyRestrictions].Field")
-	switch name {
-	case "id":
-		return s.Id()
-	case "allowedApplications":
-		return s.AllowedApplications()
-	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.androidKeyRestrictions\" resource")
-	}
-}
-
-// Id accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.androidKeyRestrictions\" failed: no value provided for static field \"id\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.androidKeyRestrictions\" failed to cast field \"id\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// AllowedApplications accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions) AllowedApplications() ([]interface{}, error) {
-	res, ok := s.Cache.Load("allowedApplications")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.apiKey.restrictions.androidKeyRestrictions\" failed: no value provided for static field \"allowedApplications\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions.androidKeyRestrictions\" failed to cast field \"allowedApplications\" to the right type ([]interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// Compute accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictions) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.androidKeyRestrictions].Compute")
-	switch name {
-	case "id":
-		return nil
-	case "allowedApplications":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.androidKeyRestrictions\" resource")
-	}
-}
-
-// GcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication resource interface
-type GcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication interface {
-	MqlResource() (*resources.Resource)
-	Compute(string) error
-	Field(string) (interface{}, error)
-	Register(string) error
-	Validate() error
-	Id() (string, error)
-	PackageName() (string, error)
-	Sha1Fingerprint() (string, error)
-}
-
-// mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication for the gcp.project.apiKey.restrictions.androidKeyRestrictions.application resource
-type mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication struct {
-	*resources.Resource
-}
-
-// MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) MqlResource() *resources.Resource {
-	return s.Resource
-}
-
-// create a new instance of the gcp.project.apiKey.restrictions.androidKeyRestrictions.application resource
-func newGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
-	// User hooks
-	var err error
-	res := mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication{runtime.NewResource("gcp.project.apiKey.restrictions.androidKeyRestrictions.application")}
-	// assign all named fields
-	var id string
-
-	now := time.Now().Unix()
-	for name, val := range *args {
-		if val == nil {
-			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-			continue
-		}
-
-		switch name {
-		case "id":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\", its \"id\" argument has the wrong type (expected type \"string\")")
-			}
-		case "packageName":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\", its \"packageName\" argument has the wrong type (expected type \"string\")")
-			}
-		case "sha1Fingerprint":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\", its \"sha1Fingerprint\" argument has the wrong type (expected type \"string\")")
-			}
-		case "__id":
-			idVal, ok := val.(string)
-			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\", its \"__id\" argument has the wrong type (expected type \"string\")")
-			}
-			id = idVal
-		default:
-			return nil, errors.New("Initialized gcp.project.apiKey.restrictions.androidKeyRestrictions.application with unknown argument " + name)
-		}
-		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-	}
-
-	// Get the ID
-	if id == "" {
-		res.Resource.Id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		res.Resource.Id = id
-	}
-
-	return &res, nil
-}
-
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) Validate() error {
-	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" resource without a \"id\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("packageName"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" resource without a \"packageName\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("sha1Fingerprint"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" resource without a \"sha1Fingerprint\". This field is required.")
-	}
-
-	return nil
-}
-
-// Register accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.androidKeyRestrictions.application].Register")
-	switch name {
-	case "id":
-		return nil
-	case "packageName":
-		return nil
-	case "sha1Fingerprint":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" resource")
-	}
-}
-
-// Field accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.androidKeyRestrictions.application].Field")
-	switch name {
-	case "id":
-		return s.Id()
-	case "packageName":
-		return s.PackageName()
-	case "sha1Fingerprint":
-		return s.Sha1Fingerprint()
-	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" resource")
-	}
-}
-
-// Id accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" failed: no value provided for static field \"id\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" failed to cast field \"id\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// PackageName accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) PackageName() (string, error) {
-	res, ok := s.Cache.Load("packageName")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" failed: no value provided for static field \"packageName\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" failed to cast field \"packageName\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// Sha1Fingerprint accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) Sha1Fingerprint() (string, error) {
-	res, ok := s.Cache.Load("sha1Fingerprint")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" failed: no value provided for static field \"sha1Fingerprint\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" failed to cast field \"sha1Fingerprint\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// Compute accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsAndroidKeyRestrictionsApplication) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.androidKeyRestrictions.application].Compute")
-	switch name {
-	case "id":
-		return nil
-	case "packageName":
-		return nil
-	case "sha1Fingerprint":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.androidKeyRestrictions.application\" resource")
-	}
-}
-
-// GcpProjectApiKeyRestrictionsApiTarget resource interface
-type GcpProjectApiKeyRestrictionsApiTarget interface {
-	MqlResource() (*resources.Resource)
-	Compute(string) error
-	Field(string) (interface{}, error)
-	Register(string) error
-	Validate() error
-	Id() (string, error)
-	Methods() ([]interface{}, error)
-	Service() (string, error)
-}
-
-// mqlGcpProjectApiKeyRestrictionsApiTarget for the gcp.project.apiKey.restrictions.apiTarget resource
-type mqlGcpProjectApiKeyRestrictionsApiTarget struct {
-	*resources.Resource
-}
-
-// MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) MqlResource() *resources.Resource {
-	return s.Resource
-}
-
-// create a new instance of the gcp.project.apiKey.restrictions.apiTarget resource
-func newGcpProjectApiKeyRestrictionsApiTarget(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
-	// User hooks
-	var err error
-	res := mqlGcpProjectApiKeyRestrictionsApiTarget{runtime.NewResource("gcp.project.apiKey.restrictions.apiTarget")}
-	// assign all named fields
-	var id string
-
-	now := time.Now().Unix()
-	for name, val := range *args {
-		if val == nil {
-			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-			continue
-		}
-
-		switch name {
-		case "id":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.apiTarget\", its \"id\" argument has the wrong type (expected type \"string\")")
-			}
-		case "methods":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.apiTarget\", its \"methods\" argument has the wrong type (expected type \"[]interface{}\")")
-			}
-		case "service":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.apiTarget\", its \"service\" argument has the wrong type (expected type \"string\")")
-			}
-		case "__id":
-			idVal, ok := val.(string)
-			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.apiTarget\", its \"__id\" argument has the wrong type (expected type \"string\")")
-			}
-			id = idVal
-		default:
-			return nil, errors.New("Initialized gcp.project.apiKey.restrictions.apiTarget with unknown argument " + name)
-		}
-		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-	}
-
-	// Get the ID
-	if id == "" {
-		res.Resource.Id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		res.Resource.Id = id
-	}
-
-	return &res, nil
-}
-
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) Validate() error {
-	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.apiTarget\" resource without a \"id\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("methods"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.apiTarget\" resource without a \"methods\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("service"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.apiTarget\" resource without a \"service\". This field is required.")
-	}
-
-	return nil
-}
-
-// Register accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.apiTarget].Register")
-	switch name {
-	case "id":
-		return nil
-	case "methods":
-		return nil
-	case "service":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.apiTarget\" resource")
-	}
-}
-
-// Field accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.apiTarget].Field")
-	switch name {
-	case "id":
-		return s.Id()
-	case "methods":
-		return s.Methods()
-	case "service":
-		return s.Service()
-	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.apiTarget\" resource")
-	}
-}
-
-// Id accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.apiTarget\" failed: no value provided for static field \"id\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.apiTarget\" failed to cast field \"id\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// Methods accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) Methods() ([]interface{}, error) {
-	res, ok := s.Cache.Load("methods")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.apiKey.restrictions.apiTarget\" failed: no value provided for static field \"methods\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions.apiTarget\" failed to cast field \"methods\" to the right type ([]interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// Service accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) Service() (string, error) {
-	res, ok := s.Cache.Load("service")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.apiTarget\" failed: no value provided for static field \"service\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.apiTarget\" failed to cast field \"service\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// Compute accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsApiTarget) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.apiTarget].Compute")
-	switch name {
-	case "id":
-		return nil
-	case "methods":
-		return nil
-	case "service":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.apiTarget\" resource")
-	}
-}
-
-// GcpProjectApiKeyRestrictionsBrowserKeyRestrictions resource interface
-type GcpProjectApiKeyRestrictionsBrowserKeyRestrictions interface {
-	MqlResource() (*resources.Resource)
-	Compute(string) error
-	Field(string) (interface{}, error)
-	Register(string) error
-	Validate() error
-	Id() (string, error)
-	AllowedReferrers() ([]interface{}, error)
-}
-
-// mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions for the gcp.project.apiKey.restrictions.browserKeyRestrictions resource
-type mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions struct {
-	*resources.Resource
-}
-
-// MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions) MqlResource() *resources.Resource {
-	return s.Resource
-}
-
-// create a new instance of the gcp.project.apiKey.restrictions.browserKeyRestrictions resource
-func newGcpProjectApiKeyRestrictionsBrowserKeyRestrictions(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
-	// User hooks
-	var err error
-	res := mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions{runtime.NewResource("gcp.project.apiKey.restrictions.browserKeyRestrictions")}
-	// assign all named fields
-	var id string
-
-	now := time.Now().Unix()
-	for name, val := range *args {
-		if val == nil {
-			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-			continue
-		}
-
-		switch name {
-		case "id":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.browserKeyRestrictions\", its \"id\" argument has the wrong type (expected type \"string\")")
-			}
-		case "allowedReferrers":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.browserKeyRestrictions\", its \"allowedReferrers\" argument has the wrong type (expected type \"[]interface{}\")")
-			}
-		case "__id":
-			idVal, ok := val.(string)
-			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.browserKeyRestrictions\", its \"__id\" argument has the wrong type (expected type \"string\")")
-			}
-			id = idVal
-		default:
-			return nil, errors.New("Initialized gcp.project.apiKey.restrictions.browserKeyRestrictions with unknown argument " + name)
-		}
-		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-	}
-
-	// Get the ID
-	if id == "" {
-		res.Resource.Id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		res.Resource.Id = id
-	}
-
-	return &res, nil
-}
-
-func (s *mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions) Validate() error {
-	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.browserKeyRestrictions\" resource without a \"id\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("allowedReferrers"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.browserKeyRestrictions\" resource without a \"allowedReferrers\". This field is required.")
-	}
-
-	return nil
-}
-
-// Register accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.browserKeyRestrictions].Register")
-	switch name {
-	case "id":
-		return nil
-	case "allowedReferrers":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.browserKeyRestrictions\" resource")
-	}
-}
-
-// Field accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.browserKeyRestrictions].Field")
-	switch name {
-	case "id":
-		return s.Id()
-	case "allowedReferrers":
-		return s.AllowedReferrers()
-	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.browserKeyRestrictions\" resource")
-	}
-}
-
-// Id accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.browserKeyRestrictions\" failed: no value provided for static field \"id\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.browserKeyRestrictions\" failed to cast field \"id\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// AllowedReferrers accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions) AllowedReferrers() ([]interface{}, error) {
-	res, ok := s.Cache.Load("allowedReferrers")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.apiKey.restrictions.browserKeyRestrictions\" failed: no value provided for static field \"allowedReferrers\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions.browserKeyRestrictions\" failed to cast field \"allowedReferrers\" to the right type ([]interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// Compute accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsBrowserKeyRestrictions) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.browserKeyRestrictions].Compute")
-	switch name {
-	case "id":
-		return nil
-	case "allowedReferrers":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.browserKeyRestrictions\" resource")
-	}
-}
-
-// GcpProjectApiKeyRestrictionsIosKeyRestrictions resource interface
-type GcpProjectApiKeyRestrictionsIosKeyRestrictions interface {
-	MqlResource() (*resources.Resource)
-	Compute(string) error
-	Field(string) (interface{}, error)
-	Register(string) error
-	Validate() error
-	Id() (string, error)
-	AllowedBundleIds() ([]interface{}, error)
-}
-
-// mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions for the gcp.project.apiKey.restrictions.iosKeyRestrictions resource
-type mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions struct {
-	*resources.Resource
-}
-
-// MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions) MqlResource() *resources.Resource {
-	return s.Resource
-}
-
-// create a new instance of the gcp.project.apiKey.restrictions.iosKeyRestrictions resource
-func newGcpProjectApiKeyRestrictionsIosKeyRestrictions(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
-	// User hooks
-	var err error
-	res := mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions{runtime.NewResource("gcp.project.apiKey.restrictions.iosKeyRestrictions")}
-	// assign all named fields
-	var id string
-
-	now := time.Now().Unix()
-	for name, val := range *args {
-		if val == nil {
-			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-			continue
-		}
-
-		switch name {
-		case "id":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.iosKeyRestrictions\", its \"id\" argument has the wrong type (expected type \"string\")")
-			}
-		case "allowedBundleIds":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.iosKeyRestrictions\", its \"allowedBundleIds\" argument has the wrong type (expected type \"[]interface{}\")")
-			}
-		case "__id":
-			idVal, ok := val.(string)
-			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.iosKeyRestrictions\", its \"__id\" argument has the wrong type (expected type \"string\")")
-			}
-			id = idVal
-		default:
-			return nil, errors.New("Initialized gcp.project.apiKey.restrictions.iosKeyRestrictions with unknown argument " + name)
-		}
-		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-	}
-
-	// Get the ID
-	if id == "" {
-		res.Resource.Id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		res.Resource.Id = id
-	}
-
-	return &res, nil
-}
-
-func (s *mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions) Validate() error {
-	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.iosKeyRestrictions\" resource without a \"id\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("allowedBundleIds"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.iosKeyRestrictions\" resource without a \"allowedBundleIds\". This field is required.")
-	}
-
-	return nil
-}
-
-// Register accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.iosKeyRestrictions].Register")
-	switch name {
-	case "id":
-		return nil
-	case "allowedBundleIds":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.iosKeyRestrictions\" resource")
-	}
-}
-
-// Field accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.iosKeyRestrictions].Field")
-	switch name {
-	case "id":
-		return s.Id()
-	case "allowedBundleIds":
-		return s.AllowedBundleIds()
-	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.iosKeyRestrictions\" resource")
-	}
-}
-
-// Id accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.iosKeyRestrictions\" failed: no value provided for static field \"id\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.iosKeyRestrictions\" failed to cast field \"id\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// AllowedBundleIds accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions) AllowedBundleIds() ([]interface{}, error) {
-	res, ok := s.Cache.Load("allowedBundleIds")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.apiKey.restrictions.iosKeyRestrictions\" failed: no value provided for static field \"allowedBundleIds\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions.iosKeyRestrictions\" failed to cast field \"allowedBundleIds\" to the right type ([]interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// Compute accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsIosKeyRestrictions) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.iosKeyRestrictions].Compute")
-	switch name {
-	case "id":
-		return nil
-	case "allowedBundleIds":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.iosKeyRestrictions\" resource")
-	}
-}
-
-// GcpProjectApiKeyRestrictionsServerKeyRestrictions resource interface
-type GcpProjectApiKeyRestrictionsServerKeyRestrictions interface {
-	MqlResource() (*resources.Resource)
-	Compute(string) error
-	Field(string) (interface{}, error)
-	Register(string) error
-	Validate() error
-	Id() (string, error)
-	AllowedIps() ([]interface{}, error)
-}
-
-// mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions for the gcp.project.apiKey.restrictions.serverKeyRestrictions resource
-type mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions struct {
-	*resources.Resource
-}
-
-// MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions) MqlResource() *resources.Resource {
-	return s.Resource
-}
-
-// create a new instance of the gcp.project.apiKey.restrictions.serverKeyRestrictions resource
-func newGcpProjectApiKeyRestrictionsServerKeyRestrictions(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
-	// User hooks
-	var err error
-	res := mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions{runtime.NewResource("gcp.project.apiKey.restrictions.serverKeyRestrictions")}
-	// assign all named fields
-	var id string
-
-	now := time.Now().Unix()
-	for name, val := range *args {
-		if val == nil {
-			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-			continue
-		}
-
-		switch name {
-		case "id":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.serverKeyRestrictions\", its \"id\" argument has the wrong type (expected type \"string\")")
-			}
-		case "allowedIps":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.serverKeyRestrictions\", its \"allowedIps\" argument has the wrong type (expected type \"[]interface{}\")")
-			}
-		case "__id":
-			idVal, ok := val.(string)
-			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.apiKey.restrictions.serverKeyRestrictions\", its \"__id\" argument has the wrong type (expected type \"string\")")
-			}
-			id = idVal
-		default:
-			return nil, errors.New("Initialized gcp.project.apiKey.restrictions.serverKeyRestrictions with unknown argument " + name)
-		}
-		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
-	}
-
-	// Get the ID
-	if id == "" {
-		res.Resource.Id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		res.Resource.Id = id
-	}
-
-	return &res, nil
-}
-
-func (s *mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions) Validate() error {
-	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.serverKeyRestrictions\" resource without a \"id\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("allowedIps"); !ok {
-		return errors.New("Initialized \"gcp.project.apiKey.restrictions.serverKeyRestrictions\" resource without a \"allowedIps\". This field is required.")
-	}
-
-	return nil
-}
-
-// Register accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.serverKeyRestrictions].Register")
-	switch name {
-	case "id":
-		return nil
-	case "allowedIps":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.serverKeyRestrictions\" resource")
-	}
-}
-
-// Field accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.serverKeyRestrictions].Field")
-	switch name {
-	case "id":
-		return s.Id()
-	case "allowedIps":
-		return s.AllowedIps()
-	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.serverKeyRestrictions\" resource")
-	}
-}
-
-// Id accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions) Id() (string, error) {
-	res, ok := s.Cache.Load("id")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.apiKey.restrictions.serverKeyRestrictions\" failed: no value provided for static field \"id\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.apiKey.restrictions.serverKeyRestrictions\" failed to cast field \"id\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// AllowedIps accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions) AllowedIps() ([]interface{}, error) {
-	res, ok := s.Cache.Load("allowedIps")
-	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.apiKey.restrictions.serverKeyRestrictions\" failed: no value provided for static field \"allowedIps\"")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.apiKey.restrictions.serverKeyRestrictions\" failed to cast field \"allowedIps\" to the right type ([]interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// Compute accessor autogenerated
-func (s *mqlGcpProjectApiKeyRestrictionsServerKeyRestrictions) Compute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.apiKey.restrictions.serverKeyRestrictions].Compute")
-	switch name {
-	case "id":
-		return nil
-	case "allowedIps":
-		return nil
-	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.apiKey.restrictions.serverKeyRestrictions\" resource")
 	}
 }
 
