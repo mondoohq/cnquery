@@ -636,7 +636,7 @@ azure.mysql {
 
 // Azure MySQL Server
 private azure.mysql.server @defaults("id name location") {
-  // Mysql server ID
+  // MySQL server ID
   id string
   // Mysql server name
   name string
