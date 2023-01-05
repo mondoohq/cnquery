@@ -660,3 +660,9 @@ content="""
 </dict>
 </plist>
 """
+
+[files."/tmp/ref1"]
+content="""/tmp/ref2"""
+
+[files."/tmp/ref2"]
+content="""asdf"""
