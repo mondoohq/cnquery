@@ -8,7 +8,7 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-func compileWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+func compileArrayWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	if call == nil {
 		return types.Nil, errors.New("missing filter argument for calling '" + id + "'")
 	}
@@ -44,7 +44,7 @@ func compileWhere(c *compiler, typ types.Type, ref uint64, id string, call *pars
 		block := c.Result.CodeV2.Block(refs.block)
 
 		if block == nil {
-			return types.Nil, err
+			return types.Nil, errors.New("cannot find block for standalone compilation of array.where")
 		}
 		blockValueRef := block.TailRef(refs.block)
 
@@ -181,7 +181,7 @@ func compileArrayUnique(c *compiler, typ types.Type, ref uint64, id string, call
 }
 
 func compileArrayContains(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileWhere(c, typ, ref, "where", call)
+	_, err := compileArrayWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -328,7 +328,7 @@ func compileArrayContainsNone(c *compiler, typ types.Type, ref uint64, id string
 }
 
 func compileArrayAll(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileWhere(c, typ, ref, "$whereNot", call)
+	_, err := compileArrayWhere(c, typ, ref, "$whereNot", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -354,7 +354,7 @@ func compileArrayAll(c *compiler, typ types.Type, ref uint64, id string, call *p
 }
 
 func compileArrayAny(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileWhere(c, typ, ref, "where", call)
+	_, err := compileArrayWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -380,7 +380,7 @@ func compileArrayAny(c *compiler, typ types.Type, ref uint64, id string, call *p
 }
 
 func compileArrayOne(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileWhere(c, typ, ref, "where", call)
+	_, err := compileArrayWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
@@ -406,7 +406,7 @@ func compileArrayOne(c *compiler, typ types.Type, ref uint64, id string, call *p
 }
 
 func compileArrayNone(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
-	_, err := compileWhere(c, typ, ref, "where", call)
+	_, err := compileArrayWhere(c, typ, ref, "where", call)
 	if err != nil {
 		return types.Nil, err
 	}
