@@ -334,6 +334,7 @@ func (p *QueryHubServer) DefaultPacks(ctx context.Context, reqBytes *[]byte) (pb
 type QueryConductor interface {
 	Assign(context.Context, *Assignment) (*Empty, error)
 	Unassign(context.Context, *Assignment) (*Empty, error)
+	SetProps(context.Context, *PropsReq) (*Empty, error)
 	Resolve(context.Context, *ResolveReq) (*ResolvedPack, error)
 	StoreResults(context.Context, *StoreResultsReq) (*Empty, error)
 	GetReport(context.Context, *EntityDataRequest) (*Report, error)
@@ -374,6 +375,11 @@ func (c *QueryConductorClient) Assign(ctx context.Context, in *Assignment) (*Emp
 func (c *QueryConductorClient) Unassign(ctx context.Context, in *Assignment) (*Empty, error) {
 	out := new(Empty)
 	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/Unassign"}, ""), in, out)
+	return out, err
+}
+func (c *QueryConductorClient) SetProps(ctx context.Context, in *PropsReq) (*Empty, error) {
+	out := new(Empty)
+	err := c.DoClientRequest(ctx, c.httpclient, strings.Join([]string{c.prefix, "/SetProps"}, ""), in, out)
 	return out, err
 }
 func (c *QueryConductorClient) Resolve(ctx context.Context, in *ResolveReq) (*ResolvedPack, error) {
@@ -421,6 +427,7 @@ func NewQueryConductorServer(handler QueryConductor, opts ...QueryConductorServe
 		Methods: map[string]ranger.Method{
 			"Assign":            srv.Assign,
 			"Unassign":          srv.Unassign,
+			"SetProps":          srv.SetProps,
 			"Resolve":           srv.Resolve,
 			"StoreResults":      srv.StoreResults,
 			"GetReport":         srv.GetReport,
@@ -482,6 +489,30 @@ func (p *QueryConductorServer) Unassign(ctx context.Context, reqBytes *[]byte) (
 		return nil, err
 	}
 	return p.handler.Unassign(ctx, &req)
+}
+func (p *QueryConductorServer) SetProps(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
+	var req PropsReq
+	var err error
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("could not access header")
+	}
+
+	switch md.First("Content-Type") {
+	case "application/protobuf", "application/octet-stream", "application/grpc+proto":
+		err = pb.Unmarshal(*reqBytes, &req)
+	default:
+		// handle case of empty object
+		if len(*reqBytes) > 0 {
+			err = jsonpb.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(*reqBytes, &req)
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return p.handler.SetProps(ctx, &req)
 }
 func (p *QueryConductorServer) Resolve(ctx context.Context, reqBytes *[]byte) (pb.Message, error) {
 	var req ResolveReq

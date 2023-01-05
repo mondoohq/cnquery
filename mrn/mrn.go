@@ -92,6 +92,14 @@ func (mrn *MRN) String() string {
 	return "//" + mrn.ServiceName + "/" + mrn.RelativeResourceName
 }
 
+func (mrn *MRN) Basename() string {
+	keyValues := strings.Split(mrn.RelativeResourceName, "/")
+	if len(keyValues) == 0 {
+		return ""
+	}
+	return keyValues[len(keyValues)-1]
+}
+
 func (mrn *MRN) ResourceID(collectionId string) (string, error) {
 	keyValues := strings.Split(mrn.RelativeResourceName, "/")
 	for i := 0; i < len(keyValues); {

@@ -251,6 +251,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 		cmd.Flags().StringP("identity-file", "i", "", "Select a file from which to read the identity (private key) for public key authentication.")
 		cmd.Flags().String("id-detector", "", "User override for platform ID detection mechanism. Supported: "+strings.Join(providers.AvailablePlatformIdDetector(), ", "))
 		cmd.Flags().String("asset-name", "", "User-override for the asset name")
+		cmd.Flags().StringToString("props", nil, "Custom values for properties")
 
 		cmd.Flags().String("path", "", "Path to a local file or directory for the connection to use.")
 		cmd.Flags().StringToString("option", nil, "Additional connection options. You can pass multiple options using `--option key=value`.")
@@ -343,6 +344,7 @@ type scanConfig struct {
 	Output         string
 	QueryPackPaths []string
 	QueryPackNames []string
+	Props          map[string]string
 	Bundle         *explorer.Bundle
 
 	IsIncognito bool
@@ -363,12 +365,18 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 		log.Info().Strs("features", opts.Features).Msg("user activated features")
 	}
 
+	props, err := cmd.Flags().GetStringToString("props")
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to parse props")
+	}
+
 	conf := scanConfig{
 		Features:       opts.GetFeatures(),
 		IsIncognito:    viper.GetBool("incognito"),
 		DoRecord:       viper.GetBool("record"),
 		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
 		QueryPackNames: viper.GetStringSlice("querypacks"),
+		Props:          props,
 	}
 
 	// if users want to get more information on available output options,
@@ -469,6 +477,11 @@ func (c *scanConfig) loadBundles() error {
 			return err
 		}
 
+		_, err = bundle.Compile(context.Background())
+		if err != nil {
+			return errors.Wrap(err, "failed to compile bundle")
+		}
+
 		c.Bundle = bundle
 		return nil
 	}
@@ -493,6 +506,7 @@ func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 				Inventory:        config.Inventory,
 				Bundle:           config.Bundle,
 				QueryPackFilters: config.QueryPackNames,
+				Props:            config.Props,
 			})
 	}
 	return scanner.Run(
@@ -502,6 +516,7 @@ func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 			Inventory:        config.Inventory,
 			Bundle:           config.Bundle,
 			QueryPackFilters: config.QueryPackNames,
+			Props:            config.Props,
 		})
 }
 

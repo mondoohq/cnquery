@@ -233,6 +233,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				UpstreamConfig:   upstreamConfig,
 				Asset:            asset,
 				Bundle:           job.Bundle,
+				Props:            job.Props,
 				QueryPackFilters: job.QueryPackFilters,
 				Ctx:              ctx,
 				GetCredential:    im.GetCredential,
@@ -399,6 +400,27 @@ func (s *localAssetScanner) prepareAsset() error {
 		AssetMrn: s.job.Asset.Mrn,
 		PackMrns: querypackMrns,
 	})
+
+	if len(s.job.Props) != 0 {
+		propsReq := explorer.PropsReq{
+			EntityMrn: s.job.Asset.Mrn,
+			Props:     make([]*explorer.Mquery, len(s.job.Props)),
+		}
+		i := 0
+		for k, v := range s.job.Props {
+			propsReq.Props[i] = &explorer.Mquery{
+				Uid:    k,
+				Mql:    v,
+				Action: explorer.Mquery_MODIFY,
+			}
+			i++
+		}
+
+		_, err = conductor.SetProps(s.job.Ctx, &propsReq)
+		if err != nil {
+			return err
+		}
+	}
 
 	return err
 }

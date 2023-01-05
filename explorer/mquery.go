@@ -77,11 +77,11 @@ func (m *Mquery) RefreshMRN(ownerMRN string) error {
 }
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (m *Mquery) RefreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBundle, error) {
+func (m *Mquery) RefreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
 	return m.refreshChecksumAndType(lookup)
 }
 
-func (m *Mquery) refreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBundle, error) {
+func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
 	localProps := map[string]*llx.Primitive{}
 	for i := range m.Props {
 		prop := m.Props[i]
@@ -95,7 +95,9 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBu
 			return nil, errors.New("cannot find property " + prop.Mrn + " in query " + m.Mrn)
 		}
 
-		localProps[v.name] = v.typ
+		localProps[v.Name] = &llx.Primitive{
+			Type: v.Property.Type,
+		}
 	}
 
 	bundle, err := m.Compile(localProps)
@@ -128,6 +130,7 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBu
 		Add(m.Mql).
 		Add(m.CodeId).
 		Add(m.Mrn).
+		Add(m.Context).
 		Add(m.Type).
 		Add(m.Title).Add("v2")
 
@@ -136,9 +139,21 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBu
 		prop := m.Props[i]
 		v := lookup[prop.Mrn]
 
-		c = c.Add(v.query.Checksum)
-		if v.query.Mql != "" {
-			c = c.Add(v.query.Mql)
+		c = c.Add(v.Checksum)
+		if v.Mql != "" {
+			c = c.Add(v.Mql)
+		}
+	}
+
+	// TODO: filters don't support properties yet
+	if m.Filter != nil {
+		for _, query := range m.Filter.Items {
+			_, err := query.RefreshAsFilter(m.Mrn)
+			if err != nil {
+				return nil, err
+			}
+
+			c = c.Add(query.Checksum)
 		}
 	}
 
@@ -169,6 +184,24 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBu
 	}
 
 	m.Checksum = c.String()
+
+	return bundle, nil
+}
+
+// RefreshAsFilter filters treats this query as an asset filter and sets its Mrn, Title, and Checksum
+func (m *Mquery) RefreshAsFilter(mrn string) (*llx.CodeBundle, error) {
+	bundle, err := m.refreshChecksumAndType(nil)
+	if err != nil {
+		return bundle, err
+	}
+
+	if mrn != "" {
+		m.Mrn = mrn + "/filter/" + m.CodeId
+	}
+
+	if m.Title == "" {
+		m.Title = m.Query
+	}
 
 	return bundle, nil
 }

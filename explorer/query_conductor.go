@@ -84,6 +84,65 @@ func (s *LocalServices) Unassign(ctx context.Context, assignment *Assignment) (*
 	return globalEmpty, err
 }
 
+func (s *LocalServices) SetProps(ctx context.Context, req *PropsReq) (*Empty, error) {
+	// validate that the queries compile and fill in checksums
+	for i := range req.Props {
+		prop := req.Props[i]
+		code, err := prop.RefreshChecksumAndType(nil)
+		if err != nil {
+			return nil, err
+		}
+		prop.CodeId = code.CodeV2.Id
+	}
+
+	return globalEmpty, s.DataLake.SetProps(ctx, req)
+}
+
+type propsCache struct {
+	services *LocalServices
+	cache    map[string]*Mquery
+}
+
+func newPropsCache(services *LocalServices) propsCache {
+	return propsCache{
+		services: services,
+		cache:    map[string]*Mquery{},
+	}
+}
+
+// add properties, overwriting existing ones
+func (c propsCache) add(props ...*Mquery) {
+	for i := range props {
+		prop := props[i]
+		if prop.Uid != "" {
+			c.cache[prop.Uid] = prop
+		}
+		if prop.Mrn != "" {
+			c.cache[prop.Mrn] = prop
+		}
+	}
+}
+
+// try to get the mrn, will also return uid-based
+// properties if they exist first
+func (c propsCache) get(ctx context.Context, propMrn string) (*Mquery, string, error) {
+	name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
+	if err != nil {
+		return nil, "", errors.New("failed to get property name")
+	}
+
+	if res, ok := c.cache[name]; ok {
+		return res, name, nil
+	}
+
+	if res, ok := c.cache[propMrn]; ok {
+		return res, name, nil
+	}
+
+	res, err := c.services.DataLake.GetQuery(ctx, propMrn)
+	return res, name, err
+}
+
 // Resolve executable bits for an asset (via asset filters)
 func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*ResolvedPack, error) {
 	if s.Upstream != nil && !s.Incognito {
@@ -136,6 +195,10 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	}
 	for i := range applicablePacks {
 		pack := applicablePacks[i]
+
+		props := newPropsCache(s)
+		props.add(bundle.Props...)
+
 		for i := range pack.Queries {
 			query := pack.Queries[i]
 
@@ -152,23 +215,9 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 				}
 			}
 
-			equery, err := s.query2executionQuery(ctx, query)
+			err := s.addQuery(ctx, &job, query, props)
 			if err != nil {
 				return nil, err
-			}
-
-			code := equery.Code.CodeV2
-			refs := append(code.Datapoints(), code.Entrypoints()...)
-
-			job.Queries[query.CodeId] = equery
-			for i := range refs {
-				ref := refs[i]
-				checksum := code.Checksums[ref]
-				typ := code.Chunk(ref).DereferencedTypeV2(code)
-
-				job.Datapoints[checksum] = &DataQueryInfo{
-					Type: string(typ),
-				}
 			}
 		}
 	}
@@ -186,36 +235,65 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	return res, err
 }
 
-func (s *LocalServices) query2executionQuery(ctx context.Context, query *Mquery) (*ExecutionQuery, error) {
+func (s *LocalServices) addQuery(ctx context.Context, job *ExecutionJob, query *Mquery, propsCache propsCache) error {
 	var props map[string]*llx.Primitive
+	var propRefs map[string]string
 	if len(query.Props) != 0 {
 		props = map[string]*llx.Primitive{}
-		for i := range query.Props {
-			prop := query.Props[i]
-			prop, err := s.DataLake.GetQuery(ctx, prop.Mrn)
-			if err != nil {
-				return nil, err
-			}
+		propRefs = map[string]string{}
 
-			name, err := mrn.GetResource(prop.Mrn, MRN_RESOURCE_QUERY)
+		for i := range query.Props {
+			prop, name, err := propsCache.get(ctx, query.Props[i].Mrn)
 			if err != nil {
-				return nil, errors.New("failed to compile, could not read property name from query mrn: " + query.Mrn)
+				return errors.Wrap(err, "failed to get property for query "+query.Mrn)
 			}
 
 			props[name] = &llx.Primitive{Type: prop.Type}
+			propRefs[name] = prop.CodeId
+
+			if _, ok := job.Queries[prop.CodeId]; ok {
+				continue
+			}
+
+			code, err := prop.Compile(nil)
+			if err != nil {
+				return errors.Wrap(err, "failed to compile property for query "+query.Mrn)
+			}
+			job.Queries[prop.CodeId] = &ExecutionQuery{
+				Query:    prop.Mql,
+				Checksum: prop.Checksum,
+				Code:     code,
+			}
 		}
 	}
 
 	bundle, err := query.Compile(props)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &ExecutionQuery{
-		Query:    query.Query,
-		Checksum: query.Checksum,
-		Code:     bundle,
-	}, nil
+	equery := &ExecutionQuery{
+		Query:      query.Mql,
+		Checksum:   query.Checksum,
+		Code:       bundle,
+		Properties: propRefs,
+	}
+
+	code := equery.Code.CodeV2
+	refs := append(code.Datapoints(), code.Entrypoints()...)
+
+	job.Queries[query.CodeId] = equery
+	for i := range refs {
+		ref := refs[i]
+		checksum := code.Checksums[ref]
+		typ := code.Chunk(ref).DereferencedTypeV2(code)
+
+		job.Datapoints[checksum] = &DataQueryInfo{
+			Type: string(typ),
+		}
+	}
+
+	return nil
 }
 
 // MatchFilters will take the list of filters and only return the ones

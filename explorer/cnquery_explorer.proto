@@ -10,6 +10,7 @@ message Bundle {
   string owner_mrn = 1; 
   repeated QueryPack packs = 2;
   repeated Mquery queries = 3;
+  repeated Mquery props = 4;
 }
 
 message QueryPack {
@@ -20,7 +21,7 @@ message QueryPack {
 
   // user-defined UID, which is used to generate the MRN
   string uid = 36;
-  // user-defined, only used in query generation
+  // user-defined, only used during query ingest in case they have no context
   string context = 44;
 
   // MRN to universally identify this query.
@@ -107,6 +108,13 @@ message Mquery {
   repeated MqueryRef refs = 22;
   // ^^
 
+  enum Action {
+    UNKNOWN = 0;
+    ADD = 1;
+    DELETE = 2;
+    MODIFY = 3;
+  }
+
   string mql = 1;
   string code_id = 2;
   string checksum = 3;
@@ -125,6 +133,8 @@ message Mquery {
   Filters filter = 37;
   repeated Property props = 38;
   repeated Mquery compose = 39;
+  // Action is used for all query overrides (eg: in packs, policies, APIs etc)
+  Action action = 41;
 }
 
 message ImpactValue {
@@ -231,6 +241,7 @@ message URLs {
 service QueryConductor {
   rpc Assign(Assignment) returns (Empty) {}
   rpc Unassign(Assignment) returns (Empty) {}
+  rpc SetProps(PropsReq) returns (Empty) {}
   rpc Resolve(ResolveReq) returns (ResolvedPack) {}
   rpc StoreResults(StoreResultsReq) returns (Empty) {}
   rpc GetReport(EntityDataRequest) returns (Report) {}
@@ -243,6 +254,12 @@ service QueryConductor {
 message Assignment {
   string asset_mrn = 1;
   repeated string pack_mrns = 2;
+}
+
+// PropsReq is used to set, change, or remove properties.
+message PropsReq {
+  string entity_mrn = 1;
+  repeated Mquery props = 2;
 }
 
 // Resolve a given entity via its MRN. Typically used to resolve assets.
