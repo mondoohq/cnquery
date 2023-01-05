@@ -875,3 +875,25 @@ private azure.monitor.diagnosticsetting @defaults("id name") {
   // Diagnostic setting storage account
   storageAccount azure.storage.account
 }
+
+// Azure Microsoft Cloud Defender
+azure.cloudDefender {
+  // indicates if the monitoring agent will be automatically provisioned on new VMs
+  monitoringAgentAutoProvision() bool
+  // the list of configured security contacts
+  securityContacts() []azure.cloudDefender.securityContact
+}
+
+// Azure Microsoft Cloud Defender Security Contact 
+private azure.cloudDefender.securityContact {
+  // the identifier of the security contact
+  id string
+  // the name of the security contact
+  name string
+  // the emails that will receive security alerts
+  emails []string
+  // the alerts notification settings
+  alertNotifications dict
+  // the notifications by role settings
+  notificationsByRole dict
+}
