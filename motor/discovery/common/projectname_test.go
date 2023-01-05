@@ -14,6 +14,8 @@ func TestProjectName(t *testing.T) {
 	// relative path where the file does not exist locally
 	assert.Equal(t, "manifest", ProjectNameFromPath("./projectname/manifest.yaml"))
 	assert.Equal(t, "manifest", ProjectNameFromPath("./manifest.yaml"))
+	// if we get a directory which exists, add it to the project name to be more expressive
+	assert.Equal(t, "directory azure", ProjectNameFromPath("../azure"))
 	// if we get a dot, use the current directory since . does not make any sense
-	assert.Equal(t, "common", ProjectNameFromPath("."))
+	assert.Equal(t, "directory common", ProjectNameFromPath("."))
 }

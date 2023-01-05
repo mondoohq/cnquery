@@ -12,8 +12,10 @@ func ProjectNameFromPath(file string) string {
 	name := ""
 	fi, err := os.Stat(file)
 	if err == nil {
-		if fi.IsDir() {
+		if fi.IsDir() && fi.Name() != "." {
 			name = "directory " + fi.Name()
+		} else if fi.IsDir() {
+			name = fi.Name()
 		} else {
 			name = filepath.Base(fi.Name())
 			extension := filepath.Ext(name)
