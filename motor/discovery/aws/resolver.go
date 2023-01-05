@@ -21,6 +21,7 @@ const (
 	DiscoverySSM          = "ssm"
 	DiscoverySSMInstances = "ssm-instances"
 	DiscoveryECR          = "ecr"
+	DiscoveryECS          = "ecs"
 )
 
 type Resolver struct{}
@@ -30,7 +31,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances, DiscoveryECR}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances, DiscoveryECR, DiscoveryECS}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -148,6 +149,11 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
+	// add all the detected ssm instanced and ec2 instances to the list
+	for k := range instancesPlatformIdsMap {
+		resolved = append(resolved, instancesPlatformIdsMap[k])
+	}
+
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECR) {
 		r, err := NewEcrDiscovery(provider.Config())
 		if err != nil {
@@ -169,9 +175,24 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	// add all the detected ssm instanced and ec2 instances to the list
-	for k := range instancesPlatformIdsMap {
-		resolved = append(resolved, instancesPlatformIdsMap[k])
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECS) {
+		r, err := NewECSContainersDiscovery(provider.Config())
+		if err != nil {
+			return nil, errors.Wrap(err, "could not initialize aws ecs discovery")
+		}
+
+		assetList, err := r.List()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fetch ecs clusters information")
+		}
+		log.Debug().Int("assets", len(assetList)).Msg("completed ecs search")
+		for i := range assetList {
+			a := assetList[i]
+			if resolvedRoot != nil {
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			}
+			resolved = append(resolved, a)
+		}
 	}
 
 	return resolved, nil

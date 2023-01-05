@@ -5,6 +5,7 @@ const (
 	RUNTIME_AWS_EC2              = "aws-ec2-instance" // ec2 instances
 	RUNTIME_AWS_SSM_MANAGED      = "aws-ssm-managed"
 	RUNTIME_AWS_ECR              = "aws-ecr"
+	RUNTIME_AWS_ECS              = "aws-ecs"
 	RUNTIME_GCP                  = "gcp" // api
 	RUNTIME_GCP_COMPUTE          = "gcp-vm"
 	RUNTIME_GCP_GCR              = "gcp-gcr"
