@@ -7,24 +7,33 @@ resources:
     platform:
       name:
       - azure
-  azure.cloud.defender:
+  azure.authorization:
     fields:
-      monitoringAgentAutoProvision: {}
-      securityContacts: {}
-      vulnerabilityAssessment: {}
+      roleDefinitions: {}
     min_mondoo_version: latest
     platform:
       name:
       - azure
-  azure.cloud.defender.securityContact:
+  azure.authorization.roleDefinition:
     fields:
-      alertNotifications: {}
-      alerts: {}
-      emails: {}
+      description: {}
       id: {}
+      isCustom: {}
       name: {}
-      notifications: {}
-      notificationsByRole: {}
+      permissions: {}
+      scopes: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.authorization.roleDefinition.permission:
+    fields:
+      allowedActions: {}
+      allowedDataActions: {}
+      deniedActions: {}
+      deniedDataActions: {}
+      id: {}
+    is_private: true
     min_mondoo_version: latest
     platform:
       name:
