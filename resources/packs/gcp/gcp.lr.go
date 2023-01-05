@@ -97,7 +97,13 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.project.dataprocService", newGcpProjectDataprocService)
 	registry.AddFactory("gcp.project.dataprocService.cluster", newGcpProjectDataprocServiceCluster)
 	registry.AddFactory("gcp.project.dataprocService.cluster.config", newGcpProjectDataprocServiceClusterConfig)
-	registry.AddFactory("gcp.project.dataprocService.cluster.metrics", newGcpProjectDataprocServiceClusterMetrics)
+	registry.AddFactory("gcp.project.dataprocService.cluster.config.gceCluster", newGcpProjectDataprocServiceClusterConfigGceCluster)
+	registry.AddFactory("gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity", newGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity)
+	registry.AddFactory("gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig", newGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig)
+	registry.AddFactory("gcp.project.dataprocService.cluster.config.gkeCluster", newGcpProjectDataprocServiceClusterConfigGkeCluster)
+	registry.AddFactory("gcp.project.dataprocService.cluster.config.lifecycle", newGcpProjectDataprocServiceClusterConfigLifecycle)
+	registry.AddFactory("gcp.project.dataprocService.cluster.config.instance", newGcpProjectDataprocServiceClusterConfigInstance)
+	registry.AddFactory("gcp.project.dataprocService.cluster.config.instance.diskConfig", newGcpProjectDataprocServiceClusterConfigInstanceDiskConfig)
 	registry.AddFactory("gcp.project.dataprocService.cluster.status", newGcpProjectDataprocServiceClusterStatus)
 	registry.AddFactory("gcp.project.dataprocService.cluster.virtualClusterConfig", newGcpProjectDataprocServiceClusterVirtualClusterConfig)
 }
@@ -29731,11 +29737,11 @@ type GcpProjectDataprocServiceCluster interface {
 	Register(string) error
 	Validate() error
 	ProjectId() (string, error)
-	ClusterName() (string, error)
-	ClusterUuid() (string, error)
+	Name() (string, error)
+	Uuid() (string, error)
 	Config() (GcpProjectDataprocServiceClusterConfig, error)
 	Labels() (map[string]interface{}, error)
-	Metrics() (GcpProjectDataprocServiceClusterMetrics, error)
+	Metrics() (interface{}, error)
 	Status() (GcpProjectDataprocServiceClusterStatus, error)
 	StatusHistory() ([]interface{}, error)
 	VirtualClusterConfig() (GcpProjectDataprocServiceClusterVirtualClusterConfig, error)
@@ -29771,13 +29777,13 @@ func newGcpProjectDataprocServiceCluster(runtime *resources.Runtime, args *resou
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"projectId\" argument has the wrong type (expected type \"string\")")
 			}
-		case "clusterName":
+		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"clusterName\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
-		case "clusterUuid":
+		case "uuid":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"clusterUuid\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"uuid\" argument has the wrong type (expected type \"string\")")
 			}
 		case "config":
 			if _, ok := val.(GcpProjectDataprocServiceClusterConfig); !ok {
@@ -29788,8 +29794,8 @@ func newGcpProjectDataprocServiceCluster(runtime *resources.Runtime, args *resou
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "metrics":
-			if _, ok := val.(GcpProjectDataprocServiceClusterMetrics); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"metrics\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterMetrics\")")
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster\", its \"metrics\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "status":
 			if _, ok := val.(GcpProjectDataprocServiceClusterStatus); !ok {
@@ -29833,11 +29839,11 @@ func (s *mqlGcpProjectDataprocServiceCluster) Validate() error {
 	if _, ok := s.Cache.Load("projectId"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster\" resource without a \"projectId\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("clusterName"); !ok {
-		return errors.New("Initialized \"gcp.project.dataprocService.cluster\" resource without a \"clusterName\". This field is required.")
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster\" resource without a \"name\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("clusterUuid"); !ok {
-		return errors.New("Initialized \"gcp.project.dataprocService.cluster\" resource without a \"clusterUuid\". This field is required.")
+	if _, ok := s.Cache.Load("uuid"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster\" resource without a \"uuid\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("config"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster\" resource without a \"config\". This field is required.")
@@ -29867,9 +29873,9 @@ func (s *mqlGcpProjectDataprocServiceCluster) Register(name string) error {
 	switch name {
 	case "projectId":
 		return nil
-	case "clusterName":
+	case "name":
 		return nil
-	case "clusterUuid":
+	case "uuid":
 		return nil
 	case "config":
 		return nil
@@ -29894,10 +29900,10 @@ func (s *mqlGcpProjectDataprocServiceCluster) Field(name string) (interface{}, e
 	switch name {
 	case "projectId":
 		return s.ProjectId()
-	case "clusterName":
-		return s.ClusterName()
-	case "clusterUuid":
-		return s.ClusterUuid()
+	case "name":
+		return s.Name()
+	case "uuid":
+		return s.Uuid()
 	case "config":
 		return s.Config()
 	case "labels":
@@ -29931,34 +29937,34 @@ func (s *mqlGcpProjectDataprocServiceCluster) ProjectId() (string, error) {
 	return tres, nil
 }
 
-// ClusterName accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceCluster) ClusterName() (string, error) {
-	res, ok := s.Cache.Load("clusterName")
+// Name accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceCluster) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.dataprocService.cluster\" failed: no value provided for static field \"clusterName\"")
+		return "", errors.New("\"gcp.project.dataprocService.cluster\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster\" failed to cast field \"clusterName\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
-// ClusterUuid accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceCluster) ClusterUuid() (string, error) {
-	res, ok := s.Cache.Load("clusterUuid")
+// Uuid accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceCluster) Uuid() (string, error) {
+	res, ok := s.Cache.Load("uuid")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.dataprocService.cluster\" failed: no value provided for static field \"clusterUuid\"")
+		return "", errors.New("\"gcp.project.dataprocService.cluster\" failed: no value provided for static field \"uuid\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster\" failed to cast field \"clusterUuid\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster\" failed to cast field \"uuid\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -29996,7 +30002,7 @@ func (s *mqlGcpProjectDataprocServiceCluster) Labels() (map[string]interface{}, 
 }
 
 // Metrics accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceCluster) Metrics() (GcpProjectDataprocServiceClusterMetrics, error) {
+func (s *mqlGcpProjectDataprocServiceCluster) Metrics() (interface{}, error) {
 	res, ok := s.Cache.Load("metrics")
 	if !ok || !res.Valid {
 		return nil, errors.New("\"gcp.project.dataprocService.cluster\" failed: no value provided for static field \"metrics\"")
@@ -30004,9 +30010,9 @@ func (s *mqlGcpProjectDataprocServiceCluster) Metrics() (GcpProjectDataprocServi
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectDataprocServiceClusterMetrics)
+	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster\" failed to cast field \"metrics\" to the right type (GcpProjectDataprocServiceClusterMetrics): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster\" failed to cast field \"metrics\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
@@ -30065,9 +30071,9 @@ func (s *mqlGcpProjectDataprocServiceCluster) MqlCompute(name string) error {
 	switch name {
 	case "projectId":
 		return nil
-	case "clusterName":
+	case "name":
 		return nil
-	case "clusterUuid":
+	case "uuid":
 		return nil
 	case "config":
 		return nil
@@ -30094,6 +30100,22 @@ type GcpProjectDataprocServiceClusterConfig interface {
 	Register(string) error
 	Validate() error
 	ParentResourcePath() (string, error)
+	Autoscaling() (interface{}, error)
+	ConfigBucket() (string, error)
+	Metrics() (interface{}, error)
+	Encryption() (interface{}, error)
+	Endpoint() (interface{}, error)
+	GceCluster() (GcpProjectDataprocServiceClusterConfigGceCluster, error)
+	GkeCluster() (GcpProjectDataprocServiceClusterConfigGkeCluster, error)
+	InitializationActions() ([]interface{}, error)
+	Lifecycle() (GcpProjectDataprocServiceClusterConfigLifecycle, error)
+	Master() (GcpProjectDataprocServiceClusterConfigInstance, error)
+	Metastore() (interface{}, error)
+	SecondaryWorker() (GcpProjectDataprocServiceClusterConfigInstance, error)
+	Security() (interface{}, error)
+	Software() (interface{}, error)
+	TempBucket() (string, error)
+	Worker() (GcpProjectDataprocServiceClusterConfigInstance, error)
 }
 
 // mqlGcpProjectDataprocServiceClusterConfig for the gcp.project.dataprocService.cluster.config resource
@@ -30126,6 +30148,70 @@ func newGcpProjectDataprocServiceClusterConfig(runtime *resources.Runtime, args 
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"parentResourcePath\" argument has the wrong type (expected type \"string\")")
 			}
+		case "autoscaling":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"autoscaling\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "configBucket":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"configBucket\" argument has the wrong type (expected type \"string\")")
+			}
+		case "metrics":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"metrics\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "encryption":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"encryption\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "endpoint":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"endpoint\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "gceCluster":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigGceCluster); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"gceCluster\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigGceCluster\")")
+			}
+		case "gkeCluster":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigGkeCluster); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"gkeCluster\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigGkeCluster\")")
+			}
+		case "initializationActions":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"initializationActions\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "lifecycle":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigLifecycle); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"lifecycle\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigLifecycle\")")
+			}
+		case "master":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigInstance); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"master\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigInstance\")")
+			}
+		case "metastore":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"metastore\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "secondaryWorker":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigInstance); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"secondaryWorker\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigInstance\")")
+			}
+		case "security":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"security\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "software":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"software\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "tempBucket":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"tempBucket\" argument has the wrong type (expected type \"string\")")
+			}
+		case "worker":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigInstance); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config\", its \"worker\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigInstance\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -30156,6 +30242,54 @@ func (s *mqlGcpProjectDataprocServiceClusterConfig) Validate() error {
 	if _, ok := s.Cache.Load("parentResourcePath"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"parentResourcePath\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("autoscaling"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"autoscaling\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("configBucket"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"configBucket\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("metrics"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"metrics\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("encryption"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"encryption\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("endpoint"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"endpoint\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gceCluster"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"gceCluster\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gkeCluster"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"gkeCluster\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("initializationActions"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"initializationActions\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("lifecycle"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"lifecycle\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("master"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"master\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("metastore"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"metastore\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("secondaryWorker"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"secondaryWorker\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("security"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"security\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("software"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"software\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("tempBucket"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"tempBucket\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("worker"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config\" resource without a \"worker\". This field is required.")
+	}
 
 	return nil
 }
@@ -30165,6 +30299,38 @@ func (s *mqlGcpProjectDataprocServiceClusterConfig) Register(name string) error 
 	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config].Register")
 	switch name {
 	case "parentResourcePath":
+		return nil
+	case "autoscaling":
+		return nil
+	case "configBucket":
+		return nil
+	case "metrics":
+		return nil
+	case "encryption":
+		return nil
+	case "endpoint":
+		return nil
+	case "gceCluster":
+		return nil
+	case "gkeCluster":
+		return nil
+	case "initializationActions":
+		return nil
+	case "lifecycle":
+		return nil
+	case "master":
+		return nil
+	case "metastore":
+		return nil
+	case "secondaryWorker":
+		return nil
+	case "security":
+		return nil
+	case "software":
+		return nil
+	case "tempBucket":
+		return nil
+	case "worker":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config\" resource")
@@ -30177,6 +30343,38 @@ func (s *mqlGcpProjectDataprocServiceClusterConfig) Field(name string) (interfac
 	switch name {
 	case "parentResourcePath":
 		return s.ParentResourcePath()
+	case "autoscaling":
+		return s.Autoscaling()
+	case "configBucket":
+		return s.ConfigBucket()
+	case "metrics":
+		return s.Metrics()
+	case "encryption":
+		return s.Encryption()
+	case "endpoint":
+		return s.Endpoint()
+	case "gceCluster":
+		return s.GceCluster()
+	case "gkeCluster":
+		return s.GkeCluster()
+	case "initializationActions":
+		return s.InitializationActions()
+	case "lifecycle":
+		return s.Lifecycle()
+	case "master":
+		return s.Master()
+	case "metastore":
+		return s.Metastore()
+	case "secondaryWorker":
+		return s.SecondaryWorker()
+	case "security":
+		return s.Security()
+	case "software":
+		return s.Software()
+	case "tempBucket":
+		return s.TempBucket()
+	case "worker":
+		return s.Worker()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config\" resource")
 	}
@@ -30198,42 +30396,343 @@ func (s *mqlGcpProjectDataprocServiceClusterConfig) ParentResourcePath() (string
 	return tres, nil
 }
 
+// Autoscaling accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Autoscaling() (interface{}, error) {
+	res, ok := s.Cache.Load("autoscaling")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"autoscaling\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"autoscaling\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ConfigBucket accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) ConfigBucket() (string, error) {
+	res, ok := s.Cache.Load("configBucket")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"configBucket\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"configBucket\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Metrics accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Metrics() (interface{}, error) {
+	res, ok := s.Cache.Load("metrics")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"metrics\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"metrics\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Encryption accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Encryption() (interface{}, error) {
+	res, ok := s.Cache.Load("encryption")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"encryption\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"encryption\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Endpoint accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Endpoint() (interface{}, error) {
+	res, ok := s.Cache.Load("endpoint")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"endpoint\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"endpoint\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// GceCluster accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) GceCluster() (GcpProjectDataprocServiceClusterConfigGceCluster, error) {
+	res, ok := s.Cache.Load("gceCluster")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"gceCluster\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigGceCluster)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"gceCluster\" to the right type (GcpProjectDataprocServiceClusterConfigGceCluster): %#v", res)
+	}
+	return tres, nil
+}
+
+// GkeCluster accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) GkeCluster() (GcpProjectDataprocServiceClusterConfigGkeCluster, error) {
+	res, ok := s.Cache.Load("gkeCluster")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"gkeCluster\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigGkeCluster)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"gkeCluster\" to the right type (GcpProjectDataprocServiceClusterConfigGkeCluster): %#v", res)
+	}
+	return tres, nil
+}
+
+// InitializationActions accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) InitializationActions() ([]interface{}, error) {
+	res, ok := s.Cache.Load("initializationActions")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"initializationActions\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"initializationActions\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Lifecycle accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Lifecycle() (GcpProjectDataprocServiceClusterConfigLifecycle, error) {
+	res, ok := s.Cache.Load("lifecycle")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"lifecycle\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigLifecycle)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"lifecycle\" to the right type (GcpProjectDataprocServiceClusterConfigLifecycle): %#v", res)
+	}
+	return tres, nil
+}
+
+// Master accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Master() (GcpProjectDataprocServiceClusterConfigInstance, error) {
+	res, ok := s.Cache.Load("master")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"master\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigInstance)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"master\" to the right type (GcpProjectDataprocServiceClusterConfigInstance): %#v", res)
+	}
+	return tres, nil
+}
+
+// Metastore accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Metastore() (interface{}, error) {
+	res, ok := s.Cache.Load("metastore")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"metastore\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"metastore\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// SecondaryWorker accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) SecondaryWorker() (GcpProjectDataprocServiceClusterConfigInstance, error) {
+	res, ok := s.Cache.Load("secondaryWorker")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"secondaryWorker\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigInstance)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"secondaryWorker\" to the right type (GcpProjectDataprocServiceClusterConfigInstance): %#v", res)
+	}
+	return tres, nil
+}
+
+// Security accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Security() (interface{}, error) {
+	res, ok := s.Cache.Load("security")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"security\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"security\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Software accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Software() (interface{}, error) {
+	res, ok := s.Cache.Load("software")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"software\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"software\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// TempBucket accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) TempBucket() (string, error) {
+	res, ok := s.Cache.Load("tempBucket")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"tempBucket\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"tempBucket\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Worker accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfig) Worker() (GcpProjectDataprocServiceClusterConfigInstance, error) {
+	res, ok := s.Cache.Load("worker")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config\" failed: no value provided for static field \"worker\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigInstance)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config\" failed to cast field \"worker\" to the right type (GcpProjectDataprocServiceClusterConfigInstance): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpProjectDataprocServiceClusterConfig) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config].MqlCompute")
 	switch name {
 	case "parentResourcePath":
 		return nil
+	case "autoscaling":
+		return nil
+	case "configBucket":
+		return nil
+	case "metrics":
+		return nil
+	case "encryption":
+		return nil
+	case "endpoint":
+		return nil
+	case "gceCluster":
+		return nil
+	case "gkeCluster":
+		return nil
+	case "initializationActions":
+		return nil
+	case "lifecycle":
+		return nil
+	case "master":
+		return nil
+	case "metastore":
+		return nil
+	case "secondaryWorker":
+		return nil
+	case "security":
+		return nil
+	case "software":
+		return nil
+	case "tempBucket":
+		return nil
+	case "worker":
+		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config\" resource")
 	}
 }
 
-// GcpProjectDataprocServiceClusterMetrics resource interface
-type GcpProjectDataprocServiceClusterMetrics interface {
+// GcpProjectDataprocServiceClusterConfigGceCluster resource interface
+type GcpProjectDataprocServiceClusterConfigGceCluster interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
-	ParentResourcePath() (string, error)
+	Id() (string, error)
+	ConfidentialInstance() (interface{}, error)
+	InternalIpOnly() (bool, error)
+	Metadata() (map[string]interface{}, error)
+	NetworkUri() (string, error)
+	NodeGroupAffinity() (interface{}, error)
+	PrivateIpv6GoogleAccess() (string, error)
+	ReservationAffinity() (GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity, error)
+	ServiceAccount() (string, error)
+	ServiceAccountScopes() ([]interface{}, error)
+	ShieldedInstanceConfig() (GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig, error)
+	SubnetworkUri() (string, error)
+	Tags() ([]interface{}, error)
+	ZoneUri() (string, error)
 }
 
-// mqlGcpProjectDataprocServiceClusterMetrics for the gcp.project.dataprocService.cluster.metrics resource
-type mqlGcpProjectDataprocServiceClusterMetrics struct {
+// mqlGcpProjectDataprocServiceClusterConfigGceCluster for the gcp.project.dataprocService.cluster.config.gceCluster resource
+type mqlGcpProjectDataprocServiceClusterConfigGceCluster struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectDataprocServiceClusterMetrics) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.dataprocService.cluster.metrics resource
-func newGcpProjectDataprocServiceClusterMetrics(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.dataprocService.cluster.config.gceCluster resource
+func newGcpProjectDataprocServiceClusterConfigGceCluster(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectDataprocServiceClusterMetrics{runtime.NewResource("gcp.project.dataprocService.cluster.metrics")}
+	res := mqlGcpProjectDataprocServiceClusterConfigGceCluster{runtime.NewResource("gcp.project.dataprocService.cluster.config.gceCluster")}
 	// assign all named fields
 	var id string
 
@@ -30245,18 +30744,70 @@ func newGcpProjectDataprocServiceClusterMetrics(runtime *resources.Runtime, args
 		}
 
 		switch name {
-		case "parentResourcePath":
+		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.metrics\", its \"parentResourcePath\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "confidentialInstance":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"confidentialInstance\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "internalIpOnly":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"internalIpOnly\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "metadata":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"metadata\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "networkUri":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"networkUri\" argument has the wrong type (expected type \"string\")")
+			}
+		case "nodeGroupAffinity":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"nodeGroupAffinity\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "privateIpv6GoogleAccess":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"privateIpv6GoogleAccess\" argument has the wrong type (expected type \"string\")")
+			}
+		case "reservationAffinity":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"reservationAffinity\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity\")")
+			}
+		case "serviceAccount":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"serviceAccount\" argument has the wrong type (expected type \"string\")")
+			}
+		case "serviceAccountScopes":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"serviceAccountScopes\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "shieldedInstanceConfig":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"shieldedInstanceConfig\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig\")")
+			}
+		case "subnetworkUri":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"subnetworkUri\" argument has the wrong type (expected type \"string\")")
+			}
+		case "tags":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"tags\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "zoneUri":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"zoneUri\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.metrics\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.metrics with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.config.gceCluster with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -30274,61 +30825,1964 @@ func newGcpProjectDataprocServiceClusterMetrics(runtime *resources.Runtime, args
 	return &res, nil
 }
 
-func (s *mqlGcpProjectDataprocServiceClusterMetrics) Validate() error {
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Validate() error {
 	// required arguments
-	if _, ok := s.Cache.Load("parentResourcePath"); !ok {
-		return errors.New("Initialized \"gcp.project.dataprocService.cluster.metrics\" resource without a \"parentResourcePath\". This field is required.")
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("confidentialInstance"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"confidentialInstance\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("internalIpOnly"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"internalIpOnly\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("metadata"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"metadata\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("networkUri"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"networkUri\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("nodeGroupAffinity"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"nodeGroupAffinity\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("privateIpv6GoogleAccess"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"privateIpv6GoogleAccess\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("reservationAffinity"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"reservationAffinity\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("serviceAccount"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"serviceAccount\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("serviceAccountScopes"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"serviceAccountScopes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("shieldedInstanceConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"shieldedInstanceConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("subnetworkUri"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"subnetworkUri\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("tags"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"tags\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("zoneUri"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"zoneUri\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceClusterMetrics) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.metrics].Register")
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster].Register")
 	switch name {
-	case "parentResourcePath":
+	case "id":
+		return nil
+	case "confidentialInstance":
+		return nil
+	case "internalIpOnly":
+		return nil
+	case "metadata":
+		return nil
+	case "networkUri":
+		return nil
+	case "nodeGroupAffinity":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "reservationAffinity":
+		return nil
+	case "serviceAccount":
+		return nil
+	case "serviceAccountScopes":
+		return nil
+	case "shieldedInstanceConfig":
+		return nil
+	case "subnetworkUri":
+		return nil
+	case "tags":
+		return nil
+	case "zoneUri":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.metrics\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceClusterMetrics) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.metrics].Field")
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster].Field")
 	switch name {
-	case "parentResourcePath":
-		return s.ParentResourcePath()
+	case "id":
+		return s.Id()
+	case "confidentialInstance":
+		return s.ConfidentialInstance()
+	case "internalIpOnly":
+		return s.InternalIpOnly()
+	case "metadata":
+		return s.Metadata()
+	case "networkUri":
+		return s.NetworkUri()
+	case "nodeGroupAffinity":
+		return s.NodeGroupAffinity()
+	case "privateIpv6GoogleAccess":
+		return s.PrivateIpv6GoogleAccess()
+	case "reservationAffinity":
+		return s.ReservationAffinity()
+	case "serviceAccount":
+		return s.ServiceAccount()
+	case "serviceAccountScopes":
+		return s.ServiceAccountScopes()
+	case "shieldedInstanceConfig":
+		return s.ShieldedInstanceConfig()
+	case "subnetworkUri":
+		return s.SubnetworkUri()
+	case "tags":
+		return s.Tags()
+	case "zoneUri":
+		return s.ZoneUri()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.metrics\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster\" resource")
 	}
 }
 
-// ParentResourcePath accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceClusterMetrics) ParentResourcePath() (string, error) {
-	res, ok := s.Cache.Load("parentResourcePath")
+// Id accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.dataprocService.cluster.metrics\" failed: no value provided for static field \"parentResourcePath\"")
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.metrics\" failed to cast field \"parentResourcePath\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ConfidentialInstance accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ConfidentialInstance() (interface{}, error) {
+	res, ok := s.Cache.Load("confidentialInstance")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"confidentialInstance\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"confidentialInstance\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// InternalIpOnly accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) InternalIpOnly() (bool, error) {
+	res, ok := s.Cache.Load("internalIpOnly")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"internalIpOnly\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"internalIpOnly\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// Metadata accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Metadata() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("metadata")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"metadata\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"metadata\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// NetworkUri accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) NetworkUri() (string, error) {
+	res, ok := s.Cache.Load("networkUri")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"networkUri\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"networkUri\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// NodeGroupAffinity accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) NodeGroupAffinity() (interface{}, error) {
+	res, ok := s.Cache.Load("nodeGroupAffinity")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"nodeGroupAffinity\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"nodeGroupAffinity\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// PrivateIpv6GoogleAccess accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) PrivateIpv6GoogleAccess() (string, error) {
+	res, ok := s.Cache.Load("privateIpv6GoogleAccess")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"privateIpv6GoogleAccess\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"privateIpv6GoogleAccess\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ReservationAffinity accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ReservationAffinity() (GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity, error) {
+	res, ok := s.Cache.Load("reservationAffinity")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"reservationAffinity\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"reservationAffinity\" to the right type (GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceAccount accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ServiceAccount() (string, error) {
+	res, ok := s.Cache.Load("serviceAccount")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"serviceAccount\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"serviceAccount\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceAccountScopes accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ServiceAccountScopes() ([]interface{}, error) {
+	res, ok := s.Cache.Load("serviceAccountScopes")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"serviceAccountScopes\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"serviceAccountScopes\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ShieldedInstanceConfig accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ShieldedInstanceConfig() (GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig, error) {
+	res, ok := s.Cache.Load("shieldedInstanceConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"shieldedInstanceConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"shieldedInstanceConfig\" to the right type (GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig): %#v", res)
+	}
+	return tres, nil
+}
+
+// SubnetworkUri accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) SubnetworkUri() (string, error) {
+	res, ok := s.Cache.Load("subnetworkUri")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"subnetworkUri\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"subnetworkUri\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Tags accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Tags() ([]interface{}, error) {
+	res, ok := s.Cache.Load("tags")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"tags\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"tags\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ZoneUri accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ZoneUri() (string, error) {
+	res, ok := s.Cache.Load("zoneUri")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"zoneUri\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"zoneUri\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceClusterMetrics) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.metrics].MqlCompute")
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster].MqlCompute")
 	switch name {
-	case "parentResourcePath":
+	case "id":
+		return nil
+	case "confidentialInstance":
+		return nil
+	case "internalIpOnly":
+		return nil
+	case "metadata":
+		return nil
+	case "networkUri":
+		return nil
+	case "nodeGroupAffinity":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "reservationAffinity":
+		return nil
+	case "serviceAccount":
+		return nil
+	case "serviceAccountScopes":
+		return nil
+	case "shieldedInstanceConfig":
+		return nil
+	case "subnetworkUri":
+		return nil
+	case "tags":
+		return nil
+	case "zoneUri":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.metrics\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster\" resource")
+	}
+}
+
+// GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity resource interface
+type GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	ConsumeReservationType() (string, error)
+	Key() (string, error)
+	Values() ([]interface{}, error)
+}
+
+// mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity for the gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity resource
+type mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity resource
+func newGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity{runtime.NewResource("gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "consumeReservationType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\", its \"consumeReservationType\" argument has the wrong type (expected type \"string\")")
+			}
+		case "key":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\", its \"key\" argument has the wrong type (expected type \"string\")")
+			}
+		case "values":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\", its \"values\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("consumeReservationType"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" resource without a \"consumeReservationType\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("key"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" resource without a \"key\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("values"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" resource without a \"values\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity].Register")
+	switch name {
+	case "id":
+		return nil
+	case "consumeReservationType":
+		return nil
+	case "key":
+		return nil
+	case "values":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "consumeReservationType":
+		return s.ConsumeReservationType()
+	case "key":
+		return s.Key()
+	case "values":
+		return s.Values()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ConsumeReservationType accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) ConsumeReservationType() (string, error) {
+	res, ok := s.Cache.Load("consumeReservationType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed: no value provided for static field \"consumeReservationType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed to cast field \"consumeReservationType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Key accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) Key() (string, error) {
+	res, ok := s.Cache.Load("key")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed: no value provided for static field \"key\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed to cast field \"key\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Values accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) Values() ([]interface{}, error) {
+	res, ok := s.Cache.Load("values")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed: no value provided for static field \"values\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" failed to cast field \"values\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "consumeReservationType":
+		return nil
+	case "key":
+		return nil
+	case "values":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity\" resource")
+	}
+}
+
+// GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig resource interface
+type GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	EnableIntegrityMonitoring() (bool, error)
+	EnableSecureBoot() (bool, error)
+	EnableVtpm() (bool, error)
+}
+
+// mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig for the gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig resource
+type mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig resource
+func newGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig{runtime.NewResource("gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "enableIntegrityMonitoring":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\", its \"enableIntegrityMonitoring\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "enableSecureBoot":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\", its \"enableSecureBoot\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "enableVtpm":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\", its \"enableVtpm\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableIntegrityMonitoring"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" resource without a \"enableIntegrityMonitoring\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableSecureBoot"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" resource without a \"enableSecureBoot\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableVtpm"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" resource without a \"enableVtpm\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig].Register")
+	switch name {
+	case "id":
+		return nil
+	case "enableIntegrityMonitoring":
+		return nil
+	case "enableSecureBoot":
+		return nil
+	case "enableVtpm":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "enableIntegrityMonitoring":
+		return s.EnableIntegrityMonitoring()
+	case "enableSecureBoot":
+		return s.EnableSecureBoot()
+	case "enableVtpm":
+		return s.EnableVtpm()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableIntegrityMonitoring accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) EnableIntegrityMonitoring() (bool, error) {
+	res, ok := s.Cache.Load("enableIntegrityMonitoring")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed: no value provided for static field \"enableIntegrityMonitoring\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed to cast field \"enableIntegrityMonitoring\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableSecureBoot accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) EnableSecureBoot() (bool, error) {
+	res, ok := s.Cache.Load("enableSecureBoot")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed: no value provided for static field \"enableSecureBoot\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed to cast field \"enableSecureBoot\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableVtpm accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) EnableVtpm() (bool, error) {
+	res, ok := s.Cache.Load("enableVtpm")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed: no value provided for static field \"enableVtpm\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" failed to cast field \"enableVtpm\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "enableIntegrityMonitoring":
+		return nil
+	case "enableSecureBoot":
+		return nil
+	case "enableVtpm":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig\" resource")
+	}
+}
+
+// GcpProjectDataprocServiceClusterConfigGkeCluster resource interface
+type GcpProjectDataprocServiceClusterConfigGkeCluster interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	GkeClusterTarget() (string, error)
+	NodePoolTarget() ([]interface{}, error)
+}
+
+// mqlGcpProjectDataprocServiceClusterConfigGkeCluster for the gcp.project.dataprocService.cluster.config.gkeCluster resource
+type mqlGcpProjectDataprocServiceClusterConfigGkeCluster struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.dataprocService.cluster.config.gkeCluster resource
+func newGcpProjectDataprocServiceClusterConfigGkeCluster(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectDataprocServiceClusterConfigGkeCluster{runtime.NewResource("gcp.project.dataprocService.cluster.config.gkeCluster")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gkeCluster\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "gkeClusterTarget":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gkeCluster\", its \"gkeClusterTarget\" argument has the wrong type (expected type \"string\")")
+			}
+		case "nodePoolTarget":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gkeCluster\", its \"nodePoolTarget\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gkeCluster\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.config.gkeCluster with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gkeCluster\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gkeClusterTarget"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gkeCluster\" resource without a \"gkeClusterTarget\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("nodePoolTarget"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gkeCluster\" resource without a \"nodePoolTarget\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gkeCluster].Register")
+	switch name {
+	case "id":
+		return nil
+	case "gkeClusterTarget":
+		return nil
+	case "nodePoolTarget":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gkeCluster\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gkeCluster].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "gkeClusterTarget":
+		return s.GkeClusterTarget()
+	case "nodePoolTarget":
+		return s.NodePoolTarget()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gkeCluster\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gkeCluster\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gkeCluster\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// GkeClusterTarget accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) GkeClusterTarget() (string, error) {
+	res, ok := s.Cache.Load("gkeClusterTarget")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gkeCluster\" failed: no value provided for static field \"gkeClusterTarget\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gkeCluster\" failed to cast field \"gkeClusterTarget\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// NodePoolTarget accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) NodePoolTarget() ([]interface{}, error) {
+	res, ok := s.Cache.Load("nodePoolTarget")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gkeCluster\" failed: no value provided for static field \"nodePoolTarget\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gkeCluster\" failed to cast field \"nodePoolTarget\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGkeCluster) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.gkeCluster].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "gkeClusterTarget":
+		return nil
+	case "nodePoolTarget":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gkeCluster\" resource")
+	}
+}
+
+// GcpProjectDataprocServiceClusterConfigLifecycle resource interface
+type GcpProjectDataprocServiceClusterConfigLifecycle interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	AutoDeleteTime() (string, error)
+	AutoDeleteTtl() (string, error)
+	IdleDeleteTime() (string, error)
+	IdleDeleteTtl() (string, error)
+	IdleStartTime() (string, error)
+}
+
+// mqlGcpProjectDataprocServiceClusterConfigLifecycle for the gcp.project.dataprocService.cluster.config.lifecycle resource
+type mqlGcpProjectDataprocServiceClusterConfigLifecycle struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.dataprocService.cluster.config.lifecycle resource
+func newGcpProjectDataprocServiceClusterConfigLifecycle(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectDataprocServiceClusterConfigLifecycle{runtime.NewResource("gcp.project.dataprocService.cluster.config.lifecycle")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.lifecycle\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "autoDeleteTime":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.lifecycle\", its \"autoDeleteTime\" argument has the wrong type (expected type \"string\")")
+			}
+		case "autoDeleteTtl":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.lifecycle\", its \"autoDeleteTtl\" argument has the wrong type (expected type \"string\")")
+			}
+		case "idleDeleteTime":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.lifecycle\", its \"idleDeleteTime\" argument has the wrong type (expected type \"string\")")
+			}
+		case "idleDeleteTtl":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.lifecycle\", its \"idleDeleteTtl\" argument has the wrong type (expected type \"string\")")
+			}
+		case "idleStartTime":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.lifecycle\", its \"idleStartTime\" argument has the wrong type (expected type \"string\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.lifecycle\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.config.lifecycle with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.lifecycle\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("autoDeleteTime"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.lifecycle\" resource without a \"autoDeleteTime\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("autoDeleteTtl"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.lifecycle\" resource without a \"autoDeleteTtl\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("idleDeleteTime"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.lifecycle\" resource without a \"idleDeleteTime\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("idleDeleteTtl"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.lifecycle\" resource without a \"idleDeleteTtl\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("idleStartTime"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.lifecycle\" resource without a \"idleStartTime\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.lifecycle].Register")
+	switch name {
+	case "id":
+		return nil
+	case "autoDeleteTime":
+		return nil
+	case "autoDeleteTtl":
+		return nil
+	case "idleDeleteTime":
+		return nil
+	case "idleDeleteTtl":
+		return nil
+	case "idleStartTime":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.lifecycle\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.lifecycle].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "autoDeleteTime":
+		return s.AutoDeleteTime()
+	case "autoDeleteTtl":
+		return s.AutoDeleteTtl()
+	case "idleDeleteTime":
+		return s.IdleDeleteTime()
+	case "idleDeleteTtl":
+		return s.IdleDeleteTtl()
+	case "idleStartTime":
+		return s.IdleStartTime()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.lifecycle\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// AutoDeleteTime accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) AutoDeleteTime() (string, error) {
+	res, ok := s.Cache.Load("autoDeleteTime")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed: no value provided for static field \"autoDeleteTime\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed to cast field \"autoDeleteTime\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// AutoDeleteTtl accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) AutoDeleteTtl() (string, error) {
+	res, ok := s.Cache.Load("autoDeleteTtl")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed: no value provided for static field \"autoDeleteTtl\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed to cast field \"autoDeleteTtl\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// IdleDeleteTime accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) IdleDeleteTime() (string, error) {
+	res, ok := s.Cache.Load("idleDeleteTime")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed: no value provided for static field \"idleDeleteTime\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed to cast field \"idleDeleteTime\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// IdleDeleteTtl accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) IdleDeleteTtl() (string, error) {
+	res, ok := s.Cache.Load("idleDeleteTtl")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed: no value provided for static field \"idleDeleteTtl\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed to cast field \"idleDeleteTtl\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// IdleStartTime accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) IdleStartTime() (string, error) {
+	res, ok := s.Cache.Load("idleStartTime")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed: no value provided for static field \"idleStartTime\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.lifecycle\" failed to cast field \"idleStartTime\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigLifecycle) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.lifecycle].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "autoDeleteTime":
+		return nil
+	case "autoDeleteTtl":
+		return nil
+	case "idleDeleteTime":
+		return nil
+	case "idleDeleteTtl":
+		return nil
+	case "idleStartTime":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.lifecycle\" resource")
+	}
+}
+
+// GcpProjectDataprocServiceClusterConfigInstance resource interface
+type GcpProjectDataprocServiceClusterConfigInstance interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Accelerators() ([]interface{}, error)
+	DiskConfig() (GcpProjectDataprocServiceClusterConfigInstanceDiskConfig, error)
+	ImageUri() (string, error)
+	InstanceNames() ([]interface{}, error)
+	InstanceReferences() ([]interface{}, error)
+	IsPreemptible() (bool, error)
+	MachineTypeUri() (string, error)
+	ManagedGroupConfig() (interface{}, error)
+	MinCpuPlatform() (string, error)
+	NumInstances() (int64, error)
+	Preemptibility() (string, error)
+}
+
+// mqlGcpProjectDataprocServiceClusterConfigInstance for the gcp.project.dataprocService.cluster.config.instance resource
+type mqlGcpProjectDataprocServiceClusterConfigInstance struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.dataprocService.cluster.config.instance resource
+func newGcpProjectDataprocServiceClusterConfigInstance(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectDataprocServiceClusterConfigInstance{runtime.NewResource("gcp.project.dataprocService.cluster.config.instance")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "accelerators":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"accelerators\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "diskConfig":
+			if _, ok := val.(GcpProjectDataprocServiceClusterConfigInstanceDiskConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"diskConfig\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigInstanceDiskConfig\")")
+			}
+		case "imageUri":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"imageUri\" argument has the wrong type (expected type \"string\")")
+			}
+		case "instanceNames":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"instanceNames\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "instanceReferences":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"instanceReferences\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "isPreemptible":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"isPreemptible\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "machineTypeUri":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"machineTypeUri\" argument has the wrong type (expected type \"string\")")
+			}
+		case "managedGroupConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"managedGroupConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "minCpuPlatform":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"minCpuPlatform\" argument has the wrong type (expected type \"string\")")
+			}
+		case "numInstances":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"numInstances\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "preemptibility":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"preemptibility\" argument has the wrong type (expected type \"string\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.config.instance with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("accelerators"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"accelerators\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("diskConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"diskConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("imageUri"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"imageUri\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("instanceNames"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"instanceNames\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("instanceReferences"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"instanceReferences\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("isPreemptible"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"isPreemptible\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("machineTypeUri"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"machineTypeUri\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("managedGroupConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"managedGroupConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("minCpuPlatform"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"minCpuPlatform\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("numInstances"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"numInstances\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("preemptibility"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance\" resource without a \"preemptibility\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.instance].Register")
+	switch name {
+	case "id":
+		return nil
+	case "accelerators":
+		return nil
+	case "diskConfig":
+		return nil
+	case "imageUri":
+		return nil
+	case "instanceNames":
+		return nil
+	case "instanceReferences":
+		return nil
+	case "isPreemptible":
+		return nil
+	case "machineTypeUri":
+		return nil
+	case "managedGroupConfig":
+		return nil
+	case "minCpuPlatform":
+		return nil
+	case "numInstances":
+		return nil
+	case "preemptibility":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.instance\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.instance].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "accelerators":
+		return s.Accelerators()
+	case "diskConfig":
+		return s.DiskConfig()
+	case "imageUri":
+		return s.ImageUri()
+	case "instanceNames":
+		return s.InstanceNames()
+	case "instanceReferences":
+		return s.InstanceReferences()
+	case "isPreemptible":
+		return s.IsPreemptible()
+	case "machineTypeUri":
+		return s.MachineTypeUri()
+	case "managedGroupConfig":
+		return s.ManagedGroupConfig()
+	case "minCpuPlatform":
+		return s.MinCpuPlatform()
+	case "numInstances":
+		return s.NumInstances()
+	case "preemptibility":
+		return s.Preemptibility()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.instance\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Accelerators accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) Accelerators() ([]interface{}, error) {
+	res, ok := s.Cache.Load("accelerators")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"accelerators\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"accelerators\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// DiskConfig accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) DiskConfig() (GcpProjectDataprocServiceClusterConfigInstanceDiskConfig, error) {
+	res, ok := s.Cache.Load("diskConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"diskConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectDataprocServiceClusterConfigInstanceDiskConfig)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"diskConfig\" to the right type (GcpProjectDataprocServiceClusterConfigInstanceDiskConfig): %#v", res)
+	}
+	return tres, nil
+}
+
+// ImageUri accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) ImageUri() (string, error) {
+	res, ok := s.Cache.Load("imageUri")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"imageUri\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"imageUri\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// InstanceNames accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) InstanceNames() ([]interface{}, error) {
+	res, ok := s.Cache.Load("instanceNames")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"instanceNames\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"instanceNames\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// InstanceReferences accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) InstanceReferences() ([]interface{}, error) {
+	res, ok := s.Cache.Load("instanceReferences")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"instanceReferences\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"instanceReferences\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// IsPreemptible accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) IsPreemptible() (bool, error) {
+	res, ok := s.Cache.Load("isPreemptible")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"isPreemptible\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"isPreemptible\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// MachineTypeUri accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) MachineTypeUri() (string, error) {
+	res, ok := s.Cache.Load("machineTypeUri")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"machineTypeUri\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"machineTypeUri\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ManagedGroupConfig accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) ManagedGroupConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("managedGroupConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"managedGroupConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"managedGroupConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// MinCpuPlatform accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) MinCpuPlatform() (string, error) {
+	res, ok := s.Cache.Load("minCpuPlatform")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"minCpuPlatform\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"minCpuPlatform\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// NumInstances accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) NumInstances() (int64, error) {
+	res, ok := s.Cache.Load("numInstances")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"numInstances\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"numInstances\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Preemptibility accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) Preemptibility() (string, error) {
+	res, ok := s.Cache.Load("preemptibility")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance\" failed: no value provided for static field \"preemptibility\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance\" failed to cast field \"preemptibility\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstance) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.instance].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "accelerators":
+		return nil
+	case "diskConfig":
+		return nil
+	case "imageUri":
+		return nil
+	case "instanceNames":
+		return nil
+	case "instanceReferences":
+		return nil
+	case "isPreemptible":
+		return nil
+	case "machineTypeUri":
+		return nil
+	case "managedGroupConfig":
+		return nil
+	case "minCpuPlatform":
+		return nil
+	case "numInstances":
+		return nil
+	case "preemptibility":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.instance\" resource")
+	}
+}
+
+// GcpProjectDataprocServiceClusterConfigInstanceDiskConfig resource interface
+type GcpProjectDataprocServiceClusterConfigInstanceDiskConfig interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	BootDiskSizeGb() (int64, error)
+	BootDiskType() (string, error)
+	LocalSsdInterface() (string, error)
+	NumLocalSsds() (int64, error)
+}
+
+// mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig for the gcp.project.dataprocService.cluster.config.instance.diskConfig resource
+type mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.dataprocService.cluster.config.instance.diskConfig resource
+func newGcpProjectDataprocServiceClusterConfigInstanceDiskConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig{runtime.NewResource("gcp.project.dataprocService.cluster.config.instance.diskConfig")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance.diskConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "bootDiskSizeGb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance.diskConfig\", its \"bootDiskSizeGb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "bootDiskType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance.diskConfig\", its \"bootDiskType\" argument has the wrong type (expected type \"string\")")
+			}
+		case "localSsdInterface":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance.diskConfig\", its \"localSsdInterface\" argument has the wrong type (expected type \"string\")")
+			}
+		case "numLocalSsds":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance.diskConfig\", its \"numLocalSsds\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.instance.diskConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.dataprocService.cluster.config.instance.diskConfig with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("bootDiskSizeGb"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource without a \"bootDiskSizeGb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("bootDiskType"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource without a \"bootDiskType\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("localSsdInterface"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource without a \"localSsdInterface\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("numLocalSsds"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource without a \"numLocalSsds\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.instance.diskConfig].Register")
+	switch name {
+	case "id":
+		return nil
+	case "bootDiskSizeGb":
+		return nil
+	case "bootDiskType":
+		return nil
+	case "localSsdInterface":
+		return nil
+	case "numLocalSsds":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.instance.diskConfig].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "bootDiskSizeGb":
+		return s.BootDiskSizeGb()
+	case "bootDiskType":
+		return s.BootDiskType()
+	case "localSsdInterface":
+		return s.LocalSsdInterface()
+	case "numLocalSsds":
+		return s.NumLocalSsds()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// BootDiskSizeGb accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) BootDiskSizeGb() (int64, error) {
+	res, ok := s.Cache.Load("bootDiskSizeGb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed: no value provided for static field \"bootDiskSizeGb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed to cast field \"bootDiskSizeGb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// BootDiskType accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) BootDiskType() (string, error) {
+	res, ok := s.Cache.Load("bootDiskType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed: no value provided for static field \"bootDiskType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed to cast field \"bootDiskType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// LocalSsdInterface accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) LocalSsdInterface() (string, error) {
+	res, ok := s.Cache.Load("localSsdInterface")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed: no value provided for static field \"localSsdInterface\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed to cast field \"localSsdInterface\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// NumLocalSsds accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) NumLocalSsds() (int64, error) {
+	res, ok := s.Cache.Load("numLocalSsds")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed: no value provided for static field \"numLocalSsds\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.instance.diskConfig\" failed to cast field \"numLocalSsds\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigInstanceDiskConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.config.instance.diskConfig].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "bootDiskSizeGb":
+		return nil
+	case "bootDiskType":
+		return nil
+	case "localSsdInterface":
+		return nil
+	case "numLocalSsds":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.instance.diskConfig\" resource")
 	}
 }
 
@@ -30340,6 +32794,10 @@ type GcpProjectDataprocServiceClusterStatus interface {
 	Register(string) error
 	Validate() error
 	Id() (string, error)
+	Detail() (string, error)
+	State() (string, error)
+	Started() (*time.Time, error)
+	Substate() (string, error)
 }
 
 // mqlGcpProjectDataprocServiceClusterStatus for the gcp.project.dataprocService.cluster.status resource
@@ -30372,6 +32830,22 @@ func newGcpProjectDataprocServiceClusterStatus(runtime *resources.Runtime, args 
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.status\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
+		case "detail":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.status\", its \"detail\" argument has the wrong type (expected type \"string\")")
+			}
+		case "state":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.status\", its \"state\" argument has the wrong type (expected type \"string\")")
+			}
+		case "started":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.status\", its \"started\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "substate":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.status\", its \"substate\" argument has the wrong type (expected type \"string\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -30402,6 +32876,18 @@ func (s *mqlGcpProjectDataprocServiceClusterStatus) Validate() error {
 	if _, ok := s.Cache.Load("id"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster.status\" resource without a \"id\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("detail"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.status\" resource without a \"detail\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("state"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.status\" resource without a \"state\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("started"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.status\" resource without a \"started\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("substate"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.status\" resource without a \"substate\". This field is required.")
+	}
 
 	return nil
 }
@@ -30411,6 +32897,14 @@ func (s *mqlGcpProjectDataprocServiceClusterStatus) Register(name string) error 
 	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.status].Register")
 	switch name {
 	case "id":
+		return nil
+	case "detail":
+		return nil
+	case "state":
+		return nil
+	case "started":
+		return nil
+	case "substate":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.status\" resource")
@@ -30423,6 +32917,14 @@ func (s *mqlGcpProjectDataprocServiceClusterStatus) Field(name string) (interfac
 	switch name {
 	case "id":
 		return s.Id()
+	case "detail":
+		return s.Detail()
+	case "state":
+		return s.State()
+	case "started":
+		return s.Started()
+	case "substate":
+		return s.Substate()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.status\" resource")
 	}
@@ -30444,11 +32946,83 @@ func (s *mqlGcpProjectDataprocServiceClusterStatus) Id() (string, error) {
 	return tres, nil
 }
 
+// Detail accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterStatus) Detail() (string, error) {
+	res, ok := s.Cache.Load("detail")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.status\" failed: no value provided for static field \"detail\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.status\" failed to cast field \"detail\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// State accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterStatus) State() (string, error) {
+	res, ok := s.Cache.Load("state")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.status\" failed: no value provided for static field \"state\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.status\" failed to cast field \"state\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Started accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterStatus) Started() (*time.Time, error) {
+	res, ok := s.Cache.Load("started")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.status\" failed: no value provided for static field \"started\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.status\" failed to cast field \"started\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Substate accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterStatus) Substate() (string, error) {
+	res, ok := s.Cache.Load("substate")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.status\" failed: no value provided for static field \"substate\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.status\" failed to cast field \"substate\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpProjectDataprocServiceClusterStatus) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.status].MqlCompute")
 	switch name {
 	case "id":
+		return nil
+	case "detail":
+		return nil
+	case "state":
+		return nil
+	case "started":
+		return nil
+	case "substate":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.status\" resource")
@@ -30463,6 +33037,9 @@ type GcpProjectDataprocServiceClusterVirtualClusterConfig interface {
 	Register(string) error
 	Validate() error
 	ParentResourcePath() (string, error)
+	AuxiliaryServices() (interface{}, error)
+	KubernetesCluster() (interface{}, error)
+	StagingBucket() (string, error)
 }
 
 // mqlGcpProjectDataprocServiceClusterVirtualClusterConfig for the gcp.project.dataprocService.cluster.virtualClusterConfig resource
@@ -30495,6 +33072,18 @@ func newGcpProjectDataprocServiceClusterVirtualClusterConfig(runtime *resources.
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.virtualClusterConfig\", its \"parentResourcePath\" argument has the wrong type (expected type \"string\")")
 			}
+		case "auxiliaryServices":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.virtualClusterConfig\", its \"auxiliaryServices\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "kubernetesCluster":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.virtualClusterConfig\", its \"kubernetesCluster\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "stagingBucket":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.virtualClusterConfig\", its \"stagingBucket\" argument has the wrong type (expected type \"string\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -30525,6 +33114,15 @@ func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) Validate() err
 	if _, ok := s.Cache.Load("parentResourcePath"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster.virtualClusterConfig\" resource without a \"parentResourcePath\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("auxiliaryServices"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.virtualClusterConfig\" resource without a \"auxiliaryServices\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("kubernetesCluster"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.virtualClusterConfig\" resource without a \"kubernetesCluster\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("stagingBucket"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.virtualClusterConfig\" resource without a \"stagingBucket\". This field is required.")
+	}
 
 	return nil
 }
@@ -30534,6 +33132,12 @@ func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) Register(name 
 	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.virtualClusterConfig].Register")
 	switch name {
 	case "parentResourcePath":
+		return nil
+	case "auxiliaryServices":
+		return nil
+	case "kubernetesCluster":
+		return nil
+	case "stagingBucket":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.virtualClusterConfig\" resource")
@@ -30546,6 +33150,12 @@ func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) Field(name str
 	switch name {
 	case "parentResourcePath":
 		return s.ParentResourcePath()
+	case "auxiliaryServices":
+		return s.AuxiliaryServices()
+	case "kubernetesCluster":
+		return s.KubernetesCluster()
+	case "stagingBucket":
+		return s.StagingBucket()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.virtualClusterConfig\" resource")
 	}
@@ -30567,11 +33177,65 @@ func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) ParentResource
 	return tres, nil
 }
 
+// AuxiliaryServices accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) AuxiliaryServices() (interface{}, error) {
+	res, ok := s.Cache.Load("auxiliaryServices")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.virtualClusterConfig\" failed: no value provided for static field \"auxiliaryServices\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.virtualClusterConfig\" failed to cast field \"auxiliaryServices\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// KubernetesCluster accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) KubernetesCluster() (interface{}, error) {
+	res, ok := s.Cache.Load("kubernetesCluster")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.dataprocService.cluster.virtualClusterConfig\" failed: no value provided for static field \"kubernetesCluster\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.virtualClusterConfig\" failed to cast field \"kubernetesCluster\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// StagingBucket accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) StagingBucket() (string, error) {
+	res, ok := s.Cache.Load("stagingBucket")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.virtualClusterConfig\" failed: no value provided for static field \"stagingBucket\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.virtualClusterConfig\" failed to cast field \"stagingBucket\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpProjectDataprocServiceClusterVirtualClusterConfig) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.dataprocService.cluster.virtualClusterConfig].MqlCompute")
 	switch name {
 	case "parentResourcePath":
+		return nil
+	case "auxiliaryServices":
+		return nil
+	case "kubernetesCluster":
+		return nil
+	case "stagingBucket":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.virtualClusterConfig\" resource")
