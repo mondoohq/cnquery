@@ -674,7 +674,7 @@ private azure.mysql.database @defaults("id name") {
 private azure.mysql.flexibleServer @defaults("id name location") {
   // MySQL flexible server ID
   id string
-  // Mysql flexible server name
+  // MySQL flexible server name
   name string
   // Mysql flexible server location
   location string
