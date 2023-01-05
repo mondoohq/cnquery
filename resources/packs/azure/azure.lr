@@ -638,21 +638,21 @@ azure.mysql {
 private azure.mysql.server @defaults("id name location") {
   // MySQL server ID
   id string
-  // Mysql server name
+  // MySQL server name
   name string
-  // Mysql server location
+  // MySQL server location
   location string
-  // Mysql server tags
+  // MySQL server tags
   tags map[string]string
-  // Mysql server type
+  // MySQL server type
   type string
-  // Mysql server properties
+  // MySQL server properties
   properties dict
-  // Mysql server configuration
+  // MySQL server configuration
   configuration() []azure.sql.configuration
-  // Mysql server databases
+  // MySQL server databases
   databases() []azure.mysql.database
-  // Mysql server firewall rules
+  // MySQL server firewall rules
   firewallRules() []azure.sql.firewallrule
 }
 
