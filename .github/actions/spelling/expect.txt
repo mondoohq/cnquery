@@ -45,3 +45,5 @@ certificatechains
 cryptokey
 ekm
 kmsService
+vulnerabilityassessmentsettings
+Sas

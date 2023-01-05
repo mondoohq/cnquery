@@ -503,7 +503,9 @@ resources:
       properties: {}
       securityAlertPolicy: {}
       tags: {}
+      threatDetectionPolicy: {}
       type: {}
+      vulnerabilityAssessmentSettings: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -517,6 +519,22 @@ resources:
       name: {}
       sid: {}
       tenantId: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.sql.server.vulnerabilityassessmentsettings:
+    fields:
+      id: {}
+      mailSubscriptionAdmins: {}
+      name: {}
+      recurringScanEmails: {}
+      recurringScanEnabled: {}
+      storageAccountAccessKey: {}
+      storageContainerPath: {}
+      storageContainerSasKey: {}
       type: {}
     is_private: true
     min_mondoo_version: latest

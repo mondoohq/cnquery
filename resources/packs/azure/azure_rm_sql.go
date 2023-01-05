@@ -152,6 +152,98 @@ func (a *mqlAzureSqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAzureSqlServer) GetThreatDetectionPolicy() (interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource id
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := azure.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	serverClient, err := sql.NewServerAdvancedThreatProtectionSettingsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	threatPolicy, err := serverClient.Get(ctx, resourceID.ResourceGroup, server, sql.AdvancedThreatProtectionNameDefault, &sql.ServerAdvancedThreatProtectionSettingsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return core.JsonToDict(threatPolicy.Properties)
+}
+
+func (a *mqlAzureSqlServerVulnerabilityassessmentsettings) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureSqlServer) GetVulnerabilityAssessmentSettings() (interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource id
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := azure.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	serverClient, err := sql.NewServerVulnerabilityAssessmentsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	vaSettings, err := serverClient.Get(ctx, resourceID.ResourceGroup, server, sql.VulnerabilityAssessmentNameDefault, &sql.ServerVulnerabilityAssessmentsClientGetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.sql.server.vulnerabilityassessmentsettings",
+		"id", core.ToString(vaSettings.ID),
+		"name", core.ToString(vaSettings.Name),
+		"type", core.ToString(vaSettings.Type),
+		"storageContainerPath", core.ToString(vaSettings.Properties.StorageContainerPath),
+		"storageAccountAccessKey", core.ToString(vaSettings.Properties.StorageAccountAccessKey),
+		"storageContainerSasKey", core.ToString(vaSettings.Properties.StorageContainerSasKey),
+		"recurringScanEnabled", core.ToBool(vaSettings.Properties.RecurringScans.IsEnabled),
+		"recurringScanEmails", core.PtrStrSliceToInterface(vaSettings.Properties.RecurringScans.Emails),
+		"mailSubscriptionAdmins", core.ToBool(vaSettings.Properties.RecurringScans.EmailSubscriptionAdmins),
+	)
+}
+
 func (a *mqlAzureSqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
