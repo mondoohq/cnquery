@@ -1029,7 +1029,7 @@ azure.monitor {
   logProfiles() []azure.monitor.logprofile
   // List of diagnostic settings for the subscription
   diagnosticSettings() []azure.monitor.diagnosticsetting
-  // the activity log for the monitor
+  // Activity log for the monitor
   activityLog() azure.monitor.activitylog
 }
 
@@ -1040,46 +1040,46 @@ private azure.monitor.activitylog {
 
 // Azure Monitor Activity Log Alert
 private azure.monitor.activitylog.alert {
-  // the identifier of the activity log alert
+  // ID of the activity log alert
   id string
-  // the type of the activity log alert
+  // Type of the activity log alert
   type string
-  // the name of the activity log alert
+  // Name of the activity log alert
   name string
-  // the description of the activity log alert
+  // Description of the activity log alert
   description string
-  // the conditions for the activity log alert, all of these conditions must be met
+  // Conditions for the activity log alert, all of which must be met
   conditions []azure.monitor.activitylog.alert.condition
-  // the location of the alert
+  // Location of the alert
   location string
-  // the tags of the alert
+  // Tags of the alert
   tags map[string]string
-  // the actions that will activate when the conditions are met
+  // Actions that activate when the conditions are met
   actions []azure.monitor.activitylog.alert.action
-  // a list of resource IDs that will be used as prefixes, the alert applies to events where the resources id has any of the prefixes.
+  // List of resource IDs that must be present to trigger the alert
   scopes []string
 }
 
 // Azure Monitor Activity Log Alert Condition
  private azure.monitor.activitylog.alert.condition {
-  // the identifier of the condition
+  // ID of the condition
   id string
-  // the alert's value will be compared to this value to determine if the condition is met. exclusive with 'containsAny'
+  // Value that is compared to the alert value to determine if the condition is met (exclusive with 'containsAny')
   equals string
-  // the name of the activity log alert's field that this condition will examine.
+  // Name of the field in the activity log alert that this condition examines
   fieldName string
-  // the alert's value will be compared to the values in this array to determine if the condition is met. exclusive with 'equals'
+  // Array of values that are compared to the alert's value to determine if the condition is met (exclusive with 'equals')
   containsAny []string
-  // the alert value will be compared against the conditions in this array. exclusive with all other fields.
+  // Array of conditions compared to the alert value to determine if the condition is met (exclusive with all other fields)
   anyOf []azure.monitor.activitylog.alert.condition
  }
 
 
 // Azure Monitor Activity Log Alert Action
  private azure.monitor.activitylog.alert.action {
-  // the identifier of the condition
+  // ID of the condition
   actionGroupId string
-  // the dictionary of custom properties to include with the post operation. These data are appended to the webhook payload.
+  // Dictionary of custom properties to include with the post operation. These are appended to the webhook payload.
   webhookProperties map[string]string
  }
 
