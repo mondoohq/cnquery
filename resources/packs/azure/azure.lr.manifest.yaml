@@ -252,6 +252,7 @@ resources:
       - azure
   azure.mysql:
     fields:
+      flexibleServers: {}
       servers: {}
     min_mondoo_version: latest
     platform:
@@ -263,6 +264,22 @@ resources:
       collation: {}
       id: {}
       name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.mysql.flexibleServer:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
       type: {}
     is_private: true
     min_mondoo_version: latest

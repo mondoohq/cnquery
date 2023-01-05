@@ -631,11 +631,12 @@ private azure.postgresql.database  @defaults("id name") {
 azure.mysql {
   // List of MySQL servers
   servers() []azure.mysql.server
+  flexibleServers() []azure.mysql.flexibleServer
 }
 
 // Azure MySQL Server
-private azure.mysql.server  @defaults("id name location") {
-  // Mysql server ID
+private azure.mysql.server @defaults("id name location") {
+  // MySQL server ID
   id string
   // Mysql server name
   name string
@@ -656,7 +657,7 @@ private azure.mysql.server  @defaults("id name location") {
 }
 
 // Azure MySQL Database
-private azure.mysql.database  @defaults("id name") {
+private azure.mysql.database @defaults("id name") {
   // MySQL database ID
   id string
   // MySQL database name
@@ -667,6 +668,28 @@ private azure.mysql.database  @defaults("id name") {
   charset string
   // MySQL database collation
   collation string
+}
+
+// Azure MySQL Flexible Server
+private azure.mysql.flexibleServer @defaults("id name location") {
+  // MySQL flexible server ID
+  id string
+  // MySQL flexible server name
+  name string
+  // MySQL flexible server location
+  location string
+  // MySQL flexible server tags
+  tags map[string]string
+  // MySQL flexible server type
+  type string
+  // MySQL flexible server properties
+  properties dict
+  // MySQL flexible server configuration
+  configuration() []azure.sql.configuration
+  // MySQL flexible server databases
+  databases() []azure.mysql.database
+  // MySQL flexible server firewall rules
+  firewallRules() []azure.sql.firewallrule
 }
 
 // Azure MariaDB
