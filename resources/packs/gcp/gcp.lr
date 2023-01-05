@@ -53,6 +53,8 @@ gcp.project @defaults("name") {
   kms() gcp.project.kmsService
   // GCP Contacts for the project
   essentialContacts() []gcp.essentialContact
+  // API keys
+  apiKeys() []gcp.project.apiKey
 }
 
 // GCP Service
@@ -1268,4 +1270,44 @@ private gcp.essentialContact @defaults("email notificationCategories") {
   validated time
   // Validity of the contact
   validationState string
+}
+
+// GCP Project API key
+private gcp.project.apiKey @defaults("name") {
+  // The Id of the key
+  id string
+  // Project ID
+  projectId string
+  // Human-readable display name of this key
+  name string
+  // Full resource path
+  resourcePath string
+  // Annotations
+  annotations map[string]string
+  // Creation timestamp
+  created time
+  // Deletion timestamp
+  deleted time
+  // Encrypted and signed value held by this key
+  keyString string
+  // API key restrictions
+  restrictions gcp.project.apiKey.restrictions
+  // Update timestamp
+  updated time
+}
+
+// GCP Project API key restrictions
+private gcp.project.apiKey.restrictions {
+  // Parent resource path
+  parentResourcePath string
+  // The Android apps that are allowed to use the key
+  androidKeyRestrictions dict
+  // A restriction for a specific service and optionally one or more specific methods
+  apiTargets []dict
+  // The HTTP referrers that are allowed to use the key
+  browserKeyRestrictions dict
+  // The iOS apps that are allowed to use the key
+  iosKeyRestrictions dict
+  // The IP addresses that are allowed to use the key
+  serverKeyRestrictions dict
 }
