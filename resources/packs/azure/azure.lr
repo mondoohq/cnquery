@@ -678,7 +678,7 @@ private azure.mysql.flexibleServer @defaults("id name location") {
   name string
   // MySQL flexible server location
   location string
-  // Mysql flexible server tags
+  // MySQL flexible server tags
   tags map[string]string
   // Mysql flexible server type
   type string
