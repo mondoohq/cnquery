@@ -50,9 +50,8 @@ func init() {
 			"unix":    {typ: intType, signature: FunctionSignature{}},
 		},
 		types.Dict: {
-			"[]":       {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
-			"{}":       {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"contains": {compile: compileArrayContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"[]": {typ: dictType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Any}}},
+			"{}": {typ: blockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			// string-ish
 			"find":      {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.Regex}}},
 			"length":    {typ: intType, signature: FunctionSignature{}},
@@ -62,13 +61,14 @@ func init() {
 			"lines":     {typ: stringArrayType, signature: FunctionSignature{}},
 			"split":     {typ: stringArrayType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.String}}},
 			"trim":      {typ: stringType, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
-			// array-ish
-			"where": {compile: compileWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"all":   {compile: compileArrayAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"any":   {compile: compileArrayAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"one":   {compile: compileArrayOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"none":  {compile: compileArrayNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
-			"map":   {compile: compileArrayMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			// array- or map-ish
+			"where":    {compile: compileDictWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"contains": {compile: compileDictContains, typ: boolType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"all":      {compile: compileDictAll, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"any":      {compile: compileDictAny, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"one":      {compile: compileDictOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"none":     {compile: compileDictNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"map":      {compile: compileArrayMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			// map-ish
 			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
 			"values": {typ: dictArrayType, signature: FunctionSignature{}},
@@ -79,7 +79,7 @@ func init() {
 			"last":         {typ: childType, signature: FunctionSignature{}},
 			"{}":           {typ: arrayBlockType, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"length":       {typ: intType, signature: FunctionSignature{}},
-			"where":        {compile: compileWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"where":        {compile: compileArrayWhere, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"duplicates":   {compile: compileArrayDuplicates, signature: FunctionSignature{Required: 0, Args: []types.Type{types.String}}},
 			"unique":       {compile: compileArrayUnique, signature: FunctionSignature{Required: 0}},
 			"contains":     {compile: compileArrayContains, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},

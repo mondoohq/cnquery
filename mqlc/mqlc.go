@@ -1229,6 +1229,7 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 			Call:      llx.Chunk_PRIMITIVE,
 			Primitive: llx.RefPrimitiveV2(variable.ref),
 		})
+		c.standalone = false
 		return restCalls, variable.typ, nil
 	}
 

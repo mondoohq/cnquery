@@ -424,38 +424,18 @@ func _stringWhere(e *blockExecutor, src string, chunk *Chunk, ref uint64, invert
 	}
 
 	var found *RawResult
-	err = e.runFunctionBlock([]*RawData{{Type: types.StringSlice, Value: src}}, fref, func(res *RawResult) {
+	err = e.runFunctionBlock([]*RawData{
+		{Type: types.Nil, Value: nil},
+		{Type: types.StringSlice, Value: src},
+	}, fref, func(res *RawResult) {
 		found = res
 	})
 
 	return found.Data, 0, nil
 }
 
-func _dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inverted bool) (*RawData, uint64, error) {
-	// where(array, function)
-	itemsRef := chunk.Function.Args[0]
-	items, rref, err := e.resolveValue(itemsRef, ref)
-	if err != nil || rref > 0 {
-		return nil, rref, err
-	}
-
-	if items.Value == nil {
-		return &RawData{Type: items.Type}, 0, nil
-	}
-
-	if s, ok := items.Value.(string); ok {
-		return _stringWhere(e, s, chunk, ref, inverted)
-	}
-
-	list, ok := items.Value.([]interface{})
-	if !ok {
-		return nil, 0, errors.New("failed to call dict.where on this value")
-	}
-
-	if len(list) == 0 {
-		return items, 0, nil
-	}
-
+// requires at least 1 entry in the list!
+func _dictArrayWhere(e *blockExecutor, list []interface{}, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
 	arg1 := chunk.Function.Args[1]
 	fref, ok := arg1.RefV2()
 	if !ok {
@@ -467,57 +447,131 @@ func _dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, inv
 		return nil, dref, err
 	}
 
-	ct := items.Type.Child()
-	filteredList := map[int]interface{}{}
-	finishedResults := 0
-	l := sync.Mutex{}
-	for it := range list {
-		i := it
-		err := e.runFunctionBlock([]*RawData{{Type: ct, Value: list[i]}}, fref, func(res *RawResult) {
-			resList := func() []interface{} {
-				l.Lock()
-				defer l.Unlock()
-
-				_, ok := filteredList[i]
-				if !ok {
-					finishedResults++
-				}
-
-				isTruthy, _ := res.Data.IsTruthy()
-				if isTruthy == !inverted {
-					filteredList[i] = list[i]
-				} else {
-					filteredList[i] = nil
-				}
-
-				if finishedResults == len(list) {
-					resList := []interface{}{}
-					for j := 0; j < len(filteredList); j++ {
-						k := filteredList[j]
-						if k != nil {
-							resList = append(resList, k)
-						}
-					}
-					return resList
-				}
-				return nil
-			}()
-
-			if resList != nil {
-				data := &RawData{
-					Type:  bind.Type,
-					Value: resList,
-				}
-				e.cache.Store(ref, &stepCache{
-					Result:   data,
-					IsStatic: false,
-				})
-				e.triggerChain(ref, data)
-			}
-		})
-		if err != nil {
-			return nil, 0, err
+	argsList := make([][]*RawData, len(list))
+	for i, value := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  types.Dict,
+				Value: i,
+			},
+			{
+				Type:  types.Dict,
+				Value: value,
+			},
 		}
+	}
+
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		resList := []interface{}{}
+		for i, res := range results {
+			if res.isTruthy() == !invert {
+				key := argsList[i][0].Value.(int)
+				resList = append(resList, list[key])
+			}
+		}
+
+		data := &RawData{
+			Type:  types.Dict,
+			Value: resList,
+		}
+		e.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: false,
+		})
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return nil, 0, nil
+}
+
+func _dictWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := e.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if items.Value == nil {
+		return &RawData{Type: items.Type}, 0, nil
+	}
+
+	if s, ok := items.Value.(string); ok {
+		return _stringWhere(e, s, chunk, ref, invert)
+	}
+
+	if list, ok := items.Value.([]interface{}); ok {
+		if len(list) == 0 {
+			return items, 0, nil
+		}
+		return _dictArrayWhere(e, list, chunk, ref, invert)
+	}
+
+	list, ok := items.Value.(map[string]interface{})
+	if !ok {
+		return nil, 0, errors.New("failed to call dict.where on this value")
+	}
+	if len(list) == 0 {
+		return items, 0, nil
+	}
+
+	arg1 := chunk.Function.Args[1]
+	if types.Type(arg1.Type).Underlying() != types.FunctionLike {
+		return nil, 0, errors.New("cannot call 'where' on a map without a filter function")
+	}
+
+	fref, ok := arg1.RefV2()
+	if !ok {
+		return nil, 0, errors.New("failed to retrieve function reference of 'where' call")
+	}
+
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
+	}
+
+	valueType := items.Type.Child()
+
+	argsList := make([][]*RawData, len(list))
+	i := 0
+	for key, value := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  types.Dict,
+				Value: key,
+			},
+			{
+				Type:  valueType,
+				Value: value,
+			},
+		}
+		i++
+	}
+
+	err = e.runFunctionBlocks(argsList, fref, func(results []arrayBlockCallResult, errs []error) {
+		resMap := map[string]interface{}{}
+		for i, res := range results {
+			if res.isTruthy() == !invert {
+				key := argsList[i][0].Value.(string)
+				resMap[key] = list[key]
+			}
+		}
+		data := &RawData{
+			Type:  bind.Type,
+			Value: resMap,
+		}
+		e.cache.Store(ref, &stepCache{
+			Result:   data,
+			IsStatic: false,
+		})
+		e.triggerChain(ref, data)
+	})
+
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return nil, 0, nil
@@ -536,15 +590,21 @@ func dictAllV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	filteredList, ok := bind.Value.([]interface{})
-	if !ok {
-		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
-	}
-
-	if len(filteredList) != 0 {
+	if filteredList, ok := bind.Value.([]interface{}); ok {
+		if len(filteredList) == 0 {
+			return BoolTrue, 0, nil
+		}
 		return BoolFalse, 0, nil
 	}
-	return BoolTrue, 0, nil
+
+	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+		if len(filteredList) == 0 {
+			return BoolTrue, 0, nil
+		}
+		return BoolFalse, 0, nil
+	}
+
+	return nil, 0, errors.New("failed to call dict assertion on a non-list/map value")
 }
 
 func dictNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -552,15 +612,21 @@ func dictNoneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	filteredList, ok := bind.Value.([]interface{})
-	if !ok {
-		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
-	}
-
-	if len(filteredList) != 0 {
+	if filteredList, ok := bind.Value.([]interface{}); ok {
+		if len(filteredList) == 0 {
+			return BoolTrue, 0, nil
+		}
 		return BoolFalse, 0, nil
 	}
-	return BoolTrue, 0, nil
+
+	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+		if len(filteredList) == 0 {
+			return BoolTrue, 0, nil
+		}
+		return BoolFalse, 0, nil
+	}
+
+	return nil, 0, errors.New("failed to call dict assertion on a non-list/map value")
 }
 
 func dictAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -568,15 +634,21 @@ func dictAnyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	filteredList, ok := bind.Value.([]interface{})
-	if !ok {
-		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
-	}
-
-	if len(filteredList) == 0 {
+	if filteredList, ok := bind.Value.([]interface{}); ok {
+		if len(filteredList) != 0 {
+			return BoolTrue, 0, nil
+		}
 		return BoolFalse, 0, nil
 	}
-	return BoolTrue, 0, nil
+
+	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+		if len(filteredList) != 0 {
+			return BoolTrue, 0, nil
+		}
+		return BoolFalse, 0, nil
+	}
+
+	return nil, 0, errors.New("failed to call dict assertion on a non-list/map value")
 }
 
 func dictOneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -584,15 +656,21 @@ func dictOneV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		return &RawData{Type: types.Bool}, 0, nil
 	}
 
-	filteredList, ok := bind.Value.([]interface{})
-	if !ok {
-		return nil, 0, errors.New("failed to call dict assertion on a non-list value")
-	}
-
-	if len(filteredList) != 1 {
+	if filteredList, ok := bind.Value.([]interface{}); ok {
+		if len(filteredList) == 1 {
+			return BoolTrue, 0, nil
+		}
 		return BoolFalse, 0, nil
 	}
-	return BoolTrue, 0, nil
+
+	if filteredList, ok := bind.Value.(map[string]interface{}); ok {
+		if len(filteredList) == 1 {
+			return BoolTrue, 0, nil
+		}
+		return BoolFalse, 0, nil
+	}
+
+	return nil, 0, errors.New("failed to call dict assertion on a non-list/map value")
 }
 
 func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
