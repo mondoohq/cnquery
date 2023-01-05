@@ -358,6 +358,9 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		if clientid != "" {
 			connection.Options["client-id"] = clientid
 		}
+		if subsToExclude != "" && subsToInclude != "" {
+			log.Fatal().Msg("cannot provide both --subscriptions and --subscriptions-exclude, provide only one of them")
+		}
 		if subsToExclude != "" {
 			connection.Options["subscriptions-exclude"] = subsToExclude
 		}
