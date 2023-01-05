@@ -76,6 +76,7 @@ enum VaultType {
   GCPSecretsManager = 5;
   AWSSecretsManager = 6;
   AWSParameterStore = 7;
+  GCPBerglas = 8;
 }
 
 message VaultConfiguration {
