@@ -301,6 +301,68 @@ private azure.network.watcher @defaults("id name location") {
   etag string
   // Network watcher properties
   properties dict
+  // Network watcher flow logs
+  flowLogs() []azure.network.watcher.flowlog
+}
+
+// Azure Network Watcher Flow Log
+private azure.network.watcher.flowlog @defaults("id name location") {
+  // Network watcher flow log ID
+  id string
+  // Network watcher flow log name
+  name string
+  // Network watcher flow log location
+  location string
+  // Network watcher flow log tags
+  tags map[string]string
+  // Network watcher flow log type
+  type string
+  // Network watcher flow log etag
+  etag string
+  // Network watcher flow log provisioning state
+  provisioningState string
+  // whether the network watcher flow log is enabled
+  enabled bool
+  // Network watcher flow log storage account identifier
+  storageAccountId string
+  // Network watcher flow log target resource identifier
+  targetResourceId string
+  // Network watcher flow log target resource guid
+  targetResourceGuid string
+  // Network watcher flow log version
+  version int
+  // Network watcher flow log format
+  format string
+  // Network watcher flow log retention policy
+  retentionPolicy azure.network.watcher.flowlog.retentionpolicy
+  // Network watcher flow log analytics
+  analytics azure.network.watcher.flowlog.analytics
+}
+
+// Azure Network Watcher Flow Log Retention Policy
+private azure.network.watcher.flowlog.retentionpolicy {
+  // Network watcher Retention Policy ID
+  id string
+  // whether the retention policy is enabled
+  enabled bool
+  // the retention period
+  retentionDays int
+}
+
+// Azure Network Watcher Flow Log Analytics
+private azure.network.watcher.flowlog.analytics {
+  // Network watcher Flow Log Analytics ID
+  id string
+  // whether analytics are enabled
+  enabled bool
+  // the analytics interval in minutes
+  analyticsInterval int
+  // the analytics workspace identifier
+  workspaceId string
+  // the analytics workspace region
+  workspaceRegion string
+  // the analytics workspace resource identifier
+  workspaceResourceId string
 }
 
 // Azure Storage

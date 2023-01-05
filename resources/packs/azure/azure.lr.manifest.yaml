@@ -422,12 +422,63 @@ resources:
   azure.network.watcher:
     fields:
       etag: {}
+      flowLog: {}
+      flowLogs: {}
       id: {}
       location: {}
       name: {}
       properties: {}
       tags: {}
       type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.network.watcher.flowlog:
+    fields:
+      analytics: {}
+      enabled: {}
+      etag: {}
+      format: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      provisioningState: {}
+      provisionngState: {}
+      retentionPolicy: {}
+      storageAccountId: {}
+      tags: {}
+      targetResourceGuid: {}
+      targetResourceId: {}
+      type: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.network.watcher.flowlog.analytics:
+    fields:
+      analyticsInterval: {}
+      analyticsIntervalInMinutes: {}
+      enabled: {}
+      id: {}
+      workspaceId: {}
+      workspaceRegion: {}
+      workspaceResourceId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.network.watcher.flowlog.retentionpolicy:
+    fields:
+      days: {}
+      enabled: {}
+      id: {}
+      retentionDays: {}
     is_private: true
     min_mondoo_version: latest
     platform:

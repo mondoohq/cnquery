@@ -3,10 +3,12 @@ package azure
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+	"go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -293,6 +295,100 @@ func (a *mqlAzureNetwork) GetWatchers() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAzureNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := a.id()
+	if err != nil {
+		return nil, err
+	}
+	watcherName, err := a.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := azure.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+	client, err := network.NewFlowLogsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListPager(resourceID.ResourceGroup, watcherName, &network.FlowLogsClientListOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, flowLog := range page.Value {
+			retentionPolicy, err := a.MotorRuntime.CreateResource("azure.network.watcher.flowlog.retentionpolicy",
+				"id", fmt.Sprintf("%s/retentionPolicy", *flowLog.ID),
+				"enabled", core.ToBool(flowLog.Properties.RetentionPolicy.Enabled),
+				"retentionDays", core.ToInt64From32(flowLog.Properties.RetentionPolicy.Days))
+			if err != nil {
+				return nil, err
+			}
+			analytics, err := a.MotorRuntime.CreateResource("azure.network.watcher.flowlog.analytics",
+				"id", fmt.Sprintf("%s/analytics", *flowLog.ID),
+				"enabled", core.ToBool(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.Enabled),
+				"analyticsInterval", core.ToInt64From32(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.TrafficAnalyticsInterval),
+				"workspaceRegion", core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceRegion),
+				"workspaceResourceId", core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceResourceID),
+				"workspaceId", core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceID),
+			)
+			if err != nil {
+				return nil, err
+			}
+			mqlFlowLog, err := a.MotorRuntime.CreateResource("azure.network.watcher.flowlog",
+				"id", core.ToString(flowLog.ID),
+				"name", core.ToString(flowLog.Name),
+				"location", core.ToString(flowLog.Location),
+				"tags", azureTagsToInterface(flowLog.Tags),
+				"type", core.ToString(flowLog.Type),
+				"etag", core.ToString(flowLog.Etag),
+				"retentionPolicy", retentionPolicy,
+				"format", core.ToString((*string)(flowLog.Properties.Format.Type)),
+				"version", core.ToInt64From32(flowLog.Properties.Format.Version),
+				"enabled", core.ToBool(flowLog.Properties.Enabled),
+				"storageAccountId", core.ToString(flowLog.Properties.StorageID),
+				"targetResourceId", core.ToString(flowLog.Properties.TargetResourceID),
+				"targetResourceGuid", core.ToString(flowLog.Properties.TargetResourceGUID),
+				"provisioningState", core.ToString((*string)(flowLog.Properties.ProvisioningState)),
+				"analytics", analytics,
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlFlowLog)
+		}
+	}
+
+	return res, nil
+}
+
 func (a *mqlAzureNetworkWatcher) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureNetworkWatcherFlowlog) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureNetworkWatcherFlowlogRetentionpolicy) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureNetworkWatcherFlowlogAnalytics) id() (string, error) {
 	return a.Id()
 }
