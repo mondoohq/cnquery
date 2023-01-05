@@ -1,9 +1,9 @@
 # Detect common combinations of valid words that are in fact invalid. 
 # Useful for brand capitalizations
 
-# s.b. MySQL
-\bMysql\b
-\bMySql\b
+#
+# Industry Terms
+#
 
 # s.b. Side scanning
 \bSidescanning\b
@@ -17,16 +17,20 @@
 \bSaas\b
 \bsaas\b
 
-# s.b. DevSecOps
-\bDevsecops\b
-
-# s.b. Elasticsearch
-\bElasticSearch\b
-
 # s.b. REST API
 \bRest API\b
 \brest API\b
 \brest api\b
+
+# s.b. DevSecOps
+\bDevsecops\b
+
+#
+# Product Names
+#
+
+# s.b. Elasticsearch
+\bElasticSearch\b
 
 # s.b. DocuSign
 \bDocu Sign\b
@@ -41,6 +45,10 @@
 # s.b. MongoDB
 \bMongo DB\b
 \bMongoDb\b
+
+# s.b. MySQL
+\bMysql\b
+\bMySql\b
 
 # s.b. OpenStack
 \bOpen Stack\b
@@ -74,17 +82,152 @@
 # s.b. GitLab
 \bGitlab\b
 
-# s.b. EventBridge
-\bEventbridge\b
-
-# s.b. CloudWatch
-\bCloudwatch\b
-
 # s.b. JavaScript
 \bJavascript\b
 
 # s.b. Microsoft
 \bMicroSoft\b
+
+#
+# AWS Products
+#
+
+# s.b. App2Container
+\bApp2container\b
+
+# s.b. AppFlow
+\bAppflow\b
+
+# s.b. AppSync
+\bAppsync\b
+
+# s.b. CloudEnsure
+\bCloudensure\b
+
+# s.b. CloudFormation
+\bCloudformation\b
+
+# s.b. CloudFront
+\bCloudfront\b
+
+# s.b. CloudHSM
+\bCloudHsm\b
+\bCloudhsm\b
+
+# s.b. CloudSearch
+\bCloudsearch\b
+
+# s.b. CloudShell
+\bCloudshell\b
+
+# s.b. CloudTrail
+\bCloudtrail\b
+
+# s.b. CloudWatch
+\bCloudwatch\b
+
+# s.b. CodeArtifact
+\bCodeartifact\b
+
+# s.b. CodeBuild
+\bCodebuild\b
+
+# s.b. CodeCommit
+\bCodecommit\b
+
+# s.b. CodeDeploy
+\bCodedeploy\b
+
+# s.b. CodeGuru
+\bCodeguru\b
+
+# s.b. CodePipeline
+\bCodepipeline\b
+
+# s.b. CodeStar
+\bCodestar\b
+
+# s.b. Copilot
+\bCoPilot\b
+
+# s.b. DeepRacer
+\bDeepracer\b
+
+# s.b. DocumentDB
+\bDocument DB\b
+\bDocumentDb\b
+
+# s.b. DynamoDB
+\bDynamo DB\b
+\bDynamoDb\b
+
+# s.b. ElastiCache
+\bElasticache\b
+
+# s.b. EventBridge
+\bEventbridge\b
+
+# s.b. Fargate
+\bFarGate\b
+
+# s.b. FinSpace
+\bFinSpace\b
+
+# s.b. FSx
+\bFSX\b
+
+# s.b. GameLift
+\bGamelift\b
+
+# s.b. GuardDuty
+\bGuardduty\b
+
+# s.b. Honeycode
+\bHoneyCode\b
+
+# s.b. Lightsail
+\bLightSail\b
+
+# s.b. MXNet
+\bMxnet\b
+\bMXnet\b
+
+# s.b. OpenSearch
+\bOpensearch\b
+
+# s.b. OpenShift
+\bOpenshift\b
+
+# s.b. PrivateLink
+\bPrivatelink\b
+
+# s.b. QuickSight
+\bQuicksight\b
+
+# s.b. Redshift
+\bRedShift\b
+
+# s.b. RoboMaker
+\bRobomaker\b
+
+# s.b. Route 53
+\bRoute53\b
+
+# s.b. SageMaker
+\bSagemaker\b
+
+# s.b. SiteWise
+\bSitewise\b
+
+# s.b. WorkDocs
+\bWorkdocs\b
+
+# s.b. WorkMail
+\bWorkmail\b
+
+#
+# Common Typos
+#
 
 # s.b. another
 \ban[- ]other\b
