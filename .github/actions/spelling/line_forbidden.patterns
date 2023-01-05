@@ -1,6 +1,14 @@
 # Detect common combinations of valid words that are in fact invalid. 
 # Useful for brand capitalizations
 
+# s.b. MySQL
+\bMysql\b
+\bMySql\b
+
+# s.b. Side scanning
+\bSidescanning\b
+\bsidescanning\b
+
 # s.b. DevOps
 \bDev Ops\b
 \bDevops\b
@@ -11,6 +19,14 @@
 
 # s.b. DevSecOps
 \bDevsecops\b
+
+# s.b. Elasticsearch
+\bElasticSearch\b
+
+# s.b. REST API
+\bRest API\b
+\brest API\b
+\brest api\b
 
 # s.b. DocuSign
 \bDocu Sign\b
