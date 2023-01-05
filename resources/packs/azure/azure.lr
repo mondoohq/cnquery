@@ -342,91 +342,91 @@ private azure.storage.account @defaults("id name location") {
 
 // Azure Storage Account Data Protection
 private azure.storage.account.dataProtection {
-  // the identifier of the storage account
+  // ID of the storage account
   storageAccountId string
-  // whether soft deletion of blobs is enabled
+  // Whether soft deletion of blobs is enabled
   blobSoftDeletionEnabled bool
-  // the retention period in days for deleted blobs
+  // Retention period in days for deleted blobs
   blobRetentionDays int
-   // whether soft deletion of containers is enabled
+   // Whether soft deletion of containers is enabled
   containerSoftDeletionEnabled bool
-   // the retention period in days for deleted containers
+   // Retention period in days for deleted containers
   containerRetentionDays int
 }
 
 // Azure Storage Account Blob Service Properties
 private azure.storage.account.blobService.properties {
-  // the identifier of the service
+  // ID of the service
   id string
-  // the hourly metrics properties
+  // Hourly metrics properties
   hourMetrics azure.storage.account.service.properties.metrics
-  // the minute metrics properties
+  // Minute metrics properties
   minuteMetrics azure.storage.account.service.properties.metrics
-  // the logging properties
+  // Logging properties
   logging azure.storage.account.service.properties.logging
 }
 
 // Azure Storage Account Queue Service Properties
 private azure.storage.account.queueService.properties {
-  // the identifier of the service
+  // ID of the service
   id string
-  // the hourly metrics properties
+  // Hourly metrics properties
   hourMetrics azure.storage.account.service.properties.metrics
-  // the minute metrics properties
+  // Minute metrics properties
   minuteMetrics azure.storage.account.service.properties.metrics
-  // the logging properties
+  // Logging properties
   logging azure.storage.account.service.properties.logging
 }
 
 // Azure Storage Account Table Service Properties
 private azure.storage.account.tableService.properties {
-  // the identifier of the service
+  // ID of the service
   id string
-  // the hourly metrics properties
+  // Hourly metrics properties
   hourMetrics azure.storage.account.service.properties.metrics
-  // the minute metrics properties
+  // Minute metrics properties
   minuteMetrics azure.storage.account.service.properties.metrics
-  // the logging properties
+  // Logging properties
   logging azure.storage.account.service.properties.logging
 }
 
 // Azure Storage Account Service Properties Metrics 
 private azure.storage.account.service.properties.metrics {
-  // the identifier of the metrics
+  // ID of the metrics
   id string
-  // indicates whether metrics generate summary statistics for called API operations
+  // Whether metrics generate summary statistics for called API operations
   includeAPIs bool
-  // the retention policy for the metrics
+  // Retention policy for the metrics
   retentionPolicy azure.storage.account.service.properties.retentionPolicy
-  // indicates whether the metrics are enabled
+  // Whether the metrics are enabled
   enabled bool
-  // the version of the metrics
+  // Version of the metrics
   version string
 }
 
 // Azure Storage Account Service Properties Retention Policy
 private azure.storage.account.service.properties.retentionPolicy {
-  // the identifier of the retention policy
+  // ID of the retention policy
   id string
-  // indicates the number of days that metrics or logging data is retained
+  // Number of days that metrics or logging data is retained
   retentionDays int
-  // indicates whether a retention policy is enabled for the Azure Storage
+  // Whether a retention policy is enabled for the Azure Storage
   enabled bool 
 }
 
 // Azure Storage Account Service Properties Logging
 private azure.storage.account.service.properties.logging {
-  // the identifier of the logging configuration
+  // ID of the logging configuration
   id string
-  // indicates whether delete requests are being logged.
+  // Whether delete requests are being logged
   delete bool
-  // indicates whether read requests are being logged.
+  // Whether read requests are being logged
   read bool
-  // indicates whether write requests are being logged.
+  // Whether write requests are being logged
   write bool
-  // the logging version
+  // Logging version
   version string
-  // the retention policy for the logging metrics
+  // Retention policy for the logging metrics
   retentionPolicy azure.storage.account.service.properties.retentionPolicy
 }
 
