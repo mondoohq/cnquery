@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	ecr "github.com/awslabs/amazon-ecr-credential-helper/ecr-login"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -50,7 +51,11 @@ func GetImageDescriptor(ref name.Reference, opts ...Option) (*remote.Descriptor,
 	}
 
 	if o.auth == nil {
-		auth, err := authn.DefaultKeychain.Resolve(ref.Context())
+		kc := authn.NewMultiKeychain(
+			authn.DefaultKeychain,
+			authn.NewKeychainFromHelper(ecr.NewECRHelper()),
+		)
+		auth, err := kc.Resolve(ref.Context())
 		if err != nil {
 			fmt.Printf("getting creds for %q: %v", ref, err)
 			return nil, err
@@ -73,7 +78,11 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.Rea
 	}
 
 	if o.auth == nil {
-		auth, err := authn.DefaultKeychain.Resolve(ref.Context())
+		kc := authn.NewMultiKeychain(
+			authn.DefaultKeychain,
+			authn.NewKeychainFromHelper(ecr.NewECRHelper()),
+		)
+		auth, err := kc.Resolve(ref.Context())
 		if err != nil {
 			fmt.Printf("getting creds for %q: %v", ref, err)
 			return nil, nil, err

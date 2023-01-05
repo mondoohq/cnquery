@@ -94,8 +94,8 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 					RepositoryName: repoName,
 				})
 				if err != nil {
-					log.Error().Err(err).Str("repo", repoUrl).Msg("cannot describe images")
-					continue
+					log.Error().Str("repo", *repoName).Err(err).Msg("cannot describe images")
+					continue // don't fail here, that will prevent us from discovering the rest of the repos' images
 				}
 				for i := range imageResp.ImageDetails {
 					assets = append(assets, ecrImageToAsset(imageResp.ImageDetails[i], region, repoUrl, a.profile))
@@ -115,8 +115,8 @@ func (a *EcrImages) getRepositories() []*jobpool.Job {
 					RepositoryName: repoName,
 				})
 				if err != nil {
-					log.Error().Err(err).Str("repo", *repoUrl).Msg("cannot describe images")
-					continue
+					log.Error().Str("repo", *repoName).Err(err).Msg("cannot describe images")
+					continue // don't fail here, that will prevent us from discovering the rest of the repos' images
 				}
 				for i := range imageResp.ImageDetails {
 					assets = append(assets, publicEcrImageToAsset(imageResp.ImageDetails[i], region, *repoUrl, a.profile))
