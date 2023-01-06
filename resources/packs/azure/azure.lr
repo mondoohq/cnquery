@@ -286,7 +286,7 @@ private azure.network.securityrule @defaults("id name") {
 }
 
 // Azure Network Watcher
-private azure.network.watcher @defaults("id name location") {
+private azure.network.watcher @defaults("name location") {
   // Network watcher ID
   id string
   // Network watcher name
@@ -334,35 +334,9 @@ private azure.network.watcher.flowlog @defaults("id name location") {
   // Network watcher flow log format
   format string
   // Network watcher flow log retention policy
-  retentionPolicy azure.network.watcher.flowlog.retentionpolicy
+  retentionPolicy dict
   // Network watcher flow log analytics
-  analytics azure.network.watcher.flowlog.analytics
-}
-
-// Azure Network Watcher Flow Log Retention Policy
-private azure.network.watcher.flowlog.retentionpolicy {
-  // Network watcher Retention Policy ID
-  id string
-  // whether the retention policy is enabled
-  enabled bool
-  // the retention period
-  retentionDays int
-}
-
-// Azure Network Watcher Flow Log Analytics
-private azure.network.watcher.flowlog.analytics {
-  // Network watcher Flow Log Analytics ID
-  id string
-  // whether analytics are enabled
-  enabled bool
-  // the analytics interval in minutes
-  analyticsInterval int
-  // the analytics workspace identifier
-  workspaceId string
-  // the analytics workspace region
-  workspaceRegion string
-  // the analytics workspace resource identifier
-  workspaceResourceId string
+  analytics dict 
 }
 
 // Azure Storage

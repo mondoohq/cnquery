@@ -395,31 +395,6 @@ resources:
     platform:
       name:
       - azure
-  azure.network.watcher.flowlog.analytics:
-    fields:
-      analyticsInterval: {}
-      analyticsIntervalInMinutes: {}
-      enabled: {}
-      id: {}
-      workspaceId: {}
-      workspaceRegion: {}
-      workspaceResourceId: {}
-    is_private: true
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-  azure.network.watcher.flowlog.retentionpolicy:
-    fields:
-      days: {}
-      enabled: {}
-      id: {}
-      retentionDays: {}
-    is_private: true
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
   azure.postgresql:
     fields:
       servers: {}

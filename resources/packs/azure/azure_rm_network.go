@@ -3,7 +3,6 @@ package azure
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -331,22 +330,34 @@ func (a *mqlAzureNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		type mqlRetentionPolicy struct {
+			Enabled       bool `json:"enabled"`
+			RetentionDays int  `json:"retentionDays"`
+		}
+		type mqlFlowLogAnalytics struct {
+			Enabled             bool   `json:"allowedApplications"`
+			AnalyticsInterval   int    `json:"analyticsInterval"`
+			WorkspaceId         string `json:"workspaceResourceId"`
+			WorkspaceResourceId string `json:"workspaceId"`
+			WorkspaceRegion     string `json:"workspaceRegion"`
+		}
 		for _, flowLog := range page.Value {
-			retentionPolicy, err := a.MotorRuntime.CreateResource("azure.network.watcher.flowlog.retentionpolicy",
-				"id", fmt.Sprintf("%s/retentionPolicy", *flowLog.ID),
-				"enabled", core.ToBool(flowLog.Properties.RetentionPolicy.Enabled),
-				"retentionDays", core.ToInt64From32(flowLog.Properties.RetentionPolicy.Days))
+			retentionPolicy := mqlRetentionPolicy{
+				Enabled:       core.ToBool(flowLog.Properties.RetentionPolicy.Enabled),
+				RetentionDays: core.ToIntFrom32(flowLog.Properties.RetentionPolicy.Days),
+			}
+			retentionPolicyDict, err := core.JsonToDict(retentionPolicy)
 			if err != nil {
 				return nil, err
 			}
-			analytics, err := a.MotorRuntime.CreateResource("azure.network.watcher.flowlog.analytics",
-				"id", fmt.Sprintf("%s/analytics", *flowLog.ID),
-				"enabled", core.ToBool(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.Enabled),
-				"analyticsInterval", core.ToInt64From32(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.TrafficAnalyticsInterval),
-				"workspaceRegion", core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceRegion),
-				"workspaceResourceId", core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceResourceID),
-				"workspaceId", core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceID),
-			)
+			flowLogAnalytics := mqlFlowLogAnalytics{
+				Enabled:             core.ToBool(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.Enabled),
+				AnalyticsInterval:   core.ToIntFrom32(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.TrafficAnalyticsInterval),
+				WorkspaceRegion:     core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceRegion),
+				WorkspaceResourceId: core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceResourceID),
+				WorkspaceId:         core.ToString(flowLog.Properties.FlowAnalyticsConfiguration.NetworkWatcherFlowAnalyticsConfiguration.WorkspaceID),
+			}
+			flowLogAnalyticsDict, err := core.JsonToDict(flowLogAnalytics)
 			if err != nil {
 				return nil, err
 			}
@@ -357,7 +368,7 @@ func (a *mqlAzureNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
 				"tags", azureTagsToInterface(flowLog.Tags),
 				"type", core.ToString(flowLog.Type),
 				"etag", core.ToString(flowLog.Etag),
-				"retentionPolicy", retentionPolicy,
+				"retentionPolicy", retentionPolicyDict,
 				"format", core.ToString((*string)(flowLog.Properties.Format.Type)),
 				"version", core.ToInt64From32(flowLog.Properties.Format.Version),
 				"enabled", core.ToBool(flowLog.Properties.Enabled),
@@ -365,7 +376,7 @@ func (a *mqlAzureNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
 				"targetResourceId", core.ToString(flowLog.Properties.TargetResourceID),
 				"targetResourceGuid", core.ToString(flowLog.Properties.TargetResourceGUID),
 				"provisioningState", core.ToString((*string)(flowLog.Properties.ProvisioningState)),
-				"analytics", analytics,
+				"analytics", flowLogAnalyticsDict,
 			)
 			if err != nil {
 				return nil, err
@@ -382,13 +393,5 @@ func (a *mqlAzureNetworkWatcher) id() (string, error) {
 }
 
 func (a *mqlAzureNetworkWatcherFlowlog) id() (string, error) {
-	return a.Id()
-}
-
-func (a *mqlAzureNetworkWatcherFlowlogRetentionpolicy) id() (string, error) {
-	return a.Id()
-}
-
-func (a *mqlAzureNetworkWatcherFlowlogAnalytics) id() (string, error) {
 	return a.Id()
 }
