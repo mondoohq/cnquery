@@ -1326,7 +1326,7 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   // Project ID
   projectId string
   // CMEK settings of the log bucket
-  cmekSettings gcp.project.loggingservice.bucket.cmekSettings
+  cmekSettings dict
   // Creation timestamp
   created time
   // Description of the bucket
@@ -1345,22 +1345,6 @@ private gcp.project.loggingservice.bucket @defaults("name") {
   retentionDays int
   // Last update timestamp of the bucket
   updated time
-}
-
-// GCP Logging bucket CMEK settings
-private gcp.project.loggingservice.bucket.cmekSettings @defaults("name") {
-  // Project ID
-  projectId string
-  // Bucket name
-  bucketName string
-  // Resource name for the configurated Cloud KMS key
-  kmsKeyName string
-  // Crypto key version name
-  kmsKeyVersionName string
-  // Resource name of the CMEK settings
-  name string
-  // Service account that will be used by the log router to access the Cloud KMS key
-  serviceAccountId string
 }
 
 // GCP Logging bucket index config

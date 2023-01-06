@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/logging/v2"
 	"google.golang.org/api/option"
@@ -58,16 +57,20 @@ func (g *mqlGcpProjectLoggingservice) GetBuckets() ([]interface{}, error) {
 	mqlBuckets := make([]interface{}, 0, len(buckets.Buckets))
 	for _, bucket := range buckets.Buckets {
 
-		var mqlCmekSettings resources.ResourceType
+		var mqlCmekSettingsDict map[string]interface{}
 		if bucket.CmekSettings != nil {
-			mqlCmekSettings, err = g.MotorRuntime.CreateResource("gcp.project.loggingservice.bucket.cmekSettings",
-				"projectId", projectId,
-				"bucketName", bucket.Name,
-				"kmsKeyName", bucket.CmekSettings.KmsKeyName,
-				"kmsKeyVersionName", bucket.CmekSettings.KmsKeyVersionName,
-				"name", bucket.CmekSettings.Name,
-				"serviceAccountId", bucket.CmekSettings.ServiceAccountId,
-			)
+			type mqlCmekSettings struct {
+				KmsKeyName        string `json:"kmsKeyName"`
+				KmsKeyVersionName string `json:"kmsKeyVersionName"`
+				Name              string `json:"name"`
+				ServiceAccountId  string `json:"serviceAccountId"`
+			}
+			mqlCmekSettingsDict, err = core.JsonToDict(mqlCmekSettings{
+				KmsKeyName:        bucket.CmekSettings.KmsKeyName,
+				KmsKeyVersionName: bucket.CmekSettings.KmsKeyVersionName,
+				Name:              bucket.CmekSettings.Name,
+				ServiceAccountId:  bucket.CmekSettings.ServiceAccountId,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -89,7 +92,7 @@ func (g *mqlGcpProjectLoggingservice) GetBuckets() ([]interface{}, error) {
 
 		mqlBucket, err := g.MotorRuntime.CreateResource("gcp.project.loggingservice.bucket",
 			"projectId", projectId,
-			"cmekSettings", mqlCmekSettings,
+			"cmekSettings", mqlCmekSettingsDict,
 			"created", parseTime(bucket.CreateTime),
 			"description", bucket.Description,
 			"indexConfigs", indexConfigs,
@@ -118,18 +121,6 @@ func (g *mqlGcpProjectLoggingserviceBucket) id() (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%s/%s", projectId, name), nil
-}
-
-func (g *mqlGcpProjectLoggingserviceBucketCmekSettings) id() (string, error) {
-	projectId, err := g.ProjectId()
-	if err != nil {
-		return "", err
-	}
-	bucketName, err := g.BucketName()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s/%s/cmekSettings", projectId, bucketName), nil
 }
 
 func (g *mqlGcpProjectLoggingserviceBucketIndexConfig) id() (string, error) {
