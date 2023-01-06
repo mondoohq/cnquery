@@ -47,3 +47,4 @@ ekm
 kmsService
 vulnerabilityassessmentsettings
 Sas
+retentionpolicy

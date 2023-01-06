@@ -286,7 +286,7 @@ private azure.network.securityrule @defaults("id name") {
 }
 
 // Azure Network Watcher
-private azure.network.watcher @defaults("id name location") {
+private azure.network.watcher @defaults("name location") {
   // Network watcher ID
   id string
   // Network watcher name
@@ -301,6 +301,44 @@ private azure.network.watcher @defaults("id name location") {
   etag string
   // Network watcher properties
   properties dict
+  // Network watcher flow logs
+  flowLogs() []azure.network.watcher.flowlog
+  // Network watcher provisioning state
+  provisioningState string
+}
+
+// Azure Network Watcher Flow Log
+private azure.network.watcher.flowlog @defaults("name location") {
+  // Network watcher flow log ID
+  id string
+  // Network watcher flow log name
+  name string
+  // Network watcher flow log location
+  location string
+  // Network watcher flow log tags
+  tags map[string]string
+  // Network watcher flow log type
+  type string
+  // Network watcher flow log etag
+  etag string
+  // Network watcher flow log provisioning state
+  provisioningState string
+  // whether the network watcher flow log is enabled
+  enabled bool
+  // Network watcher flow log storage account identifier
+  storageAccountId string
+  // Network watcher flow log target resource identifier
+  targetResourceId string
+  // Network watcher flow log target resource guid
+  targetResourceGuid string
+  // Network watcher flow log version
+  version int
+  // Network watcher flow log format
+  format string
+  // Network watcher flow log retention policy
+  retentionPolicy dict
+  // Network watcher flow log analytics
+  analytics dict 
 }
 
 // Azure Storage
