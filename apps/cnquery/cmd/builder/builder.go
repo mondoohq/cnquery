@@ -575,7 +575,7 @@ func azureProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn
 	cmd.Flags().String("client-secret", "", "Secret for application")
 	cmd.Flags().String("certificate-path", "", "Path to certificate that's used for certificate-based authentication in PKCS 12 format (pfx)")
 	cmd.Flags().String("certificate-secret", "", "Passphrase for certificate file")
-	cmd.Flags().String("subscription", "", "Azure subscription ID to scan")
+	cmd.Flags().String("subscription", "", "ID of the Azure subscription to scan")
 	cmd.Flags().String("subscriptions", "", "Comma-separated list of Azure subscriptions to include")
 	cmd.Flags().String("subscriptions-exclude", "", "Comma-separated list of Azure subscriptions to exclude")
 
