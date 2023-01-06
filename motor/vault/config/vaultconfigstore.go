@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/motor/vault/awsparameterstore"
 	"go.mondoo.com/cnquery/motor/vault/awssecretsmanager"
+	"go.mondoo.com/cnquery/motor/vault/gcpberglas"
 	"go.mondoo.com/cnquery/motor/vault/gcpsecretmanager"
 	"go.mondoo.com/cnquery/motor/vault/hashivault"
 	"go.mondoo.com/cnquery/motor/vault/keyring"
@@ -59,6 +60,14 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 			return nil, errors.Wrap(err, "cannot not determine aws environment")
 		}
 		v = awsparameterstore.New(cfg)
+	case vault.VaultType_GCPBerglas:
+		projectID := vCfg.Options["project-id"]
+		kmsKeyID := vCfg.Options["kms-key-id"]
+		if kmsKeyID != "" {
+			v = gcpberglas.NewWithKey(projectID, &kmsKeyID)
+		} else {
+			v = gcpberglas.New(projectID)
+		}
 	default:
 		return nil, errors.Errorf("could not connect to vault: %s (%s)", vCfg.Name, vCfg.Type.String())
 	}
