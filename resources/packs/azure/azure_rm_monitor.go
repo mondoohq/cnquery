@@ -2,7 +2,6 @@ package azure
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	monitor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
@@ -118,51 +117,75 @@ func (a *mqlAzureMonitorActivitylog) GetAlerts() ([]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+		type mqlAlertAction struct {
+			ActionGroupId     string            `json:"actionGroupId"`
+			WebhookProperties map[string]string `json:"webhookProperties"`
+		}
+
+		type mqlAlertLeafCondition struct {
+			FieldName   string   `json:"fieldName"`
+			Equals      string   `json:"equals"`
+			ContainsAny []string `json:"containsAny"`
+		}
+
+		type mqlAlertCondition struct {
+			FieldName   string                  `json:"fieldName"`
+			Equals      string                  `json:"equals"`
+			ContainsAny []string                `json:"containsAny"`
+			AnyOf       []mqlAlertLeafCondition `json:"anyOf"`
+		}
+
 		for _, entry := range page.Value {
-			actions := []interface{}{}
-			conditions := []interface{}{}
+			actions := []mqlAlertAction{}
+			conditions := []mqlAlertCondition{}
 
 			for _, act := range entry.Properties.Actions.ActionGroups {
-				action, err := a.MotorRuntime.CreateResource("azure.monitor.activitylog.alert.action",
-					"actionGroupId", core.ToString(act.ActionGroupID),
-					"webhookProperties", azureTagsToInterface(act.WebhookProperties),
-				)
-				if err != nil {
-					return nil, err
+				mqlAction := mqlAlertAction{
+					ActionGroupId:     core.ToString(act.ActionGroupID),
+					WebhookProperties: core.PtrMapSliceToStr(act.WebhookProperties),
 				}
-				actions = append(actions, action)
+				actions = append(actions, mqlAction)
 			}
-			for idx, cond := range entry.Properties.Condition.AllOf {
-				anyOf := []interface{}{}
-				for childIdx, leaf := range cond.AnyOf {
-					cond, err := a.MotorRuntime.CreateResource("azure.monitor.activitylog.alert.condition",
-						"id", fmt.Sprintf("%s/condition/%d/anyOf/%d", *entry.ID, idx, childIdx),
-						"fieldName", core.ToString(leaf.Field),
-						"equals", core.ToString(leaf.Equals),
-						"containsAny", core.PtrSliceToInterface(leaf.ContainsAny),
-					)
-					if err != nil {
-						return nil, err
+			for _, cond := range entry.Properties.Condition.AllOf {
+				anyOf := []mqlAlertLeafCondition{}
+				for _, leaf := range cond.AnyOf {
+					mqlAnyOfLeaf := mqlAlertLeafCondition{
+						FieldName:   core.ToString(leaf.Field),
+						Equals:      core.ToString(leaf.Equals),
+						ContainsAny: core.PtrStrSliceToStr(leaf.ContainsAny),
 					}
-					anyOf = append(anyOf, cond)
+					anyOf = append(anyOf, mqlAnyOfLeaf)
 				}
-				cond, err := a.MotorRuntime.CreateResource("azure.monitor.activitylog.alert.condition",
-					"id", fmt.Sprintf("%s/condition/%d", *entry.ID, idx),
-					"fieldName", core.ToString(cond.Field),
-					"equals", core.ToString(cond.Equals),
-					"containsAny", core.PtrSliceToInterface(cond.ContainsAny),
-					"anyOf", anyOf,
-				)
+				mqlCondition := mqlAlertCondition{
+					FieldName:   core.ToString(cond.Field),
+					Equals:      core.ToString(cond.Equals),
+					ContainsAny: core.PtrStrSliceToStr(cond.ContainsAny),
+					AnyOf:       anyOf,
+				}
+				conditions = append(conditions, mqlCondition)
+			}
+
+			actionsDict := []interface{}{}
+			for _, a := range actions {
+				dict, err := core.JsonToDict(a)
 				if err != nil {
 					return nil, err
 				}
-				conditions = append(conditions, cond)
+				actionsDict = append(actionsDict, dict)
+			}
+			conditionsDict := []interface{}{}
+			for _, c := range conditions {
+				dict, err := core.JsonToDict(c)
+				if err != nil {
+					return nil, err
+				}
+				conditionsDict = append(conditionsDict, dict)
 			}
 			alert, err := a.MotorRuntime.CreateResource("azure.monitor.activitylog.alert",
-				"conditions", conditions,
+				"conditions", conditionsDict,
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
-				"actions", actions,
+				"actions", actionsDict,
 				"description", core.ToString(entry.Properties.Description),
 				"scopes", core.PtrSliceToInterface(entry.Properties.Scopes),
 				"type", core.ToString(entry.Type),
@@ -180,14 +203,6 @@ func (a *mqlAzureMonitorActivitylog) GetAlerts() ([]interface{}, error) {
 
 func (a *mqlAzureMonitorLogprofile) id() (string, error) {
 	return a.Id()
-}
-
-func (a *mqlAzureMonitorActivitylogAlertCondition) id() (string, error) {
-	return a.Id()
-}
-
-func (a *mqlAzureMonitorActivitylogAlertAction) id() (string, error) {
-	return a.ActionGroupId()
 }
 
 func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, error) {

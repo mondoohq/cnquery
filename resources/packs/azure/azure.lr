@@ -1049,39 +1049,16 @@ private azure.monitor.activitylog.alert {
   // Description of the activity log alert
   description string
   // Conditions for the activity log alert, all of which must be met
-  conditions []azure.monitor.activitylog.alert.condition
+  conditions []dict
   // Location of the alert
   location string
   // Tags of the alert
   tags map[string]string
   // Actions that activate when the conditions are met
-  actions []azure.monitor.activitylog.alert.action
+  actions []dict
   // List of resource IDs that must be present to trigger the alert
   scopes []string
 }
-
-// Azure Monitor Activity Log Alert Condition
- private azure.monitor.activitylog.alert.condition {
-  // ID of the condition
-  id string
-  // Value that is compared to the alert value to determine if the condition is met (exclusive with 'containsAny')
-  equals string
-  // Name of the field in the activity log alert that this condition examines
-  fieldName string
-  // Array of values that are compared to the alert's value to determine if the condition is met (exclusive with 'equals')
-  containsAny []string
-  // Array of conditions compared to the alert value to determine if the condition is met (exclusive with all other fields)
-  anyOf []azure.monitor.activitylog.alert.condition
- }
-
-
-// Azure Monitor Activity Log Alert Action
- private azure.monitor.activitylog.alert.action {
-  // ID of the condition
-  actionGroupId string
-  // Dictionary of custom properties to include with the post operation. These are appended to the webhook payload.
-  webhookProperties map[string]string
- }
 
 // Azure Monitor Log Profile
 private azure.monitor.logprofile  @defaults("id name location") {

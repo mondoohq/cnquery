@@ -53,6 +53,16 @@ func PtrStrSliceToInterface(value []*string) []interface{} {
 	return res
 }
 
+func PtrStrSliceToStr(value []*string) []string {
+	res := []string{}
+	for i := range value {
+		if value[i] != nil {
+			res = append(res, *value[i])
+		}
+	}
+	return res
+}
+
 func ToStringSlice(in *[]string) []interface{} {
 	if in == nil {
 		return []interface{}{}
@@ -77,6 +87,23 @@ func PtrSliceToInterface(in []*string) []interface{} {
 		if v != nil {
 		}
 		res = append(res, *v)
+	}
+
+	return res
+}
+
+func PtrMapSliceToStr(in map[string]*string) map[string]string {
+	if in == nil {
+		return map[string]string{}
+	}
+
+	res := map[string]string{}
+	for k, v := range in {
+		if v != nil {
+			res[k] = *v
+		} else {
+			res[k] = ""
+		}
 	}
 
 	return res
