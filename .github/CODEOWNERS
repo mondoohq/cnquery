@@ -1,0 +1,6 @@
+### mondoohq/cnquery CODEOWNERS
+
+# Markdown and resource updates should be reviewed by an editor
+*.lr @mondoohq/mondoo-editors
+*.md @mondoohq/mondoo-editors
+
