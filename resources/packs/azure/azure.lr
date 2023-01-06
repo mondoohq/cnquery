@@ -306,7 +306,7 @@ private azure.network.watcher @defaults("name location") {
 }
 
 // Azure Network Watcher Flow Log
-private azure.network.watcher.flowlog @defaults("id name location") {
+private azure.network.watcher.flowlog @defaults("name location") {
   // Network watcher flow log ID
   id string
   // Network watcher flow log name
