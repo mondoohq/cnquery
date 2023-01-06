@@ -598,11 +598,11 @@ private gcp.project.sqlService.instance @defaults("name") {
   // The database engine type and version
   databaseVersion string
   // Disk encryption configuration
-  diskEncryptionConfiguration gcp.project.sqlService.instance.diskEncryptionConfiguration
+  diskEncryptionConfiguration dict
   // Disk encryption status
-  diskEncryptionStatus gcp.project.sqlService.instance.diskEncryptionStatus
+  diskEncryptionStatus dict
   // The name and status of the failover replica
-  failoverReplica gcp.project.sqlService.instance.failoverReplica
+  failoverReplica dict
   // The Compute Engine zone that the instance is currently service from
   gceZone string
   // Instance type
@@ -646,43 +646,7 @@ private gcp.project.sqlService.instance.database @defaults("name") {
   // Name of the database
   name string
   // SQL Server database details
-  sqlserverDatabaseDetails gcp.project.sqlService.instance.database.sqlserverDatabaseDetails
-}
-
-// GCP Cloud SQL Instance SQL Server database details
-private gcp.project.sqlService.instance.database.sqlserverDatabaseDetails {
-  // Internal ID
-  id string
-  // Version of the SQL Server with which the database is to be made compatible
-  compatibilityLevel int
-  // Recovery model
-  recoveryModel string
-}
-
-// GCP Cloud SQL Instance Disk Encryption Configuration
-private gcp.project.sqlService.instance.diskEncryptionConfiguration {
-  // Internal ID
-  id string
-  // Name of KMS key for disk encryption
-  kmsKeyName string
-}
-
-// GCP Cloud SQL Instance Disk Encryption Status
-private gcp.project.sqlService.instance.diskEncryptionStatus {
-  // Internal ID
-  id string
-  // KMS key version used to encrypt the Cloud SQL instance
-  kmsKeyVersionName string
-}
-
-// GCP Cloud SQL Instance Failover Replica
-private gcp.project.sqlService.instance.failoverReplica @defaults("name available") {
-  // Internal ID
-  id string
-  // The availability status of the failover replica
-  available bool
-  // The name of the failover replica
-  name string
+  sqlserverDatabaseDetails dict
 }
 
 // GCP Cloud SQL Instance IP Mapping
@@ -706,7 +670,7 @@ private gcp.project.sqlService.instance.settings {
   // Specifies when the instance is activated
   activationPolicy string
   // Active Directory configuration, relevant only for Cloud SQL for SQL server
-  activeDirectoryConfig gcp.project.sqlService.instance.settings.activedirectoryconfig
+  activeDirectoryConfig dict
   // Availability type
   availabilityType string
   // The daily backup configuration for the instance
@@ -730,11 +694,11 @@ private gcp.project.sqlService.instance.settings {
   // Deny maintenance periods
   denyMaintenancePeriods []gcp.project.sqlService.instance.settings.denyMaintenancePeriod
   // Insights configuration
-  insightsConfig gcp.project.sqlService.instance.settings.insightsConfig
+  insightsConfig dict
   // The settings for IP Management
   ipConfiguration gcp.project.sqlService.instance.settings.ipConfiguration
   // The location preference settings
-  locationPreference gcp.project.sqlService.instance.settings.locationPreference
+  locationPreference dict
   // The maintenance window
   maintenanceWindow gcp.project.sqlService.instance.settings.maintenanceWindow
   // The local user password validation policy
@@ -746,7 +710,7 @@ private gcp.project.sqlService.instance.settings {
   // The version of instance settings
   settingsVersion int
   // SQL server specific audit configuration
-  sqlServerAuditConfig gcp.project.sqlService.instance.settings.sqlServerAuditConfig
+  sqlServerAuditConfig dict
   // Configuration to increase storage size automatically
   storageAutoResize bool
   // The maximum size to which storage capacity can be automatically increased
@@ -759,20 +723,12 @@ private gcp.project.sqlService.instance.settings {
   userLabels map[string]string
 }
 
-// GCP Cloud SQL Instance Settings Active Directory Configuration
-private gcp.project.sqlService.instance.settings.activedirectoryconfig @defaults("domain") {
-  // Internal ID
-  id string
-  // The name of the domain
-  domain string
-}
-
 // GCP Cloud SQL Instance Settings Backup Configuration
 private gcp.project.sqlService.instance.settings.backupconfiguration {
   // Internal ID
   id string
   // Backup retention settings
-  backupRetentionSettings gcp.project.sqlService.instance.settings.backupconfiguration.retentionsettings
+  backupRetentionSettings dict
   // Whether binary log is enabled
   binaryLogEnabled bool
   // Whether this configuration is enabled
@@ -787,16 +743,6 @@ private gcp.project.sqlService.instance.settings.backupconfiguration {
   transactionLogRetentionDays int
 }
 
-// GCP Cloud SQL Instance Settings Backup Configuration retention settings
-private gcp.project.sqlService.instance.settings.backupconfiguration.retentionsettings {
-  // Internal ID
-  id string
-  // Depending on the value of retentionUnit, this is used to determine if a backup needs to be deleted
-  retainedBackups int
-  // The unit retainedBackups represents
-  retentionUnit string
-}
-
 // GCP Cloud SQL Instance Settings Deny Maintenance Period
 private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
   // Internal ID
@@ -809,22 +755,6 @@ private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults
   time string
 }
 
-// GCP Cloud SQL Instance Settings Insights Configuration
-private gcp.project.sqlService.instance.settings.insightsConfig {
-  // Internal ID
-  id string
-  // Whether Query Insights feature is enabled
-  queryInsightsEnabled bool
-  // Number of query execution plans captured by Insights per minute for all queries combined
-  queryPlansPerMinute int
-  //  Maximum query length stored in bytes
-  queryStringLength int
-  // Whether Query Insights will record application tags from query when enabled.
-  recordApplicationTags bool
-  // Whether Query Insights will record client address when enabled.
-  recordClientAddress bool
-}
-
 // GCP Cloud SQL Instance Settings IP Configuration
 private gcp.project.sqlService.instance.settings.ipConfiguration {
   // Internal ID
@@ -832,37 +762,13 @@ private gcp.project.sqlService.instance.settings.ipConfiguration {
   // The name of the allocated IP range for the private IP Cloud SQL instance
   allocatedIpRange string
   // The list of external networks that are allowed to connect to the instance using the IP
-  authorizedNetworks []gcp.project.sqlService.instance.settings.ipConfiguration.aclEntry
+  authorizedNetworks []dict
   // Whether the instance is assigned a public IP address
   ipv4Enabled bool
   // The resource link for the VPC network from which the Cloud SQL instance is accessible for private IP
   privateNetwork string
   // Whether SSL connections over IP are enforced or not
   requireSsl bool
-}
-
-// GCP Cloud SQL Instance Settings IP Configuration Authorized Networks
-private gcp.project.sqlService.instance.settings.ipConfiguration.aclEntry {
-  // Internal ID
-  id string
-  // The time when this access control entry expires
-  expirationTime time
-  // A label to identify this entry
-  name string
-  // The allowlisted value for the access control list
-  value string
-}
-
-// GCP Cloud SQL Instance Settings Location Preferences
-private gcp.project.sqlService.instance.settings.locationPreference @defaults("zone") {
-  // Internal ID
-  id string
-  // The App Engine application to follow
-  followGaeApplication string
-  // The preferred Compute Engine zone for the secondary/failover
-  secondaryZone string
-  // The preferred Compute Engine zone for the primary instance
-  zone string
 }
 
 // GCP Cloud SQL Instance Settings Maintenance Window
@@ -893,18 +799,6 @@ private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defau
   passwordChangeInterval string
   // Number of previous password that cannot be reused
   reuseInterval int
-}
-
-// GCP Cloud SQL Instance Settings SQL Server Audit Configuration
-private gcp.project.sqlService.instance.settings.sqlServerAuditConfig {
-  // Internal ID
-  id string
-  // The name of the destination bucket
-  bucket string
-  // How long to keep generated audit files
-  retentionInterval string
-  // How often to upload generated audit files
-  uploadInterval string
 }
 
 // GCP Big Query
