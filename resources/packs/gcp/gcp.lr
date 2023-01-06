@@ -1849,8 +1849,6 @@ private gcp.project.dataprocService.cluster.config.lifecycle {
   autoDeleteTime string
   // Lifetime duration of the cluster
   autoDeleteTtl string
-  // Time when the cluster will be auto-paused
-  idleDeleteTime string
   // Duration to keep the cluster alive while idling
   idleDeleteTtl string
   // Time when the cluster will be auto-resumed
