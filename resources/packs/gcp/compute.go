@@ -989,8 +989,61 @@ func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() ([]interface{}, error) {
-	// TODO: implement
-	return nil, errors.New("not implemented")
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	subnetUrls, err := g.SubnetworkUrls()
+	if err != nil {
+		return nil, err
+	}
+	type resourceId struct {
+		Project string
+		Region  string
+		Name    string
+	}
+	ids := make([]resourceId, 0, len(subnetUrls))
+	for _, subnetUrl := range subnetUrls {
+		// Format is https://www.googleapis.com/compute/v1/projects/mondoo-edge/regions/us-central1/subnetworks/mondoo-gke-cluster-2-subnet
+		params := strings.TrimPrefix(subnetUrl.(string), "https://www.googleapis.com/compute/v1/")
+		parts := strings.Split(params, "/")
+		ids = append(ids, resourceId{Project: parts[1], Region: parts[3], Name: parts[5]})
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+	res := []interface{}{}
+	wg.Add(len(ids))
+	mux := &sync.Mutex{}
+	for _, id := range ids {
+		go func(id resourceId) {
+			defer wg.Done()
+			subnet, err := computeSvc.Subnetworks.Get(id.Project, id.Region, id.Name).Do()
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+			mqlSubnet, err := newMqlSubnetwork(id.Project, nil, g.MotorRuntime, subnet)
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+			mux.Lock()
+			res = append(res, mqlSubnet)
+			mux.Unlock()
+		}(id)
+	}
+	wg.Wait()
+	return res, nil
 }
 
 func (g *mqlGcpProjectComputeService) GetNetworks() ([]interface{}, error) {
@@ -1044,6 +1097,7 @@ func (g *mqlGcpProjectComputeService) GetNetworks() ([]interface{}, error) {
 				"peerings", peerings,
 				"routingMode", routingMode,
 				"mode", networkMode(network),
+				"subnetworkUrls", core.StrSliceToInterface(network.Subnetworks),
 			)
 			if err != nil {
 				return err
