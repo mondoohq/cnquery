@@ -55,6 +55,8 @@ gcp.project @defaults("name") {
   essentialContacts() []gcp.essentialContact
   // API keys
   apiKeys() []gcp.project.apiKey
+  // Logging resources
+  logging() gcp.project.loggingservice
 }
 
 // GCP Service
@@ -1310,4 +1312,49 @@ private gcp.project.apiKey.restrictions {
   iosKeyRestrictions dict
   // The IP addresses that are allowed to use the key
   serverKeyRestrictions dict
+}
+// GCP Logging resources
+private gcp.project.loggingservice {
+  // Project ID
+  projectId string
+  // List of logging buckets
+  buckets() []gcp.project.loggingservice.bucket
+}
+
+// GCP Logging bucket
+private gcp.project.loggingservice.bucket @defaults("name") {
+  // Project ID
+  projectId string
+  // CMEK settings of the log bucket
+  cmekSettings dict
+  // Creation timestamp
+  created time
+  // Description of the bucket
+  description string
+  // List of indexed fields and related configuration data
+  indexConfigs []gcp.project.loggingservice.bucket.indexConfig
+  // Bucket lifecycle state
+  lifecycleState string
+  // Whether the bucket is locked
+  locked bool
+  // Bucket name
+  name string
+  // Log entry field paths that are denied access in this bucket
+  restrictedFields []string
+  // Logs will be retained by default for this amount of time, after which they will automatically be deleted
+  retentionDays int
+  // Last update timestamp of the bucket
+  updated time
+}
+
+// GCP Logging bucket index config
+private gcp.project.loggingservice.bucket.indexConfig {
+  // Internal ID
+  id string
+  // Creation timestamp
+  created time
+  // Log entry field path to index
+  fieldPath string
+  // Type of data in this index
+  type string
 }

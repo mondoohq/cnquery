@@ -48,3 +48,10 @@ kmsService
 vulnerabilityassessmentsettings
 Sas
 retentionpolicy
+ingressbackend
+ingresshttprulepath
+ingressresourceref
+ingressrule
+ingressservicebackend
+cmek
+loggingservice
