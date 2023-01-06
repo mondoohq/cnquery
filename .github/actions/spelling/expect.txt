@@ -49,3 +49,10 @@ vulnerabilityassessmentsettings
 Sas
 retentionpolicy
 activitylog
+ingressbackend
+ingresshttprulepath
+ingressresourceref
+ingressrule
+ingressservicebackend
+cmek
+loggingservice
