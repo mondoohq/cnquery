@@ -48,6 +48,7 @@ kmsService
 vulnerabilityassessmentsettings
 Sas
 retentionpolicy
+activitylog
 ingressbackend
 ingresshttprulepath
 ingressresourceref

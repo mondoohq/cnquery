@@ -1027,6 +1027,37 @@ private azure.keyvault.secret  @defaults("id secretName") {
 azure.monitor {
   // List of log profiles
   logProfiles() []azure.monitor.logprofile
+  // List of diagnostic settings for the subscription
+  diagnosticSettings() []azure.monitor.diagnosticsetting
+  // Activity log for the monitor
+  activityLog() azure.monitor.activitylog
+}
+
+// Azure Monitor Activity Log
+private azure.monitor.activitylog {
+  alerts() []azure.monitor.activitylog.alert
+}
+
+// Azure Monitor Activity Log Alert
+private azure.monitor.activitylog.alert {
+  // ID of the activity log alert
+  id string
+  // Type of the activity log alert
+  type string
+  // Name of the activity log alert
+  name string
+  // Description of the activity log alert
+  description string
+  // Conditions for the activity log alert, all of which must be met
+  conditions []dict
+  // Location of the alert
+  location string
+  // Tags of the alert
+  tags map[string]string
+  // Actions that activate when the conditions are met
+  actions []dict
+  // List of resource IDs that must be present to trigger the alert
+  scopes []string
 }
 
 // Azure Monitor Log Profile

@@ -73,6 +73,134 @@ func (a *mqlAzureMonitor) GetLogProfiles() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAzureMonitor) GetDiagnosticSettings() ([]interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	return diagnosticsSettings(a.MotorRuntime, "/subscriptions/"+at.SubscriptionID())
+}
+
+func (a *mqlAzureMonitor) GetActivityLog() (interface{}, error) {
+	return a.MotorRuntime.CreateResource("azure.monitor.activitylog")
+}
+
+func (a *mqlAzureMonitorActivitylog) id() (string, error) {
+	return "azure.monitor.activitylog", nil
+}
+
+func (a *mqlAzureMonitorActivitylogAlert) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureMonitorActivitylog) GetAlerts() ([]interface{}, error) {
+	// fetch the details
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := monitor.NewActivityLogAlertsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	pager := client.NewListBySubscriptionIDPager(&monitor.ActivityLogAlertsClientListBySubscriptionIDOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		type mqlAlertAction struct {
+			ActionGroupId     string            `json:"actionGroupId"`
+			WebhookProperties map[string]string `json:"webhookProperties"`
+		}
+
+		type mqlAlertLeafCondition struct {
+			FieldName   string   `json:"fieldName"`
+			Equals      string   `json:"equals"`
+			ContainsAny []string `json:"containsAny"`
+		}
+
+		type mqlAlertCondition struct {
+			FieldName   string                  `json:"fieldName"`
+			Equals      string                  `json:"equals"`
+			ContainsAny []string                `json:"containsAny"`
+			AnyOf       []mqlAlertLeafCondition `json:"anyOf"`
+		}
+
+		for _, entry := range page.Value {
+			actions := []mqlAlertAction{}
+			conditions := []mqlAlertCondition{}
+
+			for _, act := range entry.Properties.Actions.ActionGroups {
+				mqlAction := mqlAlertAction{
+					ActionGroupId:     core.ToString(act.ActionGroupID),
+					WebhookProperties: core.PtrMapSliceToStr(act.WebhookProperties),
+				}
+				actions = append(actions, mqlAction)
+			}
+			for _, cond := range entry.Properties.Condition.AllOf {
+				anyOf := []mqlAlertLeafCondition{}
+				for _, leaf := range cond.AnyOf {
+					mqlAnyOfLeaf := mqlAlertLeafCondition{
+						FieldName:   core.ToString(leaf.Field),
+						Equals:      core.ToString(leaf.Equals),
+						ContainsAny: core.PtrStrSliceToStr(leaf.ContainsAny),
+					}
+					anyOf = append(anyOf, mqlAnyOfLeaf)
+				}
+				mqlCondition := mqlAlertCondition{
+					FieldName:   core.ToString(cond.Field),
+					Equals:      core.ToString(cond.Equals),
+					ContainsAny: core.PtrStrSliceToStr(cond.ContainsAny),
+					AnyOf:       anyOf,
+				}
+				conditions = append(conditions, mqlCondition)
+			}
+
+			actionsDict := []interface{}{}
+			for _, a := range actions {
+				dict, err := core.JsonToDict(a)
+				if err != nil {
+					return nil, err
+				}
+				actionsDict = append(actionsDict, dict)
+			}
+			conditionsDict := []interface{}{}
+			for _, c := range conditions {
+				dict, err := core.JsonToDict(c)
+				if err != nil {
+					return nil, err
+				}
+				conditionsDict = append(conditionsDict, dict)
+			}
+			alert, err := a.MotorRuntime.CreateResource("azure.monitor.activitylog.alert",
+				"conditions", conditionsDict,
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"actions", actionsDict,
+				"description", core.ToString(entry.Properties.Description),
+				"scopes", core.PtrSliceToInterface(entry.Properties.Scopes),
+				"type", core.ToString(entry.Type),
+				"tags", azureTagsToInterface(entry.Tags),
+				"location", core.ToString(entry.Location),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, alert)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureMonitorLogprofile) id() (string, error) {
 	return a.Id()
 }
