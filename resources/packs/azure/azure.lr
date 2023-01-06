@@ -303,6 +303,8 @@ private azure.network.watcher @defaults("name location") {
   properties dict
   // Network watcher flow logs
   flowLogs() []azure.network.watcher.flowlog
+  // Network watcher provisioning state
+  provisioningState string
 }
 
 // Azure Network Watcher Flow Log

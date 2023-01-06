@@ -283,6 +283,7 @@ func (a *mqlAzureNetwork) GetWatchers() ([]interface{}, error) {
 				"type", core.ToString(watcher.Type),
 				"etag", core.ToString(watcher.Etag),
 				"properties", properties,
+				"provisioningState", core.ToString((*string)(watcher.Properties.ProvisioningState)),
 			)
 			if err != nil {
 				return nil, err

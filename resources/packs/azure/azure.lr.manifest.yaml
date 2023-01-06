@@ -358,12 +358,12 @@ resources:
   azure.network.watcher:
     fields:
       etag: {}
-      flowLog: {}
       flowLogs: {}
       id: {}
       location: {}
       name: {}
       properties: {}
+      provisioningState: {}
       tags: {}
       type: {}
     is_private: true
@@ -380,9 +380,7 @@ resources:
       id: {}
       location: {}
       name: {}
-      properties: {}
       provisioningState: {}
-      provisionngState: {}
       retentionPolicy: {}
       storageAccountId: {}
       tags: {}
