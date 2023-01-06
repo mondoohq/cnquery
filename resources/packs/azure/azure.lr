@@ -683,13 +683,13 @@ private azure.sql.databaseusage @defaults("id name") {
   nextResetTime() time
 }
 
-// Azure PostgreSQL
+// Azure Database for PostgreSQL
 azure.postgresql {
    // List of PostgreSQL servers
    servers() []azure.postgresql.server
 }
 
-// Azure PostgreSQL Server
+// Azure Database for PostgreSQL Server
 private azure.postgresql.server  @defaults("id name location") {
   // PostgreSQL server ID
   id string
@@ -711,7 +711,7 @@ private azure.postgresql.server  @defaults("id name location") {
   firewallRules() []azure.sql.firewallrule
 }
 
-// Azure PostgreSQL Database
+// Azure Database for PostgreSQL Database
 private azure.postgresql.database  @defaults("id name") {
   // PostgreSQL database ID
   id string
@@ -725,14 +725,15 @@ private azure.postgresql.database  @defaults("id name") {
   collation string
 }
 
-// Azure MySQL
+// Azure Database for MySQL
 azure.mysql {
   // List of MySQL servers
   servers() []azure.mysql.server
+  // List of Flexible MySQL servers
   flexibleServers() []azure.mysql.flexibleServer
 }
 
-// Azure MySQL Server
+// Azure Database for MySQL Server
 private azure.mysql.server @defaults("id name location") {
   // MySQL server ID
   id string
@@ -754,7 +755,7 @@ private azure.mysql.server @defaults("id name location") {
   firewallRules() []azure.sql.firewallrule
 }
 
-// Azure MySQL Database
+// Azure Database for MySQL Database
 private azure.mysql.database @defaults("id name") {
   // MySQL database ID
   id string
@@ -768,7 +769,7 @@ private azure.mysql.database @defaults("id name") {
   collation string
 }
 
-// Azure MySQL Flexible Server
+// Azure Database for MySQL Flexible Server
 private azure.mysql.flexibleServer @defaults("id name location") {
   // MySQL flexible server ID
   id string
@@ -790,13 +791,13 @@ private azure.mysql.flexibleServer @defaults("id name location") {
   firewallRules() []azure.sql.firewallrule
 }
 
-// Azure MariaDB
+// Azure Database for MariaDB
 azure.mariadb {
   // List of MariaDB servers
   servers() []azure.mariadb.server
 }
 
-// Azure MariaDB Server
+// Azure Database for MariaDB Server
 private azure.mariadb.server  @defaults("id name location") {
   // MariaDB server ID
   id string
@@ -818,7 +819,7 @@ private azure.mariadb.server  @defaults("id name location") {
   firewallRules() []azure.sql.firewallrule
 }
 
-// Azure MariaDB Database
+// Azure Database for MariaDB Database
 private azure.mariadb.database  @defaults("id name") {
   // MariaDB database ID
   id string
