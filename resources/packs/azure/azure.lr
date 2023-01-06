@@ -663,7 +663,7 @@ private azure.sql.database @defaults("id name") {
   usage() []azure.sql.databaseusage
 }
 
-// Azure MS Database Usage
+// Azure SQL Database Usage
 private azure.sql.databaseusage @defaults("id name") {
   // Database usage ID
   id string
