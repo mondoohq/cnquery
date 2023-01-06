@@ -1,4 +1,6 @@
 ### mondoohq/cnquery CODEOWNERS
 
-# All resource updates require editorial review by Docs Editor Letha with backup of Tim
-*.lr @misterpantz @tas50
+# Markdown and resource updates should be reviewed by an editor
+*.lr @mondoohq/mondoo-editors
+*.md @mondoohq/mondoo-editors
+
