@@ -17,7 +17,7 @@ func init() {
 func microsoftProvider(t providers.Instance) (*microsoft.Provider, error) {
 	at, ok := t.(*microsoft.Provider)
 	if !ok {
-		return nil, errors.New("microsoft resource is not supported on this transport")
+		return nil, errors.New("microsoft resource is not supported on this provider")
 	}
 	return at, nil
 }
