@@ -146,7 +146,13 @@ func (print *Printer) assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 	if assessment.Actual != nil {
 		res.WriteString(nextIndent)
 		res.WriteString("actual:   ")
-		res.WriteString(print.Primitive(assessment.Actual, codeID, bundle, nextIndent))
+
+		checksum := bundle.CodeV2.Checksums[assessment.Ref]
+		if _, ok := bundle.AutoExpand[checksum]; ok {
+			res.WriteString(print.Primitive(assessment.Actual, checksum, bundle, nextIndent))
+		} else {
+			res.WriteString(print.Primitive(assessment.Actual, codeID, bundle, nextIndent))
+		}
 	}
 
 	return res.String()
@@ -448,7 +454,7 @@ func (print *Printer) autoExpand(blockRef uint64, data interface{}, bundle *llx.
 			return "[]"
 		}
 
-		prefix := "  "
+		prefix := indent + "  "
 		res.WriteString("[\n")
 		for i := range arr {
 			c := print.autoExpand(blockRef, arr[i], bundle, prefix)

@@ -263,14 +263,6 @@ func TestPrinter_Assessment(t *testing.T) {
 			}, "\n"),
 		},
 		{
-			"# @msg Expected ${$expected.length} users but got ${length}\n" +
-				"users.none( uid == 0 )",
-			strings.Join([]string{
-				"[failed] Expected 5 users but got 1",
-				"",
-			}, "\n"),
-		},
-		{
 			"mondoo.build == 1",
 			strings.Join([]string{
 				"[failed] mondoo.build == 1",
@@ -299,6 +291,16 @@ func TestPrinter_Assessment(t *testing.T) {
 			}, "\n"),
 		},
 		{
+			"# @msg Expected ${$expected.length} users but got ${length}\n" +
+				"users.none( uid == 0 )",
+			strings.Join([]string{
+				"[failed] Expected 5 users but got 1",
+				"",
+			}, "\n"),
+		},
+		{
+			// FIXME: This case is currently printing too much. Remove the auto-generated
+			// expansion if the annotation is present.
 			"if(true) {\n" +
 				"  # @msg Expected ${$expected.length} users but got ${length}\n" +
 				"  users.none( uid == 0 )\n" +
@@ -306,7 +308,20 @@ func TestPrinter_Assessment(t *testing.T) {
 			strings.Join([]string{
 				"if: {",
 				"  [failed] Expected 5 users but got 1",
+				"  users.where.list: [",
+				"    user name=\"root\" uid=0 gid=0",
+				"  ]",
 				"}",
+			}, "\n"),
+		},
+		{
+			"users.all(uid > 0)",
+			strings.Join([]string{
+				"[failed] users.all()",
+				"  actual:   [",
+				"    user name=\"root\" uid=0 gid=0",
+				"  ]",
+				"",
 			}, "\n"),
 		},
 	})

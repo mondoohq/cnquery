@@ -28,6 +28,15 @@ func (b *Block) ReplaceEntrypoint(old uint64, nu uint64) {
 	}
 }
 
+func (b *Block) ReplaceDatapoint(old uint64, nu uint64) {
+	for i := range b.Datapoints {
+		if b.Datapoints[i] == old {
+			b.Datapoints[i] = nu
+			return
+		}
+	}
+}
+
 // LastChunk is the last chunk in the list or nil
 func (b *Block) LastChunk() *Chunk {
 	max := len(b.Chunks)
@@ -177,12 +186,14 @@ func (l *CodeV2) UpdateID() {
 
 // RefDatapoints returns the additional datapoints that inform a ref.
 // Typically used when writing tests and providing additional data when the test fails.
-func (l *CodeV2) RefDatapoints(ref uint64) []uint64 {
-	if assertion, ok := l.Assertions[ref]; ok {
+func (b *CodeBundle) RefDatapoints(ref uint64) []uint64 {
+	code := b.CodeV2
+
+	if assertion, ok := code.Assertions[ref]; ok {
 		return assertion.Refs
 	}
 
-	chunk := l.Chunk(ref)
+	chunk := code.Chunk(ref)
 
 	if chunk.Id == "if" && chunk.Function != nil && len(chunk.Function.Args) != 0 {
 		var ok bool
@@ -190,7 +201,7 @@ func (l *CodeV2) RefDatapoints(ref uint64) []uint64 {
 		if !ok {
 			return nil
 		}
-		chunk = l.Chunk(ref)
+		chunk = code.Chunk(ref)
 	}
 
 	if chunk.Id == "" {
@@ -204,7 +215,14 @@ func (l *CodeV2) RefDatapoints(ref uint64) []uint64 {
 
 	switch chunk.Id {
 	case "$all", "$one", "$any", "$none":
-		return []uint64{ref - 1}
+		dataRef := chunk.Function.Binding
+		// auto-generated refs have their own datapoints generated, so we don't need
+		// anything else here
+		autoRef := code.findAutoExpandedTarget(b, dataRef)
+		if autoRef != 0 {
+			return []uint64{}
+		}
+		return []uint64{dataRef}
 	}
 
 	if _, ok := ComparableLabel(chunk.Id); !ok {
@@ -217,7 +235,7 @@ func (l *CodeV2) RefDatapoints(ref uint64) []uint64 {
 	// so 2 jobs: check the left, check the right. if it's static, ignore. if not, add
 	left := chunk.Function.Binding
 	if left != 0 {
-		leftChunk := l.Chunk(left)
+		leftChunk := code.Chunk(left)
 		if leftChunk != nil && !leftChunk.isStatic() {
 			res = append(res, left)
 		}
@@ -286,6 +304,34 @@ func (l *CodeV2) returnValues(bundle *CodeBundle, lookup func(s string) (*RawRes
 	}
 
 	return res
+}
+
+// Given the bundle and the searched for ref for an auto-expanded chunk,
+// find the target it was auto-expanded to.
+// TODO: this entire handling needs a rework. It is to tedious to do this manually.
+func (l *CodeV2) findAutoExpandedTarget(bundle *CodeBundle, search uint64) uint64 {
+	reverseLookup := make(map[string]uint64, len(l.Checksums))
+	for k, v := range l.Checksums {
+		reverseLookup[v] = k
+	}
+
+	for checksum := range bundle.AutoExpand {
+		ref, ok := reverseLookup[checksum]
+		if !ok {
+			continue
+		}
+
+		chunk := l.Chunk(ref)
+		if chunk == nil || chunk.Function == nil {
+			continue
+		}
+
+		if chunk.Function.Binding == search {
+			return ref
+		}
+	}
+
+	return 0
 }
 
 func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup func(s string) (*RawResult, bool)) *AssessmentItem {
@@ -398,12 +444,20 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 
 		if !truthy {
 			listRef := chunk.Function.Binding
-			list, ok := lookup(code.Checksums[listRef])
+
+			autoRef := l.findAutoExpandedTarget(bundle, listRef)
+			if autoRef != 0 {
+				listRef = autoRef
+			}
+
+			checksum = code.Checksums[listRef]
+			list, ok := lookup(checksum)
 			if !ok {
 				res.Error = "cannot find value for assessment (" + res.Operation + ")"
 				return &res
 			}
 
+			res.Ref = listRef
 			res.Actual = list.Result().Data
 		} else {
 			res.Actual = BoolPrimitive(true)

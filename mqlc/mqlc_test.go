@@ -1051,6 +1051,27 @@ func TestCompiler_ResourceExpansion(t *testing.T) {
 			}, res.CodeV2.Blocks[1].Chunks[1])
 		})
 	})
+
+	cmd = "users.all( uid > 0 )"
+	t.Run(cmd, func(t *testing.T) {
+		compileT(t, cmd, func(res *llx.CodeBundle) {
+			assertFunction(t, "users", nil, res.CodeV2.Blocks[0].Chunks[0])
+			assertFunction(t, "{}", &llx.Function{
+				Binding: (1 << 32) | 4,
+				Type:    string(types.Array(types.Block)),
+				Args:    []*llx.Primitive{llx.FunctionPrimitive(3 << 32)},
+			}, res.CodeV2.Blocks[0].Chunks[5])
+
+			assertFunction(t, "name", &llx.Function{
+				Binding: (3 << 32) | 1,
+				Type:    string(types.String),
+			}, res.CodeV2.Blocks[2].Chunks[1])
+
+			assert.Equal(t, map[string]uint64{res.CodeV2.Checksums[1<<32|6]: 3 << 32}, res.AutoExpand)
+			assert.Equal(t, []uint64{1<<32 | 5}, res.CodeV2.Blocks[0].Entrypoints)
+			assert.Equal(t, []uint64{1<<32 | 6}, res.CodeV2.Blocks[0].Datapoints)
+		})
+	})
 }
 
 func TestCompiler_ArrayResource(t *testing.T) {
