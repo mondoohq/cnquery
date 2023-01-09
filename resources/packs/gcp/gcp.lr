@@ -57,6 +57,8 @@ gcp.project @defaults("name") {
   apiKeys() []gcp.project.apiKey
   // Logging resources
   logging() gcp.project.loggingservice
+  // GCP Cloud functions
+  cloudFunctions() []gcp.project.cloudFunction
 }
 
 // GCP Service
@@ -1357,4 +1359,14 @@ private gcp.project.loggingservice.bucket.indexConfig {
   fieldPath string
   // Type of data in this index
   type string
+}
+
+// GCP Cloud function
+private gcp.project.cloudFunction {
+  // Project ID
+  projectId string
+  // Cloud function name
+  name string
+  // Cloud function description
+  description string
 }
