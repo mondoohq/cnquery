@@ -1018,6 +1018,7 @@ func (g *mqlGcpCompute) GetNetworks() ([]interface{}, error) {
 				"created", parseTime(network.CreationTimestamp),
 				"peerings", peerings,
 				"routingMode", routingMode,
+				"mode", networkMode(network),
 			)
 			if err != nil {
 				return err
@@ -1246,4 +1247,14 @@ func (g *mqlGcpCompute) GetRouters() ([]interface{}, error) {
 
 	wg.Wait()
 	return res, nil
+}
+
+func networkMode(n *compute.Network) string {
+	if n.IPv4Range != "" {
+		return "legacy"
+	} else if n.AutoCreateSubnetworks {
+		return "auto"
+	} else {
+		return "custom"
+	}
 }
