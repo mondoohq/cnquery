@@ -16,7 +16,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpCompute) init(args *resources.Args) (*resources.Args, GcpCompute, error) {
+func (g *mqlGcpProjectComputeService) init(args *resources.Args) (*resources.Args, GcpProjectComputeService, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -32,7 +32,18 @@ func (g *mqlGcpCompute) init(args *resources.Args) (*resources.Args, GcpCompute,
 	return args, nil, nil
 }
 
-func (g *mqlGcpCompute) id() (string, error) {
+func (g *mqlGcpProject) GetCompute() (interface{}, error) {
+	projectId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.computeService",
+		"projectId", projectId,
+	)
+}
+
+func (g *mqlGcpProjectComputeService) id() (string, error) {
 	id, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -40,15 +51,15 @@ func (g *mqlGcpCompute) id() (string, error) {
 	return "gcp.compute/" + id, nil
 }
 
-func (g *mqlGcpComputeRegion) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceRegion) id() (string, error) {
 	id, err := g.Name()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.compute.region/" + id, nil
+	return "gcp.project.computeService.region/" + id, nil
 }
 
-func (g *mqlGcpComputeRegion) init(args *resources.Args) (*resources.Args, GcpComputeRegion, error) {
+func (g *mqlGcpProjectComputeServiceRegion) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceRegion, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -64,7 +75,7 @@ func (g *mqlGcpComputeRegion) init(args *resources.Args) (*resources.Args, GcpCo
 	return args, nil, nil
 }
 
-func (g *mqlGcpCompute) GetRegions() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetRegions() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -104,7 +115,7 @@ func (g *mqlGcpCompute) GetRegions() ([]interface{}, error) {
 				quotas[q.Metric] = q.Limit
 			}
 
-			mqlRegion, err := g.MotorRuntime.CreateResource("gcp.compute.region",
+			mqlRegion, err := g.MotorRuntime.CreateResource("gcp.project.computeService.region",
 				"id", strconv.FormatInt(int64(r.Id), 10),
 				"name", r.Name,
 				"description", r.Description,
@@ -126,20 +137,20 @@ func (g *mqlGcpCompute) GetRegions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeZone) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceZone) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.compute.zone/" + id, nil
+	return "gcp.project.computeService.zone/" + id, nil
 }
 
-func (g *mqlGcpComputeZone) GetRegion() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceZone) GetRegion() (interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpCompute) GetZones() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetZones() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -166,7 +177,7 @@ func (g *mqlGcpCompute) GetZones() ([]interface{}, error) {
 	req := computeSvc.Zones.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.ZoneList) error {
 		for _, zone := range page.Items {
-			mqlZone, err := g.MotorRuntime.CreateResource("gcp.compute.zone",
+			mqlZone, err := g.MotorRuntime.CreateResource("gcp.project.computeService.zone",
 				"id", strconv.FormatInt(int64(zone.Id), 10),
 				"name", zone.Name,
 				"description", zone.Description,
@@ -186,7 +197,7 @@ func (g *mqlGcpCompute) GetZones() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeMachineType) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceMachineType) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -197,16 +208,16 @@ func (g *mqlGcpComputeMachineType) id() (string, error) {
 		return "", err
 	}
 
-	return "gcp.compute.machineType/" + projectId + "/" + id, nil
+	return "gcp.project.computeService.machineType/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpComputeMachineType) GetZone() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceMachineType) GetZone() (interface{}, error) {
 	// NOTE: this should never be called since we add the zone during construction of the resource
 	return nil, errors.New("not implemented")
 }
 
-func newMqlMachineType(runtime *resources.Runtime, entry *compute.MachineType, projectId string, zone GcpComputeZone) (interface{}, error) {
-	return runtime.CreateResource("gcp.compute.machineType",
+func newMqlMachineType(runtime *resources.Runtime, entry *compute.MachineType, projectId string, zone GcpProjectComputeServiceZone) (interface{}, error) {
+	return runtime.CreateResource("gcp.project.computeService.machineType",
 		"id", strconv.FormatInt(int64(entry.Id), 10),
 		"projectId", projectId,
 		"name", entry.Name,
@@ -221,7 +232,7 @@ func newMqlMachineType(runtime *resources.Runtime, entry *compute.MachineType, p
 	)
 }
 
-func (g *mqlGcpCompute) GetMachineTypes() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetMachineTypes() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -256,13 +267,13 @@ func (g *mqlGcpCompute) GetMachineTypes() ([]interface{}, error) {
 	mux := &sync.Mutex{}
 
 	for i := range zones {
-		z := zones[i].(GcpComputeZone)
+		z := zones[i].(GcpProjectComputeServiceZone)
 		zoneName, err := z.Name()
 		if err != nil {
 			return nil, err
 		}
 
-		go func(svc *compute.Service, projectId string, zone GcpComputeZone, zoneName string) {
+		go func(svc *compute.Service, projectId string, zone GcpProjectComputeServiceZone, zoneName string) {
 			req := computeSvc.MachineTypes.List(projectId, zoneName)
 			if err := req.Pages(ctx, func(page *compute.MachineTypeList) error {
 				for _, machinetype := range page.Items {
@@ -286,7 +297,7 @@ func (g *mqlGcpCompute) GetMachineTypes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeInstance) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceInstance) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -297,10 +308,10 @@ func (g *mqlGcpComputeInstance) id() (string, error) {
 		return "", err
 	}
 
-	return "gcp.compute.instance/" + projectId + "/" + id, nil
+	return "gcp.project.computeService.instance/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpComputeInstance) GetMachineType() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceInstance) GetMachineType() (interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -350,7 +361,7 @@ func (g *mqlGcpComputeInstance) GetMachineType() (interface{}, error) {
 }
 
 func newMqlServiceAccount(runtime *resources.Runtime, sa *compute.ServiceAccount) (interface{}, error) {
-	return runtime.CreateResource("gcp.compute.serviceaccount",
+	return runtime.CreateResource("gcp.project.computeService.serviceaccount",
 		"email", sa.Email,
 		"scopes", core.StrSliceToInterface(sa.Scopes),
 	)
@@ -363,7 +374,7 @@ func newMqlAttachedDisk(id string, projectId string, runtime *resources.Runtime,
 		guestOsFeatures = append(guestOsFeatures, entry.Type)
 	}
 
-	mqlAttachedDisk, err := runtime.CreateResource("gcp.compute.attachedDisk",
+	mqlAttachedDisk, err := runtime.CreateResource("gcp.project.computeService.attachedDisk",
 		"id", id,
 		"projectId", projectId,
 		"architecture", attachedDisk.Architecture,
@@ -386,7 +397,7 @@ func newMqlAttachedDisk(id string, projectId string, runtime *resources.Runtime,
 	return mqlAttachedDisk, nil
 }
 
-func (g *mqlGcpComputeAttachedDisk) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceAttachedDisk) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -397,10 +408,10 @@ func (g *mqlGcpComputeAttachedDisk) id() (string, error) {
 		return "", err
 	}
 
-	return "gcp.compute.attachedDisk/" + projectId + "/" + id, nil
+	return "gcp.project.computeService.attachedDisk/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpComputeAttachedDisk) GetSource() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceAttachedDisk) GetSource() (interface{}, error) {
 	entry, ok := g.MqlResource().Cache.Load("_attachedDiskSource")
 	if !ok {
 		return nil, errors.New("could not find persistent disk")
@@ -412,7 +423,7 @@ func (g *mqlGcpComputeAttachedDisk) GetSource() (interface{}, error) {
 	return nil, nil
 }
 
-func newMqlInstance(projectId string, zone GcpComputeZone, runtime *resources.Runtime, instance *compute.Instance) (GcpComputeInstance, error) {
+func newMqlInstance(projectId string, zone GcpProjectComputeServiceZone, runtime *resources.Runtime, instance *compute.Instance) (GcpProjectComputeServiceInstance, error) {
 	metadata := map[string]string{}
 	for m := range instance.Metadata.Items {
 		item := instance.Metadata.Items[m]
@@ -500,7 +511,7 @@ func newMqlInstance(projectId string, zone GcpComputeZone, runtime *resources.Ru
 		}
 	}
 
-	entry, err := runtime.CreateResource("gcp.compute.instance",
+	entry, err := runtime.CreateResource("gcp.project.computeService.instance",
 		"id", instanceId,
 		"projectId", projectId,
 		"name", instance.Name,
@@ -544,10 +555,10 @@ func newMqlInstance(projectId string, zone GcpComputeZone, runtime *resources.Ru
 	if err != nil {
 		return nil, err
 	}
-	return entry.(GcpComputeInstance), nil
+	return entry.(GcpProjectComputeServiceInstance), nil
 }
 
-func (g *mqlGcpCompute) GetInstances() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetInstances() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -582,12 +593,12 @@ func (g *mqlGcpCompute) GetInstances() ([]interface{}, error) {
 	mux := &sync.Mutex{}
 
 	for i := range zones {
-		z := zones[i].(GcpComputeZone)
+		z := zones[i].(GcpProjectComputeServiceZone)
 		zoneName, err := z.Name()
 		if err != nil {
 			return nil, err
 		}
-		go func(svc *compute.Service, project string, zone GcpComputeZone, zoneName string) {
+		go func(svc *compute.Service, project string, zone GcpProjectComputeServiceZone, zoneName string) {
 			req := computeSvc.Instances.List(projectId, zoneName)
 			if err := req.Pages(ctx, func(page *compute.InstanceList) error {
 				for _, instance := range page.Items {
@@ -614,15 +625,15 @@ func (g *mqlGcpCompute) GetInstances() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeServiceaccount) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceServiceaccount) id() (string, error) {
 	email, err := g.Email()
 	if err != nil {
 		return "", nil
 	}
-	return "gcp.compute.serviceaccount/" + email, nil
+	return "gcp.project.computeService.serviceaccount/" + email, nil
 }
 
-func (g *mqlGcpComputeDisk) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceDisk) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", nil
@@ -631,12 +642,12 @@ func (g *mqlGcpComputeDisk) id() (string, error) {
 	return "gcloud.compute.disk/" + id, nil
 }
 
-func (g *mqlGcpComputeDisk) GetZone() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceDisk) GetZone() (interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpCompute) GetDisks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetDisks() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -671,13 +682,13 @@ func (g *mqlGcpCompute) GetDisks() ([]interface{}, error) {
 
 	var result error
 	for i := range zones {
-		z := zones[i].(GcpComputeZone)
+		z := zones[i].(GcpProjectComputeServiceZone)
 		zoneName, err := z.Name()
 		if err != nil {
 			return nil, err
 		}
 
-		go func(svc *compute.Service, project string, zone GcpComputeZone, zoneName string) {
+		go func(svc *compute.Service, project string, zone GcpProjectComputeServiceZone, zoneName string) {
 			req := computeSvc.Disks.List(projectId, zoneName)
 			if err := req.Pages(ctx, func(page *compute.DiskList) error {
 				for _, disk := range page.Items {
@@ -687,7 +698,7 @@ func (g *mqlGcpCompute) GetDisks() ([]interface{}, error) {
 						guestOsFeatures = append(guestOsFeatures, entry.Type)
 					}
 
-					mqlDisk, err := g.MotorRuntime.CreateResource("gcp.compute.disk",
+					mqlDisk, err := g.MotorRuntime.CreateResource("gcp.project.computeService.disk",
 						"id", strconv.FormatUint(disk.Id, 10),
 						"name", disk.Name,
 						"architecture", disk.Architecture,
@@ -733,7 +744,7 @@ func (g *mqlGcpCompute) GetDisks() ([]interface{}, error) {
 	return res, result
 }
 
-func (g *mqlGcpComputeFirewall) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceFirewall) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", nil
@@ -742,12 +753,12 @@ func (g *mqlGcpComputeFirewall) id() (string, error) {
 	return "gcloud.compute.firewall/" + id, nil
 }
 
-func (g *mqlGcpComputeFirewall) GetNetwork() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceFirewall) GetNetwork() (interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpCompute) GetFirewalls() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetFirewalls() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -797,7 +808,7 @@ func (g *mqlGcpCompute) GetFirewalls() ([]interface{}, error) {
 				return err
 			}
 
-			mqlFirewall, err := g.MotorRuntime.CreateResource("gcp.compute.firewall",
+			mqlFirewall, err := g.MotorRuntime.CreateResource("gcp.project.computeService.firewall",
 				"id", strconv.FormatUint(firewall.Id, 10),
 				"name", firewall.Name,
 				"description", firewall.Description,
@@ -827,7 +838,7 @@ func (g *mqlGcpCompute) GetFirewalls() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeSnapshot) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceSnapshot) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", nil
@@ -836,12 +847,12 @@ func (g *mqlGcpComputeSnapshot) id() (string, error) {
 	return "gcloud.compute.snapshot/" + id, nil
 }
 
-func (g *mqlGcpComputeSnapshot) GetSourceDisk() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceSnapshot) GetSourceDisk() (interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpCompute) GetSnapshots() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetSnapshots() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -868,7 +879,7 @@ func (g *mqlGcpCompute) GetSnapshots() ([]interface{}, error) {
 	req := computeSvc.Snapshots.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.SnapshotList) error {
 		for _, snapshot := range page.Items {
-			mqlSnapshpt, err := g.MotorRuntime.CreateResource("gcp.compute.snapshot",
+			mqlSnapshpt, err := g.MotorRuntime.CreateResource("gcp.project.computeService.snapshot",
 				"id", strconv.FormatUint(snapshot.Id, 10),
 				"name", snapshot.Name,
 				"description", snapshot.Description,
@@ -900,7 +911,7 @@ func (g *mqlGcpCompute) GetSnapshots() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeImage) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceImage) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", nil
@@ -909,12 +920,12 @@ func (g *mqlGcpComputeImage) id() (string, error) {
 	return "gcloud.compute.image/" + id, nil
 }
 
-func (g *mqlGcpComputeImage) GetSourceDisk() (interface{}, error) {
+func (g *mqlGcpProjectComputeServiceImage) GetSourceDisk() (interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpCompute) GetImages() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetImages() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -941,7 +952,7 @@ func (g *mqlGcpCompute) GetImages() ([]interface{}, error) {
 	req := computeSvc.Images.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.ImageList) error {
 		for _, image := range page.Items {
-			mqlImage, err := g.MotorRuntime.CreateResource("gcp.compute.image",
+			mqlImage, err := g.MotorRuntime.CreateResource("gcp.project.computeService.image",
 				"id", strconv.FormatUint(image.Id, 10),
 				"name", image.Name,
 				"description", image.Description,
@@ -967,7 +978,7 @@ func (g *mqlGcpCompute) GetImages() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeNetwork) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", nil
@@ -976,12 +987,12 @@ func (g *mqlGcpComputeNetwork) id() (string, error) {
 	return "gcloud.compute.network/" + id, nil
 }
 
-func (g *mqlGcpComputeNetwork) GetSubnetworks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() ([]interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpCompute) GetNetworks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetNetworks() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -1019,7 +1030,7 @@ func (g *mqlGcpCompute) GetNetworks() ([]interface{}, error) {
 				routingMode = network.RoutingConfig.RoutingMode
 			}
 
-			mqlNetwork, err := g.MotorRuntime.CreateResource("gcp.compute.network",
+			mqlNetwork, err := g.MotorRuntime.CreateResource("gcp.project.computeService.network",
 				"id", strconv.FormatUint(network.Id, 10),
 				"name", network.Name,
 				"description", network.Description,
@@ -1046,7 +1057,7 @@ func (g *mqlGcpCompute) GetNetworks() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeSubnetwork) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceSubnetwork) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", nil
@@ -1055,13 +1066,13 @@ func (g *mqlGcpComputeSubnetwork) id() (string, error) {
 	return "gcloud.compute.subnetwork/" + id, nil
 }
 
-func (g *mqlGcpComputeSubnetwork) GetNetwork() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceSubnetwork) GetNetwork() ([]interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func newMqlSubnetwork(projectId string, region GcpComputeRegion, runtime *resources.Runtime, subnetwork *compute.Subnetwork) (interface{}, error) {
-	return runtime.CreateResource("gcp.compute.subnetwork",
+func newMqlSubnetwork(projectId string, region GcpProjectComputeServiceRegion, runtime *resources.Runtime, subnetwork *compute.Subnetwork) (interface{}, error) {
+	return runtime.CreateResource("gcp.project.computeService.subnetwork",
 		"id", strconv.FormatUint(subnetwork.Id, 10),
 		"name", subnetwork.Name,
 		"description", subnetwork.Description,
@@ -1084,7 +1095,7 @@ func newMqlSubnetwork(projectId string, region GcpComputeRegion, runtime *resour
 	)
 }
 
-func (g *mqlGcpCompute) GetSubnetworks() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetSubnetworks() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -1118,12 +1129,12 @@ func (g *mqlGcpCompute) GetSubnetworks() ([]interface{}, error) {
 	mux := &sync.Mutex{}
 
 	for i := range regions {
-		r := regions[i].(GcpComputeRegion)
+		r := regions[i].(GcpProjectComputeServiceRegion)
 		regionName, err := r.Name()
 		if err != nil {
 			return nil, err
 		}
-		go func(svc *compute.Service, project string, region GcpComputeRegion, regionName string) {
+		go func(svc *compute.Service, project string, region GcpProjectComputeServiceRegion, regionName string) {
 			req := computeSvc.Subnetworks.List(projectId, regionName)
 			if err := req.Pages(ctx, func(page *compute.SubnetworkList) error {
 				for _, subnetwork := range page.Items {
@@ -1150,7 +1161,7 @@ func (g *mqlGcpCompute) GetSubnetworks() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpComputeRouter) id() (string, error) {
+func (g *mqlGcpProjectComputeServiceRouter) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", nil
@@ -1159,17 +1170,17 @@ func (g *mqlGcpComputeRouter) id() (string, error) {
 	return "gcloud.compute.router/" + id, nil
 }
 
-func (g *mqlGcpComputeRouter) GetNetwork() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceRouter) GetNetwork() ([]interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpComputeRouter) GetRegion() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeServiceRouter) GetRegion() ([]interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
 }
 
-func newMqlRouter(projectId string, region GcpComputeRegion, runtime *resources.Runtime, router *compute.Router) (interface{}, error) {
+func newMqlRouter(projectId string, region GcpProjectComputeServiceRegion, runtime *resources.Runtime, router *compute.Router) (interface{}, error) {
 	bgp, err := core.JsonToDict(router.Bgp)
 	if err != nil {
 		return nil, err
@@ -1185,7 +1196,7 @@ func newMqlRouter(projectId string, region GcpComputeRegion, runtime *resources.
 		return nil, err
 	}
 
-	return runtime.CreateResource("gcp.compute.router",
+	return runtime.CreateResource("gcp.project.computeService.router",
 		"id", strconv.FormatUint(router.Id, 10),
 		"name", router.Name,
 		"description", router.Description,
@@ -1197,7 +1208,7 @@ func newMqlRouter(projectId string, region GcpComputeRegion, runtime *resources.
 	)
 }
 
-func (g *mqlGcpCompute) GetRouters() ([]interface{}, error) {
+func (g *mqlGcpProjectComputeService) GetRouters() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -1231,12 +1242,12 @@ func (g *mqlGcpCompute) GetRouters() ([]interface{}, error) {
 	mux := &sync.Mutex{}
 
 	for i := range regions {
-		r := regions[i].(GcpComputeRegion)
+		r := regions[i].(GcpProjectComputeServiceRegion)
 		regionName, err := r.Name()
 		if err != nil {
 			return nil, err
 		}
-		go func(svc *compute.Service, project string, region GcpComputeRegion, regionName string) {
+		go func(svc *compute.Service, project string, region GcpProjectComputeServiceRegion, regionName string) {
 			req := computeSvc.Routers.List(projectId, regionName)
 			if err := req.Pages(ctx, func(page *compute.RouterList) error {
 				for _, router := range page.Items {

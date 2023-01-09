@@ -3,9 +3,9 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/gcp"
 alias gcloud.organization = gcp.organization
 alias gcloud.project = gcp.project
 alias gcloud.resourcemanager.binding = gcp.resourcemanager.binding
-alias gcloud.compute = gcp.compute
-alias gcloud.compute.instance = gcp.compute.instance
-alias gcloud.compute.serviceaccount = gcp.compute.serviceaccount
+alias gcloud.compute = gcp.project.computeService
+alias gcloud.compute.instance = gcp.project.computeService.instance
+alias gcloud.compute.serviceaccount = gcp.project.computeService.serviceaccount
 alias gcloud.storage = gcp.storage
 alias gcloud.storage.bucket = gcp.storage.bucket
 alias gcloud.sql = gcp.project.sqlService
@@ -47,7 +47,9 @@ gcp.project @defaults("name") {
   recommendations() []gcp.recommendation
   // GCP GKE resources
   gke() gcp.project.gkeService
-  // GCP Pub/Sub-related Resources
+  // GCP Compute Resources for the Project
+  compute() gcp.project.computeService
+  // GCP PubSub-related Resources
   pubsub() gcp.project.pubsubService
   // KMS-related resources
   kms() gcp.project.kmsService
@@ -117,35 +119,35 @@ gcp.resourcemanager.binding {
 }
 
 // GCP Compute Engine
-gcp.compute {
+private gcp.project.computeService {
   // Project ID
   projectId string
   // Google Compute Engine instances in a project
-  instances() []gcp.compute.instance
+  instances() []gcp.project.computeService.instance
   // Google Compute Engine snapshots in a project
-  snapshots() []gcp.compute.snapshot
+  snapshots() []gcp.project.computeService.snapshot
   // Google Compute Engine disks in a project
-  disks() []gcp.compute.disk
+  disks() []gcp.project.computeService.disk
   // Google Compute Engine images in a project
-  images() []gcp.compute.image
+  images() []gcp.project.computeService.image
   // Google Compute Engine firewalls in a project
-  firewalls() []gcp.compute.firewall
+  firewalls() []gcp.project.computeService.firewall
   // Google Compute Engine VPC Network in a project
-  networks() []gcp.compute.network
+  networks() []gcp.project.computeService.network
   // Logical partition of a Virtual Private Cloud network
-  subnetworks() []gcp.compute.subnetwork
+  subnetworks() []gcp.project.computeService.subnetwork
   // Cloud Routers in project
-  routers() []gcp.compute.router
+  routers() []gcp.project.computeService.router
   // Google Compute Engine machine types in a project
-  machineTypes() []gcp.compute.machineType
+  machineTypes() []gcp.project.computeService.machineType
   // Project Regions
-  regions() []gcp.compute.region
+  regions() []gcp.project.computeService.region
   // Project Zones
-  zones() []gcp.compute.zone
+  zones() []gcp.project.computeService.zone
 }
 
 // GCP Compute Region
-private gcp.compute.region @defaults("name") {
+private gcp.project.computeService.region @defaults("name") {
   // Unique identifier
   id string
   // Name of the resource
@@ -163,7 +165,7 @@ private gcp.compute.region @defaults("name") {
 }
 
 // GCP Compute Zone
-private gcp.compute.zone @defaults("name") {
+private gcp.project.computeService.zone @defaults("name") {
   // Unique identifier
   id string
   // Name of the resource
@@ -177,7 +179,7 @@ private gcp.compute.zone @defaults("name") {
 }
 
 // GCP Machine Type
-private gcp.compute.machineType @defaults("name") {
+private gcp.project.computeService.machineType @defaults("name") {
   // Unique identifier
   id string
   // Project ID
@@ -199,11 +201,11 @@ private gcp.compute.machineType @defaults("name") {
   // Creation timestamp
   created time
   // The zone where the machine type resides
-  zone gcp.compute.zone
+  zone gcp.project.computeService.zone
 }
 
 // GCP Compute Instances
-private gcp.compute.instance @defaults("name") {
+private gcp.project.computeService.instance @defaults("name") {
   // Unique identifier for the resource
   id string
   // Project ID
@@ -275,17 +277,17 @@ private gcp.compute.instance @defaults("name") {
   // Network performance configuration
   totalEgressBandwidthTier string
   // Service accounts authorized for this instance
-  serviceAccounts []gcp.compute.serviceaccount
+  serviceAccounts []gcp.project.computeService.serviceaccount
   // Disks associated with this instance
-  disks []gcp.compute.attachedDisk
+  disks []gcp.project.computeService.attachedDisk
   // Machine type
-  machineType() gcp.compute.machineType
+  machineType() gcp.project.computeService.machineType
   // Instance zone
-  zone gcp.compute.zone
+  zone gcp.project.computeService.zone
 }
 
 // GCP Compute Service Account
-private gcp.compute.serviceaccount @defaults("email") {
+private gcp.project.computeService.serviceaccount @defaults("email") {
   // Service account email address
   email string
   // Service account scopes
@@ -293,7 +295,7 @@ private gcp.compute.serviceaccount @defaults("email") {
 }
 
 // GCP Compute Persistent Disk
-private gcp.compute.disk @defaults("name") {
+private gcp.project.computeService.disk @defaults("name") {
   // Unique identifier for the resource
   id string
   // User-friendly name for this disk
@@ -323,13 +325,13 @@ private gcp.compute.disk @defaults("name") {
   // The status of disk creation
   status string
   // Disk Zone
-  zone gcp.compute.zone
+  zone gcp.project.computeService.zone
   // Creation timestamp
   created time
 }
 
 // GCP Compute Attached Disk
-private gcp.compute.attachedDisk {
+private gcp.project.computeService.attachedDisk {
   // Attached Disk ID
   id string
   // Project ID
@@ -357,13 +359,13 @@ private gcp.compute.attachedDisk {
   // Mode in which to the disk is attached
   mode string
   // Attached Persistent Disk resource
-  source() gcp.compute.disk
+  source() gcp.project.computeService.disk
   // Disk Type
   type string
 }
 
 // GCP Compute Persistent Disk Snapshot
-private gcp.compute.snapshot @defaults("name") {
+private gcp.project.computeService.snapshot @defaults("name") {
   // Unique identifier
   id string
   // Name of the resource
@@ -399,7 +401,7 @@ private gcp.compute.snapshot @defaults("name") {
 }
 
 // GCP Compute
-private gcp.compute.image @defaults("id name") {
+private gcp.project.computeService.image @defaults("id name") {
   // Unique identifier
   id string
   // Name of the resource
@@ -425,7 +427,7 @@ private gcp.compute.image @defaults("id name") {
 }
 
 // GCP Compute Firewall
-private gcp.compute.firewall @defaults("name") {
+private gcp.project.computeService.firewall @defaults("name") {
   // Unique Identifier
   id string
   // User-provided name
@@ -457,7 +459,7 @@ private gcp.compute.firewall @defaults("name") {
 }
 
 // GCP Compute VPC Network resource
-private gcp.compute.network @defaults("name") {
+private gcp.project.computeService.network @defaults("name") {
   // Unique Identifier
   id string
   // Name of the resource
@@ -485,7 +487,7 @@ private gcp.compute.network @defaults("name") {
 }
 
 // GCP Compute VPC Network Partitioning
-private gcp.compute.subnetwork @defaults("name")  {
+private gcp.project.computeService.subnetwork @defaults("name")  {
   // Unique Identifier
   id string
   // Name of the resource
@@ -515,7 +517,7 @@ private gcp.compute.subnetwork @defaults("name")  {
   // Purpose of the resource
   purpose string
   // Region
-  region gcp.compute.region
+  region gcp.project.computeService.region
   // Role of subnetwork
   role string
   // Stack type for the subnet
@@ -527,7 +529,7 @@ private gcp.compute.subnetwork @defaults("name")  {
 }
 
 // GCP Compute Cloud Router
-private gcp.compute.router @defaults("name")  {
+private gcp.project.computeService.router @defaults("name")  {
   // Unique Identifier
   id string
   // Name of the resource
