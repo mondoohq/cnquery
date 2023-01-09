@@ -1743,7 +1743,7 @@ private gcp.project.dataprocService.cluster.config {
   parentResourcePath string
   // Autoscaling configuration for the policy associated with the cluster
   autoscaling dict
-  // A Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
+  // Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
   configBucket string
   // Dataproc metrics configuration
   metrics dict
@@ -1791,15 +1791,15 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
   nodeGroupAffinity dict
   // Type of IPv6 access for the cluster
   privateIpv6GoogleAccess string
-  // Reservation Affinity for consuming Zonal reservations
+  // Reservation affinity for consuming zonal reservations
   reservationAffinity gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity
   // Dataproc service account used by the Dataproc cluster VM instances
   serviceAccount string
   // URIs of service account scopes to be included in Compute Engine instances
   serviceAccountScopes []string
-  // Shielded Instance config for clusters using Compute Engine Shielded VMs
+  // Shielded instance config for clusters using Compute Engine Shielded VMs
   shieldedInstanceConfig gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig
-  // Compute Engine subnetowrk to be used for machine communications
+  // Compute Engine subnetwork to use for machine communications
   subnetworkUri string
   // Compute Engine tags
   tags []string
@@ -1875,7 +1875,7 @@ private gcp.project.dataprocService.cluster.config.instance {
   machineTypeUri string
   // Config for Compute Engine Instance Group Manager that manages this group
   managedGroupConfig dict
-  // Minimum CPU platform for the Instance Group
+  // Minimum CPU platform for the instance group
   minCpuPlatform string
   // Number of VM instances in the instance group
   numInstances int
