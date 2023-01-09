@@ -575,7 +575,7 @@ private gcp.storage.bucket @defaults("id") {
 private gcp.project.sqlService {
   // Project ID
   projectId string
-  // The list of Cloud SQL instances in the current project
+  // List of Cloud SQL instances in the current project
   instances() []gcp.project.sqlService.instance
 }
 
@@ -591,33 +591,33 @@ private gcp.project.sqlService.instance @defaults("name") {
   connectionName string
   // Creation timestamp
   created time
-  // The current disk usage of the instance in bytes. This is deprecated, monitoring should be used instead
+  // Current disk usage of the instance in bytes. This is deprecated; use monitoring should be used instead.
   currentDiskSize int
-  // The current database version running on the instance
+  // Current database version running on the instance
   databaseInstalledVersion string
-  // The database engine type and version
+  // Database engine type and version
   databaseVersion string
   // Disk encryption configuration
   diskEncryptionConfiguration dict
   // Disk encryption status
   diskEncryptionStatus dict
-  // The name and status of the failover replica
+  // Name and status of the failover replica
   failoverReplica dict
-  // The Compute Engine zone that the instance is currently service from
+  // Compute Engine zone that the instance is currently serviced from
   gceZone string
   // Instance type
   instanceType string
-  // The assigned IP addresses
+  // Assigned IP addresses
   ipAddresses []gcp.project.sqlService.instance.ipMapping
-  // The current software version on the instance
+  // Current software version on the instance
   maintenanceVersion string
-  // The name of the instance which will act as primary in the replica
+  // Name of the instance that will act as primary in the replica
   masterInstanceName string
-  // The maximum disk size in bytes
+  // Maximum disk size in bytes
   maxDiskSize int
   // Instance name
   name string
-  // DEPRECATED: use projectId instead
+  // This is deprecated; use projectId instead.
   project string 
   // Region
   region string
@@ -653,11 +653,11 @@ private gcp.project.sqlService.instance.database @defaults("name") {
 private gcp.project.sqlService.instance.ipMapping @defaults("ipAddress") {
   // Internal ID
   id string
-  // The IP address assigned
+  // Assigned IP address
   ipAddress string
-  // The due time for this IP to be retired
+  // Due time for this IP to retire
   timeToRetire time
-  // The type of this IP address
+  // Type of this IP address
   type string
 }
 
@@ -667,27 +667,27 @@ private gcp.project.sqlService.instance.settings {
   projectId string
   // Instance name
   instanceName string
-  // Specifies when the instance is activated
+  // When the instance is activated
   activationPolicy string
-  // Active Directory configuration, relevant only for Cloud SQL for SQL server
+  // Active Directory configuration (relevant only for Cloud SQL for SQL Server)
   activeDirectoryConfig dict
   // Availability type
   availabilityType string
-  // The daily backup configuration for the instance
+  // Daily backup configuration for the instance
   backupConfiguration gcp.project.sqlService.instance.settings.backupconfiguration
-  // The name of the serve collation
+  // Name of the server collation
   collation string
-  // Specifies if connections must use Cloud SQL connectors
+  // Whether connections must use Cloud SQL connectors
   connectorEnforcement string
-  // Indicates whether database flags for crash-safe replication are enabled
+  // Whether database flags for crash-safe replication are enabled
   crashSafeReplicationEnabled bool
-  // The size of data disk, in GB
+  // Size of data disk, in GB
   dataDiskSizeGb int
-  // The type of the data disk
+  // Type of the data disk
   dataDiskType string
-  // The database flags passed to the instance at startup
+  // Database flags passed to the instance at startup
   databaseFlags map[string]string
-  // Indicates whether replication is enabled or not
+  // Whether replication is enabled
   databaseReplicationEnabled bool
   // Whether to protect against accidental instance deletion
   deletionProtectionEnabled bool
@@ -695,27 +695,27 @@ private gcp.project.sqlService.instance.settings {
   denyMaintenancePeriods []gcp.project.sqlService.instance.settings.denyMaintenancePeriod
   // Insights configuration
   insightsConfig dict
-  // The settings for IP Management
+  // IP Management settings
   ipConfiguration gcp.project.sqlService.instance.settings.ipConfiguration
-  // The location preference settings
+  // Location preference settings
   locationPreference dict
-  // The maintenance window
+  // Maintenance window
   maintenanceWindow gcp.project.sqlService.instance.settings.maintenanceWindow
-  // The local user password validation policy
+  // Local user password validation policy
   passwordValidationPolicy gcp.project.sqlService.instance.settings.passwordValidationPolicy
-  // The pricing plan 
+  // Pricing plan 
   pricingPlan string
-  // The type of replication
+  // Replication type
   replicationType string
-  // The version of instance settings
+  // Instance settings version
   settingsVersion int
   // SQL server specific audit configuration
   sqlServerAuditConfig dict
   // Configuration to increase storage size automatically
   storageAutoResize bool
-  // The maximum size to which storage capacity can be automatically increased
+  // Maximum size to which storage capacity can be automatically increased
   storageAutoResizeLimit int
-  // The tier of service for this instance
+  // Service tier for this instance
   tier string
   // Server timezone
   timeZone string
@@ -733,13 +733,13 @@ private gcp.project.sqlService.instance.settings.backupconfiguration {
   binaryLogEnabled bool
   // Whether this configuration is enabled
   enabled bool
-  // The location of the backup
+  // Location of the backup
   location string
-  // Whether point in time recovery is enabled
+  // Whether point-in-time recovery is enabled
   pointInTimeRecoveryEnabled bool
-  // Start time for the daily backup configuration in UTC timezone in the 24 hour format
+  // Start time for the daily backup configuration (in UTC timezone, in the 24 hour format)
   startTime string
-  // The number of days of transaction logs we retain for point in time restore
+  // Number of days of transaction logs retained for point-in-time restore
   transactionLogRetentionDays int
 }
 
@@ -747,9 +747,9 @@ private gcp.project.sqlService.instance.settings.backupconfiguration {
 private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
   // Internal ID
   id string
-  // Deny maintenance period end date.
+  // Deny maintenance period end date
   endDate string
-  // Deny maintenance period start date.
+  // Deny maintenance period start date
   startDate string
   // Time in UTC when the deny maintenance period starts and ends
   time string
@@ -759,15 +759,15 @@ private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults
 private gcp.project.sqlService.instance.settings.ipConfiguration {
   // Internal ID
   id string
-  // The name of the allocated IP range for the private IP Cloud SQL instance
+  // Name of the allocated IP range for the private IP Cloud SQL instance
   allocatedIpRange string
-  // The list of external networks that are allowed to connect to the instance using the IP
+  // List of external networks that are allowed to connect to the instance using the IP
   authorizedNetworks []dict
   // Whether the instance is assigned a public IP address
   ipv4Enabled bool
-  // The resource link for the VPC network from which the Cloud SQL instance is accessible for private IP
+  // Resource link for the VPC network from which the private IPs can access the Cloud SQL instance
   privateNetwork string
-  // Whether SSL connections over IP are enforced or not
+  // Whether SSL connections over IP are enforced
   requireSsl bool
 }
 
@@ -787,17 +787,17 @@ private gcp.project.sqlService.instance.settings.maintenanceWindow @defaults("da
 private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defaults("enabledPasswordPolicy") {
   // Internal ID
   id string
-  // The complexity of the password
+  // Password complexity
   complexity string
-  // Disallow username as a part of the password
+  // Whether username is forbidden as a part of the password
   disallowUsernameSubstring bool
-  // Whether the password policy is enabled or not
+  // Whether the password policy is enabled
   enabledPasswordPolicy bool
-  // Minimum number of characters allowed
+  // Minimum number of characters required in passwords
   minLength int
   // Minimum interval after which the password can be changed
   passwordChangeInterval string
-  // Number of previous password that cannot be reused
+  // Number of previous passwords that cannot be reused
   reuseInterval int
 }
 
