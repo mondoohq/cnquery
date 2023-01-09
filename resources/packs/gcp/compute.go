@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -44,11 +45,11 @@ func (g *mqlGcpProject) GetCompute() (interface{}, error) {
 }
 
 func (g *mqlGcpProjectComputeService) id() (string, error) {
-	id, err := g.ProjectId()
+	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.compute/" + id, nil
+	return fmt.Sprintf("%s/gcp.project.computeService", projectId), nil
 }
 
 func (g *mqlGcpProjectComputeServiceRegion) id() (string, error) {
