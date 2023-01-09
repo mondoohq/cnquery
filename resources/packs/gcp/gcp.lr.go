@@ -8793,6 +8793,7 @@ type GcpProjectComputeServiceSubnetwork interface {
 	Register(string) error
 	Validate() error
 	Id() (string, error)
+	ProjectId() (string, error)
 	Name() (string, error)
 	Description() (string, error)
 	EnableFlowLogs() (bool, error)
@@ -8806,7 +8807,8 @@ type GcpProjectComputeServiceSubnetwork interface {
 	PrivateIpGoogleAccess() (bool, error)
 	PrivateIpv6GoogleAccess() (string, error)
 	Purpose() (string, error)
-	Region() (GcpProjectComputeServiceRegion, error)
+	Region() (GcpComputeRegion, error)
+	RegionUrl() (string, error)
 	Role() (string, error)
 	StackType() (string, error)
 	State() (string, error)
@@ -8842,6 +8844,10 @@ func newGcpProjectComputeServiceSubnetwork(runtime *resources.Runtime, args *res
 		case "id":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.computeService.subnetwork\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.computeService.subnetwork\", its \"projectId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
@@ -8896,8 +8902,12 @@ func newGcpProjectComputeServiceSubnetwork(runtime *resources.Runtime, args *res
 				return nil, errors.New("Failed to initialize \"gcp.project.computeService.subnetwork\", its \"purpose\" argument has the wrong type (expected type \"string\")")
 			}
 		case "region":
-			if _, ok := val.(GcpProjectComputeServiceRegion); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.computeService.subnetwork\", its \"region\" argument has the wrong type (expected type \"GcpProjectComputeServiceRegion\")")
+			if _, ok := val.(GcpComputeRegion); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.computeService.subnetwork\", its \"region\" argument has the wrong type (expected type \"GcpComputeRegion\")")
+			}
+		case "regionUrl":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.computeService.subnetwork\", its \"regionUrl\" argument has the wrong type (expected type \"string\")")
 			}
 		case "role":
 			if _, ok := val.(string); !ok {
@@ -8945,6 +8955,9 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Validate() error {
 	if _, ok := s.Cache.Load("id"); !ok {
 		return errors.New("Initialized \"gcp.project.computeService.subnetwork\" resource without a \"id\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.computeService.subnetwork\" resource without a \"projectId\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("name"); !ok {
 		return errors.New("Initialized \"gcp.project.computeService.subnetwork\" resource without a \"name\". This field is required.")
 	}
@@ -8984,8 +8997,8 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Validate() error {
 	if _, ok := s.Cache.Load("purpose"); !ok {
 		return errors.New("Initialized \"gcp.project.computeService.subnetwork\" resource without a \"purpose\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("region"); !ok {
-		return errors.New("Initialized \"gcp.project.computeService.subnetwork\" resource without a \"region\". This field is required.")
+	if _, ok := s.Cache.Load("regionUrl"); !ok {
+		return errors.New("Initialized \"gcp.project.computeService.subnetwork\" resource without a \"regionUrl\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("role"); !ok {
 		return errors.New("Initialized \"gcp.project.computeService.subnetwork\" resource without a \"role\". This field is required.")
@@ -9008,6 +9021,8 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Register(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.computeService.subnetwork].Register")
 	switch name {
 	case "id":
+		return nil
+	case "projectId":
 		return nil
 	case "name":
 		return nil
@@ -9037,6 +9052,8 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Register(name string) error {
 		return nil
 	case "region":
 		return nil
+	case "regionUrl":
+		return nil
 	case "role":
 		return nil
 	case "stackType":
@@ -9056,6 +9073,8 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Field(name string) (interface{},
 	switch name {
 	case "id":
 		return s.Id()
+	case "projectId":
+		return s.ProjectId()
 	case "name":
 		return s.Name()
 	case "description":
@@ -9084,6 +9103,8 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Field(name string) (interface{},
 		return s.Purpose()
 	case "region":
 		return s.Region()
+	case "regionUrl":
+		return s.RegionUrl()
 	case "role":
 		return s.Role()
 	case "stackType":
@@ -9109,6 +9130,22 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Id() (string, error) {
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.project.computeService.subnetwork\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectComputeServiceSubnetwork) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.computeService.subnetwork\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.computeService.subnetwork\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -9322,17 +9359,40 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) Purpose() (string, error) {
 }
 
 // Region accessor autogenerated
-func (s *mqlGcpProjectComputeServiceSubnetwork) Region() (GcpProjectComputeServiceRegion, error) {
+func (s *mqlGcpProjectComputeServiceSubnetwork) Region() (GcpComputeRegion, error) {
 	res, ok := s.Cache.Load("region")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.computeService.subnetwork\" failed: no value provided for static field \"region\"")
+		if err := s.ComputeRegion(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("region")
+		if !ok {
+			return nil, errors.New("\"gcp.project.computeService.subnetwork\" calculated \"region\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "region")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectComputeServiceRegion)
+	tres, ok := res.Data.(GcpComputeRegion)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.computeService.subnetwork\" failed to cast field \"region\" to the right type (GcpProjectComputeServiceRegion): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.computeService.subnetwork\" failed to cast field \"region\" to the right type (GcpComputeRegion): %#v", res)
+	}
+	return tres, nil
+}
+
+// RegionUrl accessor autogenerated
+func (s *mqlGcpProjectComputeServiceSubnetwork) RegionUrl() (string, error) {
+	res, ok := s.Cache.Load("regionUrl")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.computeService.subnetwork\" failed: no value provided for static field \"regionUrl\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.computeService.subnetwork\" failed to cast field \"regionUrl\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -9407,6 +9467,8 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) MqlCompute(name string) error {
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "name":
 		return nil
 	case "description":
@@ -9434,6 +9496,8 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) MqlCompute(name string) error {
 	case "purpose":
 		return nil
 	case "region":
+		return s.ComputeRegion()
+	case "regionUrl":
 		return nil
 	case "role":
 		return nil
@@ -9446,6 +9510,20 @@ func (s *mqlGcpProjectComputeServiceSubnetwork) MqlCompute(name string) error {
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.computeService.subnetwork\" resource")
 	}
+}
+
+// ComputeRegion computer autogenerated
+func (s *mqlGcpProjectComputeServiceSubnetwork) ComputeRegion() error {
+	var err error
+	if _, ok := s.Cache.Load("region"); ok {
+		return nil
+	}
+	vres, err := s.GetRegion()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("region", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpProjectComputeServiceRouter resource interface
