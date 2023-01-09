@@ -470,6 +470,8 @@ private gcp.compute.network @defaults("name") {
   peerings []dict
   // The network-wide routing mode to use
   routingMode string
+  // Network mode - legacy, custom or auto
+  mode string
 }
 
 // GCP Compute VPC Network Partitioning
