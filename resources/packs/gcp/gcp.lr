@@ -440,6 +440,10 @@ private gcp.compute.firewall @defaults("name") {
   targetServiceAccounts []string
   // Creation timestamp
   created time
+  // List of ALLOW rules specified by this firewall
+  allowed []dict
+  // List of DENY rules specified by this firewall
+  denied []dict
 }
 
 // GCP Compute VPC Network resource
