@@ -342,7 +342,7 @@ func (ctx *Runtime) WatchAndUpdate(r ResourceType, field string, watcherUID stri
 			return err
 		}
 
-		err = r.Compute(field)
+		err = r.MqlCompute(field)
 		// normal case most often: we called compute but it depends on something
 		// that is not ready
 		if _, ok := err.(NotReadyError); ok {
@@ -378,7 +378,7 @@ func (ctx *Runtime) WatchAndCompute(src ResourceType, sfield string, dst Resourc
 
 	isInitial, exists, err := ctx.Observers.Watch(sid, fid, func() {
 		// once the source field changes, we recalculate the destination field
-		ierr := dst.Compute(dfield)
+		ierr := dst.MqlCompute(dfield)
 		// if the field isnt ready, finish this execution
 		if _, ok := ierr.(NotReadyError); ok {
 			return
@@ -414,7 +414,7 @@ func (ctx *Runtime) WatchAndCompute(src ResourceType, sfield string, dst Resourc
 			return err
 		}
 
-		err = src.Compute(sfield)
+		err = src.MqlCompute(sfield)
 		if err != nil {
 			if _, ok := err.(NotReadyError); !ok {
 				log.Trace().Err(err).Msg("w+c> initial compute failed")
@@ -454,7 +454,7 @@ func (ctx *Runtime) Trigger(r ResourceType, field string) error {
 		return NotReadyError{}
 	}
 
-	return r.Compute(field)
+	return r.MqlCompute(field)
 }
 
 func (r *Runtime) Close() {
