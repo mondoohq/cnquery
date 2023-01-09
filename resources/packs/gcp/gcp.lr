@@ -8,8 +8,9 @@ alias gcloud.compute.instance = gcp.compute.instance
 alias gcloud.compute.serviceaccount = gcp.compute.serviceaccount
 alias gcloud.storage = gcp.storage
 alias gcloud.storage.bucket = gcp.storage.bucket
-alias gcloud.sql = gcp.sql
-alias gcloud.sql.instance = gcp.sql.instance
+alias gcloud.sql = gcp.project.sqlService
+alias gcp.sql = gcp.project.sqlService
+alias gcloud.sql.instance = gcp.project.sqlService.instance
 
 // GCP Cloud Organization
 gcp.organization @defaults("id") {
@@ -57,6 +58,8 @@ gcp.project @defaults("name") {
   apiKeys() []gcp.project.apiKey
   // Logging resources
   logging() gcp.project.loggingservice
+  // GCP Cloud SQL Resources
+  sql() gcp.project.sqlService 
 }
 
 // GCP Service
@@ -568,43 +571,234 @@ private gcp.storage.bucket @defaults("id") {
   iamConfiguration dict
 }
 
-// GCP Cloud SQL
-gcp.sql {
-  //
-  instances() []gcp.sql.instance
+// GCP Cloud SQL Resources
+private gcp.project.sqlService {
+  // Project ID
+  projectId string
+  // List of Cloud SQL instances in the current project
+  instances() []gcp.project.sqlService.instance
 }
 
 // GCP Cloud SQL Instance
-private gcp.sql.instance @defaults("name") {
-  // Instance name
-  name string
+private gcp.project.sqlService.instance @defaults("name") {
+  // Project ID
+  projectId string
+  // All maintenance versions applicable on the instance
+  availableMaintenanceVersions []string
   // Backend type
   backendType string
-  // Connection name
+  // Connection name of the instance used in connection strings
   connectionName string
-  // Database version
+  // Creation timestamp
+  created time
+  // Current disk usage of the instance in bytes. This is deprecated; use monitoring should be used instead.
+  currentDiskSize int
+  // Current database version running on the instance
+  databaseInstalledVersion string
+  // Database engine type and version
   databaseVersion string
-  // GCE zone
+  // Disk encryption configuration
+  diskEncryptionConfiguration dict
+  // Disk encryption status
+  diskEncryptionStatus dict
+  // Name and status of the failover replica
+  failoverReplica dict
+  // Compute Engine zone that the instance is currently serviced from
   gceZone string
   // Instance type
   instanceType string
-  // Kind
-  kind string
-  // Current disk size
-  currentDiskSize int
-  // Maximum disk size
+  // Assigned IP addresses
+  ipAddresses []gcp.project.sqlService.instance.ipMapping
+  // Current software version on the instance
+  maintenanceVersion string
+  // Name of the instance that will act as primary in the replica
+  masterInstanceName string
+  // Maximum disk size in bytes
   maxDiskSize int
-  // Instance state
-  state string
-  // Project
-  // TODO: should this be id or name
+  // Instance name
+  name string
+  // This is deprecated; use projectId instead.
   project string 
   // Region
   region string
+  // Replicas
+  replicaNames []string
+  // Settings
+  settings gcp.project.sqlService.instance.settings
   // Service account email address
   serviceAccountEmailAddress string
-  // Settings
-  settings dict
+  // Instance state
+  state string
+  // List of the databases in the current SQL instance
+  databases() []gcp.project.sqlService.instance.database
+}
+
+// GCP Cloud SQL Instance database
+private gcp.project.sqlService.instance.database @defaults("name") {
+  // Project ID
+  projectId string
+  // Charset value
+  charset string
+  // Collation
+  collation string
+  // Name of the Cloud SQL instance
+  instance string
+  // Name of the database
+  name string
+  // SQL Server database details
+  sqlserverDatabaseDetails dict
+}
+
+// GCP Cloud SQL Instance IP Mapping
+private gcp.project.sqlService.instance.ipMapping @defaults("ipAddress") {
+  // Internal ID
+  id string
+  // Assigned IP address
+  ipAddress string
+  // Due time for this IP to retire
+  timeToRetire time
+  // Type of this IP address
+  type string
+}
+
+// GCP Cloud SQL Instance Settings
+private gcp.project.sqlService.instance.settings {
+  // Project ID
+  projectId string
+  // Instance name
+  instanceName string
+  // When the instance is activated
+  activationPolicy string
+  // Active Directory configuration (relevant only for Cloud SQL for SQL Server)
+  activeDirectoryConfig dict
+  // Availability type
+  availabilityType string
+  // Daily backup configuration for the instance
+  backupConfiguration gcp.project.sqlService.instance.settings.backupconfiguration
+  // Name of the server collation
+  collation string
+  // Whether connections must use Cloud SQL connectors
+  connectorEnforcement string
+  // Whether database flags for crash-safe replication are enabled
+  crashSafeReplicationEnabled bool
+  // Size of data disk, in GB
+  dataDiskSizeGb int
+  // Type of the data disk
+  dataDiskType string
+  // Database flags passed to the instance at startup
+  databaseFlags map[string]string
+  // Whether replication is enabled
+  databaseReplicationEnabled bool
+  // Whether to protect against accidental instance deletion
+  deletionProtectionEnabled bool
+  // Deny maintenance periods
+  denyMaintenancePeriods []gcp.project.sqlService.instance.settings.denyMaintenancePeriod
+  // Insights configuration
+  insightsConfig dict
+  // IP Management settings
+  ipConfiguration gcp.project.sqlService.instance.settings.ipConfiguration
+  // Location preference settings
+  locationPreference dict
+  // Maintenance window
+  maintenanceWindow gcp.project.sqlService.instance.settings.maintenanceWindow
+  // Local user password validation policy
+  passwordValidationPolicy gcp.project.sqlService.instance.settings.passwordValidationPolicy
+  // Pricing plan 
+  pricingPlan string
+  // Replication type
+  replicationType string
+  // Instance settings version
+  settingsVersion int
+  // SQL server specific audit configuration
+  sqlServerAuditConfig dict
+  // Configuration to increase storage size automatically
+  storageAutoResize bool
+  // Maximum size to which storage capacity can be automatically increased
+  storageAutoResizeLimit int
+  // Service tier for this instance
+  tier string
+  // Server timezone
+  timeZone string
+  // User-provided labels
+  userLabels map[string]string
+}
+
+// GCP Cloud SQL Instance Settings Backup Configuration
+private gcp.project.sqlService.instance.settings.backupconfiguration {
+  // Internal ID
+  id string
+  // Backup retention settings
+  backupRetentionSettings dict
+  // Whether binary log is enabled
+  binaryLogEnabled bool
+  // Whether this configuration is enabled
+  enabled bool
+  // Location of the backup
+  location string
+  // Whether point-in-time recovery is enabled
+  pointInTimeRecoveryEnabled bool
+  // Start time for the daily backup configuration (in UTC timezone, in the 24 hour format)
+  startTime string
+  // Number of days of transaction logs retained for point-in-time restore
+  transactionLogRetentionDays int
+}
+
+// GCP Cloud SQL Instance Settings Deny Maintenance Period
+private gcp.project.sqlService.instance.settings.denyMaintenancePeriod @defaults("startDate endDate") {
+  // Internal ID
+  id string
+  // Deny maintenance period end date
+  endDate string
+  // Deny maintenance period start date
+  startDate string
+  // Time in UTC when the deny maintenance period starts and ends
+  time string
+}
+
+// GCP Cloud SQL Instance Settings IP Configuration
+private gcp.project.sqlService.instance.settings.ipConfiguration {
+  // Internal ID
+  id string
+  // Name of the allocated IP range for the private IP Cloud SQL instance
+  allocatedIpRange string
+  // List of external networks that are allowed to connect to the instance using the IP
+  authorizedNetworks []dict
+  // Whether the instance is assigned a public IP address
+  ipv4Enabled bool
+  // Resource link for the VPC network from which the private IPs can access the Cloud SQL instance
+  privateNetwork string
+  // Whether SSL connections over IP are enforced
+  requireSsl bool
+}
+
+// GCP Cloud SQL Instance Settings Maintenance Window
+private gcp.project.sqlService.instance.settings.maintenanceWindow @defaults("day hour") {
+  // Internal ID
+  id string
+  // Day of week (1-7), starting on Monday
+  day int
+  // Hour of day - 0 to 23
+  hour int
+  // Maintenance timing setting: canary (Earlier) or stable (Later)
+  updateTrack string
+}
+
+// GCP Cloud SQL Instance Settings Password Validation Policy
+private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defaults("enabledPasswordPolicy") {
+  // Internal ID
+  id string
+  // Password complexity
+  complexity string
+  // Whether username is forbidden as a part of the password
+  disallowUsernameSubstring bool
+  // Whether the password policy is enabled
+  enabledPasswordPolicy bool
+  // Minimum number of characters required in passwords
+  minLength int
+  // Minimum interval after which the password can be changed
+  passwordChangeInterval string
+  // Number of previous passwords that cannot be reused
+  reuseInterval int
 }
 
 // GCP Big Query

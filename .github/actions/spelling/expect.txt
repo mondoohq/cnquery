@@ -56,3 +56,8 @@ ingressrule
 ingressservicebackend
 cmek
 loggingservice
+activedirectoryconfig
+backupconfiguration
+retentionsettings
+sqlserver
+sqlService

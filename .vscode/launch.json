@@ -47,6 +47,18 @@
       ],
     },
     {
+      "name": "cnquery-run-gcp-sql",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "args": [
+        "run",
+        "gcp",
+        "-c",
+        "gcp.project.sql"
+      ],
+    },
+    {
       "name": "cnquery-run-cr-manifest",
       "type": "go",
       "request": "launch",
