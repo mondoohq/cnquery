@@ -28377,6 +28377,31 @@ type GcpProjectCloudFunction interface {
 	ProjectId() (string, error)
 	Name() (string, error)
 	Description() (string, error)
+	Status() (string, error)
+	EntryPoint() (string, error)
+	Runtime() (string, error)
+	Timeout() (*time.Time, error)
+	AvailableMemoryMb() (int64, error)
+	ServiceAccountEmail() (string, error)
+	Updated() (*time.Time, error)
+	VersionId() (int64, error)
+	Labels() (map[string]interface{}, error)
+	EnvVars() (map[string]interface{}, error)
+	BuildEnvVars() (map[string]interface{}, error)
+	Network() (string, error)
+	MaxInstances() (int64, error)
+	MinInstances() (int64, error)
+	VpcConnector() (string, error)
+	EgressSettings() (string, error)
+	IngressSettings() (string, error)
+	KmsKeyName() (string, error)
+	BuildWorkerPool() (string, error)
+	BuildId() (string, error)
+	BuildName() (string, error)
+	SecretEnvVars() (map[string]interface{}, error)
+	SecretVolumes() ([]interface{}, error)
+	DockerRepository() (string, error)
+	DockerRegistry() (string, error)
 }
 
 // mqlGcpProjectCloudFunction for the gcp.project.cloudFunction resource
@@ -28417,6 +28442,106 @@ func newGcpProjectCloudFunction(runtime *resources.Runtime, args *resources.Args
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
+		case "status":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"status\" argument has the wrong type (expected type \"string\")")
+			}
+		case "entryPoint":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"entryPoint\" argument has the wrong type (expected type \"string\")")
+			}
+		case "runtime":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"runtime\" argument has the wrong type (expected type \"string\")")
+			}
+		case "timeout":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"timeout\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "availableMemoryMb":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"availableMemoryMb\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "serviceAccountEmail":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"serviceAccountEmail\" argument has the wrong type (expected type \"string\")")
+			}
+		case "updated":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "versionId":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"versionId\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "labels":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "envVars":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"envVars\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "buildEnvVars":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"buildEnvVars\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "network":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"network\" argument has the wrong type (expected type \"string\")")
+			}
+		case "maxInstances":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"maxInstances\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "minInstances":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"minInstances\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "vpcConnector":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"vpcConnector\" argument has the wrong type (expected type \"string\")")
+			}
+		case "egressSettings":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"egressSettings\" argument has the wrong type (expected type \"string\")")
+			}
+		case "ingressSettings":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"ingressSettings\" argument has the wrong type (expected type \"string\")")
+			}
+		case "kmsKeyName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"kmsKeyName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "buildWorkerPool":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"buildWorkerPool\" argument has the wrong type (expected type \"string\")")
+			}
+		case "buildId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"buildId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "buildName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"buildName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "secretEnvVars":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"secretEnvVars\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "secretVolumes":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"secretVolumes\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "dockerRepository":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"dockerRepository\" argument has the wrong type (expected type \"string\")")
+			}
+		case "dockerRegistry":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudFunction\", its \"dockerRegistry\" argument has the wrong type (expected type \"string\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -28453,6 +28578,81 @@ func (s *mqlGcpProjectCloudFunction) Validate() error {
 	if _, ok := s.Cache.Load("description"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"description\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("status"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"status\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("entryPoint"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"entryPoint\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("runtime"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"runtime\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("timeout"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"timeout\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("availableMemoryMb"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"availableMemoryMb\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("serviceAccountEmail"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"serviceAccountEmail\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("updated"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"updated\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("versionId"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"versionId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("labels"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"labels\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("envVars"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"envVars\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("buildEnvVars"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"buildEnvVars\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("network"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"network\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("maxInstances"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"maxInstances\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("minInstances"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"minInstances\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("vpcConnector"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"vpcConnector\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("egressSettings"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"egressSettings\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("ingressSettings"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"ingressSettings\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("kmsKeyName"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"kmsKeyName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("buildWorkerPool"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"buildWorkerPool\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("buildId"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"buildId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("buildName"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"buildName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("secretEnvVars"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"secretEnvVars\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("secretVolumes"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"secretVolumes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("dockerRepository"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"dockerRepository\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("dockerRegistry"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudFunction\" resource without a \"dockerRegistry\". This field is required.")
+	}
 
 	return nil
 }
@@ -28466,6 +28666,56 @@ func (s *mqlGcpProjectCloudFunction) Register(name string) error {
 	case "name":
 		return nil
 	case "description":
+		return nil
+	case "status":
+		return nil
+	case "entryPoint":
+		return nil
+	case "runtime":
+		return nil
+	case "timeout":
+		return nil
+	case "availableMemoryMb":
+		return nil
+	case "serviceAccountEmail":
+		return nil
+	case "updated":
+		return nil
+	case "versionId":
+		return nil
+	case "labels":
+		return nil
+	case "envVars":
+		return nil
+	case "buildEnvVars":
+		return nil
+	case "network":
+		return nil
+	case "maxInstances":
+		return nil
+	case "minInstances":
+		return nil
+	case "vpcConnector":
+		return nil
+	case "egressSettings":
+		return nil
+	case "ingressSettings":
+		return nil
+	case "kmsKeyName":
+		return nil
+	case "buildWorkerPool":
+		return nil
+	case "buildId":
+		return nil
+	case "buildName":
+		return nil
+	case "secretEnvVars":
+		return nil
+	case "secretVolumes":
+		return nil
+	case "dockerRepository":
+		return nil
+	case "dockerRegistry":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cloudFunction\" resource")
@@ -28482,6 +28732,56 @@ func (s *mqlGcpProjectCloudFunction) Field(name string) (interface{}, error) {
 		return s.Name()
 	case "description":
 		return s.Description()
+	case "status":
+		return s.Status()
+	case "entryPoint":
+		return s.EntryPoint()
+	case "runtime":
+		return s.Runtime()
+	case "timeout":
+		return s.Timeout()
+	case "availableMemoryMb":
+		return s.AvailableMemoryMb()
+	case "serviceAccountEmail":
+		return s.ServiceAccountEmail()
+	case "updated":
+		return s.Updated()
+	case "versionId":
+		return s.VersionId()
+	case "labels":
+		return s.Labels()
+	case "envVars":
+		return s.EnvVars()
+	case "buildEnvVars":
+		return s.BuildEnvVars()
+	case "network":
+		return s.Network()
+	case "maxInstances":
+		return s.MaxInstances()
+	case "minInstances":
+		return s.MinInstances()
+	case "vpcConnector":
+		return s.VpcConnector()
+	case "egressSettings":
+		return s.EgressSettings()
+	case "ingressSettings":
+		return s.IngressSettings()
+	case "kmsKeyName":
+		return s.KmsKeyName()
+	case "buildWorkerPool":
+		return s.BuildWorkerPool()
+	case "buildId":
+		return s.BuildId()
+	case "buildName":
+		return s.BuildName()
+	case "secretEnvVars":
+		return s.SecretEnvVars()
+	case "secretVolumes":
+		return s.SecretVolumes()
+	case "dockerRepository":
+		return s.DockerRepository()
+	case "dockerRegistry":
+		return s.DockerRegistry()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cloudFunction\" resource")
 	}
@@ -28535,6 +28835,406 @@ func (s *mqlGcpProjectCloudFunction) Description() (string, error) {
 	return tres, nil
 }
 
+// Status accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) Status() (string, error) {
+	res, ok := s.Cache.Load("status")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"status\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"status\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// EntryPoint accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) EntryPoint() (string, error) {
+	res, ok := s.Cache.Load("entryPoint")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"entryPoint\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"entryPoint\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Runtime accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) Runtime() (string, error) {
+	res, ok := s.Cache.Load("runtime")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"runtime\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"runtime\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Timeout accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) Timeout() (*time.Time, error) {
+	res, ok := s.Cache.Load("timeout")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"timeout\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"timeout\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// AvailableMemoryMb accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) AvailableMemoryMb() (int64, error) {
+	res, ok := s.Cache.Load("availableMemoryMb")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"availableMemoryMb\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"availableMemoryMb\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceAccountEmail accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) ServiceAccountEmail() (string, error) {
+	res, ok := s.Cache.Load("serviceAccountEmail")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"serviceAccountEmail\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"serviceAccountEmail\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Updated accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) Updated() (*time.Time, error) {
+	res, ok := s.Cache.Load("updated")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"updated\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// VersionId accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) VersionId() (int64, error) {
+	res, ok := s.Cache.Load("versionId")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"versionId\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"versionId\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// Labels accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) Labels() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("labels")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"labels\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnvVars accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) EnvVars() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("envVars")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"envVars\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"envVars\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// BuildEnvVars accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) BuildEnvVars() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("buildEnvVars")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"buildEnvVars\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"buildEnvVars\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Network accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) Network() (string, error) {
+	res, ok := s.Cache.Load("network")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"network\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"network\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// MaxInstances accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) MaxInstances() (int64, error) {
+	res, ok := s.Cache.Load("maxInstances")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"maxInstances\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"maxInstances\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// MinInstances accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) MinInstances() (int64, error) {
+	res, ok := s.Cache.Load("minInstances")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"minInstances\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"minInstances\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// VpcConnector accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) VpcConnector() (string, error) {
+	res, ok := s.Cache.Load("vpcConnector")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"vpcConnector\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"vpcConnector\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// EgressSettings accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) EgressSettings() (string, error) {
+	res, ok := s.Cache.Load("egressSettings")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"egressSettings\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"egressSettings\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// IngressSettings accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) IngressSettings() (string, error) {
+	res, ok := s.Cache.Load("ingressSettings")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"ingressSettings\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"ingressSettings\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// KmsKeyName accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) KmsKeyName() (string, error) {
+	res, ok := s.Cache.Load("kmsKeyName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"kmsKeyName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"kmsKeyName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// BuildWorkerPool accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) BuildWorkerPool() (string, error) {
+	res, ok := s.Cache.Load("buildWorkerPool")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"buildWorkerPool\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"buildWorkerPool\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// BuildId accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) BuildId() (string, error) {
+	res, ok := s.Cache.Load("buildId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"buildId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"buildId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// BuildName accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) BuildName() (string, error) {
+	res, ok := s.Cache.Load("buildName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"buildName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"buildName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// SecretEnvVars accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) SecretEnvVars() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("secretEnvVars")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"secretEnvVars\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"secretEnvVars\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// SecretVolumes accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) SecretVolumes() ([]interface{}, error) {
+	res, ok := s.Cache.Load("secretVolumes")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"secretVolumes\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"secretVolumes\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// DockerRepository accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) DockerRepository() (string, error) {
+	res, ok := s.Cache.Load("dockerRepository")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"dockerRepository\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"dockerRepository\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// DockerRegistry accessor autogenerated
+func (s *mqlGcpProjectCloudFunction) DockerRegistry() (string, error) {
+	res, ok := s.Cache.Load("dockerRegistry")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudFunction\" failed: no value provided for static field \"dockerRegistry\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudFunction\" failed to cast field \"dockerRegistry\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpProjectCloudFunction) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.cloudFunction].MqlCompute")
@@ -28544,6 +29244,56 @@ func (s *mqlGcpProjectCloudFunction) MqlCompute(name string) error {
 	case "name":
 		return nil
 	case "description":
+		return nil
+	case "status":
+		return nil
+	case "entryPoint":
+		return nil
+	case "runtime":
+		return nil
+	case "timeout":
+		return nil
+	case "availableMemoryMb":
+		return nil
+	case "serviceAccountEmail":
+		return nil
+	case "updated":
+		return nil
+	case "versionId":
+		return nil
+	case "labels":
+		return nil
+	case "envVars":
+		return nil
+	case "buildEnvVars":
+		return nil
+	case "network":
+		return nil
+	case "maxInstances":
+		return nil
+	case "minInstances":
+		return nil
+	case "vpcConnector":
+		return nil
+	case "egressSettings":
+		return nil
+	case "ingressSettings":
+		return nil
+	case "kmsKeyName":
+		return nil
+	case "buildWorkerPool":
+		return nil
+	case "buildId":
+		return nil
+	case "buildName":
+		return nil
+	case "secretEnvVars":
+		return nil
+	case "secretVolumes":
+		return nil
+	case "dockerRepository":
+		return nil
+	case "dockerRegistry":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cloudFunction\" resource")
