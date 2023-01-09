@@ -52,22 +52,23 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.dns.managedzone", newGcpDnsManagedzone)
 	registry.AddFactory("gcp.dns.recordset", newGcpDnsRecordset)
 	registry.AddFactory("gcp.dns.policy", newGcpDnsPolicy)
-	registry.AddFactory("gcp.project.cluster", newGcpProjectCluster)
-	registry.AddFactory("gcp.project.cluster.nodepool", newGcpProjectClusterNodepool)
-	registry.AddFactory("gcp.project.cluster.nodepool.networkConfig", newGcpProjectClusterNodepoolNetworkConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.networkConfig.performanceConfig", newGcpProjectClusterNodepoolNetworkConfigPerformanceConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config", newGcpProjectClusterNodepoolConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.accelerator", newGcpProjectClusterNodepoolConfigAccelerator)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig", newGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.nodeTaint", newGcpProjectClusterNodepoolConfigNodeTaint)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.sandboxConfig", newGcpProjectClusterNodepoolConfigSandboxConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.shieldedInstanceConfig", newGcpProjectClusterNodepoolConfigShieldedInstanceConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.linuxNodeConfig", newGcpProjectClusterNodepoolConfigLinuxNodeConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.kubeletConfig", newGcpProjectClusterNodepoolConfigKubeletConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.gcfsConfig", newGcpProjectClusterNodepoolConfigGcfsConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.advancedMachineFeatures", newGcpProjectClusterNodepoolConfigAdvancedMachineFeatures)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.gvnicConfig", newGcpProjectClusterNodepoolConfigGvnicConfig)
-	registry.AddFactory("gcp.project.cluster.nodepool.config.confidentialNodes", newGcpProjectClusterNodepoolConfigConfidentialNodes)
+	registry.AddFactory("gcp.project.gkeService", newGcpProjectGkeService)
+	registry.AddFactory("gcp.project.gkeService.cluster", newGcpProjectGkeServiceCluster)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool", newGcpProjectGkeServiceClusterNodepool)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.networkConfig", newGcpProjectGkeServiceClusterNodepoolNetworkConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig", newGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config", newGcpProjectGkeServiceClusterNodepoolConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.accelerator", newGcpProjectGkeServiceClusterNodepoolConfigAccelerator)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig", newGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.nodeTaint", newGcpProjectGkeServiceClusterNodepoolConfigNodeTaint)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.sandboxConfig", newGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig", newGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig", newGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.kubeletConfig", newGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.gcfsConfig", newGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures", newGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.gvnicConfig", newGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.config.confidentialNodes", newGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes)
 	registry.AddFactory("gcp.project.pubsubService", newGcpProjectPubsubService)
 	registry.AddFactory("gcp.project.pubsubService.topic", newGcpProjectPubsubServiceTopic)
 	registry.AddFactory("gcp.project.pubsubService.topic.config", newGcpProjectPubsubServiceTopicConfig)
@@ -348,7 +349,7 @@ type GcpProject interface {
 	IamPolicy() ([]interface{}, error)
 	Services() ([]interface{}, error)
 	Recommendations() ([]interface{}, error)
-	Clusters() ([]interface{}, error)
+	Gke() (GcpProjectGkeService, error)
 	Pubsub() (GcpProjectPubsubService, error)
 	Kms() (GcpProjectKmsService, error)
 	EssentialContacts() ([]interface{}, error)
@@ -432,9 +433,9 @@ func newGcpProject(runtime *resources.Runtime, args *resources.Args) (interface{
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project\", its \"recommendations\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
-		case "clusters":
-			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project\", its \"clusters\" argument has the wrong type (expected type \"[]interface{}\")")
+		case "gke":
+			if _, ok := val.(GcpProjectGkeService); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"gke\" argument has the wrong type (expected type \"GcpProjectGkeService\")")
 			}
 		case "pubsub":
 			if _, ok := val.(GcpProjectPubsubService); !ok {
@@ -516,7 +517,7 @@ func (s *mqlGcpProject) Register(name string) error {
 		return nil
 	case "recommendations":
 		return nil
-	case "clusters":
+	case "gke":
 		return nil
 	case "pubsub":
 		return nil
@@ -559,8 +560,8 @@ func (s *mqlGcpProject) Field(name string) (interface{}, error) {
 		return s.Services()
 	case "recommendations":
 		return s.Recommendations()
-	case "clusters":
-		return s.Clusters()
+	case "gke":
+		return s.Gke()
 	case "pubsub":
 		return s.Pubsub()
 	case "kms":
@@ -808,25 +809,25 @@ func (s *mqlGcpProject) Recommendations() ([]interface{}, error) {
 	return tres, nil
 }
 
-// Clusters accessor autogenerated
-func (s *mqlGcpProject) Clusters() ([]interface{}, error) {
-	res, ok := s.Cache.Load("clusters")
+// Gke accessor autogenerated
+func (s *mqlGcpProject) Gke() (GcpProjectGkeService, error) {
+	res, ok := s.Cache.Load("gke")
 	if !ok || !res.Valid {
-		if err := s.ComputeClusters(); err != nil {
+		if err := s.ComputeGke(); err != nil {
 			return nil, err
 		}
-		res, ok = s.Cache.Load("clusters")
+		res, ok = s.Cache.Load("gke")
 		if !ok {
-			return nil, errors.New("\"gcp.project\" calculated \"clusters\" but didn't find its value in cache.")
+			return nil, errors.New("\"gcp.project\" calculated \"gke\" but didn't find its value in cache.")
 		}
-		s.MotorRuntime.Trigger(s, "clusters")
+		s.MotorRuntime.Trigger(s, "gke")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.([]interface{})
+	tres, ok := res.Data.(GcpProjectGkeService)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project\" failed to cast field \"clusters\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project\" failed to cast field \"gke\" to the right type (GcpProjectGkeService): %#v", res)
 	}
 	return tres, nil
 }
@@ -993,8 +994,8 @@ func (s *mqlGcpProject) MqlCompute(name string) error {
 		return s.ComputeServices()
 	case "recommendations":
 		return s.ComputeRecommendations()
-	case "clusters":
-		return s.ComputeClusters()
+	case "gke":
+		return s.ComputeGke()
 	case "pubsub":
 		return s.ComputePubsub()
 	case "kms":
@@ -1152,17 +1153,17 @@ func (s *mqlGcpProject) ComputeRecommendations() error {
 	return nil
 }
 
-// ComputeClusters computer autogenerated
-func (s *mqlGcpProject) ComputeClusters() error {
+// ComputeGke computer autogenerated
+func (s *mqlGcpProject) ComputeGke() error {
 	var err error
-	if _, ok := s.Cache.Load("clusters"); ok {
+	if _, ok := s.Cache.Load("gke"); ok {
 		return nil
 	}
-	vres, err := s.GetClusters()
+	vres, err := s.GetGke()
 	if _, ok := err.(resources.NotReadyError); ok {
 		return err
 	}
-	s.Cache.Store("clusters", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	s.Cache.Store("gke", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
 	return nil
 }
 
@@ -17212,8 +17213,179 @@ func (s *mqlGcpDnsPolicy) MqlCompute(name string) error {
 	}
 }
 
-// GcpProjectCluster resource interface
-type GcpProjectCluster interface {
+// GcpProjectGkeService resource interface
+type GcpProjectGkeService interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	ProjectId() (string, error)
+	Clusters() ([]interface{}, error)
+}
+
+// mqlGcpProjectGkeService for the gcp.project.gkeService resource
+type mqlGcpProjectGkeService struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectGkeService) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.gkeService resource
+func newGcpProjectGkeService(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectGkeService{runtime.NewResource("gcp.project.gkeService")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "clusters":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService\", its \"clusters\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.gkeService with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectGkeService) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService\" resource without a \"projectId\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectGkeService) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService].Register")
+	switch name {
+	case "projectId":
+		return nil
+	case "clusters":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectGkeService) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService].Field")
+	switch name {
+	case "projectId":
+		return s.ProjectId()
+	case "clusters":
+		return s.Clusters()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService\" resource")
+	}
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectGkeService) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Clusters accessor autogenerated
+func (s *mqlGcpProjectGkeService) Clusters() ([]interface{}, error) {
+	res, ok := s.Cache.Load("clusters")
+	if !ok || !res.Valid {
+		if err := s.ComputeClusters(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("clusters")
+		if !ok {
+			return nil, errors.New("\"gcp.project.gkeService\" calculated \"clusters\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "clusters")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService\" failed to cast field \"clusters\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectGkeService) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService].MqlCompute")
+	switch name {
+	case "projectId":
+		return nil
+	case "clusters":
+		return s.ComputeClusters()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService\" resource")
+	}
+}
+
+// ComputeClusters computer autogenerated
+func (s *mqlGcpProjectGkeService) ComputeClusters() error {
+	var err error
+	if _, ok := s.Cache.Load("clusters"); ok {
+		return nil
+	}
+	vres, err := s.GetClusters()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("clusters", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpProjectGkeServiceCluster resource interface
+type GcpProjectGkeServiceCluster interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -17242,22 +17414,22 @@ type GcpProjectCluster interface {
 	ExpirationTime() (*time.Time, error)
 }
 
-// mqlGcpProjectCluster for the gcp.project.cluster resource
-type mqlGcpProjectCluster struct {
+// mqlGcpProjectGkeServiceCluster for the gcp.project.gkeService.cluster resource
+type mqlGcpProjectGkeServiceCluster struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectCluster) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceCluster) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster resource
-func newGcpProjectCluster(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster resource
+func newGcpProjectGkeServiceCluster(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectCluster{runtime.NewResource("gcp.project.cluster")}
-	var existing GcpProjectCluster
+	res := mqlGcpProjectGkeServiceCluster{runtime.NewResource("gcp.project.gkeService.cluster")}
+	var existing GcpProjectGkeServiceCluster
 	args, existing, err = res.init(args)
 	if err != nil {
 		return nil, err
@@ -17279,96 +17451,96 @@ func newGcpProjectCluster(runtime *resources.Runtime, args *resources.Args) (int
 		switch name {
 		case "projectId":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"projectId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "description":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"description\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
 		case "loggingService":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"loggingService\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"loggingService\" argument has the wrong type (expected type \"string\")")
 			}
 		case "monitoringService":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"monitoringService\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"monitoringService\" argument has the wrong type (expected type \"string\")")
 			}
 		case "network":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"network\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"network\" argument has the wrong type (expected type \"string\")")
 			}
 		case "clusterIpv4Cidr":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"clusterIpv4Cidr\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"clusterIpv4Cidr\" argument has the wrong type (expected type \"string\")")
 			}
 		case "subnetwork":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"subnetwork\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"subnetwork\" argument has the wrong type (expected type \"string\")")
 			}
 		case "nodePools":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"nodePools\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"nodePools\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "locations":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"locations\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"locations\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "enableKubernetesAlpha":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"enableKubernetesAlpha\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"enableKubernetesAlpha\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "autopilotEnabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"autopilotEnabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"autopilotEnabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "zone":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"zone\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"zone\" argument has the wrong type (expected type \"string\")")
 			}
 		case "endpoint":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"endpoint\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"endpoint\" argument has the wrong type (expected type \"string\")")
 			}
 		case "initialClusterVersion":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"initialClusterVersion\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"initialClusterVersion\" argument has the wrong type (expected type \"string\")")
 			}
 		case "currentMasterVersion":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"currentMasterVersion\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"currentMasterVersion\" argument has the wrong type (expected type \"string\")")
 			}
 		case "status":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"status\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"status\" argument has the wrong type (expected type \"string\")")
 			}
 		case "resourceLabels":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"resourceLabels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"resourceLabels\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "created":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "expirationTime":
 			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"expirationTime\" argument has the wrong type (expected type \"*time.Time\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"expirationTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -17386,78 +17558,78 @@ func newGcpProjectCluster(runtime *resources.Runtime, args *resources.Args) (int
 	return &res, nil
 }
 
-func (s *mqlGcpProjectCluster) Validate() error {
+func (s *mqlGcpProjectGkeServiceCluster) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("projectId"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"projectId\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"projectId\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("description"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"description\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"description\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("loggingService"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"loggingService\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"loggingService\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("monitoringService"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"monitoringService\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"monitoringService\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("network"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"network\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"network\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("clusterIpv4Cidr"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"clusterIpv4Cidr\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"clusterIpv4Cidr\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("subnetwork"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"subnetwork\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"subnetwork\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("nodePools"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"nodePools\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"nodePools\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("locations"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"locations\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"locations\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enableKubernetesAlpha"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"enableKubernetesAlpha\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"enableKubernetesAlpha\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("autopilotEnabled"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"autopilotEnabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"autopilotEnabled\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("zone"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"zone\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"zone\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("endpoint"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"endpoint\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"endpoint\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("initialClusterVersion"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"initialClusterVersion\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"initialClusterVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("currentMasterVersion"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"currentMasterVersion\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"currentMasterVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("status"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"status\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"status\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("resourceLabels"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"resourceLabels\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"resourceLabels\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("created"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"created\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"created\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("expirationTime"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster\" resource without a \"expirationTime\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"expirationTime\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectCluster) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster].Register")
+func (s *mqlGcpProjectGkeServiceCluster) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster].Register")
 	switch name {
 	case "projectId":
 		return nil
@@ -17502,13 +17674,13 @@ func (s *mqlGcpProjectCluster) Register(name string) error {
 	case "expirationTime":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectCluster) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster].Field")
+func (s *mqlGcpProjectGkeServiceCluster) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster].Field")
 	switch name {
 	case "projectId":
 		return s.ProjectId()
@@ -17553,349 +17725,349 @@ func (s *mqlGcpProjectCluster) Field(name string) (interface{}, error) {
 	case "expirationTime":
 		return s.ExpirationTime()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster\" resource")
 	}
 }
 
 // ProjectId accessor autogenerated
-func (s *mqlGcpProjectCluster) ProjectId() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) ProjectId() (string, error) {
 	res, ok := s.Cache.Load("projectId")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"projectId\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"projectId\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectCluster) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcpProjectCluster) Name() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Description accessor autogenerated
-func (s *mqlGcpProjectCluster) Description() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Description() (string, error) {
 	res, ok := s.Cache.Load("description")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"description\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"description\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"description\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"description\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // LoggingService accessor autogenerated
-func (s *mqlGcpProjectCluster) LoggingService() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) LoggingService() (string, error) {
 	res, ok := s.Cache.Load("loggingService")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"loggingService\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"loggingService\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"loggingService\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"loggingService\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MonitoringService accessor autogenerated
-func (s *mqlGcpProjectCluster) MonitoringService() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) MonitoringService() (string, error) {
 	res, ok := s.Cache.Load("monitoringService")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"monitoringService\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"monitoringService\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"monitoringService\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"monitoringService\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Network accessor autogenerated
-func (s *mqlGcpProjectCluster) Network() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Network() (string, error) {
 	res, ok := s.Cache.Load("network")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"network\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"network\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"network\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"network\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ClusterIpv4Cidr accessor autogenerated
-func (s *mqlGcpProjectCluster) ClusterIpv4Cidr() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) ClusterIpv4Cidr() (string, error) {
 	res, ok := s.Cache.Load("clusterIpv4Cidr")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"clusterIpv4Cidr\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"clusterIpv4Cidr\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"clusterIpv4Cidr\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"clusterIpv4Cidr\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Subnetwork accessor autogenerated
-func (s *mqlGcpProjectCluster) Subnetwork() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Subnetwork() (string, error) {
 	res, ok := s.Cache.Load("subnetwork")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"subnetwork\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"subnetwork\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"subnetwork\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"subnetwork\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // NodePools accessor autogenerated
-func (s *mqlGcpProjectCluster) NodePools() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceCluster) NodePools() ([]interface{}, error) {
 	res, ok := s.Cache.Load("nodePools")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"nodePools\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"nodePools\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"nodePools\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"nodePools\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Locations accessor autogenerated
-func (s *mqlGcpProjectCluster) Locations() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Locations() ([]interface{}, error) {
 	res, ok := s.Cache.Load("locations")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"locations\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"locations\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"locations\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"locations\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // EnableKubernetesAlpha accessor autogenerated
-func (s *mqlGcpProjectCluster) EnableKubernetesAlpha() (bool, error) {
+func (s *mqlGcpProjectGkeServiceCluster) EnableKubernetesAlpha() (bool, error) {
 	res, ok := s.Cache.Load("enableKubernetesAlpha")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"enableKubernetesAlpha\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"enableKubernetesAlpha\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"enableKubernetesAlpha\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"enableKubernetesAlpha\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // AutopilotEnabled accessor autogenerated
-func (s *mqlGcpProjectCluster) AutopilotEnabled() (bool, error) {
+func (s *mqlGcpProjectGkeServiceCluster) AutopilotEnabled() (bool, error) {
 	res, ok := s.Cache.Load("autopilotEnabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"autopilotEnabled\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"autopilotEnabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"autopilotEnabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"autopilotEnabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Zone accessor autogenerated
-func (s *mqlGcpProjectCluster) Zone() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Zone() (string, error) {
 	res, ok := s.Cache.Load("zone")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"zone\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"zone\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"zone\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"zone\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Endpoint accessor autogenerated
-func (s *mqlGcpProjectCluster) Endpoint() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Endpoint() (string, error) {
 	res, ok := s.Cache.Load("endpoint")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"endpoint\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"endpoint\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"endpoint\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"endpoint\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // InitialClusterVersion accessor autogenerated
-func (s *mqlGcpProjectCluster) InitialClusterVersion() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) InitialClusterVersion() (string, error) {
 	res, ok := s.Cache.Load("initialClusterVersion")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"initialClusterVersion\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"initialClusterVersion\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"initialClusterVersion\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"initialClusterVersion\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CurrentMasterVersion accessor autogenerated
-func (s *mqlGcpProjectCluster) CurrentMasterVersion() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) CurrentMasterVersion() (string, error) {
 	res, ok := s.Cache.Load("currentMasterVersion")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"currentMasterVersion\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"currentMasterVersion\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"currentMasterVersion\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"currentMasterVersion\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Status accessor autogenerated
-func (s *mqlGcpProjectCluster) Status() (string, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Status() (string, error) {
 	res, ok := s.Cache.Load("status")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"status\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"status\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"status\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"status\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ResourceLabels accessor autogenerated
-func (s *mqlGcpProjectCluster) ResourceLabels() (map[string]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceCluster) ResourceLabels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("resourceLabels")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"resourceLabels\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"resourceLabels\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"resourceLabels\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"resourceLabels\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Created accessor autogenerated
-func (s *mqlGcpProjectCluster) Created() (*time.Time, error) {
+func (s *mqlGcpProjectGkeServiceCluster) Created() (*time.Time, error) {
 	res, ok := s.Cache.Load("created")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"created\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"created\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // ExpirationTime accessor autogenerated
-func (s *mqlGcpProjectCluster) ExpirationTime() (*time.Time, error) {
+func (s *mqlGcpProjectGkeServiceCluster) ExpirationTime() (*time.Time, error) {
 	res, ok := s.Cache.Load("expirationTime")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster\" failed: no value provided for static field \"expirationTime\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"expirationTime\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster\" failed to cast field \"expirationTime\" to the right type (*time.Time): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"expirationTime\" to the right type (*time.Time): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectCluster) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster].MqlCompute")
+func (s *mqlGcpProjectGkeServiceCluster) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster].MqlCompute")
 	switch name {
 	case "projectId":
 		return nil
@@ -17940,12 +18112,12 @@ func (s *mqlGcpProjectCluster) MqlCompute(name string) error {
 	case "expirationTime":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster\" resource")
 	}
 }
 
-// GcpProjectClusterNodepool resource interface
-type GcpProjectClusterNodepool interface {
+// GcpProjectGkeServiceClusterNodepool resource interface
+type GcpProjectGkeServiceClusterNodepool interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -17953,30 +18125,30 @@ type GcpProjectClusterNodepool interface {
 	Validate() error
 	Id() (string, error)
 	Name() (string, error)
-	Config() (GcpProjectClusterNodepoolConfig, error)
+	Config() (GcpProjectGkeServiceClusterNodepoolConfig, error)
 	InitialNodeCount() (int64, error)
 	Locations() ([]interface{}, error)
-	NetworkConfig() (GcpProjectClusterNodepoolNetworkConfig, error)
+	NetworkConfig() (GcpProjectGkeServiceClusterNodepoolNetworkConfig, error)
 	Version() (string, error)
 	InstanceGroupUrls() ([]interface{}, error)
 	Status() (string, error)
 }
 
-// mqlGcpProjectClusterNodepool for the gcp.project.cluster.nodepool resource
-type mqlGcpProjectClusterNodepool struct {
+// mqlGcpProjectGkeServiceClusterNodepool for the gcp.project.gkeService.cluster.nodepool resource
+type mqlGcpProjectGkeServiceClusterNodepool struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepool) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool resource
-func newGcpProjectClusterNodepool(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool resource
+func newGcpProjectGkeServiceClusterNodepool(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepool{runtime.NewResource("gcp.project.cluster.nodepool")}
+	res := mqlGcpProjectGkeServiceClusterNodepool{runtime.NewResource("gcp.project.gkeService.cluster.nodepool")}
 	// assign all named fields
 	var id string
 
@@ -17990,48 +18162,48 @@ func newGcpProjectClusterNodepool(runtime *resources.Runtime, args *resources.Ar
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "config":
-			if _, ok := val.(GcpProjectClusterNodepoolConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"config\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"config\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfig\")")
 			}
 		case "initialNodeCount":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"initialNodeCount\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"initialNodeCount\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "locations":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"locations\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"locations\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "networkConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolNetworkConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"networkConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolNetworkConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolNetworkConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"networkConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolNetworkConfig\")")
 			}
 		case "version":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"version\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"version\" argument has the wrong type (expected type \"string\")")
 			}
 		case "instanceGroupUrls":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"instanceGroupUrls\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"instanceGroupUrls\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "status":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"status\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"status\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -18049,42 +18221,42 @@ func newGcpProjectClusterNodepool(runtime *resources.Runtime, args *resources.Ar
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepool) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("config"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"config\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"config\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("initialNodeCount"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"initialNodeCount\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"initialNodeCount\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("locations"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"locations\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"locations\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("networkConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"networkConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"networkConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("version"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"version\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"version\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("instanceGroupUrls"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"instanceGroupUrls\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"instanceGroupUrls\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("status"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool\" resource without a \"status\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"status\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool].Register")
 	switch name {
 	case "id":
 		return nil
@@ -18105,13 +18277,13 @@ func (s *mqlGcpProjectClusterNodepool) Register(name string) error {
 	case "status":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -18132,157 +18304,157 @@ func (s *mqlGcpProjectClusterNodepool) Field(name string) (interface{}, error) {
 	case "status":
 		return s.Status()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Name() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Config accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Config() (GcpProjectClusterNodepoolConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Config() (GcpProjectGkeServiceClusterNodepoolConfig, error) {
 	res, ok := s.Cache.Load("config")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"config\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"config\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"config\" to the right type (GcpProjectClusterNodepoolConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"config\" to the right type (GcpProjectGkeServiceClusterNodepoolConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // InitialNodeCount accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) InitialNodeCount() (int64, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) InitialNodeCount() (int64, error) {
 	res, ok := s.Cache.Load("initialNodeCount")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"initialNodeCount\"")
+		return 0, errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"initialNodeCount\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"initialNodeCount\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"initialNodeCount\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Locations accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Locations() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Locations() ([]interface{}, error) {
 	res, ok := s.Cache.Load("locations")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"locations\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"locations\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"locations\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"locations\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // NetworkConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) NetworkConfig() (GcpProjectClusterNodepoolNetworkConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) NetworkConfig() (GcpProjectGkeServiceClusterNodepoolNetworkConfig, error) {
 	res, ok := s.Cache.Load("networkConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"networkConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"networkConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolNetworkConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolNetworkConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"networkConfig\" to the right type (GcpProjectClusterNodepoolNetworkConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"networkConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolNetworkConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // Version accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Version() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Version() (string, error) {
 	res, ok := s.Cache.Load("version")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"version\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"version\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"version\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"version\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // InstanceGroupUrls accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) InstanceGroupUrls() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) InstanceGroupUrls() ([]interface{}, error) {
 	res, ok := s.Cache.Load("instanceGroupUrls")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"instanceGroupUrls\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"instanceGroupUrls\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"instanceGroupUrls\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"instanceGroupUrls\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Status accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) Status() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Status() (string, error) {
 	res, ok := s.Cache.Load("status")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool\" failed: no value provided for static field \"status\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"status\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool\" failed to cast field \"status\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"status\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepool) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepool) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -18303,12 +18475,12 @@ func (s *mqlGcpProjectClusterNodepool) MqlCompute(name string) error {
 	case "status":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolNetworkConfig resource interface
-type GcpProjectClusterNodepoolNetworkConfig interface {
+// GcpProjectGkeServiceClusterNodepoolNetworkConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolNetworkConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -18317,24 +18489,24 @@ type GcpProjectClusterNodepoolNetworkConfig interface {
 	Id() (string, error)
 	PodRange() (string, error)
 	PodIpv4CidrBlock() (string, error)
-	PerformanceConfig() (GcpProjectClusterNodepoolNetworkConfigPerformanceConfig, error)
+	PerformanceConfig() (GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig, error)
 }
 
-// mqlGcpProjectClusterNodepoolNetworkConfig for the gcp.project.cluster.nodepool.networkConfig resource
-type mqlGcpProjectClusterNodepoolNetworkConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig for the gcp.project.gkeService.cluster.nodepool.networkConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.networkConfig resource
-func newGcpProjectClusterNodepoolNetworkConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.networkConfig resource
+func newGcpProjectGkeServiceClusterNodepoolNetworkConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolNetworkConfig{runtime.NewResource("gcp.project.cluster.nodepool.networkConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.networkConfig")}
 	// assign all named fields
 	var id string
 
@@ -18348,28 +18520,28 @@ func newGcpProjectClusterNodepoolNetworkConfig(runtime *resources.Runtime, args 
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "podRange":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig\", its \"podRange\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig\", its \"podRange\" argument has the wrong type (expected type \"string\")")
 			}
 		case "podIpv4CidrBlock":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig\", its \"podIpv4CidrBlock\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig\", its \"podIpv4CidrBlock\" argument has the wrong type (expected type \"string\")")
 			}
 		case "performanceConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolNetworkConfigPerformanceConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig\", its \"performanceConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolNetworkConfigPerformanceConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig\", its \"performanceConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.networkConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.networkConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -18387,27 +18559,27 @@ func newGcpProjectClusterNodepoolNetworkConfig(runtime *resources.Runtime, args 
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.networkConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.networkConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("podRange"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.networkConfig\" resource without a \"podRange\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.networkConfig\" resource without a \"podRange\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("podIpv4CidrBlock"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.networkConfig\" resource without a \"podIpv4CidrBlock\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.networkConfig\" resource without a \"podIpv4CidrBlock\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("performanceConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.networkConfig\" resource without a \"performanceConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.networkConfig\" resource without a \"performanceConfig\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.networkConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.networkConfig].Register")
 	switch name {
 	case "id":
 		return nil
@@ -18418,13 +18590,13 @@ func (s *mqlGcpProjectClusterNodepoolNetworkConfig) Register(name string) error 
 	case "performanceConfig":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.networkConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.networkConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.networkConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.networkConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -18435,77 +18607,77 @@ func (s *mqlGcpProjectClusterNodepoolNetworkConfig) Field(name string) (interfac
 	case "performanceConfig":
 		return s.PerformanceConfig()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.networkConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.networkConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.networkConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.networkConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PodRange accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) PodRange() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) PodRange() (string, error) {
 	res, ok := s.Cache.Load("podRange")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.networkConfig\" failed: no value provided for static field \"podRange\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed: no value provided for static field \"podRange\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.networkConfig\" failed to cast field \"podRange\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed to cast field \"podRange\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PodIpv4CidrBlock accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) PodIpv4CidrBlock() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) PodIpv4CidrBlock() (string, error) {
 	res, ok := s.Cache.Load("podIpv4CidrBlock")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.networkConfig\" failed: no value provided for static field \"podIpv4CidrBlock\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed: no value provided for static field \"podIpv4CidrBlock\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.networkConfig\" failed to cast field \"podIpv4CidrBlock\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed to cast field \"podIpv4CidrBlock\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PerformanceConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) PerformanceConfig() (GcpProjectClusterNodepoolNetworkConfigPerformanceConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) PerformanceConfig() (GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig, error) {
 	res, ok := s.Cache.Load("performanceConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.networkConfig\" failed: no value provided for static field \"performanceConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed: no value provided for static field \"performanceConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolNetworkConfigPerformanceConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.networkConfig\" failed to cast field \"performanceConfig\" to the right type (GcpProjectClusterNodepoolNetworkConfigPerformanceConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.networkConfig\" failed to cast field \"performanceConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.networkConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.networkConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -18516,12 +18688,12 @@ func (s *mqlGcpProjectClusterNodepoolNetworkConfig) MqlCompute(name string) erro
 	case "performanceConfig":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.networkConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.networkConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolNetworkConfigPerformanceConfig resource interface
-type GcpProjectClusterNodepoolNetworkConfigPerformanceConfig interface {
+// GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -18531,21 +18703,21 @@ type GcpProjectClusterNodepoolNetworkConfigPerformanceConfig interface {
 	TotalEgressBandwidthTier() (string, error)
 }
 
-// mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig for the gcp.project.cluster.nodepool.networkConfig.performanceConfig resource
-type mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig for the gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.networkConfig.performanceConfig resource
-func newGcpProjectClusterNodepoolNetworkConfigPerformanceConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig resource
+func newGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig{runtime.NewResource("gcp.project.cluster.nodepool.networkConfig.performanceConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig")}
 	// assign all named fields
 	var id string
 
@@ -18559,20 +18731,20 @@ func newGcpProjectClusterNodepoolNetworkConfigPerformanceConfig(runtime *resourc
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "totalEgressBandwidthTier":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\", its \"totalEgressBandwidthTier\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\", its \"totalEgressBandwidthTier\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.networkConfig.performanceConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -18590,91 +18762,91 @@ func newGcpProjectClusterNodepoolNetworkConfigPerformanceConfig(runtime *resourc
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("totalEgressBandwidthTier"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" resource without a \"totalEgressBandwidthTier\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" resource without a \"totalEgressBandwidthTier\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.networkConfig.performanceConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig].Register")
 	switch name {
 	case "id":
 		return nil
 	case "totalEgressBandwidthTier":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.networkConfig.performanceConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "totalEgressBandwidthTier":
 		return s.TotalEgressBandwidthTier()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // TotalEgressBandwidthTier accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) TotalEgressBandwidthTier() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) TotalEgressBandwidthTier() (string, error) {
 	res, ok := s.Cache.Load("totalEgressBandwidthTier")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" failed: no value provided for static field \"totalEgressBandwidthTier\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" failed: no value provided for static field \"totalEgressBandwidthTier\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" failed to cast field \"totalEgressBandwidthTier\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" failed to cast field \"totalEgressBandwidthTier\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolNetworkConfigPerformanceConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.networkConfig.performanceConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "totalEgressBandwidthTier":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.networkConfig.performanceConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfig resource interface
-type GcpProjectClusterNodepoolConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -18696,33 +18868,33 @@ type GcpProjectClusterNodepoolConfig interface {
 	MinCpuPlatform() (string, error)
 	WorkloadMetadataMode() (string, error)
 	Taints() ([]interface{}, error)
-	SandboxConfig() (GcpProjectClusterNodepoolConfigSandboxConfig, error)
-	ShieldedInstanceConfig() (GcpProjectClusterNodepoolConfigShieldedInstanceConfig, error)
-	LinuxNodeConfig() (GcpProjectClusterNodepoolConfigLinuxNodeConfig, error)
-	KubeletConfig() (GcpProjectClusterNodepoolConfigKubeletConfig, error)
+	SandboxConfig() (GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig, error)
+	ShieldedInstanceConfig() (GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig, error)
+	LinuxNodeConfig() (GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig, error)
+	KubeletConfig() (GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig, error)
 	BootDiskKmsKey() (string, error)
-	GcfsConfig() (GcpProjectClusterNodepoolConfigGcfsConfig, error)
-	AdvancedMachineFeatures() (GcpProjectClusterNodepoolConfigAdvancedMachineFeatures, error)
-	GvnicConfig() (GcpProjectClusterNodepoolConfigGvnicConfig, error)
+	GcfsConfig() (GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig, error)
+	AdvancedMachineFeatures() (GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures, error)
+	GvnicConfig() (GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig, error)
 	Spot() (bool, error)
-	ConfidentialNodes() (GcpProjectClusterNodepoolConfigConfidentialNodes, error)
+	ConfidentialNodes() (GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfig for the gcp.project.cluster.nodepool.config resource
-type mqlGcpProjectClusterNodepoolConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfig for the gcp.project.gkeService.cluster.nodepool.config resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config resource
-func newGcpProjectClusterNodepoolConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config resource
+func newGcpProjectGkeServiceClusterNodepoolConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfig{runtime.NewResource("gcp.project.cluster.nodepool.config")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config")}
 	// assign all named fields
 	var id string
 
@@ -18736,116 +18908,116 @@ func newGcpProjectClusterNodepoolConfig(runtime *resources.Runtime, args *resour
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "machineType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"machineType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"machineType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "diskSizeGb":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"diskSizeGb\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"diskSizeGb\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "oauthScopes":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"oauthScopes\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"oauthScopes\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "serviceAccount":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"serviceAccount\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"serviceAccount\" argument has the wrong type (expected type \"string\")")
 			}
 		case "metadata":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"metadata\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"metadata\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "imageType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"imageType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"imageType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "labels":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "localSsdCount":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"localSsdCount\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"localSsdCount\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "tags":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"tags\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"tags\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "preemptible":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"preemptible\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"preemptible\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "accelerators":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"accelerators\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"accelerators\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "diskType":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"diskType\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"diskType\" argument has the wrong type (expected type \"string\")")
 			}
 		case "minCpuPlatform":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"minCpuPlatform\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"minCpuPlatform\" argument has the wrong type (expected type \"string\")")
 			}
 		case "workloadMetadataMode":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"workloadMetadataMode\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"workloadMetadataMode\" argument has the wrong type (expected type \"string\")")
 			}
 		case "taints":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"taints\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"taints\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "sandboxConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigSandboxConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"sandboxConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigSandboxConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"sandboxConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig\")")
 			}
 		case "shieldedInstanceConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigShieldedInstanceConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"shieldedInstanceConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigShieldedInstanceConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"shieldedInstanceConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig\")")
 			}
 		case "linuxNodeConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigLinuxNodeConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"linuxNodeConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigLinuxNodeConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"linuxNodeConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig\")")
 			}
 		case "kubeletConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigKubeletConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"kubeletConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigKubeletConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"kubeletConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig\")")
 			}
 		case "bootDiskKmsKey":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"bootDiskKmsKey\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"bootDiskKmsKey\" argument has the wrong type (expected type \"string\")")
 			}
 		case "gcfsConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigGcfsConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"gcfsConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigGcfsConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"gcfsConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig\")")
 			}
 		case "advancedMachineFeatures":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigAdvancedMachineFeatures); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"advancedMachineFeatures\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigAdvancedMachineFeatures\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"advancedMachineFeatures\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures\")")
 			}
 		case "gvnicConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigGvnicConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"gvnicConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigGvnicConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"gvnicConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig\")")
 			}
 		case "spot":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"spot\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"spot\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "confidentialNodes":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigConfidentialNodes); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"confidentialNodes\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigConfidentialNodes\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"confidentialNodes\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -18863,93 +19035,93 @@ func newGcpProjectClusterNodepoolConfig(runtime *resources.Runtime, args *resour
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("machineType"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"machineType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"machineType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("diskSizeGb"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"diskSizeGb\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"diskSizeGb\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("oauthScopes"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"oauthScopes\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"oauthScopes\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("serviceAccount"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"serviceAccount\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"serviceAccount\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("metadata"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"metadata\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"metadata\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("imageType"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"imageType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"imageType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("labels"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"labels\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"labels\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("localSsdCount"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"localSsdCount\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"localSsdCount\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("preemptible"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"preemptible\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"preemptible\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("accelerators"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"accelerators\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"accelerators\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("diskType"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"diskType\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"diskType\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("minCpuPlatform"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"minCpuPlatform\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"minCpuPlatform\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("workloadMetadataMode"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"workloadMetadataMode\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"workloadMetadataMode\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("taints"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"taints\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"taints\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sandboxConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"sandboxConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"sandboxConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("shieldedInstanceConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"shieldedInstanceConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"shieldedInstanceConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("linuxNodeConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"linuxNodeConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"linuxNodeConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kubeletConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"kubeletConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"kubeletConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("bootDiskKmsKey"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"bootDiskKmsKey\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"bootDiskKmsKey\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("gcfsConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"gcfsConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"gcfsConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("advancedMachineFeatures"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"advancedMachineFeatures\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"advancedMachineFeatures\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("gvnicConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"gvnicConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"gvnicConfig\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("spot"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"spot\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"spot\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("confidentialNodes"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config\" resource without a \"confidentialNodes\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"confidentialNodes\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config].Register")
 	switch name {
 	case "id":
 		return nil
@@ -19004,13 +19176,13 @@ func (s *mqlGcpProjectClusterNodepoolConfig) Register(name string) error {
 	case "confidentialNodes":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -19065,429 +19237,429 @@ func (s *mqlGcpProjectClusterNodepoolConfig) Field(name string) (interface{}, er
 	case "confidentialNodes":
 		return s.ConfidentialNodes()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MachineType accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) MachineType() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) MachineType() (string, error) {
 	res, ok := s.Cache.Load("machineType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"machineType\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"machineType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"machineType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"machineType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // DiskSizeGb accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) DiskSizeGb() (int64, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) DiskSizeGb() (int64, error) {
 	res, ok := s.Cache.Load("diskSizeGb")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"diskSizeGb\"")
+		return 0, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"diskSizeGb\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"diskSizeGb\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"diskSizeGb\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // OauthScopes accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) OauthScopes() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) OauthScopes() ([]interface{}, error) {
 	res, ok := s.Cache.Load("oauthScopes")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"oauthScopes\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"oauthScopes\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"oauthScopes\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"oauthScopes\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ServiceAccount accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) ServiceAccount() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ServiceAccount() (string, error) {
 	res, ok := s.Cache.Load("serviceAccount")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"serviceAccount\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"serviceAccount\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"serviceAccount\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"serviceAccount\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Metadata accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Metadata() (map[string]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Metadata() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("metadata")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"metadata\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"metadata\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"metadata\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"metadata\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // ImageType accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) ImageType() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ImageType() (string, error) {
 	res, ok := s.Cache.Load("imageType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"imageType\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"imageType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"imageType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"imageType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Labels accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Labels() (map[string]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Labels() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("labels")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"labels\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"labels\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // LocalSsdCount accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) LocalSsdCount() (int64, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) LocalSsdCount() (int64, error) {
 	res, ok := s.Cache.Load("localSsdCount")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"localSsdCount\"")
+		return 0, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"localSsdCount\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"localSsdCount\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"localSsdCount\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Tags() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Tags() ([]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"tags\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"tags\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Preemptible accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Preemptible() (bool, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Preemptible() (bool, error) {
 	res, ok := s.Cache.Load("preemptible")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"preemptible\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"preemptible\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"preemptible\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"preemptible\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Accelerators accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Accelerators() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Accelerators() ([]interface{}, error) {
 	res, ok := s.Cache.Load("accelerators")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"accelerators\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"accelerators\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"accelerators\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"accelerators\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DiskType accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) DiskType() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) DiskType() (string, error) {
 	res, ok := s.Cache.Load("diskType")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"diskType\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"diskType\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"diskType\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"diskType\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MinCpuPlatform accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) MinCpuPlatform() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) MinCpuPlatform() (string, error) {
 	res, ok := s.Cache.Load("minCpuPlatform")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"minCpuPlatform\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"minCpuPlatform\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"minCpuPlatform\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"minCpuPlatform\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // WorkloadMetadataMode accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) WorkloadMetadataMode() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) WorkloadMetadataMode() (string, error) {
 	res, ok := s.Cache.Load("workloadMetadataMode")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"workloadMetadataMode\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"workloadMetadataMode\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"workloadMetadataMode\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"workloadMetadataMode\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Taints accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Taints() ([]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Taints() ([]interface{}, error) {
 	res, ok := s.Cache.Load("taints")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"taints\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"taints\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"taints\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"taints\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // SandboxConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) SandboxConfig() (GcpProjectClusterNodepoolConfigSandboxConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) SandboxConfig() (GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig, error) {
 	res, ok := s.Cache.Load("sandboxConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"sandboxConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"sandboxConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigSandboxConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"sandboxConfig\" to the right type (GcpProjectClusterNodepoolConfigSandboxConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"sandboxConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // ShieldedInstanceConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) ShieldedInstanceConfig() (GcpProjectClusterNodepoolConfigShieldedInstanceConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ShieldedInstanceConfig() (GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig, error) {
 	res, ok := s.Cache.Load("shieldedInstanceConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"shieldedInstanceConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"shieldedInstanceConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigShieldedInstanceConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"shieldedInstanceConfig\" to the right type (GcpProjectClusterNodepoolConfigShieldedInstanceConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"shieldedInstanceConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // LinuxNodeConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) LinuxNodeConfig() (GcpProjectClusterNodepoolConfigLinuxNodeConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) LinuxNodeConfig() (GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig, error) {
 	res, ok := s.Cache.Load("linuxNodeConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"linuxNodeConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"linuxNodeConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigLinuxNodeConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"linuxNodeConfig\" to the right type (GcpProjectClusterNodepoolConfigLinuxNodeConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"linuxNodeConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // KubeletConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) KubeletConfig() (GcpProjectClusterNodepoolConfigKubeletConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) KubeletConfig() (GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig, error) {
 	res, ok := s.Cache.Load("kubeletConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"kubeletConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"kubeletConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigKubeletConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"kubeletConfig\" to the right type (GcpProjectClusterNodepoolConfigKubeletConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"kubeletConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // BootDiskKmsKey accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) BootDiskKmsKey() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) BootDiskKmsKey() (string, error) {
 	res, ok := s.Cache.Load("bootDiskKmsKey")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"bootDiskKmsKey\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"bootDiskKmsKey\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"bootDiskKmsKey\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"bootDiskKmsKey\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // GcfsConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) GcfsConfig() (GcpProjectClusterNodepoolConfigGcfsConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) GcfsConfig() (GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig, error) {
 	res, ok := s.Cache.Load("gcfsConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"gcfsConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"gcfsConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigGcfsConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"gcfsConfig\" to the right type (GcpProjectClusterNodepoolConfigGcfsConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"gcfsConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // AdvancedMachineFeatures accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) AdvancedMachineFeatures() (GcpProjectClusterNodepoolConfigAdvancedMachineFeatures, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) AdvancedMachineFeatures() (GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures, error) {
 	res, ok := s.Cache.Load("advancedMachineFeatures")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"advancedMachineFeatures\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"advancedMachineFeatures\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigAdvancedMachineFeatures)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"advancedMachineFeatures\" to the right type (GcpProjectClusterNodepoolConfigAdvancedMachineFeatures): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"advancedMachineFeatures\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures): %#v", res)
 	}
 	return tres, nil
 }
 
 // GvnicConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) GvnicConfig() (GcpProjectClusterNodepoolConfigGvnicConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) GvnicConfig() (GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig, error) {
 	res, ok := s.Cache.Load("gvnicConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"gvnicConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"gvnicConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigGvnicConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"gvnicConfig\" to the right type (GcpProjectClusterNodepoolConfigGvnicConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"gvnicConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // Spot accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) Spot() (bool, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Spot() (bool, error) {
 	res, ok := s.Cache.Load("spot")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"spot\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"spot\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"spot\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"spot\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // ConfidentialNodes accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) ConfidentialNodes() (GcpProjectClusterNodepoolConfigConfidentialNodes, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ConfidentialNodes() (GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes, error) {
 	res, ok := s.Cache.Load("confidentialNodes")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config\" failed: no value provided for static field \"confidentialNodes\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"confidentialNodes\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigConfidentialNodes)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config\" failed to cast field \"confidentialNodes\" to the right type (GcpProjectClusterNodepoolConfigConfidentialNodes): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"confidentialNodes\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -19542,12 +19714,12 @@ func (s *mqlGcpProjectClusterNodepoolConfig) MqlCompute(name string) error {
 	case "confidentialNodes":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigAccelerator resource interface
-type GcpProjectClusterNodepoolConfigAccelerator interface {
+// GcpProjectGkeServiceClusterNodepoolConfigAccelerator resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigAccelerator interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -19557,24 +19729,24 @@ type GcpProjectClusterNodepoolConfigAccelerator interface {
 	Count() (int64, error)
 	Type() (string, error)
 	GpuPartitionSize() (string, error)
-	GpuSharingConfig() (GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig, error)
+	GpuSharingConfig() (GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigAccelerator for the gcp.project.cluster.nodepool.config.accelerator resource
-type mqlGcpProjectClusterNodepoolConfigAccelerator struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator for the gcp.project.gkeService.cluster.nodepool.config.accelerator resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.accelerator resource
-func newGcpProjectClusterNodepoolConfigAccelerator(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.accelerator resource
+func newGcpProjectGkeServiceClusterNodepoolConfigAccelerator(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigAccelerator{runtime.NewResource("gcp.project.cluster.nodepool.config.accelerator")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.accelerator")}
 	// assign all named fields
 	var id string
 
@@ -19588,32 +19760,32 @@ func newGcpProjectClusterNodepoolConfigAccelerator(runtime *resources.Runtime, a
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "count":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator\", its \"count\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator\", its \"count\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "gpuPartitionSize":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator\", its \"gpuPartitionSize\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator\", its \"gpuPartitionSize\" argument has the wrong type (expected type \"string\")")
 			}
 		case "gpuSharingConfig":
-			if _, ok := val.(GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator\", its \"gpuSharingConfig\" argument has the wrong type (expected type \"GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig\")")
+			if _, ok := val.(GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator\", its \"gpuSharingConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.accelerator with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.accelerator with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -19631,30 +19803,30 @@ func newGcpProjectClusterNodepoolConfigAccelerator(runtime *resources.Runtime, a
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("count"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator\" resource without a \"count\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource without a \"count\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("gpuPartitionSize"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator\" resource without a \"gpuPartitionSize\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource without a \"gpuPartitionSize\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("gpuSharingConfig"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator\" resource without a \"gpuSharingConfig\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource without a \"gpuSharingConfig\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.accelerator].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.accelerator].Register")
 	switch name {
 	case "id":
 		return nil
@@ -19667,13 +19839,13 @@ func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Register(name string) er
 	case "gpuSharingConfig":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.accelerator\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.accelerator].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.accelerator].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -19686,93 +19858,93 @@ func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Field(name string) (inte
 	case "gpuSharingConfig":
 		return s.GpuSharingConfig()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.accelerator\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Count accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Count() (int64, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) Count() (int64, error) {
 	res, ok := s.Cache.Load("count")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"count\"")
+		return 0, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"count\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator\" failed to cast field \"count\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed to cast field \"count\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) Type() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // GpuPartitionSize accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) GpuPartitionSize() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) GpuPartitionSize() (string, error) {
 	res, ok := s.Cache.Load("gpuPartitionSize")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"gpuPartitionSize\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"gpuPartitionSize\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator\" failed to cast field \"gpuPartitionSize\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed to cast field \"gpuPartitionSize\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // GpuSharingConfig accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) GpuSharingConfig() (GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) GpuSharingConfig() (GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig, error) {
 	res, ok := s.Cache.Load("gpuSharingConfig")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"gpuSharingConfig\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed: no value provided for static field \"gpuSharingConfig\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	tres, ok := res.Data.(GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig)
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig)
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator\" failed to cast field \"gpuSharingConfig\" to the right type (GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator\" failed to cast field \"gpuSharingConfig\" to the right type (GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.accelerator].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAccelerator) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.accelerator].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -19785,12 +19957,12 @@ func (s *mqlGcpProjectClusterNodepoolConfigAccelerator) MqlCompute(name string) 
 	case "gpuSharingConfig":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.accelerator\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.accelerator\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig resource interface
-type GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -19801,21 +19973,21 @@ type GcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig interface {
 	Strategy() (string, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig for the gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig resource
-type mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig for the gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig resource
-func newGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig resource
+func newGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig{runtime.NewResource("gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig")}
 	// assign all named fields
 	var id string
 
@@ -19829,24 +20001,24 @@ func newGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig(runtime *reso
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "maxSharedClientsPerGpu":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"maxSharedClientsPerGpu\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"maxSharedClientsPerGpu\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "strategy":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"strategy\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"strategy\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -19864,24 +20036,24 @@ func newGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig(runtime *reso
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("maxSharedClientsPerGpu"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource without a \"maxSharedClientsPerGpu\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource without a \"maxSharedClientsPerGpu\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("strategy"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource without a \"strategy\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource without a \"strategy\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig].Register")
 	switch name {
 	case "id":
 		return nil
@@ -19890,13 +20062,13 @@ func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) Register
 	case "strategy":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -19905,61 +20077,61 @@ func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) Field(na
 	case "strategy":
 		return s.Strategy()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // MaxSharedClientsPerGpu accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) MaxSharedClientsPerGpu() (int64, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) MaxSharedClientsPerGpu() (int64, error) {
 	res, ok := s.Cache.Load("maxSharedClientsPerGpu")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed: no value provided for static field \"maxSharedClientsPerGpu\"")
+		return 0, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed: no value provided for static field \"maxSharedClientsPerGpu\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed to cast field \"maxSharedClientsPerGpu\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed to cast field \"maxSharedClientsPerGpu\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Strategy accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) Strategy() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) Strategy() (string, error) {
 	res, ok := s.Cache.Load("strategy")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed: no value provided for static field \"strategy\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed: no value provided for static field \"strategy\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed to cast field \"strategy\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" failed to cast field \"strategy\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAcceleratorGpuSharingConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -19968,12 +20140,12 @@ func (s *mqlGcpProjectClusterNodepoolConfigAcceleratorGpuSharingConfig) MqlCompu
 	case "strategy":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.accelerator.gpuSharingConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigNodeTaint resource interface
-type GcpProjectClusterNodepoolConfigNodeTaint interface {
+// GcpProjectGkeServiceClusterNodepoolConfigNodeTaint resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigNodeTaint interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -19985,21 +20157,21 @@ type GcpProjectClusterNodepoolConfigNodeTaint interface {
 	Effect() (string, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigNodeTaint for the gcp.project.cluster.nodepool.config.nodeTaint resource
-type mqlGcpProjectClusterNodepoolConfigNodeTaint struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint for the gcp.project.gkeService.cluster.nodepool.config.nodeTaint resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.nodeTaint resource
-func newGcpProjectClusterNodepoolConfigNodeTaint(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.nodeTaint resource
+func newGcpProjectGkeServiceClusterNodepoolConfigNodeTaint(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigNodeTaint{runtime.NewResource("gcp.project.cluster.nodepool.config.nodeTaint")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.nodeTaint")}
 	// assign all named fields
 	var id string
 
@@ -20013,28 +20185,28 @@ func newGcpProjectClusterNodepoolConfigNodeTaint(runtime *resources.Runtime, arg
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.nodeTaint\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "key":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.nodeTaint\", its \"key\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\", its \"key\" argument has the wrong type (expected type \"string\")")
 			}
 		case "value":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.nodeTaint\", its \"value\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\", its \"value\" argument has the wrong type (expected type \"string\")")
 			}
 		case "effect":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.nodeTaint\", its \"effect\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\", its \"effect\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.nodeTaint\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.nodeTaint with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.nodeTaint with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -20052,27 +20224,27 @@ func newGcpProjectClusterNodepoolConfigNodeTaint(runtime *resources.Runtime, arg
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.nodeTaint\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("key"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.nodeTaint\" resource without a \"key\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" resource without a \"key\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("value"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.nodeTaint\" resource without a \"value\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" resource without a \"value\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("effect"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.nodeTaint\" resource without a \"effect\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" resource without a \"effect\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.nodeTaint].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.nodeTaint].Register")
 	switch name {
 	case "id":
 		return nil
@@ -20083,13 +20255,13 @@ func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Register(name string) erro
 	case "effect":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.nodeTaint\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.nodeTaint].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.nodeTaint].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -20100,77 +20272,77 @@ func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Field(name string) (interf
 	case "effect":
 		return s.Effect()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.nodeTaint\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Key accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Key() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) Key() (string, error) {
 	res, ok := s.Cache.Load("key")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"key\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"key\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed to cast field \"key\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed to cast field \"key\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Value accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Value() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) Value() (string, error) {
 	res, ok := s.Cache.Load("value")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"value\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"value\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed to cast field \"value\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed to cast field \"value\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Effect accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) Effect() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) Effect() (string, error) {
 	res, ok := s.Cache.Load("effect")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"effect\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed: no value provided for static field \"effect\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.nodeTaint\" failed to cast field \"effect\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" failed to cast field \"effect\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.nodeTaint].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigNodeTaint) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.nodeTaint].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -20181,12 +20353,12 @@ func (s *mqlGcpProjectClusterNodepoolConfigNodeTaint) MqlCompute(name string) er
 	case "effect":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.nodeTaint\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.nodeTaint\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigSandboxConfig resource interface
-type GcpProjectClusterNodepoolConfigSandboxConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigSandboxConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -20196,21 +20368,21 @@ type GcpProjectClusterNodepoolConfigSandboxConfig interface {
 	Type() (string, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigSandboxConfig for the gcp.project.cluster.nodepool.config.sandboxConfig resource
-type mqlGcpProjectClusterNodepoolConfigSandboxConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig for the gcp.project.gkeService.cluster.nodepool.config.sandboxConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigSandboxConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.sandboxConfig resource
-func newGcpProjectClusterNodepoolConfigSandboxConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.sandboxConfig resource
+func newGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigSandboxConfig{runtime.NewResource("gcp.project.cluster.nodepool.config.sandboxConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.sandboxConfig")}
 	// assign all named fields
 	var id string
 
@@ -20224,20 +20396,20 @@ func newGcpProjectClusterNodepoolConfigSandboxConfig(runtime *resources.Runtime,
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.sandboxConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.sandboxConfig\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.sandboxConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.sandboxConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.sandboxConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -20255,91 +20427,91 @@ func newGcpProjectClusterNodepoolConfigSandboxConfig(runtime *resources.Runtime,
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigSandboxConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.sandboxConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.sandboxConfig\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" resource without a \"type\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigSandboxConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.sandboxConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.sandboxConfig].Register")
 	switch name {
 	case "id":
 		return nil
 	case "type":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.sandboxConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigSandboxConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.sandboxConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.sandboxConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "type":
 		return s.Type()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.sandboxConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigSandboxConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.sandboxConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.sandboxConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigSandboxConfig) Type() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.sandboxConfig\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.sandboxConfig\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigSandboxConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.sandboxConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigSandboxConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.sandboxConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "type":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.sandboxConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.sandboxConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigShieldedInstanceConfig resource interface
-type GcpProjectClusterNodepoolConfigShieldedInstanceConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -20350,21 +20522,21 @@ type GcpProjectClusterNodepoolConfigShieldedInstanceConfig interface {
 	EnableIntegrityMonitoring() (bool, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig for the gcp.project.cluster.nodepool.config.shieldedInstanceConfig resource
-type mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig for the gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.shieldedInstanceConfig resource
-func newGcpProjectClusterNodepoolConfigShieldedInstanceConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig resource
+func newGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig{runtime.NewResource("gcp.project.cluster.nodepool.config.shieldedInstanceConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig")}
 	// assign all named fields
 	var id string
 
@@ -20378,24 +20550,24 @@ func newGcpProjectClusterNodepoolConfigShieldedInstanceConfig(runtime *resources
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "enableSecureBoot":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\", its \"enableSecureBoot\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\", its \"enableSecureBoot\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "enableIntegrityMonitoring":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\", its \"enableIntegrityMonitoring\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\", its \"enableIntegrityMonitoring\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.shieldedInstanceConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -20413,24 +20585,24 @@ func newGcpProjectClusterNodepoolConfigShieldedInstanceConfig(runtime *resources
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enableSecureBoot"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" resource without a \"enableSecureBoot\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" resource without a \"enableSecureBoot\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enableIntegrityMonitoring"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" resource without a \"enableIntegrityMonitoring\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" resource without a \"enableIntegrityMonitoring\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.shieldedInstanceConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig].Register")
 	switch name {
 	case "id":
 		return nil
@@ -20439,13 +20611,13 @@ func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) Register(name
 	case "enableIntegrityMonitoring":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.shieldedInstanceConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -20454,61 +20626,61 @@ func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) Field(name st
 	case "enableIntegrityMonitoring":
 		return s.EnableIntegrityMonitoring()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // EnableSecureBoot accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) EnableSecureBoot() (bool, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) EnableSecureBoot() (bool, error) {
 	res, ok := s.Cache.Load("enableSecureBoot")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" failed: no value provided for static field \"enableSecureBoot\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" failed: no value provided for static field \"enableSecureBoot\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" failed to cast field \"enableSecureBoot\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" failed to cast field \"enableSecureBoot\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // EnableIntegrityMonitoring accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) EnableIntegrityMonitoring() (bool, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) EnableIntegrityMonitoring() (bool, error) {
 	res, ok := s.Cache.Load("enableIntegrityMonitoring")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" failed: no value provided for static field \"enableIntegrityMonitoring\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" failed: no value provided for static field \"enableIntegrityMonitoring\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" failed to cast field \"enableIntegrityMonitoring\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" failed to cast field \"enableIntegrityMonitoring\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.shieldedInstanceConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigShieldedInstanceConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -20517,12 +20689,12 @@ func (s *mqlGcpProjectClusterNodepoolConfigShieldedInstanceConfig) MqlCompute(na
 	case "enableIntegrityMonitoring":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.shieldedInstanceConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.shieldedInstanceConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigLinuxNodeConfig resource interface
-type GcpProjectClusterNodepoolConfigLinuxNodeConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -20532,21 +20704,21 @@ type GcpProjectClusterNodepoolConfigLinuxNodeConfig interface {
 	Sysctls() (map[string]interface{}, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig for the gcp.project.cluster.nodepool.config.linuxNodeConfig resource
-type mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig for the gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.linuxNodeConfig resource
-func newGcpProjectClusterNodepoolConfigLinuxNodeConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig resource
+func newGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig{runtime.NewResource("gcp.project.cluster.nodepool.config.linuxNodeConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig")}
 	// assign all named fields
 	var id string
 
@@ -20560,20 +20732,20 @@ func newGcpProjectClusterNodepoolConfigLinuxNodeConfig(runtime *resources.Runtim
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.linuxNodeConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "sysctls":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.linuxNodeConfig\", its \"sysctls\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\", its \"sysctls\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.linuxNodeConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.linuxNodeConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -20591,91 +20763,91 @@ func newGcpProjectClusterNodepoolConfigLinuxNodeConfig(runtime *resources.Runtim
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.linuxNodeConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("sysctls"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.linuxNodeConfig\" resource without a \"sysctls\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" resource without a \"sysctls\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.linuxNodeConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig].Register")
 	switch name {
 	case "id":
 		return nil
 	case "sysctls":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.linuxNodeConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.linuxNodeConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "sysctls":
 		return s.Sysctls()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.linuxNodeConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.linuxNodeConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.linuxNodeConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Sysctls accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) Sysctls() (map[string]interface{}, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) Sysctls() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("sysctls")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.project.cluster.nodepool.config.linuxNodeConfig\" failed: no value provided for static field \"sysctls\"")
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" failed: no value provided for static field \"sysctls\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.project.cluster.nodepool.config.linuxNodeConfig\" failed to cast field \"sysctls\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" failed to cast field \"sysctls\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigLinuxNodeConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.linuxNodeConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigLinuxNodeConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "sysctls":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.linuxNodeConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.linuxNodeConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigKubeletConfig resource interface
-type GcpProjectClusterNodepoolConfigKubeletConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigKubeletConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -20687,21 +20859,21 @@ type GcpProjectClusterNodepoolConfigKubeletConfig interface {
 	PodPidsLimit() (int64, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigKubeletConfig for the gcp.project.cluster.nodepool.config.kubeletConfig resource
-type mqlGcpProjectClusterNodepoolConfigKubeletConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig for the gcp.project.gkeService.cluster.nodepool.config.kubeletConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.kubeletConfig resource
-func newGcpProjectClusterNodepoolConfigKubeletConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.kubeletConfig resource
+func newGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigKubeletConfig{runtime.NewResource("gcp.project.cluster.nodepool.config.kubeletConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.kubeletConfig")}
 	// assign all named fields
 	var id string
 
@@ -20715,28 +20887,28 @@ func newGcpProjectClusterNodepoolConfigKubeletConfig(runtime *resources.Runtime,
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.kubeletConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "cpuManagerPolicy":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.kubeletConfig\", its \"cpuManagerPolicy\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\", its \"cpuManagerPolicy\" argument has the wrong type (expected type \"string\")")
 			}
 		case "cpuCfsQuotaPeriod":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.kubeletConfig\", its \"cpuCfsQuotaPeriod\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\", its \"cpuCfsQuotaPeriod\" argument has the wrong type (expected type \"string\")")
 			}
 		case "podPidsLimit":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.kubeletConfig\", its \"podPidsLimit\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\", its \"podPidsLimit\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.kubeletConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.kubeletConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.kubeletConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -20754,27 +20926,27 @@ func newGcpProjectClusterNodepoolConfigKubeletConfig(runtime *resources.Runtime,
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.kubeletConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("cpuManagerPolicy"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.kubeletConfig\" resource without a \"cpuManagerPolicy\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" resource without a \"cpuManagerPolicy\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("cpuCfsQuotaPeriod"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.kubeletConfig\" resource without a \"cpuCfsQuotaPeriod\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" resource without a \"cpuCfsQuotaPeriod\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("podPidsLimit"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.kubeletConfig\" resource without a \"podPidsLimit\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" resource without a \"podPidsLimit\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.kubeletConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.kubeletConfig].Register")
 	switch name {
 	case "id":
 		return nil
@@ -20785,13 +20957,13 @@ func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) Register(name string) 
 	case "podPidsLimit":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.kubeletConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.kubeletConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.kubeletConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -20802,77 +20974,77 @@ func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) Field(name string) (in
 	case "podPidsLimit":
 		return s.PodPidsLimit()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.kubeletConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CpuManagerPolicy accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) CpuManagerPolicy() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) CpuManagerPolicy() (string, error) {
 	res, ok := s.Cache.Load("cpuManagerPolicy")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"cpuManagerPolicy\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"cpuManagerPolicy\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed to cast field \"cpuManagerPolicy\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed to cast field \"cpuManagerPolicy\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // CpuCfsQuotaPeriod accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) CpuCfsQuotaPeriod() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) CpuCfsQuotaPeriod() (string, error) {
 	res, ok := s.Cache.Load("cpuCfsQuotaPeriod")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"cpuCfsQuotaPeriod\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"cpuCfsQuotaPeriod\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed to cast field \"cpuCfsQuotaPeriod\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed to cast field \"cpuCfsQuotaPeriod\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // PodPidsLimit accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) PodPidsLimit() (int64, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) PodPidsLimit() (int64, error) {
 	res, ok := s.Cache.Load("podPidsLimit")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"podPidsLimit\"")
+		return 0, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed: no value provided for static field \"podPidsLimit\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.cluster.nodepool.config.kubeletConfig\" failed to cast field \"podPidsLimit\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" failed to cast field \"podPidsLimit\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.kubeletConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigKubeletConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.kubeletConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -20883,12 +21055,12 @@ func (s *mqlGcpProjectClusterNodepoolConfigKubeletConfig) MqlCompute(name string
 	case "podPidsLimit":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.kubeletConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.kubeletConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigGcfsConfig resource interface
-type GcpProjectClusterNodepoolConfigGcfsConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigGcfsConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -20898,21 +21070,21 @@ type GcpProjectClusterNodepoolConfigGcfsConfig interface {
 	Enabled() (bool, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigGcfsConfig for the gcp.project.cluster.nodepool.config.gcfsConfig resource
-type mqlGcpProjectClusterNodepoolConfigGcfsConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig for the gcp.project.gkeService.cluster.nodepool.config.gcfsConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigGcfsConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.gcfsConfig resource
-func newGcpProjectClusterNodepoolConfigGcfsConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.gcfsConfig resource
+func newGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigGcfsConfig{runtime.NewResource("gcp.project.cluster.nodepool.config.gcfsConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.gcfsConfig")}
 	// assign all named fields
 	var id string
 
@@ -20926,20 +21098,20 @@ func newGcpProjectClusterNodepoolConfigGcfsConfig(runtime *resources.Runtime, ar
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.gcfsConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.gcfsConfig\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.gcfsConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.gcfsConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.gcfsConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -20957,91 +21129,91 @@ func newGcpProjectClusterNodepoolConfigGcfsConfig(runtime *resources.Runtime, ar
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigGcfsConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.gcfsConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabled"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.gcfsConfig\" resource without a \"enabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" resource without a \"enabled\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGcfsConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.gcfsConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.gcfsConfig].Register")
 	switch name {
 	case "id":
 		return nil
 	case "enabled":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.gcfsConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGcfsConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.gcfsConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.gcfsConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "enabled":
 		return s.Enabled()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.gcfsConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGcfsConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.gcfsConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.gcfsConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Enabled accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGcfsConfig) Enabled() (bool, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) Enabled() (bool, error) {
 	res, ok := s.Cache.Load("enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster.nodepool.config.gcfsConfig\" failed: no value provided for static field \"enabled\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" failed: no value provided for static field \"enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster.nodepool.config.gcfsConfig\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGcfsConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.gcfsConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGcfsConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.gcfsConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "enabled":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.gcfsConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.gcfsConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigAdvancedMachineFeatures resource interface
-type GcpProjectClusterNodepoolConfigAdvancedMachineFeatures interface {
+// GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -21051,21 +21223,21 @@ type GcpProjectClusterNodepoolConfigAdvancedMachineFeatures interface {
 	ThreadsPerCore() (int64, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures for the gcp.project.cluster.nodepool.config.advancedMachineFeatures resource
-type mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures for the gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.advancedMachineFeatures resource
-func newGcpProjectClusterNodepoolConfigAdvancedMachineFeatures(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures resource
+func newGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures{runtime.NewResource("gcp.project.cluster.nodepool.config.advancedMachineFeatures")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures")}
 	// assign all named fields
 	var id string
 
@@ -21079,20 +21251,20 @@ func newGcpProjectClusterNodepoolConfigAdvancedMachineFeatures(runtime *resource
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "threadsPerCore":
 			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\", its \"threadsPerCore\" argument has the wrong type (expected type \"int64\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\", its \"threadsPerCore\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.advancedMachineFeatures with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -21110,91 +21282,91 @@ func newGcpProjectClusterNodepoolConfigAdvancedMachineFeatures(runtime *resource
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("threadsPerCore"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" resource without a \"threadsPerCore\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" resource without a \"threadsPerCore\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.advancedMachineFeatures].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures].Register")
 	switch name {
 	case "id":
 		return nil
 	case "threadsPerCore":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.advancedMachineFeatures].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "threadsPerCore":
 		return s.ThreadsPerCore()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // ThreadsPerCore accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) ThreadsPerCore() (int64, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) ThreadsPerCore() (int64, error) {
 	res, ok := s.Cache.Load("threadsPerCore")
 	if !ok || !res.Valid {
-		return 0, errors.New("\"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" failed: no value provided for static field \"threadsPerCore\"")
+		return 0, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" failed: no value provided for static field \"threadsPerCore\"")
 	}
 	if res.Error != nil {
 		return 0, res.Error
 	}
 	tres, ok := res.Data.(int64)
 	if !ok {
-		return 0, fmt.Errorf("\"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" failed to cast field \"threadsPerCore\" to the right type (int64): %#v", res)
+		return 0, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" failed to cast field \"threadsPerCore\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigAdvancedMachineFeatures) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.advancedMachineFeatures].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigAdvancedMachineFeatures) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "threadsPerCore":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.advancedMachineFeatures\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.advancedMachineFeatures\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigGvnicConfig resource interface
-type GcpProjectClusterNodepoolConfigGvnicConfig interface {
+// GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigGvnicConfig interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -21204,21 +21376,21 @@ type GcpProjectClusterNodepoolConfigGvnicConfig interface {
 	Enabled() (bool, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigGvnicConfig for the gcp.project.cluster.nodepool.config.gvnicConfig resource
-type mqlGcpProjectClusterNodepoolConfigGvnicConfig struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig for the gcp.project.gkeService.cluster.nodepool.config.gvnicConfig resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigGvnicConfig) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.gvnicConfig resource
-func newGcpProjectClusterNodepoolConfigGvnicConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.gvnicConfig resource
+func newGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigGvnicConfig{runtime.NewResource("gcp.project.cluster.nodepool.config.gvnicConfig")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.gvnicConfig")}
 	// assign all named fields
 	var id string
 
@@ -21232,20 +21404,20 @@ func newGcpProjectClusterNodepoolConfigGvnicConfig(runtime *resources.Runtime, a
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.gvnicConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.gvnicConfig\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.gvnicConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.gvnicConfig with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.gvnicConfig with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -21263,91 +21435,91 @@ func newGcpProjectClusterNodepoolConfigGvnicConfig(runtime *resources.Runtime, a
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigGvnicConfig) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.gvnicConfig\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabled"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.gvnicConfig\" resource without a \"enabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" resource without a \"enabled\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGvnicConfig) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.gvnicConfig].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.gvnicConfig].Register")
 	switch name {
 	case "id":
 		return nil
 	case "enabled":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.gvnicConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGvnicConfig) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.gvnicConfig].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.gvnicConfig].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "enabled":
 		return s.Enabled()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.gvnicConfig\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGvnicConfig) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.gvnicConfig\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.gvnicConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Enabled accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGvnicConfig) Enabled() (bool, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) Enabled() (bool, error) {
 	res, ok := s.Cache.Load("enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster.nodepool.config.gvnicConfig\" failed: no value provided for static field \"enabled\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" failed: no value provided for static field \"enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster.nodepool.config.gvnicConfig\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigGvnicConfig) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.gvnicConfig].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigGvnicConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.gvnicConfig].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "enabled":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.gvnicConfig\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.gvnicConfig\" resource")
 	}
 }
 
-// GcpProjectClusterNodepoolConfigConfidentialNodes resource interface
-type GcpProjectClusterNodepoolConfigConfidentialNodes interface {
+// GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes resource interface
+type GcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -21357,21 +21529,21 @@ type GcpProjectClusterNodepoolConfigConfidentialNodes interface {
 	Enabled() (bool, error)
 }
 
-// mqlGcpProjectClusterNodepoolConfigConfidentialNodes for the gcp.project.cluster.nodepool.config.confidentialNodes resource
-type mqlGcpProjectClusterNodepoolConfigConfidentialNodes struct {
+// mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes for the gcp.project.gkeService.cluster.nodepool.config.confidentialNodes resource
+type mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) MqlResource() *resources.Resource {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.project.cluster.nodepool.config.confidentialNodes resource
-func newGcpProjectClusterNodepoolConfigConfidentialNodes(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.project.gkeService.cluster.nodepool.config.confidentialNodes resource
+func newGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpProjectClusterNodepoolConfigConfidentialNodes{runtime.NewResource("gcp.project.cluster.nodepool.config.confidentialNodes")}
+	res := mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes{runtime.NewResource("gcp.project.gkeService.cluster.nodepool.config.confidentialNodes")}
 	// assign all named fields
 	var id string
 
@@ -21385,20 +21557,20 @@ func newGcpProjectClusterNodepoolConfigConfidentialNodes(runtime *resources.Runt
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.confidentialNodes\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "enabled":
 			if _, ok := val.(bool); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.confidentialNodes\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\", its \"enabled\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cluster.nodepool.config.confidentialNodes\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.project.cluster.nodepool.config.confidentialNodes with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.nodepool.config.confidentialNodes with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -21416,86 +21588,86 @@ func newGcpProjectClusterNodepoolConfigConfidentialNodes(runtime *resources.Runt
 	return &res, nil
 }
 
-func (s *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) Validate() error {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.confidentialNodes\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("enabled"); !ok {
-		return errors.New("Initialized \"gcp.project.cluster.nodepool.config.confidentialNodes\" resource without a \"enabled\". This field is required.")
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" resource without a \"enabled\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.confidentialNodes].Register")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.confidentialNodes].Register")
 	switch name {
 	case "id":
 		return nil
 	case "enabled":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.confidentialNodes\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.confidentialNodes].Field")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.confidentialNodes].Field")
 	switch name {
 	case "id":
 		return s.Id()
 	case "enabled":
 		return s.Enabled()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.confidentialNodes\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) Id() (string, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cluster.nodepool.config.confidentialNodes\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cluster.nodepool.config.confidentialNodes\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Enabled accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) Enabled() (bool, error) {
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) Enabled() (bool, error) {
 	res, ok := s.Cache.Load("enabled")
 	if !ok || !res.Valid {
-		return false, errors.New("\"gcp.project.cluster.nodepool.config.confidentialNodes\" failed: no value provided for static field \"enabled\"")
+		return false, errors.New("\"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" failed: no value provided for static field \"enabled\"")
 	}
 	if res.Error != nil {
 		return false, res.Error
 	}
 	tres, ok := res.Data.(bool)
 	if !ok {
-		return false, fmt.Errorf("\"gcp.project.cluster.nodepool.config.confidentialNodes\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" failed to cast field \"enabled\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpProjectClusterNodepoolConfigConfidentialNodes) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.project.cluster.nodepool.config.confidentialNodes].MqlCompute")
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool.config.confidentialNodes].MqlCompute")
 	switch name {
 	case "id":
 		return nil
 	case "enabled":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cluster.nodepool.config.confidentialNodes\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config.confidentialNodes\" resource")
 	}
 }
 
