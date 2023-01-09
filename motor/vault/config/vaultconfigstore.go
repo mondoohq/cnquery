@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/motor/vault/gcpberglas"
 	"go.mondoo.com/cnquery/motor/vault/gcpsecretmanager"
 	"go.mondoo.com/cnquery/motor/vault/hashivault"
+	"go.mondoo.com/cnquery/motor/vault/inmemory"
 	"go.mondoo.com/cnquery/motor/vault/keyring"
 )
 
@@ -29,6 +30,8 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 	log.Debug().Str("vault-name", vCfg.Name).Str("vault-type", vCfg.Type.String()).Msg("initialize new vault")
 	var v vault.Vault
 	switch vCfg.Type {
+	case vault.VaultType_Memory:
+		v = inmemory.New()
 	case vault.VaultType_HashiCorp:
 		serverUrl := vCfg.Options["url"]
 		token := vCfg.Options["token"]

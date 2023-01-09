@@ -40,10 +40,6 @@ func (v *inmemoryVault) Set(ctx context.Context, secret *vault.Secret) (*vault.S
 		return nil, errors.New("secret is empty")
 	}
 
-	if secret.Encoding != vault.SecretEncoding_encoding_undefined && secret.Encoding != vault.SecretEncoding_encoding_proto {
-		return nil, errors.New("only proto encoding is supported")
-	}
-
 	v.secrets[secret.Key] = secret
 	return &vault.SecretID{
 		Key: secret.Key,
@@ -59,6 +55,5 @@ func (v *inmemoryVault) Get(ctx context.Context, id *vault.SecretID) (*vault.Sec
 	if !ok {
 		return nil, vault.NotFoundError
 	}
-	s.Encoding = vault.SecretEncoding_encoding_proto
 	return s, nil
 }

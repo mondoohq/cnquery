@@ -34,6 +34,7 @@ var vaultMarshalNameMap = map[VaultType]string{
 	VaultType_AWSSecretsManager:  "aws-secrets-manager",
 	VaultType_AWSParameterStore:  "aws-parameter-store",
 	VaultType_GCPBerglas:         "gcp-berglas",
+	VaultType_Memory:             "memory",
 }
 
 func (t *VaultType) Value() string {
