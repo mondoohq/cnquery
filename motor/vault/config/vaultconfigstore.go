@@ -66,11 +66,16 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 	case vault.VaultType_GCPBerglas:
 		projectID := vCfg.Options["project-id"]
 		kmsKeyID := vCfg.Options["kms-key-id"]
+		bucketName := vCfg.Options["bucket-name"]
+		opts := []gcpberglas.Option{}
 		if kmsKeyID != "" {
-			v = gcpberglas.NewWithKey(projectID, &kmsKeyID)
-		} else {
-			v = gcpberglas.New(projectID)
+			opts = append(opts, gcpberglas.WithKmsKey(kmsKeyID))
 		}
+		if bucketName != "" {
+			opts = append(opts, gcpberglas.WithBucket(bucketName))
+		}
+		v = gcpberglas.New(projectID, opts...)
+
 	default:
 		return nil, errors.Errorf("could not connect to vault: %s (%s)", vCfg.Name, vCfg.Type.String())
 	}
