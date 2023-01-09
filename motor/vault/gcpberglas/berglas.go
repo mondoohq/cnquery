@@ -2,6 +2,7 @@ package gcpberglas
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	berglas "github.com/GoogleCloudPlatform/berglas/pkg/berglas"
@@ -9,18 +10,31 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
+type storageType string
+
+type Option func(*Vault)
+
+const cloudStorage storageType = "storage"
+
 // https://github.com/GoogleCloudPlatform/berglas
-func New(projectID string) *Vault {
-	return &Vault{
-		projectID: projectID,
+func New(projectID string, opts ...Option) *Vault {
+	v := &Vault{projectID: projectID}
+	for _, opt := range opts {
+		opt(v)
+	}
+	return v
+}
+
+func WithBucket(bucket string) Option {
+	return func(v *Vault) {
+		v.bucket = bucket
+		v.storageType = cloudStorage
 	}
 }
 
-// should be instantiated with NewWithKey if vault.Set is to be used
-func NewWithKey(projectID string, kmsKeyID *string) *Vault {
-	return &Vault{
-		projectID: projectID,
-		kmsKeyID:  kmsKeyID,
+func WithKmsKey(kmsKeyID string) Option {
+	return func(v *Vault) {
+		v.kmsKeyID = kmsKeyID
 	}
 }
 
@@ -30,15 +44,16 @@ type berglasStorageInfo struct {
 }
 
 type Vault struct {
-	projectID string
-	kmsKeyID  *string
+	projectID   string
+	storageType storageType
+	kmsKeyID    string
+	bucket      string
 }
 
 func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
 	return &vault.VaultInfo{Name: "GCP Berglas: " + v.projectID}, nil
 }
 
-// Dial gets a Vault client.
 func (v *Vault) client(ctx context.Context) (*berglas.Client, error) {
 	client, err := berglas.New(ctx)
 	if err != nil {
@@ -47,7 +62,7 @@ func (v *Vault) client(ctx context.Context) (*berglas.Client, error) {
 	return client, nil
 }
 
-// expected berglas key format: storage/{bucketName}/{objectName}
+// expected berglas key format: {storage}/{bucketName}/{objectName}
 func getBerglasStorageInfo(key string) (berglasStorageInfo, error) {
 	split := strings.Split(key, "/")
 	if len(split) != 3 {
@@ -59,6 +74,13 @@ func getBerglasStorageInfo(key string) (berglasStorageInfo, error) {
 		bucket: split[1],
 		object: split[2],
 	}, nil
+}
+
+func (v *Vault) assembleBerglasKeyId(key string) (string, error) {
+	if v.storageType == cloudStorage {
+		return fmt.Sprintf("%s/%s/%s", v.storageType, v.bucket, key), nil
+	}
+	return "", errors.New("invalid berglas storage type")
 }
 
 func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, error) {
@@ -87,32 +109,40 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 }
 
 func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
-	if v.kmsKeyID == nil {
-		return nil, errors.New("cannot create vault secret without KMS key id")
-	}
-	if len(*v.kmsKeyID) == 0 {
+	if len(v.kmsKeyID) == 0 {
 		return nil, errors.New("specified KMS key id is empty")
 	}
+
+	if len(v.storageType) == 0 {
+		return nil, errors.New("cannot create vault secret without a storage type")
+	}
+
+	if len(v.bucket) == 0 && v.storageType == cloudStorage {
+		return nil, errors.New("specified bucket name is empty")
+	}
+
 	c, err := v.client(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	berglasReadInfo, err := getBerglasStorageInfo(cred.Key)
+	// assemble the berglas key that will be used to get this secret
+	// it uses the storage type and the passed in key to build a key
+	key, err := v.assembleBerglasKeyId(cred.Key)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = c.Create(ctx, &berglas.StorageCreateRequest{
-		Bucket:    berglasReadInfo.bucket,
-		Object:    berglasReadInfo.object,
+		Bucket:    v.bucket,
+		Object:    cred.Key,
 		Plaintext: cred.Data,
-		Key:       *v.kmsKeyID,
+		Key:       v.kmsKeyID,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &vault.SecretID{
-		Key: cred.Key,
+		Key: key,
 	}, nil
 }
