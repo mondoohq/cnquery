@@ -757,10 +757,33 @@ func (g *mqlGcpCompute) GetFirewalls() ([]interface{}, error) {
 		return nil, err
 	}
 
+	type mqlFirewall struct {
+		IpProtocol string   `json:"ipProtocol"`
+		Ports      []string `json:"ports"`
+	}
+
 	res := []interface{}{}
 	req := computeSvc.Firewalls.List(projectId)
 	if err := req.Pages(ctx, func(page *compute.FirewallList) error {
 		for _, firewall := range page.Items {
+			allowed := make([]mqlFirewall, 0, len(firewall.Allowed))
+			for _, a := range firewall.Allowed {
+				allowed = append(allowed, mqlFirewall{IpProtocol: a.IPProtocol, Ports: a.Ports})
+			}
+			allowedDict, err := core.JsonToDictSlice(allowed)
+			if err != nil {
+				return err
+			}
+
+			denied := make([]mqlFirewall, 0, len(firewall.Denied))
+			for _, d := range firewall.Denied {
+				denied = append(denied, mqlFirewall{IpProtocol: d.IPProtocol, Ports: d.Ports})
+			}
+			deniedDict, err := core.JsonToDictSlice(denied)
+			if err != nil {
+				return err
+			}
+
 			mqlFirewall, err := g.MotorRuntime.CreateResource("gcp.compute.firewall",
 				"id", strconv.FormatUint(firewall.Id, 10),
 				"name", firewall.Name,
@@ -774,6 +797,8 @@ func (g *mqlGcpCompute) GetFirewalls() ([]interface{}, error) {
 				"destinationRanges", core.StrSliceToInterface(firewall.DestinationRanges),
 				"targetServiceAccounts", core.StrSliceToInterface(firewall.TargetServiceAccounts),
 				"created", parseTime(firewall.CreationTimestamp),
+				"allowed", allowedDict,
+				"denied", deniedDict,
 			)
 			if err != nil {
 				return err
