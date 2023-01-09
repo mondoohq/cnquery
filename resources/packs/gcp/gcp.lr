@@ -466,6 +466,10 @@ private gcp.compute.network @defaults("name") {
   peerings []dict
   // The network-wide routing mode to use
   routingMode string
+  // List of URLs for the subnetwork in this network
+  subnetworkUrls []string
+  // Subnetworks in this network
+  subnetworks() []gcp.compute.subnetwork
 }
 
 // GCP Compute VPC Network Partitioning
