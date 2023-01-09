@@ -48,8 +48,8 @@ type ResourceType interface {
 	// Register a field by (1) registering all callbacks to other resources
 	// and fields and (2) triggering its initial run if it has no other dependencies
 	Register(field string) error
-	// Compute a field of the resource
-	Compute(field string) error
+	// MqlCompute compute a field of the resource
+	MqlCompute(field string) error
 	MqlResource() *Resource
 	Validate() error
 }

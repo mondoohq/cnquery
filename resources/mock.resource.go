@@ -47,7 +47,7 @@ func (m MockResource) Register(field string) error {
 }
 
 // Compute a field. For mock, all fields are always computed
-func (m MockResource) Compute(field string) error {
+func (m MockResource) MqlCompute(field string) error {
 	_, ok := m.StaticFields[field]
 	if !ok {
 		return errors.New("cannot find field " + field)
