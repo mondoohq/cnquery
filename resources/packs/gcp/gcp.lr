@@ -1642,6 +1642,16 @@ private gcp.project.cloudFunction {
   name string
   // Cloud function description
   description string
+  // Location of the archive with the function's source code
+  sourceArchiveUrl string
+  // Repository reference for the function's source code
+  sourceRepository dict
+  // Location of the upload with the function's source code
+  sourceUploadUrl string
+  // HTTPS endpoint of source that can triggered via URL
+  httpsTrigger dict
+  // Source that fires events in response to a condition in another service
+  eventTrigger dict
   // Status of the function deployment
   status string
   // Name of the function (as defined in source code) that will be executed

@@ -51,6 +51,23 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 		Secret    string                   `json:"secret"`
 		Versions  []mqlSecretVolumeVersion `json:"versions"`
 	}
+	type mqlSourceRepository struct {
+		Url         string `json:"url"`
+		DeployedUrl string `json:"deployedUrl"`
+	}
+	type mqlHttpsTrigger struct {
+		Url           string `json:"url"`
+		SecurityLevel string `json:"securityLevel"`
+	}
+	type mqlFailurePolicy struct {
+		Retry string `json:"retry"`
+	}
+	type mqlEventTrigger struct {
+		EventType     string           `json:"eventType"`
+		Resource      string           `json:"resource"`
+		Service       string           `json:"service"`
+		FailurePolicy mqlFailurePolicy `json:"failurePolicy"`
+	}
 
 	it := cloudFuncSvc.ListFunctions(ctx, &functionspb.ListFunctionsRequest{Parent: fmt.Sprintf("projects/%s/locations/-", projectId)})
 	var cloudFunctions []interface{}
@@ -85,10 +102,51 @@ func (g *mqlGcpProject) GetCloudFunctions() ([]interface{}, error) {
 			secretVolumes = append(secretVolumes, vol)
 		}
 
+		var sourceUploadUrl, sourceArchiveUrl string
+		var sourceRepository map[string]interface{}
+		switch f.SourceCode.(type) {
+		case *functionspb.CloudFunction_SourceArchiveUrl:
+			sourceArchiveUrl = f.GetSourceArchiveUrl()
+		case *functionspb.CloudFunction_SourceRepository:
+			pbSourceRepo := f.GetSourceRepository()
+			sourceRepository, err = core.JsonToDict(mqlSourceRepository{Url: pbSourceRepo.Url, DeployedUrl: pbSourceRepo.DeployedUrl})
+			if err != nil {
+				return nil, err
+			}
+		case *functionspb.CloudFunction_SourceUploadUrl:
+			sourceUploadUrl = f.GetSourceUploadUrl()
+		}
+
+		var httpsTrigger, eventTrigger map[string]interface{}
+		switch f.Trigger.(type) {
+		case *functionspb.CloudFunction_HttpsTrigger:
+			pbHttpsTrigger := f.GetHttpsTrigger()
+			httpsTrigger, err = core.JsonToDict(mqlHttpsTrigger{Url: pbHttpsTrigger.Url, SecurityLevel: pbHttpsTrigger.SecurityLevel.String()})
+			if err != nil {
+				return nil, err
+			}
+		case *functionspb.CloudFunction_EventTrigger:
+			pbEventTrigger := f.GetEventTrigger()
+			eventTrigger, err = core.JsonToDict(mqlEventTrigger{
+				EventType:     pbEventTrigger.EventType,
+				Resource:      pbEventTrigger.Resource,
+				Service:       pbEventTrigger.Service,
+				FailurePolicy: mqlFailurePolicy{Retry: pbEventTrigger.FailurePolicy.GetRetry().String()},
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		mqlCloudFuncs, err := g.MotorRuntime.CreateResource("gcp.project.cloudFunction",
 			"projectId", projectId,
 			"name", parseResourceName(f.Name),
 			"description", f.Description,
+			"sourceArchiveUrl", sourceArchiveUrl,
+			"sourceRepository", sourceRepository,
+			"sourceUploadUrl", sourceUploadUrl,
+			"httpsTrigger", httpsTrigger,
+			"eventTrigger", eventTrigger,
 			"status", f.Status.String(),
 			"entryPoint", f.EntryPoint,
 			"runtime", f.Runtime,
