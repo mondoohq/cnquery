@@ -44,15 +44,15 @@ alias azurerm.monitor.diagnosticsetting = azure.monitor.diagnosticsetting
 
 // Azure Active Directory (deprecated, use microsoft resource pack instead)
 azuread {
-  // deprecated, use microsoft.user
+  // Deprecated. Use `microsoft.user` instead.
   users() []azuread.user
-  // deprecated, use microsoft.group
+  // Deprecated. Use microsoft.group
   groups() []azuread.group
-  // deprecated, use microsoft.domain
+  // Deprecated. Use `microsoft.domain` instead.
   domains() []azuread.domain
-  // deprecated, use microsoft.application
+  // Deprecated. Use `microsoft.application` instead.
   applications() []azuread.application
-  // deprecated, use microsoft.serviceprincipal
+  // Deprecated. Use `microsoft.serviceprincipal` instead.
   servicePrincipals() []azuread.serviceprincipal
 }
 
@@ -74,11 +74,11 @@ private azuread.user @defaults("id displayName") {
   mailNickname string
   // User email
   mail string
-  // deprecated, no longer used
+  // Deprecated
   objectType() string
   // Azure Directory user type
   userType string
-  // deprecated, no longer used
+  // Deprecated
   properties() dict
 }
 
@@ -96,9 +96,9 @@ private azuread.group @defaults("displayName") {
   mailNickname string
   // Group email
   mail string
-  // deprecated, no longer used
+  // Deprecated
   objectType() string
-  // deprecated, no longer used
+  // Deprecated
   properties() dict
   // Group members
   members() []azuread.user
@@ -114,17 +114,17 @@ private azuread.domain @defaults("name") {
   isDefault bool
   // Domain authentication type
   authenticationType string
-  // deprecated, no longer used
+  // Deprecated
   properties() dict
 }
 
-// Azure Active Directory Application (deprecated, use microsoft.application instead))
+// Deprecated. Use `microsoft.application` instead
 private azuread.application @defaults("id") {
   // Application ID
   id string
 }
 
-// Azure Active Directory Service Principal (deprecated, use microsoft.serviceprincipal instead))
+// Deprecated. Use `microsoft.serviceprincipal` instead.
 private azuread.serviceprincipal @defaults("id") {
   // Service principal ID
   id string
@@ -152,7 +152,7 @@ private azure.resource @defaults("id name location") {
   type string
   // Resource managed by
   managedBy string
-  // Resource sku
+  // Resource SKU
   sku dict
   // Resource plan
   plan dict
@@ -552,7 +552,7 @@ private azure.web.appsiteconfig @defaults("id name") {
 
 // Azure SQL
 azure.sql {
-  // List of sql servers
+  // List of SQL servers
   servers() []azure.sql.server
 }
 
@@ -592,23 +592,23 @@ private azure.sql.server @defaults("name location") {
 
 // Azure SQL Server Vulnerability Assessment Settings
 private azure.sql.server.vulnerabilityassessmentsettings {
-  // identifier of the vulnerability assessment
+  // ID of the vulnerability assessment
   id string
-  // name of the vulnerability assessment
+  // Name of the vulnerability assessment
   name string
-  // type of the vulnerability assessment
+  // Type of the vulnerability assessment
   type string
-  // a blob storage container path to hold the scan results
+  // Blob storage container path to hold the scan results
   storageContainerPath string
-  // specifies the identifier key of the storage account for vulnerability assessment scan results
+  // Identifier key of the storage account for vulnerability assessment scan results
   storageAccountAccessKey string
-  // a shared access signature key that has write access to the blob container specified in 'storageContainerPath'
+  // Shared access signature key that has write access to the blob container specified in 'storageContainerPath'
   storageContainerSasKey string
-  // indicates whether recurring scan is enabled
+  // Indicates whether recurring scan is enabled
   recurringScanEnabled bool
-  // specifies an array of e-mail addresses to which the scan notification is sent
+  // Specifies an array of e-mail addresses to which the scan notification is sent
   recurringScanEmails []string
-  // indicates whether the schedule scan notification is also sent to the subscription administrators
+  // Whether the schedule scan notification is also sent to the subscription administrators
   mailSubscriptionAdmins bool
 }
 // Azure SQL Server Administrator
@@ -641,9 +641,9 @@ private azure.sql.database @defaults("id name") {
   collation string
   // SQL database create date
   creationDate time
-  // deprecated, no longer used
+  // Deprecated
   containmentState() int
-  // deprecated, use serviceLevelObjective instead
+  // Deprecated. Use `serviceLevelObjective` instead.
   currentServiceObjectiveId() string
   // Database ID
   databaseId string
@@ -663,7 +663,7 @@ private azure.sql.database @defaults("id name") {
   edition string
   // SQL database max byte size
   maxSizeBytes int
-  // deprecated, use requestedServiceObjectiveName instead
+  // Deprecated. Use `requestedServiceObjectiveName` instead.
   requestedServiceObjectiveId() string
   // SQL database requested objective name
   requestedServiceObjectiveName string
@@ -675,9 +675,9 @@ private azure.sql.database @defaults("id name") {
   elasticPoolName string
   // SQL database default secondary location
   defaultSecondaryLocation string
-  // deprecated, no longer used
+  // Deprecated
   serviceTierAdvisors() dict
-  // deprecated, use advisor.recommendedActions instead
+  // Deprecated. Use `advisor.recommendedActions` instead.
   recommendedIndex() dict
   // SQL database failover group ID
   failoverGroupId string
@@ -717,7 +717,7 @@ private azure.sql.databaseusage @defaults("id name") {
   limit float
   // Database usage unit
   unit string
-  // deprecated, no longer supported
+  // Deprecated
   nextResetTime() time
 }
 
@@ -915,27 +915,27 @@ azure.keyvault {
 
 // Azure Key Vault Vault
 private azure.keyvault.vault  @defaults("id vaultName location") {
-  // Key vault ID
+  // Key Vault ID
   id string
-  // Key vault name
+  // Key Vault name
   vaultName string
-  // Key vault type
+  // Key Vault type
   type string
-  // Key vault location
+  // Key Vault location
   location string
-  // Key vault tags
+  // Key Vault tags
   tags map[string]string
-  // Key vault URL 
+  // Key Vault URL 
   vaultUri() string
-  // Key vault properties 
+  // Key Vault properties 
   properties() dict
-  // Key vault keys 
+  // Key Vault keys 
   keys() []azure.keyvault.key
-  // Key vault certificates 
+  // Key Vault certificates 
   certificates() []azure.keyvault.certificate
-  // Key vault secrets 
+  // Key Vault secrets 
   secrets() []azure.keyvault.secret
-  // Key vault diagnostic settings 
+  // Key Vault diagnostic settings 
   diagnosticSettings() []azure.monitor.diagnosticsetting
 }
 
@@ -1094,23 +1094,23 @@ private azure.monitor.diagnosticsetting @defaults("id name") {
 
 // Azure Microsoft Cloud Defender
 azure.cloudDefender {
-  // indicates if the monitoring agent will be automatically provisioned on new VMs
+  // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
-  // the list of configured security contacts
+  // List of configured security contacts
   securityContacts() []azure.cloudDefender.securityContact
 }
 
 // Azure Microsoft Cloud Defender Security Contact 
 private azure.cloudDefender.securityContact {
-  // the identifier of the security contact
+  // ID of the security contact
   id string
-  // the name of the security contact
+  // Name of the security contact
   name string
-  // the emails that will receive security alerts
+  // Emails that receive security alerts
   emails []string
-  // the alerts notification settings
+  // Alerts notification settings
   alertNotifications dict
-  // the notifications by role settings
+  // Notifications by role settings
   notificationsByRole dict
 }
 

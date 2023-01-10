@@ -47,7 +47,7 @@ gcp.project @defaults("name") {
   recommendations() []gcp.recommendation
   // GCP GKE resources
   gke() gcp.project.gkeService
-  // GCP PubSub-related Resources
+  // GCP Pub/Sub-related Resources
   pubsub() gcp.project.pubsubService
   // KMS-related resources
   kms() gcp.project.kmsService
@@ -246,7 +246,7 @@ private gcp.compute.instance @defaults("name") {
   reservationAffinity dict
   // Resource policies applied to this instance
   resourcePolicies []string
-  // Resource Status fpr physical host
+  // Resource status for physical host
   physicalHostResourceStatus string
   // Scheduling options
   scheduling dict
@@ -258,7 +258,7 @@ private gcp.compute.instance @defaults("name") {
   enableVtpm bool
   // Indicates if VM has been restricted for start because Compute Engine has detected suspicious activity
   startRestricted bool
-  // Instance Status
+  // Instance status
   status string
   // Human-readable explanation of the status
   statusMessage string
@@ -266,21 +266,23 @@ private gcp.compute.instance @defaults("name") {
   sourceMachineImage string
   // Tags associated with this instance
   tags []string
-  // Network Performance Configuration
+  // Network performance configuration
   totalEgressBandwidthTier string
   // Service accounts authorized for this instance
   serviceAccounts []gcp.compute.serviceaccount
   // Disks associated with this instance
   disks []gcp.compute.attachedDisk
-  // Machine Type
+  // Machine type
   machineType() gcp.compute.machineType
-  // Instance Zone
+  // Instance zone
   zone gcp.compute.zone
 }
 
 // GCP Compute Service Account
 private gcp.compute.serviceaccount @defaults("email") {
+  // Service account email address
   email string
+  // Service account scopes
   scopes []string
 }
 
@@ -882,9 +884,9 @@ private gcp.bigquery.table @defaults("id") {
   externalDataConfig dict
   // Information for materialized views
   materializedView dict
-  //  integer-range based partitioning on a table
+  // Integer-range-based partitioning on a table
   rangePartitioning dict
-  // time-based date partitioning on a table
+  // Time-based date partitioning on a table
   timePartitioning dict
   // Table schema
   schema []dict
@@ -1004,6 +1006,7 @@ private gcp.dns.policy {
   enableLogging bool
 }
 
+// GCP GKE
 private gcp.project.gkeService {
   // Project ID
   projectId string
@@ -1037,7 +1040,7 @@ private gcp.project.gkeService.cluster @defaults("name") {
   locations []string
   // Enable Kubernetes alpha features
   enableKubernetesAlpha bool
-  // Whether Autopilot is enabled fpr the cluster
+  // Whether Autopilot is enabled for the cluster
   autopilotEnabled bool
   // The name of the Google Compute Engine zone in which the cluster resides
   zone string
@@ -1261,7 +1264,7 @@ private gcp.project.gkeService.cluster.nodepool.config.confidentialNodes @defaul
   enabled bool
 }
 
-// GCP PubSub resources
+// GCP Pub/Sub resources
 private gcp.project.pubsubService {
   // Project ID
   projectId string
@@ -1273,7 +1276,7 @@ private gcp.project.pubsubService {
   snapshots() []gcp.project.pubsubService.snapshot
 }
 
-// GCP PubSub topic
+// GCP Pub/Sub topic
 private gcp.project.pubsubService.topic @defaults("name") {
   // Project ID
   projectId string
@@ -1283,7 +1286,7 @@ private gcp.project.pubsubService.topic @defaults("name") {
   config() gcp.project.pubsubService.topic.config
 }
 
-// GCP PubSub topic configuration
+// GCP Pub/Sub topic configuration
 private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStoragePolicy") {
   // Project ID
   projectId string
@@ -1297,7 +1300,7 @@ private gcp.project.pubsubService.topic.config @defaults("kmsKeyName messageStor
   messageStoragePolicy gcp.project.pubsubService.topic.config.messagestoragepolicy
 }
 
-// GCP PubSub topic message storage policy
+// GCP Pub/Sub topic message storage policy
 private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("allowedPersistenceRegions"){
   // Parent configuration ID
   configId string
@@ -1305,7 +1308,7 @@ private gcp.project.pubsubService.topic.config.messagestoragepolicy @defaults("a
   allowedPersistenceRegions []string
 }
 
-// GCP PubSub subscription
+// GCP Pub/Sub subscription
 private gcp.project.pubsubService.subscription @defaults("name") {
   // Project ID
   projectId string
@@ -1315,7 +1318,7 @@ private gcp.project.pubsubService.subscription @defaults("name") {
   config() gcp.project.pubsubService.subscription.config
 }
 
-// GCP PubSub subscription configuration
+// GCP Pub/Sub subscription configuration
 private gcp.project.pubsubService.subscription.config @defaults("topic.name ackDeadline expirationPolicy") {
   // Project ID
   projectId string
@@ -1337,7 +1340,7 @@ private gcp.project.pubsubService.subscription.config @defaults("topic.name ackD
   labels map[string]string
 }
 
-// GCP PubSub Configuration for subscriptions that operate in push mode
+// GCP Pub/Sub Configuration for subscriptions that operate in push mode
 private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attributes") {
   // Parent configuration ID
   configId string
@@ -1347,7 +1350,7 @@ private gcp.project.pubsubService.subscription.config.pushconfig @defaults("attr
   attributes map[string]string
 }
 
-// GCP PubSub snapshot
+// GCP Pub/Sub snapshot
 private gcp.project.pubsubService.snapshot @defaults("name") {
   // Project ID
   projectId string

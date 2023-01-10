@@ -7,7 +7,6 @@ dfw
 dlq
 elbv
 firewalls
-fpr
 gcfs
 GOBIN
 gpu
