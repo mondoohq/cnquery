@@ -114,7 +114,7 @@ gcp.resourcemanager.binding {
   role string
 }
 
-// GCP Compute
+// GCP Compute Engine
 gcp.compute {
   // Project ID
   projectId string
@@ -802,7 +802,7 @@ private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defau
   reuseInterval int
 }
 
-// GCP Big Query
+// GCP BigQuery
 gcp.bigquery {
   // List of Datasets
   datasets() []gcp.bigquery.dataset
