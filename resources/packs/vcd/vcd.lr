@@ -16,14 +16,15 @@ vcd {
 
 // VMware Cloud Director organization resource
 vcd.organization @defaults("name") {
+  // Organization ID
   id string
-  // Org name
+  // Organization name
   name string
-  // Org full name
+  // Organization full name
   fullName string
   // Indicates if this organization is enabled
   isEnabled bool
-  // Org description
+  // Organization description
   description string
   // Virtual machines
   vms() []vcd.vm
@@ -133,9 +134,9 @@ private vcd.vm @defaults("name") {
   name string
   // The name of the containing vApp or vApp template
   containerName string
-  // vApp or vApp template Id
+  // vApp or vApp template ID
   containerID string
-  // Owner Id of the VM
+  // Owner ID of the VM
   ownerId string
   // Owner name of the VM
   ownerName string

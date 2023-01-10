@@ -88,6 +88,7 @@ slack.user @defaults("id") {
 
 // Slack Enterprise Grid User
 slack.enterpriseUser {
+  // Enterprise user ID
    id string
    // Unique ID for the Enterprise Grid organization
    enterpriseId string

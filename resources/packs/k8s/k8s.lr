@@ -153,12 +153,13 @@ private k8s.pod @defaults("namespace name created"){
 
 // Kubernetes workload container
 private k8s.container @defaults("name") {
+  // Kubernetes Object UID
   uid string
   // Name of the container
   name string
   // Container image name
   imageName string
-  // deprecated, use imageName
+  // Deprecated. Use `imageName` instead.
   image string
   // Container image
   containerImage() os.container.image
@@ -192,12 +193,13 @@ private k8s.container @defaults("name") {
 
 // Kubernetes Init Container
 private k8s.initContainer @defaults("name") {
+  // Kubernetes Object UID
   uid string
   // Name of the container
   name string
   // Container image name
   imageName string
-  // deprecated, use imageName
+  // Deprecated. Use `imageName` instead.
   image string
   // Container image
   containerImage() os.container.image
@@ -227,12 +229,13 @@ private k8s.initContainer @defaults("name") {
 
 // Kubernetes Ephemeral Container
 private k8s.ephemeralContainer @defaults("name") {
+  // Kubernetes Object UID
   uid string
   // Name of the container
   name string
   // Container image name
   imageName string
-  // deprecated, use imageName
+  // Deprecated. Use `imageName` instead.
   image string
   // Container image
   containerImage() os.container.image
@@ -568,7 +571,7 @@ private k8s.ingressservicebackend @defaults("name") {
 
 // Kubernetes Ingress Backend
 private k8s.ingressbackend @defaults("name") {
-  // Mondoo Id for Object
+  // Mondoo ID for Object
   id string
   // Kubernetes Service for Ingress Backend
   service k8s.ingressservicebackend

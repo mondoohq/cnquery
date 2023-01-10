@@ -296,7 +296,7 @@ platform @defaults("name version") {
   // List of platform families that this platform belongs to
   family []string
   // Release version of the platform
-  // deprecated: this field is deprecated in favor of 'version', will be removed in v8
+  // Deprecated. Use 'version' instead. 
   release string
   // Version of the platform
   version string
@@ -319,7 +319,7 @@ platform @defaults("name version") {
   vulnerabilityReport() dict
 
   // Contextual information about the runtime (bare-metal, cloud, container, etc)
-  // deprecated: this field is deprecated in favor of 'runtime', will be removed in v8
+  // Deprecated. Use 'runtime' instead.
   runtimeEnv string
 }
 
@@ -558,7 +558,7 @@ dns.dkimRecord @defaults("dnsTxt") {
   valid() bool
 }
 
-// deprecated: do not use anymore
+// Deprecated
 yaml.path {
   filepath string
   jsonpath string
