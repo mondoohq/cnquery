@@ -45,8 +45,6 @@ gcp.project @defaults("name") {
   services() []gcp.service
   // List of recommendations
   recommendations() []gcp.recommendation
-  // GCP Compute Resources for the Project
-  // compute() gcp.compute
   // GCP GKE resources
   gke() gcp.project.gkeService
   // GCP PubSub-related Resources
