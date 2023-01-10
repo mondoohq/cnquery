@@ -56,6 +56,12 @@ func NewProviderCommand(opts CommandOpts) *cobra.Command {
 				os.Exit(1)
 			}
 
+			if viper.GetString("inventory-file") != "" {
+				// when the user provided an inventory file, users do not need to provide a provider
+				opts.Run(cmd, args, providers.ProviderType_UNKNOWN, DefaultAssetType)
+				return
+			}
+
 			log.Info().Msg("no provider specified, defaulting to local.\n  Use --help for a list of available providers.")
 			opts.Run(cmd, args, providers.ProviderType_LOCAL_OS, DefaultAssetType)
 		},

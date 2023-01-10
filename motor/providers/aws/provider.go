@@ -52,10 +52,12 @@ func TransportOptions(opts map[string]string) []ProviderOption {
 	}
 
 	if awsRegion, ok := opts["region"]; ok {
+		log.Debug().Str("region", awsRegion).Msg("using region")
 		transportOpts = append(transportOpts, WithRegion(awsRegion))
 	}
 
 	if awsProfile, ok := opts["profile"]; ok {
+		log.Debug().Str("profile", awsProfile).Msg("using aws profile")
 		transportOpts = append(transportOpts, WithProfile(awsProfile))
 	}
 	return transportOpts
@@ -79,7 +81,7 @@ func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
 		return nil, errors.Wrap(err, "could not load aws configuration")
 	}
 	if cfg.Region == "" {
-		log.Warn().Msg("no AWS region found, using us-east-1")
+		log.Info().Msg("no AWS region found, using us-east-1")
 		cfg.Region = "us-east-1" // in case the user has no region set, default to us-east-1
 	}
 
