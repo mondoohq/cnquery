@@ -19,7 +19,7 @@ func init() {
 func azureTransport(t providers.Instance) (*microsoft_transport.Provider, error) {
 	at, ok := t.(*microsoft_transport.Provider)
 	if !ok {
-		return nil, errors.New("azure resource is not supported on this transport")
+		return nil, errors.New("azure resource is not supported on this provider")
 	}
 	if len(at.SubscriptionID()) == 0 {
 		return nil, errors.New("azure resource requires a subscription id")

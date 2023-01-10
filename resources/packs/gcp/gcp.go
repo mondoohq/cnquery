@@ -18,7 +18,7 @@ func init() {
 func gcpProvider(t providers.Instance) (*gcp_provider.Provider, error) {
 	provider, ok := t.(*gcp_provider.Provider)
 	if !ok {
-		return nil, errors.New("gcp resource is not supported on this transport")
+		return nil, errors.New("gcp resource is not supported on this provider")
 	}
 	return provider, nil
 }

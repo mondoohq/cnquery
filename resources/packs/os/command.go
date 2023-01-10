@@ -16,7 +16,7 @@ func (c *mqlCommand) id() (string, error) {
 
 func (c *mqlCommand) execute() (*os.Command, error) {
 	if !c.MotorRuntime.Motor.Provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
-		return nil, errors.New("run command not supported on this transport")
+		return nil, errors.New("run command not supported on this provider")
 	}
 
 	osProvider, err := osProvider(c.MotorRuntime.Motor)

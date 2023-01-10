@@ -2,8 +2,10 @@ package core
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"strings"
+
+	"go.mondoo.com/cnquery/motor/providers"
 )
 
 func (f *mqlSocketstats) id() (string, error) {
@@ -16,17 +18,21 @@ func (f *mqlSocketstats) GetOpenPorts() ([]interface{}, error) {
 		return nil, err
 	}
 
+	if !f.MotorRuntime.Motor.Provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
+		return nil, errors.New("socketStats not supported on this provider")
+	}
+
 	cmd, err := osProvider.RunCommand("ss -4tuln")
 	if err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
 
 	if cmd.ExitStatus != 0 {
-		outErr, _ := ioutil.ReadAll(cmd.Stderr)
+		outErr, _ := io.ReadAll(cmd.Stderr)
 		return nil, errors.New(string(outErr))
 	}
 	stats := strings.Split(string(data), "\n")
