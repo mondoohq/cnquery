@@ -802,7 +802,7 @@ private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defau
 
 // GCP BigQuery
 gcp.bigquery {
-  // List of Datasets
+  // List of BigQuery datasets
   datasets() []gcp.bigquery.dataset
 }
 
