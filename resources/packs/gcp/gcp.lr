@@ -16,11 +16,11 @@ alias gcloud.sql.instance = gcp.project.sqlService.instance
 gcp.organization @defaults("id") {
   // Organization ID
   id string
-  // Organization Name
+  // Organization name
   name string
-  // Organization State
+  // Organization state
   lifecycleState string
-  // Organization IAM Policy
+  // Organization IAM policy
   iamPolicy() []gcp.resourcemanager.binding
 }
 
@@ -65,7 +65,7 @@ gcp.project @defaults("name") {
 gcp.service @defaults("name") {
   // Project ID
   projectId string
-  // Service Name
+  // Service name
   name string
   // Service parent name
   parentName string
