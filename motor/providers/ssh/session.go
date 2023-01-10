@@ -2,13 +2,9 @@ package ssh
 
 import (
 	"context"
-	"encoding/pem"
 	"fmt"
 	"io"
-	"net"
-	"os"
 	"strconv"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
@@ -16,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/ssh/awsinstanceconnect"
 	"go.mondoo.com/cnquery/motor/providers/ssh/awsssmsession"
+	"go.mondoo.com/cnquery/motor/providers/ssh/signers"
 	"go.mondoo.com/cnquery/motor/vault"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -48,32 +45,6 @@ func establishClientConnection(pCfg *providers.Config, hostKeyCallback ssh.HostK
 	return conn, closer, err
 }
 
-func authPrivateKeyWithPassphrase(pemBytes []byte, passphrase []byte) (ssh.Signer, error) {
-	// check if the key is encrypted
-	block, _ := pem.Decode(pemBytes)
-	if block == nil {
-		return nil, errors.New("ssh: no key found")
-	}
-
-	var signer ssh.Signer
-	var err error
-	if strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED") {
-		// we may want to support to parse password protected encrypted key
-		signer, err = ssh.ParsePrivateKeyWithPassphrase(pemBytes, passphrase)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// parse unencrypted key
-		signer, err = ssh.ParsePrivateKey(pemBytes)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return signer, nil
-}
-
 // hasAgentLoadedKey returns if the ssh agent has loaded the key file
 // This may not be 100% accurate. The key can be stored in multiple locations with the
 // same fingerprint. We cannot determine the fingerprint without decoding the encrypted
@@ -95,25 +66,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 	closer := []io.Closer{}
 
 	// only one public auth method is allowed, therefore multiple keys need to be encapsulated into one auth method
-	signers := []ssh.Signer{}
-
-	// enable ssh agent auth
-	useAgentAuth := func() {
-		if sshAgentConn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
-			log.Debug().Str("socket", os.Getenv("SSH_AUTH_SOCK")).Msg("ssh agent socket found")
-			sshAgentClient := agent.NewClient(sshAgentConn)
-			sshAgentSigners, err := sshAgentClient.Signers()
-			if err == nil && len(sshAgentSigners) == 0 {
-				log.Warn().Msg("could not find keys in ssh agent")
-			} else if err == nil {
-				signers = append(signers, sshAgentSigners...)
-			} else {
-				log.Error().Err(err).Msg("could not get public keys from ssh agent")
-			}
-		} else {
-			log.Debug().Msg("could not find valud ssh agent authentication")
-		}
-	}
+	sshSigners := []ssh.Signer{}
 
 	// use key auth, only load if the key was not found in ssh agent
 	for i := range pCfg.Credentials {
@@ -122,11 +75,11 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 		switch credential.Type {
 		case vault.CredentialType_private_key:
 			log.Debug().Msg("enabled ssh private key authentication")
-			priv, err := authPrivateKeyWithPassphrase(credential.Secret, []byte(credential.Password))
+			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(credential.Secret, []byte(credential.Password))
 			if err != nil {
 				log.Debug().Err(err).Msg("could not read private key")
 			} else {
-				signers = append(signers, priv)
+				sshSigners = append(sshSigners, priv)
 			}
 		case vault.CredentialType_password:
 			// use password auth if the password was set, this is also used when only the username is set
@@ -136,7 +89,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			}
 		case vault.CredentialType_ssh_agent:
 			log.Debug().Msg("enabled ssh agent authentication")
-			useAgentAuth()
+			sshSigners = append(sshSigners, signers.GetSignersFromSSHAgent()...)
 		case vault.CredentialType_aws_ec2_ssm_session:
 			// when the user establishes the ssm session we do the following
 			// 1. start websocket connection and start the session-manager-plugin to map the websocket to a local port
@@ -204,11 +157,11 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			pCfg.Insecure = true
 
 			// use the generated ssh credentials for authentication
-			priv, err := authPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
+			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "could not read generated private key")
 			}
-			signers = append(signers, priv)
+			sshSigners = append(sshSigners, priv)
 			closer = append(closer, ssmConn)
 		case vault.CredentialType_aws_ec2_instance_connect:
 			log.Debug().Str("profile", pCfg.Options["profile"]).Str("region", pCfg.Options["region"]).Msg("using aws creds")
@@ -235,11 +188,11 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 				return nil, nil, err
 			}
 
-			priv, err := authPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
+			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "could not read generated private key")
 			}
-			signers = append(signers, priv)
+			sshSigners = append(sshSigners, priv)
 
 			// NOTE: this creates a side-effect where the host is overwritten
 			pCfg.Host = creds.PublicIpAddress
@@ -248,14 +201,14 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 		}
 	}
 
-	// if no credential was provided, fallback to ssh-agent and ssh-config
-	if len(auths) == 0 {
-		log.Debug().Msg("enabled ssh agent authentication")
-		useAgentAuth()
+	if len(sshSigners) > 0 {
+		auths = append(auths, ssh.PublicKeys(sshSigners...))
 	}
 
-	if len(signers) > 0 {
-		auths = append(auths, ssh.PublicKeys(signers...))
+	// if no credential was provided, fallback to ssh-agent and ssh-config
+	if len(pCfg.Credentials) == 0 {
+		sshSigners = append(sshSigners, signers.GetSignersFromSSHAgent()...)
 	}
+
 	return auths, closer, nil
 }
