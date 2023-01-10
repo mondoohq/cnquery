@@ -942,13 +942,13 @@ private gcp.bigquery.routine @defaults("id") {
 gcp.dns {
   // Project ID
   projectId string
-  // Cloud DNS ManagedZone in project
+  // Cloud DNS managed zone in project
   managedZones() []gcp.dns.managedzone
   // Cloud DNS rules in project
   policies() []gcp.dns.policy
 }
 
-// Cloud DNS ManagedZone is a resource that represents a DNS zone hosted by the Cloud DNS service
+// Cloud DNS managed zone is a resource that represents a DNS zone hosted by the Cloud DNS service
 private gcp.dns.managedzone @defaults("name") {
   // Managed Zone ID
   id string
