@@ -54,7 +54,7 @@ private microsoft.organization @defaults("displayName") {
 
 // Microsoft User
 private microsoft.user @defaults("id displayName mail") {
-  // User Id
+  // User ID
   id string
   // User account status
   accountEnabled bool

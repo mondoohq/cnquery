@@ -30,11 +30,11 @@ gcp.project @defaults("name") {
   id() string
   // The unique resource name
   name() string
-  // deprecated, use id
+  // Deprecated. Use `id` instead.
   number() string
   // The project lifecycle state
   state() string
-  // deprecated, use state
+  // Deprecated. Use `state` instead.
   lifecycleState() string
   // Creation time
   createTime() time
@@ -79,7 +79,7 @@ gcp.service @defaults("name") {
 
 // GCP recommendation along with a suggested action
 gcp.recommendation {
-  // Id of recommendation
+  // ID of recommendation
   id string
   // Project ID
   projectId string
@@ -358,7 +358,7 @@ private gcp.compute.attachedDisk {
 
 // GCP Compute Persistent Disk Snapshot
 private gcp.compute.snapshot @defaults("name") {
-  // unique identifier
+  // Unique identifier
   id string
   // Name of the resource
   name string
@@ -394,7 +394,7 @@ private gcp.compute.snapshot @defaults("name") {
 
 // GCP Compute
 private gcp.compute.image @defaults("id name") {
-  // unique identifier
+  // Unique identifier
   id string
   // Name of the resource
   name string
@@ -460,7 +460,7 @@ private gcp.compute.network @defaults("name") {
   description string
   // If not set, indicates a legacy network
   autoCreateSubnetworks bool
-  // Indicates if ULA internal ipv6 is enabled on this network
+  // Indicates if ULA internal IPv6 is enabled on this network
   enableUlaInternalIpv6 bool
   // Gateway address for default routing
   gatewayIPv4 string
@@ -1485,7 +1485,7 @@ private gcp.essentialContact @defaults("email notificationCategories") {
 
 // GCP Project API key
 private gcp.project.apiKey @defaults("name") {
-  // The Id of the key
+  // The ID of the key
   id string
   // Project ID
   projectId string

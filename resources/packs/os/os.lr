@@ -1088,19 +1088,19 @@ macos.security {
   authorizationDB() dict
 }
 
-//ipv4 tables
+// IPv4 tables
 iptables {
-  //ipv4 input chain stats
+  // IPv4 input chain stats
   input() []iptables.entry
-  //ipv4 output chain stats
+  // IPv4 output chain stats
   output() []iptables.entry
 }
 
-//ipv6 tables
+// IPv6 tables
 ip6tables {
-  //ipv6 input chain stats
+  // IPv6 input chain stats
   input() []iptables.entry
-  //ipv6 output chain stats
+  // IPv6 output chain stats
   output() []iptables.entry
 }
 

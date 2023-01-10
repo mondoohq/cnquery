@@ -171,6 +171,7 @@ esxi.command {
 
 // vSphere installation bundle resource
 private esxi.vib @defaults("id name") {
+  // VIB ID
   id string
   // Bundle name
   name string
@@ -244,6 +245,7 @@ private esxi.timezone @defaults("key name") {
 
 // vSphere ESXi NTP configuration resource
 private esxi.ntpconfig @defaults("id") {
+  // NTP config ID
   id string
   // List of time servers, specified as either IP addresses or fully qualified domain names (FQDNs)
   server []string
