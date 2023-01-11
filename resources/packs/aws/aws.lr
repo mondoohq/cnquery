@@ -742,6 +742,64 @@ aws.cloudtrail {
   trails() []aws.cloudtrail.trail
 }
 
+
+// AWS CloudFront
+aws.cloudfront {
+  // List of CloudFront distributions
+  distributions() []aws.cloudfront.distribution
+  // List of CloudFront functions
+  functions() []aws.cloudfront.function
+}
+
+private aws.cloudfront.distribution {
+  // ARN of the CloudFront distribution
+  arn string
+  // Status of the distribution
+  status string
+  // Domain Name of the distribution
+  domainName string
+  // Contains details on the origins of this distribution
+  origins []aws.cloudfront.distribution.origin
+  // Describes the default cache behavior for the distribution
+  defaultCacheBehavior dict
+  // All cache behaviors for the distribution
+  cacheBehaviors []dict
+}
+
+private aws.cloudfront.distribution.origin {
+  // Domain name for the origin
+  domainName string
+  // Unique id for the origin
+  id string
+  // Number of times CloudFront attempts to connect
+  connectionAttempts int
+  // Number of seconds CloudFront wants when attempting a connection
+  connectionTimeout int
+  // Path that CloudFront appends to original domain
+  originPath string
+  // Account id where the origin exists
+  account string
+}
+
+private aws.cloudfront.function {
+  // Name of the CloudFront function
+  name string
+  // Status of the CloudFront function
+  status string
+  // ARN of the CloudFront function
+  arn string
+  // Date and time when function was last updated
+  lastModifiedTime time
+  // Date and time when function was created
+  createdTime time
+  // Stage that the function is in
+  stage string
+  // Comment to describe the function
+  comment string
+  // Runtime environment for the function
+  runtime string
+}
+
 // AWS CloudTrail Trail
 private aws.cloudtrail.trail @defaults("arn") {
   // ARN of the trail
