@@ -664,6 +664,21 @@ aws.cloudtrail {
   trails() []aws.cloudtrail.trail
 }
 
+
+// AWS Cloudfront
+aws.cloudfront {
+  // List of CloudFront distributions
+  distributions() []aws.cloudfront.distribution
+}
+
+private aws.cloudfront.distribution {
+  arn string
+  status string
+  domainName string
+  origins dict
+  defaultCacheBehavior dict
+}
+
 // AWS CloudTrail Trail
 private aws.cloudtrail.trail @defaults("arn") {
   // ARN of the trail
