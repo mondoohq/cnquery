@@ -1733,7 +1733,7 @@ private gcp.project.dataprocService.cluster @defaults("name") {
   status gcp.project.dataprocService.cluster.status
   // Previous cluster status
   statusHistory []gcp.project.dataprocService.cluster.status
-  // Virtual cluster config is used when creating a Dataproc cluster that does not directly control the underlying compute resources
+  // Virtual cluster config used when creating a Dataproc cluster that does not directly control the underlying compute resources
   virtualClusterConfig gcp.project.dataprocService.cluster.virtualClusterConfig
 }
 
