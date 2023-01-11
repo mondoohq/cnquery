@@ -5,7 +5,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	llx "go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -81,6 +84,65 @@ func (s *LocalServices) Unassign(ctx context.Context, assignment *Assignment) (*
 	return globalEmpty, err
 }
 
+func (s *LocalServices) SetProps(ctx context.Context, req *PropsReq) (*Empty, error) {
+	// validate that the queries compile and fill in checksums
+	for i := range req.Props {
+		prop := req.Props[i]
+		code, err := prop.RefreshChecksumAndType(nil)
+		if err != nil {
+			return nil, err
+		}
+		prop.CodeId = code.CodeV2.Id
+	}
+
+	return globalEmpty, s.DataLake.SetProps(ctx, req)
+}
+
+type propsCache struct {
+	services *LocalServices
+	cache    map[string]*Mquery
+}
+
+func newPropsCache(services *LocalServices) propsCache {
+	return propsCache{
+		services: services,
+		cache:    map[string]*Mquery{},
+	}
+}
+
+// add properties, overwriting existing ones
+func (c propsCache) add(props ...*Mquery) {
+	for i := range props {
+		prop := props[i]
+		if prop.Uid != "" {
+			c.cache[prop.Uid] = prop
+		}
+		if prop.Mrn != "" {
+			c.cache[prop.Mrn] = prop
+		}
+	}
+}
+
+// try to get the mrn, will also return uid-based
+// properties if they exist first
+func (c propsCache) get(ctx context.Context, propMrn string) (*Mquery, string, error) {
+	name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
+	if err != nil {
+		return nil, "", errors.New("failed to get property name")
+	}
+
+	if res, ok := c.cache[name]; ok {
+		return res, name, nil
+	}
+
+	if res, ok := c.cache[propMrn]; ok {
+		return res, name, nil
+	}
+
+	res, err := c.services.DataLake.GetQuery(ctx, propMrn)
+	return res, name, err
+}
+
 // Resolve executable bits for an asset (via asset filters)
 func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*ResolvedPack, error) {
 	if s.Upstream != nil && !s.Incognito {
@@ -103,7 +165,7 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 		return nil, err
 	}
 
-	filtersChecksum, err := MatchAssetFilters(req.EntityMrn, req.AssetFilters, bundle.Packs)
+	filtersChecksum, err := MatchFilters(req.EntityMrn, req.AssetFilters, bundle.Packs)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +178,10 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	applicablePacks := []*QueryPack{}
 	for i := range bundle.Packs {
 		pack := bundle.Packs[i]
-		for k := range pack.AssetFilters {
+		if pack.Filters == nil {
+			continue
+		}
+		for k := range pack.Filters.Items {
 			if _, ok := supportedFilters[k]; ok {
 				applicablePacks = append(applicablePacks, pack)
 				break
@@ -130,25 +195,30 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	}
 	for i := range applicablePacks {
 		pack := applicablePacks[i]
+
+		props := newPropsCache(s)
+		props.add(pack.Props...)
+		props.add(bundle.Props...)
+
 		for i := range pack.Queries {
 			query := pack.Queries[i]
-			equery, err := query2executionQuery(query)
-			if err != nil {
-				return nil, err
+
+			if query.Filter != nil {
+				supported := true
+				for codeID := range query.Filter.Items {
+					if _, ok := supportedFilters[codeID]; !ok {
+						supported = false
+						break
+					}
+				}
+				if !supported {
+					continue
+				}
 			}
 
-			code := equery.Code.CodeV2
-			refs := append(code.Datapoints(), code.Entrypoints()...)
-
-			job.Queries[query.CodeId] = equery
-			for i := range refs {
-				ref := refs[i]
-				checksum := code.Checksums[ref]
-				typ := code.Chunk(ref).DereferencedTypeV2(code)
-
-				job.Datapoints[checksum] = &DataQueryInfo{
-					Type: string(typ),
-				}
+			err := s.addQuery(ctx, &job, query, props)
+			if err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -166,32 +236,85 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	return res, err
 }
 
-func query2executionQuery(query *Mquery) (*ExecutionQuery, error) {
-	bundle, err := query.Compile(nil)
-	if err != nil {
-		return nil, err
+func (s *LocalServices) addQuery(ctx context.Context, job *ExecutionJob, query *Mquery, propsCache propsCache) error {
+	var props map[string]*llx.Primitive
+	var propRefs map[string]string
+	if len(query.Props) != 0 {
+		props = map[string]*llx.Primitive{}
+		propRefs = map[string]string{}
+
+		for i := range query.Props {
+			prop, name, err := propsCache.get(ctx, query.Props[i].Mrn)
+			if err != nil {
+				return errors.Wrap(err, "failed to get property for query "+query.Mrn)
+			}
+
+			props[name] = &llx.Primitive{Type: prop.Type}
+			propRefs[name] = prop.CodeId
+
+			if _, ok := job.Queries[prop.CodeId]; ok {
+				continue
+			}
+
+			code, err := prop.Compile(nil)
+			if err != nil {
+				return errors.Wrap(err, "failed to compile property for query "+query.Mrn)
+			}
+			job.Queries[prop.CodeId] = &ExecutionQuery{
+				Query:    prop.Mql,
+				Checksum: prop.Checksum,
+				Code:     code,
+			}
+		}
 	}
 
-	return &ExecutionQuery{
-		Query:    query.Query,
-		Checksum: query.Checksum,
-		Code:     bundle,
-	}, nil
+	bundle, err := query.Compile(props)
+	if err != nil {
+		return err
+	}
+
+	equery := &ExecutionQuery{
+		Query:      query.Mql,
+		Checksum:   query.Checksum,
+		Code:       bundle,
+		Properties: propRefs,
+	}
+
+	code := equery.Code.CodeV2
+	refs := append(code.Datapoints(), code.Entrypoints()...)
+
+	job.Queries[query.CodeId] = equery
+	for i := range refs {
+		ref := refs[i]
+		checksum := code.Checksums[ref]
+		typ := code.Chunk(ref).DereferencedTypeV2(code)
+
+		job.Datapoints[checksum] = &DataQueryInfo{
+			Type: string(typ),
+		}
+	}
+
+	return nil
 }
 
-// MatchAssetFilters will take the list of filters and only return the ones
+// MatchFilters will take the list of filters and only return the ones
 // that are supported by the bundle.
-func MatchAssetFilters(entityMrn string, assetFilters []*Mquery, packs []*QueryPack) (string, error) {
+func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack) (string, error) {
 	supported := map[string]*Mquery{}
 	for i := range packs {
-		for k, v := range packs[i].AssetFilters {
+		pack := packs[i]
+		if pack.Filters == nil {
+			continue
+		}
+
+		for k, v := range pack.Filters.Items {
 			supported[k] = v
 		}
 	}
 
 	matching := []*Mquery{}
-	for i := range assetFilters {
-		cur := assetFilters[i]
+	for i := range filters {
+		cur := filters[i]
 
 		if _, ok := supported[cur.CodeId]; ok {
 			curCopy := proto.Clone(cur).(*Mquery)
@@ -202,10 +325,10 @@ func MatchAssetFilters(entityMrn string, assetFilters []*Mquery, packs []*QueryP
 	}
 
 	if len(matching) == 0 {
-		return "", newAssetMatchError(entityMrn, assetFilters, supported)
+		return "", newAssetMatchError(entityMrn, filters, supported)
 	}
 
-	sum, err := ChecksumAssetFilters(matching)
+	sum, err := ChecksumFilters(matching)
 	if err != nil {
 		return "", err
 	}
@@ -213,8 +336,8 @@ func MatchAssetFilters(entityMrn string, assetFilters []*Mquery, packs []*QueryP
 	return sum, nil
 }
 
-func newAssetMatchError(mrn string, assetFilters []*Mquery, supportedFilters map[string]*Mquery) error {
-	if len(assetFilters) == 0 {
+func newAssetMatchError(mrn string, filters []*Mquery, supportedFilters map[string]*Mquery) error {
+	if len(filters) == 0 {
 		// send a proto error with details, so that the agent can render it properly
 		msg := "asset does not match any of the activated query packs"
 		st := status.New(codes.InvalidArgument, msg)
@@ -236,19 +359,19 @@ func newAssetMatchError(mrn string, assetFilters []*Mquery, supportedFilters map
 	supported := make([]string, len(supportedFilters))
 	i := 0
 	for _, v := range supportedFilters {
-		supported[i] = v.Query
+		supported[i] = v.Mql
 		i++
 	}
 
-	filters := make([]string, len(assetFilters))
-	for i := range assetFilters {
-		filters[i] = strings.TrimSpace(assetFilters[i].Query)
+	filtersMql := make([]string, len(filters))
+	for i := range filters {
+		filtersMql[i] = strings.TrimSpace(filters[i].Mql)
 	}
 
-	sort.Strings(filters)
+	sort.Strings(filtersMql)
 	sort.Strings(supported)
 
-	msg := "asset does not support any of these query packs\nfilters supported:\n" + strings.Join(supported, ",\n") + "\n\nasset supports the following filters:\n" + strings.Join(filters, ",\n")
+	msg := "asset does not support any of these query packs\nfilters supported:\n" + strings.Join(supported, ",\n") + "\n\nasset supports the following filters:\n" + strings.Join(filtersMql, ",\n")
 	return status.Error(codes.InvalidArgument, msg)
 }
 

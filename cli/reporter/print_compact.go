@@ -84,7 +84,14 @@ func (r *defaultReporter) printQueries() {
 		return
 	}
 
-	queriesMap := r.bundle.Queries
+	queriesMap := map[string]*explorer.Mquery{}
+	for _, p := range r.bundle.Packs {
+		for i := range p.Queries {
+			query := p.Queries[i]
+			queriesMap[query.Mrn] = query
+		}
+	}
+
 	queries := make([]*explorer.Mquery, len(queriesMap))
 	i := 0
 	for _, v := range queriesMap {

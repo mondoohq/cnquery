@@ -12,5 +12,6 @@ message Job {
   
   bool do_record = 20;
   repeated string query_pack_filters = 21;
+  map<string,string> props = 22;
 }
 
