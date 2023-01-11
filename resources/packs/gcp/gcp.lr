@@ -1596,4 +1596,24 @@ private gcp.project.iamService.serviceAccount {
   oauth2ClientId string
   // Whether the service account is disabled
   disabled bool
+  // Service account keys
+  keys() []gcp.project.iamService.serviceAccount.key
+}
+
+// GCP Service account keys
+private gcp.project.iamService.serviceAccount.key {
+  // Service account key name
+  name string
+  // Algorithm (an possibly key size) for the key
+  keyAlgorithm string
+  // Key can be used after this timestamp
+  validAfterTime time
+  // Key can be used before this timestamp
+  validBeforeTime time
+  // Key origin
+  keyOrigin string
+  // Key type
+  keyType string
+  // Whether the key is disabled
+  disabled bool
 }

@@ -33,6 +33,10 @@ func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
 	return g.UniqueId()
 }
 
+func (g *mqlGcpProjectIamServiceServiceAccountKey) id() (string, error) {
+	return g.Name()
+}
+
 func (g *mqlGcpProjectIamService) GetServiceAccounts() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -83,4 +87,56 @@ func (g *mqlGcpProjectIamService) GetServiceAccounts() ([]interface{}, error) {
 		serviceAccounts = append(serviceAccounts, mqlSA)
 	}
 	return serviceAccounts, nil
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) GetKeys() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	email, err := g.Email()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := provider.Credentials(admin.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer adminSvc.Close()
+
+	resp, err := adminSvc.ListServiceAccountKeys(ctx, &adminpb.ListServiceAccountKeysRequest{Name: fmt.Sprintf("projects/%s/serviceAccounts/%s", projectId, email)})
+	if err != nil {
+		return nil, err
+	}
+	mqlKeys := make([]interface{}, 0, len(resp.Keys))
+	for _, k := range resp.Keys {
+		mqlKey, err := g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount.key",
+			"name", k.Name,
+			"keyAlgorithm", k.KeyAlgorithm.String(),
+			"validAfterTime", timestampAsTimePtr(k.ValidAfterTime),
+			"validBeforeTime", timestampAsTimePtr(k.ValidBeforeTime),
+			"keyOrigin", k.KeyOrigin.String(),
+			"keyType", k.KeyType.String(),
+			"disabled", k.Disabled,
+		)
+		if err != nil {
+			return nil, err
+		}
+		mqlKeys = append(mqlKeys, mqlKey)
+	}
+	return mqlKeys, nil
 }
