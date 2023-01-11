@@ -1648,13 +1648,13 @@ private gcp.project.cloudFunction {
   sourceRepository dict
   // Location of the upload with the function's source code
   sourceUploadUrl string
-  // HTTPS endpoint of source that can triggered via URL
+  // HTTPS endpoint of source that can be triggered via URL
   httpsTrigger dict
   // Source that fires events in response to a condition in another service
   eventTrigger dict
   // Status of the function deployment
   status string
-  // Name of the function (as defined in source code) that will be executed
+  // Name of the function (as defined in source code) that is executed
   entryPoint string
   // Runtime in which to run the function
   runtime string
@@ -1670,15 +1670,15 @@ private gcp.project.cloudFunction {
   versionId int
   // Labels associated with this cloud function
   labels map[string]string
-  // Environment variables that shall be available during function execution
+  // Environment variables that are available during function execution
   envVars map[string]string
-  // Build environment variables that shall be available during build time
+  // Build environment variables that are available during build time
   buildEnvVars map[string]string
   // VPC network that this cloud function can connect to
   network string
-  // Limit on the maximum number of function instances that may coexist at a given time
+  // Maximum number of function instances that may coexist at a given time
   maxInstances int
-  // Lower bound for the number function instances that may coexist at a given time
+  // Lower bound for the number of function instances that may coexist at a given time
   minInstances int
   // VPC network connector that this cloud function can connect to
   vpcConnector string
@@ -1688,11 +1688,11 @@ private gcp.project.cloudFunction {
   ingressSettings string
   // Resource name of a KMS crypto key used to encrypt/decrypt function resources
   kmsKeyName string
-  // Name of the cloud build custom worker pool that should be used to build the function
+  // Name of the Cloud Build custom WorkerPool that should be used to build the function
   buildWorkerPool string
-  // Cloud build ID of the latest successful deployment of the function
+  // Cloud Build ID of the latest successful deployment of the function
   buildId string
-  // Cloud build name of the function deployment
+  // Cloud Build name of the function deployment
   buildName string
   // Secret environment variables
   secretEnvVars map[string]dict
