@@ -58,7 +58,9 @@ gcp.project @defaults("name") {
   // Logging resources
   logging() gcp.project.loggingservice
   // GCP Cloud SQL Resources
-  sql() gcp.project.sqlService 
+  sql() gcp.project.sqlService
+  // GCP IAM Resources
+  iam() gcp.project.iamService
 }
 
 // GCP Service
@@ -1566,4 +1568,32 @@ private gcp.project.loggingservice.bucket.indexConfig {
   fieldPath string
   // Type of data in this index
   type string
+}
+
+// GCP IAM Resources
+private gcp.project.iamService {
+  // Project ID
+  projectId string
+  // List of service accounts
+  serviceAccounts() []gcp.project.iamService.serviceAccount
+}
+
+// GCP Service Account
+private gcp.project.iamService.serviceAccount {
+  // Project ID
+  projectId string
+  // Service account name
+  name string
+  // Unique, stable numeric ID for the service account
+  uniqueId string
+  // Email address of the service account
+  email string
+  // User-specified, human-readable name for the service account
+  displayName string
+  // Service account description
+  description string
+  // OAuth 2.0 client ID
+  oauth2ClientId string
+  // Whether the service account is disabled
+  disabled bool
 }
