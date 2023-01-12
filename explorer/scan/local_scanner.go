@@ -196,11 +196,11 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	for i := range assetList {
 		progressBarElements[assetList[i].Mrn] = assetList[i].Name
 	}
-	var progressProgram progress.Program
+	var progressProg progress.Program
 	if isatty.IsTerminal(os.Stdout.Fd()) {
-		progressProgram = progress.NewMultiProgressProgram(progressBarElements)
+		progressProg = progress.NewMultiProgressProgram(progressBarElements)
 	} else {
-		progressProgram = progress.NoopProgram{}
+		progressProg = progress.NoopProgram{}
 	}
 
 	scanGroup := sync.WaitGroup{}
@@ -208,7 +208,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	finished := false
 	go func() {
 		defer scanGroup.Done()
-		defer progressProgram.Quit()
+		defer progressProg.Quit()
 		for i := range assetList {
 			asset := assetList[i]
 
@@ -230,7 +230,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Ctx:              ctx,
 				GetCredential:    im.GetCredential,
 				Reporter:         reporter,
-				Progress:         progressProgram,
+				ProgressProg:     progressProg,
 			})
 		}
 		finished = true
@@ -240,11 +240,11 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
 		defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
 	}
-	if _, err := progressProgram.Run(); err != nil {
+	if _, err := progressProg.Run(); err != nil {
 		fmt.Println(err.Error())
 		panic(err)
 	}
-	defer progressProgram.Quit()
+	defer progressProg.Quit()
 	scanGroup.Wait()
 	return reporter.Reports(), finished, nil
 }
@@ -494,7 +494,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	logger.DebugDumpJSON("resolvedPack", resolvedPack)
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.Progress)
+	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.ProgressProg)
 	if err != nil {
 		return nil, err
 	}

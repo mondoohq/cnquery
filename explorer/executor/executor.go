@@ -16,7 +16,7 @@ import (
 
 func RunExecutionJob(
 	schema *resources.Schema, runtime *resources.Runtime, collectorSvc explorer.QueryConductor, assetMrn string,
-	job *explorer.ExecutionJob, features cnquery.Features, progress progress.Program,
+	job *explorer.ExecutionJob, features cnquery.Features, progressProg progress.Program,
 ) (*instance, error) {
 	// We are setting a sensible default timeout for jobs here. This will need
 	// user-configuration.
@@ -29,7 +29,7 @@ func RunExecutionJob(
 		i++
 	}
 
-	res := newInstance(schema, runtime, progress)
+	res := newInstance(schema, runtime, progressProg)
 	res.assetMrn = assetMrn
 	res.collector = collectorSvc
 
@@ -143,14 +143,14 @@ type instance struct {
 	isAborted        bool
 	isDone           bool
 	done             chan struct{}
-	progress         progress.Program
+	progressProg     progress.Program
 	collector        explorer.QueryConductor
 	assetMrn         string
 }
 
-func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressProgram progress.Program) *instance {
-	if progressProgram == nil {
-		progressProgram = progress.NoopProgram{}
+func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressProg progress.Program) *instance {
+	if progressProg == nil {
+		progressProg = progress.NoopProgram{}
 	}
 
 	return &instance{
@@ -161,7 +161,7 @@ func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressP
 		isAborted:        false,
 		isDone:           false,
 		done:             make(chan struct{}),
-		progress:         progressProgram,
+		progressProg:     progressProg,
 		assetMrn:         runtime.Motor.GetAsset().Mrn,
 	}
 }
@@ -213,8 +213,8 @@ func (i *instance) collect(res *llx.RawResult) {
 	i.isDone = isDone
 	isAborted := i.isAborted
 	percentageDone := float64(cur) / float64(max)
-	if i.progress != nil && i.assetMrn != "" {
-		i.progress.Send(progress.MsgProgress{
+	if i.progressProg != nil && i.assetMrn != "" {
+		i.progressProg.Send(progress.MsgProgress{
 			Index:   i.assetMrn,
 			Percent: percentageDone,
 		})
