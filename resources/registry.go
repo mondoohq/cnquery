@@ -66,16 +66,27 @@ func (ctx *Registry) LoadJson(raw []byte) error {
 
 	sort.Strings(keys)
 
-	for i := range keys {
-		isAlias := keys[i] != schema.Resources[keys[i]].Id
-		if err := ctx.AddResourceInfo(schema.Resources[keys[i]]); err != nil {
+	// make sure we import aliases last. aliases should always refer to existing resources
+	// so we want to make sure those are properly registered in the registry first before we import aliases too
+	aliases := []string{}
+	for _, k := range keys {
+		isAlias := k != schema.Resources[k].Id
+		if isAlias {
+			aliases = append(aliases, k)
+			continue
+		}
+		if err := ctx.AddResourceInfo(schema.Resources[k]); err != nil {
 			return errors.New("failed to add resource info: " + err.Error())
 		}
-		if isAlias {
-			info := ctx.Resources[schema.Resources[keys[i]].Id]
-			ctx.Resources[keys[i]] = info
-			ctx.ensureResourceChain(keys[i], info.Private, isAlias)
+	}
+
+	for _, k := range aliases {
+		if err := ctx.AddResourceInfo(schema.Resources[k]); err != nil {
+			return errors.New("failed to add resource info: " + err.Error())
 		}
+		info := ctx.Resources[schema.Resources[k].Id]
+		ctx.Resources[k] = info
+		ctx.ensureResourceChain(k, info.Private, true)
 	}
 
 	return nil
