@@ -16,7 +16,7 @@ import (
 
 func RunExecutionJob(
 	schema *resources.Schema, runtime *resources.Runtime, collectorSvc explorer.QueryConductor, assetMrn string,
-	job *explorer.ExecutionJob, features cnquery.Features, progressFn progress.Progress,
+	job *explorer.ExecutionJob, features cnquery.Features, progress progress.Program,
 ) (*instance, error) {
 	// We are setting a sensible default timeout for jobs here. This will need
 	// user-configuration.
@@ -29,7 +29,7 @@ func RunExecutionJob(
 		i++
 	}
 
-	res := newInstance(schema, runtime, progressFn)
+	res := newInstance(schema, runtime, progress)
 	res.assetMrn = assetMrn
 	res.collector = collectorSvc
 
@@ -143,14 +143,14 @@ type instance struct {
 	isAborted        bool
 	isDone           bool
 	done             chan struct{}
-	progress         progress.Progress
+	progress         progress.Program
 	collector        explorer.QueryConductor
 	assetMrn         string
 }
 
-func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressFn progress.Progress) *instance {
-	if progressFn == nil {
-		progressFn = progress.Noop{}
+func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressProgram progress.Program) *instance {
+	if progressProgram == nil {
+		progressProgram = progress.NoopProgram{}
 	}
 
 	return &instance{
@@ -161,7 +161,8 @@ func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressF
 		isAborted:        false,
 		isDone:           false,
 		done:             make(chan struct{}),
-		progress:         progressFn,
+		progress:         progressProgram,
+		assetMrn:         runtime.Motor.GetAsset().Mrn,
 	}
 }
 
@@ -210,8 +211,14 @@ func (i *instance) collect(res *llx.RawResult) {
 	max := len(i.datapointTracker)
 	isDone := cur == max
 	i.isDone = isDone
-	i.progress.OnProgress(cur, max)
 	isAborted := i.isAborted
+	percentageDone := float64(cur) / float64(max)
+	if i.progress != nil && i.assetMrn != "" {
+		i.progress.Send(progress.MsgProgress{
+			Index:   i.assetMrn,
+			Percent: percentageDone,
+		})
+	}
 	i.mutex.Unlock()
 
 	if isDone && !isAborted {
