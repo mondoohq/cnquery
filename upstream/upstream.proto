@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package mondoo.upstream.v1;
+package mondoo.cnquery.upstream.v1;
 option go_package = "go.mondoo.com/cnquery/upstream";
 
 message ServiceAccountCredentials {
@@ -23,7 +23,6 @@ service AgentManager {
 
 message Ping {}
 message Pong {}
-
 
 message AgentRegistrationRequest {
   string token = 1;
@@ -52,3 +51,36 @@ message AgentRegistrationConfirmation {
 message Mrn { string mrn = 1; }
 
 message Confirmation { string mrn = 1; }
+
+service SecureTokenService {
+  rpc ExchangeSSH (ExchangeSSHKeyRequest) returns (ExchangeSSHKeyResponse) {}
+}
+
+message ExchangeSSHKeyRequest {
+  Claims claims = 1;
+  repeated SshSignature signatures = 2;
+}
+
+message ExchangeSSHKeyResponse {
+  string mrn = 1;
+  string parent_mrn = 2;
+  string private_key = 3;
+  string certificate = 4;
+  string api_endpoint = 5;
+}
+
+// Claims follow https://datatracker.ietf.org/doc/html/rfc8693#section-2.1
+message Claims {
+  string subject = 1;
+  // NumericDate as defined in RFC 7519, which uses RFC 3339
+  string exp = 2;
+  // NumericDate as defined in RFC 7519, which uses RFC 3339
+  string iat = 3;
+  string resource = 4;
+}
+
+message SshSignature {
+  string alg = 1;
+  string kid = 2;
+  string sig = 3;
+}

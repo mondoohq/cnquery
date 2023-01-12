@@ -42,11 +42,18 @@ type CommonCliConfig struct {
 	Certificate       string `json:"certificate,omitempty" mapstructure:"certificate"`
 	APIEndpoint       string `json:"api_endpoint,omitempty" mapstructure:"api_endpoint"`
 
+	// authentication
+	Authentication *CliConfigAuthentication `json:"auth,omitempty" mapstructure:"auth"`
+
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
 
 	// labels that will be applied to all assets
 	Labels map[string]string `json:"labels,omitempty" mapstructure:"labels"`
+}
+
+type CliConfigAuthentication struct {
+	Method string `json:"method,omitempty" mapstructure:"method"`
 }
 
 func (c *CommonCliConfig) GetFeatures() cnquery.Features {
@@ -76,35 +83,45 @@ func (c *CommonCliConfig) GetFeatures() cnquery.Features {
 }
 
 // GetServiceCredential returns the service credential that is defined in the config.
-// If no service credential is defined, it will return an nil.
-func (v *CommonCliConfig) GetServiceCredential() *upstream.ServiceAccountCredentials {
+// If no service credential is defined, it will return nil.
+func (c *CommonCliConfig) GetServiceCredential() *upstream.ServiceAccountCredentials {
+	if c.Authentication != nil && c.Authentication.Method == "ssh" {
+		log.Info().Msg("using ssh authentication method, generate temporary credentials")
+		serviceAccount, err := upstream.ExchangeSSHKey(c.UpstreamApiEndpoint(), c.ServiceAccountMrn, c.GetParentMrn())
+		if err != nil {
+			log.Error().Err(err).Msg("could not exchange ssh key")
+			return nil
+		}
+		return serviceAccount
+	}
+
 	// return nil when no service account is defined
-	if v.ServiceAccountMrn == "" && v.PrivateKey == "" && v.Certificate == "" {
+	if c.ServiceAccountMrn == "" && c.PrivateKey == "" && c.Certificate == "" {
 		return nil
 	}
 
 	return &upstream.ServiceAccountCredentials{
-		Mrn:         v.ServiceAccountMrn,
-		ParentMrn:   v.GetParentMrn(),
-		PrivateKey:  v.PrivateKey,
-		Certificate: v.Certificate,
-		ApiEndpoint: v.APIEndpoint,
+		Mrn:         c.ServiceAccountMrn,
+		ParentMrn:   c.GetParentMrn(),
+		PrivateKey:  c.PrivateKey,
+		Certificate: c.Certificate,
+		ApiEndpoint: c.APIEndpoint,
 	}
 }
 
-func (o *CommonCliConfig) GetParentMrn() string {
-	parent := o.ParentMrn
+func (c *CommonCliConfig) GetParentMrn() string {
+	parent := c.ParentMrn
 
 	// fallback to old space_mrn config
 	if parent == "" {
-		parent = o.SpaceMrn
+		parent = c.SpaceMrn
 	}
 
 	return parent
 }
 
-func (o *CommonCliConfig) UpstreamApiEndpoint() string {
-	apiEndpoint := o.APIEndpoint
+func (c *CommonCliConfig) UpstreamApiEndpoint() string {
+	apiEndpoint := c.APIEndpoint
 
 	// fallback to default api if nothing was set
 	if apiEndpoint == "" {
