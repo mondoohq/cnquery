@@ -88,8 +88,13 @@ func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
 	// gather information about the aws account
 	identity, err := CheckIam(t.config)
 	if err != nil {
-		log.Warn().Err(err).Msg("could not gather details of AWS account")
-		// do not error since this break with localstack
+		// try with govcloud region
+		t.config.Region = "us-gov-west-1"
+		identity, err = CheckIam(t.config)
+		if err != nil {
+			log.Warn().Err(err).Msg("could not gather details of AWS account")
+			// do not error since this break with localstack
+		}
 	} else {
 		t.info = Info{
 			Account: toString(identity.Account),
@@ -168,7 +173,12 @@ func (p *Provider) GetRegions() ([]string, error) {
 
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
-		return regions, nil
+		// try with govcloud region
+		svc := p.Ec2("us-gov-west-1")
+		res, err = svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
+		if err != nil {
+			return regions, err
+		}
 	}
 	for _, region := range res.Regions {
 		regions = append(regions, *region.RegionName)
