@@ -61,6 +61,8 @@ gcp.project @defaults("name") {
   sql() gcp.project.sqlService
   // GCP IAM Resources
   iam() gcp.project.iamService
+  // Common instance metadata for the project
+  commonInstanceMetadata() map[string]string
 }
 
 // GCP Service
