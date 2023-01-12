@@ -149,3 +149,40 @@ func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
 
 	return res, nil
 }
+
+func (g *mqlGcpProject) GetCommonInstanceMetadata() (map[string]interface{}, error) {
+	projectId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	p, err := computeSvc.Projects.Get(projectId).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	metadata := make(map[string]string)
+	if p.CommonInstanceMetadata != nil {
+		for _, item := range p.CommonInstanceMetadata.Items {
+			metadata[item.Key] = core.ToString(item.Value)
+		}
+	}
+	return core.StrMapToInterface(metadata), nil
+}
