@@ -15,7 +15,6 @@ var color func(string) termenv.Color = colors.Profile.Color
 
 // renderer stores values we'll use when rendering the progress bar.
 type renderer struct {
-
 	// Total width of the progress bar, including percentage, if set.
 	Width int
 
