@@ -1584,7 +1584,7 @@ private gcp.project.iamService.serviceAccount {
   projectId string
   // Service account name
   name string
-  // Unique, stable numeric ID for the service account
+  // Unique, stable, numeric ID for the service account
   uniqueId string
   // Email address of the service account
   email string
@@ -1600,11 +1600,11 @@ private gcp.project.iamService.serviceAccount {
   keys() []gcp.project.iamService.serviceAccount.key
 }
 
-// GCP Service account keys
+// GCP service account keys
 private gcp.project.iamService.serviceAccount.key {
   // Service account key name
   name string
-  // Algorithm (an possibly key size) for the key
+  // Algorithm (and possibly key size) of the key
   keyAlgorithm string
   // Key can be used after this timestamp
   validAfterTime time
