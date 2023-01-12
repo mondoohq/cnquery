@@ -210,6 +210,8 @@ private gcp.compute.instance @defaults("name") {
   name string
   // User-friendly name for this instance
   description string
+  // Confidential instance configuration
+  confidentialInstanceConfig dict
   // Indicates if this instance is allowed to send and receive packets with non-matching destination or source IPs
   canIpForward bool
   // The CPU platform used by this instance
