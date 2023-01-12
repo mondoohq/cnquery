@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	ecr "github.com/awslabs/amazon-ecr-credential-helper/ecr-login"
@@ -53,8 +54,13 @@ func GetImageDescriptor(ref name.Reference, opts ...Option) (*remote.Descriptor,
 	if o.auth == nil {
 		kc := authn.NewMultiKeychain(
 			authn.DefaultKeychain,
-			authn.NewKeychainFromHelper(ecr.NewECRHelper()),
 		)
+		if strings.Contains(ref.Name(), ".ecr.") {
+			kc = authn.NewMultiKeychain(
+				authn.DefaultKeychain,
+				authn.NewKeychainFromHelper(ecr.NewECRHelper()),
+			)
+		}
 		auth, err := kc.Resolve(ref.Context())
 		if err != nil {
 			fmt.Printf("getting creds for %q: %v", ref, err)
@@ -80,8 +86,13 @@ func LoadImageFromRegistry(ref name.Reference, opts ...Option) (v1.Image, io.Rea
 	if o.auth == nil {
 		kc := authn.NewMultiKeychain(
 			authn.DefaultKeychain,
-			authn.NewKeychainFromHelper(ecr.NewECRHelper()),
 		)
+		if strings.Contains(ref.Name(), ".ecr.") {
+			kc = authn.NewMultiKeychain(
+				authn.DefaultKeychain,
+				authn.NewKeychainFromHelper(ecr.NewECRHelper()),
+			)
+		}
 		auth, err := kc.Resolve(ref.Context())
 		if err != nil {
 			fmt.Printf("getting creds for %q: %v", ref, err)
