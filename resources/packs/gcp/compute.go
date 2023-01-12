@@ -488,12 +488,25 @@ func newMqlInstance(projectId string, zone GcpComputeZone, runtime *resources.Ru
 		attachedDisks = append(attachedDisks, attachedDisk)
 	}
 
+	var mqlConfCompute map[string]interface{}
+	if instance.ConfidentialInstanceConfig != nil {
+		type mqlConfidentialInstanceConfig struct {
+			Enabled bool `json:"enabled,omitempty"`
+		}
+		mqlConfCompute, err = core.JsonToDict(
+			mqlConfidentialInstanceConfig{Enabled: instance.ConfidentialInstanceConfig.EnableConfidentialCompute})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	entry, err := runtime.CreateResource("gcp.compute.instance",
 		"id", instanceId,
 		"projectId", projectId,
 		"name", instance.Name,
 		"cpuPlatform", instance.CpuPlatform,
 		"description", instance.Description,
+		"confidentialInstanceConfig", mqlConfCompute,
 		"canIpForward", instance.CanIpForward,
 		"cpuPlatform", instance.CpuPlatform,
 		"created", parseTime(instance.CreationTimestamp),
