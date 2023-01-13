@@ -234,6 +234,9 @@
 # GCP Products
 #
 
+# s.b. Pub/Sub
+\bPubSub\b
+
 # s.b. Cloud SQL
 \bCloudSQL\b
 
