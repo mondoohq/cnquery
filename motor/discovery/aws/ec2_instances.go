@@ -86,7 +86,7 @@ func (ec2i *Ec2Instances) getInstances(account string, ec2InstancesFilters Ec2In
 			return []*jobpool.Job{{Err: err}} // return the error
 		}
 	}
-	log.Debug().Msgf("regions being called for ec2 instance list are: %v", regions)
+	log.Debug().Msgf("regions being called for EC2 instance list are: %v", regions)
 	for ri := range regions {
 		region := regions[ri]
 		f := func() (jobpool.JobResult, error) {

@@ -32,7 +32,7 @@ var awscodebuildEnv = &RuntimeEnv{
 		},
 		{
 			Name: "AWS_REGION",
-			Desc: "The AWS Region where the build is running",
+			Desc: "The AWS region where the build is running",
 		},
 	},
 }
