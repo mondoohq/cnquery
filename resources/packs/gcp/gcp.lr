@@ -13,6 +13,7 @@ alias gcloud.sql = gcp.project.sqlService
 alias gcp.sql = gcp.project.sqlService
 alias gcloud.sql.instance = gcp.project.sqlService.instance
 alias gcp.dns = gcp.project.dnsService
+alias gcp.bigquery = gcp.project.bigqueryService
 
 // GCP Cloud Organization
 gcp.organization @defaults("id") {
@@ -69,6 +70,8 @@ gcp.project @defaults("name") {
   commonInstanceMetadata() map[string]string
   // GCP Cloud DNS
   dns() gcp.project.dnsService
+  // GCP BigQuery Resources
+  bigquery() gcp.project.bigqueryService
 }
 
 // GCP Service
@@ -814,14 +817,16 @@ private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defau
   reuseInterval int
 }
 
-// GCP BigQuery
-gcp.bigquery {
+// GCP BigQuery Resources
+private gcp.project.bigqueryService {
+  // Project ID
+  projectId string
   // List of BigQuery datasets
-  datasets() []gcp.bigquery.dataset
+  datasets() []gcp.project.bigqueryService.dataset
 }
 
 // GCP BigQuery dataset
-private gcp.bigquery.dataset @defaults("id"){
+private gcp.project.bigqueryService.dataset @defaults("id"){
   // Dataset ID
   id string
   // Project ID
@@ -843,15 +848,15 @@ private gcp.bigquery.dataset @defaults("id"){
   // Cloud KMS encryption key that will be used to protect BigQuery table
   kmsName string
   // Returns tables in the Dataset
-  tables() []gcp.bigquery.table
+  tables() []gcp.project.bigqueryService.table
   // Returns models in the Dataset
-  models() []gcp.bigquery.model
+  models() []gcp.project.bigqueryService.model
   // Returns routines in the Dataset
-  routines() []gcp.bigquery.routine
+  routines() []gcp.project.bigqueryService.routine
 }
 
 // GCP BigQuery table
-private gcp.bigquery.table @defaults("id") {
+private gcp.project.bigqueryService.table @defaults("id") {
   // Table ID
   id string
   // Project ID
@@ -905,7 +910,7 @@ private gcp.bigquery.table @defaults("id") {
 }
 
 // GCP BigQuery ML model
-private gcp.bigquery.model @defaults("id") {
+private gcp.project.bigqueryService.model @defaults("id") {
   // Model ID
   id string
   // Dataset ID
@@ -933,7 +938,7 @@ private gcp.bigquery.model @defaults("id") {
 }
 
 // GCP BigQuery routine
-private gcp.bigquery.routine @defaults("id") {
+private gcp.project.bigqueryService.routine @defaults("id") {
   // Routine ID
   id string
   // Dataset ID

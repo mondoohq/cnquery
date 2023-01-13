@@ -3,20 +3,58 @@ package gcp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/bigquery"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpBigquery) id() (string, error) {
-	return "gcp.bigquery", nil
+func (g *mqlGcpProjectBigqueryService) init(args *resources.Args) (*resources.Args, GcpProjectBigqueryService, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	projectId := provider.ResourceID()
+	(*args)["projectId"] = projectId
+
+	return args, nil, nil
 }
 
-func (g *mqlGcpBigquery) GetDatasets() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryService) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("gcp.project.bigqueryService/%s", projectId), nil
+}
+
+func (g *mqlGcpProject) GetBigquery() (interface{}, error) {
+	projectId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.bigqueryService",
+		"projectId", projectId,
+	)
+}
+
+func (g *mqlGcpProjectBigqueryService) GetDatasets() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
 	}
@@ -27,8 +65,7 @@ func (g *mqlGcpBigquery) GetDatasets() ([]interface{}, error) {
 	}
 
 	ctx := context.Background()
-	projectID := provider.ResourceID()
-	bigquerySvc, err := bigquery.NewClient(ctx, projectID, option.WithHTTPClient(client))
+	bigquerySvc, err := bigquery.NewClient(ctx, projectId, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +97,7 @@ func (g *mqlGcpBigquery) GetDatasets() ([]interface{}, error) {
 			kmsName = metadata.DefaultEncryptionConfig.KMSKeyName
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.bigquery.dataset",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.dataset",
 			"id", dataset.DatasetID,
 			"projectId", dataset.ProjectID,
 			"name", metadata.Name,
@@ -81,7 +118,7 @@ func (g *mqlGcpBigquery) GetDatasets() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpBigqueryDataset) id() (string, error) {
+func (g *mqlGcpProjectBigqueryServiceDataset) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -91,10 +128,10 @@ func (g *mqlGcpBigqueryDataset) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "gcp.bigquery.dataset/" + projectId + "/" + name, nil
+	return "gcp.project.bigqueryService.dataset/" + projectId + "/" + name, nil
 }
 
-func (g *mqlGcpBigqueryDataset) GetTables() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -178,7 +215,7 @@ func (g *mqlGcpBigqueryDataset) GetTables() ([]interface{}, error) {
 			snapshotTime = &metadata.SnapshotDefinition.SnapshotTime
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.bigquery.table",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.table",
 			"id", table.TableID,
 			"projectId", table.ProjectID,
 			"datasetId", table.DatasetID,
@@ -214,15 +251,15 @@ func (g *mqlGcpBigqueryDataset) GetTables() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpBigqueryTable) id() (string, error) {
+func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
 	name, err := g.Name()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.bigquery.table/" + name, nil
+	return "gcp.project.bigqueryService.table/" + name, nil
 }
 
-func (g *mqlGcpBigqueryDataset) GetModels() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryServiceDataset) GetModels() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -271,7 +308,7 @@ func (g *mqlGcpBigqueryDataset) GetModels() ([]interface{}, error) {
 			kmsName = metadata.EncryptionConfig.KMSKeyName
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.bigquery.model",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.model",
 			"id", model.ModelID,
 			"datasetId", model.DatasetID,
 			"projectId", model.ProjectID,
@@ -295,15 +332,15 @@ func (g *mqlGcpBigqueryDataset) GetModels() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpBigqueryModel) id() (string, error) {
+func (g *mqlGcpProjectBigqueryServiceModel) id() (string, error) {
 	name, err := g.Name()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.bigquery.model/" + name, nil
+	return "gcp.project.bigqueryService.model/" + name, nil
 }
 
-func (g *mqlGcpBigqueryDataset) GetRoutines() ([]interface{}, error) {
+func (g *mqlGcpProjectBigqueryServiceDataset) GetRoutines() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -347,7 +384,7 @@ func (g *mqlGcpBigqueryDataset) GetRoutines() ([]interface{}, error) {
 			return nil, err
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.bigquery.routine",
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.routine",
 			"id", routine.RoutineID,
 			"datasetId", routine.DatasetID,
 			"projectId", routine.ProjectID,
@@ -366,10 +403,10 @@ func (g *mqlGcpBigqueryDataset) GetRoutines() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpBigqueryRoutine) id() (string, error) {
+func (g *mqlGcpProjectBigqueryServiceRoutine) id() (string, error) {
 	name, err := g.Id()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.bigquery.routine/" + name, nil
+	return "gcp.project.bigqueryService.routine/" + name, nil
 }
