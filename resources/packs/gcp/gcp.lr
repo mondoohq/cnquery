@@ -12,6 +12,7 @@ alias gcloud.storage.bucket = gcp.storage.bucket
 alias gcloud.sql = gcp.project.sqlService
 alias gcp.sql = gcp.project.sqlService
 alias gcloud.sql.instance = gcp.project.sqlService.instance
+alias gcp.dns = gcp.project.dnsService
 
 // GCP Cloud Organization
 gcp.organization @defaults("id") {
@@ -66,6 +67,8 @@ gcp.project @defaults("name") {
   iam() gcp.project.iamService
   // Common instance metadata for the project
   commonInstanceMetadata() map[string]string
+  // GCP Cloud DNS
+  dns() gcp.project.dnsService
 }
 
 // GCP Service
@@ -950,17 +953,17 @@ private gcp.bigquery.routine @defaults("id") {
 }
 
 // GCP Cloud DNS
-gcp.dns {
+private gcp.project.dnsService {
   // Project ID
   projectId string
   // Cloud DNS managed zone in project
-  managedZones() []gcp.dns.managedzone
+  managedZones() []gcp.project.dnsService.managedzone
   // Cloud DNS rules in project
-  policies() []gcp.dns.policy
+  policies() []gcp.project.dnsService.policy
 }
 
 // Cloud DNS managed zone is a resource that represents a DNS zone hosted by the Cloud DNS service
-private gcp.dns.managedzone @defaults("name") {
+private gcp.project.dnsService.managedzone @defaults("name") {
   // Managed Zone ID
   id string
   // Project ID
@@ -980,11 +983,11 @@ private gcp.dns.managedzone @defaults("name") {
   // Creation timestamp
   created time
   // Cloud DNS RecordSet in zone
-  recordSets() []gcp.dns.recordset
+  recordSets() []gcp.project.dnsService.recordset
 }
 
 // Cloud DNS RecordSet
-private gcp.dns.recordset @defaults("name") {
+private gcp.project.dnsService.recordset @defaults("name") {
   // Project ID
   projectId string
   // User-friendly name of the resource
@@ -1000,7 +1003,7 @@ private gcp.dns.recordset @defaults("name") {
 }
 
 // Cloud DNS rules applied to one or more Virtual Private Cloud resources
-private gcp.dns.policy {
+private gcp.project.dnsService.policy {
   // Project ID
   projectId string
   // Managed Zone ID
