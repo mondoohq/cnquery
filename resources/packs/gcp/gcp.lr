@@ -50,7 +50,7 @@ gcp.project @defaults("name") {
   gke() gcp.project.gkeService
   // GCP Compute Resources for the Project
   compute() gcp.project.computeService
-  // GCP PubSub-related Resources
+  // GCP Pub/Sub-related Resources
   pubsub() gcp.project.pubsubService
   // KMS-related resources
   kms() gcp.project.kmsService
