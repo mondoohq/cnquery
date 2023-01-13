@@ -29,6 +29,11 @@
 # Product Names
 #
 
+# s.b. macOS
+\bOS X\b
+\bMacOS\b
+\bMac OS\b
+
 # s.b. Elasticsearch
 \bElasticSearch\b
 
