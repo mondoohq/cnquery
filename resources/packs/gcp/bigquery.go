@@ -97,6 +97,48 @@ func (g *mqlGcpProjectBigqueryService) GetDatasets() ([]interface{}, error) {
 			kmsName = metadata.DefaultEncryptionConfig.KMSKeyName
 		}
 
+		access := make([]interface{}, 0, len(metadata.Access))
+		for i, a := range metadata.Access {
+			var viewRef interface{}
+			if a.View != nil {
+				viewRef = map[string]interface{}{
+					"projectId": a.View.ProjectID,
+					"datasetId": a.View.DatasetID,
+					"tableId":   a.View.TableID,
+				}
+			}
+			var routineRef interface{}
+			if a.Routine != nil {
+				routineRef = map[string]interface{}{
+					"projectId": a.Routine.ProjectID,
+					"datasetId": a.Routine.DatasetID,
+					"tableId":   a.Routine.RoutineID,
+				}
+			}
+			var datasetRef interface{}
+			if a.Dataset != nil {
+				datasetRef = map[string]interface{}{
+					"projectId":   a.Dataset.Dataset.ProjectID,
+					"datasetId":   a.Dataset.Dataset.DatasetID,
+					"targetTypes": a.Dataset.TargetTypes,
+				}
+			}
+			mqlA, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.dataset.accessEntry",
+				"id", fmt.Sprintf("gcp.project.bigqueryService.dataset/%s/%s/accessEntry/%d", projectId, dataset.DatasetID, i),
+				"datasetId", dataset.DatasetID,
+				"role", string(a.Role),
+				"entityType", entityTypeToString(a.EntityType),
+				"entity", a.Entity,
+				"viewRef", viewRef,
+				"routineRef", routineRef,
+				"datasetRef", datasetRef,
+			)
+			if err != nil {
+				return nil, err
+			}
+			access = append(access, mqlA)
+		}
+
 		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService.dataset",
 			"id", dataset.DatasetID,
 			"projectId", dataset.ProjectID,
@@ -108,6 +150,7 @@ func (g *mqlGcpProjectBigqueryService) GetDatasets() ([]interface{}, error) {
 			"modified", &metadata.LastModifiedTime,
 			"tags", core.StrMapToInterface(tags),
 			"kmsName", kmsName,
+			"access", access,
 		)
 		if err != nil {
 			return nil, err
@@ -129,6 +172,10 @@ func (g *mqlGcpProjectBigqueryServiceDataset) id() (string, error) {
 		return "", err
 	}
 	return "gcp.project.bigqueryService.dataset/" + projectId + "/" + name, nil
+}
+
+func (g *mqlGcpProjectBigqueryServiceDatasetAccessEntry) id() (string, error) {
+	return g.Id()
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error) {
@@ -425,4 +472,27 @@ func (g *mqlGcpProjectBigqueryServiceRoutine) id() (string, error) {
 		return "", err
 	}
 	return "gcp.project.bigqueryService.routine/" + name, nil
+}
+
+func entityTypeToString(entityType bigquery.EntityType) string {
+	switch entityType {
+	case bigquery.DomainEntity:
+		return "DOMAIN"
+	case bigquery.GroupEmailEntity:
+		return "GROUP_EMAIL"
+	case bigquery.UserEmailEntity:
+		return "USER_EMAIL"
+	case bigquery.SpecialGroupEntity:
+		return "SPECIAL_GROUP"
+	case bigquery.ViewEntity:
+		return "VIEW"
+	case bigquery.IAMMemberEntity:
+		return "IAM_MEMBER"
+	case bigquery.RoutineEntity:
+		return "ROUTINE"
+	case bigquery.DatasetEntity:
+		return "DATASET"
+	default:
+		return "UNKNOWN"
+	}
 }
