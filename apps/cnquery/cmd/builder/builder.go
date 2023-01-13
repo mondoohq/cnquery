@@ -438,9 +438,9 @@ func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, 
 	cmd.Flags().MarkHidden("namespace")
 	// ^^
 
-	cmd.Flags().String("context", "", "target a kubernetes context")
-	cmd.Flags().String("namespaces-exclude", "", "filter out kubernetes objects in the matching namespaces")
-	cmd.Flags().String("namespaces", "", "only include kubernetes object in the matching namespaces")
+	cmd.Flags().String("context", "", "target a Kubernetes context")
+	cmd.Flags().String("namespaces-exclude", "", "filter out Kubernetes objects in the matching namespaces")
+	cmd.Flags().String("namespaces", "", "only include Kubernetes object in the matching namespaces")
 	return cmd
 }
 
