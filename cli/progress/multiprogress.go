@@ -29,7 +29,6 @@ func (n NoopProgram) Quit()                   {}
 const (
 	padding                  = 0
 	maxWidth                 = 80
-	maxItemsToShow           = 30
 	overallProgressIndexName = "overall"
 )
 
@@ -52,8 +51,9 @@ type modelProgress struct {
 }
 
 type modelMultiProgress struct {
-	Progress     map[string]*modelProgress
-	maxNameWidth int
+	Progress       map[string]*modelProgress
+	maxNameWidth   int
+	maxItemsToShow int
 }
 
 func newProgressBar() progress.Model {
@@ -72,8 +72,9 @@ func newProgressBar() progress.Model {
 // This is a wrapper around a tea.Programm.
 // The key of the map is used to identify the progress bar.
 // The value of the map is used as the name displayed for the progress bar.
-func NewMultiProgressProgram(elements map[string]string) Program {
+func NewMultiProgressProgram(elements map[string]string, progressNumAssets int) Program {
 	m := newMultiProgress(elements)
+	m.maxItemsToShow = progressNumAssets
 	return tea.NewProgram(m)
 }
 
@@ -236,8 +237,6 @@ func (m modelMultiProgress) View() string {
 	sort.Strings(keys)
 	keys = append(keys, overallProgressIndexName)
 
-	// TODO: Check CLI parameter
-	maxLines := maxItemsToShow
 	i := 1
 	for _, k := range keys {
 		if k != overallProgressIndexName {
@@ -248,13 +247,13 @@ func (m modelMultiProgress) View() string {
 			}
 		}
 		output += "\n" + pad
-		if i == maxLines {
+		if i == m.maxItemsToShow {
 			break
 		}
 		i++
 	}
-	if maxLines > 0 && len(keys) > maxLines+1 {
-		output += fmt.Sprintf("... %d more assets ...\n%s", len(keys)-maxLines-1, pad)
+	if m.maxItemsToShow > 0 && len(keys) > m.maxItemsToShow+1 {
+		output += fmt.Sprintf("... %d more assets ...\n%s", len(keys)-m.maxItemsToShow-1, pad)
 	}
 
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
