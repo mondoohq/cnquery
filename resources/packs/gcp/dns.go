@@ -11,15 +11,26 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpDns) id() (string, error) {
+func (g *mqlGcpProjectDnsService) id() (string, error) {
 	id, err := g.ProjectId()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.dns/" + id, nil
+	return "gcp.project.dnsService/" + id, nil
 }
 
-func (g *mqlGcpDns) init(args *resources.Args) (*resources.Args, GcpDns, error) {
+func (g *mqlGcpProject) GetDns() (interface{}, error) {
+	projectId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.dnsService",
+		"projectId", projectId,
+	)
+}
+
+func (g *mqlGcpProjectDnsService) init(args *resources.Args) (*resources.Args, GcpProjectDnsService, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -35,7 +46,7 @@ func (g *mqlGcpDns) init(args *resources.Args) (*resources.Args, GcpDns, error) 
 	return args, nil, nil
 }
 
-func (g *mqlGcpDnsManagedzone) id() (string, error) {
+func (g *mqlGcpProjectDnsServiceManagedzone) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -45,10 +56,10 @@ func (g *mqlGcpDnsManagedzone) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "gcp.dns.managedzone/" + projectId + "/" + id, nil
+	return "gcp.project.dnsService.managedzone/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpDns) GetManagedZones() ([]interface{}, error) {
+func (g *mqlGcpProjectDnsService) GetManagedZones() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -77,7 +88,7 @@ func (g *mqlGcpDns) GetManagedZones() ([]interface{}, error) {
 		for i := range page.ManagedZones {
 			managedZone := page.ManagedZones[i]
 
-			mqlManagedZone, err := g.MotorRuntime.CreateResource("gcp.dns.managedzone",
+			mqlManagedZone, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.managedzone",
 				"id", strconv.FormatInt(int64(managedZone.Id), 10),
 				"projectId", projectId,
 				"name", managedZone.Name,
@@ -101,7 +112,7 @@ func (g *mqlGcpDns) GetManagedZones() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpDnsPolicy) id() (string, error) {
+func (g *mqlGcpProjectDnsServicePolicy) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -111,10 +122,10 @@ func (g *mqlGcpDnsPolicy) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "gcp.dns.policy/" + projectId + "/" + id, nil
+	return "gcp.project.dnsService.policy/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpDns) GetPolicies() ([]interface{}, error) {
+func (g *mqlGcpProjectDnsService) GetPolicies() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -143,7 +154,7 @@ func (g *mqlGcpDns) GetPolicies() ([]interface{}, error) {
 		for i := range page.Policies {
 			policy := page.Policies[i]
 
-			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.dns.policy",
+			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.policy",
 				"projectId", projectId,
 				"id", strconv.FormatInt(int64(policy.Id), 10),
 				"name", policy.Name,
@@ -164,7 +175,7 @@ func (g *mqlGcpDns) GetPolicies() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpDnsRecordset) id() (string, error) {
+func (g *mqlGcpProjectDnsServiceRecordset) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -174,10 +185,10 @@ func (g *mqlGcpDnsRecordset) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return "gcp.dns.recordset/" + projectId + "/" + id, nil
+	return "gcp.project.dnsService.recordset/" + projectId + "/" + id, nil
 }
 
-func (g *mqlGcpDnsManagedzone) GetRecordSets() ([]interface{}, error) {
+func (g *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -211,7 +222,7 @@ func (g *mqlGcpDnsManagedzone) GetRecordSets() ([]interface{}, error) {
 		for i := range page.Rrsets {
 			rSet := page.Rrsets[i]
 
-			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.dns.recordset",
+			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.recordset",
 				"projectId", projectId,
 				"name", rSet.Name,
 				"rrdatas", core.StrSliceToInterface(rSet.Rrdatas),
