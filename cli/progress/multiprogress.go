@@ -5,11 +5,13 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// reduced tea.Program interface
 type Program interface {
 	Send(msg tea.Msg)
 	Run() (tea.Model, error)
@@ -46,7 +48,7 @@ type modelProgress struct {
 	Name      string
 	Score     string
 	Completed bool
-	Aborted   bool
+	lock      sync.Mutex
 }
 
 type modelMultiProgress struct {
@@ -54,7 +56,7 @@ type modelMultiProgress struct {
 	maxNameWidth int
 }
 
-func newBar() progress.Model {
+func newProgressBar() progress.Model {
 	progressbar := progress.New(progress.WithScaledGradient("#5A56E0", "#EE6FF8"))
 	progressbar.Width = 40
 	progressbar.Full = '█'
@@ -66,11 +68,17 @@ func newBar() progress.Model {
 	return progressbar
 }
 
+// Creates a new progress bars for the given elements.
+// This is a wrapper around a tea.Programm.
+// The key of the map is used to identify the progress bar.
+// The value of the map is used as the name displayed for the progress bar.
 func NewMultiProgressProgram(elements map[string]string) Program {
 	m := newMultiProgress(elements)
 	return tea.NewProgram(m)
 }
 
+// This is only needed for testing.
+// This way we get the output without having a tty.
 func newMultiProgressMockProgram(elements map[string]string, input io.Reader, output io.Writer) Program {
 	m := newMultiProgress(elements)
 	return tea.NewProgram(m, tea.WithInput(input), tea.WithOutput(output))
@@ -110,7 +118,7 @@ func (m modelMultiProgress) Init() tea.Cmd {
 }
 
 func (m modelMultiProgress) add(key string, name string) {
-	progressbar := newBar()
+	progressbar := newProgressBar()
 
 	m.Progress[key] = &modelProgress{
 		model:     &progressbar,
@@ -150,27 +158,30 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		if msg.Percent != 0 {
+			m.Progress[msg.Index].lock.Lock()
 			cmd := m.Progress[msg.Index].model.SetPercent(msg.Percent)
+			m.Progress[msg.Index].lock.Unlock()
 			cmds = append(cmds, cmd)
 		}
 		if msg.Percent == 1.0 {
+			m.Progress[msg.Index].lock.Lock()
 			m.Progress[msg.Index].Completed = true
+			m.Progress[msg.Index].lock.Unlock()
 		}
 
-		sumPercent := 0.0
-		validAssets := 0
-		for k := range m.Progress {
-			if k == overallProgressIndexName {
-				continue
-			}
-			if m.Progress[k].Aborted {
-				continue
-			}
-			sumPercent += m.Progress[k].model.Percent()
-			validAssets++
-		}
 		if _, ok := m.Progress[overallProgressIndexName]; ok {
+			m.Progress[msg.Index].lock.Lock()
+			sumPercent := 0.0
+			validAssets := 0
+			for k := range m.Progress {
+				if k == overallProgressIndexName {
+					continue
+				}
+				sumPercent += m.Progress[k].model.Percent()
+				validAssets++
+			}
 			cmd = m.Progress[overallProgressIndexName].model.SetPercent(sumPercent / float64(validAssets))
+			m.Progress[msg.Index].lock.Unlock()
 			cmds = append(cmds, cmd)
 		}
 
@@ -182,9 +193,10 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if msg.Score != "" {
+			m.Progress[msg.Index].lock.Lock()
 			m.Progress[msg.Index].Score = msg.Score
-			cmd := m.Progress[msg.Index].model.SetPercent(m.Progress[msg.Index].model.Percent())
-			return m, cmd
+			m.Progress[msg.Index].lock.Unlock()
+			return m, nil
 		}
 		return m, nil
 
