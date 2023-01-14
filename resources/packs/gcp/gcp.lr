@@ -72,6 +72,8 @@ gcp.project @defaults("name") {
   dns() gcp.project.dnsService
   // GCP BigQuery Resources
   bigquery() gcp.project.bigqueryService
+  // GCP Cloud Functions
+  cloudFunctions() []gcp.project.cloudFunction
 }
 
 // GCP Service
@@ -1631,4 +1633,73 @@ private gcp.project.iamService.serviceAccount.key {
   keyType string
   // Whether the key is disabled
   disabled bool
+}
+// GCP Cloud Function
+private gcp.project.cloudFunction {
+  // Project ID
+  projectId string
+  // Cloud Function name
+  name string
+  // Cloud Function description
+  description string
+  // Location of the archive with the function's source code
+  sourceArchiveUrl string
+  // Repository reference for the function's source code
+  sourceRepository dict
+  // Location of the upload with the function's source code
+  sourceUploadUrl string
+  // HTTPS endpoint of source that can be triggered via URL
+  httpsTrigger dict
+  // Source that fires events in response to a condition in another service
+  eventTrigger dict
+  // Status of the function deployment
+  status string
+  // Name of the function (as defined in source code) that is executed
+  entryPoint string
+  // Runtime in which to run the function
+  runtime string
+  // Function execution timeout
+  timeout time
+  // Amount of memory in MB available for a function
+  availableMemoryMb int
+  // Email of the function's service account
+  serviceAccountEmail string
+  // Update timestamp
+  updated time
+  // Version identifier of the cloud function
+  versionId int
+  // Labels associated with this cloud function
+  labels map[string]string
+  // Environment variables that are available during function execution
+  envVars map[string]string
+  // Build environment variables that are available during build time
+  buildEnvVars map[string]string
+  // VPC network that this cloud function can connect to
+  network string
+  // Maximum number of function instances that may coexist at a given time
+  maxInstances int
+  // Lower bound for the number of function instances that may coexist at a given time
+  minInstances int
+  // VPC network connector that this cloud function can connect to
+  vpcConnector string
+  // Egress settings for the connector controlling what traffic is diverted
+  egressSettings string
+  // Ingress settings for the function controlling what traffic can reach
+  ingressSettings string
+  // Resource name of a KMS crypto key used to encrypt/decrypt function resources
+  kmsKeyName string
+  // Name of the Cloud Build custom WorkerPool that should be used to build the function
+  buildWorkerPool string
+  // Cloud Build ID of the latest successful deployment of the function
+  buildId string
+  // Cloud Build name of the function deployment
+  buildName string
+  // Secret environment variables
+  secretEnvVars map[string]dict
+  // Secret volumes
+  secretVolumes []dict
+  // User-managed repository created in Artifact Registry
+  dockerRepository string
+  // Docker registry to use for this deployment
+  dockerRegistry string
 }

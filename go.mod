@@ -5,6 +5,7 @@ go 1.19
 require (
 	cloud.google.com/go/bigquery v1.44.0
 	cloud.google.com/go/container v1.7.0
+	cloud.google.com/go/functions v1.9.0
 	cloud.google.com/go/iam v0.7.0
 	cloud.google.com/go/kms v1.6.0
 	cloud.google.com/go/logging v1.6.1
