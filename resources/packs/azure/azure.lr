@@ -1101,6 +1101,10 @@ private azure.monitor.diagnosticsetting @defaults("id name") {
 azure.cloudDefender {
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
+  // List of Defender For Server components and whether they are enabled
+  defenderForServers() dict
+  // List of Defender For Container components and whether they are enabled
+  defenderForContainers() dict
   // List of configured security contacts
   securityContacts() []azure.cloudDefender.securityContact
 }

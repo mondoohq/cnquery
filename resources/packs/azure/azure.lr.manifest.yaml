@@ -40,6 +40,8 @@ resources:
       - azure
   azure.cloudDefender:
     fields:
+      defenderForContainers: {}
+      defenderForServers: {}
       monitoringAgentAutoProvision: {}
       securityContacts: {}
     min_mondoo_version: latest
