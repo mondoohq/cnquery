@@ -674,6 +674,84 @@ privatekey {
   encrypted() bool
 }
 
+// Parse OpenPGP from files
+parse.openpgp {
+  []openpgp.entity(content, path)
+  init(path string)
+  // OpenPGP file path
+  path string
+  // OpenPGP file
+  file() file
+  // OpenPGP file content
+  content(file) string
+}
+
+// OpenPGP Entity
+openpgp.entity {
+  // primary public key, which must be a signing key
+  primaryPublicKey openpgp.publicKey
+  // Entity's Identities
+  identities() []openpgp.identity
+}
+
+// OpenPGP Public Key
+openpgp.publicKey {
+  // Key ID
+  id string
+  // Key Version
+  version int
+  // Key Fingerprint
+  fingerprint string
+  // Key Algorithm
+  keyAlgorithm string
+  // Key Bit Length
+  bitLength int
+  // Key creation time
+  creationTime time
+}
+
+// OpenPGP Identity
+openpgp.identity {
+  // Primary Key Fingerprint
+  fingerprint string
+  // Full name in form of "Full Name (comment) <email@example.com>"
+  id string
+  // Name
+  name string
+  // Email
+  email string
+  // Comment
+  comment string
+  // Identity Signatures
+  signatures() []openpgp.signature
+}
+
+// OpenPGP Signature
+openpgp.signature {
+  // Primary Key Fingerprint
+  fingerprint string
+  // Identity Name
+  identityName string
+  // Signature Hash
+  hash string
+  // Signature Version
+  version int
+  // Signature Type
+  signatureType string
+  // Hash Algorithm
+  keyAlgorithm string
+  // Creation Time
+  creationTime time
+  // Signature Lifetime in Seconds
+  lifetimeSecs int
+  // Expiration Duration
+  expiresIn time
+  // Key Lifetime in Seconds
+  keyLifetimeSecs int
+  // Key Expiration Duration
+  keyExpiresIn time
+}
+
 // Intelligent Platform Management Interface (IPMI) resource
 //
 // Provides access to BIOS and UEFI configuration

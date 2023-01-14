@@ -21,7 +21,7 @@ func (s *mqlParseCertificates) init(args *resources.Args) (*resources.Args, Pars
 	if x, ok := (*args)["path"]; ok {
 		path, ok := x.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in authorizedkeys initialization, it must be a string")
+			return nil, nil, errors.New("Wrong type for 'path' in certificates initialization, it must be a string")
 		}
 
 		f, err := s.MotorRuntime.CreateResource("file", "path", path)

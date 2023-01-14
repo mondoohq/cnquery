@@ -38,6 +38,7 @@ require (
 	github.com/BurntSushi/toml v1.2.0
 	github.com/GoogleCloudPlatform/berglas v1.0.1
 	github.com/Masterminds/semver v1.5.0
+	github.com/ProtonMail/go-crypto v0.0.0-20230113180642-068501e20d67
 	github.com/StackExchange/wmi v1.2.1
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7
@@ -252,6 +253,7 @@ require (
 	github.com/charithe/durationcheck v0.0.9 // indirect
 	github.com/chavacava/garif v0.0.0-20220630083739-93517212f375 // indirect
 	github.com/cjlapao/common-go v0.0.29 // indirect
+	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/console v1.0.3 // indirect
