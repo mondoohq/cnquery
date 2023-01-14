@@ -74,6 +74,8 @@ gcp.project @defaults("name") {
   bigquery() gcp.project.bigqueryService
   // GCP Cloud Functions
   cloudFunctions() []gcp.project.cloudFunction
+  // GCP Dataproc resources
+  dataproc() gcp.project.dataprocService
 }
 
 // GCP Service
@@ -1702,4 +1704,221 @@ private gcp.project.cloudFunction {
   dockerRepository string
   // Docker registry to use for this deployment
   dockerRegistry string
+}
+// GCP Dataproc Resources
+private gcp.project.dataprocService {
+  // Project ID
+  projectId string
+  // List of available regions
+  regions() []string
+  // List of Dataproc clusters in the current project
+  clusters() []gcp.project.dataprocService.cluster
+}
+
+// GCP Dataproc cluster
+private gcp.project.dataprocService.cluster @defaults("name") {
+  // Project ID
+  projectId string
+  // Cluster name
+  name string
+  // Cluster UUID
+  uuid string
+  // Cluster configuration
+  config gcp.project.dataprocService.cluster.config
+  // Labels associated with the cluster
+  labels map[string]string
+  // Contains cluster daemon metrics such as HDF and YARN stats
+  metrics dict
+  // Cluster status
+  status gcp.project.dataprocService.cluster.status
+  // Previous cluster status
+  statusHistory []gcp.project.dataprocService.cluster.status
+  // Virtual cluster config used when creating a Dataproc cluster that does not directly control the underlying compute resources
+  virtualClusterConfig gcp.project.dataprocService.cluster.virtualClusterConfig
+}
+
+// GCP Dataproc cluster config
+private gcp.project.dataprocService.cluster.config {
+  // Parent resource path
+  parentResourcePath string
+  // Autoscaling configuration for the policy associated with the cluster
+  autoscaling dict
+  // Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
+  configBucket string
+  // Dataproc metrics configuration
+  metrics dict
+  // Encryption configuration
+  encryption dict
+  // Port/endpoint configuration
+  endpoint dict
+  // Shared Compute Engine configuration
+  gceCluster gcp.project.dataprocService.cluster.config.gceCluster
+  // Kubernetes Engine config for Dataproc clusters deployed to Kubernetes
+  gkeCluster gcp.project.dataprocService.cluster.config.gkeCluster
+  // Commands to execute on each node after config is completed
+  initializationActions []dict
+  // Lifecycle configuration
+  lifecycle gcp.project.dataprocService.cluster.config.lifecycle
+  // Compute Engine config for the cluster's master instance
+  master gcp.project.dataprocService.cluster.config.instance
+  // Metastore configuration
+  metastore dict
+  // Compute Engine configuration for the cluster's secondary worker instances
+  secondaryWorker gcp.project.dataprocService.cluster.config.instance
+  // Security configuration
+  security dict
+  // Cluster software configuration
+  software dict
+  // Cloud Storage bucket used to store ephemeral cluster and jobs data
+  tempBucket string
+  // Compute Engine configuration for the cluster's worker instances
+  worker gcp.project.dataprocService.cluster.config.instance
+}
+
+// GCP Dataproc cluster endpoint config
+private gcp.project.dataprocService.cluster.config.gceCluster {
+  // Internal ID
+  id string
+  // Confidential instance configuration
+  confidentialInstance dict
+  // Whether the cluster has only internal IP addresses
+  internalIpOnly bool
+  // Compute Engine metadata entries
+  metadata map[string]string
+  // Compute Engine network to be used for machine communications
+  networkUri string
+  // Node Group Affinity for sole-tenant clusters
+  nodeGroupAffinity dict
+  // Type of IPv6 access for the cluster
+  privateIpv6GoogleAccess string
+  // Reservation affinity for consuming zonal reservations
+  reservationAffinity gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity
+  // Dataproc service account used by the Dataproc cluster VM instances
+  serviceAccount string
+  // URIs of service account scopes to be included in Compute Engine instances
+  serviceAccountScopes []string
+  // Shielded instance config for clusters using Compute Engine Shielded VMs
+  shieldedInstanceConfig gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig
+  // Compute Engine subnetwork to use for machine communications
+  subnetworkUri string
+  // Compute Engine tags
+  tags []string
+  // Zone where the Compute Engine cluster is located
+  zoneUri string
+}
+
+// GCP Dataproc cluster GCE Cluster reservation affinity config
+private gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity {
+  // Internal ID
+  id string
+  // Type of reservation to consume
+  consumeReservationType string
+  // Corresponds to the label key of the reservation resource
+  key string
+  // Corresponds to the label values of the reservation resource
+  values []string
+}
+
+// GCP Dataproc cluster GCE Cluster shielded instance config
+private gcp.project.dataprocService.cluster.config.gceCluster.shieldedInstanceConfig {
+  // Internal ID
+  id string
+  // Whether the instances have integrity monitoring enabled
+  enableIntegrityMonitoring bool
+  // Whether the instances have Secure Boot enabled
+  enableSecureBoot bool
+  // Whether the instances have the vTPM enabled
+  enableVtpm bool
+}
+
+// GCP Dataproc cluster GKE Cluster config
+private gcp.project.dataprocService.cluster.config.gkeCluster {
+  // Internal ID
+  id string
+  // Target GKE cluster
+  gkeClusterTarget string
+  // GKE node pools where workloads are scheduled
+  nodePoolTarget []dict
+}
+
+// GCP Dataproc cluster lifecycle config
+private gcp.project.dataprocService.cluster.config.lifecycle {
+  // Internal ID
+  id string
+  // Time when the cluster will be auto-deleted
+  autoDeleteTime string
+  // Lifetime duration of the cluster
+  autoDeleteTtl string
+  // Duration to keep the cluster alive while idling
+  idleDeleteTtl string
+  // Time when the cluster will be auto-resumed
+  idleStartTime string
+}
+
+// GCP Dataproc cluster instance config
+private gcp.project.dataprocService.cluster.config.instance {
+  // Internal ID
+  id string
+  // Compute Engine accelerators
+  accelerators []dict
+  // Disk options
+  diskConfig gcp.project.dataprocService.cluster.config.instance.diskConfig
+  // Compute Engine imager resource used for cluster instances
+  imageUri string
+  // List of instance names
+  instanceNames []string
+  // List of references to Compute Engine instances
+  instanceReferences []dict
+  // Whether the instance group contains preemptible instances
+  isPreemptible bool
+  // Compute Engine machine type used for cluster instances
+  machineTypeUri string
+  // Config for Compute Engine Instance Group Manager that manages this group
+  managedGroupConfig dict
+  // Minimum CPU platform for the instance group
+  minCpuPlatform string
+  // Number of VM instances in the instance group
+  numInstances int
+  // The preemptibility of the instance group
+  preemptibility string
+}
+
+// GCP Dataproc cluster instance disk config
+private gcp.project.dataprocService.cluster.config.instance.diskConfig {
+  // Internal ID
+  id string
+  // Size in GB of the boot disk
+  bootDiskSizeGb int
+  // Type of the boot disk
+  bootDiskType string
+  // Interface type of local SSDs
+  localSsdInterface string
+  // Number of attached SSDs
+  numLocalSsds int
+}
+
+// GCP Dataproc cluster status
+private gcp.project.dataprocService.cluster.status @defaults("state") {
+  // Internal ID
+  id string
+  // Details of the cluster's state
+  detail string
+  // Cluster's state
+  state string
+  // Started timestamp
+  started time
+  // Additional state information that includes status reported by the agent
+  substate string
+}
+
+// GCP Dataproc cluster virtual cluster config
+private gcp.project.dataprocService.cluster.virtualClusterConfig {
+  // Parent resource path
+  parentResourcePath string
+  // Auxiliary services configuration
+  auxiliaryServices dict
+  // Kubernetes cluster configuration
+  kubernetesCluster dict
+  // Cloud Storage bucket used to stage job dependencies, config files, and job driver console output
+  stagingBucket string
 }
