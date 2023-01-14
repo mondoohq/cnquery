@@ -5,13 +5,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"io"
-	"io/ioutil"
 
 	"k8s.io/client-go/util/cert"
 )
 
 func ParseCertFromPEM(r io.Reader) ([]*x509.Certificate, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
