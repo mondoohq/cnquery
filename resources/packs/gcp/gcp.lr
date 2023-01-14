@@ -72,7 +72,7 @@ gcp.project @defaults("name") {
   dns() gcp.project.dnsService
   // GCP BigQuery Resources
   bigquery() gcp.project.bigqueryService
-  // GCP Cloud functions
+  // GCP Cloud Functions
   cloudFunctions() []gcp.project.cloudFunction
 }
 
@@ -1634,13 +1634,13 @@ private gcp.project.iamService.serviceAccount.key {
   // Whether the key is disabled
   disabled bool
 }
-// GCP Cloud function
+// GCP Cloud Function
 private gcp.project.cloudFunction {
   // Project ID
   projectId string
-  // Cloud function name
+  // Cloud Function name
   name string
-  // Cloud function description
+  // Cloud Function description
   description string
   // Location of the archive with the function's source code
   sourceArchiveUrl string
