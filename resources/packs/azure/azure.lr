@@ -222,8 +222,11 @@ private azure.compute.disk @defaults("id name location") {
 
 // Azure Network
 azure.network {
+  // List of network interfaces
   interfaces() []azure.network.interface
+  // List of network security groups
   securityGroups() []azure.network.securitygroup
+  // List of network watchers
   watchers() []azure.network.watcher
 }
 
@@ -343,6 +346,7 @@ private azure.network.watcher.flowlog @defaults("name location") {
 
 // Azure Storage
 azure.storage {
+  // List of storage accounts
   accounts() []azure.storage.account
 }
 
@@ -1035,6 +1039,7 @@ azure.monitor {
 
 // Azure Monitor Activity Log
 private azure.monitor.activitylog {
+  // List of activity log alerts
   alerts() []azure.monitor.activitylog.alert
 }
 
