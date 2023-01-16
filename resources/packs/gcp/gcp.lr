@@ -495,12 +495,18 @@ private gcp.project.computeService.network @defaults("name") {
   routingMode string
   // Network mode - legacy, custom or auto
   mode string
+  // List of URLs for the subnetwork in this network
+  subnetworkUrls []string
+  // Subnetworks in this network
+  subnetworks() []gcp.project.computeService.subnetwork
 }
 
 // GCP Compute VPC Network Partitioning
 private gcp.project.computeService.subnetwork @defaults("name")  {
   // Unique Identifier
   id string
+  // Project ID
+  projectId string
   // Name of the resource
   name string
   // An optional description of this resource
@@ -528,7 +534,9 @@ private gcp.project.computeService.subnetwork @defaults("name")  {
   // Purpose of the resource
   purpose string
   // Region
-  region gcp.project.computeService.region
+  region() gcp.project.computeService.region
+  // Region URL
+  regionUrl string
   // Role of subnetwork
   role string
   // Stack type for the subnet

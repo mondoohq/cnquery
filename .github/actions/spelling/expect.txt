@@ -9,7 +9,6 @@ cmek
 CMKs
 cryptokey
 customresources
-dataproc
 dfw
 dlq
 ekm
@@ -19,14 +18,12 @@ gcfs
 GOBIN
 gpu
 gvnic
-HDF
 hostkeys
 iex
 ingresstls
 loggingservice
 managedzone
 messagestoragepolicy
-metastore
 mfs
 Mpim
 nats
@@ -43,7 +40,7 @@ Sas
 serviceprincipals
 spo
 sqlserver
-ssd
+ssds
 sshkeys
 sysctls
 unarchived
