@@ -99,21 +99,17 @@ func (g *mqlGcpProjectComputeService) GetRegions() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
-	req := computeSvc.Regions.List(projectId)
-	if err := req.Pages(ctx, func(page *compute.RegionList) error {
-		for i := range page.Items {
-			r := page.Items[i]
-
-			mqlRegion, err := newMqlRegion(g.MotorRuntime, r)
-			if err != nil {
-				return err
-			}
-			res = append(res, mqlRegion)
-		}
-		return nil
-	}); err != nil {
+	req, err := computeSvc.Regions.List(projectId).Do()
+	if err != nil {
 		return nil, err
+	}
+	res := make([]interface{}, 0, len(req.Items))
+	for _, r := range req.Items {
+		mqlRegion, err := newMqlRegion(g.MotorRuntime, r)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRegion)
 	}
 
 	return res, nil
@@ -1116,28 +1112,29 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) GetRegion() (interface{}, error)
 	regionUrlSegments := strings.Split(regionUrl, "/")
 	regionName := regionUrlSegments[len(regionUrlSegments)-1]
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	// Find regionName for projectId
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", projectId)
+	if err != nil {
+		return nil, err
+	}
+	gcpCompute := obj.(GcpProjectComputeService)
+	regions, err := gcpCompute.Regions()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
+	for _, r := range regions {
+		region := r.(GcpProjectComputeServiceRegion)
+		name, err := region.Name()
+		if err != nil {
+			return nil, err
+		}
+		if name == regionName {
+			return region, nil
+		}
 	}
 
-	ctx := context.Background()
-
-	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := computeSvc.Regions.Get(projectId, regionName).Do()
-	if err != nil {
-		return nil, err
-	}
-	return newMqlRegion(g.MotorRuntime, req)
+	return nil, errors.New(fmt.Sprintf("region %s not found", regionName))
 }
 
 func (g *mqlGcpProjectComputeServiceSubnetwork) GetNetwork() ([]interface{}, error) {
@@ -1157,7 +1154,7 @@ func newMqlRegion(runtime *resources.Runtime, r *compute.Region) (interface{}, e
 		quotas[q.Metric] = q.Limit
 	}
 
-	return runtime.CreateResource("gcp.compute.region",
+	return runtime.CreateResource("gcp.project.computeService.region",
 		"id", strconv.FormatInt(int64(r.Id), 10),
 		"name", r.Name,
 		"description", r.Description,
@@ -1194,7 +1191,7 @@ func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *
 	if region != nil {
 		args = append(args, "region", region)
 	}
-	return runtime.CreateResource("gcp.compute.subnetwork", args...)
+	return runtime.CreateResource("gcp.project.computeService.subnetwork", args...)
 }
 
 func (g *mqlGcpProjectComputeService) GetSubnetworks() ([]interface{}, error) {
