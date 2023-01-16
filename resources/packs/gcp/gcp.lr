@@ -1426,6 +1426,22 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
   primary gcp.project.kmsService.keyring.cryptokey.version
   // Crypto key purpose
   purpose string
+  // Creation timestamp
+  created time
+  // Time at which KMS will create a new version of this key and mark it as primary
+  nextRotation time
+  // Rotation period
+  rotationPeriod time
+  // Template describing the settings for new crypto key versions
+  versionTemplate dict
+  // User-defined labels
+  labels map[string]string
+  // Whether this key may contain imported versions only
+  importOnly bool
+  // Period of time that versions of this key spend in DESTROY_SCHEDULED state before being destroyed
+  destroyScheduledDuration time
+  // Resource name of the backend environment where the key material for all crypto key versions reside
+  cryptoKeyBackend string
   // List of cryptokey versions
   versions() []gcp.project.kmsService.keyring.cryptokey.version
 }
