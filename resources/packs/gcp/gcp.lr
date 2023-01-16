@@ -2049,7 +2049,7 @@ private gcp.project.cloudrunService.service.revisionTemplate @defaults("name") {
   // Email address of the IAM service account associated with the revision of the service
   serviceAccount string
   // Containers for this revision
-  // containers 
+  containers  []gcp.project.cloudrunService.service.revisionTemplate.container
   // List of volumes to make available to containers
   volumes []dict
   // Sandbox environment to host the revision
@@ -2083,9 +2083,27 @@ private gcp.project.cloudrunService.service.revisionTemplate.container @defaults
   // Container's working directory
   workingDir string
   // Periodic probe of container liveness
-  livenessProbe dict
+  livenessProbe gcp.project.cloudrunService.service.revisionTemplate.container.probe
   // Startup probe of application within the container
-  startupProbe dict
+  startupProbe gcp.project.cloudrunService.service.revisionTemplate.container.probe
+}
+
+// GCP Cloud Run service revision template container probe
+private gcp.project.cloudrunService.service.revisionTemplate.container.probe {
+  // Internal ID
+  id string
+  // Number of seconds after the container has started before the probe is initiated
+  initialDelaySeconds int
+  // Number of seconds after which the probe times out
+  timeoutSeconds int
+  // Number of seconds indicating how often to perform the probe
+  periodSeconds int
+  // Minimum consecutive successes for the probe to be considered failed
+  failureThreshold int
+  // HTTP GET probe configuration
+  httpGet dict
+  // TCP socket probe configuration
+  tcpSocket dict
 }
 
 // GCP Cloud Run service condition

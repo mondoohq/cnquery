@@ -9,6 +9,7 @@ import (
 	run "cloud.google.com/go/run/apiv2"
 	runpb "cloud.google.com/go/run/apiv2/runpb"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/compute/v1"
@@ -80,6 +81,10 @@ func (g *mqlGcpProjectCloudrunServiceServiceRevisionTemplate) id() (string, erro
 }
 
 func (g *mqlGcpProjectCloudrunServiceServiceRevisionTemplateContainer) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectCloudrunServiceServiceRevisionTemplateContainerProbe) id() (string, error) {
 	return g.Id()
 }
 
@@ -213,6 +218,15 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 	}
 	defer runSvc.Close()
 
+	type mqlRevisionScaling struct {
+		MinInstanceCount int32 `json:"minInstanceCount"`
+		MaxInstanceCount int32 `json:"maxInstanceCount"`
+	}
+	type mqlVpcAccess struct {
+		Connector string `json:"connector"`
+		Egress    string `json:"egress"`
+	}
+
 	var wg sync.WaitGroup
 	var services []interface{}
 	wg.Add(len(regions))
@@ -229,6 +243,188 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
+
+				var mqlTemplate resources.ResourceType
+				if s.Template != nil {
+					var scalingCfg map[string]interface{}
+					if s.Template.Scaling != nil {
+						scalingCfg, err = core.JsonToDict(mqlRevisionScaling{
+							MinInstanceCount: s.Template.Scaling.MinInstanceCount,
+							MaxInstanceCount: s.Template.Scaling.MaxInstanceCount,
+						})
+						if err != nil {
+							log.Error().Err(err).Send()
+						}
+					}
+
+					var vpcCfg map[string]interface{}
+					if s.Template.VpcAccess != nil {
+						vpcCfg, err = core.JsonToDict(mqlVpcAccess{
+							Connector: s.Template.VpcAccess.Connector,
+							Egress:    s.Template.VpcAccess.Egress.String(),
+						})
+						if err != nil {
+							log.Error().Err(err).Send()
+						}
+					}
+
+					templateId := fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s/revisionTemplate", projectId, s.Name)
+					mqlContainers := make([]interface{}, 0, len(s.Template.Containers))
+					for _, c := range s.Template.Containers {
+						mqlEnvs := make([]interface{}, 0, len(c.Env))
+						for _, e := range c.Env {
+							valueSource := e.GetValueSource()
+							var mqlValueSource map[string]interface{}
+							if valueSource != nil {
+								mqlValueSource = map[string]interface{}{
+									"secretKeyRef": map[string]interface{}{
+										"secret":  valueSource.SecretKeyRef.Secret,
+										"version": valueSource.SecretKeyRef.Version,
+									},
+								}
+							}
+							mqlEnvs = append(mqlEnvs, map[string]interface{}{
+								"name":        e.Name,
+								"value":       e.GetValue(),
+								"valueSource": mqlValueSource,
+							})
+						}
+
+						var mqlResources map[string]interface{}
+						if c.Resources != nil {
+							mqlResources = map[string]interface{}{
+								"limits":  core.StrMapToInterface(c.Resources.Limits),
+								"cpuIdle": c.Resources.CpuIdle,
+							}
+						}
+
+						mqlPorts := make([]interface{}, 0, len(c.Ports))
+						for _, p := range c.Ports {
+							mqlPorts = append(mqlPorts, map[string]interface{}{
+								"name":          p.Name,
+								"containerPort": p.ContainerPort,
+							})
+						}
+
+						mqlVolumeMounts := make([]interface{}, 0, len(c.Ports))
+						for _, v := range c.VolumeMounts {
+							mqlVolumeMounts = append(mqlVolumeMounts, map[string]interface{}{
+								"name":      v.Name,
+								"mountPath": v.MountPath,
+							})
+						}
+
+						containerId := fmt.Sprintf("%s/container/%s", templateId, c.Name)
+						mqlLivenessProbe, err := mqlContainerProbe(g.MotorRuntime, c.LivenessProbe, containerId)
+						if err != nil {
+							log.Error().Err(err).Send()
+						}
+
+						mqlStartupProbe, err := mqlContainerProbe(g.MotorRuntime, c.StartupProbe, containerId)
+						if err != nil {
+							log.Error().Err(err).Send()
+						}
+
+						mqlContainer, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.revisionTemplate.container",
+							"id", containerId,
+							"name", c.Name,
+							"image", c.Image,
+							"command", core.StrSliceToInterface(c.Command),
+							"args", core.StrSliceToInterface(c.Args),
+							"env", mqlEnvs,
+							"resources", mqlResources,
+							"ports", mqlPorts,
+							"volumeMounts", mqlVolumeMounts,
+							"workingDir", c.WorkingDir,
+							"livenessProbe", mqlLivenessProbe,
+							"startupProbe", mqlStartupProbe,
+						)
+						if err != nil {
+							log.Error().Err(err).Send()
+						}
+						mqlContainers = append(mqlContainers, mqlContainer)
+					}
+
+					mqlVolumes := make([]interface{}, 0, len(s.Template.Volumes))
+					for _, v := range s.Template.Volumes {
+						mqlVolumes = append(mqlVolumes, map[string]interface{}{
+							"name": v.Name,
+						})
+					}
+
+					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.revisionTemplate",
+						"id", templateId,
+						"name", s.Template.Revision,
+						"labels", core.StrMapToInterface(s.Template.Labels),
+						"annotations", core.StrMapToInterface(s.Template.Annotations),
+						"scaling", scalingCfg,
+						"vpcAccess", vpcCfg,
+						"timeout", core.MqlTime(llx.DurationToTime((s.Template.Timeout.Seconds))),
+						"serviceAccount", s.Template.ServiceAccount,
+						"containers", mqlContainers,
+						"volumes", mqlVolumes,
+						"executionEnvironment", s.Template.ExecutionEnvironment.String(),
+						"encryptionKey", s.Template.EncryptionKey,
+						"maxInstanceRequestConcurrency", int64(s.Template.MaxInstanceRequestConcurrency),
+					)
+					if err != nil {
+						log.Error().Err(err).Send()
+					}
+				}
+
+				mqlTraffic := make([]interface{}, 0, len(s.Traffic))
+				for _, t := range s.Traffic {
+					mqlTraffic = append(mqlTraffic, map[string]interface{}{
+						"type":     t.Type.String(),
+						"revision": t.Revision,
+						"percent":  t.Percent,
+						"tag":      t.Tag,
+					})
+				}
+
+				serviceId := fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s", projectId, s.Name)
+				var mqlTerminalCondition resources.ResourceType
+				if s.TerminalCondition != nil {
+					mqlTerminalCondition, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.condition",
+						"id", fmt.Sprintf("%s/terminalCondition", serviceId),
+						"type", s.TerminalCondition.Type,
+						"state", s.TerminalCondition.State.String(),
+						"message", s.TerminalCondition.Message,
+						"lastTransitionTime", core.MqlTime(s.TerminalCondition.LastTransitionTime.AsTime()),
+						"severity", s.TerminalCondition.Severity.String(),
+					)
+					if err != nil {
+						log.Error().Err(err).Send()
+					}
+				}
+
+				mqlConditions := make([]interface{}, 0, len(s.Conditions))
+				for i, c := range s.Conditions {
+					mqlCondition, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.condition",
+						"id", fmt.Sprintf("%s/condition/%d", serviceId, i),
+						"type", c.Type,
+						"state", c.State.String(),
+						"message", s.TerminalCondition.Message,
+						"lastTransitionTime", core.MqlTime(c.LastTransitionTime.AsTime()),
+						"severity", c.Severity.String(),
+					)
+					if err != nil {
+						log.Error().Err(err).Send()
+					}
+					mqlConditions = append(mqlConditions, mqlCondition)
+				}
+
+				mqlTrafficStatuses := make([]interface{}, 0, len(s.TrafficStatuses))
+				for _, t := range s.TrafficStatuses {
+					mqlTrafficStatuses = append(mqlTrafficStatuses, map[string]interface{}{
+						"type":     t.Type.String(),
+						"revision": t.Revision,
+						"percent":  t.Percent,
+						"tag":      t.Tag,
+						"uri":      t.Uri,
+					})
+				}
+
 				mqlS, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service",
 					"projectId", projectId,
 					"region", region,
@@ -247,15 +443,14 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 					"clientVersion", s.ClientVersion,
 					"ingress", s.Ingress.String(),
 					"launchStage", s.LaunchStage.String(),
-					"binaryAuthorization", nil, // TODO
-					"traffic", nil, // TODO
+					"template", mqlTemplate,
+					"traffic", mqlTraffic,
 					"observedGeneration", s.ObservedGeneration,
-					"terminalConditions", nil, // TODO
-					"terminalCondition", nil, // TODO
-					"conditions", nil, // TODO
+					"terminalCondition", mqlTerminalCondition,
+					"conditions", mqlConditions,
 					"latestReadyRevision", s.LatestReadyRevision,
 					"latestCreatedRevision", s.LatestCreatedRevision,
-					"trafficStatuses", nil, // TODO
+					"trafficStatuses", mqlTrafficStatuses,
 					"uri", s.Uri,
 					"reconciling", s.Reconciling,
 				)
@@ -270,4 +465,41 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 	}
 	wg.Wait()
 	return services, nil
+}
+
+func mqlContainerProbe(runtime *resources.Runtime, probe *runpb.Probe, containerId string) (resources.ResourceType, error) {
+	if probe == nil {
+		return nil, nil
+	}
+	var mqlHttpGet map[string]interface{}
+	if httpGet := probe.GetHttpGet(); httpGet != nil {
+		mqlHttpHeaders := make([]interface{}, 0, len(httpGet.HttpHeaders))
+		for _, h := range httpGet.HttpHeaders {
+			mqlHttpHeaders = append(mqlHttpHeaders, map[string]interface{}{
+				"name":  h.Name,
+				"value": h.Value,
+			})
+		}
+		mqlHttpGet = map[string]interface{}{
+			"path":        httpGet.Path,
+			"httpHeaders": mqlHttpHeaders,
+		}
+	}
+
+	var mqlTcpSocket map[string]interface{}
+	if tcpSocket := probe.GetTcpSocket(); tcpSocket != nil {
+		mqlTcpSocket = map[string]interface{}{
+			"port": tcpSocket.Port,
+		}
+	}
+
+	return runtime.CreateResource("gcp.project.cloudrunService.service.revisionTemplate.container.probe",
+		"id", fmt.Sprintf("%s/livenessProbe", containerId),
+		"initialDelaySeconds", probe.InitialDelaySeconds,
+		"timeoutSeconds", probe.TimeoutSeconds,
+		"periodSeconds", probe.PeriodSeconds,
+		"failureThreshold", probe.FailureThreshold,
+		"httpGet", mqlHttpGet,
+		"tcpSocket", mqlTcpSocket,
+	)
 }
