@@ -252,11 +252,19 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error)
 }
 
 func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
-	name, err := g.Name()
+	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.project.bigqueryService.table/" + name, nil
+	datasetId, err := g.DatasetId()
+	if err != nil {
+		return "", err
+	}
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("gcp.project.bigqueryService.table/%s/%s/%s", projectId, datasetId, id), nil
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) GetModels() ([]interface{}, error) {
@@ -333,11 +341,19 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetModels() ([]interface{}, error)
 }
 
 func (g *mqlGcpProjectBigqueryServiceModel) id() (string, error) {
-	name, err := g.Name()
+	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
 	}
-	return "gcp.project.bigqueryService.model/" + name, nil
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	datasetId, err := g.DatasetId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("gcp.project.bigqueryService.model/%s/%s/%s", projectId, datasetId, id), nil
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) GetRoutines() ([]interface{}, error) {
