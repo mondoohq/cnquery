@@ -76,19 +76,39 @@ func (g *mqlGcpProjectCloudrunServiceService) id() (string, error) {
 	return fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s", projectId, name), nil
 }
 
+func (g *mqlGcpProjectCloudrunServiceJob) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	name, err := g.Name()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("gcp.project.cloudrunService.job/%s/%s", projectId, name), nil
+}
+
 func (g *mqlGcpProjectCloudrunServiceServiceRevisionTemplate) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceServiceRevisionTemplateContainer) id() (string, error) {
+func (g *mqlGcpProjectCloudrunServiceContainer) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceServiceRevisionTemplateContainerProbe) id() (string, error) {
+func (g *mqlGcpProjectCloudrunServiceContainerProbe) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceServiceCondition) id() (string, error) {
+func (g *mqlGcpProjectCloudrunServiceCondition) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectCloudrunServiceJobExecutionTemplate) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectCloudrunServiceJobExecutionTemplateTaskTemplate) id() (string, error) {
 	return g.Id()
 }
 
@@ -222,10 +242,6 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 		MinInstanceCount int32 `json:"minInstanceCount"`
 		MaxInstanceCount int32 `json:"maxInstanceCount"`
 	}
-	type mqlVpcAccess struct {
-		Connector string `json:"connector"`
-		Egress    string `json:"egress"`
-	}
 
 	var wg sync.WaitGroup
 	var services []interface{}
@@ -257,99 +273,15 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 						}
 					}
 
-					var vpcCfg map[string]interface{}
-					if s.Template.VpcAccess != nil {
-						vpcCfg, err = core.JsonToDict(mqlVpcAccess{
-							Connector: s.Template.VpcAccess.Connector,
-							Egress:    s.Template.VpcAccess.Egress.String(),
-						})
-						if err != nil {
-							log.Error().Err(err).Send()
-						}
+					vpcCfg, err := mqlVpcAccess(s.Template.VpcAccess)
+					if err != nil {
+						log.Error().Err(err).Send()
 					}
 
 					templateId := fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s/revisionTemplate", projectId, s.Name)
-					mqlContainers := make([]interface{}, 0, len(s.Template.Containers))
-					for _, c := range s.Template.Containers {
-						mqlEnvs := make([]interface{}, 0, len(c.Env))
-						for _, e := range c.Env {
-							valueSource := e.GetValueSource()
-							var mqlValueSource map[string]interface{}
-							if valueSource != nil {
-								mqlValueSource = map[string]interface{}{
-									"secretKeyRef": map[string]interface{}{
-										"secret":  valueSource.SecretKeyRef.Secret,
-										"version": valueSource.SecretKeyRef.Version,
-									},
-								}
-							}
-							mqlEnvs = append(mqlEnvs, map[string]interface{}{
-								"name":        e.Name,
-								"value":       e.GetValue(),
-								"valueSource": mqlValueSource,
-							})
-						}
-
-						var mqlResources map[string]interface{}
-						if c.Resources != nil {
-							mqlResources = map[string]interface{}{
-								"limits":  core.StrMapToInterface(c.Resources.Limits),
-								"cpuIdle": c.Resources.CpuIdle,
-							}
-						}
-
-						mqlPorts := make([]interface{}, 0, len(c.Ports))
-						for _, p := range c.Ports {
-							mqlPorts = append(mqlPorts, map[string]interface{}{
-								"name":          p.Name,
-								"containerPort": p.ContainerPort,
-							})
-						}
-
-						mqlVolumeMounts := make([]interface{}, 0, len(c.Ports))
-						for _, v := range c.VolumeMounts {
-							mqlVolumeMounts = append(mqlVolumeMounts, map[string]interface{}{
-								"name":      v.Name,
-								"mountPath": v.MountPath,
-							})
-						}
-
-						containerId := fmt.Sprintf("%s/container/%s", templateId, c.Name)
-						mqlLivenessProbe, err := mqlContainerProbe(g.MotorRuntime, c.LivenessProbe, containerId)
-						if err != nil {
-							log.Error().Err(err).Send()
-						}
-
-						mqlStartupProbe, err := mqlContainerProbe(g.MotorRuntime, c.StartupProbe, containerId)
-						if err != nil {
-							log.Error().Err(err).Send()
-						}
-
-						mqlContainer, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.revisionTemplate.container",
-							"id", containerId,
-							"name", c.Name,
-							"image", c.Image,
-							"command", core.StrSliceToInterface(c.Command),
-							"args", core.StrSliceToInterface(c.Args),
-							"env", mqlEnvs,
-							"resources", mqlResources,
-							"ports", mqlPorts,
-							"volumeMounts", mqlVolumeMounts,
-							"workingDir", c.WorkingDir,
-							"livenessProbe", mqlLivenessProbe,
-							"startupProbe", mqlStartupProbe,
-						)
-						if err != nil {
-							log.Error().Err(err).Send()
-						}
-						mqlContainers = append(mqlContainers, mqlContainer)
-					}
-
-					mqlVolumes := make([]interface{}, 0, len(s.Template.Volumes))
-					for _, v := range s.Template.Volumes {
-						mqlVolumes = append(mqlVolumes, map[string]interface{}{
-							"name": v.Name,
-						})
+					mqlContainers, err := mqlContainers(g.MotorRuntime, s.Template.Containers, templateId)
+					if err != nil {
+						log.Error().Err(err).Send()
 					}
 
 					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.revisionTemplate",
@@ -362,7 +294,7 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 						"timeout", core.MqlTime(llx.DurationToTime((s.Template.Timeout.Seconds))),
 						"serviceAccount", s.Template.ServiceAccount,
 						"containers", mqlContainers,
-						"volumes", mqlVolumes,
+						"volumes", mqlVolumes(s.Template.Volumes),
 						"executionEnvironment", s.Template.ExecutionEnvironment.String(),
 						"encryptionKey", s.Template.EncryptionKey,
 						"maxInstanceRequestConcurrency", int64(s.Template.MaxInstanceRequestConcurrency),
@@ -383,31 +315,14 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 				}
 
 				serviceId := fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s", projectId, s.Name)
-				var mqlTerminalCondition resources.ResourceType
-				if s.TerminalCondition != nil {
-					mqlTerminalCondition, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.condition",
-						"id", fmt.Sprintf("%s/terminalCondition", serviceId),
-						"type", s.TerminalCondition.Type,
-						"state", s.TerminalCondition.State.String(),
-						"message", s.TerminalCondition.Message,
-						"lastTransitionTime", core.MqlTime(s.TerminalCondition.LastTransitionTime.AsTime()),
-						"severity", s.TerminalCondition.Severity.String(),
-					)
-					if err != nil {
-						log.Error().Err(err).Send()
-					}
+				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, s.TerminalCondition, serviceId, "terminal")
+				if err != nil {
+					log.Error().Err(err).Send()
 				}
 
 				mqlConditions := make([]interface{}, 0, len(s.Conditions))
 				for i, c := range s.Conditions {
-					mqlCondition, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.condition",
-						"id", fmt.Sprintf("%s/condition/%d", serviceId, i),
-						"type", c.Type,
-						"state", c.State.String(),
-						"message", s.TerminalCondition.Message,
-						"lastTransitionTime", core.MqlTime(c.LastTransitionTime.AsTime()),
-						"severity", c.Severity.String(),
-					)
+					mqlCondition, err := mqlCondition(g.MotorRuntime, c, serviceId, fmt.Sprintf("%d", i))
 					if err != nil {
 						log.Error().Err(err).Send()
 					}
@@ -467,6 +382,154 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 	return services, nil
 }
 
+func (g *mqlGcpProjectCloudrunService) GetJobs() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	regions, err := g.Regions()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := provider.Credentials(run.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	runSvc, err := run.NewJobsClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer runSvc.Close()
+
+	var wg sync.WaitGroup
+	var jobs []interface{}
+	wg.Add(len(regions))
+	mux := &sync.Mutex{}
+	for _, region := range regions {
+		go func(region string) {
+			defer wg.Done()
+			it := runSvc.ListJobs(ctx, &runpb.ListJobsRequest{Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region)})
+			for {
+				j, err := it.Next()
+				if err == iterator.Done {
+					break
+				}
+				if err != nil {
+					log.Error().Err(err).Send()
+					return
+				}
+
+				jobId := fmt.Sprintf("gcp.project.cloudrunService.job/%s/%s", projectId, j.Name)
+				var mqlTemplate resources.ResourceType
+				if j.Template != nil {
+					templateId := fmt.Sprintf("%s/executionTemplate", jobId)
+					var mqlTaskTemplate resources.ResourceType
+					if j.Template.Template != nil {
+						vpcAccess, err := mqlVpcAccess(j.Template.Template.VpcAccess)
+						if err != nil {
+							log.Error().Err(err).Send()
+							return
+						}
+
+						mqlContainers, err := mqlContainers(g.MotorRuntime, j.Template.Template.Containers, templateId)
+						if err != nil {
+							log.Error().Err(err).Send()
+							return
+						}
+
+						mqlTaskTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.job.executionTemplate.taskTemplate",
+							"id", fmt.Sprintf("%s/template", templateId),
+							"vpcAccess", vpcAccess,
+							"timeout", core.MqlTime(llx.DurationToTime((j.Template.Template.Timeout.Seconds))),
+							"serviceAccount", j.Template.Template.ServiceAccount,
+							"containers", mqlContainers,
+							"volumes", mqlVolumes(j.Template.Template.Volumes),
+							"executionEnvironment", j.Template.Template.ExecutionEnvironment.String(),
+							"encryptionKey", j.Template.Template.EncryptionKey,
+							"maxRetries", int64(j.Template.Template.GetMaxRetries()),
+						)
+						if err != nil {
+							log.Error().Err(err).Send()
+							return
+						}
+					}
+
+					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.job.executionTemplate",
+						"id", templateId,
+						"labels", core.StrMapToInterface(j.Template.Labels),
+						"annotations", core.StrMapToInterface(j.Template.Annotations),
+						"parallelism", int64(j.Template.Parallelism),
+						"taskCount", int64(j.Template.TaskCount),
+						"template", mqlTaskTemplate,
+					)
+					if err != nil {
+						log.Error().Err(err).Send()
+						return
+					}
+				}
+
+				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, j.TerminalCondition, jobId, "terminal")
+				if err != nil {
+					log.Error().Err(err).Send()
+					return
+				}
+
+				mqlConditions := make([]interface{}, 0, len(j.Conditions))
+				for i, c := range j.Conditions {
+					mqlCondition, err := mqlCondition(g.MotorRuntime, c, jobId, fmt.Sprintf("%d", i))
+					if err != nil {
+						log.Error().Err(err).Send()
+						return
+					}
+					mqlConditions = append(mqlConditions, mqlCondition)
+				}
+
+				mqlJob, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.job",
+					"projectId", projectId,
+					"region", region,
+					"name", j.Name,
+					"generation", j.Generation,
+					"labels", core.StrMapToInterface(j.Labels),
+					"annotations", core.StrMapToInterface(j.Annotations),
+					"created", core.MqlTime(j.CreateTime.AsTime()),
+					"updated", core.MqlTime(j.UpdateTime.AsTime()),
+					"deleted", core.MqlTime(j.DeleteTime.AsTime()),
+					"expired", core.MqlTime(j.ExpireTime.AsTime()),
+					"creator", j.Creator,
+					"lastModifier", j.LastModifier,
+					"client", j.Client,
+					"clientVersion", j.ClientVersion,
+					"launchStage", j.LaunchStage.String(),
+					"template", mqlTemplate,
+					"observedGeneration", j.ObservedGeneration,
+					"terminalCondition", mqlTerminalCondition,
+					"conditions", mqlConditions,
+					"executionCount", int64(j.ExecutionCount),
+					"reconciling", j.Reconciling,
+				)
+				if err != nil {
+					log.Error().Err(err).Send()
+					return
+				}
+				mux.Lock()
+				jobs = append(jobs, mqlJob)
+				mux.Unlock()
+			}
+		}(region.(string))
+	}
+	wg.Wait()
+	return jobs, nil
+}
+
 func mqlContainerProbe(runtime *resources.Runtime, probe *runpb.Probe, containerId string) (resources.ResourceType, error) {
 	if probe == nil {
 		return nil, nil
@@ -493,7 +556,7 @@ func mqlContainerProbe(runtime *resources.Runtime, probe *runpb.Probe, container
 		}
 	}
 
-	return runtime.CreateResource("gcp.project.cloudrunService.service.revisionTemplate.container.probe",
+	return runtime.CreateResource("gcp.project.cloudrunService.container.probe",
 		"id", fmt.Sprintf("%s/livenessProbe", containerId),
 		"initialDelaySeconds", probe.InitialDelaySeconds,
 		"timeoutSeconds", probe.TimeoutSeconds,
@@ -502,4 +565,121 @@ func mqlContainerProbe(runtime *resources.Runtime, probe *runpb.Probe, container
 		"httpGet", mqlHttpGet,
 		"tcpSocket", mqlTcpSocket,
 	)
+}
+
+func mqlCondition(runtime *resources.Runtime, c *runpb.Condition, parentId, suffix string) (resources.ResourceType, error) {
+	if c == nil {
+		return nil, nil
+	}
+	return runtime.CreateResource("gcp.project.cloudrunService.condition",
+		"id", fmt.Sprintf("%s/condition/%s", parentId, suffix),
+		"type", c.Type,
+		"state", c.String(),
+		"message", c.Message,
+		"lastTransitionTime", core.MqlTime(c.LastTransitionTime.AsTime()),
+		"severity", c.Severity.String(),
+	)
+}
+
+func mqlVpcAccess(vpcAccess *runpb.VpcAccess) (map[string]interface{}, error) {
+	type mqlVpcAccess struct {
+		Connector string `json:"connector"`
+		Egress    string `json:"egress"`
+	}
+	if vpcAccess == nil {
+		return nil, nil
+	}
+	return core.JsonToDict(mqlVpcAccess{
+		Connector: vpcAccess.Connector,
+		Egress:    vpcAccess.Egress.String(),
+	})
+}
+
+func mqlContainers(runtime *resources.Runtime, containers []*runpb.Container, templateId string) ([]interface{}, error) {
+	mqlContainers := make([]interface{}, 0, len(containers))
+	for _, c := range containers {
+		mqlEnvs := make([]interface{}, 0, len(c.Env))
+		for _, e := range c.Env {
+			valueSource := e.GetValueSource()
+			var mqlValueSource map[string]interface{}
+			if valueSource != nil {
+				mqlValueSource = map[string]interface{}{
+					"secretKeyRef": map[string]interface{}{
+						"secret":  valueSource.SecretKeyRef.Secret,
+						"version": valueSource.SecretKeyRef.Version,
+					},
+				}
+			}
+			mqlEnvs = append(mqlEnvs, map[string]interface{}{
+				"name":        e.Name,
+				"value":       e.GetValue(),
+				"valueSource": mqlValueSource,
+			})
+		}
+
+		var mqlResources map[string]interface{}
+		if c.Resources != nil {
+			mqlResources = map[string]interface{}{
+				"limits":  core.StrMapToInterface(c.Resources.Limits),
+				"cpuIdle": c.Resources.CpuIdle,
+			}
+		}
+
+		mqlPorts := make([]interface{}, 0, len(c.Ports))
+		for _, p := range c.Ports {
+			mqlPorts = append(mqlPorts, map[string]interface{}{
+				"name":          p.Name,
+				"containerPort": p.ContainerPort,
+			})
+		}
+
+		mqlVolumeMounts := make([]interface{}, 0, len(c.Ports))
+		for _, v := range c.VolumeMounts {
+			mqlVolumeMounts = append(mqlVolumeMounts, map[string]interface{}{
+				"name":      v.Name,
+				"mountPath": v.MountPath,
+			})
+		}
+
+		containerId := fmt.Sprintf("%s/container/%s", templateId, c.Name)
+		mqlLivenessProbe, err := mqlContainerProbe(runtime, c.LivenessProbe, containerId)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlStartupProbe, err := mqlContainerProbe(runtime, c.StartupProbe, containerId)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlContainer, err := runtime.CreateResource("gcp.project.cloudrunService.container",
+			"id", containerId,
+			"name", c.Name,
+			"image", c.Image,
+			"command", core.StrSliceToInterface(c.Command),
+			"args", core.StrSliceToInterface(c.Args),
+			"env", mqlEnvs,
+			"resources", mqlResources,
+			"ports", mqlPorts,
+			"volumeMounts", mqlVolumeMounts,
+			"workingDir", c.WorkingDir,
+			"livenessProbe", mqlLivenessProbe,
+			"startupProbe", mqlStartupProbe,
+		)
+		if err != nil {
+			return nil, err
+		}
+		mqlContainers = append(mqlContainers, mqlContainer)
+	}
+	return mqlContainers, nil
+}
+
+func mqlVolumes(volumes []*runpb.Volume) []interface{} {
+	mqlVolumes := make([]interface{}, 0, len(volumes))
+	for _, v := range volumes {
+		mqlVolumes = append(mqlVolumes, map[string]interface{}{
+			"name": v.Name,
+		})
+	}
+	return mqlVolumes
 }

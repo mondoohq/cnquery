@@ -1960,6 +1960,8 @@ private gcp.project.cloudrunService {
   operations() []gcp.project.cloudrunService.operation
   // List of services
   services() []gcp.project.cloudrunService.service
+  // List of jobs
+  jobs() []gcp.project.cloudrunService.job
 }
 
 // GCP Cloud Run operation
@@ -2015,9 +2017,9 @@ private gcp.project.cloudrunService.service @defaults("name") {
   // Generation of this service currently serving traffic
   observedGeneration int
   // Conditions of this service, containing its readiness status and detailed error information in case it did not reach a serving state
-  terminalCondition gcp.project.cloudrunService.service.condition
+  terminalCondition gcp.project.cloudrunService.condition
   // Conditions of all other associated sub-resources
-  conditions []gcp.project.cloudrunService.service.condition
+  conditions []gcp.project.cloudrunService.condition
   // Name of the latest revision that is serving traffic
   latestReadyRevision string
   // Name of the last created revision
@@ -2049,7 +2051,7 @@ private gcp.project.cloudrunService.service.revisionTemplate @defaults("name") {
   // Email address of the IAM service account associated with the revision of the service
   serviceAccount string
   // Containers for this revision
-  containers  []gcp.project.cloudrunService.service.revisionTemplate.container
+  containers  []gcp.project.cloudrunService.container
   // List of volumes to make available to containers
   volumes []dict
   // Sandbox environment to host the revision
@@ -2061,7 +2063,7 @@ private gcp.project.cloudrunService.service.revisionTemplate @defaults("name") {
 }
 
 // GCP Cloud Run service revision template container
-private gcp.project.cloudrunService.service.revisionTemplate.container @defaults("name image") {
+private gcp.project.cloudrunService.container @defaults("name image") {
   // Internal ID
   id string
   // Container name
@@ -2083,13 +2085,13 @@ private gcp.project.cloudrunService.service.revisionTemplate.container @defaults
   // Container's working directory
   workingDir string
   // Periodic probe of container liveness
-  livenessProbe gcp.project.cloudrunService.service.revisionTemplate.container.probe
+  livenessProbe gcp.project.cloudrunService.container.probe
   // Startup probe of application within the container
-  startupProbe gcp.project.cloudrunService.service.revisionTemplate.container.probe
+  startupProbe gcp.project.cloudrunService.container.probe
 }
 
 // GCP Cloud Run service revision template container probe
-private gcp.project.cloudrunService.service.revisionTemplate.container.probe {
+private gcp.project.cloudrunService.container.probe {
   // Internal ID
   id string
   // Number of seconds after the container has started before the probe is initiated
@@ -2106,8 +2108,8 @@ private gcp.project.cloudrunService.service.revisionTemplate.container.probe {
   tcpSocket dict
 }
 
-// GCP Cloud Run service condition
-private gcp.project.cloudrunService.service.condition @defaults("type state message") {
+// GCP Cloud Run condition
+private gcp.project.cloudrunService.condition @defaults("type state message") {
   // Internal ID
   id string
   // Status of the reconciliation process
@@ -2120,4 +2122,88 @@ private gcp.project.cloudrunService.service.condition @defaults("type state mess
   lastTransitionTime time
   // How to interpret failures of this condition
   severity string
+}
+
+// GCP Cloud Run job
+private gcp.project.cloudrunService.job {
+  // Project ID
+  projectId string
+  // Region
+  region string
+  // Job name
+  name string
+  // Number that monotonically increases every time the user modifies the desired state
+  generation int
+  // User-defined labels
+  labels map[string]string
+  // Unstructured key-value map that may be set by external tools to store an arbitrary metadata
+  annotations map[string]string
+  // Creation timestamp
+  created time
+  // Update timestamp
+  updated time
+  // Deletion timestamp
+  deleted time
+  // Timestamp after which a deleted service will be permanently deleted
+  expired time
+  // Email address of the authenticated creator
+  creator string
+  // Email address of the last authenticated modifier
+  lastModifier string
+  // Arbitrary identifier for the API client
+  client string
+  // Arbitrary version identifier for the API client
+  clientVersion string
+  // Launch stage
+  launchStage string
+  // Template used to create executions for this job
+  template gcp.project.cloudrunService.job.executionTemplate
+  // Generation of this service currently serving traffic
+  observedGeneration int
+  // Conditions of this service, containing its readiness status and detailed error information in case it did not reach a serving state
+  terminalCondition gcp.project.cloudrunService.condition
+  // Conditions of all other associated sub-resources
+  conditions []gcp.project.cloudrunService.condition
+  // Number of executions created for this job
+  executionCount int
+  // Whether the service is currently being acted upon by the system to bring it into the desired state
+  reconciling bool
+}
+
+// GCP Cloud Run job execution template
+private gcp.project.cloudrunService.job.executionTemplate {
+  // Internal ID
+  id string
+  // User-defined labels
+  labels map[string]string
+  // Unstructured key-value map that may be set by external tools to store an arbitrary metadata
+  annotations map[string]string
+  // Specifies the maximum desired number of tasks the execution should run at a given time
+  parallelism int
+  // Specifies the desired number of tasks the execution should run
+  taskCount int
+  // Describes the task that will be create when executing an execution
+  template gcp.project.cloudrunService.job.executionTemplate.taskTemplate
+}
+
+// GCP Cloud Run job execution template task template
+private gcp.project.cloudrunService.job.executionTemplate.taskTemplate {
+  // Internal ID
+  id string
+  // VPC access configuration
+  vpcAccess dict
+  // Maximum allowed time for an instance to respond to a request
+  timeout time
+  // Email address of the IAM service account associated with the revision of the service
+  serviceAccount string
+  // Containers for this revision
+  containers  []gcp.project.cloudrunService.container
+  // List of volumes to make available to containers
+  volumes []dict
+  // Sandbox environment to host the revision
+  executionEnvironment string
+  // Reference to a customer-managed encryption key to use to encrypt this container image
+  encryptionKey string
+  // Number of retries allowed per task
+  maxRetries int
 }
