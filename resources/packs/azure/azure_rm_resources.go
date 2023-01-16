@@ -57,7 +57,7 @@ func (a *mqlAzure) GetResources() ([]interface{}, error) {
 			mqlAzure, err := a.MotorRuntime.CreateResource("azure.resource",
 				"id", core.ToString(resource.ID),
 				"name", core.ToString(resource.Name),
-				"kind", core.ToString(resource.Location),
+				"kind", core.ToString(resource.Kind),
 				"location", core.ToString(resource.Location),
 				"tags", azureTagsToInterface(resource.Tags),
 				"type", core.ToString(resource.Type),

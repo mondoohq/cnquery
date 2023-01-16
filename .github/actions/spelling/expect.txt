@@ -35,12 +35,12 @@ preemptibility
 preemptible
 pushconfig
 querypack
+resourcegroup
 runtimes
 Sas
 serviceprincipals
 spo
 sqlserver
-ssds
 sshkeys
 sysctls
 unarchived
