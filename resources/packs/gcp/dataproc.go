@@ -106,7 +106,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 		return nil, err
 	}
 
-	regions, err := g.GetRegions()
+	regions, err := g.Regions()
 	if err != nil {
 		return nil, err
 	}

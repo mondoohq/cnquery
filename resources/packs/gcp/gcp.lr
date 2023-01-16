@@ -76,10 +76,8 @@ gcp.project @defaults("name") {
   cloudFunctions() []gcp.project.cloudFunction
   // GCP Dataproc resources
   dataproc() gcp.project.dataprocService
-  // compute() gcp.compute
-  clusters() []gcp.project.cluster
   // GCP Cloud Run Resources
-  cloudrun() gcp.project.cloudrun
+  cloudrun() gcp.project.cloudrunService
 }
 
 // GCP Service
@@ -1953,17 +1951,155 @@ private gcp.project.dataprocService.cluster.virtualClusterConfig {
   stagingBucket string
 }
 // GCP Cloud Run resources
-private gcp.project.cloudrun {
+private gcp.project.cloudrunService {
   // Project ID
   projectId string
-  operations() []gcp.project.cloudrun.operation
+  // List of available regions
+  regions() []string
+  // List of operations
+  operations() []gcp.project.cloudrunService.operation
+  // List of services
+  services() []gcp.project.cloudrunService.service
 }
 
-private gcp.project.cloudrun.operation @defaults("name") {
-  // Internal ID
-  id string
+// GCP Cloud Run operation
+private gcp.project.cloudrunService.operation @defaults("name") {
   // Project ID
   projectId string
-  // The name of the operation
+  // Operation name
   name string
+  // Whether the operation is completed
+  done bool
+}
+
+// GCP Cloud Run service
+private gcp.project.cloudrunService.service @defaults("name") {
+  // Project ID
+  projectId string
+  // Region
+  region string
+  // Service name
+  name string
+  // Service description
+  description string
+  // Number that monotonically increases every time the user modifies the desired state
+  generation int
+  // User-provided labels
+  labels map[string]string
+  // Unstructured key-value map that may be set by external tools to store an arbitrary metadata
+  annotations map[string]string
+  // Creation timestamp
+  created time
+  // Update timestamp
+  updated time
+  // Deletion timestamp
+  deleted time
+  // Timestamp after which a deleted service will be permanently deleted
+  expired time
+  // Email address of the authenticated creator
+  creator string
+  // Email address of the last authenticated modifier
+  lastModifier string
+  // Arbitrary identifier for the API client
+  client string
+  // Arbitrary version identifier for the API client
+  clientVersion string
+  // Ingress settings
+  ingress string
+  // Launch stage
+  launchStage string
+  // Template used to create revisions for the service
+  template gcp.project.cloudrunService.service.revisionTemplate
+  // Specifies how to distribute traffic over a collection of revisions belonging to the service
+  traffic []dict
+  // Generation of this service currently serving traffic
+  observedGeneration int
+  // Conditions of this service, containing its readiness status and detailed error information in case it did not reach a serving state
+  terminalCondition gcp.project.cloudrunService.service.condition
+  // Conditions of all other associated sub-resources
+  conditions []gcp.project.cloudrunService.service.condition
+  // Name of the latest revision that is serving traffic
+  latestReadyRevision string
+  // Name of the last created revision
+  latestCreatedRevision string
+  // Detailed status information for corresponding traffic targets
+  trafficStatuses []dict
+  // Main URI in which this service is serving traffic
+  uri string
+  // Whether the service is currently being acted upon by the system to bring it into the desired state
+  reconciling bool
+}
+
+// GCP Cloud Run service revision template
+private gcp.project.cloudrunService.service.revisionTemplate @defaults("name") {
+  // Internal ID
+  id string
+  // Revision name
+  name string
+  // User-provided labels
+  labels map[string]string
+  // Unstructured key-value map that may be set by external tools to store an arbitrary metadata
+  annotations map[string]string
+  // Scaling settings
+  scaling dict
+  // VPC access configuration
+  vpcAccess dict
+  // Maximum allowed time for an instance to respond to a request
+  timeout time
+  // Email address of the IAM service account associated with the revision of the service
+  serviceAccount string
+  // Containers for this revision
+  // containers 
+  // List of volumes to make available to containers
+  volumes []dict
+  // Sandbox environment to host the revision
+  executionEnvironment string
+  // Reference to a customer-managed encryption key to use to encrypt this container image
+  encryptionKey string
+  // Maximum number of requests that each serving instance can receive
+  maxInstanceRequestConcurrency int
+}
+
+// GCP Cloud Run service revision template container
+private gcp.project.cloudrunService.service.revisionTemplate.container @defaults("name image") {
+  // Internal ID
+  id string
+  // Container name
+  name string
+  // URL of the container image in Google Container Registry or Google Artifact Registry
+  image string
+  // Entrypoint array
+  command []string
+  // Arguments to the entrypoint
+  args []string
+  // Environment variables
+  env []dict
+  // Compute resource requirements by the container
+  resources dict
+  // List of ports to expose from the container
+  ports []dict
+  // Volumes to mount into the container's filesystem
+  volumeMounts []dict
+  // Container's working directory
+  workingDir string
+  // Periodic probe of container liveness
+  livenessProbe dict
+  // Startup probe of application within the container
+  startupProbe dict
+}
+
+// GCP Cloud Run service condition
+private gcp.project.cloudrunService.service.condition @defaults("type state message") {
+  // Internal ID
+  id string
+  // Status of the reconciliation process
+  type string
+  // Condition state
+  state string
+  // Human-readable message indicating details about the current status
+  message string
+  // Last time the condition transitioned from one status to another
+  lastTransitionTime time
+  // How to interpret failures of this condition
+  severity string
 }
