@@ -77,7 +77,7 @@ gcp.project @defaults("name") {
   // GCP Dataproc resources
   dataproc() gcp.project.dataprocService
   // GCP Cloud Run Resources
-  cloudrun() gcp.project.cloudrunService
+  cloudRun() gcp.project.cloudRunService
 }
 
 // GCP Service
@@ -1951,21 +1951,21 @@ private gcp.project.dataprocService.cluster.virtualClusterConfig {
   stagingBucket string
 }
 // GCP Cloud Run resources
-private gcp.project.cloudrunService {
+private gcp.project.cloudRunService {
   // Project ID
   projectId string
   // List of available regions
   regions() []string
   // List of operations
-  operations() []gcp.project.cloudrunService.operation
+  operations() []gcp.project.cloudRunService.operation
   // List of services
-  services() []gcp.project.cloudrunService.service
+  services() []gcp.project.cloudRunService.service
   // List of jobs
-  jobs() []gcp.project.cloudrunService.job
+  jobs() []gcp.project.cloudRunService.job
 }
 
 // GCP Cloud Run operation
-private gcp.project.cloudrunService.operation @defaults("name") {
+private gcp.project.cloudRunService.operation @defaults("name") {
   // Project ID
   projectId string
   // Operation name
@@ -1975,7 +1975,7 @@ private gcp.project.cloudrunService.operation @defaults("name") {
 }
 
 // GCP Cloud Run service
-private gcp.project.cloudrunService.service @defaults("name") {
+private gcp.project.cloudRunService.service @defaults("name") {
   // Project ID
   projectId string
   // Region
@@ -2011,15 +2011,15 @@ private gcp.project.cloudrunService.service @defaults("name") {
   // Launch stage
   launchStage string
   // Template used to create revisions for the service
-  template gcp.project.cloudrunService.service.revisionTemplate
+  template gcp.project.cloudRunService.service.revisionTemplate
   // Specifies how to distribute traffic over a collection of revisions belonging to the service
   traffic []dict
   // Generation of this service currently serving traffic
   observedGeneration int
   // Conditions of this service, containing its readiness status and detailed error information in case it did not reach a serving state
-  terminalCondition gcp.project.cloudrunService.condition
+  terminalCondition gcp.project.cloudRunService.condition
   // Conditions of all other associated sub-resources
-  conditions []gcp.project.cloudrunService.condition
+  conditions []gcp.project.cloudRunService.condition
   // Name of the latest revision that is serving traffic
   latestReadyRevision string
   // Name of the last created revision
@@ -2033,7 +2033,7 @@ private gcp.project.cloudrunService.service @defaults("name") {
 }
 
 // GCP Cloud Run service revision template
-private gcp.project.cloudrunService.service.revisionTemplate @defaults("name") {
+private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   // Internal ID
   id string
   // Revision name
@@ -2051,7 +2051,7 @@ private gcp.project.cloudrunService.service.revisionTemplate @defaults("name") {
   // Email address of the IAM service account associated with the revision of the service
   serviceAccount string
   // Containers for this revision
-  containers  []gcp.project.cloudrunService.container
+  containers  []gcp.project.cloudRunService.container
   // List of volumes to make available to containers
   volumes []dict
   // Sandbox environment to host the revision
@@ -2063,7 +2063,7 @@ private gcp.project.cloudrunService.service.revisionTemplate @defaults("name") {
 }
 
 // GCP Cloud Run service revision template container
-private gcp.project.cloudrunService.container @defaults("name image") {
+private gcp.project.cloudRunService.container @defaults("name image") {
   // Internal ID
   id string
   // Container name
@@ -2085,13 +2085,13 @@ private gcp.project.cloudrunService.container @defaults("name image") {
   // Container's working directory
   workingDir string
   // Periodic probe of container liveness
-  livenessProbe gcp.project.cloudrunService.container.probe
+  livenessProbe gcp.project.cloudRunService.container.probe
   // Startup probe of application within the container
-  startupProbe gcp.project.cloudrunService.container.probe
+  startupProbe gcp.project.cloudRunService.container.probe
 }
 
 // GCP Cloud Run service revision template container probe
-private gcp.project.cloudrunService.container.probe {
+private gcp.project.cloudRunService.container.probe {
   // Internal ID
   id string
   // Number of seconds after the container has started before the probe is initiated
@@ -2109,7 +2109,7 @@ private gcp.project.cloudrunService.container.probe {
 }
 
 // GCP Cloud Run condition
-private gcp.project.cloudrunService.condition @defaults("type state message") {
+private gcp.project.cloudRunService.condition @defaults("type state message") {
   // Internal ID
   id string
   // Status of the reconciliation process
@@ -2125,7 +2125,7 @@ private gcp.project.cloudrunService.condition @defaults("type state message") {
 }
 
 // GCP Cloud Run job
-private gcp.project.cloudrunService.job {
+private gcp.project.cloudRunService.job {
   // Project ID
   projectId string
   // Region
@@ -2157,13 +2157,13 @@ private gcp.project.cloudrunService.job {
   // Launch stage
   launchStage string
   // Template used to create executions for this job
-  template gcp.project.cloudrunService.job.executionTemplate
+  template gcp.project.cloudRunService.job.executionTemplate
   // Generation of this service currently serving traffic
   observedGeneration int
   // Conditions of this service, containing its readiness status and detailed error information in case it did not reach a serving state
-  terminalCondition gcp.project.cloudrunService.condition
+  terminalCondition gcp.project.cloudRunService.condition
   // Conditions of all other associated sub-resources
-  conditions []gcp.project.cloudrunService.condition
+  conditions []gcp.project.cloudRunService.condition
   // Number of executions created for this job
   executionCount int
   // Whether the service is currently being acted upon by the system to bring it into the desired state
@@ -2171,7 +2171,7 @@ private gcp.project.cloudrunService.job {
 }
 
 // GCP Cloud Run job execution template
-private gcp.project.cloudrunService.job.executionTemplate {
+private gcp.project.cloudRunService.job.executionTemplate {
   // Internal ID
   id string
   // User-defined labels
@@ -2183,11 +2183,11 @@ private gcp.project.cloudrunService.job.executionTemplate {
   // Specifies the desired number of tasks the execution should run
   taskCount int
   // Describes the task that will be create when executing an execution
-  template gcp.project.cloudrunService.job.executionTemplate.taskTemplate
+  template gcp.project.cloudRunService.job.executionTemplate.taskTemplate
 }
 
 // GCP Cloud Run job execution template task template
-private gcp.project.cloudrunService.job.executionTemplate.taskTemplate {
+private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   // Internal ID
   id string
   // VPC access configuration
@@ -2197,7 +2197,7 @@ private gcp.project.cloudrunService.job.executionTemplate.taskTemplate {
   // Email address of the IAM service account associated with the revision of the service
   serviceAccount string
   // Containers for this revision
-  containers  []gcp.project.cloudrunService.container
+  containers  []gcp.project.cloudRunService.container
   // List of volumes to make available to containers
   volumes []dict
   // Sandbox environment to host the revision

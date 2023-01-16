@@ -17,15 +17,15 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpProjectCloudrunService) id() (string, error) {
+func (g *mqlGcpProjectCloudRunService) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s/gcp.project.cloudrunService", projectId), nil
+	return fmt.Sprintf("%s/gcp.project.cloudRunService", projectId), nil
 }
 
-func (g *mqlGcpProjectCloudrunService) init(args *resources.Args) (*resources.Args, GcpProjectCloudrunService, error) {
+func (g *mqlGcpProjectCloudRunService) init(args *resources.Args) (*resources.Args, GcpProjectCloudRunService, error) {
 	if len(*args) > 0 {
 		return args, nil, nil
 	}
@@ -41,18 +41,18 @@ func (g *mqlGcpProjectCloudrunService) init(args *resources.Args) (*resources.Ar
 	return args, nil, nil
 }
 
-func (g *mqlGcpProject) GetCloudrun() (interface{}, error) {
+func (g *mqlGcpProject) GetCloudRun() (interface{}, error) {
 	projectId, err := g.Id()
 	if err != nil {
 		return nil, err
 	}
 
-	return g.MotorRuntime.CreateResource("gcp.project.cloudrunService",
+	return g.MotorRuntime.CreateResource("gcp.project.cloudRunService",
 		"projectId", projectId,
 	)
 }
 
-func (g *mqlGcpProjectCloudrunServiceOperation) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceOperation) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -61,10 +61,10 @@ func (g *mqlGcpProjectCloudrunServiceOperation) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("gcp.project.cloudrunService.operation/%s/%s", projectId, name), nil
+	return fmt.Sprintf("gcp.project.cloudRunService.operation/%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectCloudrunServiceService) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceService) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -73,10 +73,10 @@ func (g *mqlGcpProjectCloudrunServiceService) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s", projectId, name), nil
+	return fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectCloudrunServiceJob) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceJob) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return "", err
@@ -85,34 +85,34 @@ func (g *mqlGcpProjectCloudrunServiceJob) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("gcp.project.cloudrunService.job/%s/%s", projectId, name), nil
+	return fmt.Sprintf("gcp.project.cloudRunService.job/%s/%s", projectId, name), nil
 }
 
-func (g *mqlGcpProjectCloudrunServiceServiceRevisionTemplate) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceContainer) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceContainer) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceContainerProbe) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceContainerProbe) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceCondition) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceCondition) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceJobExecutionTemplate) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplate) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunServiceJobExecutionTemplateTaskTemplate) id() (string, error) {
+func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) id() (string, error) {
 	return g.Id()
 }
 
-func (g *mqlGcpProjectCloudrunService) GetRegions() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) GetRegions() ([]interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func (g *mqlGcpProjectCloudrunService) GetRegions() ([]interface{}, error) {
 	return regionNames, nil
 }
 
-func (g *mqlGcpProjectCloudrunService) GetOperations() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) GetOperations() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func (g *mqlGcpProjectCloudrunService) GetOperations() ([]interface{}, error) {
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
-				mqlOp, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.operation",
+				mqlOp, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.operation",
 					"projectId", projectId,
 					"name", t.Name,
 					"done", t.Done,
@@ -209,7 +209,7 @@ func (g *mqlGcpProjectCloudrunService) GetOperations() ([]interface{}, error) {
 	return operations, nil
 }
 
-func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -278,13 +278,13 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 						log.Error().Err(err).Send()
 					}
 
-					templateId := fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s/revisionTemplate", projectId, s.Name)
+					templateId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s/revisionTemplate", projectId, s.Name)
 					mqlContainers, err := mqlContainers(g.MotorRuntime, s.Template.Containers, templateId)
 					if err != nil {
 						log.Error().Err(err).Send()
 					}
 
-					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service.revisionTemplate",
+					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.service.revisionTemplate",
 						"id", templateId,
 						"name", s.Template.Revision,
 						"labels", core.StrMapToInterface(s.Template.Labels),
@@ -314,7 +314,7 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 					})
 				}
 
-				serviceId := fmt.Sprintf("gcp.project.cloudrunService.service/%s/%s", projectId, s.Name)
+				serviceId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s", projectId, s.Name)
 				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, s.TerminalCondition, serviceId, "terminal")
 				if err != nil {
 					log.Error().Err(err).Send()
@@ -340,7 +340,7 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 					})
 				}
 
-				mqlS, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.service",
+				mqlS, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.service",
 					"projectId", projectId,
 					"region", region,
 					"name", s.Name,
@@ -382,7 +382,7 @@ func (g *mqlGcpProjectCloudrunService) GetServices() ([]interface{}, error) {
 	return services, nil
 }
 
-func (g *mqlGcpProjectCloudrunService) GetJobs() ([]interface{}, error) {
+func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
 		return nil, err
@@ -428,7 +428,7 @@ func (g *mqlGcpProjectCloudrunService) GetJobs() ([]interface{}, error) {
 					return
 				}
 
-				jobId := fmt.Sprintf("gcp.project.cloudrunService.job/%s/%s", projectId, j.Name)
+				jobId := fmt.Sprintf("gcp.project.cloudRunService.job/%s/%s", projectId, j.Name)
 				var mqlTemplate resources.ResourceType
 				if j.Template != nil {
 					templateId := fmt.Sprintf("%s/executionTemplate", jobId)
@@ -446,7 +446,7 @@ func (g *mqlGcpProjectCloudrunService) GetJobs() ([]interface{}, error) {
 							return
 						}
 
-						mqlTaskTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.job.executionTemplate.taskTemplate",
+						mqlTaskTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job.executionTemplate.taskTemplate",
 							"id", fmt.Sprintf("%s/template", templateId),
 							"vpcAccess", vpcAccess,
 							"timeout", core.MqlTime(llx.DurationToTime((j.Template.Template.Timeout.Seconds))),
@@ -463,7 +463,7 @@ func (g *mqlGcpProjectCloudrunService) GetJobs() ([]interface{}, error) {
 						}
 					}
 
-					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudrunService.job.executionTemplate",
+					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job.executionTemplate",
 						"id", templateId,
 						"labels", core.StrMapToInterface(j.Template.Labels),
 						"annotations", core.StrMapToInterface(j.Template.Annotations),
@@ -493,7 +493,7 @@ func (g *mqlGcpProjectCloudrunService) GetJobs() ([]interface{}, error) {
 					mqlConditions = append(mqlConditions, mqlCondition)
 				}
 
-				mqlJob, err := g.MotorRuntime.CreateResource("gcp.project.cloudrunService.job",
+				mqlJob, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job",
 					"projectId", projectId,
 					"region", region,
 					"name", j.Name,
@@ -556,7 +556,7 @@ func mqlContainerProbe(runtime *resources.Runtime, probe *runpb.Probe, container
 		}
 	}
 
-	return runtime.CreateResource("gcp.project.cloudrunService.container.probe",
+	return runtime.CreateResource("gcp.project.cloudRunService.container.probe",
 		"id", fmt.Sprintf("%s/livenessProbe", containerId),
 		"initialDelaySeconds", probe.InitialDelaySeconds,
 		"timeoutSeconds", probe.TimeoutSeconds,
@@ -571,7 +571,7 @@ func mqlCondition(runtime *resources.Runtime, c *runpb.Condition, parentId, suff
 	if c == nil {
 		return nil, nil
 	}
-	return runtime.CreateResource("gcp.project.cloudrunService.condition",
+	return runtime.CreateResource("gcp.project.cloudRunService.condition",
 		"id", fmt.Sprintf("%s/condition/%s", parentId, suffix),
 		"type", c.Type,
 		"state", c.String(),
@@ -652,7 +652,7 @@ func mqlContainers(runtime *resources.Runtime, containers []*runpb.Container, te
 			return nil, err
 		}
 
-		mqlContainer, err := runtime.CreateResource("gcp.project.cloudrunService.container",
+		mqlContainer, err := runtime.CreateResource("gcp.project.cloudRunService.container",
 			"id", containerId,
 			"name", c.Name,
 			"image", c.Image,
