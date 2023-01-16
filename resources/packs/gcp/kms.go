@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/iterator"
@@ -227,6 +229,10 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 		Parent: keyring,
 	})
 
+	type mqlVersionTemplate struct {
+		ProtectionLevel string `json:"protectionLevel"`
+		Algorithm       string `json:"algorithm"`
+	}
 	for {
 		k, err := it.Next()
 		if err == iterator.Done {
@@ -241,11 +247,41 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 			return nil, err
 		}
 
+		var versionTemplate map[string]interface{}
+		if k.VersionTemplate != nil {
+			versionTemplate, err = core.JsonToDict(mqlVersionTemplate{
+				ProtectionLevel: k.VersionTemplate.ProtectionLevel.String(),
+				Algorithm:       k.VersionTemplate.Algorithm.String(),
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var mqlRotationPeriod *time.Time
+		rotationPeriod := k.GetRotationPeriod()
+		if rotationPeriod != nil {
+			mqlRotationPeriod = core.MqlTime(llx.DurationToTime(rotationPeriod.Seconds))
+		}
+
+		var mqlDestroyScheduledDuration *time.Time
+		if k.DestroyScheduledDuration != nil {
+			mqlDestroyScheduledDuration = core.MqlTime(llx.DurationToTime(k.DestroyScheduledDuration.Seconds))
+		}
+
 		mqlKey, err := g.MotorRuntime.CreateResource("gcp.project.kmsService.keyring.cryptokey",
 			"resourcePath", k.Name,
 			"name", parseResourceName(k.Name),
 			"primary", mqlPrimary,
 			"purpose", k.Purpose.String(),
+			"created", core.MqlTime(k.CreateTime.AsTime()),
+			"nextRotation", core.MqlTime(k.NextRotationTime.AsTime()),
+			"rotationPeriod", mqlRotationPeriod,
+			"versionTemplate", versionTemplate,
+			"labels", core.StrMapToInterface(k.Labels),
+			"importOnly", k.ImportOnly,
+			"destroyScheduledDuration", mqlDestroyScheduledDuration,
+			"cryptoKeyBackend", k.CryptoKeyBackend,
 		)
 
 		keys = append(keys, mqlKey)

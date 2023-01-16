@@ -24610,6 +24610,14 @@ type GcpProjectKmsServiceKeyringCryptokey interface {
 	Name() (string, error)
 	Primary() (GcpProjectKmsServiceKeyringCryptokeyVersion, error)
 	Purpose() (string, error)
+	Created() (*time.Time, error)
+	NextRotation() (*time.Time, error)
+	RotationPeriod() (*time.Time, error)
+	VersionTemplate() (interface{}, error)
+	Labels() (map[string]interface{}, error)
+	ImportOnly() (bool, error)
+	DestroyScheduledDuration() (*time.Time, error)
+	CryptoKeyBackend() (string, error)
 	Versions() ([]interface{}, error)
 }
 
@@ -24655,6 +24663,38 @@ func newGcpProjectKmsServiceKeyringCryptokey(runtime *resources.Runtime, args *r
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"purpose\" argument has the wrong type (expected type \"string\")")
 			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "nextRotation":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"nextRotation\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "rotationPeriod":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"rotationPeriod\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "versionTemplate":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"versionTemplate\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "labels":
+			if _, ok := val.(map[string]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"labels\" argument has the wrong type (expected type \"map[string]interface{}\")")
+			}
+		case "importOnly":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"importOnly\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "destroyScheduledDuration":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"destroyScheduledDuration\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "cryptoKeyBackend":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"cryptoKeyBackend\" argument has the wrong type (expected type \"string\")")
+			}
 		case "versions":
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.kmsService.keyring.cryptokey\", its \"versions\" argument has the wrong type (expected type \"[]interface{}\")")
@@ -24698,6 +24738,30 @@ func (s *mqlGcpProjectKmsServiceKeyringCryptokey) Validate() error {
 	if _, ok := s.Cache.Load("purpose"); !ok {
 		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"purpose\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"created\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("nextRotation"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"nextRotation\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("rotationPeriod"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"rotationPeriod\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("versionTemplate"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"versionTemplate\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("labels"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"labels\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("importOnly"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"importOnly\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("destroyScheduledDuration"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"destroyScheduledDuration\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("cryptoKeyBackend"); !ok {
+		return errors.New("Initialized \"gcp.project.kmsService.keyring.cryptokey\" resource without a \"cryptoKeyBackend\". This field is required.")
+	}
 
 	return nil
 }
@@ -24713,6 +24777,22 @@ func (s *mqlGcpProjectKmsServiceKeyringCryptokey) Register(name string) error {
 	case "primary":
 		return nil
 	case "purpose":
+		return nil
+	case "created":
+		return nil
+	case "nextRotation":
+		return nil
+	case "rotationPeriod":
+		return nil
+	case "versionTemplate":
+		return nil
+	case "labels":
+		return nil
+	case "importOnly":
+		return nil
+	case "destroyScheduledDuration":
+		return nil
+	case "cryptoKeyBackend":
 		return nil
 	case "versions":
 		return nil
@@ -24733,6 +24813,22 @@ func (s *mqlGcpProjectKmsServiceKeyringCryptokey) Field(name string) (interface{
 		return s.Primary()
 	case "purpose":
 		return s.Purpose()
+	case "created":
+		return s.Created()
+	case "nextRotation":
+		return s.NextRotation()
+	case "rotationPeriod":
+		return s.RotationPeriod()
+	case "versionTemplate":
+		return s.VersionTemplate()
+	case "labels":
+		return s.Labels()
+	case "importOnly":
+		return s.ImportOnly()
+	case "destroyScheduledDuration":
+		return s.DestroyScheduledDuration()
+	case "cryptoKeyBackend":
+		return s.CryptoKeyBackend()
 	case "versions":
 		return s.Versions()
 	default:
@@ -24804,6 +24900,134 @@ func (s *mqlGcpProjectKmsServiceKeyringCryptokey) Purpose() (string, error) {
 	return tres, nil
 }
 
+// Created accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// NextRotation accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) NextRotation() (*time.Time, error) {
+	res, ok := s.Cache.Load("nextRotation")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"nextRotation\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"nextRotation\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// RotationPeriod accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) RotationPeriod() (*time.Time, error) {
+	res, ok := s.Cache.Load("rotationPeriod")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"rotationPeriod\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"rotationPeriod\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// VersionTemplate accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) VersionTemplate() (interface{}, error) {
+	res, ok := s.Cache.Load("versionTemplate")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"versionTemplate\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"versionTemplate\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Labels accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) Labels() (map[string]interface{}, error) {
+	res, ok := s.Cache.Load("labels")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"labels\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"labels\" to the right type (map[string]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ImportOnly accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) ImportOnly() (bool, error) {
+	res, ok := s.Cache.Load("importOnly")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"importOnly\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"importOnly\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// DestroyScheduledDuration accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) DestroyScheduledDuration() (*time.Time, error) {
+	res, ok := s.Cache.Load("destroyScheduledDuration")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"destroyScheduledDuration\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"destroyScheduledDuration\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// CryptoKeyBackend accessor autogenerated
+func (s *mqlGcpProjectKmsServiceKeyringCryptokey) CryptoKeyBackend() (string, error) {
+	res, ok := s.Cache.Load("cryptoKeyBackend")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.kmsService.keyring.cryptokey\" failed: no value provided for static field \"cryptoKeyBackend\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.kmsService.keyring.cryptokey\" failed to cast field \"cryptoKeyBackend\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Versions accessor autogenerated
 func (s *mqlGcpProjectKmsServiceKeyringCryptokey) Versions() ([]interface{}, error) {
 	res, ok := s.Cache.Load("versions")
@@ -24838,6 +25062,22 @@ func (s *mqlGcpProjectKmsServiceKeyringCryptokey) MqlCompute(name string) error 
 	case "primary":
 		return nil
 	case "purpose":
+		return nil
+	case "created":
+		return nil
+	case "nextRotation":
+		return nil
+	case "rotationPeriod":
+		return nil
+	case "versionTemplate":
+		return nil
+	case "labels":
+		return nil
+	case "importOnly":
+		return nil
+	case "destroyScheduledDuration":
+		return nil
+	case "cryptoKeyBackend":
 		return nil
 	case "versions":
 		return s.ComputeVersions()
