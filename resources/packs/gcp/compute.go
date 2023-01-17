@@ -676,6 +676,17 @@ func (g *mqlGcpProjectComputeService) GetDisks() ([]interface{}, error) {
 						guestOsFeatures = append(guestOsFeatures, entry.Type)
 					}
 
+					var mqlDiskEnc map[string]interface{}
+					if disk.DiskEncryptionKey != nil {
+						mqlDiskEnc = map[string]interface{}{
+							"kmsKeyName":           disk.DiskEncryptionKey.KmsKeyName,
+							"kmsKeyServiceAccount": disk.DiskEncryptionKey.KmsKeyServiceAccount,
+							"rawKey":               disk.DiskEncryptionKey.RawKey,
+							"rsaEncryptedKey":      disk.DiskEncryptionKey.RsaEncryptedKey,
+							"sha256":               disk.DiskEncryptionKey.Sha256,
+						}
+					}
+
 					mqlDisk, err := g.MotorRuntime.CreateResource("gcp.project.computeService.disk",
 						"id", strconv.FormatUint(disk.Id, 10),
 						"name", disk.Name,
@@ -701,6 +712,7 @@ func (g *mqlGcpProjectComputeService) GetDisks() ([]interface{}, error) {
 						"status", disk.Status,
 						"zone", zone,
 						"created", parseTime(disk.CreationTimestamp),
+						"diskEncryptionKey", mqlDiskEnc,
 					)
 					if err != nil {
 						return err
