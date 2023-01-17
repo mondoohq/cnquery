@@ -55,6 +55,7 @@ func (r *defaultReporter) printAssetSummary(assetMrn string, asset *explorer.Ass
 		target = assetMrn
 	}
 
+	r.out.Write([]byte(termenv.String(fmt.Sprintf("Target:     %s\n", target)).Foreground(r.Colors.Primary).String()))
 	report, ok := r.data.Reports[assetMrn]
 	if !ok {
 		// If scanning the asset has failed, there will be no report, we should first look if there's an error for that target.
@@ -69,11 +70,10 @@ func (r *defaultReporter) printAssetSummary(assetMrn string, asset *explorer.Ass
 				target,
 			)))
 		}
-		r.out.Write([]byte("\n"))
+		r.out.Write([]byte("\n\n"))
 		return
 	}
 
-	r.out.Write([]byte(termenv.String(fmt.Sprintf("Target:     %s\n", target)).Foreground(r.Colors.Primary).String()))
 	r.out.Write([]byte(fmt.Sprintf("Datapoints: %d\n", len(report.Data))))
 	r.out.Write([]byte("\n"))
 }

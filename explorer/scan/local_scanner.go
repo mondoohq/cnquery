@@ -288,8 +288,9 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 			job.connection = m
 			results, err := s.runMotorizedAsset(job)
 			if err != nil {
-				log.Warn().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
+				log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
 				job.Reporter.AddScanError(job.Asset, err)
+				job.ProgressProg.Send(progress.MsgErrored{Index: job.Asset.Mrn})
 				return
 			}
 

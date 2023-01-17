@@ -29,12 +29,17 @@ func (n NoopProgram) Quit()                   {}
 const (
 	padding                  = 0
 	maxWidth                 = 80
+	defaultWidth             = 40
 	overallProgressIndexName = "overall"
 )
 
 type MsgProgress struct {
 	Index   string
 	Percent float64
+}
+
+type MsgErrored struct {
+	Index string
 }
 
 type MsgScore struct {
@@ -47,6 +52,7 @@ type modelProgress struct {
 	Name      string
 	Score     string
 	Completed bool
+	Errored   bool
 	lock      sync.Mutex
 }
 
@@ -58,7 +64,7 @@ type modelMultiProgress struct {
 
 func newProgressBar() progress.Model {
 	progressbar := progress.New(progress.WithScaledGradient("#5A56E0", "#EE6FF8"))
-	progressbar.Width = 40
+	progressbar.Width = defaultWidth
 	progressbar.Full = '█'
 	progressbar.FullColor = "#7571F9"
 	progressbar.Empty = '░'
@@ -188,6 +194,20 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m, tea.Batch(cmds...)
 
+	case MsgErrored:
+		if _, ok := m.Progress[msg.Index]; !ok {
+			return m, nil
+		}
+
+		m.Progress[msg.Index].lock.Lock()
+		m.Progress[msg.Index].Errored = true
+		m.Progress[msg.Index].model.ShowPercentage = false
+		// settings ShowPercentage to false, expanse the progress bar to match the others
+		// we need to manually reduce the width to match the others without the percentage
+		m.Progress[msg.Index].model.Width -= 5
+		m.Progress[msg.Index].lock.Unlock()
+		return m, nil
+
 	case MsgScore:
 		if _, ok := m.Progress[msg.Index]; !ok {
 			return m, nil
@@ -223,6 +243,7 @@ func (m modelMultiProgress) View() string {
 	output := ""
 
 	completedAssets := 0
+	erroredAssets := 0
 	keys := []string{}
 	for k := range m.Progress {
 		if k == overallProgressIndexName {
@@ -231,6 +252,8 @@ func (m modelMultiProgress) View() string {
 		keys = append(keys, k)
 		if m.Progress[k].Completed {
 			completedAssets++
+		} else if m.Progress[k].Errored {
+			erroredAssets++
 		}
 	}
 
@@ -240,7 +263,11 @@ func (m modelMultiProgress) View() string {
 	i := 1
 	for _, k := range keys {
 		if k != overallProgressIndexName {
-			output += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
+			if m.Progress[k].Errored {
+				output += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
+			} else {
+				output += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
+			}
 			if m.Progress[k].Completed && k != overallProgressIndexName && m.Progress[k].Score != "" {
 				pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
 				output += pad + " score: " + m.Progress[k].Score
@@ -259,6 +286,9 @@ func (m modelMultiProgress) View() string {
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(m.Progress[overallProgressIndexName].model.Percent()) + " " + m.Progress[overallProgressIndexName].Name
 		output += fmt.Sprintf(" %d/%d assets", completedAssets, len(m.Progress)-1)
+		if erroredAssets > 0 {
+			output += fmt.Sprintf(" %d/%d errors", erroredAssets, len(m.Progress)-1)
+		}
 	}
 
 	return "\n" + pad + output + "\n\n"
