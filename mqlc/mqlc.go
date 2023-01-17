@@ -619,7 +619,9 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 			return blockRefs{}, err
 		}
 	}
+
 	blockCompiler.updateEntrypoints(false)
+	blockCompiler.updateLabels()
 
 	return blockRefs{
 		block:        blockCompiler.blockRef,
