@@ -157,7 +157,7 @@ private gcp.project.computeService {
   regions() []gcp.project.computeService.region
   // Project Zones
   zones() []gcp.project.computeService.zone
-  // List of backend serivces
+  // List of backend services
   backendServices() []gcp.project.computeService.backendService
 }
 
@@ -635,7 +635,7 @@ private gcp.project.computeService.backendService @defaults("name") {
   loadBalancingScheme string
   // List of locality load balancing policies to be used in order of preference
   localityLbPolicies []dict
-  // Load balancing algorith used within the scope of the locality
+  // Load balancing algorithm used within the scope of the locality
   localityLbPolicy string
   // Log configuration
   logConfig dict
@@ -657,7 +657,7 @@ private gcp.project.computeService.backendService @defaults("name") {
   securitySettings dict
   // Service binding URLs
   serviceBindingUrls []string
-  // Session affinity typr
+  // Session affinity type
   sessionAffinity string
   // Backend service timeout in settings
   timeoutSec int
