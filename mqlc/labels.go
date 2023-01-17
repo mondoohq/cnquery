@@ -17,18 +17,17 @@ func createLabel(res *llx.CodeBundle, ref uint64, schema *resources.Schema) (str
 	chunk := code.Chunk(ref)
 
 	if chunk.Call == llx.Chunk_PRIMITIVE {
-		if chunk.Primitive.Type != string(types.Ref) {
-			return "", nil
-		}
-
 		// In the case of refs, we want to check for the name of the variable,
 		// which is what every final ref should lead to
-		ref, ok := chunk.Primitive.RefV2()
-		if !ok {
-			return "", nil
+		if chunk.Primitive.Type == string(types.Ref) {
+			if deref, ok := chunk.Primitive.RefV2(); ok {
+				ref = deref
+			}
 		}
 
+		// TODO: better labels if we don't have it as a var
 		label := res.Vars[ref]
+
 		return label, nil
 	}
 
