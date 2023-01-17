@@ -157,6 +157,8 @@ private gcp.project.computeService {
   regions() []gcp.project.computeService.region
   // Project Zones
   zones() []gcp.project.computeService.zone
+  // List of backend serivces
+  backendServices() []gcp.project.computeService.backendService
 }
 
 // GCP Compute Region
@@ -589,6 +591,136 @@ private gcp.project.computeService.router @defaults("name")  {
   nats []dict
   // Creation timestamp
   created time
+}
+
+// GCP Compute backend service
+private gcp.project.computeService.backendService @defaults("name") {
+  // Unique identifier
+  id string
+  // Lifetime of cookies in seconds
+  affinityCookieTtlSec int
+  // List of backends that serve this backend service
+  backends []gcp.project.computeService.backendService.backend
+  // Cloud CDN configuration
+  cdnPolicy gcp.project.computeService.backendService.cdnPolicy
+  // Circuit breakers
+  circuitBreakers dict
+  // Compress text responses using Brotli or gzip compression, based on the client's Accept-Encoding header
+  compressionMode string
+  // Connection draining configuration
+  connectionDraining dict
+  // Connection tracking configuration
+  connectionTrackingPolicy dict
+  // Consistent hash-based load balancing used to provide soft session affinity based on HTTP headers, cookies or other properties
+  consistentHash dict
+  // Creation timestamp
+  created time
+  // Headers that the load balancer adds to proxied requests
+  customRequestHeaders []string
+  // Headers that the load balancer adds to proxied responses
+  customResponseHeaders []string
+  // Backend service description
+  description string
+  // Resource URL for the edge security policy associated with this backend service
+  edgeSecurityPolicy string
+  // Whether to enable Cloud CDN
+  enableCDN bool
+  // Failover policy
+  failoverPolicy dict
+  // List of URLs to the health checks
+  healthChecks []string
+  // Identity-aware proxy configuration
+  iap dict
+  // Load balancer type
+  loadBalancingScheme string
+  // List of locality load balancing policies to be used in order of preference
+  localityLbPolicies []dict
+  // Load balancing algorith used within the scope of the locality
+  localityLbPolicy string
+  // Log configuration
+  logConfig dict
+  // Default maximum duration (timeout) for streams to this service
+  maxStreamDuration time
+  // Backend service name
+  name string
+  // URL to the network to which this backend service belongs
+  networkUrl string
+  // Named port on a backend instance group representing the port for communication to the backend VMs in that group
+  portName string
+  // Protocol used for communication
+  protocol string
+  // Region URL
+  regionUrl string
+  // Security policy URL
+  securityPolicyUrl string
+  // Security settings
+  securitySettings dict
+  // Service binding URLs
+  serviceBindingUrls []string
+  // Session affinity typr
+  sessionAffinity string
+  // Backend service timeout in settings
+  timeoutSec int
+}
+
+// GCP Compute backend service backend
+private gcp.project.computeService.backendService.backend @defaults("description") {
+  // Internal ID
+  id string
+  // How to determine whether the backend of a load balancer can handle additional traffic or is fully loaded
+  balancingMode string
+  // Multiplier applied to the backend's target capacity of its balancing mode
+  capacityScaler float
+  // Backend description
+  description string
+  // Whether this is a failover backend
+  failover bool
+  // Fully-qualified URL of an instance group or network endpoint group determining what types of backends a load balancer supports
+  groupUrl string
+  // Maximum number of simultaneous connections
+  maxConnections int
+  // Maximum number of simultaneous connections per endpoint
+  maxConnectionsPerEndpoint int
+  // Maximum number of simultaneous connections per instance
+  maxConnectionsPerInstance int
+  // Maximum number of HTTP requests per second
+  maxRate int
+  // Maximum number for requests per second per endpoint
+  maxRatePerEndpoint float
+  // Maximum number for requests per second per instance
+  maxRatePerInstance float
+  // Target capacity for the utilization balancing mode
+  maxUtilization float
+}
+
+// GCP Compute backend service CDN policy
+private gcp.project.computeService.backendService.cdnPolicy {
+  // Internal ID
+  id string
+  // Bypass the cache when the specified request headers are matched
+  bypassCacheOnRequestHeaders []dict
+  // Cache key policy
+  cacheKeyPolicy dict
+  // Cache mode for all responses from this backend
+  cacheMode string
+  // Client maximum TTL
+  clientTtl int
+  // Default TTL for cached content
+  defaultTtl int
+  // Maximum allowed TTL for cached content
+  maxTtl int
+  // Negative caching allows per-status code TTLs to be set, in order to apply fine-grained caching for common errors or redirects
+  negativeCaching bool
+  // Negative caching policy
+  negativeCachingPolicy []dict
+  // Whether Cloud CDN will combine multiple concurrent cache fill requests into a small number of requests to the origin
+  requestCoalescing bool
+  // Serve existing content from the cache when revalidating content with the origin
+  serveWhileStale int
+  // Maximum number of seconds the response to a signed URL request will be considered fresh
+  signedUrlCacheMaxAgeSec int
+  // Names of the keys for signing request URLs
+  signedUrlKeyNames []string
 }
 
 // GCP Cloud Storage
