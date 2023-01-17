@@ -1597,6 +1597,10 @@ private gcp.project.loggingservice {
   projectId string
   // List of logging buckets
   buckets() []gcp.project.loggingservice.bucket
+  // List of metrics
+  metrics() []gcp.project.loggingservice.metric
+  // List of log sinks
+  sinks() []gcp.project.loggingservice.sink
 }
 
 // GCP Logging bucket
@@ -1635,6 +1639,34 @@ private gcp.project.loggingservice.bucket.indexConfig {
   fieldPath string
   // Type of data in this index
   type string
+}
+
+// GCP Logging metric
+private gcp.project.loggingservice.metric @defaults("description filter") {
+  // Metric ID
+  id string
+  // Project ID
+  projectId string
+  // Metric description
+  description string
+  // Advanced log filter
+  filter string
+}
+
+// GCP Logging sink
+private gcp.project.loggingservice.sink {
+  // Sink ID
+  id string
+  // Project ID
+  projectId string
+  // Export destination
+  destination string
+  // Optional advanced logs filter
+  filter string
+  // When exporting logs, logging adopts this identity for authorization
+  writerIdentity string
+  // Whether to allow the sink to export log entries from the organization or folder, plus (recursively) from any contained folders, billings accounts, or projects
+  includeChildren bool
 }
 
 // GCP IAM Resources
