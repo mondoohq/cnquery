@@ -312,6 +312,27 @@ func TestPrinter_Assessment(t *testing.T) {
 	})
 }
 
+func TestPrinter_Blocks(t *testing.T) {
+	runSimpleTests(t, []simpleTest{
+		{
+			"['a', 'b'] { x=_ \n x }",
+			"", // ignore
+			[]string{
+				strings.Join([]string{
+					"[",
+					"  0: {",
+					"    x: \"a\"",
+					"  }",
+					"  1: {",
+					"    x: \"b\"",
+					"  }",
+					"]",
+				}, "\n"),
+			},
+		},
+	})
+}
+
 func TestPrinter_Buggy(t *testing.T) {
 	runSimpleTests(t, []simpleTest{
 		{
