@@ -88,11 +88,29 @@ func (g *mqlGcpProjectDnsService) GetManagedZones() ([]interface{}, error) {
 		for i := range page.ManagedZones {
 			managedZone := page.ManagedZones[i]
 
+			var mqlDnssecCfg map[string]interface{}
+			if managedZone.DnssecConfig != nil {
+				keySpecs := make([]interface{}, 0, len(managedZone.DnssecConfig.DefaultKeySpecs))
+				for _, keySpec := range managedZone.DnssecConfig.DefaultKeySpecs {
+					keySpecs = append(keySpecs, map[string]interface{}{
+						"algorithm": keySpec.Algorithm,
+						"keyLength": keySpec.KeyLength,
+						"keyType":   keySpec.KeyType,
+					})
+				}
+				mqlDnssecCfg = map[string]interface{}{
+					"defaultKeySpecs": keySpecs,
+					"nonExistence":    managedZone.DnssecConfig.NonExistence,
+					"state":           managedZone.DnssecConfig.State,
+				}
+			}
+
 			mqlManagedZone, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.managedzone",
 				"id", strconv.FormatInt(int64(managedZone.Id), 10),
 				"projectId", projectId,
 				"name", managedZone.Name,
 				"description", managedZone.Description,
+				"dnssecConfig", mqlDnssecCfg,
 				"dnsName", managedZone.DnsName,
 				"nameServerSet", managedZone.NameServerSet,
 				"nameServers", core.StrSliceToInterface(managedZone.NameServers),

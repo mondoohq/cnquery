@@ -989,6 +989,8 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   name string
   // User-friendly description of the resource
   description string
+  // DNSSEC configuration
+  dnssecConfig dict
   // DNS name of this managed zone
   dnsName string
   //  Optionally specifies the NameServerSet for this ManagedZone
