@@ -201,7 +201,7 @@ func TestPrinter(t *testing.T) {
 		{
 			"a = 3\n if(true) {\n a == 3 \n}",
 			"-> block 1\n   entrypoints: [<1,2>]\n   1: 3\n   2: if bind: <0,0> type:block (true, => <2,0>, [\n     0: ref<1,1>\n   ])\n-> block 2\n   entrypoints: [<2,2>]\n   1: ref<1,1>\n   2: ==\x05 bind: <1,1> type:bool (3)\n",
-			[]string{"if: {\n   == 3: true\n}"},
+			[]string{"if: {\n  a == 3: true\n}"},
 		},
 		{
 			"mondoo",
@@ -325,6 +325,22 @@ func TestPrinter_Blocks(t *testing.T) {
 					"  }",
 					"  1: {",
 					"    x: \"b\"",
+					"  }",
+					"]",
+				}, "\n"),
+			},
+		},
+		{
+			"['a', 'b'] { x=_ \n x == 'a' }",
+			"", // ignore
+			[]string{
+				strings.Join([]string{
+					"[",
+					"  0: {",
+					"    x == \"a\": true",
+					"  }",
+					"  1: {",
+					"    x == \"a\": false",
 					"  }",
 					"]",
 				}, "\n"),
