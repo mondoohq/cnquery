@@ -1976,6 +1976,8 @@ private gcp.project.cloudRunService.operation @defaults("name") {
 
 // GCP Cloud Run service
 private gcp.project.cloudRunService.service @defaults("name") {
+  // Service identifier
+  id string
   // Project ID
   projectId string
   // Region
@@ -2002,10 +2004,6 @@ private gcp.project.cloudRunService.service @defaults("name") {
   creator string
   // Email address of the last authenticated modifier
   lastModifier string
-  // Arbitrary identifier for the API client
-  client string
-  // Arbitrary version identifier for the API client
-  clientVersion string
   // Ingress settings
   ingress string
   // Launch stage
@@ -2126,6 +2124,8 @@ private gcp.project.cloudRunService.condition @defaults("type state message") {
 
 // GCP Cloud Run job
 private gcp.project.cloudRunService.job {
+  // Job identifier
+  id string
   // Project ID
   projectId string
   // Region

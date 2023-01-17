@@ -34210,6 +34210,7 @@ type GcpProjectCloudRunServiceService interface {
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
+	Id() (string, error)
 	ProjectId() (string, error)
 	Region() (string, error)
 	Name() (string, error)
@@ -34223,8 +34224,6 @@ type GcpProjectCloudRunServiceService interface {
 	Expired() (*time.Time, error)
 	Creator() (string, error)
 	LastModifier() (string, error)
-	Client() (string, error)
-	ClientVersion() (string, error)
 	Ingress() (string, error)
 	LaunchStage() (string, error)
 	Template() (GcpProjectCloudRunServiceServiceRevisionTemplate, error)
@@ -34265,6 +34264,10 @@ func newGcpProjectCloudRunServiceService(runtime *resources.Runtime, args *resou
 		}
 
 		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
 		case "projectId":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service\", its \"projectId\" argument has the wrong type (expected type \"string\")")
@@ -34316,14 +34319,6 @@ func newGcpProjectCloudRunServiceService(runtime *resources.Runtime, args *resou
 		case "lastModifier":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service\", its \"lastModifier\" argument has the wrong type (expected type \"string\")")
-			}
-		case "client":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service\", its \"client\" argument has the wrong type (expected type \"string\")")
-			}
-		case "clientVersion":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service\", its \"clientVersion\" argument has the wrong type (expected type \"string\")")
 			}
 		case "ingress":
 			if _, ok := val.(string); !ok {
@@ -34400,6 +34395,9 @@ func newGcpProjectCloudRunServiceService(runtime *resources.Runtime, args *resou
 
 func (s *mqlGcpProjectCloudRunServiceService) Validate() error {
 	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudRunService.service\" resource without a \"id\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("projectId"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.service\" resource without a \"projectId\". This field is required.")
 	}
@@ -34438,12 +34436,6 @@ func (s *mqlGcpProjectCloudRunServiceService) Validate() error {
 	}
 	if _, ok := s.Cache.Load("lastModifier"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.service\" resource without a \"lastModifier\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("client"); !ok {
-		return errors.New("Initialized \"gcp.project.cloudRunService.service\" resource without a \"client\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("clientVersion"); !ok {
-		return errors.New("Initialized \"gcp.project.cloudRunService.service\" resource without a \"clientVersion\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("ingress"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.service\" resource without a \"ingress\". This field is required.")
@@ -34489,6 +34481,8 @@ func (s *mqlGcpProjectCloudRunServiceService) Validate() error {
 func (s *mqlGcpProjectCloudRunServiceService) Register(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.cloudRunService.service].Register")
 	switch name {
+	case "id":
+		return nil
 	case "projectId":
 		return nil
 	case "region":
@@ -34514,10 +34508,6 @@ func (s *mqlGcpProjectCloudRunServiceService) Register(name string) error {
 	case "creator":
 		return nil
 	case "lastModifier":
-		return nil
-	case "client":
-		return nil
-	case "clientVersion":
 		return nil
 	case "ingress":
 		return nil
@@ -34552,6 +34542,8 @@ func (s *mqlGcpProjectCloudRunServiceService) Register(name string) error {
 func (s *mqlGcpProjectCloudRunServiceService) Field(name string) (interface{}, error) {
 	log.Trace().Str("field", name).Msg("[gcp.project.cloudRunService.service].Field")
 	switch name {
+	case "id":
+		return s.Id()
 	case "projectId":
 		return s.ProjectId()
 	case "region":
@@ -34578,10 +34570,6 @@ func (s *mqlGcpProjectCloudRunServiceService) Field(name string) (interface{}, e
 		return s.Creator()
 	case "lastModifier":
 		return s.LastModifier()
-	case "client":
-		return s.Client()
-	case "clientVersion":
-		return s.ClientVersion()
 	case "ingress":
 		return s.Ingress()
 	case "launchStage":
@@ -34609,6 +34597,22 @@ func (s *mqlGcpProjectCloudRunServiceService) Field(name string) (interface{}, e
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cloudRunService.service\" resource")
 	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceService) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudRunService.service\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudRunService.service\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
 }
 
 // ProjectId accessor autogenerated
@@ -34819,38 +34823,6 @@ func (s *mqlGcpProjectCloudRunServiceService) LastModifier() (string, error) {
 	return tres, nil
 }
 
-// Client accessor autogenerated
-func (s *mqlGcpProjectCloudRunServiceService) Client() (string, error) {
-	res, ok := s.Cache.Load("client")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cloudRunService.service\" failed: no value provided for static field \"client\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cloudRunService.service\" failed to cast field \"client\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// ClientVersion accessor autogenerated
-func (s *mqlGcpProjectCloudRunServiceService) ClientVersion() (string, error) {
-	res, ok := s.Cache.Load("clientVersion")
-	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cloudRunService.service\" failed: no value provided for static field \"clientVersion\"")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cloudRunService.service\" failed to cast field \"clientVersion\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
 // Ingress accessor autogenerated
 func (s *mqlGcpProjectCloudRunServiceService) Ingress() (string, error) {
 	res, ok := s.Cache.Load("ingress")
@@ -35047,6 +35019,8 @@ func (s *mqlGcpProjectCloudRunServiceService) Reconciling() (bool, error) {
 func (s *mqlGcpProjectCloudRunServiceService) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.cloudRunService.service].MqlCompute")
 	switch name {
+	case "id":
+		return nil
 	case "projectId":
 		return nil
 	case "region":
@@ -35072,10 +35046,6 @@ func (s *mqlGcpProjectCloudRunServiceService) MqlCompute(name string) error {
 	case "creator":
 		return nil
 	case "lastModifier":
-		return nil
-	case "client":
-		return nil
-	case "clientVersion":
 		return nil
 	case "ingress":
 		return nil
@@ -36625,6 +36595,7 @@ type GcpProjectCloudRunServiceJob interface {
 	Field(string) (interface{}, error)
 	Register(string) error
 	Validate() error
+	Id() (string, error)
 	ProjectId() (string, error)
 	Region() (string, error)
 	Name() (string, error)
@@ -36674,6 +36645,10 @@ func newGcpProjectCloudRunServiceJob(runtime *resources.Runtime, args *resources
 		}
 
 		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
 		case "projectId":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job\", its \"projectId\" argument has the wrong type (expected type \"string\")")
@@ -36785,6 +36760,9 @@ func newGcpProjectCloudRunServiceJob(runtime *resources.Runtime, args *resources
 
 func (s *mqlGcpProjectCloudRunServiceJob) Validate() error {
 	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudRunService.job\" resource without a \"id\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("projectId"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.job\" resource without a \"projectId\". This field is required.")
 	}
@@ -36856,6 +36834,8 @@ func (s *mqlGcpProjectCloudRunServiceJob) Validate() error {
 func (s *mqlGcpProjectCloudRunServiceJob) Register(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.cloudRunService.job].Register")
 	switch name {
+	case "id":
+		return nil
 	case "projectId":
 		return nil
 	case "region":
@@ -36907,6 +36887,8 @@ func (s *mqlGcpProjectCloudRunServiceJob) Register(name string) error {
 func (s *mqlGcpProjectCloudRunServiceJob) Field(name string) (interface{}, error) {
 	log.Trace().Str("field", name).Msg("[gcp.project.cloudRunService.job].Field")
 	switch name {
+	case "id":
+		return s.Id()
 	case "projectId":
 		return s.ProjectId()
 	case "region":
@@ -36952,6 +36934,22 @@ func (s *mqlGcpProjectCloudRunServiceJob) Field(name string) (interface{}, error
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.cloudRunService.job\" resource")
 	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceJob) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudRunService.job\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudRunService.job\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
 }
 
 // ProjectId accessor autogenerated
@@ -37294,6 +37292,8 @@ func (s *mqlGcpProjectCloudRunServiceJob) Reconciling() (bool, error) {
 func (s *mqlGcpProjectCloudRunServiceJob) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.cloudRunService.job].MqlCompute")
 	switch name {
+	case "id":
+		return nil
 	case "projectId":
 		return nil
 	case "region":

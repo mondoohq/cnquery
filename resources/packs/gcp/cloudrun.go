@@ -65,27 +65,19 @@ func (g *mqlGcpProjectCloudRunServiceOperation) id() (string, error) {
 }
 
 func (g *mqlGcpProjectCloudRunServiceService) id() (string, error) {
-	projectId, err := g.ProjectId()
+	id, err := g.Id()
 	if err != nil {
 		return "", err
 	}
-	name, err := g.Name()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s", projectId, name), nil
+	return fmt.Sprintf("gcp.project.cloudRunService.service/%s", id), nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceJob) id() (string, error) {
-	projectId, err := g.ProjectId()
+	id, err := g.Id()
 	if err != nil {
 		return "", err
 	}
-	name, err := g.Name()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("gcp.project.cloudRunService.job/%s/%s", projectId, name), nil
+	return fmt.Sprintf("gcp.project.cloudRunService.job/%s", id), nil
 }
 
 func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) id() (string, error) {
@@ -314,15 +306,14 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 					})
 				}
 
-				serviceId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s", projectId, s.Name)
-				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, s.TerminalCondition, serviceId, "terminal")
+				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, s.TerminalCondition, s.Name, "terminal")
 				if err != nil {
 					log.Error().Err(err).Send()
 				}
 
 				mqlConditions := make([]interface{}, 0, len(s.Conditions))
 				for i, c := range s.Conditions {
-					mqlCondition, err := mqlCondition(g.MotorRuntime, c, serviceId, fmt.Sprintf("%d", i))
+					mqlCondition, err := mqlCondition(g.MotorRuntime, c, s.Name, fmt.Sprintf("%d", i))
 					if err != nil {
 						log.Error().Err(err).Send()
 					}
@@ -341,9 +332,10 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 				}
 
 				mqlS, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.service",
+					"id", s.Name,
 					"projectId", projectId,
 					"region", region,
-					"name", s.Name,
+					"name", parseResourceName(s.Name),
 					"description", s.Description,
 					"generation", s.Generation,
 					"labels", core.StrMapToInterface(s.Labels),
@@ -354,8 +346,6 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 					"expired", core.MqlTime(s.ExpireTime.AsTime()),
 					"creator", s.Creator,
 					"lastModifier", s.LastModifier,
-					"client", s.Client,
-					"clientVersion", s.ClientVersion,
 					"ingress", s.Ingress.String(),
 					"launchStage", s.LaunchStage.String(),
 					"template", mqlTemplate,
@@ -428,10 +418,9 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 					return
 				}
 
-				jobId := fmt.Sprintf("gcp.project.cloudRunService.job/%s/%s", projectId, j.Name)
 				var mqlTemplate resources.ResourceType
 				if j.Template != nil {
-					templateId := fmt.Sprintf("%s/executionTemplate", jobId)
+					templateId := fmt.Sprintf("%s/executionTemplate", j.Name)
 					var mqlTaskTemplate resources.ResourceType
 					if j.Template.Template != nil {
 						vpcAccess, err := mqlVpcAccess(j.Template.Template.VpcAccess)
@@ -477,7 +466,7 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 					}
 				}
 
-				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, j.TerminalCondition, jobId, "terminal")
+				mqlTerminalCondition, err := mqlCondition(g.MotorRuntime, j.TerminalCondition, j.Name, "terminal")
 				if err != nil {
 					log.Error().Err(err).Send()
 					return
@@ -485,7 +474,7 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 
 				mqlConditions := make([]interface{}, 0, len(j.Conditions))
 				for i, c := range j.Conditions {
-					mqlCondition, err := mqlCondition(g.MotorRuntime, c, jobId, fmt.Sprintf("%d", i))
+					mqlCondition, err := mqlCondition(g.MotorRuntime, c, j.Name, fmt.Sprintf("%d", i))
 					if err != nil {
 						log.Error().Err(err).Send()
 						return
@@ -494,9 +483,10 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 				}
 
 				mqlJob, err := g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job",
+					"id", j.Name,
 					"projectId", projectId,
 					"region", region,
-					"name", j.Name,
+					"name", parseResourceName(j.Name),
 					"generation", j.Generation,
 					"labels", core.StrMapToInterface(j.Labels),
 					"annotations", core.StrMapToInterface(j.Annotations),
