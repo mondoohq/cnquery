@@ -42,14 +42,8 @@ private git.gpgSignature @defaults("sha") {
   signature string
 }
 
-// GitHub Resource
-github {
-  repositories() []github.repository
-  user() github.user
-}
-
 // GitHub Organization
-github.organization @defaults("name") {
+github.organization @defaults("login name") {
   // Organization login
   login string
   // Organization ID
@@ -144,6 +138,8 @@ private github.user @defaults("id name") {
   suspendedAt time
   // User company
   company string
+  // User repositories
+  repositories() []github.repository
 }
 
 // GitHub Team
@@ -201,7 +197,7 @@ private github.package @defaults("id name") {
 }
 
 // GitHub Repository
-private github.repository @defaults("id name") {
+private github.repository @defaults("fullName") {
   init(name string) // can only be used when logged in to github as a user
   // Repository ID
   id int
