@@ -9,8 +9,10 @@ require (
 	cloud.google.com/go/iam v0.7.0
 	cloud.google.com/go/kms v1.6.0
 	cloud.google.com/go/logging v1.6.1
+	cloud.google.com/go/longrunning v0.3.0
 	cloud.google.com/go/pubsub v1.28.0
 	cloud.google.com/go/recommender v1.8.0
+	cloud.google.com/go/run v0.5.0
 	cloud.google.com/go/secretmanager v1.9.0
 	cloud.google.com/go/serviceusage v1.4.0
 	github.com/99designs/keyring v1.2.1
@@ -173,7 +175,7 @@ require (
 	golang.org/x/tools v0.3.0
 	google.golang.org/api v0.103.0
 	google.golang.org/genproto v0.0.0-20221202195650-67e5cbc046fd
-	google.golang.org/grpc v1.50.1
+	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -196,7 +198,6 @@ require (
 	cloud.google.com/go v0.105.0 // indirect
 	cloud.google.com/go/compute v1.13.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
-	cloud.google.com/go/longrunning v0.3.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/Antonboom/errname v0.1.7 // indirect
