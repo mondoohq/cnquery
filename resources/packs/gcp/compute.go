@@ -1098,6 +1098,15 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) id() (string, error) {
 	return "gcloud.compute.subnetwork/" + id, nil
 }
 
+func (g *mqlGcpProjectComputeServiceSubnetworkLogConfig) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", nil
+	}
+
+	return "gcloud.compute.subnetwork.logConfig/" + id, nil
+}
+
 func (g *mqlGcpProjectComputeServiceSubnetwork) GetRegion() (interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -1166,8 +1175,26 @@ func newMqlRegion(runtime *resources.Runtime, r *compute.Region) (interface{}, e
 }
 
 func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *compute.Subnetwork, region GcpProjectComputeServiceRegion) (interface{}, error) {
+	subnetId := strconv.FormatUint(subnetwork.Id, 10)
+	var mqlLogConfig resources.ResourceType
+	var err error
+	if subnetwork.LogConfig != nil {
+		mqlLogConfig, err = runtime.CreateResource("gcp.project.computeService.subnetwork.logConfig",
+			"id", fmt.Sprintf("%s/logConfig", subnetId),
+			"aggregationInterval", subnetwork.LogConfig.AggregationInterval,
+			"enable", subnetwork.LogConfig.Enable,
+			"filterExpression", subnetwork.LogConfig.FilterExpr,
+			"flowSampling", subnetwork.LogConfig.FlowSampling,
+			"metadata", subnetwork.LogConfig.Metadata,
+			"metadataFields", core.StrSliceToInterface(subnetwork.LogConfig.MetadataFields),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	args := []interface{}{
-		"id", strconv.FormatUint(subnetwork.Id, 10),
+		"id", subnetId,
 		"projectId", projectId,
 		"name", subnetwork.Name,
 		"description", subnetwork.Description,
@@ -1179,6 +1206,7 @@ func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *
 		"ipCidrRange", subnetwork.IpCidrRange,
 		"ipv6AccessType", subnetwork.Ipv6AccessType,
 		"ipv6CidrRange", subnetwork.Ipv6CidrRange,
+		"logConfig", mqlLogConfig,
 		"privateIpGoogleAccess", subnetwork.PrivateIpGoogleAccess,
 		"privateIpv6GoogleAccess", subnetwork.PrivateIpv6GoogleAccess,
 		"purpose", subnetwork.Purpose,
