@@ -15,14 +15,42 @@ import (
 )
 
 const (
-	DiscoveryAccounts  = "accounts"
-	DiscoveryInstances = "instances"
-	// deprecated: use DiscoverySSMInstances instead
-	DiscoverySSM          = "ssm"
+	DiscoveryInstances    = "instances"
+	DiscoverySSM          = "ssm" // deprecated: use DiscoverySSMInstances instead
 	DiscoverySSMInstances = "ssm-instances"
 	DiscoveryECR          = "ecr"
-	DiscoveryECS          = "ecs"
+	// api-only scan
+	DiscoveryAccounts       = "accounts"
+	DiscoveryResources      = "resources"
+	DiscoveryECS            = "ecs" // todo move to mql, add policy
+	DiscoveryS3             = "s3"
+	DiscoveryCloudtrail     = "cloudtrail"
+	DiscoveryRds            = "rds"
+	DiscoveryVPC            = "vpc"
+	DiscoverySecurityGroups = "security-groups"
+	DiscoveryUsers          = "users"
+	DiscoveryGroups         = "groups"
+	DiscoveryCloudwatch     = "cloudwatch"
+	DiscoveryLambda         = "lambda"
+	DiscoveryDynamoDB       = "dynamodb"
+	DiscoveryRedshift       = "redshift"
+	DiscoveryVolumes        = "volumes"
+	DiscoverySnapshots      = "snapshots"
+	DiscoveryEFS            = "efs"       // todo resource, policy complete
+	DiscoveryAPIGateway     = "gateway"   // todo resource, policy complete
+	DiscoveryELB            = "elb"       // todo resource, policy complete
+	DiscoveryES             = "es"        // todo resource, policy complete
+	DiscoveryKMS            = "kms"       // todo resource, policy complete
+	DiscoverySagemaker      = "sagemaker" // todo resource, policy complete
 )
+
+var ResourceDiscoveryTargets = []string{
+	DiscoveryResources, DiscoveryS3, DiscoveryCloudtrail, DiscoveryRds,
+	DiscoveryVPC, DiscoverySecurityGroups, DiscoveryUsers, DiscoveryGroups,
+	DiscoveryCloudwatch, DiscoveryLambda, DiscoveryDynamoDB, DiscoveryRedshift,
+	DiscoveryVolumes, DiscoverySnapshots, DiscoveryEFS, DiscoveryECS,
+	DiscoveryAPIGateway, DiscoveryELB, DiscoveryES, DiscoveryKMS, DiscoverySagemaker,
+}
 
 type Resolver struct{}
 
@@ -31,7 +59,13 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances, DiscoveryECR, DiscoveryECS}
+	discovery := []string{
+		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts,
+		DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances,
+		DiscoveryECR, DiscoveryECS,
+	}
+	discovery = append(discovery, ResourceDiscoveryTargets...)
+	return discovery
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -88,6 +122,21 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	discoverFilter := map[string]string{}
 	if tc.Discover != nil {
 		discoverFilter = tc.Discover.Filter
+	}
+
+	// resources as assets
+	if tc.IncludesOneOfDiscoveryTarget(ResourceDiscoveryTargets...) { // todo: add auto, all when policies are ready
+		assetList, err := GatherMQLObjects(provider, tc.Clone(), info.ID)
+		if err != nil {
+			return nil, err
+		}
+		for i := range assetList {
+			a := assetList[i]
+			if resolvedRoot != nil {
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			}
+			resolved = append(resolved, a)
+		}
 	}
 
 	instancesPlatformIdsMap := map[string]*asset.Asset{}

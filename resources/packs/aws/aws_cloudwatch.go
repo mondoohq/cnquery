@@ -695,6 +695,7 @@ func (t *mqlAwsCloudwatch) getLogGroups(provider *aws_provider.Provider) []*jobp
 					args := []interface{}{
 						"arn", core.ToString(loggroup.Arn),
 						"name", core.ToString(loggroup.LogGroupName),
+						"region", regionVal,
 					}
 					// add kms key if there is one
 					if loggroup.KmsKeyId != nil {
@@ -727,6 +728,12 @@ func (c *mqlAwsCloudwatchLoggroup) init(args *resources.Args) (*resources.Args, 
 		return args, nil, nil
 	}
 
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(c.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
 	if (*args)["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch cloudwatch log group")
 	}

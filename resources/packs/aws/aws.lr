@@ -644,6 +644,8 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   metricsFilters() []aws.cloudwatch.loggroup.metricsfilter
   // KMS key used for log encryption
   kmsKey() aws.kms.key
+  // Region where the loggroup is stored
+  region string
 }
 
 // AWS CloudWatch Log Group Metrics Filter
@@ -1296,6 +1298,8 @@ private aws.ec2.volume @defaults("arn") {
   volumeType string
   // Time the volume was created
   createTime time
+  // Region where the EC2 volume is stored
+  region string
 }
 
 // Amazon EC2 Instance

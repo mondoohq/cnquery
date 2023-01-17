@@ -158,6 +158,13 @@ func (p *mqlAwsVpc) init(args *resources.Args) (*resources.Args, AwsVpc, error) 
 		return args, nil, nil
 	}
 
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
 	if (*args)["arn"] == nil && (*args)["id"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws vpc")
 	}

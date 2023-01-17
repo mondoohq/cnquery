@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -86,7 +87,10 @@ func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
 	}
 
 	t.config = cfg
-
+	var override string
+	if pCfg.Options != nil {
+		override = pCfg.Options["platform-override"]
+	}
 	// gather information about the aws account
 	identity, err := CheckIam(t.config)
 	if err != nil {
@@ -99,9 +103,10 @@ func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
 		}
 	} else {
 		t.info = Info{
-			Account: toString(identity.Account),
-			Arn:     toString(identity.Arn),
-			UserId:  toString(identity.UserId),
+			Account:          toString(identity.Account),
+			Arn:              toString(identity.Arn),
+			UserId:           toString(identity.UserId),
+			PlatformOverride: override,
 		}
 	}
 
@@ -116,9 +121,10 @@ func toString(i *string) string {
 }
 
 type Info struct {
-	Account string
-	Arn     string
-	UserId  string
+	Account          string
+	Arn              string
+	UserId           string
+	PlatformOverride string
 }
 
 type Provider struct {
@@ -143,6 +149,10 @@ func (p *Provider) Config() aws_sdk.Config {
 
 func (p *Provider) Kind() providers.Kind {
 	return providers.Kind_KIND_API
+}
+
+func (p *Provider) PlatformInfo() *platform.Platform {
+	return getPlatformForObject(p.info.PlatformOverride)
 }
 
 func (p *Provider) Runtime() string {
@@ -215,3 +225,28 @@ func (c *Cache) Load(key string) (*CacheEntry, bool) {
 
 // Delete a Cache Entry
 func (c *Cache) Delete(key string) { c.Map.Delete(key) }
+
+func getPlatformForObject(platformName string) *platform.Platform {
+	if platformName != "aws" && platformName != "" {
+		return &platform.Platform{
+			Name:    platformName,
+			Title:   getTitleForPlatformName(platformName),
+			Kind:    providers.Kind_KIND_AWS_OBJECT,
+			Runtime: providers.RUNTIME_AWS,
+		}
+	}
+	return &platform.Platform{
+		Name:    "aws",
+		Title:   "Amazon Web Services",
+		Kind:    providers.Kind_KIND_API,
+		Runtime: providers.RUNTIME_AWS,
+	}
+}
+
+func getTitleForPlatformName(name string) string {
+	switch name {
+	case "aws-s3-bucket":
+		return "AWS S3 Bucket"
+	}
+	return "AWS"
+}

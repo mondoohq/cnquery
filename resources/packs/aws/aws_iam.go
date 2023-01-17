@@ -734,6 +734,12 @@ func (p *mqlAwsIamUser) init(args *resources.Args) (*resources.Args, AwsIamUser,
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
 
 	if (*args)["arn"] == nil && (*args)["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam user")
@@ -1376,7 +1382,12 @@ func (p *mqlAwsIamGroup) init(args *resources.Args) (*resources.Args, AwsIamGrou
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
-
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
 	if (*args)["arn"] == nil && (*args)["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam group")
 	}
