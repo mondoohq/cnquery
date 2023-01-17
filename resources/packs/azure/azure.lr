@@ -134,6 +134,8 @@ private azuread.serviceprincipal @defaults("id") {
 azure {
   // Get all the resources in a subscription
   resources() []azure.resource
+  // Get all the resource groups in a subscription
+  resourceGroups() []azure.resourcegroup
 }
 
 // Azure Resource
@@ -164,6 +166,24 @@ private azure.resource @defaults("id name location") {
   createdTime time
   // Resource change time
   changedTime time
+}
+
+// Azure Resource Group
+private azure.resourcegroup @defaults("name location") {
+  // Resource Group ID
+  id string
+  // Resource Group name
+  name string
+  // Resource Group location
+  location string
+  // Resource Group tags
+  tags map[string]string
+  // Resource Group type
+  type string
+  // Resource Group managed by
+  managedBy string
+  // Resource Group provisioning state
+  provisioningState string
 }
 
 // Azure Compute

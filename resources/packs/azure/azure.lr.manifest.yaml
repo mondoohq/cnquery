@@ -2,6 +2,7 @@ resources:
   azure:
     fields:
       cloudDefender: {}
+      resourceGroups: {}
       resources: {}
     min_mondoo_version: latest
     platform:
@@ -469,6 +470,20 @@ resources:
       plan: {}
       provisioningState: {}
       sku: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.resourcegroup:
+    fields:
+      id: {}
+      location: {}
+      managedBy: {}
+      name: {}
+      provisioningState: {}
       tags: {}
       type: {}
     is_private: true
