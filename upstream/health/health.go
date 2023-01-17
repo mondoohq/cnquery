@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -21,18 +20,18 @@ type Status struct {
 	Warnings []string `json:"warnings,omitempty"`
 }
 
-func CheckApiHealth(endpoint string) Status {
+func CheckApiHealth(endpoint string) (Status, error) {
 	status := Status{}
 	status.API.Endpoint = endpoint
 
 	sendTime := time.Now()
 	healthClient, err := NewHealthClient(endpoint, ranger.DefaultHttpClient())
 	if err != nil {
-		log.Error().Err(err).Msg("could not run api health check")
+		return status, err
 	}
 	healthResp, err := healthClient.Check(context.Background(), &HealthCheckRequest{})
 	if err != nil {
-		log.Error().Err(err).Msg("could not run api health check")
+		return status, err
 	} else {
 		status.API.Status = healthResp.Status.String()
 		status.API.Timestamp = healthResp.Time
@@ -55,7 +54,7 @@ func CheckApiHealth(endpoint string) Status {
 			}
 		}
 	}
-	return status
+	return status, nil
 }
 
 func abs(a time.Duration) time.Duration {
