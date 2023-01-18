@@ -994,7 +994,7 @@ private gcp.project.bigqueryService {
 }
 
 // GCP BigQuery dataset
-private gcp.project.bigqueryService.dataset @defaults("id"){
+private gcp.project.bigqueryService.dataset @defaults("name") {
   // Dataset ID
   id string
   // Project ID
@@ -1015,12 +1015,34 @@ private gcp.project.bigqueryService.dataset @defaults("id"){
   tags map[string]string
   // Cloud KMS encryption key that will be used to protect BigQuery table
   kmsName string
+  // Access permissions
+  access []gcp.project.bigqueryService.dataset.accessEntry
   // Returns tables in the Dataset
   tables() []gcp.project.bigqueryService.table
   // Returns models in the Dataset
   models() []gcp.project.bigqueryService.model
   // Returns routines in the Dataset
   routines() []gcp.project.bigqueryService.routine
+}
+
+// GCP BigQuery dataset access entry
+private gcp.project.bigqueryService.dataset.accessEntry {
+  // Internal ID
+  id string
+  // Dataset ID
+  datasetId string
+  // Role of the entity
+  role string
+  // Type of the entity
+  entityType string
+  // Entity (individual or group) granted access
+  entity string
+  // View granted access (entityType must be ViewEntity)
+  viewRef dict
+  // Routine granted access (only UDF currently supported)
+  routineRef dict
+  // Resources within a dataset granted access
+  datasetRef dict
 }
 
 // GCP BigQuery table
