@@ -45,6 +45,7 @@ gcp.project @defaults("name") {
   createTime() time
   // The labels associated with this project
   labels() map[string]string
+  // IAM policy
   iamPolicy() []gcp.resourcemanager.binding
   // List of available and enabled services for project
   services() []gcp.service
@@ -129,9 +130,12 @@ gcp.recommendation {
 }
 
 // GCP Resource Manager Binding
-gcp.resourcemanager.binding {
+private gcp.resourcemanager.binding {
+  // Internal ID
   id string
+  // Principals requesting access for a Google Cloud resource
   members []string
+  // Role assigned to the list of members or principals
   role string
 }
 
