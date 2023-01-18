@@ -25,6 +25,8 @@ gcp.organization @defaults("id") {
   lifecycleState string
   // Organization IAM policy
   iamPolicy() []gcp.resourcemanager.binding
+  // Access approval settings
+  accessApprovalSettings() gcp.accessApprovalSettings
 }
 
 // Google Cloud Platform Project
@@ -78,6 +80,8 @@ gcp.project @defaults("name") {
   dataproc() gcp.project.dataprocService
   // GCP Cloud Run Resources
   cloudRun() gcp.project.cloudRunService
+  // Access approval settings
+  accessApprovalSettings() gcp.accessApprovalSettings
 }
 
 // GCP Service
@@ -2414,4 +2418,22 @@ private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   encryptionKey string
   // Number of retries allowed per task
   maxRetries int
+}
+
+// GCP access approval settings
+private gcp.accessApprovalSettings {
+  // Resource path
+  resourcePath string
+  // List of email addresses to which notifications relating to approval requests should be sent
+  notificationEmails []string
+  // List of Google Cloud services for which the given resource has access approval enrolled
+  enrolledServices []dict
+  // Whether at least one service is enrolled for access approval in one or more ancestors of the project or folder (unset for organizations since organizations do not have ancestors)
+  enrolledAncestor bool
+  // Asymmetric crypto key version to use for signing approval requests
+  activeKeyVersion string
+  // Whether an ancestor of this project or folder has set active key version (unset for organizations since organizations do not have ancestors)
+  ancestorHasActiveKeyVersion bool
+  // Whether there is some configuration issue with the active key version configured at this level of the resource hierarchy
+  invalidKeyVersion bool
 }
