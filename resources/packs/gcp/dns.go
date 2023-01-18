@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/cnquery/resources"
 
@@ -172,6 +173,12 @@ func (g *mqlGcpProjectDnsService) GetPolicies() ([]interface{}, error) {
 		for i := range page.Policies {
 			policy := page.Policies[i]
 
+			networkNames := make([]interface{}, 0, len(policy.Networks))
+			for _, network := range policy.Networks {
+				segments := strings.Split(network.NetworkUrl, "/")
+				networkNames = append(networkNames, segments[len(segments)-1])
+			}
+
 			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.policy",
 				"projectId", projectId,
 				"id", strconv.FormatInt(int64(policy.Id), 10),
@@ -179,6 +186,7 @@ func (g *mqlGcpProjectDnsService) GetPolicies() ([]interface{}, error) {
 				"description", policy.Description,
 				"enableInboundForwarding", policy.EnableInboundForwarding,
 				"enableLogging", policy.EnableLogging,
+				"networkNames", networkNames,
 			)
 			if err != nil {
 				return err
@@ -190,6 +198,43 @@ func (g *mqlGcpProjectDnsService) GetPolicies() ([]interface{}, error) {
 		return nil, err
 	}
 
+	return res, nil
+}
+
+func (g *mqlGcpProjectDnsServicePolicy) GetNetworks() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	networkNames, err := g.NetworkNames()
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", projectId)
+	if err != nil {
+		return nil, err
+	}
+	gcpCompute := obj.(GcpProjectComputeService)
+	networks, err := gcpCompute.Networks()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]interface{}, 0, len(networkNames))
+	for _, network := range networks {
+		networkName, err := network.(GcpProjectComputeServiceNetwork).Name()
+		if err != nil {
+			return nil, err
+		}
+		for _, name := range networkNames {
+			if name == networkName {
+				res = append(res, network)
+				break
+			}
+		}
+	}
 	return res, nil
 }
 
