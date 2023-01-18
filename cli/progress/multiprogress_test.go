@@ -40,7 +40,7 @@ func TestMultiProgressBarSingleAsset(t *testing.T) {
 	var buf bytes.Buffer
 
 	progressBarElements := map[string]string{"1": "test1"}
-	progressProgram, err := newMultiProgressMockProgram(progressBarElements, []string{"1", "2", "3"}, 30, &in, &buf)
+	progressProgram, err := newMultiProgressMockProgram(progressBarElements, []string{"1"}, 30, &in, &buf)
 	require.NoError(t, err)
 
 	go func() {
