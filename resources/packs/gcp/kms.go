@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/cloud/location"
+	iampb "google.golang.org/genproto/googleapis/iam/v1"
 )
 
 func (g *mqlGcpProjectKmsService) id() (string, error) {
@@ -332,6 +334,49 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetVersions() ([]interface{}, 
 		versions = append(versions, mqlVersion)
 	}
 	return versions, nil
+}
+
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() ([]interface{}, error) {
+	cryptokey, err := g.ResourcePath()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := provider.Credentials(kms.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	kmsSvc, err := kms.NewKeyManagementClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	defer kmsSvc.Close()
+
+	policy, err := kmsSvc.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: cryptokey})
+	if err != nil {
+		return nil, err
+	}
+	res := make([]interface{}, 0, len(policy.Bindings))
+	for i, b := range policy.Bindings {
+		mqlBinding, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
+			"id", cryptokey+"-"+strconv.Itoa(i),
+			"role", b.Role,
+			"members", core.StrSliceToInterface(b.Members),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlBinding)
+	}
+	return res, nil
 }
 
 func cryptoKeyVersionToMql(runtime *resources.Runtime, v *kmspb.CryptoKeyVersion) (resources.ResourceType, error) {

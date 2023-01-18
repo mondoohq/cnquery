@@ -1632,6 +1632,8 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
   cryptoKeyBackend string
   // List of cryptokey versions
   versions() []gcp.project.kmsService.keyring.cryptokey.version
+  // Crypto key IAM policy
+  iamPolicy() []gcp.resourcemanager.binding
 }
 
 // GCP KMS crypto key version
