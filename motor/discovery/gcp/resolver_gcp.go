@@ -26,7 +26,7 @@ func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *provid
 	if tc.Options != nil && (tc.Options["organization"] != "" || tc.Options["organization-id"] != "") {
 		// ^^
 		// discover the full organization
-		return (&GcpOrgResolver{}).Resolve(tc, cfn, sfn, userIdDetectors...)
+		return (&GcpOrgResolver{}).Resolve(ctx, tc, cfn, sfn, userIdDetectors...)
 	} else {
 		// when the user has not provided a project, check if we got a project or try to determine it
 		// FIXME: DEPRECATED, update in v8.0 vv
@@ -45,6 +45,6 @@ func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *provid
 		}
 
 		// assume it is the local project
-		return (&GcpProjectResolver{}).Resolve(tc, cfn, sfn, userIdDetectors...)
+		return (&GcpProjectResolver{}).Resolve(ctx, tc, cfn, sfn, userIdDetectors...)
 	}
 }

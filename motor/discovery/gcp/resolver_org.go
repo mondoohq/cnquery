@@ -1,6 +1,8 @@
 package gcp
 
 import (
+	"context"
+
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -17,7 +19,7 @@ func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects}
 }
 
-func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// FIXME: DEPRECATED, update in v8.0 vv
@@ -76,7 +78,7 @@ func (r *GcpOrgResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, 
 				"project-id": project.ProjectId,
 			}
 
-			assets, err := (&GcpProjectResolver{}).Resolve(projectConfig, cfn, sfn, userIdDetectors...)
+			assets, err := (&GcpProjectResolver{}).Resolve(ctx, projectConfig, cfn, sfn, userIdDetectors...)
 			if err != nil {
 				return nil, err
 			}

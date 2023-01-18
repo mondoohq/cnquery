@@ -14,14 +14,17 @@ import (
 
 func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, error) {
 	ctx := context.Background()
+	credParams := googleoauth.CredentialsParams{
+		Scopes:  scopes,
+		Subject: t.serviceAccountSubject,
+	}
+	if t.cred != nil {
+		// use service account from secret
+		return googleoauth.CredentialsFromJSONWithParams(ctx, t.cred.Secret, credParams)
+	}
 
 	if t.serviceAccountSubject != "" {
 		// use custom service account provided by user
-		credParams := googleoauth.CredentialsParams{
-			Scopes:  scopes,
-			Subject: t.serviceAccountSubject,
-		}
-
 		return googleoauth.CredentialsFromJSONWithParams(ctx, t.serviceAccount, credParams)
 	}
 
@@ -32,6 +35,11 @@ func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, erro
 
 func (t *Provider) Client(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
+
+	// use service account from secret if one is provided
+	if t.cred != nil {
+		return serviceAccountAuth(ctx, t.serviceAccountSubject, t.cred.Secret, scope...)
+	}
 
 	// use service account authentication if we loaded a service account
 	if t.serviceAccount != nil {

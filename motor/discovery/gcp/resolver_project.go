@@ -1,6 +1,8 @@
 package gcp
 
 import (
+	"context"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -8,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
+	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -21,7 +24,7 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
 }
 
-func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// FIXME: DEPRECATED, update in v8.0 vv
@@ -31,9 +34,15 @@ func (r *GcpProjectResolver) Resolve(tc *providers.Config, cfn common.Credential
 		return resolved, nil
 	}
 
-	provider, err := gcp_provider.New(tc)
+	// Note: we use the resolver instead of the direct gcp_provider.New to resolve credentials properly
+	m, err := resolver.NewMotorConnection(ctx, tc, cfn)
 	if err != nil {
 		return nil, err
+	}
+	defer m.Close()
+	provider, ok := m.Provider.(*gcp_provider.Provider)
+	if !ok {
+		return nil, errors.New("could not create gcp provider")
 	}
 
 	identifier, err := provider.Identifier()
