@@ -3,7 +3,6 @@ package progress
 import (
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 	"sync"
 
@@ -60,6 +59,7 @@ type modelMultiProgress struct {
 	Progress       map[string]*modelProgress
 	maxNameWidth   int
 	maxItemsToShow int
+	orderedKeys    []string
 }
 
 func newProgressBar() progress.Model {
@@ -78,10 +78,15 @@ func newProgressBar() progress.Model {
 // This is a wrapper around a tea.Programm.
 // The key of the map is used to identify the progress bar.
 // The value of the map is used as the name displayed for the progress bar.
-func NewMultiProgressProgram(elements map[string]string, progressNumAssets int) Program {
+// orderedKeys is used to define the order of the progress bars.
+func NewMultiProgressProgram(elements map[string]string, orderedKeys []string, progressNumAssets int) (Program, error) {
+	if len(elements) != len(orderedKeys) {
+		return nil, fmt.Errorf("number of elements and orderedKeys must be equal")
+	}
 	m := newMultiProgress(elements)
 	m.maxItemsToShow = progressNumAssets
-	return tea.NewProgram(m)
+	m.orderedKeys = orderedKeys
+	return tea.NewProgram(m), nil
 }
 
 // This is only needed for testing.
@@ -244,33 +249,21 @@ func (m modelMultiProgress) View() string {
 
 	completedAssets := 0
 	erroredAssets := 0
-	keys := []string{}
-	for k := range m.Progress {
-		if k == overallProgressIndexName {
-			continue
-		}
-		keys = append(keys, k)
-		if m.Progress[k].Completed {
-			completedAssets++
-		} else if m.Progress[k].Errored {
-			erroredAssets++
-		}
-	}
-
-	sort.Strings(keys)
-	keys = append(keys, overallProgressIndexName)
-
 	i := 1
-	for _, k := range keys {
+	for _, k := range m.orderedKeys {
 		if k != overallProgressIndexName {
 			if m.Progress[k].Errored {
 				output += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
+				erroredAssets++
 			} else {
 				output += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
 			}
-			if m.Progress[k].Completed && k != overallProgressIndexName && m.Progress[k].Score != "" {
-				pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
-				output += pad + " score: " + m.Progress[k].Score
+			if m.Progress[k].Completed {
+				completedAssets++
+				if m.Progress[k].Score != "" {
+					pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
+					output += pad + " score: " + m.Progress[k].Score
+				}
 			}
 		}
 		output += "\n" + pad
@@ -279,8 +272,8 @@ func (m modelMultiProgress) View() string {
 		}
 		i++
 	}
-	if m.maxItemsToShow > 0 && len(keys) > m.maxItemsToShow+1 {
-		output += fmt.Sprintf("... %d more assets ...\n%s", len(keys)-m.maxItemsToShow-1, pad)
+	if m.maxItemsToShow > 0 && len(m.orderedKeys) > m.maxItemsToShow+1 {
+		output += fmt.Sprintf("... %d more assets ...\n%s", len(m.orderedKeys)-m.maxItemsToShow-1, pad)
 	}
 
 	if _, ok := m.Progress[overallProgressIndexName]; ok {

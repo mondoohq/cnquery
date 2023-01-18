@@ -193,12 +193,17 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	}
 
 	progressBarElements := map[string]string{}
+	orderedKeys := []string{}
 	for i := range assetList {
 		progressBarElements[assetList[i].Mrn] = assetList[i].Name
+		orderedKeys = append(orderedKeys, assetList[i].Mrn)
 	}
 	var progressProg progress.Program
 	if isatty.IsTerminal(os.Stdout.Fd()) {
-		progressProg = progress.NewMultiProgressProgram(progressBarElements, int(job.ProgressNumAssets))
+		progressProg, err = progress.NewMultiProgressProgram(progressBarElements, orderedKeys, int(job.ProgressNumAssets))
+		if err != nil {
+			return nil, false, errors.Wrap(err, "failed to create progress bars")
+		}
 	} else {
 		progressProg = progress.NoopProgram{}
 	}
