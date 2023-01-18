@@ -7,13 +7,14 @@ alias gcp.compute = gcp.project.computeService
 alias gcloud.compute = gcp.project.computeService
 alias gcloud.compute.instance = gcp.project.computeService.instance
 alias gcloud.compute.serviceaccount = gcp.project.computeService.serviceaccount
-alias gcloud.storage = gcp.storage
-alias gcloud.storage.bucket = gcp.storage.bucket
+alias gcloud.storage = gcp.project.storageService
+alias gcloud.storage.bucket = gcp.project.storageService.bucket
 alias gcloud.sql = gcp.project.sqlService
 alias gcp.sql = gcp.project.sqlService
 alias gcloud.sql.instance = gcp.project.sqlService.instance
 alias gcp.dns = gcp.project.dnsService
 alias gcp.bigquery = gcp.project.bigqueryService
+alias gcp.storage = gcp.project.storageService
 
 // GCP Cloud Organization
 gcp.organization @defaults("id") {
@@ -83,6 +84,8 @@ gcp.project @defaults("name") {
   cloudRun() gcp.project.cloudRunService
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
+  // GCP Storage resources
+  storage() gcp.project.storageService
 }
 
 // GCP Service
@@ -732,35 +735,41 @@ private gcp.project.computeService.backendService.cdnPolicy {
 }
 
 // GCP Cloud Storage
-gcp.storage {
+private gcp.project.storageService {
+  // Project ID
+  projectId string
   // List all buckets
-  buckets() []gcp.storage.bucket
+  buckets() []gcp.project.storageService.bucket
 }
 
 // GCP Cloud Storage Bucket
-private gcp.storage.bucket @defaults("id") {
-  //
+private gcp.project.storageService.bucket @defaults("id") {
+  // Bucket ID
   id string
-  //
+  // Project ID
+  projectId string
+  // Bucket name
   name string
-  //
+  // User-defined labels
   labels map[string]string
-  //
+  // Bucket location
   location string
-  //
+  // Bucket location type
   locationType string
-  // TODO: project number / project id / project name
+  // Project number
   projectNumber string 
-  //
+  // Default storage class
   storageClass string
-  //
+  // Creation timestamp
   created time
-  //
+  // Update timestamp
   updated time
-  //
+  // IAM policy
   iamPolicy() []gcp.resourcemanager.binding
-  //
+  // IAM configuration
   iamConfiguration dict
+  // Retention policy
+  retentionPolicy dict
 }
 
 // GCP Cloud SQL Resources

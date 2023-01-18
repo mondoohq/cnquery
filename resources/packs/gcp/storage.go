@@ -2,9 +2,11 @@ package gcp
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iam/v1"
@@ -12,11 +14,47 @@ import (
 	"google.golang.org/api/storage/v1"
 )
 
-func (g *mqlGcpStorage) id() (string, error) {
-	return "gcp.storage", nil
+func (g *mqlGcpProjectStorageService) id() (string, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("gcp.project.storageService/%s", projectId), nil
 }
 
-func (g *mqlGcpStorage) GetBuckets() ([]interface{}, error) {
+func (g *mqlGcpProjectStorageService) init(args *resources.Args) (*resources.Args, GcpProjectStorageService, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	projectId := provider.ResourceID()
+	(*args)["projectId"] = projectId
+
+	return args, nil, nil
+}
+
+func (g *mqlGcpProject) GetStorage() (interface{}, error) {
+	projectId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.storageService",
+		"projectId", projectId,
+	)
+}
+
+func (g *mqlGcpProjectStorageService) GetBuckets() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -39,11 +77,8 @@ func (g *mqlGcpStorage) GetBuckets() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
-
-	for i := range buckets.Items {
-		bucket := buckets.Items[i]
-
+	res := make([]interface{}, 0, len(buckets.Items))
+	for _, bucket := range buckets.Items {
 		created := parseTime(bucket.TimeCreated)
 		updated := parseTime(bucket.Updated)
 
@@ -83,8 +118,17 @@ func (g *mqlGcpStorage) GetBuckets() ([]interface{}, error) {
 			}
 		}
 
-		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.storage.bucket",
+		var retentionPolicy interface{}
+		if bucket.RetentionPolicy != nil {
+			retentionPolicy = map[string]interface{}{
+				"retentionPeriod": bucket.RetentionPolicy.RetentionPeriod,
+				"effectiveTime":   parseTime(bucket.RetentionPolicy.EffectiveTime),
+				"isLocked":        bucket.RetentionPolicy.IsLocked,
+			}
+		}
+		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.storageService.bucket",
 			"id", bucket.Id,
+			"projectId", projectId,
 			"name", bucket.Name,
 			"labels", core.StrMapToInterface(bucket.Labels),
 			"location", bucket.Location,
@@ -94,21 +138,30 @@ func (g *mqlGcpStorage) GetBuckets() ([]interface{}, error) {
 			"created", created,
 			"updated", updated,
 			"iamConfiguration", iamConfigurationDict,
+			"retentionPolicy", retentionPolicy,
 		)
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, mqlInstance)
 	}
-
 	return res, nil
 }
 
-func (g *mqlGcpStorageBucket) id() (string, error) {
-	return g.Name()
+func (g *mqlGcpProjectStorageServiceBucket) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("gcp.project.storageService.bucket/%s/%s", projectId, id), nil
 }
 
-func (g *mqlGcpStorageBucket) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProjectStorageServiceBucket) GetIamPolicy() ([]interface{}, error) {
 	bucketName, err := g.Name()
 	if err != nil {
 		return nil, err
