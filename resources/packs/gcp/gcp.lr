@@ -1204,7 +1204,7 @@ private gcp.project.dnsService.recordset @defaults("name") {
 }
 
 // Cloud DNS rules applied to one or more Virtual Private Cloud resources
-private gcp.project.dnsService.policy {
+private gcp.project.dnsService.policy @defaults("name") {
   // Project ID
   projectId string
   // Managed Zone ID
@@ -1217,6 +1217,10 @@ private gcp.project.dnsService.policy {
   enableInboundForwarding bool
   // Indicates if logging is enabled
   enableLogging bool
+  // List of network names specifying networks to which this policy is applied
+  networkNames []string
+  // List of networks to which this policy is applied
+  networks() []gcp.project.computeService.network
 }
 
 // GCP GKE
