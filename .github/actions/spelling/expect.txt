@@ -50,3 +50,7 @@ Vtpm
 vulnerabilityassessmentsettings
 wfascimprov
 wil
+Brotli
+cdn
+iap
+TTLs
