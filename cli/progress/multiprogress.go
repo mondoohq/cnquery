@@ -2,7 +2,6 @@ package progress
 
 import (
 	"fmt"
-	"io"
 	"strings"
 	"sync"
 
@@ -87,13 +86,6 @@ func NewMultiProgressProgram(elements map[string]string, orderedKeys []string, p
 	m.maxItemsToShow = progressNumAssets
 	m.orderedKeys = orderedKeys
 	return tea.NewProgram(m), nil
-}
-
-// This is only needed for testing.
-// This way we get the output without having a tty.
-func newMultiProgressMockProgram(elements map[string]string, input io.Reader, output io.Writer) Program {
-	m := newMultiProgress(elements)
-	return tea.NewProgram(m, tea.WithInput(input), tea.WithOutput(output))
 }
 
 func newMultiProgress(elements map[string]string) *modelMultiProgress {
@@ -249,21 +241,25 @@ func (m modelMultiProgress) View() string {
 
 	completedAssets := 0
 	erroredAssets := 0
+	for _, k := range m.orderedKeys {
+		if m.Progress[k].Errored {
+			erroredAssets++
+		}
+		if m.Progress[k].Completed {
+			completedAssets++
+		}
+	}
 	i := 1
 	for _, k := range m.orderedKeys {
 		if k != overallProgressIndexName {
 			if m.Progress[k].Errored {
 				output += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
-				erroredAssets++
 			} else {
 				output += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
 			}
-			if m.Progress[k].Completed {
-				completedAssets++
-				if m.Progress[k].Score != "" {
-					pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
-					output += pad + " score: " + m.Progress[k].Score
-				}
+			if m.Progress[k].Completed && m.Progress[k].Score != "" {
+				pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
+				output += pad + " score: " + m.Progress[k].Score
 			}
 		}
 		output += "\n" + pad
@@ -273,7 +269,7 @@ func (m modelMultiProgress) View() string {
 		i++
 	}
 	if m.maxItemsToShow > 0 && len(m.orderedKeys) > m.maxItemsToShow+1 {
-		output += fmt.Sprintf("... %d more assets ...\n%s", len(m.orderedKeys)-m.maxItemsToShow-1, pad)
+		output += fmt.Sprintf("... %d more assets ...\n%s", len(m.orderedKeys)-m.maxItemsToShow, pad)
 	}
 
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
