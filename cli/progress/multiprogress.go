@@ -252,13 +252,13 @@ func (m modelMultiProgress) View() string {
 	i := 1
 	for _, k := range m.orderedKeys {
 		if k != overallProgressIndexName {
+			pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
 			if m.Progress[k].Errored {
 				output += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
 			} else {
 				output += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
 			}
-			if m.Progress[k].Completed && m.Progress[k].Score != "" {
-				pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
+			if m.Progress[k].Score != "" {
 				output += pad + " score: " + m.Progress[k].Score
 			}
 		}
@@ -268,7 +268,7 @@ func (m modelMultiProgress) View() string {
 		}
 		i++
 	}
-	if m.maxItemsToShow > 0 && len(m.orderedKeys) > m.maxItemsToShow+1 {
+	if m.maxItemsToShow > 0 && len(m.orderedKeys) > m.maxItemsToShow {
 		output += fmt.Sprintf("... %d more assets ...\n%s", len(m.orderedKeys)-m.maxItemsToShow, pad)
 	}
 
