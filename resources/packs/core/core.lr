@@ -848,3 +848,7 @@ package @defaults("name version") {
 packages {
   []package
 }
+
+pythonPackages {
+  []package
+}

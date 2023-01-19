@@ -39,6 +39,12 @@ message AnalyseAssetRequest {
   Platform platform = 1;
   repeated Package packages = 2;
   string kernelVersion = 3;
+  map<string,ApplicationEcosystems> ecosystems = 4;
+}
+
+message ApplicationEcosystems {
+  string name = 1;
+  repeated Package packages = 2;
 }
 
 message VulnReport {

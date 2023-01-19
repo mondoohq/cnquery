@@ -82,6 +82,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 	}
 
 	apiPackages := []*mvd.Package{}
+	pyEcoPackages := []*mvd.Package{}
 	kernelVersion := ""
 
 	// collect pacakges if the platform supports gathering files
@@ -121,12 +122,45 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 		if err == nil {
 			kernelVersion = getKernelVersion(objKernel.(Kernel))
 		}
+
+		obj, err = r.CreateResource("pythonPackages")
+		if err != nil {
+			return nil, err
+		}
+		pythonPackages := obj.(PythonPackages)
+
+		pyPkgs, err := pythonPackages.List()
+		if err != nil {
+			return nil, err
+		}
+		for _, pyPkg := range pyPkgs {
+			pkg := pyPkg.(Package)
+			name, _ := pkg.Name()
+			version, _ := pkg.Version()
+			arch, _ := pkg.Arch()
+			format, _ := pkg.Format()
+			origin, _ := pkg.Origin()
+
+			pyEcoPackages = append(pyEcoPackages, &mvd.Package{
+				Name:    name,
+				Version: version,
+				Arch:    arch,
+				Format:  format,
+				Origin:  origin,
+			})
+		}
 	}
 
 	scanjob := &mvd.AnalyseAssetRequest{
 		Platform:      convertPlatform2VulnPlatform(platformObj),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
+		Ecosystems: map[string]*mvd.ApplicationEcosystems{
+			"PyPI": {
+				Name:     "PyPI",
+				Packages: pyEcoPackages,
+			},
+		},
 	}
 	logger.DebugDumpYAML("vuln-scan-job", scanjob)
 
