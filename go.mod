@@ -11,6 +11,7 @@ require (
 	cloud.google.com/go/kms v1.6.0
 	cloud.google.com/go/logging v1.6.1
 	cloud.google.com/go/longrunning v0.3.0
+	cloud.google.com/go/monitoring v1.8.0
 	cloud.google.com/go/pubsub v1.28.0
 	cloud.google.com/go/recommender v1.8.0
 	cloud.google.com/go/run v0.5.0
