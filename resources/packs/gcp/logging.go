@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"cloud.google.com/go/logging/logadmin"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -157,6 +158,65 @@ func (g *mqlGcpProjectLoggingservice) GetMetrics() ([]interface{}, error) {
 		metrics = append(metrics, metric)
 	}
 	return metrics, nil
+}
+
+func (g *mqlGcpProjectLoggingserviceMetric) GetAlertPolicies() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	// Find alert policies for projectId
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.monitoringService", "projectId", projectId)
+	if err != nil {
+		return nil, err
+	}
+	gcpMonitoring := obj.(GcpProjectMonitoringService)
+	alertPolicies, err := gcpMonitoring.AlertPolicies()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []interface{}
+	for _, alertPolicy := range alertPolicies {
+		mqlAP := alertPolicy.(GcpProjectMonitoringServiceAlertPolicy)
+		conditions, err := mqlAP.Conditions()
+		if err != nil {
+			return nil, err
+		}
+		for _, c := range conditions {
+			mqlC := c.(map[string]interface{})
+			var cond map[string]interface{}
+			if mqlC["threshold"] != nil {
+				cond = mqlC["threshold"].(map[string]interface{})
+			} else if mqlC["absent"] != nil {
+				cond = mqlC["absent"].(map[string]interface{})
+			} else if mqlC["matchedLog"] != nil {
+				cond = mqlC["matchedLog"].(map[string]interface{})
+			} else if mqlC["monitoringQueryLanguage"] != nil {
+				cond = mqlC["monitoringQueryLanguage"].(map[string]interface{})
+			} else {
+				continue
+			}
+
+			if parseAlertPolicyConditionFilterMetricName(cond) == id {
+				res = append(res, alertPolicy)
+			}
+		}
+	}
+	return res, nil
+}
+
+func parseAlertPolicyConditionFilterMetricName(condition map[string]interface{}) string {
+	filter := condition["filter"].(string)
+	// The filter looks like this: metric.type=\"logging.googleapis.com/user/log-metric-filter-and-alerts-exist-for-project-ownership-assignments-changes\"
+	// We are interested in the user part of that string
+	return strings.TrimSuffix(strings.TrimPrefix(filter, "metric.type=\"logging.googleapis.com/user/"), "\"")
 }
 
 func (g *mqlGcpProjectLoggingservice) GetSinks() ([]interface{}, error) {

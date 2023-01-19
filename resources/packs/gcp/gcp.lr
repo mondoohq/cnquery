@@ -1832,6 +1832,8 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   description string
   // Advanced log filter
   filter string
+  // Alert policies for this metric
+  alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
 
 // GCP Logging sink
