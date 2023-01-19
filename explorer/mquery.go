@@ -160,8 +160,14 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 	if m.Docs != nil {
 		c = c.
 			Add(m.Docs.Desc).
-			Add(m.Docs.Audit).
-			Add(m.Docs.Remediation)
+			Add(m.Docs.Audit)
+
+		if m.Docs.Remediation != nil {
+			for i := range m.Docs.Remediation.Items {
+				doc := m.Docs.Remediation.Items[i]
+				c = c.Add(doc.Id).Add(doc.Desc)
+			}
+		}
 
 		for i := range m.Docs.Refs {
 			c = c.
@@ -215,7 +221,13 @@ func (m *Mquery) Sanitize() {
 	if m.Docs != nil {
 		m.Docs.Desc = strings.TrimSpace(m.Docs.Desc)
 		m.Docs.Audit = strings.TrimSpace(m.Docs.Audit)
-		m.Docs.Remediation = strings.TrimSpace(m.Docs.Remediation)
+
+		if m.Docs.Remediation != nil {
+			for i := range m.Docs.Remediation.Items {
+				doc := m.Docs.Remediation.Items[i]
+				doc.Desc = strings.TrimSpace(doc.Desc)
+			}
+		}
 
 		for i := range m.Docs.Refs {
 			r := m.Docs.Refs[i]
@@ -257,7 +269,7 @@ func (m *Mquery) Merge(base *Mquery) {
 		if m.Docs.Audit == "" {
 			m.Docs.Audit = base.Docs.Audit
 		}
-		if m.Docs.Remediation == "" {
+		if m.Docs.Remediation == nil {
 			m.Docs.Remediation = base.Docs.Remediation
 		}
 		if m.Docs.Refs == nil {
@@ -284,8 +296,19 @@ func (m *Mquery) Merge(base *Mquery) {
 	}
 }
 
-func (v *ImpactValue) UnmarshalJSON(data []byte) error {
+func (v *Impact) Merge(base *Impact) {
+	if base == nil {
+		return
+	}
+	if v.Scoring == Impact_SCORING_UNSPECIFIED {
+		v.Scoring = base.Scoring
+	}
+}
+
+func (v *Impact) UnmarshalJSON(data []byte) error {
 	var res int32
+	v.Value = -1
+	v.Weight = -1
 
 	if err := json.Unmarshal(data, &res); err == nil {
 		v.Value = res
@@ -299,11 +322,24 @@ func (v *ImpactValue) UnmarshalJSON(data []byte) error {
 		v.Value = v.Value
 	}
 
-	if v.Value < 0 || v.Value > 100 {
+	if v.Value < -1 || v.Value > 100 {
 		return errors.New("impact must be between 0 and 100")
+	}
+	if v.Weight < -1 {
+		return errors.New("impact weight cannot be negative")
 	}
 
 	return nil
+}
+
+func (r *Remediation) UnmarshalJSON(data []byte) error {
+	var res string
+	if err := json.Unmarshal(data, &res); err == nil {
+		r.Items = []*TypedDoc{{Id: "default", Desc: res}}
+		return nil
+	}
+
+	return json.Unmarshal(data, r.Items)
 }
 
 func ChecksumFilters(queries []*Mquery) (string, error) {

@@ -1,12 +1,15 @@
 package explorer
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/checksums"
 	llx "go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc"
+	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/types"
 )
@@ -101,4 +104,48 @@ func (p *Property) Merge(base *Property) {
 	if len(p.For) == 0 {
 		p.For = base.For
 	}
+}
+
+type PropsCache struct {
+	cache map[string]*Property
+}
+
+func NewPropsCache() PropsCache {
+	return PropsCache{
+		cache: map[string]*Property{},
+	}
+}
+
+// Add properties, overwriting existing ones
+func (c PropsCache) Add(props ...*Property) {
+	for i := range props {
+		prop := props[i]
+		if prop.Uid != "" {
+			c.cache[prop.Uid] = prop
+		}
+		if prop.Mrn != "" {
+			c.cache[prop.Mrn] = prop
+		}
+	}
+}
+
+// try to Get the mrn, will also return uid-based
+// properties if they exist first
+func (c PropsCache) Get(ctx context.Context, propMrn string) (*Property, string, error) {
+	name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
+	if err != nil {
+		return nil, "", errors.New("failed to get property name")
+	}
+
+	if res, ok := c.cache[name]; ok {
+		return res, name, nil
+	}
+
+	if res, ok := c.cache[propMrn]; ok {
+		return res, name, nil
+	}
+
+	// We currently don't grab properties from upstream. This requires further investigation.
+
+	return nil, "", errors.New("property " + propMrn + " not found")
 }

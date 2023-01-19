@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	llx "go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -88,7 +87,7 @@ func (s *LocalServices) SetProps(ctx context.Context, req *PropsReq) (*Empty, er
 	// validate that the queries compile and fill in checksums
 	for i := range req.Props {
 		prop := req.Props[i]
-		code, err := prop.RefreshChecksumAndType(nil)
+		code, err := prop.RefreshChecksumAndType()
 		if err != nil {
 			return nil, err
 		}
@@ -96,51 +95,6 @@ func (s *LocalServices) SetProps(ctx context.Context, req *PropsReq) (*Empty, er
 	}
 
 	return globalEmpty, s.DataLake.SetProps(ctx, req)
-}
-
-type propsCache struct {
-	services *LocalServices
-	cache    map[string]*Mquery
-}
-
-func newPropsCache(services *LocalServices) propsCache {
-	return propsCache{
-		services: services,
-		cache:    map[string]*Mquery{},
-	}
-}
-
-// add properties, overwriting existing ones
-func (c propsCache) add(props ...*Mquery) {
-	for i := range props {
-		prop := props[i]
-		if prop.Uid != "" {
-			c.cache[prop.Uid] = prop
-		}
-		if prop.Mrn != "" {
-			c.cache[prop.Mrn] = prop
-		}
-	}
-}
-
-// try to get the mrn, will also return uid-based
-// properties if they exist first
-func (c propsCache) get(ctx context.Context, propMrn string) (*Mquery, string, error) {
-	name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
-	if err != nil {
-		return nil, "", errors.New("failed to get property name")
-	}
-
-	if res, ok := c.cache[name]; ok {
-		return res, name, nil
-	}
-
-	if res, ok := c.cache[propMrn]; ok {
-		return res, name, nil
-	}
-
-	res, err := c.services.DataLake.GetQuery(ctx, propMrn)
-	return res, name, err
 }
 
 // Resolve executable bits for an asset (via asset filters)
@@ -196,8 +150,8 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	for i := range applicablePacks {
 		pack := applicablePacks[i]
 
-		props := newPropsCache(s)
-		props.add(bundle.Props...)
+		props := NewPropsCache()
+		props.Add(bundle.Props...)
 
 		for i := range pack.Queries {
 			query := pack.Queries[i]
@@ -235,7 +189,7 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	return res, err
 }
 
-func (s *LocalServices) addQuery(ctx context.Context, job *ExecutionJob, query *Mquery, propsCache propsCache) error {
+func (s *LocalServices) addQuery(ctx context.Context, job *ExecutionJob, query *Mquery, propsCache PropsCache) error {
 	var props map[string]*llx.Primitive
 	var propRefs map[string]string
 	if len(query.Props) != 0 {
@@ -243,7 +197,7 @@ func (s *LocalServices) addQuery(ctx context.Context, job *ExecutionJob, query *
 		propRefs = map[string]string{}
 
 		for i := range query.Props {
-			prop, name, err := propsCache.get(ctx, query.Props[i].Mrn)
+			prop, name, err := propsCache.Get(ctx, query.Props[i].Mrn)
 			if err != nil {
 				return errors.Wrap(err, "failed to get property for query "+query.Mrn)
 			}
