@@ -86,6 +86,8 @@ gcp.project @defaults("name") {
   accessApprovalSettings() gcp.accessApprovalSettings
   // GCP Storage resources
   storage() gcp.project.storageService
+  // Monitoring resources
+  monitoring() gcp.project.monitoringService
 }
 
 // GCP Service
@@ -1830,6 +1832,8 @@ private gcp.project.loggingservice.metric @defaults("description filter") {
   description string
   // Advanced log filter
   filter string
+  // Alert policies for this metric
+  alertPolicies() []gcp.project.monitoringService.alertPolicy
 }
 
 // GCP Logging sink
@@ -2455,4 +2459,46 @@ private gcp.accessApprovalSettings {
   ancestorHasActiveKeyVersion bool
   // Whether there is some configuration issue with the active key version configured at this level of the resource hierarchy
   invalidKeyVersion bool
+}
+
+// GCP monitoring resources
+private gcp.project.monitoringService {
+  // Project ID
+  projectId string
+  // List of alert policies
+  alertPolicies() []gcp.project.monitoringService.alertPolicy
+}
+
+// GCP monitoring alert policy
+private gcp.project.monitoringService.alertPolicy {
+  // Project ID
+  projectId string
+  // Alert policy name
+  name string
+  // Display name
+  displayName string
+  // Documentation included with notifications and incidents related to this policy
+  documentation dict
+  // User-defined labels
+  labels map[string]string
+  // List of conditions for the policy
+  conditions []dict
+  // How to combine the results of multiple conditions to determine if an incident should be opened
+  combiner string
+  // Whether the policy is enabled
+  enabled bool
+  // Description of how the alert policy is invalid
+  validity dict
+  // Notification channel URLs to which notifications should be sent when incidents are opened or closed
+  notificationChannelUrls []string
+  // Creation timestamp
+  created time
+  // Email address of the user who created the alert policy
+  createdBy string
+  // Update timestamp
+  updated time
+  // Email address of the user who last updated the alert policy
+  updatedBy string
+  // Configuration for notification channels notifications
+  alertStrategy dict
 }
