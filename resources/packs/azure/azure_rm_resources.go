@@ -78,7 +78,3 @@ func (a *mqlAzure) GetResources() ([]interface{}, error) {
 
 	return res, nil
 }
-
-func (a *mqlAzureResource) id() (string, error) {
-	return a.Id()
-}

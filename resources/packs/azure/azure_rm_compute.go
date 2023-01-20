@@ -13,11 +13,11 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureCompute) id() (string, error) {
+func (a *mqlAzureSubscriptionCompute) id() (string, error) {
 	return "azure.compute", nil
 }
 
-func (a *mqlAzureCompute) GetDisks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionCompute) GetDisks() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -94,11 +94,11 @@ func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.Resourc
 	)
 }
 
-func (a *mqlAzureComputeDisk) id() (string, error) {
+func (a *mqlAzureSubscriptionComputeDisk) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureCompute) GetVms() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionCompute) GetVms() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -147,11 +147,11 @@ func (a *mqlAzureCompute) GetVms() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureComputeVm) id() (string, error) {
+func (a *mqlAzureSubscriptionComputeVm) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureComputeVm) GetExtensions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeVm) GetExtensions() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -210,7 +210,7 @@ func (a *mqlAzureComputeVm) GetExtensions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureComputeVm) GetOsDisk() (interface{}, error) {
+func (a *mqlAzureSubscriptionComputeVm) GetOsDisk() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -264,7 +264,7 @@ func (a *mqlAzureComputeVm) GetOsDisk() (interface{}, error) {
 	return diskToMql(a.MotorRuntime, disk.Disk)
 }
 
-func (a *mqlAzureComputeVm) GetDataDisks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeVm) GetDataDisks() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

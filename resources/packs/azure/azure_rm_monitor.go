@@ -9,11 +9,11 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureMonitor) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitor) id() (string, error) {
 	return "azure.monitor", nil
 }
 
-func (a *mqlAzureMonitor) GetLogProfiles() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitor) GetLogProfiles() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (a *mqlAzureMonitor) GetLogProfiles() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMonitor) GetDiagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitor) GetDiagnosticSettings() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -81,19 +81,19 @@ func (a *mqlAzureMonitor) GetDiagnosticSettings() ([]interface{}, error) {
 	return diagnosticsSettings(a.MotorRuntime, "/subscriptions/"+at.SubscriptionID())
 }
 
-func (a *mqlAzureMonitor) GetActivityLog() (interface{}, error) {
+func (a *mqlAzureSubscriptionMonitor) GetActivityLog() (interface{}, error) {
 	return a.MotorRuntime.CreateResource("azure.monitor.activitylog")
 }
 
-func (a *mqlAzureMonitorActivitylog) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorActivitylog) id() (string, error) {
 	return "azure.monitor.activitylog", nil
 }
 
-func (a *mqlAzureMonitorActivitylogAlert) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorActivitylogAlert) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMonitorActivitylog) GetAlerts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMonitorActivitylog) GetAlerts() ([]interface{}, error) {
 	// fetch the details
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -201,7 +201,7 @@ func (a *mqlAzureMonitorActivitylog) GetAlerts() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMonitorLogprofile) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorLogprofile) id() (string, error) {
 	return a.Id()
 }
 
@@ -263,6 +263,6 @@ func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, 
 	return res, nil
 }
 
-func (a *mqlAzureMonitorDiagnosticsetting) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorDiagnosticsetting) id() (string, error) {
 	return a.Id()
 }

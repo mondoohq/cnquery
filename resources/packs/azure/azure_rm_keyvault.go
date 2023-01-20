@@ -22,11 +22,11 @@ import (
 // NOTE: the resourcemanager keyvault sdk lacks some functionality/fields for secrets, keys, certs.
 // NOTE: instead we use the keyvault/az(certificates/keys/secrets) modules even though they are still in beta.
 // NOTE: lets track https://github.com/Azure/azure-sdk-for-go/issues/19412 and see if there's any guidance there once its solved
-func (a *mqlAzureKeyvault) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyvault) id() (string, error) {
 	return "azure.keyvault", nil
 }
 
-func (a *mqlAzureKeyvault) GetVaults() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvault) GetVaults() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -68,11 +68,11 @@ func (a *mqlAzureKeyvault) GetVaults() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureKeyvaultVault) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyvaultVault) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureKeyvaultVault) GetVaultUri() (string, error) {
+func (a *mqlAzureSubscriptionKeyvaultVault) GetVaultUri() (string, error) {
 	name, err := a.VaultName()
 	if err != nil {
 		return "", err
@@ -81,7 +81,7 @@ func (a *mqlAzureKeyvaultVault) GetVaultUri() (string, error) {
 	return KVUri, nil
 }
 
-func (a *mqlAzureKeyvaultVault) GetKeys() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultVault) GetKeys() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func (a *mqlAzureKeyvaultVault) GetKeys() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureKeyvaultVault) GetCertificates() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultVault) GetCertificates() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (a *mqlAzureKeyvaultVault) GetCertificates() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureKeyvaultVault) GetSecrets() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultVault) GetSecrets() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -230,7 +230,7 @@ func (a *mqlAzureKeyvaultVault) GetSecrets() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureKeyvaultVault) GetProperties() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultVault) GetProperties() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -270,7 +270,7 @@ func (a *mqlAzureKeyvaultVault) GetProperties() (map[string]interface{}, error) 
 	return core.JsonToDict(vault.Properties)
 }
 
-func (a *mqlAzureKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error) {
 	// id is a azure resource id
 	id, err := a.Id()
 	if err != nil {
@@ -281,11 +281,11 @@ func (a *mqlAzureKeyvaultVault) GetDiagnosticSettings() ([]interface{}, error) {
 	return diagnosticsSettings(a.MotorRuntime, id)
 }
 
-func (a *mqlAzureKeyvaultKey) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyvaultKey) id() (string, error) {
 	return a.Kid()
 }
 
-func (a *mqlAzureKeyvaultKey) GetKeyName() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultKey) GetKeyName() (interface{}, error) {
 	// parse id "https://superdupervault.vault.azure.net/keys/sqltestkey"
 	id, err := a.Kid()
 	if err != nil {
@@ -300,7 +300,7 @@ func (a *mqlAzureKeyvaultKey) GetKeyName() (interface{}, error) {
 	return kvid.Name, nil
 }
 
-func (a *mqlAzureKeyvaultKey) GetVersion() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultKey) GetVersion() (interface{}, error) {
 	id, err := a.Kid()
 	if err != nil {
 		return nil, err
@@ -314,7 +314,7 @@ func (a *mqlAzureKeyvaultKey) GetVersion() (interface{}, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureKeyvaultKey) GetVersions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultKey) GetVersions() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -376,12 +376,12 @@ func (a *mqlAzureKeyvaultKey) GetVersions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureKeyvaultCertificate) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyvaultCertificate) id() (string, error) {
 	return a.Id()
 }
 
 // TODO: switch to name once the issue is solved in MQL
-func (a *mqlAzureKeyvaultCertificate) GetCertName() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultCertificate) GetCertName() (interface{}, error) {
 	// parse id "https://superdupervault.vault.azure.net/certificates/testcertificate"
 	id, err := a.Id()
 	if err != nil {
@@ -395,7 +395,7 @@ func (a *mqlAzureKeyvaultCertificate) GetCertName() (interface{}, error) {
 	return kvid.Name, nil
 }
 
-func (a *mqlAzureKeyvaultCertificate) GetVersion() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultCertificate) GetVersion() (interface{}, error) {
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -409,7 +409,7 @@ func (a *mqlAzureKeyvaultCertificate) GetVersion() (interface{}, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureKeyvaultCertificate) GetX509() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultCertificate) GetX509() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
@@ -439,7 +439,7 @@ func parseKeyVaultId(url string) (*keyvaultid, error) {
 	}, nil
 }
 
-func (a *mqlAzureKeyvaultCertificate) GetVersions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultCertificate) GetVersions() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -503,12 +503,12 @@ func (a *mqlAzureKeyvaultCertificate) GetVersions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureKeyvaultSecret) id() (string, error) {
+func (a *mqlAzureSubscriptionKeyvaultSecret) id() (string, error) {
 	return a.Id()
 }
 
 // TODO: switch to name once the issue is solved in MQL
-func (a *mqlAzureKeyvaultSecret) GetSecretName() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultSecret) GetSecretName() (interface{}, error) {
 	// parse id "https://superdupervault.vault.azure.net/certificates/testcertificate"
 	id, err := a.Id()
 	if err != nil {
@@ -523,7 +523,7 @@ func (a *mqlAzureKeyvaultSecret) GetSecretName() (interface{}, error) {
 	return kvid.Name, nil
 }
 
-func (a *mqlAzureKeyvaultSecret) GetVersion() (interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultSecret) GetVersion() (interface{}, error) {
 	id, err := a.Id()
 	if err != nil {
 		return nil, err
@@ -537,7 +537,7 @@ func (a *mqlAzureKeyvaultSecret) GetVersion() (interface{}, error) {
 	return kvid.Version, nil
 }
 
-func (a *mqlAzureKeyvaultSecret) GetVersions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionKeyvaultSecret) GetVersions() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

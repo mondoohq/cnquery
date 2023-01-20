@@ -11,15 +11,15 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurePostgresql) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgresql) id() (string, error) {
 	return "azure.postgresql", nil
 }
 
-func (a *mqlAzurePostgresqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgresqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurePostgresql) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresql) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -74,11 +74,11 @@ func (a *mqlAzurePostgresql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurePostgresqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgresqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurePostgresqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresqlServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (a *mqlAzurePostgresqlServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurePostgresqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -198,7 +198,7 @@ func (a *mqlAzurePostgresqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurePostgresqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

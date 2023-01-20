@@ -33,7 +33,7 @@ func (a *mqlAzure) GetResourceGroups() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, rg := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.resourcegroup",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.resourcegroup",
 				"id", core.ToString(rg.ID),
 				"name", core.ToString(rg.Name),
 				"location", core.ToString(rg.Location),
@@ -52,6 +52,6 @@ func (a *mqlAzure) GetResourceGroups() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureResourcegroup) id() (string, error) {
+func (a *mqlAzureSubscriptionResourcegroup) id() (string, error) {
 	return a.Id()
 }

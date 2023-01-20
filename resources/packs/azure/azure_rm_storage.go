@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureStorage) id() (string, error) {
+func (a *mqlAzureSubscriptionStorage) id() (string, error) {
 	return "azure.storage", nil
 }
 
@@ -24,7 +24,7 @@ type (
 	Kind                          storage.Kind
 )
 
-func (a *mqlAzureStorage) GetAccounts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorage) GetAccounts() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -93,11 +93,11 @@ func (a *mqlAzureStorage) GetAccounts() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureStorageAccount) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccount) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccount) init(args *resources.Args) (*resources.Args, AzureStorageAccount, error) {
+func (a *mqlAzureSubscriptionStorageAccount) init(args *resources.Args) (*resources.Args, AzureSubscriptionStorageAccount, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -179,7 +179,7 @@ func (a *mqlAzureStorageAccount) init(args *resources.Args) (*resources.Args, Az
 	return args, nil, nil
 }
 
-func (a *mqlAzureStorageAccount) GetContainers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorageAccount) GetContainers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -244,7 +244,7 @@ func (a *mqlAzureStorageAccount) GetContainers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureStorageAccount) GetDataProtection() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageAccount) GetDataProtection() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -307,7 +307,7 @@ func (a *mqlAzureStorageAccount) GetDataProtection() (interface{}, error) {
 	)
 }
 
-func (a *mqlAzureStorageAccount) GetQueueProperties() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageAccount) GetQueueProperties() (interface{}, error) {
 	props, err := a.getServiceStorageProperties("queue")
 	if err != nil {
 		return nil, err
@@ -319,7 +319,7 @@ func (a *mqlAzureStorageAccount) GetQueueProperties() (interface{}, error) {
 	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "queue", parentId)
 }
 
-func (a *mqlAzureStorageAccount) GetTableProperties() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageAccount) GetTableProperties() (interface{}, error) {
 	props, err := a.getServiceStorageProperties("table")
 	if err != nil {
 		return nil, err
@@ -331,7 +331,7 @@ func (a *mqlAzureStorageAccount) GetTableProperties() (interface{}, error) {
 	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "table", parentId)
 }
 
-func (a *mqlAzureStorageAccount) GetBlobProperties() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageAccount) GetBlobProperties() (interface{}, error) {
 	props, err := a.getServiceStorageProperties("blob")
 	if err != nil {
 		return nil, err
@@ -343,11 +343,11 @@ func (a *mqlAzureStorageAccount) GetBlobProperties() (interface{}, error) {
 	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "blob", parentId)
 }
 
-func (a *mqlAzureStorageContainer) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageContainer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
+func (a *mqlAzureSubscriptionStorageAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return table.GetPropertiesResponse{}, err
@@ -389,11 +389,11 @@ func (a *mqlAzureStorageAccount) getServiceStorageProperties(serviceType string)
 	return props, nil
 }
 
-func (a *mqlAzureStorageAccountBlobServiceProperties) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccountBlobServiceProperties) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountDataProtection) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccountDataProtection) id() (string, error) {
 	storageAccId, err := a.StorageAccountId()
 	if err != nil {
 		return "", err
@@ -401,23 +401,23 @@ func (a *mqlAzureStorageAccountDataProtection) id() (string, error) {
 	return fmt.Sprintf("%s/dataProtection", storageAccId), nil
 }
 
-func (a *mqlAzureStorageAccountTableServiceProperties) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccountTableServiceProperties) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountQueueServiceProperties) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccountQueueServiceProperties) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountServicePropertiesLogging) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccountServicePropertiesLogging) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountServicePropertiesMetrics) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccountServicePropertiesMetrics) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountServicePropertiesRetentionPolicy) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageAccountServicePropertiesRetentionPolicy) id() (string, error) {
 	return a.Id()
 }
 

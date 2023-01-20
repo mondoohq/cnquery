@@ -10,23 +10,23 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureMysql) id() (string, error) {
+func (a *mqlAzureSubscriptionMysql) id() (string, error) {
 	return "azure.mysql", nil
 }
 
-func (a *mqlAzureMysqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMysqlServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMysqlFlexibleServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMysqlFlexibleServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMysqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionMysqlDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMysql) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysql) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (a *mqlAzureMysql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysql) GetFlexibleServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysql) GetFlexibleServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (a *mqlAzureMysql) GetFlexibleServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func (a *mqlAzureMysqlServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -235,7 +235,7 @@ func (a *mqlAzureMysqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlFlexibleServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlFlexibleServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -292,7 +292,7 @@ func (a *mqlAzureMysqlFlexibleServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -349,7 +349,7 @@ func (a *mqlAzureMysqlServer) GetFirewallRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlFlexibleServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlFlexibleServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -409,7 +409,7 @@ func (a *mqlAzureMysqlFlexibleServer) GetConfiguration() ([]interface{}, error) 
 	return res, nil
 }
 
-func (a *mqlAzureMysqlFlexibleServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlFlexibleServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

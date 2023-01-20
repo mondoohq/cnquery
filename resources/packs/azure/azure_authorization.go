@@ -10,12 +10,12 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureAuthorization) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorization) id() (string, error) {
 	return "azure.authorization", nil
 }
 
 // note: requires Microsoft.Authorization/roleDefinitions/read to read role definitions
-func (a *mqlAzureAuthorization) GetRoleDefinitions() (interface{}, error) {
+func (a *mqlAzureSubscriptionAuthorization) GetRoleDefinitions() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -118,10 +118,10 @@ func azureToMqlPermission(runtime *resources.Runtime, id string, permission *aut
 	return p, nil
 }
 
-func (a *mqlAzureAuthorizationRoleDefinition) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorizationRoleDefinition) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureAuthorizationRoleDefinitionPermission) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorizationRoleDefinitionPermission) id() (string, error) {
 	return a.Id()
 }

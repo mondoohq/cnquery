@@ -31,11 +31,11 @@ const (
 	kubernetesClusterPolicyExtensonDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 )
 
-func (a *mqlAzureCloudDefender) id() (string, error) {
+func (a *mqlAzureSubscriptionCloudDefender) id() (string, error) {
 	return "azure.cloudDefender", nil
 }
 
-func (a *mqlAzureCloudDefender) GetMonitoringAgentAutoProvision() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefender) GetMonitoringAgentAutoProvision() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (a *mqlAzureCloudDefender) GetMonitoringAgentAutoProvision() (interface{}, 
 	return autoProvision == security.AutoProvisionOn, nil
 }
 
-func (a *mqlAzureCloudDefender) GetDefenderForContainers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefender) GetDefenderForContainers() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (a *mqlAzureCloudDefender) GetDefenderForContainers() (interface{}, error) 
 	return core.JsonToDict(def)
 }
 
-func (a *mqlAzureCloudDefender) GetDefenderForServers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefender) GetDefenderForServers() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (a *mqlAzureCloudDefender) GetDefenderForServers() (interface{}, error) {
 	return core.JsonToDict(resp)
 }
 
-func (a *mqlAzureCloudDefender) GetSecurityContacts() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefender) GetSecurityContacts() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (a *mqlAzureCloudDefender) GetSecurityContacts() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureCloudDefenderSecurityContact) id() (string, error) {
+func (a *mqlAzureSubscriptionCloudDefenderSecurityContact) id() (string, error) {
 	return a.Id()
 }
 

@@ -10,19 +10,19 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureMariadb) id() (string, error) {
+func (a *mqlAzureSubscriptionMariadb) id() (string, error) {
 	return "azure.mariadb", nil
 }
 
-func (a *mqlAzureMariadbServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMariadbServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMariadbDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionMariadbDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMariadb) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadb) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func (a *mqlAzureMariadb) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMariadbServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadbServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (a *mqlAzureMariadbServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMariadbServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadbServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (a *mqlAzureMariadbServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMariadbServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadbServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
