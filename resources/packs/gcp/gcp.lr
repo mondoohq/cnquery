@@ -1844,6 +1844,8 @@ private gcp.project.loggingservice.sink {
   projectId string
   // Export destination
   destination string
+  // Storage bucket to which the sink exports. Only set for sinks with a destination storage bucket
+  storageBucket() gcp.project.storageService.bucket
   // Optional advanced logs filter
   filter string
   // When exporting logs, logging adopts this identity for authorization
