@@ -253,8 +253,6 @@ private github.repository @defaults("fullName") {
   allowSquashMerge bool
   // Whether the repository has open issues
   hasIssues bool
-  // Repository organization name
-  organizationName string
   // Whether the repository has open merge requests
   openMergeRequests() []github.mergeRequest
   // List of branches for the repository
@@ -277,6 +275,8 @@ private github.repository @defaults("fullName") {
   webhooks() []github.webhook
   // List of workflows for the repository
   workflows() []github.workflow
+  // List of repository forks
+  forks() []github.repository
 }
 
 // GitHub Repository File
@@ -433,8 +433,6 @@ private github.mergeRequest @defaults("id state") {
   commits() []github.commit
   // Pull request reviews
   reviews() []github.review
-  // Pull request organization
-  organizationName string
   // Pull request repository name
   repoName string
 }

@@ -43,7 +43,6 @@ func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository)
 		"allowRebaseMerge", core.ToBool(repo.AllowRebaseMerge),
 		"allowSquashMerge", core.ToBool(repo.AllowSquashMerge),
 		"hasIssues", core.ToBool(repo.HasIssues),
-		"organizationName", "",
 		"defaultBranchName", core.ToString(repo.DefaultBranch),
 		"owner", owner,
 	)
@@ -145,7 +144,6 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 		(*args)["allowRebaseMerge"] = core.ToBool(repo.AllowRebaseMerge)
 		(*args)["allowSquashMerge"] = core.ToBool(repo.AllowSquashMerge)
 		(*args)["hasIssues"] = core.ToBool(repo.HasIssues)
-		(*args)["organizationName"] = ""
 		(*args)["defaultBranchName"] = core.ToString(repo.DefaultBranch)
 		(*args)["owner"] = owner
 	}
@@ -159,10 +157,6 @@ func (g *mqlGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 		return nil, err
 	}
 	repoName, err := g.Name()
-	if err != nil {
-		return nil, err
-	}
-	orgName, err := g.OrganizationName()
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +227,6 @@ func (g *mqlGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 			"title", core.ToString(pr.Title),
 			"owner", owner,
 			"assignees", assigneesRes,
-			"organizationName", orgName,
 			"repoName", repoName,
 		)
 		if err != nil {
@@ -479,7 +472,7 @@ func newMqlGithubCommit(runtime *resources.Runtime, rc *github.RepositoryCommit,
 	}
 	var githubCommitter interface{}
 	if rc.Committer != nil {
-		githubCommitter, err = runtime.CreateResource("github.user", "id", core.ToInt64(rc.Committer.ID), "login", core.ToString(rc.Author.Login))
+		githubCommitter, err = runtime.CreateResource("github.user", "id", core.ToInt64(rc.Committer.ID), "login", core.ToString(rc.Committer.Login))
 		if err != nil {
 			return nil, err
 		}
@@ -518,10 +511,6 @@ func (g *mqlGithubRepository) GetCommits() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	orgName, err := g.OrganizationName()
-	if err != nil {
-		return nil, err
-	}
 	ownerName, err := g.Owner()
 	if err != nil {
 		return nil, err
@@ -553,7 +542,7 @@ func (g *mqlGithubRepository) GetCommits() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range allCommits {
 		rc := allCommits[i]
-		mqlCommit, err := newMqlGithubCommit(g.MotorRuntime, rc, orgName, repoName)
+		mqlCommit, err := newMqlGithubCommit(g.MotorRuntime, rc, ownerLogin, repoName)
 		if err != nil {
 			return nil, err
 		}
@@ -571,7 +560,11 @@ func (g *mqlGithubMergeRequest) GetReviews() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	orgName, err := g.OrganizationName()
+	owner, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := owner.Login()
 	if err != nil {
 		return nil, err
 	}
@@ -585,7 +578,7 @@ func (g *mqlGithubMergeRequest) GetReviews() ([]interface{}, error) {
 	}
 	var allReviews []*github.PullRequestReview
 	for {
-		reviews, resp, err := gt.Client().PullRequests.ListReviews(context.TODO(), orgName, repoName, int(prID), listOpts)
+		reviews, resp, err := gt.Client().PullRequests.ListReviews(context.TODO(), ownerLogin, repoName, int(prID), listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -632,7 +625,11 @@ func (g *mqlGithubMergeRequest) GetCommits() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	orgName, err := g.OrganizationName()
+	owner, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := owner.Login()
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +643,7 @@ func (g *mqlGithubMergeRequest) GetCommits() ([]interface{}, error) {
 	}
 	var allCommits []*github.RepositoryCommit
 	for {
-		commits, resp, err := gt.Client().PullRequests.ListCommits(context.TODO(), orgName, repoName, int(prID), listOpts)
+		commits, resp, err := gt.Client().PullRequests.ListCommits(context.TODO(), ownerLogin, repoName, int(prID), listOpts)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
@@ -663,7 +660,7 @@ func (g *mqlGithubMergeRequest) GetCommits() ([]interface{}, error) {
 	for i := range allCommits {
 		rc := allCommits[i]
 
-		mqlCommit, err := newMqlGithubCommit(g.MotorRuntime, rc, orgName, repoName)
+		mqlCommit, err := newMqlGithubCommit(g.MotorRuntime, rc, ownerLogin, repoName)
 		if err != nil {
 			return nil, err
 		}
@@ -1182,4 +1179,57 @@ func (g *mqlGithubFile) GetContent() (string, error) {
 		}
 	}
 	return content, nil
+}
+
+func (g *mqlGithubRepository) GetForks() ([]interface{}, error) {
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	owner, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := owner.Login()
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := &github.RepositoryListForksOptions{
+		ListOptions: github.ListOptions{
+			PerPage: paginationPerPage,
+		},
+	}
+	var allForks []*github.Repository
+	for {
+		forks, resp, err := gt.Client().Repositories.ListForks(context.TODO(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to get contents list")
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allForks = append(allForks, forks...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := []interface{}{}
+	for i := range allForks {
+		repo := allForks[i]
+		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
 }

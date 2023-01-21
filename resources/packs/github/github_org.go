@@ -268,42 +268,7 @@ func (g *mqlGithubOrganization) GetRepositories() ([]interface{}, error) {
 	res := []interface{}{}
 	for i := range allRepos {
 		repo := allRepos[i]
-
-		var id int64
-		if repo.ID != nil {
-			id = *repo.ID
-		}
-
-		owner, err := g.MotorRuntime.CreateResource("github.user",
-			"id", repo.GetOwner().GetID(),
-			"login", repo.GetOwner().GetLogin(),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		r, err := g.MotorRuntime.CreateResource("github.repository",
-			"id", id,
-			"name", core.ToString(repo.Name),
-			"fullName", core.ToString(repo.FullName),
-			"description", core.ToString(repo.Description),
-			"homepage", core.ToString(repo.Homepage),
-			"createdAt", githubTimestamp(repo.CreatedAt),
-			"updatedAt", githubTimestamp(repo.UpdatedAt),
-			"archived", core.ToBool(repo.Archived),
-			"disabled", core.ToBool(repo.Disabled),
-			"private", core.ToBool(repo.Private),
-			"visibility", core.ToString(repo.Visibility),
-			"allowAutoMerge", core.ToBool(repo.AllowAutoMerge),
-			"allowForking", core.ToBool(repo.AllowForking),
-			"allowMergeCommit", core.ToBool(repo.AllowMergeCommit),
-			"allowRebaseMerge", core.ToBool(repo.AllowRebaseMerge),
-			"allowSquashMerge", core.ToBool(repo.AllowSquashMerge),
-			"hasIssues", core.ToBool(repo.HasIssues),
-			"organizationName", orgLogin,
-			"defaultBranchName", core.ToString(repo.DefaultBranch),
-			"owner", owner,
-		)
+		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
 		if err != nil {
 			return nil, err
 		}
