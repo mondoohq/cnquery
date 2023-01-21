@@ -36,6 +36,7 @@ func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository)
 		"archived", core.ToBool(repo.Archived),
 		"disabled", core.ToBool(repo.Disabled),
 		"private", core.ToBool(repo.Private),
+		"openIssuesCount", int64(repo.GetOpenIssues()),
 		"stargazersCount", int64(repo.GetStargazersCount()),
 		"visibility", core.ToString(repo.Visibility),
 		"allowAutoMerge", core.ToBool(repo.AllowAutoMerge),
@@ -133,6 +134,7 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 		(*args)["fullName"] = core.ToString(repo.FullName)
 		(*args)["description"] = core.ToString(repo.Description)
 		(*args)["homepage"] = core.ToString(repo.Homepage)
+		(*args)["openIssuesCount"] = int64(repo.GetOpenIssues())
 		(*args)["stargazersCount"] = int64(repo.GetStargazersCount())
 		(*args)["createdAt"] = githubTimestamp(repo.CreatedAt)
 		(*args)["updatedAt"] = githubTimestamp(repo.UpdatedAt)
@@ -1281,6 +1283,114 @@ func (g *mqlGithubRepository) GetStargazers() ([]interface{}, error) {
 		r, err := g.MotorRuntime.CreateResource("github.user",
 			"id", core.ToInt64(stargazer.User.ID),
 			"login", core.ToString(stargazer.User.Login),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (g *mqlGithubIssue) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+
+	return "github.issue/" + strconv.FormatInt(id, 10), nil
+}
+
+func (g *mqlGithubRepository) GetOpenIssues() ([]interface{}, error) {
+	return g.getIssues("open")
+}
+
+func (g *mqlGithubRepository) GetClosedIssues() ([]interface{}, error) {
+	return g.getIssues("closed")
+}
+
+func (g *mqlGithubRepository) getIssues(state string) ([]interface{}, error) {
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	owner, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := owner.Login()
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := &github.IssueListByRepoOptions{
+		State: state,
+		ListOptions: github.ListOptions{
+			PerPage: paginationPerPage,
+		},
+	}
+	var allIssues []*github.Issue
+	for {
+		issues, resp, err := gt.Client().Issues.ListByRepo(context.Background(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to get contents list")
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allIssues = append(allIssues, issues...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := []interface{}{}
+	for i := range allIssues {
+		issue := allIssues[i]
+
+		var assignees []interface{}
+		for _, assignee := range issue.Assignees {
+			r, err := g.MotorRuntime.CreateResource("github.user",
+				"id", core.ToInt64(assignee.ID),
+				"login", core.ToString(assignee.Login),
+			)
+			if err != nil {
+				return nil, err
+			}
+			assignees = append(assignees, r)
+		}
+
+		var closedBy interface{}
+		if issue.GetClosedBy() != nil {
+			r, err := g.MotorRuntime.CreateResource("github.user",
+				"id", core.ToInt64(issue.GetClosedBy().ID),
+				"login", core.ToString(issue.GetClosedBy().Login),
+			)
+			if err != nil {
+				return nil, err
+			}
+			closedBy = r
+		}
+
+		r, err := g.MotorRuntime.CreateResource("github.issue",
+			"id", issue.GetID(),
+			"number", int64(issue.GetNumber()),
+			"title", issue.GetTitle(),
+			"state", issue.GetState(),
+			"body", issue.GetBody(),
+			"url", issue.GetURL(),
+			"createdAt", issue.CreatedAt,
+			"updatedAt", issue.UpdatedAt,
+			"closedAt", issue.ClosedAt,
+			"assignees", assignees,
+			"closedBy", closedBy,
 		)
 		if err != nil {
 			return nil, err

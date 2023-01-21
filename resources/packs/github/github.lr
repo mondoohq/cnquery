@@ -231,6 +231,8 @@ private github.repository @defaults("fullName") {
   homepage string
   // Count of repository stargazers
   stargazersCount int
+  // Count of open issues in repository
+  openIssuesCount int
   // Repository create time
   createdAt time
   // Repository update time
@@ -281,6 +283,10 @@ private github.repository @defaults("fullName") {
   forks() []github.repository
   // List of repository stargazers
   stargazers() []github.user
+  // List of repository open issues
+  openIssues() []github.issue
+  // List of repository closed issues
+  closedIssues() []github.issue
 }
 
 // GitHub Repository File
@@ -501,4 +507,30 @@ private github.gistfile @defaults("filename") {
   size int
   // Gist file content
   content() string
+}
+
+// GitHub Issue
+private github.issue @defaults("title") {
+  // Issue ID
+  id int
+  // Issue number
+  number int
+  // Issue title
+  title string
+  // Issue state
+  state string
+  // Issue body
+  body string
+  // Issue url
+  url string
+  // Issue create time
+  createdAt time
+  // Issue update time
+  updatedAt time
+  // Issue closed time
+  closedAt time
+  // Issue assignees
+  assignees []github.user
+  // Issue closed by
+  closedBy github.user
 }
