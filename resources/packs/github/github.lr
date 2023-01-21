@@ -136,6 +136,18 @@ private github.user @defaults("id name") {
   email string
   // User bio
   bio string
+  // User blog URL
+  blog string
+  // User location
+  location string
+  // User profile picture URL
+  avatarUrl string
+  // User followers
+  followers int
+  // User following
+  following int
+  // User twitter name
+  twitterUsername string
   // User create time in UTC
   createdAt time
   // Last user update time in UTC

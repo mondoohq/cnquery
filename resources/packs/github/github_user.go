@@ -51,18 +51,24 @@ func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser,
 	(*args)["login"] = user.GetLogin()
 	(*args)["name"] = user.GetName()
 	(*args)["email"] = user.GetEmail()
+	(*args)["blog"] = user.GetBlog()
+	(*args)["location"] = user.GetLocation()
+	(*args)["avatarUrl"] = user.GetAvatarURL()
+	(*args)["followers"] = int64(user.GetFollowers())
+	(*args)["following"] = int64(user.GetFollowing())
+	(*args)["twitterUsername"] = user.GetTwitterUsername()
 	(*args)["bio"] = user.GetBio()
-	createdAt := &time.Time{}
+	var createdAt *time.Time
 	if user.CreatedAt != nil {
 		createdAt = &user.CreatedAt.Time
 	}
 	(*args)["createdAt"] = createdAt
-	updatedAt := &time.Time{}
+	var updatedAt *time.Time
 	if user.UpdatedAt != nil {
 		updatedAt = &user.UpdatedAt.Time
 	}
 	(*args)["updatedAt"] = updatedAt
-	suspendedAt := &time.Time{}
+	var suspendedAt *time.Time
 	if user.SuspendedAt != nil {
 		suspendedAt = &user.SuspendedAt.Time
 	}
