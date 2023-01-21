@@ -146,6 +146,8 @@ private github.user @defaults("id name") {
   company string
   // User repositories
   repositories() []github.repository
+  // User gists
+  gists() []github.gist
 }
 
 // GitHub Team
@@ -449,4 +451,40 @@ private github.installation @defaults("id appId") {
   createdAt time
   // Application installation update time
   updatedAt time
+}
+
+// GitHub Gist
+private github.gist @defaults("description") {
+  // Gist ID
+  id string
+  // Gist description
+  description string
+  // Gist create time
+  createdAt time
+  // Gist update time
+  updatedAt time
+  // Gist owner
+  owner github.user
+  // Indicates whether the gist is public
+  public bool
+  // Gist files
+  files []github.gistfile
+}
+
+// GitHub Gist File
+private github.gistfile @defaults("filename") {
+  // Gist ID
+  gistId string
+  // Gist file name
+  filename string
+  // Gist file type
+  type string
+  // Gist file language
+  language string
+  // Gist file raw url
+  rawUrl string
+  // Gist file size
+  size int
+  // Gist file content
+  content() string
 }
