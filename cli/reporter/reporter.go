@@ -105,8 +105,9 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 	case JSON:
 		w := shared.IOWriter{Writer: out}
 		return ReportCollectionToJSON(data, &w)
-	// case CSV:
-	// 	res, err = data.ToCsv()
+	case CSV:
+		w := shared.IOWriter{Writer: out}
+		return ReportCollectionToCSV(data, &w)
 	default:
 		return errors.New("unknown reporter type, don't recognize this Format")
 	}
