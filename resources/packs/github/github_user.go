@@ -25,26 +25,30 @@ func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser,
 		return args, nil, nil
 	}
 
-	if (*args)["login"] == nil {
-		return nil, nil, errors.New("login required to fetch github user")
-	}
-	userLogin := (*args)["login"].(string)
-
 	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	user, _, err := gt.Client().Users.Get(context.Background(), userLogin)
-	if err != nil {
-		return nil, nil, err
+	var user *github.User
+	if (*args)["login"] == nil {
+		user, err = gt.User()
+		if err != nil {
+			return nil, nil, errors.New("login required to fetch github user")
+		}
+	} else {
+		userLogin := (*args)["login"].(string)
+		user, _, err = gt.Client().Users.Get(context.Background(), userLogin)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
-	(*args)["id"] = (*args)["id"]
-	(*args)["login"] = core.ToString(user.Login)
-	(*args)["name"] = core.ToString(user.Name)
-	(*args)["email"] = core.ToString(user.Email)
-	(*args)["bio"] = core.ToString(user.Bio)
+	(*args)["id"] = user.GetID()
+	(*args)["login"] = user.GetLogin()
+	(*args)["name"] = user.GetName()
+	(*args)["email"] = user.GetEmail()
+	(*args)["bio"] = user.GetBio()
 	createdAt := &time.Time{}
 	if user.CreatedAt != nil {
 		createdAt = &user.CreatedAt.Time
@@ -60,7 +64,7 @@ func (g *mqlGithubUser) init(args *resources.Args) (*resources.Args, GithubUser,
 		suspendedAt = &user.SuspendedAt.Time
 	}
 	(*args)["suspendedAt"] = suspendedAt
-	(*args)["company"] = core.ToString(user.Company)
+	(*args)["company"] = user.GetCompany()
 	return args, nil, nil
 }
 

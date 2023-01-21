@@ -26,6 +26,7 @@ const (
 	GcrContainerRegistryAssetType
 	GithubOrganizationAssetType
 	GithubRepositoryAssetType
+	GithubUserAssetType
 )
 
 type (
@@ -132,6 +133,8 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	githubCmd.AddCommand(githubOrgCmd)
 	githubRepositoryCmd := githubProviderRepositoryCmd(commonCmdFlags, preRun, runFn, docs)
 	githubCmd.AddCommand(githubRepositoryCmd)
+	githubUserCmd := githubProviderUserCmd(commonCmdFlags, preRun, runFn, docs)
+	githubCmd.AddCommand(githubUserCmd)
 
 	// terraform subcommand
 	terraformCmd := terraformProviderCmd(commonCmdFlags, preRun, runFn, docs)
@@ -711,6 +714,25 @@ func githubProviderRepositoryCmd(commonCmdFlags commonFlagsFn, preRun commonPreR
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_GITHUB, GithubRepositoryAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("token", "", "GitHub personal access token")
+	return cmd
+}
+
+func githubProviderUserCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "user",
+		Short: docs.GetShort("github-user"),
+		Long:  docs.GetLong("github-user"),
+		Args:  cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_GITHUB, GithubUserAssetType)
 		},
 	}
 	commonCmdFlags(cmd)
