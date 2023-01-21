@@ -339,8 +339,6 @@ private github.branch @defaults("name") {
   headCommit github.commit
   // Repository branch protection rules
   protectionRules() github.branchprotection
-  // Repository branch organization
-  organizationName string
   // Repository branch repository name
   repoName string
   // Repository branch owner

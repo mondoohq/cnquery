@@ -3,8 +3,9 @@ package github
 import (
 	"context"
 	"strconv"
+	"strings"
 
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -37,14 +38,26 @@ func (g *mqlGithubTeam) GetRepositories() ([]interface{}, error) {
 		return nil, err
 	}
 
-	repos, _, err := gt.Client().Teams.ListTeamReposByID(context.Background(), orgID, teamID, &github.ListOptions{})
-	if err != nil {
-		return nil, err
+	listOpts := &github.ListOptions{}
+	var allRepos []*github.Repository
+	for {
+		repos, resp, err := gt.Client().Teams.ListTeamReposByID(context.Background(), orgID, teamID, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allRepos = append(allRepos, repos...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
-	for i := range repos {
-		repo := repos[i]
+	for i := range allRepos {
+		repo := allRepos[i]
 
 		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
 		if err != nil {
@@ -77,14 +90,25 @@ func (g *mqlGithubTeam) GetMembers() ([]interface{}, error) {
 		return nil, err
 	}
 
-	members, _, err := gt.Client().Teams.ListTeamMembersByID(context.Background(), orgID, teamID, &github.TeamListTeamMembersOptions{})
-	if err != nil {
-		return nil, err
+	listOpts := &github.TeamListTeamMembersOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+	var allMembers []*github.User
+	for {
+		members, resp, err := gt.Client().Teams.ListTeamMembersByID(context.Background(), orgID, teamID, listOpts)
+		if err != nil {
+			return nil, err
+		}
+		allMembers = append(allMembers, members...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
-	for i := range members {
-		member := members[i]
+	for i := range allMembers {
+		member := allMembers[i]
 
 		r, err := g.MotorRuntime.CreateResource("github.user",
 			"id", core.ToInt64(member.ID),

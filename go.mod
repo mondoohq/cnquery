@@ -111,7 +111,7 @@ require (
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.12.1
-	github.com/google/go-github/v47 v47.1.1-0.20220922183808-8a4bdb5e400f
+	github.com/google/go-github/v49 v49.1.0
 	github.com/google/uuid v1.3.0
 	github.com/gosimple/slug v1.13.1
 	github.com/hashicorp/go-cleanhttp v0.5.2

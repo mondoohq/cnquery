@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"sigs.k8s.io/yaml"
 )
