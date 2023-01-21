@@ -36,6 +36,7 @@ func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository)
 		"archived", core.ToBool(repo.Archived),
 		"disabled", core.ToBool(repo.Disabled),
 		"private", core.ToBool(repo.Private),
+		"stargazersCount", int64(repo.GetStargazersCount()),
 		"visibility", core.ToString(repo.Visibility),
 		"allowAutoMerge", core.ToBool(repo.AllowAutoMerge),
 		"allowForking", core.ToBool(repo.AllowForking),
@@ -132,6 +133,7 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 		(*args)["fullName"] = core.ToString(repo.FullName)
 		(*args)["description"] = core.ToString(repo.Description)
 		(*args)["homepage"] = core.ToString(repo.Homepage)
+		(*args)["stargazersCount"] = int64(repo.GetStargazersCount())
 		(*args)["createdAt"] = githubTimestamp(repo.CreatedAt)
 		(*args)["updatedAt"] = githubTimestamp(repo.UpdatedAt)
 		(*args)["archived"] = core.ToBool(repo.Archived)
@@ -1207,7 +1209,7 @@ func (g *mqlGithubRepository) GetForks() ([]interface{}, error) {
 	}
 	var allForks []*github.Repository
 	for {
-		forks, resp, err := gt.Client().Repositories.ListForks(context.TODO(), ownerLogin, repoName, listOpts)
+		forks, resp, err := gt.Client().Repositories.ListForks(context.Background(), ownerLogin, repoName, listOpts)
 		if err != nil {
 			log.Error().Err(err).Msg("unable to get contents list")
 			if strings.Contains(err.Error(), "404") {
@@ -1226,6 +1228,60 @@ func (g *mqlGithubRepository) GetForks() ([]interface{}, error) {
 	for i := range allForks {
 		repo := allForks[i]
 		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}
+
+func (g *mqlGithubRepository) GetStargazers() ([]interface{}, error) {
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	owner, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := owner.Login()
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := &github.ListOptions{
+		PerPage: paginationPerPage,
+	}
+	var allStargazers []*github.Stargazer
+	for {
+		stargazers, resp, err := gt.Client().Activity.ListStargazers(context.Background(), ownerLogin, repoName, listOpts)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to get contents list")
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allStargazers = append(allStargazers, stargazers...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
+	res := []interface{}{}
+	for i := range allStargazers {
+		stargazer := allStargazers[i]
+		r, err := g.MotorRuntime.CreateResource("github.user",
+			"id", core.ToInt64(stargazer.User.ID),
+			"login", core.ToString(stargazer.User.Login),
+		)
 		if err != nil {
 			return nil, err
 		}

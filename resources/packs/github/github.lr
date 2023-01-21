@@ -229,6 +229,8 @@ private github.repository @defaults("fullName") {
   description string
   // Repository homepage
   homepage string
+  // Count of repository stargazers
+  stargazersCount int
   // Repository create time
   createdAt time
   // Repository update time
@@ -277,6 +279,8 @@ private github.repository @defaults("fullName") {
   workflows() []github.workflow
   // List of repository forks
   forks() []github.repository
+  // List of repository stargazers
+  stargazers() []github.user
 }
 
 // GitHub Repository File
