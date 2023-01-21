@@ -43,6 +43,9 @@ func (g *mqlGithubOrganization) init(args *resources.Args) (*resources.Args, Git
 	(*args)["location"] = core.ToString(org.Location)
 	(*args)["email"] = core.ToString(org.Email)
 	(*args)["twitterUsername"] = core.ToString(org.TwitterUsername)
+	(*args)["avatarUrl"] = core.ToString(org.AvatarURL)
+	(*args)["followers"] = core.ToInt(org.Followers)
+	(*args)["following"] = core.ToInt(org.Following)
 	(*args)["description"] = core.ToString(org.Description)
 	(*args)["createdAt"] = org.CreatedAt
 	(*args)["updatedAt"] = org.UpdatedAt

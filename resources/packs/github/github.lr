@@ -60,8 +60,14 @@ github.organization @defaults("login name") {
   location string
   // Organization email
   email string
-  // Organization Twitter name
+  // Organization twitter name
   twitterUsername string
+  // Profile picture URL
+  avatarUrl string
+  // Organization followers
+  followers int
+  // Organization following
+  following int
   // Organization description
   description string
   // Create time for the organization
