@@ -21,6 +21,7 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("github.collaborator", newGithubCollaborator)
 	registry.AddFactory("github.package", newGithubPackage)
 	registry.AddFactory("github.repository", newGithubRepository)
+	registry.AddFactory("github.license", newGithubLicense)
 	registry.AddFactory("github.file", newGithubFile)
 	registry.AddFactory("github.release", newGithubRelease)
 	registry.AddFactory("github.webhook", newGithubWebhook)
@@ -3755,14 +3756,22 @@ type GithubRepository interface {
 	Name() (string, error)
 	FullName() (string, error)
 	Description() (string, error)
+	CloneUrl() (string, error)
+	SshUrl() (string, error)
 	Homepage() (string, error)
+	Topics() ([]interface{}, error)
+	Language() (string, error)
+	WatchersCount() (int64, error)
+	ForksCount() (int64, error)
 	StargazersCount() (int64, error)
 	OpenIssuesCount() (int64, error)
 	CreatedAt() (*time.Time, error)
 	UpdatedAt() (*time.Time, error)
+	PushedAt() (*time.Time, error)
 	Archived() (bool, error)
 	Disabled() (bool, error)
 	Private() (bool, error)
+	IsFork() (bool, error)
 	Visibility() (string, error)
 	AllowAutoMerge() (bool, error)
 	AllowForking() (bool, error)
@@ -3770,6 +3779,10 @@ type GithubRepository interface {
 	AllowRebaseMerge() (bool, error)
 	AllowSquashMerge() (bool, error)
 	HasIssues() (bool, error)
+	HasProjects() (bool, error)
+	HasWiki() (bool, error)
+	HasPages() (bool, error)
+	HasDownloads() (bool, error)
 	OpenMergeRequests() ([]interface{}, error)
 	Branches() ([]interface{}, error)
 	DefaultBranchName() (string, error)
@@ -3785,6 +3798,7 @@ type GithubRepository interface {
 	Stargazers() ([]interface{}, error)
 	OpenIssues() ([]interface{}, error)
 	ClosedIssues() ([]interface{}, error)
+	License() (GithubLicense, error)
 }
 
 // mqlGithubRepository for the github.repository resource
@@ -3838,9 +3852,33 @@ func newGithubRepository(runtime *resources.Runtime, args *resources.Args) (inte
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"github.repository\", its \"description\" argument has the wrong type (expected type \"string\")")
 			}
+		case "cloneUrl":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"cloneUrl\" argument has the wrong type (expected type \"string\")")
+			}
+		case "sshUrl":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"sshUrl\" argument has the wrong type (expected type \"string\")")
+			}
 		case "homepage":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"github.repository\", its \"homepage\" argument has the wrong type (expected type \"string\")")
+			}
+		case "topics":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"topics\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "language":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"language\" argument has the wrong type (expected type \"string\")")
+			}
+		case "watchersCount":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"watchersCount\" argument has the wrong type (expected type \"int64\")")
+			}
+		case "forksCount":
+			if _, ok := val.(int64); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"forksCount\" argument has the wrong type (expected type \"int64\")")
 			}
 		case "stargazersCount":
 			if _, ok := val.(int64); !ok {
@@ -3858,6 +3896,10 @@ func newGithubRepository(runtime *resources.Runtime, args *resources.Args) (inte
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"github.repository\", its \"updatedAt\" argument has the wrong type (expected type \"*time.Time\")")
 			}
+		case "pushedAt":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"pushedAt\" argument has the wrong type (expected type \"*time.Time\")")
+			}
 		case "archived":
 			if _, ok := val.(bool); !ok {
 				return nil, errors.New("Failed to initialize \"github.repository\", its \"archived\" argument has the wrong type (expected type \"bool\")")
@@ -3869,6 +3911,10 @@ func newGithubRepository(runtime *resources.Runtime, args *resources.Args) (inte
 		case "private":
 			if _, ok := val.(bool); !ok {
 				return nil, errors.New("Failed to initialize \"github.repository\", its \"private\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "isFork":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"isFork\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "visibility":
 			if _, ok := val.(string); !ok {
@@ -3897,6 +3943,22 @@ func newGithubRepository(runtime *resources.Runtime, args *resources.Args) (inte
 		case "hasIssues":
 			if _, ok := val.(bool); !ok {
 				return nil, errors.New("Failed to initialize \"github.repository\", its \"hasIssues\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "hasProjects":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"hasProjects\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "hasWiki":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"hasWiki\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "hasPages":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"hasPages\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "hasDownloads":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"hasDownloads\" argument has the wrong type (expected type \"bool\")")
 			}
 		case "openMergeRequests":
 			if _, ok := val.([]interface{}); !ok {
@@ -3958,6 +4020,10 @@ func newGithubRepository(runtime *resources.Runtime, args *resources.Args) (inte
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"github.repository\", its \"closedIssues\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
+		case "license":
+			if _, ok := val.(GithubLicense); !ok {
+				return nil, errors.New("Failed to initialize \"github.repository\", its \"license\" argument has the wrong type (expected type \"GithubLicense\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -3997,8 +4063,26 @@ func (s *mqlGithubRepository) Validate() error {
 	if _, ok := s.Cache.Load("description"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"description\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("cloneUrl"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"cloneUrl\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("sshUrl"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"sshUrl\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("homepage"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"homepage\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("topics"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"topics\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("language"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"language\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("watchersCount"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"watchersCount\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("forksCount"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"forksCount\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("stargazersCount"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"stargazersCount\". This field is required.")
@@ -4012,6 +4096,9 @@ func (s *mqlGithubRepository) Validate() error {
 	if _, ok := s.Cache.Load("updatedAt"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"updatedAt\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("pushedAt"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"pushedAt\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("archived"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"archived\". This field is required.")
 	}
@@ -4020,6 +4107,9 @@ func (s *mqlGithubRepository) Validate() error {
 	}
 	if _, ok := s.Cache.Load("private"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"private\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("isFork"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"isFork\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("visibility"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"visibility\". This field is required.")
@@ -4041,6 +4131,18 @@ func (s *mqlGithubRepository) Validate() error {
 	}
 	if _, ok := s.Cache.Load("hasIssues"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"hasIssues\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("hasProjects"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"hasProjects\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("hasWiki"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"hasWiki\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("hasPages"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"hasPages\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("hasDownloads"); !ok {
+		return errors.New("Initialized \"github.repository\" resource without a \"hasDownloads\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("defaultBranchName"); !ok {
 		return errors.New("Initialized \"github.repository\" resource without a \"defaultBranchName\". This field is required.")
@@ -4064,7 +4166,19 @@ func (s *mqlGithubRepository) Register(name string) error {
 		return nil
 	case "description":
 		return nil
+	case "cloneUrl":
+		return nil
+	case "sshUrl":
+		return nil
 	case "homepage":
+		return nil
+	case "topics":
+		return nil
+	case "language":
+		return nil
+	case "watchersCount":
+		return nil
+	case "forksCount":
 		return nil
 	case "stargazersCount":
 		return nil
@@ -4074,11 +4188,15 @@ func (s *mqlGithubRepository) Register(name string) error {
 		return nil
 	case "updatedAt":
 		return nil
+	case "pushedAt":
+		return nil
 	case "archived":
 		return nil
 	case "disabled":
 		return nil
 	case "private":
+		return nil
+	case "isFork":
 		return nil
 	case "visibility":
 		return nil
@@ -4093,6 +4211,14 @@ func (s *mqlGithubRepository) Register(name string) error {
 	case "allowSquashMerge":
 		return nil
 	case "hasIssues":
+		return nil
+	case "hasProjects":
+		return nil
+	case "hasWiki":
+		return nil
+	case "hasPages":
+		return nil
+	case "hasDownloads":
 		return nil
 	case "openMergeRequests":
 		return nil
@@ -4124,6 +4250,8 @@ func (s *mqlGithubRepository) Register(name string) error {
 		return nil
 	case "closedIssues":
 		return nil
+	case "license":
+		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"github.repository\" resource")
 	}
@@ -4141,8 +4269,20 @@ func (s *mqlGithubRepository) Field(name string) (interface{}, error) {
 		return s.FullName()
 	case "description":
 		return s.Description()
+	case "cloneUrl":
+		return s.CloneUrl()
+	case "sshUrl":
+		return s.SshUrl()
 	case "homepage":
 		return s.Homepage()
+	case "topics":
+		return s.Topics()
+	case "language":
+		return s.Language()
+	case "watchersCount":
+		return s.WatchersCount()
+	case "forksCount":
+		return s.ForksCount()
 	case "stargazersCount":
 		return s.StargazersCount()
 	case "openIssuesCount":
@@ -4151,12 +4291,16 @@ func (s *mqlGithubRepository) Field(name string) (interface{}, error) {
 		return s.CreatedAt()
 	case "updatedAt":
 		return s.UpdatedAt()
+	case "pushedAt":
+		return s.PushedAt()
 	case "archived":
 		return s.Archived()
 	case "disabled":
 		return s.Disabled()
 	case "private":
 		return s.Private()
+	case "isFork":
+		return s.IsFork()
 	case "visibility":
 		return s.Visibility()
 	case "allowAutoMerge":
@@ -4171,6 +4315,14 @@ func (s *mqlGithubRepository) Field(name string) (interface{}, error) {
 		return s.AllowSquashMerge()
 	case "hasIssues":
 		return s.HasIssues()
+	case "hasProjects":
+		return s.HasProjects()
+	case "hasWiki":
+		return s.HasWiki()
+	case "hasPages":
+		return s.HasPages()
+	case "hasDownloads":
+		return s.HasDownloads()
 	case "openMergeRequests":
 		return s.OpenMergeRequests()
 	case "branches":
@@ -4201,6 +4353,8 @@ func (s *mqlGithubRepository) Field(name string) (interface{}, error) {
 		return s.OpenIssues()
 	case "closedIssues":
 		return s.ClosedIssues()
+	case "license":
+		return s.License()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"github.repository\" resource")
 	}
@@ -4270,6 +4424,38 @@ func (s *mqlGithubRepository) Description() (string, error) {
 	return tres, nil
 }
 
+// CloneUrl accessor autogenerated
+func (s *mqlGithubRepository) CloneUrl() (string, error) {
+	res, ok := s.Cache.Load("cloneUrl")
+	if !ok || !res.Valid {
+		return "", errors.New("\"github.repository\" failed: no value provided for static field \"cloneUrl\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"github.repository\" failed to cast field \"cloneUrl\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// SshUrl accessor autogenerated
+func (s *mqlGithubRepository) SshUrl() (string, error) {
+	res, ok := s.Cache.Load("sshUrl")
+	if !ok || !res.Valid {
+		return "", errors.New("\"github.repository\" failed: no value provided for static field \"sshUrl\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"github.repository\" failed to cast field \"sshUrl\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // Homepage accessor autogenerated
 func (s *mqlGithubRepository) Homepage() (string, error) {
 	res, ok := s.Cache.Load("homepage")
@@ -4282,6 +4468,70 @@ func (s *mqlGithubRepository) Homepage() (string, error) {
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"github.repository\" failed to cast field \"homepage\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Topics accessor autogenerated
+func (s *mqlGithubRepository) Topics() ([]interface{}, error) {
+	res, ok := s.Cache.Load("topics")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"github.repository\" failed: no value provided for static field \"topics\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"github.repository\" failed to cast field \"topics\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Language accessor autogenerated
+func (s *mqlGithubRepository) Language() (string, error) {
+	res, ok := s.Cache.Load("language")
+	if !ok || !res.Valid {
+		return "", errors.New("\"github.repository\" failed: no value provided for static field \"language\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"github.repository\" failed to cast field \"language\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// WatchersCount accessor autogenerated
+func (s *mqlGithubRepository) WatchersCount() (int64, error) {
+	res, ok := s.Cache.Load("watchersCount")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"github.repository\" failed: no value provided for static field \"watchersCount\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"github.repository\" failed to cast field \"watchersCount\" to the right type (int64): %#v", res)
+	}
+	return tres, nil
+}
+
+// ForksCount accessor autogenerated
+func (s *mqlGithubRepository) ForksCount() (int64, error) {
+	res, ok := s.Cache.Load("forksCount")
+	if !ok || !res.Valid {
+		return 0, errors.New("\"github.repository\" failed: no value provided for static field \"forksCount\"")
+	}
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	tres, ok := res.Data.(int64)
+	if !ok {
+		return 0, fmt.Errorf("\"github.repository\" failed to cast field \"forksCount\" to the right type (int64): %#v", res)
 	}
 	return tres, nil
 }
@@ -4350,6 +4600,22 @@ func (s *mqlGithubRepository) UpdatedAt() (*time.Time, error) {
 	return tres, nil
 }
 
+// PushedAt accessor autogenerated
+func (s *mqlGithubRepository) PushedAt() (*time.Time, error) {
+	res, ok := s.Cache.Load("pushedAt")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"github.repository\" failed: no value provided for static field \"pushedAt\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"github.repository\" failed to cast field \"pushedAt\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
 // Archived accessor autogenerated
 func (s *mqlGithubRepository) Archived() (bool, error) {
 	res, ok := s.Cache.Load("archived")
@@ -4394,6 +4660,22 @@ func (s *mqlGithubRepository) Private() (bool, error) {
 	tres, ok := res.Data.(bool)
 	if !ok {
 		return false, fmt.Errorf("\"github.repository\" failed to cast field \"private\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// IsFork accessor autogenerated
+func (s *mqlGithubRepository) IsFork() (bool, error) {
+	res, ok := s.Cache.Load("isFork")
+	if !ok || !res.Valid {
+		return false, errors.New("\"github.repository\" failed: no value provided for static field \"isFork\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"github.repository\" failed to cast field \"isFork\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
@@ -4506,6 +4788,70 @@ func (s *mqlGithubRepository) HasIssues() (bool, error) {
 	tres, ok := res.Data.(bool)
 	if !ok {
 		return false, fmt.Errorf("\"github.repository\" failed to cast field \"hasIssues\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// HasProjects accessor autogenerated
+func (s *mqlGithubRepository) HasProjects() (bool, error) {
+	res, ok := s.Cache.Load("hasProjects")
+	if !ok || !res.Valid {
+		return false, errors.New("\"github.repository\" failed: no value provided for static field \"hasProjects\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"github.repository\" failed to cast field \"hasProjects\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// HasWiki accessor autogenerated
+func (s *mqlGithubRepository) HasWiki() (bool, error) {
+	res, ok := s.Cache.Load("hasWiki")
+	if !ok || !res.Valid {
+		return false, errors.New("\"github.repository\" failed: no value provided for static field \"hasWiki\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"github.repository\" failed to cast field \"hasWiki\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// HasPages accessor autogenerated
+func (s *mqlGithubRepository) HasPages() (bool, error) {
+	res, ok := s.Cache.Load("hasPages")
+	if !ok || !res.Valid {
+		return false, errors.New("\"github.repository\" failed: no value provided for static field \"hasPages\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"github.repository\" failed to cast field \"hasPages\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// HasDownloads accessor autogenerated
+func (s *mqlGithubRepository) HasDownloads() (bool, error) {
+	res, ok := s.Cache.Load("hasDownloads")
+	if !ok || !res.Valid {
+		return false, errors.New("\"github.repository\" failed: no value provided for static field \"hasDownloads\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"github.repository\" failed to cast field \"hasDownloads\" to the right type (bool): %#v", res)
 	}
 	return tres, nil
 }
@@ -4841,6 +5187,29 @@ func (s *mqlGithubRepository) ClosedIssues() ([]interface{}, error) {
 	return tres, nil
 }
 
+// License accessor autogenerated
+func (s *mqlGithubRepository) License() (GithubLicense, error) {
+	res, ok := s.Cache.Load("license")
+	if !ok || !res.Valid {
+		if err := s.ComputeLicense(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("license")
+		if !ok {
+			return nil, errors.New("\"github.repository\" calculated \"license\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "license")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GithubLicense)
+	if !ok {
+		return nil, fmt.Errorf("\"github.repository\" failed to cast field \"license\" to the right type (GithubLicense): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGithubRepository) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[github.repository].MqlCompute")
@@ -4853,7 +5222,19 @@ func (s *mqlGithubRepository) MqlCompute(name string) error {
 		return nil
 	case "description":
 		return nil
+	case "cloneUrl":
+		return nil
+	case "sshUrl":
+		return nil
 	case "homepage":
+		return nil
+	case "topics":
+		return nil
+	case "language":
+		return nil
+	case "watchersCount":
+		return nil
+	case "forksCount":
 		return nil
 	case "stargazersCount":
 		return nil
@@ -4863,11 +5244,15 @@ func (s *mqlGithubRepository) MqlCompute(name string) error {
 		return nil
 	case "updatedAt":
 		return nil
+	case "pushedAt":
+		return nil
 	case "archived":
 		return nil
 	case "disabled":
 		return nil
 	case "private":
+		return nil
+	case "isFork":
 		return nil
 	case "visibility":
 		return nil
@@ -4882,6 +5267,14 @@ func (s *mqlGithubRepository) MqlCompute(name string) error {
 	case "allowSquashMerge":
 		return nil
 	case "hasIssues":
+		return nil
+	case "hasProjects":
+		return nil
+	case "hasWiki":
+		return nil
+	case "hasPages":
+		return nil
+	case "hasDownloads":
 		return nil
 	case "openMergeRequests":
 		return s.ComputeOpenMergeRequests()
@@ -4913,6 +5306,8 @@ func (s *mqlGithubRepository) MqlCompute(name string) error {
 		return s.ComputeOpenIssues()
 	case "closedIssues":
 		return s.ComputeClosedIssues()
+	case "license":
+		return s.ComputeLicense()
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"github.repository\" resource")
 	}
@@ -5098,6 +5493,233 @@ func (s *mqlGithubRepository) ComputeClosedIssues() error {
 	}
 	s.Cache.Store("closedIssues", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
 	return nil
+}
+
+// ComputeLicense computer autogenerated
+func (s *mqlGithubRepository) ComputeLicense() error {
+	var err error
+	if _, ok := s.Cache.Load("license"); ok {
+		return nil
+	}
+	vres, err := s.GetLicense()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("license", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GithubLicense resource interface
+type GithubLicense interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Key() (string, error)
+	Name() (string, error)
+	Url() (string, error)
+	SpdxId() (string, error)
+}
+
+// mqlGithubLicense for the github.license resource
+type mqlGithubLicense struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGithubLicense) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the github.license resource
+func newGithubLicense(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGithubLicense{runtime.NewResource("github.license")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "key":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"github.license\", its \"key\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"github.license\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "url":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"github.license\", its \"url\" argument has the wrong type (expected type \"string\")")
+			}
+		case "spdxId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"github.license\", its \"spdxId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"github.license\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized github.license with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGithubLicense) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("key"); !ok {
+		return errors.New("Initialized \"github.license\" resource without a \"key\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"github.license\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("url"); !ok {
+		return errors.New("Initialized \"github.license\" resource without a \"url\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("spdxId"); !ok {
+		return errors.New("Initialized \"github.license\" resource without a \"spdxId\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGithubLicense) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[github.license].Register")
+	switch name {
+	case "key":
+		return nil
+	case "name":
+		return nil
+	case "url":
+		return nil
+	case "spdxId":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"github.license\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGithubLicense) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[github.license].Field")
+	switch name {
+	case "key":
+		return s.Key()
+	case "name":
+		return s.Name()
+	case "url":
+		return s.Url()
+	case "spdxId":
+		return s.SpdxId()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"github.license\" resource")
+	}
+}
+
+// Key accessor autogenerated
+func (s *mqlGithubLicense) Key() (string, error) {
+	res, ok := s.Cache.Load("key")
+	if !ok || !res.Valid {
+		return "", errors.New("\"github.license\" failed: no value provided for static field \"key\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"github.license\" failed to cast field \"key\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGithubLicense) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"github.license\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"github.license\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Url accessor autogenerated
+func (s *mqlGithubLicense) Url() (string, error) {
+	res, ok := s.Cache.Load("url")
+	if !ok || !res.Valid {
+		return "", errors.New("\"github.license\" failed: no value provided for static field \"url\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"github.license\" failed to cast field \"url\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// SpdxId accessor autogenerated
+func (s *mqlGithubLicense) SpdxId() (string, error) {
+	res, ok := s.Cache.Load("spdxId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"github.license\" failed: no value provided for static field \"spdxId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"github.license\" failed to cast field \"spdxId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGithubLicense) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[github.license].MqlCompute")
+	switch name {
+	case "key":
+		return nil
+	case "name":
+		return nil
+	case "url":
+		return nil
+	case "spdxId":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"github.license\" resource")
+	}
 }
 
 // GithubFile resource interface

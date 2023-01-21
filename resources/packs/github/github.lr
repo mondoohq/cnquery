@@ -227,8 +227,20 @@ private github.repository @defaults("fullName") {
   fullName string
   // Repository description
   description string
+  // Repository clone URL
+  cloneUrl string
+  // Repository SSH URL
+  sshUrl string
   // Repository homepage
   homepage string
+  // Repository topics
+  topics []string
+  // Repository language
+  language string
+  // Count of repository watchers
+  watchersCount int
+  // Count of repository forks
+  forksCount int
   // Count of repository stargazers
   stargazersCount int
   // Count of open issues in repository
@@ -237,12 +249,16 @@ private github.repository @defaults("fullName") {
   createdAt time
   // Repository update time
   updatedAt time
+  // Repository pushed time
+  pushedAt time
   // Whether the repository is archived
   archived bool
   // Whether the repository is disabled
   disabled bool
   // Whether the repository is private
   private bool
+  // Whether the repository is a fork
+  isFork bool
   // Repository visibility
   visibility string
   // Whether the repository allows auto merging
@@ -257,6 +273,14 @@ private github.repository @defaults("fullName") {
   allowSquashMerge bool
   // Whether the repository has open issues
   hasIssues bool
+  // Whether the repository has projects
+  hasProjects bool
+  // Whether the repository has wiki
+  hasWiki bool
+  // Whether the repository has pages
+  hasPages bool
+  // Whether the repository has downloads
+  hasDownloads bool
   // Whether the repository has open merge requests
   openMergeRequests() []github.mergeRequest
   // List of branches for the repository
@@ -287,6 +311,20 @@ private github.repository @defaults("fullName") {
   openIssues() []github.issue
   // List of repository closed issues
   closedIssues() []github.issue
+  // Repository license
+  license() github.license
+}
+
+// GitHub License
+private github.license @defaults("spdxId") {
+  // License key
+  key string
+  // License name
+  name string
+  // License URL
+  url string
+  // License spdx ID
+  spdxId string
 }
 
 // GitHub Repository File

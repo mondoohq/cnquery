@@ -31,11 +31,17 @@ func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository)
 		"fullName", core.ToString(repo.FullName),
 		"description", core.ToString(repo.Description),
 		"homepage", core.ToString(repo.Homepage),
+		"topics", core.StrSliceToInterface(repo.Topics),
+		"language", repo.GetLanguage(),
 		"createdAt", githubTimestamp(repo.CreatedAt),
 		"updatedAt", githubTimestamp(repo.UpdatedAt),
+		"pushedAt", githubTimestamp(repo.PushedAt),
 		"archived", core.ToBool(repo.Archived),
 		"disabled", core.ToBool(repo.Disabled),
 		"private", core.ToBool(repo.Private),
+		"isFork", repo.GetFork(),
+		"watchersCount", int64(repo.GetWatchersCount()),
+		"forksCount", int64(repo.GetForksCount()),
 		"openIssuesCount", int64(repo.GetOpenIssues()),
 		"stargazersCount", int64(repo.GetStargazersCount()),
 		"visibility", core.ToString(repo.Visibility),
@@ -44,8 +50,14 @@ func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository)
 		"allowMergeCommit", core.ToBool(repo.AllowMergeCommit),
 		"allowRebaseMerge", core.ToBool(repo.AllowRebaseMerge),
 		"allowSquashMerge", core.ToBool(repo.AllowSquashMerge),
-		"hasIssues", core.ToBool(repo.HasIssues),
+		"hasIssues", repo.GetHasIssues(),
+		"hasProjects", repo.GetHasProjects(),
+		"hasWiki", repo.GetHasWiki(),
+		"hasPages", repo.GetHasPages(),
+		"hasDownloads", repo.GetHasDownloads(),
 		"defaultBranchName", core.ToString(repo.DefaultBranch),
+		"cloneUrl", repo.GetCloneURL(),
+		"sshUrl", repo.GetSSHURL(),
 		"owner", owner,
 	)
 }
@@ -134,25 +146,84 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 		(*args)["fullName"] = core.ToString(repo.FullName)
 		(*args)["description"] = core.ToString(repo.Description)
 		(*args)["homepage"] = core.ToString(repo.Homepage)
+		(*args)["topics"] = core.StrSliceToInterface(repo.Topics)
+		(*args)["language"] = repo.GetLanguage()
+		(*args)["watchersCount"] = int64(repo.GetWatchersCount())
+		(*args)["forksCount"] = int64(repo.GetForksCount())
 		(*args)["openIssuesCount"] = int64(repo.GetOpenIssues())
 		(*args)["stargazersCount"] = int64(repo.GetStargazersCount())
 		(*args)["createdAt"] = githubTimestamp(repo.CreatedAt)
 		(*args)["updatedAt"] = githubTimestamp(repo.UpdatedAt)
+		(*args)["pushedAt"] = githubTimestamp(repo.PushedAt)
 		(*args)["archived"] = core.ToBool(repo.Archived)
 		(*args)["disabled"] = core.ToBool(repo.Disabled)
 		(*args)["private"] = core.ToBool(repo.Private)
+		(*args)["isFork"] = repo.GetFork()
 		(*args)["visibility"] = core.ToString(repo.Visibility)
 		(*args)["allowAutoMerge"] = core.ToBool(repo.AllowAutoMerge)
 		(*args)["allowForking"] = core.ToBool(repo.AllowForking)
 		(*args)["allowMergeCommit"] = core.ToBool(repo.AllowMergeCommit)
 		(*args)["allowRebaseMerge"] = core.ToBool(repo.AllowRebaseMerge)
 		(*args)["allowSquashMerge"] = core.ToBool(repo.AllowSquashMerge)
-		(*args)["hasIssues"] = core.ToBool(repo.HasIssues)
+		(*args)["hasIssues"] = repo.GetHasIssues()
+		(*args)["hasProjects"] = repo.GetHasProjects()
+		(*args)["hasWiki"] = repo.GetHasWiki()
+		(*args)["hasPages"] = repo.GetHasPages()
+		(*args)["hasDownloads"] = repo.GetHasDownloads()
 		(*args)["defaultBranchName"] = core.ToString(repo.DefaultBranch)
+		(*args)["cloneUrl"] = repo.GetCloneURL()
+		(*args)["sshUrl"] = repo.GetSSHURL()
 		(*args)["owner"] = owner
 	}
 
 	return args, nil, nil
+}
+
+func (g *mqlGithubLicense) id() (string, error) {
+	id, err := g.SpdxId()
+	if err != nil {
+		return "", err
+	}
+	return "github.license/" + id, nil
+}
+
+func (g *mqlGithubRepository) GetLicense() (interface{}, error) {
+	gt, err := githubProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	repoName, err := g.Name()
+	if err != nil {
+		return nil, err
+	}
+	ownerName, err := g.Owner()
+	if err != nil {
+		return nil, err
+	}
+	ownerLogin, err := ownerName.Login()
+	if err != nil {
+		return nil, err
+	}
+
+	repoLicense, _, err := gt.Client().Repositories.License(context.Background(), ownerLogin, repoName)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if repoLicense == nil || repoLicense.License == nil {
+		return nil, nil
+	}
+
+	license := repoLicense.License
+	return g.MotorRuntime.CreateResource("github.license",
+		"key", license.GetKey(),
+		"name", license.GetName(),
+		"url", license.GetURL(),
+		"spdxId", license.GetSPDXID(),
+	)
 }
 
 func (g *mqlGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
@@ -181,7 +252,6 @@ func (g *mqlGithubRepository) GetOpenMergeRequests() ([]interface{}, error) {
 	for {
 		pulls, resp, err := gt.Client().PullRequests.List(context.TODO(), ownerLogin, repoName, listOpts)
 		if err != nil {
-			log.Error().Err(err).Msg("unable to pull merge requests list")
 			if strings.Contains(err.Error(), "404") {
 				return nil, nil
 			}
