@@ -28,6 +28,7 @@ const (
 	padding                  = 0
 	maxWidth                 = 80
 	defaultWidth             = 40
+	defaultProgressNumAssets = 10
 	overallProgressIndexName = "overall"
 )
 
@@ -78,12 +79,12 @@ func newProgressBar() progress.Model {
 // The key of the map is used to identify the progress bar.
 // The value of the map is used as the name displayed for the progress bar.
 // orderedKeys is used to define the order of the progress bars.
-func NewMultiProgressProgram(elements map[string]string, orderedKeys []string, progressNumAssets int) (Program, error) {
+func NewMultiProgressProgram(elements map[string]string, orderedKeys []string) (Program, error) {
 	if len(elements) != len(orderedKeys) {
 		return nil, fmt.Errorf("number of elements and orderedKeys must be equal")
 	}
 	m := newMultiProgress(elements)
-	m.maxItemsToShow = progressNumAssets
+	m.maxItemsToShow = defaultProgressNumAssets
 	m.orderedKeys = orderedKeys
 	return tea.NewProgram(m), nil
 }
