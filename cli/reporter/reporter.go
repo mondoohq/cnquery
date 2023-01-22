@@ -3,6 +3,7 @@ package reporter
 import (
 	"errors"
 	"io"
+	"sort"
 	"strings"
 
 	"go.mondoo.com/cnquery/cli/printer"
@@ -10,6 +11,44 @@ import (
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/shared"
 )
+
+type Format byte
+
+const (
+	Compact Format = iota + 1
+	Summary
+	Full
+	YAML
+	JSON
+	JUnit
+	CSV
+)
+
+// Formats that are supported by the reporter
+var Formats = map[string]Format{
+	"compact": Compact,
+	"summary": Summary,
+	"full":    Full,
+	"":        Compact,
+	"yaml":    YAML,
+	"yml":     YAML,
+	"json":    JSON,
+	"csv":     CSV,
+}
+
+func AllFormats() string {
+	var res []string
+	for k := range Formats {
+		if k != "" && // default if nothing is provided, ignore
+			k != "yml" { // don't show both yaml and yml
+			res = append(res, k)
+		}
+	}
+
+	// ensure the order is always the same
+	sort.Strings(res)
+	return strings.Join(res, ", ")
+}
 
 type Reporter struct {
 	// Pager set to true will use a pager for the output. Only relevant for all
@@ -39,7 +78,7 @@ func New(typ string) (*Reporter, error) {
 func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 	switch r.Format {
 	case Compact:
-		rr := &defaultReporter{
+		rr := &cliReporter{
 			Reporter:  r,
 			isCompact: true,
 			out:       out,
@@ -47,7 +86,7 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 		}
 		return rr.print()
 	case Summary:
-		rr := &defaultReporter{
+		rr := &cliReporter{
 			Reporter:  r,
 			isCompact: true,
 			isSummary: true,
@@ -56,7 +95,7 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 		}
 		return rr.print()
 	case Full:
-		rr := &defaultReporter{
+		rr := &cliReporter{
 			Reporter:  r,
 			isCompact: false,
 			out:       out,

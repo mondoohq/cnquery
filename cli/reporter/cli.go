@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/cnquery/stringx"
 )
 
-type defaultReporter struct {
+type cliReporter struct {
 	*Reporter
 	isCompact bool
 	isSummary bool
@@ -24,7 +24,7 @@ type defaultReporter struct {
 	bundle *explorer.BundleMap
 }
 
-func (r *defaultReporter) print() error {
+func (r *cliReporter) print() error {
 	// catch case where the scan was not successful and no bundle was fetched from server
 	if r.data == nil || r.data.Bundle == nil {
 		return nil
@@ -40,7 +40,7 @@ func (r *defaultReporter) print() error {
 	return nil
 }
 
-func (r *defaultReporter) printSummary() {
+func (r *cliReporter) printSummary() {
 	r.out.Write([]byte(r.Printer.H1("Summary (" + strconv.Itoa(len(r.data.Assets)) + " assets)")))
 
 	for mrn, asset := range r.data.Assets {
@@ -48,7 +48,7 @@ func (r *defaultReporter) printSummary() {
 	}
 }
 
-func (r *defaultReporter) printAssetSummary(assetMrn string, asset *explorer.Asset) {
+func (r *cliReporter) printAssetSummary(assetMrn string, asset *explorer.Asset) {
 	target := asset.Name
 	if target == "" {
 		target = assetMrn
@@ -77,7 +77,7 @@ func (r *defaultReporter) printAssetSummary(assetMrn string, asset *explorer.Ass
 	r.out.Write([]byte("\n"))
 }
 
-func (r *defaultReporter) printQueries() {
+func (r *cliReporter) printQueries() {
 	if len(r.data.Assets) == 0 {
 		r.out.Write([]byte("No assets to report on."))
 		return
@@ -111,7 +111,7 @@ func (r *defaultReporter) printQueries() {
 	}
 }
 
-func (r *defaultReporter) printAssetQueries(assetMrn string, queries []*explorer.Mquery) {
+func (r *cliReporter) printAssetQueries(assetMrn string, queries []*explorer.Mquery) {
 	report, ok := r.data.Reports[assetMrn]
 	if !ok {
 		// nothing to do, we get an error message in the summary code
