@@ -41,8 +41,7 @@ func (r *defaultReporter) print() error {
 }
 
 func (r *defaultReporter) printSummary() {
-	r.out.Write([]byte("Summary (" + strconv.Itoa(len(r.data.Assets)) + " assets)\n"))
-	r.out.Write([]byte("========================\n"))
+	r.out.Write([]byte(r.Printer.H1("Summary (" + strconv.Itoa(len(r.data.Assets)) + " assets)")))
 
 	for mrn, asset := range r.data.Assets {
 		r.printAssetSummary(mrn, asset)
@@ -105,11 +104,9 @@ func (r *defaultReporter) printQueries() {
 
 	for k := range r.data.Assets {
 		cur := r.data.Assets[k]
-		r.out.Write([]byte("Asset: " + cur.Name + "\n"))
-		r.out.Write([]byte("========================\n\n"))
 
+		r.out.Write([]byte(r.Printer.H1("Asset: " + cur.Name)))
 		r.printAssetQueries(k, queries)
-
 		r.out.Write([]byte{'\n'})
 	}
 }
