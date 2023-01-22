@@ -253,5 +253,5 @@ func TestMultiProgressBarOrdering(t *testing.T) {
 	// regexp is not working, perhaps because of ansi escape characters???
 	// ordering := regexp.MustCompile(`^.*test1.*test3.*test2.*$`)
 	// m := ordering.FindString(buf.String())
-	assert.Contains(t, buf.String(), "test1   score: F\r\n███████████████████████████████████ 100% test3   score: F\r\n███████████████████████████████████ 100% test2")
+	assert.Contains(t, buf.String(), "test1   score: F\r\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% test3   score: F\r\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% test2")
 }

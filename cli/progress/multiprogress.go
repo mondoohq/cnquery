@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"go.mondoo.com/cnquery/cli/theme"
 )
 
 // reduced tea.Program interface
@@ -66,9 +67,9 @@ type modelMultiProgress struct {
 func newProgressBar() progress.Model {
 	progressbar := progress.New(progress.WithScaledGradient("#5A56E0", "#EE6FF8"))
 	progressbar.Width = defaultWidth
-	progressbar.Full = '█'
+	progressbar.Full = '━'
 	progressbar.FullColor = "#7571F9"
-	progressbar.Empty = '░'
+	progressbar.Empty = '─'
 	progressbar.EmptyColor = "#606060"
 	progressbar.ShowPercentage = true
 	progressbar.PercentFormat = " %3.0f%%"
@@ -269,7 +270,7 @@ func (m modelMultiProgress) View() string {
 		}
 		pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
 		if m.Progress[k].Errored {
-			outputFinished += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
+			outputFinished += m.Progress[k].model.View() + theme.DefaultTheme.Error("    X "+m.Progress[k].Name)
 		} else if m.Progress[k].Completed {
 			outputFinished += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
 		}
