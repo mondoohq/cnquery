@@ -19,6 +19,7 @@ type Progress interface {
 	OnProgress(current int, total int)
 	Score(score string)
 	Errored()
+	NotApplicable()
 	Completed()
 	Close()
 }
@@ -29,6 +30,7 @@ func (n Noop) Open() error         { return nil }
 func (n Noop) OnProgress(int, int) {}
 func (n Noop) Score(score string)  {}
 func (n Noop) Errored()            {}
+func (n Noop) NotApplicable()      {}
 func (n Noop) Completed()          {}
 func (n Noop) Close()              {}
 
@@ -74,9 +76,10 @@ func NewMultiBar(id string, data progressData) *progressbar {
 	}
 }
 
-func (p *progressbar) Errored()     {}
-func (p *progressbar) Score(string) {}
-func (p *progressbar) Completed()   {}
+func (p *progressbar) Errored()       {}
+func (p *progressbar) NotApplicable() {}
+func (p *progressbar) Score(string)   {}
+func (p *progressbar) Completed()     {}
 
 func (p *progressbar) Open() error {
 	var err error
