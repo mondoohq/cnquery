@@ -213,7 +213,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	finished := false
 	go func() {
 		defer scanGroup.Done()
-		defer progressProg.Quit()
 		for i := range assetList {
 			asset := assetList[i]
 
@@ -222,6 +221,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 			select {
 			case <-ctx.Done():
 				log.Warn().Msg("request context has been canceled")
+				progressProg.Quit()
 				return
 			default:
 			}
@@ -249,7 +249,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		fmt.Println(err.Error())
 		panic(err)
 	}
-	defer progressProg.Quit()
 	scanGroup.Wait()
 	return reporter.Reports(), finished, nil
 }

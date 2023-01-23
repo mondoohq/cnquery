@@ -2,6 +2,7 @@ package progress
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 
@@ -174,6 +175,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Progress[msg.Index].lock.Unlock()
 		}
 
+		overallPercent := 0.0
 		if _, ok := m.Progress[overallProgressIndexName]; ok {
 			m.Progress[msg.Index].lock.Lock()
 			sumPercent := 0.0
@@ -182,14 +184,23 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if k == overallProgressIndexName {
 					continue
 				}
+				if m.Progress[k].Errored {
+					continue
+				}
 				sumPercent += m.Progress[k].model.Percent()
 				validAssets++
 			}
-			cmd = m.Progress[overallProgressIndexName].model.SetPercent(sumPercent / float64(validAssets))
+			overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
+			cmd = m.Progress[overallProgressIndexName].model.SetPercent(overallPercent)
 			m.Progress[msg.Index].lock.Unlock()
 			cmds = append(cmds, cmd)
 		}
 
+		// When all progress bars are completed, quit the program
+		// Also quit the Program when there is only one progress bar and it is completed
+		if overallPercent == 1.0 || (len(m.Progress) == 1 && m.Progress[msg.Index].model.Percent() == 1.0) {
+			cmds = append(cmds, tea.Quit)
+		}
 		return m, tea.Batch(cmds...)
 
 	case MsgErrored:
@@ -250,36 +261,51 @@ func (m modelMultiProgress) View() string {
 			completedAssets++
 		}
 	}
-	i := 1
+	outputFinished := ""
+	numItemsFinished := 0
 	for _, k := range m.orderedKeys {
-		if k != overallProgressIndexName {
-			pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
-			if m.Progress[k].Errored {
-				output += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
-			} else {
-				output += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
-			}
-			if m.Progress[k].Score != "" {
-				output += pad + " score: " + m.Progress[k].Score
-			}
+		if !m.Progress[k].Errored && !m.Progress[k].Completed {
+			continue
 		}
-		output += "\n" + pad
-		if i == m.maxItemsToShow {
+		pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
+		if m.Progress[k].Errored {
+			outputFinished += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
+		} else if m.Progress[k].Completed {
+			outputFinished += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
+		}
+		if m.Progress[k].Score != "" {
+			outputFinished += pad + " score: " + m.Progress[k].Score
+		}
+		outputFinished += "\n"
+		numItemsFinished++
+	}
+
+	itemsInProgress := 0
+	outputNotDone := ""
+	for _, k := range m.orderedKeys {
+		if m.Progress[k].Errored || m.Progress[k].Completed {
+			continue
+		}
+		outputNotDone += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name + "\n"
+		itemsInProgress++
+		if itemsInProgress == m.maxItemsToShow {
 			break
 		}
-		i++
 	}
-	if m.maxItemsToShow > 0 && len(m.orderedKeys) > m.maxItemsToShow {
-		output += fmt.Sprintf("... %d more assets ...\n%s", len(m.orderedKeys)-m.maxItemsToShow, pad)
+	itemsUnfinished := len(m.orderedKeys) - itemsInProgress - numItemsFinished
+	if m.maxItemsToShow > 0 && itemsUnfinished > 0 {
+		outputNotDone += fmt.Sprintf("... %d more assets ...\n", itemsUnfinished)
 	}
 
+	output += outputFinished + outputNotDone
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(m.Progress[overallProgressIndexName].model.Percent()) + " " + m.Progress[overallProgressIndexName].Name
-		output += fmt.Sprintf(" %d/%d assets", completedAssets, len(m.Progress)-1)
+		output += fmt.Sprintf(" %d/%d scanned", completedAssets, len(m.Progress)-1)
 		if erroredAssets > 0 {
-			output += fmt.Sprintf(" %d/%d errors", erroredAssets, len(m.Progress)-1)
+			output += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
 		}
+		output += "\n"
 	}
 
-	return "\n" + pad + output + "\n\n"
+	return "\n" + pad + output + "\n"
 }
