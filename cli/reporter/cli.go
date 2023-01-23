@@ -33,7 +33,7 @@ func (r *cliReporter) print() error {
 	r.bundle = r.data.Bundle.ToMap()
 
 	if !r.isSummary {
-		r.printQueries()
+		r.printQueryData()
 	}
 
 	r.printSummary()
@@ -77,7 +77,9 @@ func (r *cliReporter) printAssetSummary(assetMrn string, asset *explorer.Asset) 
 	r.out.Write([]byte("\n"))
 }
 
-func (r *cliReporter) printQueries() {
+func (r *cliReporter) printQueryData() {
+	r.out.Write([]byte(r.Printer.H1("Data (" + strconv.Itoa(len(r.data.Assets)) + " assets)")))
+
 	if len(r.data.Assets) == 0 {
 		r.out.Write([]byte("No assets to report on."))
 		return
@@ -105,9 +107,18 @@ func (r *cliReporter) printQueries() {
 	for k := range r.data.Assets {
 		cur := r.data.Assets[k]
 
-		r.out.Write([]byte(r.Printer.H1("Asset: " + cur.Name)))
+		r.out.Write([]byte(r.Printer.H2("Asset: " + cur.Name)))
+
+		// check if the asset has an error
+		err, ok := r.data.Errors[k]
+		if ok {
+			r.out.Write([]byte(r.Printer.Error(err)))
+			r.out.Write([]byte("\n\n"))
+			continue
+		}
+
+		// print the query data
 		r.printAssetQueries(k, queries)
-		r.out.Write([]byte{'\n'})
 	}
 }
 
@@ -165,5 +176,4 @@ func (r *cliReporter) printAssetQueries(assetMrn string, queries []*explorer.Mqu
 		r.out.Write([]byte(result))
 		r.out.Write([]byte("\n\n"))
 	}
-	r.out.Write([]byte("\n"))
 }
