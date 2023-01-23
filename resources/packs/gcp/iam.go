@@ -169,7 +169,7 @@ func auditConfigsToMql(runtime *resources.Runtime, auditCfgs []*cloudresourceman
 func bindingsToMql(runtime *resources.Runtime, bindings []*cloudresourcemanager.Binding, idPrefix string) ([]interface{}, error) {
 	mqlBindings := make([]interface{}, 0, len(bindings))
 	for i, b := range bindings {
-		mqlServiceaccount, err := runtime.CreateResource("gcp.resourcemanager.binding",
+		mqlServiceaccount, err := runtime.CreateResource("gcp.iamPolicy.binding",
 			"id", fmt.Sprintf("%s/%d", idPrefix, i),
 			"role", b.Role,
 			"members", core.StrSliceToInterface(b.Members),

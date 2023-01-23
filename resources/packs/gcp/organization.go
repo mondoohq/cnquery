@@ -105,6 +105,6 @@ func (g *mqlGcpOrganization) GetIamPolicy() (interface{}, error) {
 	)
 }
 
-func (g *mqlGcpResourcemanagerBinding) id() (string, error) {
+func (g *mqlGcpIamPolicyBinding) id() (string, error) {
 	return g.Id()
 }

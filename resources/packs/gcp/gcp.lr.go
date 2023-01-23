@@ -17,7 +17,7 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.service", newGcpService)
 	registry.AddFactory("gcp.recommendation", newGcpRecommendation)
 	registry.AddFactory("gcp.iamPolicy", newGcpIamPolicy)
-	registry.AddFactory("gcp.resourcemanager.binding", newGcpResourcemanagerBinding)
+	registry.AddFactory("gcp.iamPolicy.binding", newGcpIamPolicyBinding)
 	registry.AddFactory("gcp.project.computeService", newGcpProjectComputeService)
 	registry.AddFactory("gcp.project.computeService.region", newGcpProjectComputeServiceRegion)
 	registry.AddFactory("gcp.project.computeService.zone", newGcpProjectComputeServiceZone)
@@ -2830,8 +2830,8 @@ func (s *mqlGcpIamPolicy) MqlCompute(name string) error {
 	}
 }
 
-// GcpResourcemanagerBinding resource interface
-type GcpResourcemanagerBinding interface {
+// GcpIamPolicyBinding resource interface
+type GcpIamPolicyBinding interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -2842,21 +2842,21 @@ type GcpResourcemanagerBinding interface {
 	Role() (string, error)
 }
 
-// mqlGcpResourcemanagerBinding for the gcp.resourcemanager.binding resource
-type mqlGcpResourcemanagerBinding struct {
+// mqlGcpIamPolicyBinding for the gcp.iamPolicy.binding resource
+type mqlGcpIamPolicyBinding struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlGcpResourcemanagerBinding) MqlResource() *resources.Resource {
+func (s *mqlGcpIamPolicyBinding) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the gcp.resourcemanager.binding resource
-func newGcpResourcemanagerBinding(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the gcp.iamPolicy.binding resource
+func newGcpIamPolicyBinding(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlGcpResourcemanagerBinding{runtime.NewResource("gcp.resourcemanager.binding")}
+	res := mqlGcpIamPolicyBinding{runtime.NewResource("gcp.iamPolicy.binding")}
 	// assign all named fields
 	var id string
 
@@ -2870,24 +2870,24 @@ func newGcpResourcemanagerBinding(runtime *resources.Runtime, args *resources.Ar
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.iamPolicy.binding\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "members":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"members\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"gcp.iamPolicy.binding\", its \"members\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "role":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"role\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.iamPolicy.binding\", its \"role\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"gcp.resourcemanager.binding\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.iamPolicy.binding\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized gcp.resourcemanager.binding with unknown argument " + name)
+			return nil, errors.New("Initialized gcp.iamPolicy.binding with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -2905,24 +2905,24 @@ func newGcpResourcemanagerBinding(runtime *resources.Runtime, args *resources.Ar
 	return &res, nil
 }
 
-func (s *mqlGcpResourcemanagerBinding) Validate() error {
+func (s *mqlGcpIamPolicyBinding) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.resourcemanager.binding\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"gcp.iamPolicy.binding\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("members"); !ok {
-		return errors.New("Initialized \"gcp.resourcemanager.binding\" resource without a \"members\". This field is required.")
+		return errors.New("Initialized \"gcp.iamPolicy.binding\" resource without a \"members\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("role"); !ok {
-		return errors.New("Initialized \"gcp.resourcemanager.binding\" resource without a \"role\". This field is required.")
+		return errors.New("Initialized \"gcp.iamPolicy.binding\" resource without a \"role\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlGcpResourcemanagerBinding) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.resourcemanager.binding].Register")
+func (s *mqlGcpIamPolicyBinding) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.iamPolicy.binding].Register")
 	switch name {
 	case "id":
 		return nil
@@ -2931,13 +2931,13 @@ func (s *mqlGcpResourcemanagerBinding) Register(name string) error {
 	case "role":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.resourcemanager.binding\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.iamPolicy.binding\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlGcpResourcemanagerBinding) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[gcp.resourcemanager.binding].Field")
+func (s *mqlGcpIamPolicyBinding) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.iamPolicy.binding].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -2946,61 +2946,61 @@ func (s *mqlGcpResourcemanagerBinding) Field(name string) (interface{}, error) {
 	case "role":
 		return s.Role()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.resourcemanager.binding\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.iamPolicy.binding\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlGcpResourcemanagerBinding) Id() (string, error) {
+func (s *mqlGcpIamPolicyBinding) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.resourcemanager.binding\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"gcp.iamPolicy.binding\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.resourcemanager.binding\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.iamPolicy.binding\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Members accessor autogenerated
-func (s *mqlGcpResourcemanagerBinding) Members() ([]interface{}, error) {
+func (s *mqlGcpIamPolicyBinding) Members() ([]interface{}, error) {
 	res, ok := s.Cache.Load("members")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"gcp.resourcemanager.binding\" failed: no value provided for static field \"members\"")
+		return nil, errors.New("\"gcp.iamPolicy.binding\" failed: no value provided for static field \"members\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"gcp.resourcemanager.binding\" failed to cast field \"members\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"gcp.iamPolicy.binding\" failed to cast field \"members\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Role accessor autogenerated
-func (s *mqlGcpResourcemanagerBinding) Role() (string, error) {
+func (s *mqlGcpIamPolicyBinding) Role() (string, error) {
 	res, ok := s.Cache.Load("role")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.resourcemanager.binding\" failed: no value provided for static field \"role\"")
+		return "", errors.New("\"gcp.iamPolicy.binding\" failed: no value provided for static field \"role\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.resourcemanager.binding\" failed to cast field \"role\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.iamPolicy.binding\" failed to cast field \"role\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlGcpResourcemanagerBinding) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[gcp.resourcemanager.binding].MqlCompute")
+func (s *mqlGcpIamPolicyBinding) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.iamPolicy.binding].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -3009,7 +3009,7 @@ func (s *mqlGcpResourcemanagerBinding) MqlCompute(name string) error {
 	case "role":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"gcp.resourcemanager.binding\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"gcp.iamPolicy.binding\" resource")
 	}
 }
 
