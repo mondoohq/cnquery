@@ -275,7 +275,11 @@ func (m modelMultiProgress) View() string {
 			outputFinished += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
 		}
 		if m.Progress[k].Score != "" {
-			outputFinished += pad + " score: " + m.Progress[k].Score
+			if m.Progress[k].Errored {
+				outputFinished += pad + theme.DefaultTheme.Error(" score: "+m.Progress[k].Score)
+			} else {
+				outputFinished += pad + " score: " + m.Progress[k].Score
+			}
 		}
 		outputFinished += "\n"
 		numItemsFinished++
