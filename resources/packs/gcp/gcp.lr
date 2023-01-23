@@ -434,6 +434,8 @@ private gcp.project.computeService.snapshot @defaults("name") {
 private gcp.project.computeService.image @defaults("id name") {
   // Unique identifier
   id string
+  // Project ID
+  projectId string
   // Name of the resource
   name string
   // Optional description

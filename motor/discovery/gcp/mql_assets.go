@@ -92,7 +92,7 @@ type gcpObjectPlatformInfo struct {
 	platform string
 }
 
-func MondooObjectID(o gcpObject) string {
+func GcpPlatformID(o gcpObject) string {
 	return "//platformid.api.mondoo.app/runtime/gcp/" + o.service + "/v1/projects/" + o.project + "/regions/" + o.region + "/" + o.objectType + "/" + o.name
 }
 
@@ -109,11 +109,11 @@ func MqlObjectToAsset(account string, mqlObject mqlObject, tc *providers.Config)
 		log.Error().Err(err).Msg("missing runtime info")
 		return nil
 	}
-	platformid := MondooObjectID(mqlObject.gcpObject)
+	platformid := GcpPlatformID(mqlObject.gcpObject)
 	t := tc.Clone()
 	t.PlatformId = platformid
 	return &asset.Asset{
-		PlatformIds: []string{platformid, mqlObject.gcpObject.id},
+		PlatformIds: []string{platformid},
 		Name:        mqlObject.name,
 		Platform: &platform.Platform{
 			Name:    info.platform,

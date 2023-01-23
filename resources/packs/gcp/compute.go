@@ -911,6 +911,44 @@ func (g *mqlGcpProjectComputeServiceImage) id() (string, error) {
 	return "gcloud.compute.image/" + id, nil
 }
 
+func (g *mqlGcpProjectComputeServiceImage) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceImage, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+		(*args)["name"] = ids.name
+		(*args)["projectId"] = ids.project
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(GcpProjectComputeService)
+	images, err := computeSvc.Images()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, i := range images {
+		image := i.(GcpProjectComputeServiceImage)
+		name, err := image.Name()
+		if err != nil {
+			return nil, nil, err
+		}
+		projectId, err := image.ProjectId()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if name == (*args)["name"] && projectId == (*args)["projectId"] {
+			return args, image, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
+}
+
 func (g *mqlGcpProjectComputeServiceImage) GetSourceDisk() (interface{}, error) {
 	// TODO: implement
 	return nil, errors.New("not implemented")
@@ -945,6 +983,7 @@ func (g *mqlGcpProjectComputeService) GetImages() ([]interface{}, error) {
 		for _, image := range page.Items {
 			mqlImage, err := g.MotorRuntime.CreateResource("gcp.project.computeService.image",
 				"id", strconv.FormatUint(image.Id, 10),
+				"projectId", projectId,
 				"name", image.Name,
 				"description", image.Description,
 				"architecture", image.Architecture,
