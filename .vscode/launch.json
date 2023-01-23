@@ -112,6 +112,19 @@
         "-c",
         "gcp.project.kms.keyrings"
       ],
+    },
+    {
+      "name": "cnquery-gcp-assets",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "scan",
+        "gcp",
+        "--discover",
+        "compute-images"
+      ],
     }
   ]
 }

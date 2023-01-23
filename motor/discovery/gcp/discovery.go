@@ -1,6 +1,7 @@
 package gcp
 
 const (
-	DiscoveryInstances = "instances"
-	DiscoveryProjects  = "projects"
+	DiscoveryInstances     = "instances"
+	DiscoveryProjects      = "projects"
+	DiscoveryComputeImages = "compute-images"
 )
