@@ -177,7 +177,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		overallPercent := 0.0
 		if _, ok := m.Progress[overallProgressIndexName]; ok {
-			m.Progress[msg.Index].lock.Lock()
+			m.Progress[overallProgressIndexName].lock.Lock()
 			sumPercent := 0.0
 			validAssets := 0
 			for k := range m.Progress {
@@ -187,12 +187,14 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.Progress[k].Errored {
 					continue
 				}
+				m.Progress[k].lock.Lock()
 				sumPercent += m.Progress[k].model.Percent()
+				m.Progress[k].lock.Unlock()
 				validAssets++
 			}
 			overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
 			cmd = m.Progress[overallProgressIndexName].model.SetPercent(overallPercent)
-			m.Progress[msg.Index].lock.Unlock()
+			m.Progress[overallProgressIndexName].lock.Unlock()
 			cmds = append(cmds, cmd)
 		}
 
