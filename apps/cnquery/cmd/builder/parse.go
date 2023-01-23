@@ -176,6 +176,10 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 
 		if len(connection.Credentials) == 0 {
 			log.Warn().Msg("no identity file or password are provided for ssh authentication, use either --identity-file, --ask-pass or --password, fall back to ssh agent")
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type: vault.CredentialType_ssh_agent,
+				User: username,
+			})
 		}
 	case providers.ProviderType_WINRM:
 		connection.Backend = providerType
@@ -645,14 +649,6 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 
 		connection.Credentials = append(connection.Credentials, cred)
-	}
-
-	// if username was set but not credentials
-	if username != "" && len(connection.Credentials) == 0 {
-		connection.Credentials = append(connection.Credentials, &vault.Credential{
-			Type: vault.CredentialType_password,
-			User: username,
-		})
 	}
 
 	parsedAsset.Connections = []*providers.Config{connection}
