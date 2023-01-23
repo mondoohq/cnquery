@@ -221,6 +221,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 			select {
 			case <-ctx.Done():
 				log.Warn().Msg("request context has been canceled")
+				// When running multiple scans in parallel, this should not quit
+				// this should then send a progress.MsgErrored
 				progressProg.Quit()
 				return
 			default:

@@ -208,14 +208,18 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
+		var cmd tea.Cmd
 		m.Progress[msg.Index].lock.Lock()
 		m.Progress[msg.Index].Errored = true
 		m.Progress[msg.Index].model.ShowPercentage = false
 		// settings ShowPercentage to false, expanse the progress bar to match the others
 		// we need to manually reduce the width to match the others without the percentage
 		m.Progress[msg.Index].model.Width -= 5
+		if len(m.Progress) == 1 && m.Progress[msg.Index].Errored {
+			cmd = tea.Quit
+		}
 		m.Progress[msg.Index].lock.Unlock()
-		return m, nil
+		return m, cmd
 
 	case MsgScore:
 		if _, ok := m.Progress[msg.Index]; !ok {

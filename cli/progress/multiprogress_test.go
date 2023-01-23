@@ -119,6 +119,25 @@ func TestMultiProgressBarErrored(t *testing.T) {
 	assert.Contains(t, buf.String(), "67% overall 2/3 assets 1/3 errors")
 }
 
+func TestMultiProgressBarOnlyOneErrored(t *testing.T) {
+	var in bytes.Buffer
+	var buf bytes.Buffer
+
+	progressBarElements := map[string]string{"1": "test1"}
+	progressProgram, err := newMultiProgressMockProgram(progressBarElements, []string{"1"}, 30, &in, &buf)
+	require.NoError(t, err)
+
+	go func() {
+		// we need to wait for tea to start the Program, otherwise these would be no-ops
+		time.Sleep(1 * time.Millisecond)
+		// this should also end the tea program
+		progressProgram.Send(MsgErrored{Index: "1"})
+	}()
+	_, err = progressProgram.Run()
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "   X test1")
+}
+
 func TestMultiProgressBarLimitedNumber(t *testing.T) {
 	var in bytes.Buffer
 	var buf bytes.Buffer
