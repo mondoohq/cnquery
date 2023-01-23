@@ -2,6 +2,7 @@ package progress
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 
@@ -28,7 +29,7 @@ const (
 	padding                  = 0
 	maxWidth                 = 80
 	defaultWidth             = 40
-	defaultProgressNumAssets = 10
+	defaultProgressNumAssets = 1
 	overallProgressIndexName = "overall"
 )
 
@@ -157,7 +158,6 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case MsgProgress:
 		var cmds []tea.Cmd
-		var cmd tea.Cmd
 
 		if _, ok := m.Progress[msg.Index]; !ok {
 			return m, nil
@@ -174,21 +174,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Progress[msg.Index].lock.Unlock()
 		}
 
-		if _, ok := m.Progress[overallProgressIndexName]; ok {
-			m.Progress[msg.Index].lock.Lock()
-			sumPercent := 0.0
-			validAssets := 0
-			for k := range m.Progress {
-				if k == overallProgressIndexName {
-					continue
-				}
-				sumPercent += m.Progress[k].model.Percent()
-				validAssets++
-			}
-			cmd = m.Progress[overallProgressIndexName].model.SetPercent(sumPercent / float64(validAssets))
-			m.Progress[msg.Index].lock.Unlock()
-			cmds = append(cmds, cmd)
-		}
+		cmds = append(cmds, m.updateOverallProgress())
 
 		return m, tea.Batch(cmds...)
 
@@ -204,7 +190,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// we need to manually reduce the width to match the others without the percentage
 		m.Progress[msg.Index].model.Width -= 5
 		m.Progress[msg.Index].lock.Unlock()
-		return m, nil
+		return m, m.updateOverallProgress()
 
 	case MsgScore:
 		if _, ok := m.Progress[msg.Index]; !ok {
@@ -215,7 +201,6 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Progress[msg.Index].lock.Lock()
 			m.Progress[msg.Index].Score = msg.Score
 			m.Progress[msg.Index].lock.Unlock()
-			return m, nil
 		}
 		return m, nil
 
@@ -236,6 +221,32 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
+func (m modelMultiProgress) updateOverallProgress() tea.Cmd {
+	if _, ok := m.Progress[overallProgressIndexName]; !ok {
+		return nil
+	}
+	overallPercent := 0.0
+	m.Progress[overallProgressIndexName].lock.Lock()
+	sumPercent := 0.0
+	validAssets := 0
+	for k := range m.Progress {
+		if k == overallProgressIndexName {
+			continue
+		}
+		if m.Progress[k].Errored {
+			continue
+		}
+		m.Progress[k].lock.Lock()
+		sumPercent += m.Progress[k].model.Percent()
+		m.Progress[k].lock.Unlock()
+		validAssets++
+	}
+	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
+	cmd := m.Progress[overallProgressIndexName].model.SetPercent(overallPercent)
+	m.Progress[overallProgressIndexName].lock.Unlock()
+	return cmd
+}
+
 func (m modelMultiProgress) View() string {
 	pad := strings.Repeat(" ", padding)
 	output := ""
@@ -250,36 +261,51 @@ func (m modelMultiProgress) View() string {
 			completedAssets++
 		}
 	}
-	i := 1
+	outputFinished := ""
+	numItemsFinished := 0
 	for _, k := range m.orderedKeys {
-		if k != overallProgressIndexName {
-			pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
-			if m.Progress[k].Errored {
-				output += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
-			} else {
-				output += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
-			}
-			if m.Progress[k].Score != "" {
-				output += pad + " score: " + m.Progress[k].Score
-			}
+		if !m.Progress[k].Errored && !m.Progress[k].Completed {
+			continue
 		}
-		output += "\n" + pad
-		if i == m.maxItemsToShow {
+		pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
+		if m.Progress[k].Errored {
+			outputFinished += m.Progress[k].model.View() + "    X " + m.Progress[k].Name
+		} else if m.Progress[k].Completed {
+			outputFinished += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
+		}
+		if m.Progress[k].Score != "" {
+			outputFinished += pad + " score: " + m.Progress[k].Score
+		}
+		outputFinished += "\n"
+		numItemsFinished++
+	}
+
+	itemsInProgress := 0
+	outputNotDone := ""
+	for _, k := range m.orderedKeys {
+		if m.Progress[k].Errored || m.Progress[k].Completed {
+			continue
+		}
+		outputNotDone += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name + "\n"
+		itemsInProgress++
+		if itemsInProgress == m.maxItemsToShow {
 			break
 		}
-		i++
 	}
-	if m.maxItemsToShow > 0 && len(m.orderedKeys) > m.maxItemsToShow {
-		output += fmt.Sprintf("... %d more assets ...\n%s", len(m.orderedKeys)-m.maxItemsToShow, pad)
+	itemsUnfinished := len(m.orderedKeys) - itemsInProgress - numItemsFinished
+	if m.maxItemsToShow > 0 && itemsUnfinished > 0 {
+		outputNotDone += fmt.Sprintf("... %d more assets ...\n", itemsUnfinished)
 	}
 
+	output += outputFinished + outputNotDone
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(m.Progress[overallProgressIndexName].model.Percent()) + " " + m.Progress[overallProgressIndexName].Name
-		output += fmt.Sprintf(" %d/%d assets", completedAssets, len(m.Progress)-1)
+		output += fmt.Sprintf(" %d/%d scanned", completedAssets, len(m.Progress)-1)
 		if erroredAssets > 0 {
-			output += fmt.Sprintf(" %d/%d errors", erroredAssets, len(m.Progress)-1)
+			output += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
 		}
+		output += "\n"
 	}
 
-	return "\n" + pad + output + "\n\n"
+	return "\n" + pad + output + "\n"
 }

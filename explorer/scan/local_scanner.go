@@ -249,7 +249,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		fmt.Println(err.Error())
 		panic(err)
 	}
-	defer progressProg.Quit()
 	scanGroup.Wait()
 	return reporter.Reports(), finished, nil
 }
