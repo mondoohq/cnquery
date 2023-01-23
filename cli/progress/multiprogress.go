@@ -261,15 +261,15 @@ func (m modelMultiProgress) View() string {
 			if m.Progress[k].Score != "" {
 				output += pad + " score: " + m.Progress[k].Score
 			}
+			output += "\n"
 		}
-		output += "\n" + pad
 		if i == m.maxItemsToShow {
 			break
 		}
 		i++
 	}
 	if m.maxItemsToShow > 0 && len(m.orderedKeys) > m.maxItemsToShow {
-		output += fmt.Sprintf("... %d more assets ...\n%s", len(m.orderedKeys)-m.maxItemsToShow, pad)
+		output += fmt.Sprintf("... %d more assets ...\n", len(m.orderedKeys)-m.maxItemsToShow)
 	}
 
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
@@ -278,7 +278,8 @@ func (m modelMultiProgress) View() string {
 		if erroredAssets > 0 {
 			output += fmt.Sprintf(" %d/%d errors", erroredAssets, len(m.Progress)-1)
 		}
+		output += "\n"
 	}
 
-	return "\n" + pad + output + "\n\n"
+	return "\n" + pad + output + "\n"
 }
