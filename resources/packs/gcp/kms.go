@@ -244,9 +244,12 @@ func (g *mqlGcpProjectKmsServiceKeyring) GetCryptokeys() ([]interface{}, error) 
 			return nil, err
 		}
 
-		mqlPrimary, err := cryptoKeyVersionToMql(g.MotorRuntime, k.Primary)
-		if err != nil {
-			return nil, err
+		var mqlPrimary interface{}
+		if k.Primary != nil {
+			mqlPrimary, err = cryptoKeyVersionToMql(g.MotorRuntime, k.Primary)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		var versionTemplate map[string]interface{}
