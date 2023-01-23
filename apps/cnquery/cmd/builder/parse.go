@@ -455,6 +455,18 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 					Password: x,
 				})
 			}
+		case GithubUserAssetType:
+			connection.Backend = providerType
+			connection.Options["user"] = args[0]
+
+			if x, err := cmd.Flags().GetString("token"); err != nil {
+				log.Fatal().Err(err).Msg("cannot parse --token value")
+			} else if x != "" {
+				connection.Credentials = append(connection.Credentials, &vault.Credential{
+					Type:     vault.CredentialType_password,
+					Password: x,
+				})
+			}
 		case GithubRepositoryAssetType:
 			connection.Backend = providerType
 			paths := strings.Split(args[0], "/")

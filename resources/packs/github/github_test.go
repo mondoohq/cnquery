@@ -7,15 +7,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/github"
+	github_provider "go.mondoo.com/cnquery/motor/providers/github"
+	"go.mondoo.com/cnquery/resources/packs/github"
+	"go.mondoo.com/cnquery/resources/packs/testutils"
 )
 
-func githubTestQuery(t *testing.T, query string) []*llx.RawResult {
-	trans, err := github.New(&providers.TransportConfig{
+var x = testutils.InitTester(GithubProvider(), github.Registry)
+
+func GithubProvider() *motor.Motor {
+	p, err := github_provider.New(&providers.Config{
 		Backend: providers.ProviderType_GITHUB,
 		Options: map[string]string{
 			"owner":      "mondoohq",
@@ -23,18 +25,29 @@ func githubTestQuery(t *testing.T, query string) []*llx.RawResult {
 			"token":      "<TOKEN HERE>",
 		},
 	})
-	require.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
 
-	m, err := motor.New(trans)
-	require.NoError(t, err)
+	m, err := motor.New(p)
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
 
-	executor := initExecutionContext(m)
-	return testQueryWithExecutor(t, executor, query, nil)
+func TestResource_GithubRepo(t *testing.T) {
+	t.Run("github project", func(t *testing.T) {
+		res := x.TestQuery(t, "github.repository")
+		assert.NotEmpty(t, res)
+		assert.Empty(t, res[0].Result().Error)
+		assert.Equal(t, string(""), res[0].Data.Value)
+	})
 }
 
 func TestResource_Github(t *testing.T) {
-	t.Run("ms365 organization", func(t *testing.T) {
-		res := githubTestQuery(t, "github.repository.branches.where( name == \"main\")[0].headCommit { * }")
+	t.Run("github branch", func(t *testing.T) {
+		res := x.TestQuery(t, "github.repository.branches.where( name == \"main\")[0].headCommit { * }")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, string(""), res[0].Data.Value)

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -43,6 +43,9 @@ func (g *mqlGithubOrganization) init(args *resources.Args) (*resources.Args, Git
 	(*args)["location"] = core.ToString(org.Location)
 	(*args)["email"] = core.ToString(org.Email)
 	(*args)["twitterUsername"] = core.ToString(org.TwitterUsername)
+	(*args)["avatarUrl"] = core.ToString(org.AvatarURL)
+	(*args)["followers"] = core.ToInt(org.Followers)
+	(*args)["following"] = core.ToInt(org.Following)
 	(*args)["description"] = core.ToString(org.Description)
 	(*args)["createdAt"] = org.CreatedAt
 	(*args)["updatedAt"] = org.UpdatedAt
@@ -81,14 +84,29 @@ func (g *mqlGithubOrganization) GetMembers() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	members, _, err := gt.Client().Organizations.ListMembers(context.Background(), orgLogin, nil)
-	if err != nil {
-		return nil, err
+
+	listOpts := &github.ListMembersOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+	}
+	var allMembers []*github.User
+	for {
+		members, resp, err := gt.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allMembers = append(allMembers, members...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
-	for i := range members {
-		member := members[i]
+	for i := range allMembers {
+		member := allMembers[i]
 
 		r, err := g.MotorRuntime.CreateResource("github.user",
 			"id", core.ToInt64(member.ID),
@@ -114,16 +132,30 @@ func (g *mqlGithubOrganization) GetOwners() ([]interface{}, error) {
 		return nil, err
 	}
 
-	members, _, err := gt.Client().Organizations.ListMembers(context.Background(), orgLogin, &github.ListMembersOptions{
-		Role: "admin",
-	})
-	if err != nil {
-		return nil, err
+	listOpts := &github.ListMembersOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		Role:        "admin",
+	}
+	var allMembers []*github.User
+	for {
+		members, resp, err := gt.Client().Organizations.ListMembers(context.Background(), orgLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		allMembers = append(allMembers, members...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
-	for i := range members {
-		member := members[i]
+	for i := range allMembers {
+		member := allMembers[i]
 
 		var id int64
 		if member.ID != nil {
@@ -160,14 +192,29 @@ func (g *mqlGithubOrganization) GetTeams() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	teams, _, err := gt.Client().Teams.ListTeams(context.Background(), orgLogin, nil)
-	if err != nil {
-		return nil, err
+
+	listOpts := &github.ListOptions{
+		PerPage: paginationPerPage,
+	}
+	var allTeams []*github.Team
+	for {
+		teams, resp, err := gt.Client().Teams.ListTeams(context.Background(), orgLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allTeams = append(allTeams, teams...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
-	for i := range teams {
-		team := teams[i]
+	for i := range allTeams {
+		team := allTeams[i]
 		r, err := g.MotorRuntime.CreateResource("github.team",
 			"id", core.ToInt64(team.ID),
 			"name", core.ToString(team.Name),
@@ -197,50 +244,31 @@ func (g *mqlGithubOrganization) GetRepositories() ([]interface{}, error) {
 		return nil, err
 	}
 
-	repos, _, err := gt.Client().Repositories.ListByOrg(context.Background(), orgLogin, &github.RepositoryListByOrgOptions{Type: "all"})
-	if err != nil {
-		return nil, err
+	listOpts := &github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{PerPage: paginationPerPage},
+		Type:        "all",
+	}
+
+	var allRepos []*github.Repository
+	for {
+		repos, resp, err := gt.Client().Repositories.ListByOrg(context.Background(), orgLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allRepos = append(allRepos, repos...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
-	for i := range repos {
-		repo := repos[i]
-
-		var id int64
-		if repo.ID != nil {
-			id = *repo.ID
-		}
-
-		owner, err := g.MotorRuntime.CreateResource("github.user",
-			"id", repo.GetOwner().GetID(),
-			"login", repo.GetOwner().GetLogin(),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		r, err := g.MotorRuntime.CreateResource("github.repository",
-			"id", id,
-			"name", core.ToString(repo.Name),
-			"fullName", core.ToString(repo.FullName),
-			"description", core.ToString(repo.Description),
-			"homepage", core.ToString(repo.Homepage),
-			"createdAt", githubTimestamp(repo.CreatedAt),
-			"updatedAt", githubTimestamp(repo.UpdatedAt),
-			"archived", core.ToBool(repo.Archived),
-			"disabled", core.ToBool(repo.Disabled),
-			"private", core.ToBool(repo.Private),
-			"visibility", core.ToString(repo.Visibility),
-			"allowAutoMerge", core.ToBool(repo.AllowAutoMerge),
-			"allowForking", core.ToBool(repo.AllowForking),
-			"allowMergeCommit", core.ToBool(repo.AllowMergeCommit),
-			"allowRebaseMerge", core.ToBool(repo.AllowRebaseMerge),
-			"allowSquashMerge", core.ToBool(repo.AllowSquashMerge),
-			"hasIssues", core.ToBool(repo.HasIssues),
-			"organizationName", orgLogin,
-			"defaultBranchName", core.ToString(repo.DefaultBranch),
-			"owner", owner,
-		)
+	for i := range allRepos {
+		repo := allRepos[i]
+		r, err := newMqlGithubRepository(g.MotorRuntime, repo)
 		if err != nil {
 			return nil, err
 		}
@@ -261,16 +289,28 @@ func (g *mqlGithubOrganization) GetWebhooks() ([]interface{}, error) {
 		return nil, err
 	}
 
-	hooks, _, err := gt.Client().Organizations.ListHooks(context.TODO(), ownerLogin, &github.ListOptions{})
-	if err != nil {
-		if strings.Contains(err.Error(), "404") {
-			return nil, nil
-		}
-		return nil, err
+	listOpts := &github.ListOptions{
+		PerPage: paginationPerPage,
 	}
+	var allHooks []*github.Hook
+	for {
+		hooks, resp, err := gt.Client().Organizations.ListHooks(context.TODO(), ownerLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
+		}
+		allHooks = append(allHooks, hooks...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
+	}
+
 	res := []interface{}{}
-	for i := range hooks {
-		h := hooks[i]
+	for i := range allHooks {
+		h := allHooks[i]
 		config, err := core.JsonToDict(h.Config)
 		if err != nil {
 			return nil, err
@@ -308,18 +348,29 @@ func (g *mqlGithubOrganization) GetPackages() ([]interface{}, error) {
 	pkgTypes := []string{"npm", "maven", "rubygems", "docker", "nuget", "container"}
 	res := []interface{}{}
 	for i := range pkgTypes {
-		packages, _, err := gt.Client().Organizations.ListPackages(context.Background(), ownerLogin, &github.PackageListOptions{
+		listOpts := &github.PackageListOptions{
+			ListOptions: github.ListOptions{PerPage: paginationPerPage},
 			PackageType: github.String(pkgTypes[i]),
-		})
-		if err != nil {
-			if strings.Contains(err.Error(), "404") {
-				return nil, nil
-			}
-			return nil, err
 		}
 
-		for i := range packages {
-			p := packages[i]
+		var allPackages []*github.Package
+		for {
+			packages, resp, err := gt.Client().Organizations.ListPackages(context.Background(), ownerLogin, listOpts)
+			if err != nil {
+				if strings.Contains(err.Error(), "404") {
+					return nil, nil
+				}
+				return nil, err
+			}
+			allPackages = append(allPackages, packages...)
+			if resp.NextPage == 0 {
+				break
+			}
+			listOpts.Page = resp.NextPage
+		}
+
+		for i := range allPackages {
+			p := allPackages[i]
 
 			owner, err := g.MotorRuntime.CreateResource("github.user",
 				"id", p.GetOwner().GetID(),
@@ -397,17 +448,28 @@ func (g *mqlGithubOrganization) GetInstallations() ([]interface{}, error) {
 		return nil, err
 	}
 
-	apps, _, err := gt.Client().Organizations.ListInstallations(context.Background(), orgLogin, &github.ListOptions{})
-	if err != nil {
-		if strings.Contains(err.Error(), "404") {
-			return nil, nil
+	listOpts := &github.ListOptions{
+		PerPage: paginationPerPage,
+	}
+	var allOrgInstallations []*github.Installation
+	for {
+		orgInstallations, resp, err := gt.Client().Organizations.ListInstallations(context.Background(), orgLogin, listOpts)
+		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			return nil, err
 		}
-		return nil, err
+		allOrgInstallations = append(allOrgInstallations, orgInstallations.Installations...)
+		if resp.NextPage == 0 {
+			break
+		}
+		listOpts.Page = resp.NextPage
 	}
 
 	res := []interface{}{}
-	for i := range apps.Installations {
-		app := apps.Installations[i]
+	for i := range allOrgInstallations {
+		app := allOrgInstallations[i]
 
 		var id int64
 		if app.ID != nil {

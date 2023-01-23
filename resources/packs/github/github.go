@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/motor/providers"
 	provider "go.mondoo.com/cnquery/motor/providers/github"
 	"go.mondoo.com/cnquery/resources/packs/github/info"
@@ -30,3 +30,7 @@ func githubTimestamp(ts *github.Timestamp) *time.Time {
 	}
 	return &ts.Time
 }
+
+const (
+	paginationPerPage = 100
+)

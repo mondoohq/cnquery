@@ -60,8 +60,14 @@ github.organization @defaults("login name") {
   location string
   // Organization email
   email string
-  // Organization Twitter name
+  // Organization twitter name
   twitterUsername string
+  // Profile picture URL
+  avatarUrl string
+  // Organization followers
+  followers int
+  // Organization following
+  following int
   // Organization description
   description string
   // Create time for the organization
@@ -130,6 +136,18 @@ private github.user @defaults("id name") {
   email string
   // User bio
   bio string
+  // User blog URL
+  blog string
+  // User location
+  location string
+  // User profile picture URL
+  avatarUrl string
+  // User followers
+  followers int
+  // User following
+  following int
+  // User twitter name
+  twitterUsername string
   // User create time in UTC
   createdAt time
   // Last user update time in UTC
@@ -140,6 +158,8 @@ private github.user @defaults("id name") {
   company string
   // User repositories
   repositories() []github.repository
+  // User gists
+  gists() []github.gist
 }
 
 // GitHub Team
@@ -207,18 +227,38 @@ private github.repository @defaults("fullName") {
   fullName string
   // Repository description
   description string
+  // Repository clone URL
+  cloneUrl string
+  // Repository SSH URL
+  sshUrl string
   // Repository homepage
   homepage string
+  // Repository topics
+  topics []string
+  // Repository language
+  language string
+  // Count of repository watchers
+  watchersCount int
+  // Count of repository forks
+  forksCount int
+  // Count of repository stargazers
+  stargazersCount int
+  // Count of open issues in repository
+  openIssuesCount int
   // Repository create time
   createdAt time
   // Repository update time
   updatedAt time
+  // Repository pushed time
+  pushedAt time
   // Whether the repository is archived
   archived bool
   // Whether the repository is disabled
   disabled bool
   // Whether the repository is private
   private bool
+  // Whether the repository is a fork
+  isFork bool
   // Repository visibility
   visibility string
   // Whether the repository allows auto merging
@@ -233,8 +273,14 @@ private github.repository @defaults("fullName") {
   allowSquashMerge bool
   // Whether the repository has open issues
   hasIssues bool
-  // Repository organization name
-  organizationName string
+  // Whether the repository has projects
+  hasProjects bool
+  // Whether the repository has wiki
+  hasWiki bool
+  // Whether the repository has pages
+  hasPages bool
+  // Whether the repository has downloads
+  hasDownloads bool
   // Whether the repository has open merge requests
   openMergeRequests() []github.mergeRequest
   // List of branches for the repository
@@ -257,6 +303,28 @@ private github.repository @defaults("fullName") {
   webhooks() []github.webhook
   // List of workflows for the repository
   workflows() []github.workflow
+  // List of repository forks
+  forks() []github.repository
+  // List of repository stargazers
+  stargazers() []github.user
+  // List of repository open issues
+  openIssues() []github.issue
+  // List of repository closed issues
+  closedIssues() []github.issue
+  // Repository license
+  license() github.license
+}
+
+// GitHub License
+private github.license @defaults("spdxId") {
+  // License key
+  key string
+  // License name
+  name string
+  // License URL
+  url string
+  // License spdx ID
+  spdxId string
 }
 
 // GitHub Repository File
@@ -339,8 +407,6 @@ private github.branch @defaults("name") {
   headCommit github.commit
   // Repository branch protection rules
   protectionRules() github.branchprotection
-  // Repository branch organization
-  organizationName string
   // Repository branch repository name
   repoName string
   // Repository branch owner
@@ -415,8 +481,6 @@ private github.mergeRequest @defaults("id state") {
   commits() []github.commit
   // Pull request reviews
   reviews() []github.review
-  // Pull request organization
-  organizationName string
   // Pull request repository name
   repoName string
 }
@@ -445,4 +509,66 @@ private github.installation @defaults("id appId") {
   createdAt time
   // Application installation update time
   updatedAt time
+}
+
+// GitHub Gist
+private github.gist @defaults("description") {
+  // Gist ID
+  id string
+  // Gist description
+  description string
+  // Gist create time
+  createdAt time
+  // Gist update time
+  updatedAt time
+  // Gist owner
+  owner github.user
+  // Indicates whether the gist is public
+  public bool
+  // Gist files
+  files []github.gistfile
+}
+
+// GitHub Gist File
+private github.gistfile @defaults("filename") {
+  // Gist ID
+  gistId string
+  // Gist file name
+  filename string
+  // Gist file type
+  type string
+  // Gist file language
+  language string
+  // Gist file raw url
+  rawUrl string
+  // Gist file size
+  size int
+  // Gist file content
+  content() string
+}
+
+// GitHub Issue
+private github.issue @defaults("title") {
+  // Issue ID
+  id int
+  // Issue number
+  number int
+  // Issue title
+  title string
+  // Issue state
+  state string
+  // Issue body
+  body string
+  // Issue url
+  url string
+  // Issue create time
+  createdAt time
+  // Issue update time
+  updatedAt time
+  // Issue closed time
+  closedAt time
+  // Issue assignees
+  assignees []github.user
+  // Issue closed by
+  closedBy github.user
 }

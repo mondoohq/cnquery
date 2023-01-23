@@ -3,8 +3,10 @@ package github
 import (
 	"context"
 	"errors"
+	"strings"
 
-	"github.com/google/go-github/v47/github"
+	"github.com/google/go-github/v49/github"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -92,9 +94,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 		}
 	case "github-org":
-		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) ||
-			pCfg.IncludesDiscoveryTarget(common.DiscoveryAuto) ||
-			pCfg.IncludesDiscoveryTarget(DiscoveryOrganization) {
+		if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryOrganization) {
 			name := defaultName
 			if name == "" {
 				org, _ := p.Organization()
@@ -111,18 +111,34 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			})
 		}
 
-		if pCfg.IncludesDiscoveryTarget(common.DiscoveryAll) || pCfg.IncludesDiscoveryTarget(DiscoveryRepository) {
+		if pCfg.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryRepository) {
+			log.Debug().Msg("Discovering repositories for organization")
 			org, err := p.Organization()
 			if err != nil {
 				return nil, err
 			}
 
-			repos, _, err := p.Client().Repositories.List(context.Background(), org.GetLogin(), &github.RepositoryListOptions{})
-			if err != nil {
-				return nil, err
+			listOpts := &github.RepositoryListByOrgOptions{
+				ListOptions: github.ListOptions{PerPage: 100},
+				Type:        "all",
+			}
+			allRepos := []*github.Repository{}
+			for {
+				repos, resp, err := p.Client().Repositories.List(context.Background(), org.GetLogin(), &github.RepositoryListOptions{})
+				if err != nil {
+					if strings.Contains(err.Error(), "404") {
+						return nil, nil
+					}
+					return nil, err
+				}
+				allRepos = append(allRepos, repos...)
+				if resp.NextPage == 0 {
+					break
+				}
+				listOpts.Page = resp.NextPage
 			}
 
-			for _, repo := range repos {
+			for _, repo := range allRepos {
 				clonedConfig := pCfg.Clone()
 				if clonedConfig.Options == nil {
 					clonedConfig.Options = map[string]string{}

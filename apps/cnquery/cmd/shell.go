@@ -210,6 +210,9 @@ configure your Azure credentials and have SSH access to the virtual machines.`,
 			"github-repo": {
 				Short: "Connect to a GitHub repository.",
 			},
+			"github-user": {
+				Short: "Connect to a GitHub user.",
+			},
 			"gitlab": {
 				Short: "Connect to a GitLab group.",
 			},

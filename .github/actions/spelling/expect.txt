@@ -15,6 +15,7 @@ ekm
 elbv
 firewalls
 gcfs
+gistfile
 GOBIN
 gpu
 gvnic
