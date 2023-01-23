@@ -98,6 +98,33 @@ func TestMultiProgressBarErrored(t *testing.T) {
 		// we need to wait for tea to start the Program, otherwise these would be no-ops
 		time.Sleep(1 * time.Millisecond)
 		progressProgram.Send(MsgProgress{Index: "1", Percent: 1.0})
+		progressProgram.Send(MsgScore{Index: "1", Score: "F"})
+		progressProgram.Send(MsgErrored{Index: "2"})
+		progressProgram.Send(MsgScore{Index: "2", Score: "X"})
+		progressProgram.Send(MsgProgress{Index: "3", Percent: 1.0})
+		progressProgram.Send(MsgScore{Index: "3", Score: "F"})
+		progressProgram.Quit()
+	}()
+	_, err = progressProgram.Run()
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "100% test1   score: F")
+	assert.Contains(t, buf.String(), "   X test2   score: X")
+	assert.Contains(t, buf.String(), "100% test3   score: F")
+	assert.Contains(t, buf.String(), "100% overall 2/3 scanned 1/3 errored")
+}
+
+func TestMultiProgressBarLastErrored(t *testing.T) {
+	var in bytes.Buffer
+	var buf bytes.Buffer
+
+	progressBarElements := map[string]string{"1": "test1", "2": "test2", "3": "test3"}
+	progressProgram, err := newMultiProgressMockProgram(progressBarElements, []string{"1", "2", "3"}, 30, &in, &buf)
+	require.NoError(t, err)
+
+	go func() {
+		// we need to wait for tea to start the Program, otherwise these would be no-ops
+		time.Sleep(1 * time.Millisecond)
+		progressProgram.Send(MsgProgress{Index: "1", Percent: 1.0})
 		progressProgram.Send(MsgProgress{Index: "2", Percent: 1.0})
 		progressProgram.Send(MsgScore{Index: "1", Score: "F"})
 		progressProgram.Send(MsgScore{Index: "2", Score: "F"})
@@ -110,7 +137,7 @@ func TestMultiProgressBarErrored(t *testing.T) {
 	assert.Contains(t, buf.String(), "100% test1   score: F")
 	assert.Contains(t, buf.String(), "100% test2   score: F")
 	assert.Contains(t, buf.String(), "   X test3   score: X")
-	assert.Contains(t, buf.String(), "66% overall 2/3 scanned 1/3 errored")
+	assert.Contains(t, buf.String(), "100% overall 2/3 scanned 1/3 errored")
 }
 
 func TestMultiProgressBarOnlyOneErrored(t *testing.T) {

@@ -158,7 +158,6 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case MsgProgress:
 		var cmds []tea.Cmd
-		var cmd tea.Cmd
 
 		if _, ok := m.Progress[msg.Index]; !ok {
 			return m, nil
@@ -175,28 +174,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Progress[msg.Index].lock.Unlock()
 		}
 
-		overallPercent := 0.0
-		if _, ok := m.Progress[overallProgressIndexName]; ok {
-			m.Progress[overallProgressIndexName].lock.Lock()
-			sumPercent := 0.0
-			validAssets := 0
-			for k := range m.Progress {
-				if k == overallProgressIndexName {
-					continue
-				}
-				if m.Progress[k].Errored {
-					continue
-				}
-				m.Progress[k].lock.Lock()
-				sumPercent += m.Progress[k].model.Percent()
-				m.Progress[k].lock.Unlock()
-				validAssets++
-			}
-			overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
-			cmd = m.Progress[overallProgressIndexName].model.SetPercent(overallPercent)
-			m.Progress[overallProgressIndexName].lock.Unlock()
-			cmds = append(cmds, cmd)
-		}
+		cmds = append(cmds, m.updateOverallProgress())
 
 		return m, tea.Batch(cmds...)
 
@@ -212,7 +190,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// we need to manually reduce the width to match the others without the percentage
 		m.Progress[msg.Index].model.Width -= 5
 		m.Progress[msg.Index].lock.Unlock()
-		return m, nil
+		return m, m.updateOverallProgress()
 
 	case MsgScore:
 		if _, ok := m.Progress[msg.Index]; !ok {
@@ -241,6 +219,32 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	default:
 		return m, nil
 	}
+}
+
+func (m modelMultiProgress) updateOverallProgress() tea.Cmd {
+	if _, ok := m.Progress[overallProgressIndexName]; !ok {
+		return nil
+	}
+	overallPercent := 0.0
+	m.Progress[overallProgressIndexName].lock.Lock()
+	sumPercent := 0.0
+	validAssets := 0
+	for k := range m.Progress {
+		if k == overallProgressIndexName {
+			continue
+		}
+		if m.Progress[k].Errored {
+			continue
+		}
+		m.Progress[k].lock.Lock()
+		sumPercent += m.Progress[k].model.Percent()
+		m.Progress[k].lock.Unlock()
+		validAssets++
+	}
+	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
+	cmd := m.Progress[overallProgressIndexName].model.SetPercent(overallPercent)
+	m.Progress[overallProgressIndexName].lock.Unlock()
+	return cmd
 }
 
 func (m modelMultiProgress) View() string {
