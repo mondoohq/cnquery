@@ -29,7 +29,7 @@ const (
 	padding                  = 0
 	maxWidth                 = 80
 	defaultWidth             = 40
-	defaultProgressNumAssets = 10
+	defaultProgressNumAssets = 1
 	overallProgressIndexName = "overall"
 )
 
