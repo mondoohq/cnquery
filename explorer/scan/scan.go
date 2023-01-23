@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -28,4 +29,5 @@ type AssetJob struct {
 	GetCredential    func(cred *vault.Credential) (*vault.Credential, error)
 	Reporter         Reporter
 	connection       *motor.Motor
+	ProgressProg     progress.Program
 }

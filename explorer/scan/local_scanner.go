@@ -2,8 +2,10 @@ package scan
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
+	sync "sync"
 	"time"
 
 	"github.com/mattn/go-isatty"
@@ -190,35 +192,70 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		return nil, false, errors.New("all available packs filtered out. nothing to do.")
 	}
 
+	progressBarElements := map[string]string{}
+	orderedKeys := []string{}
 	for i := range assetList {
-		asset := assetList[i]
-
-		// Make sure the context has not been canceled in the meantime. Note that this approach works only for single threaded execution. If we have more than 1 thread calling this function,
-		// we need to solve this at a different level.
-		select {
-		case <-ctx.Done():
-			log.Warn().Msg("request context has been canceled")
-			return reporter.Reports(), false, nil
-		default:
+		progressBarElements[assetList[i].Mrn] = assetList[i].Name
+		orderedKeys = append(orderedKeys, assetList[i].Mrn)
+	}
+	var progressProg progress.Program
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		progressProg, err = progress.NewMultiProgressProgram(progressBarElements, orderedKeys, int(job.ProgressNumAssets))
+		if err != nil {
+			return nil, false, errors.Wrap(err, "failed to create progress bars")
 		}
-
-		s.RunAssetJob(&AssetJob{
-			DoRecord:         job.DoRecord,
-			UpstreamConfig:   upstreamConfig,
-			Asset:            asset,
-			Bundle:           job.Bundle,
-			QueryPackFilters: job.QueryPackFilters,
-			Ctx:              ctx,
-			GetCredential:    im.GetCredential,
-			Reporter:         reporter,
-		})
+	} else {
+		progressProg = progress.NoopProgram{}
 	}
 
-	return reporter.Reports(), true, nil
+	scanGroup := sync.WaitGroup{}
+	scanGroup.Add(1)
+	finished := false
+	go func() {
+		defer scanGroup.Done()
+		defer progressProg.Quit()
+		for i := range assetList {
+			asset := assetList[i]
+
+			// Make sure the context has not been canceled in the meantime. Note that this approach works only for single threaded execution. If we have more than 1 thread calling this function,
+			// we need to solve this at a different level.
+			select {
+			case <-ctx.Done():
+				log.Warn().Msg("request context has been canceled")
+				return
+			default:
+			}
+
+			s.RunAssetJob(&AssetJob{
+				DoRecord:         job.DoRecord,
+				UpstreamConfig:   upstreamConfig,
+				Asset:            asset,
+				Bundle:           job.Bundle,
+				QueryPackFilters: job.QueryPackFilters,
+				Ctx:              ctx,
+				GetCredential:    im.GetCredential,
+				Reporter:         reporter,
+				ProgressProg:     progressProg,
+			})
+		}
+		finished = true
+	}()
+
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
+		defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
+	}
+	if _, err := progressProg.Run(); err != nil {
+		fmt.Println(err.Error())
+		panic(err)
+	}
+	defer progressProg.Quit()
+	scanGroup.Wait()
+	return reporter.Reports(), finished, nil
 }
 
 func (s *LocalScanner) RunAssetJob(job *AssetJob) {
-	log.Info().Msgf("connecting to asset %s", job.Asset.HumanName())
+	log.Debug().Msgf("connecting to asset %s", job.Asset.HumanName())
 
 	// run over all connections
 	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.GetCredential, job.DoRecord)
@@ -256,8 +293,9 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 			job.connection = m
 			results, err := s.runMotorizedAsset(job)
 			if err != nil {
-				log.Warn().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
+				log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
 				job.Reporter.AddScanError(job.Asset, err)
+				job.ProgressProg.Send(progress.MsgErrored{Index: job.Asset.Mrn})
 				return
 			}
 
@@ -285,13 +323,6 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 		runtime := resources.NewRuntime(registry, job.connection)
 		runtime.UpstreamConfig = &job.UpstreamConfig
 
-		var progressListener progress.Progress
-		if isatty.IsTerminal(os.Stdout.Fd()) {
-			progressListener = progress.New(job.Asset.Mrn, job.Asset.Name)
-		} else {
-			progressListener = progress.Noop{}
-		}
-
 		scanner := &localAssetScanner{
 			db:       db,
 			services: services,
@@ -300,7 +331,6 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 			Registry: registry,
 			Schema:   schema,
 			Runtime:  runtime,
-			Progress: progressListener,
 		}
 		res, scanErr = scanner.run()
 		return scanErr
@@ -325,11 +355,6 @@ type localAssetScanner struct {
 }
 
 func (s *localAssetScanner) run() (*AssetReport, error) {
-	s.Progress.Open()
-
-	// fallback to always close the progressbar if we error before getting the report
-	defer s.Progress.Close()
-
 	if err := s.prepareAsset(); err != nil {
 		return nil, err
 	}
@@ -475,7 +500,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	logger.DebugDumpJSON("resolvedPack", resolvedPack)
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.Progress)
+	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.ProgressProg)
 	if err != nil {
 		return nil, err
 	}
