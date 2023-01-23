@@ -196,11 +196,6 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 
-		// When all progress bars are completed, quit the program
-		// Also quit the Program when there is only one progress bar and it is completed
-		if overallPercent == 1.0 || (len(m.Progress) == 1 && m.Progress[msg.Index].model.Percent() == 1.0) {
-			cmds = append(cmds, tea.Quit)
-		}
 		return m, tea.Batch(cmds...)
 
 	case MsgErrored:
@@ -208,18 +203,14 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		var cmd tea.Cmd
 		m.Progress[msg.Index].lock.Lock()
 		m.Progress[msg.Index].Errored = true
 		m.Progress[msg.Index].model.ShowPercentage = false
 		// settings ShowPercentage to false, expanse the progress bar to match the others
 		// we need to manually reduce the width to match the others without the percentage
 		m.Progress[msg.Index].model.Width -= 5
-		if len(m.Progress) == 1 && m.Progress[msg.Index].Errored {
-			cmd = tea.Quit
-		}
 		m.Progress[msg.Index].lock.Unlock()
-		return m, cmd
+		return m, nil
 
 	case MsgScore:
 		if _, ok := m.Progress[msg.Index]; !ok {
@@ -230,7 +221,6 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Progress[msg.Index].lock.Lock()
 			m.Progress[msg.Index].Score = msg.Score
 			m.Progress[msg.Index].lock.Unlock()
-			return m, nil
 		}
 		return m, nil
 
