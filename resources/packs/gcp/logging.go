@@ -267,6 +267,42 @@ func (g *mqlGcpProjectLoggingservice) GetSinks() ([]interface{}, error) {
 	return sinks, nil
 }
 
+func (g *mqlGcpProjectLoggingserviceSink) GetStorageBucket() (interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	dest, err := g.Destination()
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasPrefix(dest, "storage.googleapis.com/") {
+		obj, err := g.MotorRuntime.CreateResource("gcp.project.storageService", "projectId", projectId)
+		if err != nil {
+			return nil, err
+		}
+		gcpStorage := obj.(GcpProjectStorageService)
+		buckets, err := gcpStorage.Buckets()
+		if err != nil {
+			return nil, err
+		}
+
+		targetBucketName := strings.TrimPrefix(dest, "storage.googleapis.com/")
+		for _, bucket := range buckets {
+			bucketName, err := bucket.(GcpProjectStorageServiceBucket).Name()
+			if err != nil {
+				return nil, err
+			}
+
+			if bucketName == targetBucketName {
+				return bucket, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
 func (g *mqlGcpProjectLoggingserviceMetric) id() (string, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
