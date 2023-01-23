@@ -2,13 +2,14 @@ package gcp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
-	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/storage/v1"
@@ -161,7 +162,7 @@ func (g *mqlGcpProjectStorageServiceBucket) id() (string, error) {
 	return fmt.Sprintf("gcp.project.storageService.bucket/%s/%s", projectId, id), nil
 }
 
-func (g *mqlGcpProjectStorageServiceBucket) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProjectStorageServiceBucket) GetIamPolicy() (interface{}, error) {
 	bucketName, err := g.Name()
 	if err != nil {
 		return nil, err
@@ -183,25 +184,36 @@ func (g *mqlGcpProjectStorageServiceBucket) GetIamPolicy() ([]interface{}, error
 		return nil, err
 	}
 
-	policy, err := storeSvc.Buckets.GetIamPolicy(bucketName).Do()
+	iamPolicy, err := storeSvc.Buckets.GetIamPolicy(bucketName).Do()
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
-	for i := range policy.Bindings {
-		b := policy.Bindings[i]
-
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
-			"id", bucketName+"-"+strconv.Itoa(i),
-			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlServiceaccount)
+	data, err := iamPolicy.MarshalJSON()
+	if err != nil {
+		return nil, err
 	}
 
-	return res, nil
+	convPolicy := &cloudresourcemanager.Policy{}
+	if err := json.Unmarshal(data, convPolicy); err != nil {
+		return nil, err
+	}
+
+	policyId := fmt.Sprintf("gcp.project.storageService.bucket/%s/gcp.iamPolicy", bucketName)
+	auditConfigs, err := auditConfigsToMql(g.MotorRuntime, convPolicy.AuditConfigs, fmt.Sprintf("%s/auditConfigs", policyId))
+	if err != nil {
+		return nil, err
+	}
+
+	bindings, err := bindingsToMql(g.MotorRuntime, convPolicy.Bindings, fmt.Sprintf("%s/bindings", policyId))
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.iamPolicy",
+		"id", policyId,
+		"auditConfigs", auditConfigs,
+		"bindings", bindings,
+		"version", convPolicy.Version,
+	)
 }

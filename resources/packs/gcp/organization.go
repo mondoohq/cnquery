@@ -2,11 +2,10 @@ package gcp
 
 import (
 	"context"
-	"strconv"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
@@ -58,7 +57,7 @@ func (g *mqlGcpOrganization) init(args *resources.Args) (*resources.Args, GcpOrg
 	return args, nil, nil
 }
 
-func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpOrganization) GetIamPolicy() (interface{}, error) {
 	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -82,27 +81,28 @@ func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {
 	}
 
 	name := "organizations/" + orgId
-	orgpolicy, err := svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	policy, err := svc.Organizations.GetIamPolicy(name, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
 	if err != nil {
 		return nil, err
 	}
 
-	res := []interface{}{}
-	for i := range orgpolicy.Bindings {
-		b := orgpolicy.Bindings[i]
-
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
-			"id", name+"-"+strconv.Itoa(i),
-			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlServiceaccount)
+	policyId := fmt.Sprintf("gcp.organization/%s/gcp.iamPolicy", orgId)
+	auditConfigs, err := auditConfigsToMql(g.MotorRuntime, policy.AuditConfigs, fmt.Sprintf("%s/auditConfigs", policyId))
+	if err != nil {
+		return nil, err
 	}
 
-	return res, nil
+	bindings, err := bindingsToMql(g.MotorRuntime, policy.Bindings, fmt.Sprintf("%s/bindings", policyId))
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.iamPolicy",
+		"id", policyId,
+		"auditConfigs", auditConfigs,
+		"bindings", bindings,
+		"version", policy.Version,
+	)
 }
 
 func (g *mqlGcpResourcemanagerBinding) id() (string, error) {

@@ -25,7 +25,7 @@ gcp.organization @defaults("id") {
   // Organization state
   lifecycleState string
   // Organization IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
 }
@@ -47,7 +47,7 @@ gcp.project @defaults("name") {
   // The labels associated with this project
   labels() map[string]string
   // IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
   // List of available and enabled services for project
   services() []gcp.service
   // List of recommendations
@@ -132,6 +132,18 @@ gcp.recommendation {
   lastRefreshTime time
   // State and Metadata about Recommendation
   state dict
+}
+
+// GCP IAM policy
+private gcp.iamPolicy @defaults("bindings") {
+  // Internal ID
+  id string
+  // Cloud audit logging configuration
+  auditConfigs []dict
+  // List of bindings associating lists of members, or principals, to roles
+  bindings []gcp.resourcemanager.binding
+  // Format of the policy
+  version int
 }
 
 // GCP Resource Manager Binding
@@ -767,7 +779,7 @@ private gcp.project.storageService.bucket @defaults("id") {
   // Update timestamp
   updated time
   // IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
   // IAM configuration
   iamConfiguration dict
   // Retention policy
@@ -1648,7 +1660,7 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
   // List of cryptokey versions
   versions() []gcp.project.kmsService.keyring.cryptokey.version
   // Crypto key IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
 }
 
 // GCP KMS crypto key version

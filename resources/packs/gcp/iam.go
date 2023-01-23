@@ -5,10 +5,17 @@ import (
 	"fmt"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	adminpb "google.golang.org/genproto/googleapis/iam/admin/v1"
 )
+
+func (g *mqlGcpIamPolicy) id() (string, error) {
+	return g.Id()
+}
 
 func (g *mqlGcpProjectIamService) id() (string, error) {
 	projectId, err := g.ProjectId()
@@ -139,4 +146,38 @@ func (g *mqlGcpProjectIamServiceServiceAccount) GetKeys() ([]interface{}, error)
 		mqlKeys = append(mqlKeys, mqlKey)
 	}
 	return mqlKeys, nil
+}
+
+func auditConfigsToMql(runtime *resources.Runtime, auditCfgs []*cloudresourcemanager.AuditConfig, idPrefix string) ([]interface{}, error) {
+	mqlAuditCfgs := make([]interface{}, 0, len(auditCfgs))
+	for _, a := range auditCfgs {
+		cfgs := make([]interface{}, 0, len(a.AuditLogConfigs))
+		for _, c := range a.AuditLogConfigs {
+			cfgs = append(cfgs, map[string]interface{}{
+				"exemptedMembers": c.ExemptedMembers,
+				"logType":         c.LogType,
+			})
+		}
+		mqlAuditCfgs = append(mqlAuditCfgs, map[string]interface{}{
+			"auditLogConfigs": cfgs,
+			"service":         a.Service,
+		})
+	}
+	return mqlAuditCfgs, nil
+}
+
+func bindingsToMql(runtime *resources.Runtime, bindings []*cloudresourcemanager.Binding, idPrefix string) ([]interface{}, error) {
+	mqlBindings := make([]interface{}, 0, len(bindings))
+	for i, b := range bindings {
+		mqlServiceaccount, err := runtime.CreateResource("gcp.resourcemanager.binding",
+			"id", fmt.Sprintf("%s/%d", idPrefix, i),
+			"role", b.Role,
+			"members", core.StrSliceToInterface(b.Members),
+		)
+		if err != nil {
+			return nil, err
+		}
+		mqlBindings = append(mqlBindings, mqlServiceaccount)
+	}
+	return mqlBindings, nil
 }
