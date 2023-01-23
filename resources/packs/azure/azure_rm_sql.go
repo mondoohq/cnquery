@@ -11,23 +11,23 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureSubscriptionSql) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlService) id() (string, error) {
 	return "azure.sql", nil
 }
 
-func (a *mqlAzureSubscriptionSqlConfiguration) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceConfiguration) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSqlFirewallrule) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceFirewallrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSqlServerAdministrator) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceServerAdministrator) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSql) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlService) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -74,11 +74,11 @@ func (a *mqlAzureSubscriptionSql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (a *mqlAzureSubscriptionSqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetThreatDetectionPolicy() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetThreatDetectionPolicy() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -191,11 +191,11 @@ func (a *mqlAzureSubscriptionSqlServer) GetThreatDetectionPolicy() (interface{},
 	return core.JsonToDict(threatPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServerVulnerabilityassessmentsettings) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetVulnerabilityAssessmentSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetVulnerabilityAssessmentSettings() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -244,7 +244,7 @@ func (a *mqlAzureSubscriptionSqlServer) GetVulnerabilityAssessmentSettings() (in
 	)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -302,7 +302,7 @@ func (a *mqlAzureSubscriptionSqlServer) GetFirewallRules() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetAzureAdAdministrators() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetAzureAdAdministrators() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -361,7 +361,7 @@ func (a *mqlAzureSubscriptionSqlServer) GetAzureAdAdministrators() ([]interface{
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetConnectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetConnectionPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -401,7 +401,7 @@ func (a *mqlAzureSubscriptionSqlServer) GetConnectionPolicy() (map[string]interf
 	return core.JsonToDict(policy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetAuditingPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetAuditingPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -441,7 +441,7 @@ func (a *mqlAzureSubscriptionSqlServer) GetAuditingPolicy() (map[string]interfac
 	return core.JsonToDict(policy.ServerBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetSecurityAlertPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -481,7 +481,7 @@ func (a *mqlAzureSubscriptionSqlServer) GetSecurityAlertPolicy() (map[string]int
 	return core.JsonToDict(policy.ServerSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlServer) GetEncryptionProtector() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceServer) GetEncryptionProtector() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -521,11 +521,11 @@ func (a *mqlAzureSubscriptionSqlServer) GetEncryptionProtector() (map[string]int
 	return core.JsonToDict(policy.EncryptionProtector.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetUsage() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetUsage() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -590,15 +590,15 @@ func (a *mqlAzureSubscriptionSqlDatabase) GetUsage() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlDatabaseusage) id() (string, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabaseusage) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSqlDatabaseusage) GetNextResetTime() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabaseusage) GetNextResetTime() (interface{}, error) {
 	return nil, errors.New("deprecated, no longer supported")
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetAdvisor() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetAdvisor() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -666,7 +666,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) GetAdvisor() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetThreatDetectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetThreatDetectionPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -712,7 +712,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) GetThreatDetectionPolicy() (map[string
 	return core.JsonToDict(policy.DatabaseSecurityAlertPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetConnectionPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -752,7 +752,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) GetConnectionPolicy() (map[string]inte
 	return core.JsonToDict(policy.ServerConnectionPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetAuditingPolicy() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -798,7 +798,7 @@ func (a *mqlAzureSubscriptionSqlDatabase) GetAuditingPolicy() (map[string]interf
 	return core.JsonToDict(policy.DatabaseBlobAuditingPolicy.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetTransparentDataEncryption() (map[string]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -844,22 +844,22 @@ func (a *mqlAzureSubscriptionSqlDatabase) GetTransparentDataEncryption() (map[st
 	return core.JsonToDict(policy.LogicalDatabaseTransparentDataEncryption.Properties)
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetCurrentServiceObjectiveId() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetCurrentServiceObjectiveId() (interface{}, error) {
 	return nil, errors.New("deprecated, use 'serviceLevelObjective'")
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetContainmentState() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetContainmentState() (interface{}, error) {
 	return nil, errors.New("deprecated, no longer supported")
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetRequestedServiceObjectiveId() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetRequestedServiceObjectiveId() (interface{}, error) {
 	return nil, errors.New("deprecated, use 'requestedServiceObjectiveName'")
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetRecommendedIndex() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetRecommendedIndex() (interface{}, error) {
 	return nil, errors.New("deprecated, use 'advisor.recommendedActions'")
 }
 
-func (a *mqlAzureSubscriptionSqlDatabase) GetServiceTierAdvisors() (interface{}, error) {
+func (a *mqlAzureSubscriptionSqlServiceDatabase) GetServiceTierAdvisors() (interface{}, error) {
 	return nil, errors.New("deprecated, no longer supported")
 }

@@ -12,11 +12,11 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureSubscriptionNetwork) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
 	return "azure.network", nil
 }
 
-func (a *mqlAzureSubscriptionNetwork) GetInterfaces() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) GetInterfaces() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resou
 	)
 }
 
-func (a *mqlAzureSubscriptionNetwork) GetSecurityGroups() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) GetSecurityGroups() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -230,23 +230,23 @@ func parseAzureSecurityRulePortRange(portRange string) []AzureSecurityRulePortRa
 	return res
 }
 
-func (a *mqlAzureSubscriptionNetworkInterface) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceInterface) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionNetworkInterface) GetVm() (interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceInterface) GetVm() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *mqlAzureSubscriptionNetworkSecuritygroup) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSecuritygroup) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionNetworkSecurityrule) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSecurityrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionNetwork) GetWatchers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) GetWatchers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -295,7 +295,7 @@ func (a *mqlAzureSubscriptionNetwork) GetWatchers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcher) GetFlowLogs() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -389,10 +389,10 @@ func (a *mqlAzureSubscriptionNetworkWatcher) GetFlowLogs() ([]interface{}, error
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionNetworkWatcher) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcher) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionNetworkWatcherFlowlog) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcherFlowlog) id() (string, error) {
 	return a.Id()
 }

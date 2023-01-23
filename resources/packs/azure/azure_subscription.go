@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
@@ -94,7 +95,7 @@ func (a *mqlAzureSubscription) GetResourceGroups() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, rg := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.resourcegroup",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.resourcegroup",
 				"id", core.ToString(rg.ID),
 				"name", core.ToString(rg.Name),
 				"location", core.ToString(rg.Location),
@@ -159,6 +160,60 @@ func (a *mqlAzureSubscription) GetMonitor() (interface{}, error) {
 
 func (a *mqlAzureSubscription) GetCloudDefender() (interface{}, error) {
 	return a.MotorRuntime.CreateResource("azure.cloudDefender")
+}
+
+func (a *mqlAzureSubscription) GetId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetSubscriptionId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetName() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetTenantId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetManagedByTenants() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetTags() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetAuthorizationSource() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetSubscriptionsPolicies() (map[string]interface{}, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return nil, errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscription) GetState() (map[string]interface{}, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return nil, errors.New("not implemented")
 }
 
 func (a *mqlAzureSubscription) GetResources() ([]interface{}, error) {

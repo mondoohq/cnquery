@@ -31,11 +31,11 @@ const (
 	kubernetesClusterPolicyExtensonDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 )
 
-func (a *mqlAzureSubscriptionCloudDefender) id() (string, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
 	return "azure.cloudDefender", nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) GetMonitoringAgentAutoProvision() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) GetMonitoringAgentAutoProvision() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (a *mqlAzureSubscriptionCloudDefender) GetMonitoringAgentAutoProvision() (i
 	return autoProvision == security.AutoProvisionOn, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) GetDefenderForContainers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) GetDefenderForContainers() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (a *mqlAzureSubscriptionCloudDefender) GetDefenderForContainers() (interfac
 	return core.JsonToDict(def)
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) GetDefenderForServers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) GetDefenderForServers() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (a *mqlAzureSubscriptionCloudDefender) GetDefenderForServers() (interface{}
 	return core.JsonToDict(resp)
 }
 
-func (a *mqlAzureSubscriptionCloudDefender) GetSecurityContacts() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) GetSecurityContacts() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (a *mqlAzureSubscriptionCloudDefender) GetSecurityContacts() (interface{}, 
 	return res, nil
 }
 
-func (a *mqlAzureSubscriptionCloudDefenderSecurityContact) id() (string, error) {
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) id() (string, error) {
 	return a.Id()
 }
 

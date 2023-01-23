@@ -768,6 +768,38 @@ resources:
       deniedActions: {}
       deniedDataActions: {}
       id: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.authorizationService:
+    fields:
+      roleDefinitions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.authorizationService.roleDefinition:
+    fields:
+      description: {}
+      id: {}
+      isCustom: {}
+      name: {}
+      permissions: {}
+      scopes: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.authorizationService.roleDefinition.permission:
+    fields:
+      allowedActions: {}
+      allowedDataActions: {}
+      deniedActions: {}
+      deniedDataActions: {}
+      id: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -784,6 +816,28 @@ resources:
       name:
       - azure
   azure.subscription.cloudDefender.securityContact:
+    fields:
+      alertNotifications: {}
+      emails: {}
+      id: {}
+      name: {}
+      notificationsByRole: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.cloudDefenderService:
+    fields:
+      defenderForContainers: {}
+      defenderForServers: {}
+      monitoringAgentAutoProvision: {}
+      securityContacts: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.cloudDefenderService.securityContact:
     fields:
       alertNotifications: {}
       emails: {}
@@ -815,12 +869,52 @@ resources:
       tags: {}
       type: {}
       zones: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.compute.vm:
+    fields:
+      dataDisks: {}
+      extensions: {}
+      id: {}
+      location: {}
+      name: {}
+      osDisk: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.computeService:
+    fields:
+      disks: {}
+      vms: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.computeService.disk:
+    fields:
+      id: {}
+      location: {}
+      managedBy: {}
+      managedByExtended: {}
+      name: {}
+      properties: {}
+      sku: {}
+      tags: {}
+      type: {}
+      zones: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.computeService.vm:
     fields:
       dataDisks: {}
       extensions: {}
@@ -857,7 +951,6 @@ resources:
       version: {}
       versions: {}
       x5t: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -876,7 +969,6 @@ resources:
       updated: {}
       version: {}
       versions: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -895,12 +987,93 @@ resources:
       updated: {}
       version: {}
       versions: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.keyvault.vault:
+    fields:
+      certificates: {}
+      diagnosticSettings: {}
+      id: {}
+      keys: {}
+      location: {}
+      properties: {}
+      secrets: {}
+      tags: {}
+      type: {}
+      vaultName: {}
+      vaultUri: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.keyvaultService:
+    fields:
+      vaults: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.keyvaultService.certificate:
+    fields:
+      certName: {}
+      created: {}
+      enabled: {}
+      expires: {}
+      id: {}
+      notBefore: {}
+      recoveryLevel: {}
+      tags: {}
+      updated: {}
+      version: {}
+      versions: {}
+      x5t: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.keyvaultService.key:
+    fields:
+      created: {}
+      enabled: {}
+      expires: {}
+      keyName: {}
+      kid: {}
+      managed: {}
+      notBefore: {}
+      recoveryLevel: {}
+      tags: {}
+      updated: {}
+      version: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.keyvaultService.secret:
+    fields:
+      contentType: {}
+      created: {}
+      enabled: {}
+      expires: {}
+      id: {}
+      managed: {}
+      notBefore: {}
+      secretName: {}
+      tags: {}
+      updated: {}
+      version: {}
+      versions: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.keyvaultService.vault:
     fields:
       certificates: {}
       diagnosticSettings: {}
@@ -932,12 +1105,46 @@ resources:
       id: {}
       name: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.mariadb.server:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.mariadbService:
+    fields:
+      servers: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.mariadbService.database:
+    fields:
+      charset: {}
+      collation: {}
+      id: {}
+      name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.mariadbService.server:
     fields:
       configuration: {}
       databases: {}
@@ -965,7 +1172,6 @@ resources:
   azure.subscription.monitor.activitylog:
     fields:
       alerts: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -981,7 +1187,6 @@ resources:
       scopes: {}
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -993,12 +1198,70 @@ resources:
       properties: {}
       storageAccount: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.monitor.logprofile:
+    fields:
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      storageAccount: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.monitorService:
+    fields:
+      activityLog: {}
+      diagnosticSettings: {}
+      logProfiles: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.monitorService.activitylog:
+    fields:
+      alerts: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.monitorService.activitylog.alert:
+    fields:
+      actions: {}
+      conditions: {}
+      description: {}
+      id: {}
+      location: {}
+      name: {}
+      scopes: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.monitorService.diagnosticsetting:
+    fields:
+      id: {}
+      name: {}
+      properties: {}
+      storageAccount: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.monitorService.logprofile:
     fields:
       id: {}
       location: {}
@@ -1027,7 +1290,6 @@ resources:
       id: {}
       name: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1043,12 +1305,63 @@ resources:
       properties: {}
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.mysql.server:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.mysqlService:
+    fields:
+      flexibleServers: {}
+      servers: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.mysqlService.database:
+    fields:
+      charset: {}
+      collation: {}
+      id: {}
+      name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.mysqlService.flexibleServer:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.mysqlService.server:
     fields:
       configuration: {}
       databases: {}
@@ -1083,7 +1396,6 @@ resources:
       tags: {}
       type: {}
       vm: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1100,7 +1412,6 @@ resources:
       securityRules: {}
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1112,7 +1423,6 @@ resources:
       id: {}
       name: {}
       properties: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1128,12 +1438,102 @@ resources:
       provisioningState: {}
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.network.watcher.flowlog:
+    fields:
+      analytics: {}
+      enabled: {}
+      etag: {}
+      format: {}
+      id: {}
+      location: {}
+      name: {}
+      provisioningState: {}
+      retentionPolicy: {}
+      storageAccountId: {}
+      tags: {}
+      targetResourceGuid: {}
+      targetResourceId: {}
+      type: {}
+      version: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService:
+    fields:
+      interfaces: {}
+      securityGroups: {}
+      watchers: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.interface:
+    fields:
+      etag: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+      vm: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.securitygroup:
+    fields:
+      defaultSecurityRules: {}
+      etag: {}
+      id: {}
+      interfaces: {}
+      location: {}
+      name: {}
+      properties: {}
+      securityRules: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.securityrule:
+    fields:
+      destinationPortRange: {}
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.watcher:
+    fields:
+      etag: {}
+      flowLogs: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      provisioningState: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.watcher.flowlog:
     fields:
       analytics: {}
       enabled: {}
@@ -1169,12 +1569,46 @@ resources:
       id: {}
       name: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.postgresql.server:
+    fields:
+      configuration: {}
+      databases: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.postgresqlService:
+    fields:
+      servers: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.postgresqlService.database:
+    fields:
+      charset: {}
+      collation: {}
+      id: {}
+      name: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.postgresqlService.server:
     fields:
       configuration: {}
       databases: {}
@@ -1242,7 +1676,6 @@ resources:
       source: {}
       type: {}
       value: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1283,7 +1716,6 @@ resources:
       type: {}
       usage: {}
       zoneRedundant: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1298,7 +1730,6 @@ resources:
       nextResetTime: {}
       resourceName: {}
       unit: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1310,7 +1741,6 @@ resources:
       name: {}
       startIpAddress: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1332,7 +1762,6 @@ resources:
       threatDetectionPolicy: {}
       type: {}
       vulnerabilityAssessmentSettings: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1346,12 +1775,154 @@ resources:
       sid: {}
       tenantId: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.sql.server.vulnerabilityassessmentsettings:
+    fields:
+      id: {}
+      mailSubscriptionAdmins: {}
+      name: {}
+      recurringScanEmails: {}
+      recurringScanEnabled: {}
+      storageAccountAccessKey: {}
+      storageContainerPath: {}
+      storageContainerSasKey: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService:
+    fields:
+      servers: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.configuration:
+    fields:
+      allowedValues: {}
+      dataType: {}
+      defaultValue: {}
+      description: {}
+      id: {}
+      name: {}
+      source: {}
+      type: {}
+      value: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.database:
+    fields:
+      advisor: {}
+      auditingPolicy: {}
+      collation: {}
+      connectionPolicy: {}
+      containmentState: {}
+      createMode: {}
+      creationDate: {}
+      currentServiceObjectiveId: {}
+      databaseId: {}
+      defaultSecondaryLocation: {}
+      earliestRestoreDate: {}
+      edition: {}
+      elasticPoolName: {}
+      failoverGroupId: {}
+      id: {}
+      maxSizeBytes: {}
+      name: {}
+      readScale: {}
+      recommendedIndex: {}
+      recoveryServicesRecoveryPointResourceId: {}
+      requestedServiceObjectiveId: {}
+      requestedServiceObjectiveName: {}
+      restorePointInTime: {}
+      sampleName: {}
+      serviceLevelObjective: {}
+      serviceTierAdvisors: {}
+      sourceDatabaseDeletionDate: {}
+      sourceDatabaseId: {}
+      status: {}
+      threatDetectionPolicy: {}
+      transparentDataEncryption: {}
+      type: {}
+      usage: {}
+      zoneRedundant: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.databaseusage:
+    fields:
+      currentValue: {}
+      displayName: {}
+      id: {}
+      limit: {}
+      name: {}
+      nextResetTime: {}
+      resourceName: {}
+      unit: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.firewallrule:
+    fields:
+      endIpAddress: {}
+      id: {}
+      name: {}
+      startIpAddress: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.server:
+    fields:
+      auditingPolicy: {}
+      azureAdAdministrators: {}
+      connectionPolicy: {}
+      databases: {}
+      encryptionProtector: {}
+      firewallRules: {}
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      securityAlertPolicy: {}
+      tags: {}
+      threatDetectionPolicy: {}
+      type: {}
+      vulnerabilityAssessmentSettings: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.server.administrator:
+    fields:
+      administratorType: {}
+      id: {}
+      login: {}
+      name: {}
+      sid: {}
+      tenantId: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.server.vulnerabilityassessmentsettings:
     fields:
       id: {}
       mailSubscriptionAdmins: {}
@@ -1390,7 +1961,6 @@ resources:
       tableProperties: {}
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1401,7 +1971,6 @@ resources:
       id: {}
       logging: {}
       minuteMetrics: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1413,7 +1982,6 @@ resources:
       containerRetentionDays: {}
       containerSoftDeletionEnabled: {}
       storageAccountId: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1424,7 +1992,6 @@ resources:
       id: {}
       logging: {}
       minuteMetrics: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1437,7 +2004,6 @@ resources:
       retentionPolicy: {}
       version: {}
       write: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1449,7 +2015,6 @@ resources:
       includeAPIs: {}
       retentionPolicy: {}
       version: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1459,7 +2024,6 @@ resources:
       enabled: {}
       id: {}
       retentionDays: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1470,12 +2034,131 @@ resources:
       id: {}
       logging: {}
       minuteMetrics: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.storage.container:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService:
+    fields:
+      accounts: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account:
+    fields:
+      blobProperties: {}
+      containers: {}
+      dataProtection: {}
+      id: {}
+      identity: {}
+      kind: {}
+      location: {}
+      name: {}
+      properties: {}
+      queueProperties: {}
+      sku: {}
+      tableProperties: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.blobService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.dataProtection:
+    fields:
+      blobRetentionDays: {}
+      blobSoftDeletionEnabled: {}
+      containerRetentionDays: {}
+      containerSoftDeletionEnabled: {}
+      storageAccountId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.queueService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.service.properties.logging:
+    fields:
+      delete: {}
+      id: {}
+      read: {}
+      retentionPolicy: {}
+      version: {}
+      write: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.service.properties.metrics:
+    fields:
+      enabled: {}
+      id: {}
+      includeAPIs: {}
+      retentionPolicy: {}
+      version: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.service.properties.retentionPolicy:
+    fields:
+      enabled: {}
+      id: {}
+      retentionDays: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.account.tableService.properties:
+    fields:
+      hourMetrics: {}
+      id: {}
+      logging: {}
+      minuteMetrics: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.storageService.container:
     fields:
       etag: {}
       id: {}
@@ -1511,7 +2194,6 @@ resources:
       stack: {}
       tags: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
@@ -1523,12 +2205,64 @@ resources:
       name: {}
       properties: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:
       - azure
   azure.subscription.web.appsiteconfig:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.webService:
+    fields:
+      apps: {}
+      availableRuntimes: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.appsite:
+    fields:
+      applicationSettings: {}
+      authenticationSettings: {}
+      configuration: {}
+      connectionSettings: {}
+      id: {}
+      identity: {}
+      kind: {}
+      location: {}
+      metadata: {}
+      name: {}
+      properties: {}
+      stack: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.appsiteauthsettings:
+    fields:
+      id: {}
+      kind: {}
+      name: {}
+      properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.webService.appsiteconfig:
     fields:
       id: {}
       kind: {}
