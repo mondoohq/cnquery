@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/cnquery/stringx"
 )
 
-type defaultReporter struct {
+type cliReporter struct {
 	*Reporter
 	isCompact bool
 	isSummary bool
@@ -24,7 +24,7 @@ type defaultReporter struct {
 	bundle *explorer.BundleMap
 }
 
-func (r *defaultReporter) print() error {
+func (r *cliReporter) print() error {
 	// catch case where the scan was not successful and no bundle was fetched from server
 	if r.data == nil || r.data.Bundle == nil {
 		return nil
@@ -40,16 +40,15 @@ func (r *defaultReporter) print() error {
 	return nil
 }
 
-func (r *defaultReporter) printSummary() {
-	r.out.Write([]byte("Summary (" + strconv.Itoa(len(r.data.Assets)) + " assets)\n"))
-	r.out.Write([]byte("========================\n"))
+func (r *cliReporter) printSummary() {
+	r.out.Write([]byte(r.Printer.H1("Summary (" + strconv.Itoa(len(r.data.Assets)) + " assets)")))
 
 	for mrn, asset := range r.data.Assets {
 		r.printAssetSummary(mrn, asset)
 	}
 }
 
-func (r *defaultReporter) printAssetSummary(assetMrn string, asset *explorer.Asset) {
+func (r *cliReporter) printAssetSummary(assetMrn string, asset *explorer.Asset) {
 	target := asset.Name
 	if target == "" {
 		target = assetMrn
@@ -78,7 +77,7 @@ func (r *defaultReporter) printAssetSummary(assetMrn string, asset *explorer.Ass
 	r.out.Write([]byte("\n"))
 }
 
-func (r *defaultReporter) printQueries() {
+func (r *cliReporter) printQueries() {
 	if len(r.data.Assets) == 0 {
 		r.out.Write([]byte("No assets to report on."))
 		return
@@ -105,16 +104,14 @@ func (r *defaultReporter) printQueries() {
 
 	for k := range r.data.Assets {
 		cur := r.data.Assets[k]
-		r.out.Write([]byte("Asset: " + cur.Name + "\n"))
-		r.out.Write([]byte("========================\n\n"))
 
+		r.out.Write([]byte(r.Printer.H1("Asset: " + cur.Name)))
 		r.printAssetQueries(k, queries)
-
 		r.out.Write([]byte{'\n'})
 	}
 }
 
-func (r *defaultReporter) printAssetQueries(assetMrn string, queries []*explorer.Mquery) {
+func (r *cliReporter) printAssetQueries(assetMrn string, queries []*explorer.Mquery) {
 	report, ok := r.data.Reports[assetMrn]
 	if !ok {
 		// nothing to do, we get an error message in the summary code
