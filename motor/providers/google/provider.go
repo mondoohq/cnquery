@@ -206,6 +206,8 @@ func getTitleForPlatformName(name string) string {
 	switch name {
 	case "gcp-compute-image":
 		return "GCP Compute Image"
+	case "gcp-gke-cluster":
+		return "GCP GKE Cluster"
 	}
 	return "Google Cloud Platform"
 }

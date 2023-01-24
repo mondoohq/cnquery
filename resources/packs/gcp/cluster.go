@@ -44,15 +44,42 @@ func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.
 		return args, nil, nil
 	}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+		(*args)["name"] = ids.name
+		(*args)["zone"] = ids.region
+		(*args)["projectId"] = ids.project
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.gkeService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	gkeSvc := obj.(GcpProjectGkeService)
+	clusters, err := gkeSvc.Clusters()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	projectId := provider.ResourceID()
-	(*args)["projectId"] = projectId
+	for _, c := range clusters {
+		cluster := c.(GcpProjectGkeServiceCluster)
+		name, err := cluster.Name()
+		if err != nil {
+			return nil, nil, err
+		}
+		projectId, err := cluster.ProjectId()
+		if err != nil {
+			return nil, nil, err
+		}
+		zone, err := cluster.Zone()
+		if err != nil {
+			return nil, nil, err
+		}
 
-	return args, nil, nil
+		if name == (*args)["name"] && projectId == (*args)["projectId"] && zone == (*args)["zone"] {
+			return args, cluster, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
 }
 
 func (g *mqlGcpProjectGkeServiceClusterNodepool) id() (string, error) {

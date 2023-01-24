@@ -65,8 +65,11 @@ func GatherMQLObjects(tc *providers.Config, project string) ([]*asset.Asset, err
 	if err != nil {
 		return nil, err
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryComputeImages) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeImages) {
 		assets = append(assets, computeImages(m, project, tc)...)
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryGkeClusters) {
+		assets = append(assets, gkeClusters(m, project, tc)...)
 	}
 
 	return assets, nil
