@@ -39,8 +39,8 @@ func getAssetIdentifier(runtime *resources.Runtime) *assetIdentifier {
 			// "//platformid.api.mondoo.app/runtime/gcp/{o.service}/v1/projects/{project}/regions/{region}/{objectType}/{name}"
 			segments := strings.Split(id, "/")
 			name = segments[len(segments)-1]
-			region = segments[8]
-			project = segments[6]
+			region = segments[10]
+			project = segments[8]
 			break
 		}
 	}

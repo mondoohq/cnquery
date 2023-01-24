@@ -79,7 +79,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		resolved = append(resolved, resolvedRoot)
 	}
 
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryComputeImages) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeImages) {
 		assetList, err := GatherMQLObjects(tc, project)
 		if err != nil {
 			return nil, err
