@@ -1435,229 +1435,231 @@ func (g *mqlGcpProjectComputeService) GetBackendServices() ([]interface{}, error
 		return nil, err
 	}
 
-	list, err := computeSvc.BackendServices.List(projectId).Do()
+	list, err := computeSvc.BackendServices.AggregatedList(projectId).Do()
 	if err != nil {
 		return nil, err
 	}
 
 	res := make([]interface{}, 0, len(list.Items))
-	for _, b := range list.Items {
-		backendServiceId := strconv.FormatUint(b.Id, 10)
-		mqlBackends := make([]interface{}, 0, len(b.Backends))
-		for i, backend := range b.Backends {
-			mqlBackend, err := g.MotorRuntime.CreateResource("gcp.project.computeService.backendService.backend",
-				"id", fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%d", backendServiceId, i),
-				"balancingMode", backend.BalancingMode,
-				"capacityScaler", backend.CapacityScaler,
-				"description", backend.Description,
-				"failover", backend.Failover,
-				"groupUrl", backend.Group,
-				"maxConnections", backend.MaxConnections,
-				"maxConnectionsPerEndpoint", backend.MaxConnectionsPerEndpoint,
-				"maxConnectionsPerInstance", backend.MaxConnectionsPerInstance,
-				"maxRate", backend.MaxRate,
-				"maxRatePerEndpoint", backend.MaxRatePerEndpoint,
-				"maxRatePerInstance", backend.MaxRatePerInstance,
-				"maxUtilization", backend.MaxUtilization,
+	for _, sb := range list.Items {
+		for _, b := range sb.BackendServices {
+			backendServiceId := strconv.FormatUint(b.Id, 10)
+			mqlBackends := make([]interface{}, 0, len(b.Backends))
+			for i, backend := range b.Backends {
+				mqlBackend, err := g.MotorRuntime.CreateResource("gcp.project.computeService.backendService.backend",
+					"id", fmt.Sprintf("gcp.project.computeService.backendService.backend/%s/%d", backendServiceId, i),
+					"balancingMode", backend.BalancingMode,
+					"capacityScaler", backend.CapacityScaler,
+					"description", backend.Description,
+					"failover", backend.Failover,
+					"groupUrl", backend.Group,
+					"maxConnections", backend.MaxConnections,
+					"maxConnectionsPerEndpoint", backend.MaxConnectionsPerEndpoint,
+					"maxConnectionsPerInstance", backend.MaxConnectionsPerInstance,
+					"maxRate", backend.MaxRate,
+					"maxRatePerEndpoint", backend.MaxRatePerEndpoint,
+					"maxRatePerInstance", backend.MaxRatePerInstance,
+					"maxUtilization", backend.MaxUtilization,
+				)
+				if err != nil {
+					return nil, err
+				}
+				mqlBackends = append(mqlBackends, mqlBackend)
+			}
+
+			var cdnPolicy interface{}
+			if b.CdnPolicy != nil {
+				bypassCacheOnRequestHeaders := make([]interface{}, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
+				for _, h := range b.CdnPolicy.BypassCacheOnRequestHeaders {
+					mqlH := map[string]interface{}{"headerName": h.HeaderName}
+					bypassCacheOnRequestHeaders = append(bypassCacheOnRequestHeaders, mqlH)
+				}
+
+				var mqlCacheKeyPolicy interface{}
+				if b.CdnPolicy.CacheKeyPolicy != nil {
+					mqlCacheKeyPolicy = map[string]interface{}{
+						"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
+						"includeHttpHeaders":   core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
+						"includeNamedCookies":  core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
+						"includeProtocol":      b.CdnPolicy.CacheKeyPolicy.IncludeProtocol,
+						"includeQueryString":   b.CdnPolicy.CacheKeyPolicy.IncludeQueryString,
+						"queryStringBlacklist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
+						"queryStringWhitelist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
+					}
+				}
+
+				mqlNegativeCachingPolicy := make([]interface{}, 0, len(b.CdnPolicy.NegativeCachingPolicy))
+				for _, p := range b.CdnPolicy.NegativeCachingPolicy {
+					mqlP := map[string]interface{}{
+						"code": p.Code,
+						"ttl":  p.Ttl,
+					}
+					mqlNegativeCachingPolicy = append(mqlNegativeCachingPolicy, mqlP)
+				}
+
+				cdnPolicy, err = g.MotorRuntime.CreateResource("gcp.project.computeService.backendService.cdnPolicy",
+					"id", fmt.Sprintf("gcp.project.computeService.backendService.cdnPolicy/%s", backendServiceId),
+					"bypassCacheOnRequestHeaders", bypassCacheOnRequestHeaders,
+					"cacheKeyPolicy", mqlCacheKeyPolicy,
+					"cacheMode", b.CdnPolicy.CacheMode,
+					"clientTtl", b.CdnPolicy.ClientTtl,
+					"defaultTtl", b.CdnPolicy.DefaultTtl,
+					"maxTtl", b.CdnPolicy.MaxTtl,
+					"negativeCaching", b.CdnPolicy.NegativeCaching,
+					"negativeCachingPolicy", mqlNegativeCachingPolicy,
+					"requestCoalescing", b.CdnPolicy.RequestCoalescing,
+					"serveWhileStale", b.CdnPolicy.ServeWhileStale,
+					"signedUrlCacheMaxAgeSec", b.CdnPolicy.SignedUrlCacheMaxAgeSec,
+					"signedUrlKeyNames", core.StrSliceToInterface(b.CdnPolicy.SignedUrlKeyNames),
+				)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			var mqlCircuitBreakers interface{}
+			if b.CircuitBreakers != nil {
+				mqlCircuitBreakers = map[string]interface{}{
+					"maxConnections":           b.CircuitBreakers.MaxConnections,
+					"maxPendingRequests":       b.CircuitBreakers.MaxPendingRequests,
+					"maxRequests":              b.CircuitBreakers.MaxRequests,
+					"maxRequestsPerConnection": b.CircuitBreakers.MaxRequestsPerConnection,
+					"maxRetries":               b.CircuitBreakers.MaxRetries,
+				}
+			}
+
+			var mqlConnectionDraining interface{}
+			if b.ConnectionDraining != nil {
+				mqlConnectionDraining = map[string]interface{}{
+					"drainingTimeoutSec": b.ConnectionDraining.DrainingTimeoutSec,
+				}
+			}
+
+			var mqlConnectionTrackingPolicy interface{}
+			if b.ConnectionTrackingPolicy != nil {
+				mqlConnectionTrackingPolicy = map[string]interface{}{
+					"connectionPersistenceOnUnhealthyBackends": b.ConnectionTrackingPolicy.ConnectionPersistenceOnUnhealthyBackends,
+					"enableStrongAffinity":                     b.ConnectionTrackingPolicy.EnableStrongAffinity,
+					"idleTimeoutSec":                           b.ConnectionTrackingPolicy.IdleTimeoutSec,
+					"trackingMode":                             b.ConnectionTrackingPolicy.TrackingMode,
+				}
+			}
+
+			var mqlConsistentHash interface{}
+			if b.ConsistentHash != nil {
+				mqlConsistentHash = map[string]interface{}{
+					"httpCookie": map[string]interface{}{
+						"name": b.ConsistentHash.HttpCookie.Name,
+						"path": b.ConsistentHash.HttpCookie.Path,
+						"ttl":  core.MqlTime(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds)),
+					},
+					"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
+					"minimumRingSize": b.ConsistentHash.MinimumRingSize,
+				}
+			}
+
+			var mqlFailoverPolicy interface{}
+			if b.FailoverPolicy != nil {
+				mqlFailoverPolicy = map[string]interface{}{
+					"disableConnectionDrainOnFailover": b.FailoverPolicy.DisableConnectionDrainOnFailover,
+					"dropTrafficIfUnhealthy":           b.FailoverPolicy.DropTrafficIfUnhealthy,
+					"failoverRatio":                    b.FailoverPolicy.FailoverRatio,
+				}
+			}
+
+			var mqlIap interface{}
+			if b.Iap != nil {
+				mqlIap = map[string]interface{}{
+					"enabled":                  b.Iap.Enabled,
+					"oauth2ClientId":           b.Iap.Oauth2ClientId,
+					"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
+					"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
+				}
+			}
+
+			mqlLocalityLbPolicy := make([]interface{}, 0, len(b.LocalityLbPolicies))
+			for _, p := range b.LocalityLbPolicies {
+				var mqlCustomPolicy interface{}
+				if p.CustomPolicy != nil {
+					mqlCustomPolicy = map[string]interface{}{
+						"data": p.CustomPolicy.Data,
+						"name": p.CustomPolicy.Name,
+					}
+				}
+
+				var mqlPolicy interface{}
+				if p.Policy != nil {
+					mqlPolicy = map[string]interface{}{
+						"name": p.Policy.Name,
+					}
+				}
+				mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]interface{}{
+					"customPolicy": mqlCustomPolicy,
+					"policy":       mqlPolicy,
+				})
+			}
+
+			var mqlLogConfig interface{}
+			if b.LogConfig != nil {
+				mqlLogConfig = map[string]interface{}{
+					"enable":     b.LogConfig.Enable,
+					"sampleRate": b.LogConfig.SampleRate,
+				}
+			}
+
+			var mqlSecuritySettings interface{}
+			if b.SecuritySettings != nil {
+				mqlSecuritySettings = map[string]interface{}{
+					"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
+					"subjectAltNames": core.StrSliceToInterface(b.SecuritySettings.SubjectAltNames),
+				}
+			}
+
+			var maxStreamDuration interface{}
+			if b.MaxStreamDuration != nil {
+				maxStreamDuration = core.MqlTime(llx.DurationToTime(b.MaxStreamDuration.Seconds))
+			}
+
+			mqlB, err := g.MotorRuntime.CreateResource("gcp.project.computeService.backendService",
+				"id", backendServiceId,
+				"affinityCookieTtlSec", b.AffinityCookieTtlSec,
+				"backends", mqlBackends,
+				"cdnPolicy", cdnPolicy,
+				"circuitBreakers", mqlCircuitBreakers,
+				"compressionMode", b.CompressionMode,
+				"connectionDraining", mqlConnectionDraining,
+				"connectionTrackingPolicy", mqlConnectionTrackingPolicy,
+				"consistentHash", mqlConsistentHash,
+				"created", parseTime(b.CreationTimestamp),
+				"customRequestHeaders", core.StrSliceToInterface(b.CustomRequestHeaders),
+				"customResponseHeaders", core.StrSliceToInterface(b.CustomResponseHeaders),
+				"description", b.Description,
+				"edgeSecurityPolicy", b.EdgeSecurityPolicy,
+				"enableCDN", b.EnableCDN,
+				"failoverPolicy", mqlFailoverPolicy,
+				"healthChecks", core.StrSliceToInterface(b.HealthChecks),
+				"iap", mqlIap,
+				"loadBalancingScheme", b.LoadBalancingScheme,
+				"localityLbPolicies", mqlLocalityLbPolicy,
+				"localityLbPolicy", b.LocalityLbPolicy,
+				"logConfig", mqlLogConfig,
+				"maxStreamDuration", maxStreamDuration,
+				"name", b.Name,
+				"networkUrl", b.Network,
+				"portName", b.PortName,
+				"protocol", b.Protocol,
+				"regionUrl", b.Region,
+				"securityPolicyUrl", b.SecurityPolicy,
+				"securitySettings", mqlSecuritySettings,
+				"serviceBindingUrls", core.StrSliceToInterface(b.ServiceBindings),
+				"sessionAffinity", b.SessionAffinity,
+				"timeoutSec", b.TimeoutSec,
 			)
 			if err != nil {
 				return nil, err
 			}
-			mqlBackends = append(mqlBackends, mqlBackend)
+			res = append(res, mqlB)
 		}
-
-		var cdnPolicy interface{}
-		if b.CdnPolicy != nil {
-			bypassCacheOnRequestHeaders := make([]interface{}, 0, len(b.CdnPolicy.BypassCacheOnRequestHeaders))
-			for _, h := range b.CdnPolicy.BypassCacheOnRequestHeaders {
-				mqlH := map[string]interface{}{"headerName": h.HeaderName}
-				bypassCacheOnRequestHeaders = append(bypassCacheOnRequestHeaders, mqlH)
-			}
-
-			var mqlCacheKeyPolicy interface{}
-			if b.CdnPolicy.CacheKeyPolicy != nil {
-				mqlCacheKeyPolicy = map[string]interface{}{
-					"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
-					"includeHttpHeaders":   core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
-					"includeNamedCookies":  core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
-					"includeProtocol":      b.CdnPolicy.CacheKeyPolicy.IncludeProtocol,
-					"includeQueryString":   b.CdnPolicy.CacheKeyPolicy.IncludeQueryString,
-					"queryStringBlacklist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
-					"queryStringWhitelist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
-				}
-			}
-
-			mqlNegativeCachingPolicy := make([]interface{}, 0, len(b.CdnPolicy.NegativeCachingPolicy))
-			for _, p := range b.CdnPolicy.NegativeCachingPolicy {
-				mqlP := map[string]interface{}{
-					"code": p.Code,
-					"ttl":  p.Ttl,
-				}
-				mqlNegativeCachingPolicy = append(mqlNegativeCachingPolicy, mqlP)
-			}
-
-			cdnPolicy, err = g.MotorRuntime.CreateResource("gcp.project.computeService.backendService.cdnPolicy",
-				"id", fmt.Sprintf("gcp.project.computeService.backendService.cdnPolicy/%s", backendServiceId),
-				"bypassCacheOnRequestHeaders", bypassCacheOnRequestHeaders,
-				"cacheKeyPolicy", mqlCacheKeyPolicy,
-				"cacheMode", b.CdnPolicy.CacheMode,
-				"clientTtl", b.CdnPolicy.ClientTtl,
-				"defaultTtl", b.CdnPolicy.DefaultTtl,
-				"maxTtl", b.CdnPolicy.MaxTtl,
-				"negativeCaching", b.CdnPolicy.NegativeCaching,
-				"negativeCachingPolicy", mqlNegativeCachingPolicy,
-				"requestCoalescing", b.CdnPolicy.RequestCoalescing,
-				"serveWhileStale", b.CdnPolicy.ServeWhileStale,
-				"signedUrlCacheMaxAgeSec", b.CdnPolicy.SignedUrlCacheMaxAgeSec,
-				"signedUrlKeyNames", core.StrSliceToInterface(b.CdnPolicy.SignedUrlKeyNames),
-			)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		var mqlCircuitBreakers interface{}
-		if b.CircuitBreakers != nil {
-			mqlCircuitBreakers = map[string]interface{}{
-				"maxConnections":           b.CircuitBreakers.MaxConnections,
-				"maxPendingRequests":       b.CircuitBreakers.MaxPendingRequests,
-				"maxRequests":              b.CircuitBreakers.MaxRequests,
-				"maxRequestsPerConnection": b.CircuitBreakers.MaxRequestsPerConnection,
-				"maxRetries":               b.CircuitBreakers.MaxRetries,
-			}
-		}
-
-		var mqlConnectionDraining interface{}
-		if b.ConnectionDraining != nil {
-			mqlConnectionDraining = map[string]interface{}{
-				"drainingTimeoutSec": b.ConnectionDraining.DrainingTimeoutSec,
-			}
-		}
-
-		var mqlConnectionTrackingPolicy interface{}
-		if b.ConnectionTrackingPolicy != nil {
-			mqlConnectionTrackingPolicy = map[string]interface{}{
-				"connectionPersistenceOnUnhealthyBackends": b.ConnectionTrackingPolicy.ConnectionPersistenceOnUnhealthyBackends,
-				"enableStrongAffinity":                     b.ConnectionTrackingPolicy.EnableStrongAffinity,
-				"idleTimeoutSec":                           b.ConnectionTrackingPolicy.IdleTimeoutSec,
-				"trackingMode":                             b.ConnectionTrackingPolicy.TrackingMode,
-			}
-		}
-
-		var mqlConsistentHash interface{}
-		if b.ConsistentHash != nil {
-			mqlConsistentHash = map[string]interface{}{
-				"httpCookie": map[string]interface{}{
-					"name": b.ConsistentHash.HttpCookie.Name,
-					"path": b.ConsistentHash.HttpCookie.Path,
-					"ttl":  core.MqlTime(llx.DurationToTime(b.ConsistentHash.HttpCookie.Ttl.Seconds)),
-				},
-				"httpHeaderName":  b.ConsistentHash.HttpHeaderName,
-				"minimumRingSize": b.ConsistentHash.MinimumRingSize,
-			}
-		}
-
-		var mqlFailoverPolicy interface{}
-		if b.FailoverPolicy != nil {
-			mqlFailoverPolicy = map[string]interface{}{
-				"disableConnectionDrainOnFailover": b.FailoverPolicy.DisableConnectionDrainOnFailover,
-				"dropTrafficIfUnhealthy":           b.FailoverPolicy.DropTrafficIfUnhealthy,
-				"failoverRatio":                    b.FailoverPolicy.FailoverRatio,
-			}
-		}
-
-		var mqlIap interface{}
-		if b.Iap != nil {
-			mqlIap = map[string]interface{}{
-				"enabled":                  b.Iap.Enabled,
-				"oauth2ClientId":           b.Iap.Oauth2ClientId,
-				"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
-				"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
-			}
-		}
-
-		mqlLocalityLbPolicy := make([]interface{}, 0, len(b.LocalityLbPolicies))
-		for _, p := range b.LocalityLbPolicies {
-			var mqlCustomPolicy interface{}
-			if p.CustomPolicy != nil {
-				mqlCustomPolicy = map[string]interface{}{
-					"data": p.CustomPolicy.Data,
-					"name": p.CustomPolicy.Name,
-				}
-			}
-
-			var mqlPolicy interface{}
-			if p.Policy != nil {
-				mqlPolicy = map[string]interface{}{
-					"name": p.Policy.Name,
-				}
-			}
-			mqlLocalityLbPolicy = append(mqlLocalityLbPolicy, map[string]interface{}{
-				"customPolicy": mqlCustomPolicy,
-				"policy":       mqlPolicy,
-			})
-		}
-
-		var mqlLogConfig interface{}
-		if b.LogConfig != nil {
-			mqlLogConfig = map[string]interface{}{
-				"enable":     b.LogConfig.Enable,
-				"sampleRate": b.LogConfig.SampleRate,
-			}
-		}
-
-		var mqlSecuritySettings interface{}
-		if b.SecuritySettings != nil {
-			mqlSecuritySettings = map[string]interface{}{
-				"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
-				"subjectAltNames": core.StrSliceToInterface(b.SecuritySettings.SubjectAltNames),
-			}
-		}
-
-		var maxStreamDuration interface{}
-		if b.MaxStreamDuration != nil {
-			maxStreamDuration = core.MqlTime(llx.DurationToTime(b.MaxStreamDuration.Seconds))
-		}
-
-		mqlB, err := g.MotorRuntime.CreateResource("gcp.project.computeService.backendService",
-			"id", backendServiceId,
-			"affinityCookieTtlSec", b.AffinityCookieTtlSec,
-			"backends", mqlBackends,
-			"cdnPolicy", cdnPolicy,
-			"circuitBreakers", mqlCircuitBreakers,
-			"compressionMode", b.CompressionMode,
-			"connectionDraining", mqlConnectionDraining,
-			"connectionTrackingPolicy", mqlConnectionTrackingPolicy,
-			"consistentHash", mqlConsistentHash,
-			"created", parseTime(b.CreationTimestamp),
-			"customRequestHeaders", core.StrSliceToInterface(b.CustomRequestHeaders),
-			"customResponseHeaders", core.StrSliceToInterface(b.CustomResponseHeaders),
-			"description", b.Description,
-			"edgeSecurityPolicy", b.EdgeSecurityPolicy,
-			"enableCDN", b.EnableCDN,
-			"failoverPolicy", mqlFailoverPolicy,
-			"healthChecks", core.StrSliceToInterface(b.HealthChecks),
-			"iap", mqlIap,
-			"loadBalancingScheme", b.LoadBalancingScheme,
-			"localityLbPolicies", mqlLocalityLbPolicy,
-			"localityLbPolicy", b.LocalityLbPolicy,
-			"logConfig", mqlLogConfig,
-			"maxStreamDuration", maxStreamDuration,
-			"name", b.Name,
-			"networkUrl", b.Network,
-			"portName", b.PortName,
-			"protocol", b.Protocol,
-			"regionUrl", b.Region,
-			"securityPolicyUrl", b.SecurityPolicy,
-			"securitySettings", mqlSecuritySettings,
-			"serviceBindingUrls", core.StrSliceToInterface(b.ServiceBindings),
-			"sessionAffinity", b.SessionAffinity,
-			"timeoutSec", b.TimeoutSec,
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlB)
 	}
 	return res, nil
 }
