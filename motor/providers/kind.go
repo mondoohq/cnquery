@@ -24,6 +24,8 @@ func (x Kind) Name() string {
 		return "network"
 	case Kind_KIND_K8S_OBJECT:
 		return "k8s-object"
+	case Kind_KIND_GCP_OBJECT:
+		return "gcp-object"
 	case Kind_KIND_UNKNOWN:
 		fallthrough
 	default:
