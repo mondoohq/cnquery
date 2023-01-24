@@ -154,7 +154,7 @@ func auditConfigsToMql(runtime *resources.Runtime, auditCfgs []*cloudresourceman
 		cfgs := make([]interface{}, 0, len(a.AuditLogConfigs))
 		for _, c := range a.AuditLogConfigs {
 			cfgs = append(cfgs, map[string]interface{}{
-				"exemptedMembers": c.ExemptedMembers,
+				"exemptedMembers": core.StrSliceToInterface(c.ExemptedMembers),
 				"logType":         c.LogType,
 			})
 		}
