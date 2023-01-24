@@ -462,6 +462,8 @@ private gcp.project.computeService.image @defaults("id name") {
 private gcp.project.computeService.firewall @defaults("name") {
   // Unique Identifier
   id string
+  // Project ID
+  projectId string
   // User-provided name
   name string
   // An optional description of this resource

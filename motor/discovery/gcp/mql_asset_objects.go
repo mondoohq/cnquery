@@ -9,8 +9,13 @@ import (
 func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 	switch o.service {
 	case "compute":
-		if o.objectType == "image" {
+		switch o.objectType {
+		case "image":
 			return gcpObjectPlatformInfo{title: "GCP Compute Image", platform: "gcp-compute-image"}, nil
+		case "firewall":
+			return gcpObjectPlatformInfo{title: "GCP Compute Firewall", platform: "gcp-compute-firewall"}, nil
+		default:
+			return gcpObjectPlatformInfo{}, errors.Newf("unknown gcp compute object type", o.objectType)
 		}
 	case "gke":
 		if o.objectType == "cluster" {
@@ -43,6 +48,30 @@ func computeImages(m *MqlDiscovery, project string, tc *providers.Config) []*ass
 					id:         id,
 					service:    "compute",
 					objectType: "image",
+				},
+			}, tc))
+	}
+	return assets
+}
+
+func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+	assets := []*asset.Asset{}
+	images := m.GetList("gcp.project.compute.firewalls { id name }")
+	for i := range images {
+		b := images[i].(map[string]interface{})
+		id := b["id"].(string)
+		name := b["name"].(string)
+
+		assets = append(assets, MqlObjectToAsset(project,
+			mqlObject{
+				name: name,
+				gcpObject: gcpObject{
+					project:    project,
+					region:     "global", // Not region-based
+					name:       name,
+					id:         id,
+					service:    "compute",
+					objectType: "firewall",
 				},
 			}, tc))
 	}

@@ -749,6 +749,44 @@ func (g *mqlGcpProjectComputeServiceFirewall) GetNetwork() (interface{}, error) 
 	return nil, errors.New("not implemented")
 }
 
+func (g *mqlGcpProjectComputeServiceFirewall) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceFirewall, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+		(*args)["name"] = ids.name
+		(*args)["projectId"] = ids.project
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(GcpProjectComputeService)
+	firewalls, err := computeSvc.Firewalls()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, f := range firewalls {
+		firewall := f.(GcpProjectComputeServiceFirewall)
+		name, err := firewall.Name()
+		if err != nil {
+			return nil, nil, err
+		}
+		projectId, err := firewall.ProjectId()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if name == (*args)["name"] && projectId == (*args)["projectId"] {
+			return args, firewall, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
+}
+
 func (g *mqlGcpProjectComputeService) GetFirewalls() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -801,6 +839,7 @@ func (g *mqlGcpProjectComputeService) GetFirewalls() ([]interface{}, error) {
 
 			mqlFirewall, err := g.MotorRuntime.CreateResource("gcp.project.computeService.firewall",
 				"id", strconv.FormatUint(firewall.Id, 10),
+				"projectId", projectId,
 				"name", firewall.Name,
 				"description", firewall.Description,
 				"priority", firewall.Priority,

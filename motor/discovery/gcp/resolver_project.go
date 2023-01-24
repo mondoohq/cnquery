@@ -21,7 +21,7 @@ func (k *GcpProjectResolver) Name() string {
 }
 
 func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects, DiscoveryInstances, DiscoveryComputeImages, DiscoveryGkeClusters}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects, DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeFirewalls, DiscoveryGkeClusters}
 }
 
 func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -79,7 +79,9 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		resolved = append(resolved, resolvedRoot)
 	}
 
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryComputeImages, DiscoveryGkeClusters) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll,
+		DiscoveryComputeImages, DiscoveryComputeFirewalls,
+		DiscoveryGkeClusters) {
 		assetList, err := GatherMQLObjects(tc, project)
 		if err != nil {
 			return nil, err
