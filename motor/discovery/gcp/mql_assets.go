@@ -74,6 +74,9 @@ func GatherMQLObjects(tc *providers.Config, project string) ([]*asset.Asset, err
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryGkeClusters) {
 		assets = append(assets, gkeClusters(m, project, tc)...)
 	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryStorageBuckets) {
+		assets = append(assets, storageBuckets(m, project, tc)...)
+	}
 
 	return assets, nil
 }

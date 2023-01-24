@@ -6,4 +6,5 @@ const (
 	DiscoveryComputeImages    = "compute-images"
 	DiscoveryComputeFirewalls = "compute-firewalls"
 	DiscoveryGkeClusters      = "gke-clusters"
+	DiscoveryStorageBuckets   = "storage-buckets"
 )

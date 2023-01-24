@@ -210,6 +210,8 @@ func getTitleForPlatformName(name string) string {
 		return "GCP Compute Firewall"
 	case "gcp-gke-cluster":
 		return "GCP GKE Cluster"
+	case "gcp-storage-bucket":
+		return "GCP Storage Bucket"
 	}
 	return "Google Cloud Platform"
 }

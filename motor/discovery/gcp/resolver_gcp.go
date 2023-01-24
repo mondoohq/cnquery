@@ -17,7 +17,12 @@ func (k *GcpResolver) Name() string {
 }
 
 func (r *GcpResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects, DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeFirewalls, DiscoveryGkeClusters}
+	return []string{
+		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects,
+		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeFirewalls,
+		DiscoveryGkeClusters,
+		DiscoveryStorageBuckets,
+	}
 }
 
 func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
