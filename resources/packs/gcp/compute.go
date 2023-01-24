@@ -1114,6 +1114,44 @@ func (g *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() ([]interface{}, er
 	return res, nil
 }
 
+func (g *mqlGcpProjectComputeServiceNetwork) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceNetwork, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+		(*args)["name"] = ids.name
+		(*args)["projectId"] = ids.project
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(GcpProjectComputeService)
+	networks, err := computeSvc.Networks()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, n := range networks {
+		network := n.(GcpProjectComputeServiceNetwork)
+		name, err := network.Name()
+		if err != nil {
+			return nil, nil, err
+		}
+		projectId, err := network.ProjectId()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if name == (*args)["name"] && projectId == (*args)["projectId"] {
+			return args, network, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
+}
+
 func (g *mqlGcpProjectComputeService) GetNetworks() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -1154,6 +1192,7 @@ func (g *mqlGcpProjectComputeService) GetNetworks() ([]interface{}, error) {
 
 			mqlNetwork, err := g.MotorRuntime.CreateResource("gcp.project.computeService.network",
 				"id", strconv.FormatUint(network.Id, 10),
+				"projectId", projectId,
 				"name", network.Name,
 				"description", network.Description,
 				"autoCreateSubnetworks", network.AutoCreateSubnetworks,

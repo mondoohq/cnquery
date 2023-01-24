@@ -206,6 +206,8 @@ func getTitleForPlatformName(name string) string {
 	switch name {
 	case "gcp-compute-image":
 		return "GCP Compute Image"
+	case "gcp-compute-network":
+		return "GCP Compute Network"
 	case "gcp-compute-firewall":
 		return "GCP Compute Firewall"
 	case "gcp-gke-cluster":

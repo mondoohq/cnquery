@@ -19,7 +19,7 @@ func (k *GcpResolver) Name() string {
 func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	return []string{
 		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects,
-		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeFirewalls,
+		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeFirewalls,
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
 	}

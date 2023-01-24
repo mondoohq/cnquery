@@ -496,6 +496,8 @@ private gcp.project.computeService.firewall @defaults("name") {
 private gcp.project.computeService.network @defaults("name") {
   // Unique Identifier
   id string
+  // Project ID
+  projectId string
   // Name of the resource
   name string
   // An optional description of this resource
