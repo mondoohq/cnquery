@@ -213,7 +213,6 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	finished := false
 	go func() {
 		defer scanGroup.Done()
-		defer progressProg.Quit()
 		for i := range assetList {
 			asset := assetList[i]
 
@@ -222,6 +221,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 			select {
 			case <-ctx.Done():
 				log.Warn().Msg("request context has been canceled")
+				// When we scan concurrently, we need to send MsgErrored to the tea program
+				progressProg.Quit()
 				return
 			default:
 			}
@@ -245,10 +246,14 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
 		defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
 	}
-	if _, err := progressProg.Run(); err != nil {
-		fmt.Println(err.Error())
-		panic(err)
-	}
+	scanGroup.Add(1)
+	go func() {
+		defer scanGroup.Done()
+		if _, err := progressProg.Run(); err != nil {
+			fmt.Println(err.Error())
+			panic(err)
+		}
+	}()
 	scanGroup.Wait()
 	return reporter.Reports(), finished, nil
 }
@@ -295,6 +300,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 				log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
 				job.Reporter.AddScanError(job.Asset, err)
 				job.ProgressProg.Send(progress.MsgErrored{Index: job.Asset.Mrn})
+				job.ProgressProg.Send(progress.MsgCompleted{Index: job.Asset.Mrn})
 				return
 			}
 

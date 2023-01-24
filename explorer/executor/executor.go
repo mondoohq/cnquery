@@ -218,6 +218,11 @@ func (i *instance) collect(res *llx.RawResult) {
 			Index:   i.assetMrn,
 			Percent: percentageDone,
 		})
+		if isDone {
+			i.progressProg.Send(progress.MsgCompleted{
+				Index: i.assetMrn,
+			})
+		}
 	}
 	i.mutex.Unlock()
 

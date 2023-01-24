@@ -39,6 +39,13 @@ type MsgProgress struct {
 	Percent float64
 }
 
+// For cnquery the progressbar is completed, when percent is 1.0
+// But for cnspec we also need the score, which is displayed after the progressbar
+// So we need a second message to indicate when the progressbar is completed
+type MsgCompleted struct {
+	Index string
+}
+
 type MsgErrored struct {
 	Index string
 }
@@ -157,22 +164,42 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case MsgProgress:
-		var cmds []tea.Cmd
-
+	case MsgCompleted:
 		if _, ok := m.Progress[msg.Index]; !ok {
 			return m, nil
 		}
+		m.Progress[msg.Index].lock.Lock()
+		m.Progress[msg.Index].Completed = true
+		m.Progress[msg.Index].lock.Unlock()
+
+		finished := 0
+		for k := range m.Progress {
+			if k == overallProgressIndexName {
+				continue
+			}
+			if m.Progress[k].Errored || m.Progress[k].Completed {
+				finished++
+			}
+		}
+		if finished == len(m.Progress)-1 {
+			m.Progress[overallProgressIndexName].lock.Lock()
+			m.Progress[overallProgressIndexName].Completed = true
+			m.Progress[overallProgressIndexName].lock.Unlock()
+			return m, tea.Quit
+		}
+		return m, nil
+
+	case MsgProgress:
+		if _, ok := m.Progress[msg.Index]; !ok {
+			return m, nil
+		}
+
+		var cmds []tea.Cmd
 		if msg.Percent != 0 {
 			m.Progress[msg.Index].lock.Lock()
 			cmd := m.Progress[msg.Index].model.SetPercent(msg.Percent)
 			m.Progress[msg.Index].lock.Unlock()
 			cmds = append(cmds, cmd)
-		}
-		if msg.Percent == 1.0 {
-			m.Progress[msg.Index].lock.Lock()
-			m.Progress[msg.Index].Completed = true
-			m.Progress[msg.Index].lock.Unlock()
 		}
 
 		cmds = append(cmds, m.updateOverallProgress())
@@ -191,6 +218,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// we need to manually reduce the width to match the others without the percentage
 		m.Progress[msg.Index].model.Width -= 5
 		m.Progress[msg.Index].lock.Unlock()
+
 		return m, m.updateOverallProgress()
 
 	case MsgScore:
