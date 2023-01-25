@@ -17,6 +17,9 @@ import (
 type Progress interface {
 	Open() error
 	OnProgress(current int, total int)
+	Score(score string)
+	Errored()
+	Completed()
 	Close()
 }
 
@@ -24,6 +27,9 @@ type Noop struct{}
 
 func (n Noop) Open() error         { return nil }
 func (n Noop) OnProgress(int, int) {}
+func (n Noop) Score(score string)  {}
+func (n Noop) Errored()            {}
+func (n Noop) Completed()          {}
 func (n Noop) Close()              {}
 
 type progressbar struct {
@@ -67,6 +73,10 @@ func NewMultiBar(id string, data progressData) *progressbar {
 		isTTY:        isatty.IsTerminal(os.Stdout.Fd()),
 	}
 }
+
+func (p *progressbar) Errored()     {}
+func (p *progressbar) Score(string) {}
+func (p *progressbar) Completed()   {}
 
 func (p *progressbar) Open() error {
 	var err error
