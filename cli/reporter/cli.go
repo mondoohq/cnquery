@@ -95,6 +95,14 @@ func (r *cliReporter) printQueryData() {
 			query := p.Queries[i]
 			queriesMap[query.Mrn] = query
 		}
+
+		for i := range p.Groups {
+			group := p.Groups[i]
+			for j := range group.Queries {
+				query := group.Queries[j]
+				queriesMap[query.Mrn] = query
+			}
+		}
 	}
 
 	queries := make([]*explorer.Mquery, len(queriesMap))

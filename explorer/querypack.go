@@ -2,9 +2,7 @@ package explorer
 
 import (
 	"context"
-	"encoding/json"
 	"sort"
-	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -41,11 +39,6 @@ func (p *QueryPack) UpdateChecksums() error {
 	contentChecksum := checksums.New
 
 	contentChecksum = contentChecksum.Add(p.Mrn).Add(p.Name).Add(p.Version).Add(p.OwnerMrn)
-	if p.IsPublic {
-		contentChecksum = contentChecksum.AddUint(1)
-	} else {
-		contentChecksum = contentChecksum.AddUint(0)
-	}
 	for i := range p.Authors {
 		author := p.Authors[i]
 		contentChecksum = contentChecksum.Add(author.Email).Add(author.Name)
@@ -70,52 +63,83 @@ func (p *QueryPack) UpdateChecksums() error {
 		contentChecksum = contentChecksum.Add(k).Add(p.Tags[k])
 	}
 
-	// QUERIES (must be sorted)
-	queryIDs := make([]string, len(p.Queries))
-	queries := make(map[string]*Mquery, len(p.Queries))
-	for i := range p.Queries {
-		query := p.Queries[i]
+	c, e := p.Filters.Checksum()
+	contentChecksum = contentChecksum.AddUint(uint64(c))
+	executionChecksum = executionChecksum.AddUint(uint64(e))
+
+	c, e = ChecksumQueries(p.Queries)
+	contentChecksum = contentChecksum.AddUint(uint64(c))
+	executionChecksum = executionChecksum.AddUint(uint64(e))
+
+	// Groups
+	for i := range p.Groups {
+		group := p.Groups[i]
+
+		contentChecksum = contentChecksum.
+			Add(group.Title).
+			AddUint(uint64(group.Created)).
+			AddUint(uint64(group.Modified))
+
+		c, e := group.Filters.Checksum()
+		contentChecksum = contentChecksum.AddUint(uint64(c))
+		executionChecksum = executionChecksum.AddUint(uint64(e))
+
+		c, e = ChecksumQueries(p.Queries)
+		contentChecksum = contentChecksum.AddUint(uint64(c))
+		executionChecksum = executionChecksum.AddUint(uint64(e))
+	}
+
+	contentChecksum = contentChecksum.AddUint(uint64(executionChecksum))
+
+	p.LocalContentChecksum = contentChecksum.String()
+	p.LocalExecutionChecksum = executionChecksum.String()
+
+	return nil
+}
+
+// Computes the checksums for a list of queries, which is sorted and then
+// split into a content and execution checksum. These queries must have been
+// previously compiled and ready, otherwise the checksums cannot be computed.
+func ChecksumQueries(queries []*Mquery) (checksums.Fast, checksums.Fast) {
+	content := checksums.New
+	execution := checksums.New
+
+	if len(queries) == 0 {
+		return content, execution
+	}
+
+	queryIDs := make([]string, len(queries))
+	queryMap := make(map[string]*Mquery, len(queries))
+	for i := range queries {
+		query := queries[i]
 		queryIDs[i] = query.Mrn
-		queries[query.Mrn] = query
+		queryMap[query.Mrn] = query
 	}
 	sort.Strings(queryIDs)
+
 	for _, queryID := range queryIDs {
-		q, ok := queries[queryID]
-		if !ok {
-			return errors.New("cannot find query " + queryID)
+		query := queryMap[queryID]
+
+		// we add this sanity check since we expose the method, but can't ensure
+		// that users have compiled everything beforehand
+		if query.Checksum == "" || query.CodeId == "" {
+			panic("internal error processing filter checksums: query is compiled")
 		}
 
 		// we use the checksum for doc, tag and ref changes
-		contentChecksum = contentChecksum.Add(q.Checksum)
-		executionChecksum = executionChecksum.Add(q.CodeId)
+		content = content.Add(query.Checksum)
+		execution = execution.Add(query.CodeId)
 	}
 
-	return nil
+	content = content.AddUint(uint64(execution))
+
+	return content, execution
 }
 
 // ComputeFilters into mql
 func (p *QueryPack) ComputeFilters(ctx context.Context, ownerMRN string) ([]*Mquery, error) {
 	if p.Filters == nil {
-		return nil, nil
-	}
-
-	if err := p.Filters.compile(ownerMRN); err != nil {
-		return nil, err
-	}
-
-	for i := range p.Queries {
-		query := p.Queries[i]
-		if query.Filter == nil {
-			continue
-		}
-
-		if err := query.Filter.compile(ownerMRN); err != nil {
-			return nil, err
-		}
-
-		for k, v := range query.Filter.Items {
-			p.Filters.Items[k] = v
-		}
+		return nil, errors.New("cannot compute filters for a querypack, unless it was compiled first")
 	}
 
 	res := make([]*Mquery, len(p.Filters.Items))
@@ -125,69 +149,9 @@ func (p *QueryPack) ComputeFilters(ctx context.Context, ownerMRN string) ([]*Mqu
 		idx++
 	}
 
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].CodeId < res[j].CodeId
+	})
+
 	return res, nil
-}
-
-func (s *Filters) UnmarshalJSON(data []byte) error {
-	var str string
-	err := json.Unmarshal(data, &str)
-	if err == nil {
-		s.Items = map[string]*Mquery{}
-		s.Items[""] = &Mquery{
-			Mql: str,
-		}
-		return nil
-	}
-
-	// FIXME: DEPRECATED, remove in v9.0 vv
-	// This old style of specifying filters is going to be removed, we
-	// have an alternative with list and keys
-	var arr []string
-	err = json.Unmarshal(data, &arr)
-	if err == nil {
-		s.Items = map[string]*Mquery{}
-		for i := range arr {
-			s.Items[strconv.Itoa(i)] = &Mquery{Mql: arr[i]}
-		}
-		return nil
-	}
-	// ^^
-
-	var list []*Mquery
-	err = json.Unmarshal(data, &list)
-	if err == nil {
-		s.Items = map[string]*Mquery{}
-		for i := range list {
-			s.Items[strconv.Itoa(i)] = list[i]
-		}
-		return nil
-	}
-
-	return json.Unmarshal(data, &s.Items)
-}
-
-func (s *Filters) compile(ownerMRN string) error {
-	if s == nil || len(s.Items) == 0 {
-		return nil
-	}
-
-	res := make(map[string]*Mquery, len(s.Items))
-	for _, query := range s.Items {
-		bundle, err := query.Compile(nil)
-		if err != nil {
-			return errors.Wrap(err, "failed to compile asset filter")
-		}
-
-		query.Mrn = ownerMRN + "/assetfilter/" + bundle.CodeV2.Id
-		query.CodeId = bundle.CodeV2.Id
-
-		if _, ok := res[query.CodeId]; ok {
-			continue
-		}
-
-		res[query.CodeId] = query
-	}
-
-	s.Items = res
-	return nil
 }

@@ -97,11 +97,6 @@ func (s *LocalServices) setBundleFromMap(ctx context.Context, bundle *BundleMap)
 		logCtx.Debug().Str("owner", querypack.OwnerMrn).Str("uid", querypack.Uid).Str("mrn", querypack.Mrn).Msg("store query pack")
 		querypack.OwnerMrn = bundle.OwnerMrn
 
-		// If this is user generated, it must be non-public
-		if bundle.OwnerMrn != "//querypack.api.mondoo.app" {
-			querypack.IsPublic = false
-		}
-
 		if err = s.setPack(ctx, querypack); err != nil {
 			return err
 		}

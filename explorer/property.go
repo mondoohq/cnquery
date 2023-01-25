@@ -116,14 +116,20 @@ func NewPropsCache() PropsCache {
 	}
 }
 
-// Add properties, overwriting existing ones
+// Add properties, NOT overwriting existing ones (instead we add them as base)
 func (c PropsCache) Add(props ...*Property) {
 	for i := range props {
 		prop := props[i]
 		if prop.Uid != "" {
+			if base, ok := c.cache[prop.Uid]; ok {
+				prop.Merge(base)
+			}
 			c.cache[prop.Uid] = prop
 		}
 		if prop.Mrn != "" {
+			if base, ok := c.cache[prop.Mrn]; ok {
+				prop.Merge(base)
+			}
 			c.cache[prop.Mrn] = prop
 		}
 	}

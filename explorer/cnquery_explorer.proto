@@ -13,6 +13,19 @@ message Bundle {
   repeated Property props = 4;
 }
 
+message QueryGroup {
+  repeated Mquery queries = 3;
+
+  // filter for the assets this applies to
+  Filters filters = 20;
+
+  // metadata
+  string title = 24;
+
+  int64 created = 32;
+  int64 modified = 33;
+}
+
 message QueryPack {
   // FIXME: DEPRECATED, remove in v9.0 vv
   // This is replaced by the field "filters"
@@ -33,12 +46,14 @@ message QueryPack {
   string owner_mrn = 4; // auto-generated
   
   repeated Mquery queries = 6;
+  repeated QueryGroup groups = 11;
+
   repeated Property props = 35;
   Filters filters = 43;
   
-  bool is_public = 20;
   string license = 21;
   QueryPackDocs docs = 22;
+  string summary = 46;
 
   repeated Author authors = 30;
   int64 created = 32;
@@ -130,7 +145,7 @@ message Mquery {
   string desc = 35;
   Impact impact = 23;
   map<string,string> tags = 34;
-  Filters filter = 37;
+  Filters filters = 37;
   repeated Property props = 38;
   repeated Mquery compose = 39;
   // Action is used for all query overrides (eg: in packs, policies, APIs etc)

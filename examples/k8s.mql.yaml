@@ -5,7 +5,7 @@ packs:
     queries:
       - title: Gather Pods Security Context
         uid: k8s-pods-security-context
-        query: |
+        mql: |
           k8s.pod {
             initContainers {
               securityContext
