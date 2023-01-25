@@ -9286,6 +9286,15 @@ func newGcpProjectComputeServiceSubnetwork(runtime *resources.Runtime, args *res
 	// User hooks
 	var err error
 	res := mqlGcpProjectComputeServiceSubnetwork{runtime.NewResource("gcp.project.computeService.subnetwork")}
+	var existing GcpProjectComputeServiceSubnetwork
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 

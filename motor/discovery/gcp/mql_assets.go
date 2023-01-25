@@ -71,6 +71,9 @@ func GatherMQLObjects(tc *providers.Config, project string) ([]*asset.Asset, err
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeNetworks) {
 		assets = append(assets, computeNetworks(m, project, tc)...)
 	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeSubnetworks) {
+		assets = append(assets, computeSubnetworks(m, project, tc)...)
+	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeFirewalls) {
 		assets = append(assets, computeFirewalls(m, project, tc)...)
 	}

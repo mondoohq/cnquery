@@ -1228,6 +1228,50 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) id() (string, error) {
 	return "gcloud.compute.subnetwork/" + id, nil
 }
 
+func (g *mqlGcpProjectComputeServiceSubnetwork) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceSubnetwork, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+		(*args)["name"] = ids.name
+		(*args)["region"] = ids.region
+		(*args)["projectId"] = ids.project
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(GcpProjectComputeService)
+	subnetworks, err := computeSvc.Subnetworks()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, n := range subnetworks {
+		subnetwork := n.(GcpProjectComputeServiceSubnetwork)
+		name, err := subnetwork.Name()
+		if err != nil {
+			return nil, nil, err
+		}
+		regionUrl, err := subnetwork.RegionUrl()
+		if err != nil {
+			return nil, nil, err
+		}
+		region := RegionNameFromRegionUrl(regionUrl)
+		projectId, err := subnetwork.ProjectId()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if name == (*args)["name"] && projectId == (*args)["projectId"] && region == (*args)["region"] {
+			return args, subnetwork, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
+}
+
 func (g *mqlGcpProjectComputeServiceSubnetworkLogConfig) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
@@ -1247,9 +1291,7 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) GetRegion() (interface{}, error)
 	if err != nil {
 		return nil, err
 	}
-
-	regionUrlSegments := strings.Split(regionUrl, "/")
-	regionName := regionUrlSegments[len(regionUrlSegments)-1]
+	regionName := RegionNameFromRegionUrl(regionUrl)
 
 	// Find regionName for projectId
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", projectId)

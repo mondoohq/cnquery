@@ -8,6 +8,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func RegionNameFromRegionUrl(regionUrl string) string {
+	regionUrlSegments := strings.Split(regionUrl, "/")
+	return regionUrlSegments[len(regionUrlSegments)-1]
+}
+
 func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
 	if t == nil {
 		return nil

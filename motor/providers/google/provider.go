@@ -208,6 +208,8 @@ func getTitleForPlatformName(name string) string {
 		return "GCP Compute Image"
 	case "gcp-compute-network":
 		return "GCP Compute Network"
+	case "gcp-compute-subnetwork":
+		return "GCP Compute Subnetwork"
 	case "gcp-compute-firewall":
 		return "GCP Compute Firewall"
 	case "gcp-gke-cluster":
