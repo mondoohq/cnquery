@@ -2,7 +2,6 @@ package scan
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	sync "sync"
@@ -198,14 +197,15 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		progressBarElements[assetList[i].Mrn] = assetList[i].Name
 		orderedKeys = append(orderedKeys, assetList[i].Mrn)
 	}
-	var progressProg progress.Program
+	var multiprogress progress.MultiProgress
 	if isatty.IsTerminal(os.Stdout.Fd()) {
-		progressProg, err = progress.NewMultiProgressProgram(progressBarElements, orderedKeys)
+		multiprogress, err = progress.NewMultiProgressBars(progressBarElements, orderedKeys)
 		if err != nil {
 			return nil, false, errors.Wrap(err, "failed to create progress bars")
 		}
 	} else {
-		progressProg = progress.NoopProgram{}
+		// TODO: adjust naming
+		multiprogress = progress.NoopMultiProgressBars{}
 	}
 
 	scanGroup := sync.WaitGroup{}
@@ -221,8 +221,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 			select {
 			case <-ctx.Done():
 				log.Warn().Msg("request context has been canceled")
-				// When we scan concurrently, we need to send MsgErrored to the tea program
-				progressProg.Quit()
+				// When we scan concurrently, we need to call Errored(asset.Mrn) status for this asset
+				multiprogress.Close()
 				return
 			default:
 			}
@@ -236,23 +236,16 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Ctx:              ctx,
 				GetCredential:    im.GetCredential,
 				Reporter:         reporter,
-				ProgressProg:     progressProg,
+				MultiProgressBar: multiprogress,
 			})
 		}
 		finished = true
 	}()
 
-	if isatty.IsTerminal(os.Stdout.Fd()) {
-		(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
-		defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
-	}
 	scanGroup.Add(1)
 	go func() {
 		defer scanGroup.Done()
-		if _, err := progressProg.Run(); err != nil {
-			fmt.Println(err.Error())
-			panic(err)
-		}
+		multiprogress.Open()
 	}()
 	scanGroup.Wait()
 	return reporter.Reports(), finished, nil
@@ -299,8 +292,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 			if err != nil {
 				log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
 				job.Reporter.AddScanError(job.Asset, err)
-				job.ProgressProg.Send(progress.MsgErrored{Index: job.Asset.Mrn})
-				job.ProgressProg.Send(progress.MsgCompleted{Index: job.Asset.Mrn})
+				job.MultiProgressBar.Errored(job.Asset.Mrn)
 				return
 			}
 
@@ -505,7 +497,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	logger.DebugDumpJSON("resolvedPack", resolvedPack)
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.ProgressProg)
+	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.MultiProgressBar)
 	if err != nil {
 		return nil, err
 	}

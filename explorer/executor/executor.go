@@ -16,7 +16,7 @@ import (
 
 func RunExecutionJob(
 	schema *resources.Schema, runtime *resources.Runtime, collectorSvc explorer.QueryConductor, assetMrn string,
-	job *explorer.ExecutionJob, features cnquery.Features, progressProg progress.Program,
+	job *explorer.ExecutionJob, features cnquery.Features, multiProgressBar progress.MultiProgress,
 ) (*instance, error) {
 	// We are setting a sensible default timeout for jobs here. This will need
 	// user-configuration.
@@ -29,7 +29,7 @@ func RunExecutionJob(
 		i++
 	}
 
-	res := newInstance(schema, runtime, progressProg)
+	res := newInstance(schema, runtime, multiProgressBar)
 	res.assetMrn = assetMrn
 	res.collector = collectorSvc
 
@@ -143,14 +143,14 @@ type instance struct {
 	isAborted        bool
 	isDone           bool
 	done             chan struct{}
-	progressProg     progress.Program
+	multiProgressBar progress.MultiProgress
 	collector        explorer.QueryConductor
 	assetMrn         string
 }
 
-func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressProg progress.Program) *instance {
-	if progressProg == nil {
-		progressProg = progress.NoopProgram{}
+func newInstance(schema *resources.Schema, runtime *resources.Runtime, multiProgressBar progress.MultiProgress) *instance {
+	if multiProgressBar == nil {
+		multiProgressBar = progress.NoopMultiProgressBars{}
 	}
 
 	return &instance{
@@ -161,7 +161,7 @@ func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressP
 		isAborted:        false,
 		isDone:           false,
 		done:             make(chan struct{}),
-		progressProg:     progressProg,
+		multiProgressBar: multiProgressBar,
 		assetMrn:         runtime.Motor.GetAsset().Mrn,
 	}
 }
@@ -213,16 +213,9 @@ func (i *instance) collect(res *llx.RawResult) {
 	i.isDone = isDone
 	isAborted := i.isAborted
 	percentageDone := float64(cur) / float64(max)
-	if i.progressProg != nil && i.assetMrn != "" {
-		i.progressProg.Send(progress.MsgProgress{
-			Index:   i.assetMrn,
-			Percent: percentageDone,
-		})
-		if isDone {
-			i.progressProg.Send(progress.MsgCompleted{
-				Index: i.assetMrn,
-			})
-		}
+	i.multiProgressBar.OnProgress(i.assetMrn, percentageDone)
+	if isDone {
+		i.multiProgressBar.Completed(i.assetMrn)
 	}
 	i.mutex.Unlock()
 

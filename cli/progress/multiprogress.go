@@ -9,22 +9,26 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"go.mondoo.com/cnquery/cli/theme"
+	"go.mondoo.com/cnquery/logger"
 )
 
-// reduced tea.Program interface
-type Program interface {
-	Send(msg tea.Msg)
-	Run() (tea.Model, error)
-	Kill()
-	Quit()
+type MultiProgress interface {
+	Open() error
+	OnProgress(index string, percent float64)
+	Score(index string, score string)
+	Errored(index string)
+	Completed(index string)
+	Close()
 }
 
-type NoopProgram struct{}
+type NoopMultiProgressBars struct{}
 
-func (n NoopProgram) Send(msg tea.Msg)        {}
-func (n NoopProgram) Run() (tea.Model, error) { return progress.Model{}, nil }
-func (n NoopProgram) Kill()                   {}
-func (n NoopProgram) Quit()                   {}
+func (n NoopMultiProgressBars) Open() error                { return nil }
+func (n NoopMultiProgressBars) OnProgress(string, float64) {}
+func (n NoopMultiProgressBars) Score(string, string)       {}
+func (n NoopMultiProgressBars) Errored(string)             {}
+func (n NoopMultiProgressBars) Completed(string)           {}
+func (n NoopMultiProgressBars) Close()                     {}
 
 const (
 	padding                  = 0
@@ -72,6 +76,10 @@ type modelMultiProgress struct {
 	orderedKeys    []string
 }
 
+type multiProgressBars struct {
+	program *tea.Program
+}
+
 func newProgressBar() progress.Model {
 	progressbar := progress.New(progress.WithScaledGradient("#5A56E0", "#EE6FF8"))
 	progressbar.Width = defaultWidth
@@ -89,7 +97,56 @@ func newProgressBar() progress.Model {
 // The key of the map is used to identify the progress bar.
 // The value of the map is used as the name displayed for the progress bar.
 // orderedKeys is used to define the order of the progress bars.
-func NewMultiProgressProgram(elements map[string]string, orderedKeys []string) (Program, error) {
+func NewMultiProgressBars(elements map[string]string, orderedKeys []string) (*multiProgressBars, error) {
+	program, err := newMultiProgressProgram(elements, orderedKeys)
+	if err != nil {
+		return nil, err
+	}
+	return &multiProgressBars{program: program}, nil
+}
+
+func (m multiProgressBars) Open() error {
+	(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
+	defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
+	if _, err := m.program.Run(); err != nil {
+		fmt.Println(err.Error())
+		panic(err)
+	}
+	return nil
+}
+
+func (m multiProgressBars) OnProgress(index string, percent float64) {
+	m.program.Send(MsgProgress{
+		Index:   index,
+		Percent: percent,
+	})
+}
+
+func (m multiProgressBars) Score(index string, score string) {
+	m.program.Send(MsgScore{
+		Index: index,
+		Score: score,
+	})
+}
+
+func (m multiProgressBars) Errored(index string) {
+	m.program.Send(MsgErrored{
+		Index: index,
+	})
+}
+
+func (m multiProgressBars) Completed(index string) {
+	m.program.Send(MsgCompleted{
+		Index: index,
+	})
+}
+
+func (m multiProgressBars) Close() {
+	m.program.Quit()
+}
+
+// create the actual tea.Program
+func newMultiProgressProgram(elements map[string]string, orderedKeys []string) (*tea.Program, error) {
 	if len(elements) != len(orderedKeys) {
 		return nil, fmt.Errorf("number of elements and orderedKeys must be equal")
 	}
@@ -173,19 +230,7 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Progress[msg.Index].Completed = true
 		m.Progress[msg.Index].lock.Unlock()
 
-		finished := 0
-		for k := range m.Progress {
-			if k == overallProgressIndexName {
-				continue
-			}
-			if m.Progress[k].Errored || m.Progress[k].Completed {
-				finished++
-			}
-		}
-		if finished == len(m.Progress)-1 {
-			m.Progress[overallProgressIndexName].lock.Lock()
-			m.Progress[overallProgressIndexName].Completed = true
-			m.Progress[overallProgressIndexName].lock.Unlock()
+		if m.allDone() {
 			return m, tea.Quit
 		}
 		return m, nil
@@ -195,18 +240,15 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		var cmds []tea.Cmd
 		if msg.Percent != 0 {
 			m.Progress[msg.Index].lock.Lock()
-			// cmd := m.Progress[msg.Index].model.SetPercent(msg.Percent)
 			m.Progress[msg.Index].percent = msg.Percent
 			m.Progress[msg.Index].lock.Unlock()
-			// cmds = append(cmds, cmd)
 		}
 
-		cmds = append(cmds, m.updateOverallProgress())
+		m.updateOverallProgress()
 
-		return m, tea.Batch(cmds...)
+		return m, nil
 
 	case MsgErrored:
 		if _, ok := m.Progress[msg.Index]; !ok {
@@ -221,7 +263,13 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Progress[msg.Index].model.Width -= 5
 		m.Progress[msg.Index].lock.Unlock()
 
-		return m, m.updateOverallProgress()
+		m.updateOverallProgress()
+
+		if m.allDone() {
+			return m, tea.Quit
+		}
+
+		return m, nil
 
 	case MsgScore:
 		if _, ok := m.Progress[msg.Index]; !ok {
@@ -252,9 +300,36 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m modelMultiProgress) updateOverallProgress() tea.Cmd {
+func (m modelMultiProgress) allDone() bool {
+	finished := 0
+	for k := range m.Progress {
+		if k == overallProgressIndexName {
+			continue
+		}
+		m.Progress[k].lock.Lock()
+		if m.Progress[k].Errored || m.Progress[k].Completed {
+			finished++
+		}
+		m.Progress[k].lock.Unlock()
+	}
+	allDone := false
+	if _, ok := m.Progress[overallProgressIndexName]; ok {
+		if finished == len(m.Progress)-1 {
+			m.Progress[overallProgressIndexName].lock.Lock()
+			m.Progress[overallProgressIndexName].Completed = true
+			m.Progress[overallProgressIndexName].lock.Unlock()
+		}
+		allDone = m.Progress[overallProgressIndexName].Completed
+	} else {
+		allDone = finished == len(m.Progress)
+	}
+
+	return allDone
+}
+
+func (m modelMultiProgress) updateOverallProgress() {
 	if _, ok := m.Progress[overallProgressIndexName]; !ok {
-		return nil
+		return
 	}
 	overallPercent := 0.0
 	m.Progress[overallProgressIndexName].lock.Lock()
@@ -275,7 +350,7 @@ func (m modelMultiProgress) updateOverallProgress() tea.Cmd {
 	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
 	m.Progress[overallProgressIndexName].percent = overallPercent
 	m.Progress[overallProgressIndexName].lock.Unlock()
-	return nil
+	return
 }
 
 func (m modelMultiProgress) View() string {
