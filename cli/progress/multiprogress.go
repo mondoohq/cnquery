@@ -57,6 +57,7 @@ type MsgScore struct {
 
 type modelProgress struct {
 	model     *progress.Model
+	percent   float64
 	Name      string
 	Score     string
 	Completed bool
@@ -197,9 +198,10 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmds []tea.Cmd
 		if msg.Percent != 0 {
 			m.Progress[msg.Index].lock.Lock()
-			cmd := m.Progress[msg.Index].model.SetPercent(msg.Percent)
+			// cmd := m.Progress[msg.Index].model.SetPercent(msg.Percent)
+			m.Progress[msg.Index].percent = msg.Percent
 			m.Progress[msg.Index].lock.Unlock()
-			cmds = append(cmds, cmd)
+			// cmds = append(cmds, cmd)
 		}
 
 		cmds = append(cmds, m.updateOverallProgress())
@@ -266,14 +268,14 @@ func (m modelMultiProgress) updateOverallProgress() tea.Cmd {
 			continue
 		}
 		m.Progress[k].lock.Lock()
-		sumPercent += m.Progress[k].model.Percent()
+		sumPercent += m.Progress[k].percent
 		m.Progress[k].lock.Unlock()
 		validAssets++
 	}
 	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
-	cmd := m.Progress[overallProgressIndexName].model.SetPercent(overallPercent)
+	m.Progress[overallProgressIndexName].percent = overallPercent
 	m.Progress[overallProgressIndexName].lock.Unlock()
-	return cmd
+	return nil
 }
 
 func (m modelMultiProgress) View() string {
@@ -300,7 +302,7 @@ func (m modelMultiProgress) View() string {
 		if m.Progress[k].Errored {
 			outputFinished += m.Progress[k].model.View() + theme.DefaultTheme.Error("    X "+m.Progress[k].Name)
 		} else if m.Progress[k].Completed {
-			outputFinished += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name
+			outputFinished += m.Progress[k].model.ViewAs(m.Progress[k].percent) + " " + m.Progress[k].Name
 		}
 		if m.Progress[k].Score != "" {
 			if m.Progress[k].Errored {
@@ -319,7 +321,7 @@ func (m modelMultiProgress) View() string {
 		if m.Progress[k].Errored || m.Progress[k].Completed {
 			continue
 		}
-		outputNotDone += m.Progress[k].model.ViewAs(m.Progress[k].model.Percent()) + " " + m.Progress[k].Name + "\n"
+		outputNotDone += m.Progress[k].model.ViewAs(m.Progress[k].percent) + " " + m.Progress[k].Name + "\n"
 		itemsInProgress++
 		if itemsInProgress == m.maxItemsToShow {
 			break
@@ -332,7 +334,7 @@ func (m modelMultiProgress) View() string {
 
 	output += outputFinished + outputNotDone
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
-		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(m.Progress[overallProgressIndexName].model.Percent()) + " " + m.Progress[overallProgressIndexName].Name
+		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(m.Progress[overallProgressIndexName].percent) + " " + m.Progress[overallProgressIndexName].Name
 		output += fmt.Sprintf(" %d/%d scanned", completedAssets, len(m.Progress)-1)
 		if erroredAssets > 0 {
 			output += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
