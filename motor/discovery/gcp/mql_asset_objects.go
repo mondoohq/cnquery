@@ -30,6 +30,10 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 		if o.objectType == "bucket" {
 			return gcpObjectPlatformInfo{title: "GCP Storage Bucket", platform: "gcp-storage-bucket"}, nil
 		}
+	case "bigquery":
+		if o.objectType == "dataset" {
+			return gcpObjectPlatformInfo{title: "GCP BigQuery Dataset", platform: "gcp-bigquery-dataset"}, nil
+		}
 	}
 	return gcpObjectPlatformInfo{}, errors.Newf("missing runtime info for gcp object service %s type %s", o.service, o.objectType)
 }
@@ -191,6 +195,36 @@ func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) []*as
 					id:         id,
 					service:    "storage",
 					objectType: "bucket",
+				},
+			}, tc))
+	}
+	return assets
+}
+
+func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+	assets := []*asset.Asset{}
+	datasets := m.GetList("gcp.project.bigquery.datasets { id location labels }")
+	for i := range datasets {
+		b := datasets[i].(map[string]interface{})
+		id := b["id"].(string)
+		name := b["id"].(string)
+		location := b["location"].(string)
+		tags := b["labels"].(map[string]interface{})
+		stringLabels := make(map[string]string)
+		for k, v := range tags {
+			stringLabels[k] = v.(string)
+		}
+
+		assets = append(assets, MqlObjectToAsset(project,
+			mqlObject{
+				name: name, labels: stringLabels,
+				gcpObject: gcpObject{
+					project:    project,
+					region:     location,
+					name:       name,
+					id:         id,
+					service:    "bigquery",
+					objectType: "dataset",
 				},
 			}, tc))
 	}

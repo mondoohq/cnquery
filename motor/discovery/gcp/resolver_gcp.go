@@ -22,6 +22,7 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
+		DiscoveryBigQueryDatasets,
 	}
 }
 

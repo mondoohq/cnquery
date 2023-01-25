@@ -1019,7 +1019,7 @@ private gcp.project.bigqueryService {
 }
 
 // GCP BigQuery dataset
-private gcp.project.bigqueryService.dataset @defaults("name") {
+private gcp.project.bigqueryService.dataset @defaults("id name") {
   // Dataset ID
   id string
   // Project ID

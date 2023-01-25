@@ -9,4 +9,5 @@ const (
 	DiscoveryComputeFirewalls   = "compute-firewalls"
 	DiscoveryGkeClusters        = "gke-clusters"
 	DiscoveryStorageBuckets     = "storage-buckets"
+	DiscoveryBigQueryDatasets   = "bigquery-datasets"
 )

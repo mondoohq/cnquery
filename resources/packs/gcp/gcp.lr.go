@@ -17429,6 +17429,15 @@ func newGcpProjectBigqueryServiceDataset(runtime *resources.Runtime, args *resou
 	// User hooks
 	var err error
 	res := mqlGcpProjectBigqueryServiceDataset{runtime.NewResource("gcp.project.bigqueryService.dataset")}
+	var existing GcpProjectBigqueryServiceDataset
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 

@@ -216,6 +216,8 @@ func getTitleForPlatformName(name string) string {
 		return "GCP GKE Cluster"
 	case "gcp-storage-bucket":
 		return "GCP Storage Bucket"
+	case "gcp-bigquery-dataset":
+		return "GCP BigQuery Dataset"
 	}
 	return "Google Cloud Platform"
 }
