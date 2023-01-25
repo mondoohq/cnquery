@@ -105,6 +105,8 @@ func NewMultiProgressBars(elements map[string]string, orderedKeys []string) (*mu
 	return &multiProgressBars{program: program}, nil
 }
 
+// Start the progress bars
+// Form now on the progress bars can be updated
 func (m multiProgressBars) Open() error {
 	(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
 	defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
@@ -115,6 +117,7 @@ func (m multiProgressBars) Open() error {
 	return nil
 }
 
+// Set the current progress of a progress bar
 func (m multiProgressBars) OnProgress(index string, percent float64) {
 	m.program.Send(MsgProgress{
 		Index:   index,
@@ -122,6 +125,8 @@ func (m multiProgressBars) OnProgress(index string, percent float64) {
 	})
 }
 
+// Add a score to the progress bar
+// This should be called before Completed is called
 func (m multiProgressBars) Score(index string, score string) {
 	m.program.Send(MsgScore{
 		Index: index,
@@ -129,18 +134,23 @@ func (m multiProgressBars) Score(index string, score string) {
 	})
 }
 
+// This is called when an error occurs during the progress
 func (m multiProgressBars) Errored(index string) {
 	m.program.Send(MsgErrored{
 		Index: index,
 	})
 }
 
+// Set a single bar to completed
+// For cnquery this should be called after the progress is 100%
+// For cnspec this should be called after the score is set
 func (m multiProgressBars) Completed(index string) {
 	m.program.Send(MsgCompleted{
 		Index: index,
 	})
 }
 
+// This ends the multiprogrssbar no matter the current progress
 func (m multiProgressBars) Close() {
 	m.program.Quit()
 }
