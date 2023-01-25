@@ -43,11 +43,13 @@ func ReportCollectionToCSV(data *explorer.ReportCollection, out shared.OutputHel
 	}
 
 	queryMrnIdx := map[string]*explorer.Mquery{}
-	for i := range data.Bundle.Packs {
-		pack := data.Bundle.Packs[i]
-		for j := range pack.Queries {
-			query := pack.Queries[j]
-			queryMrnIdx[query.CodeId] = query
+	if data.Bundle != nil {
+		for i := range data.Bundle.Packs {
+			pack := data.Bundle.Packs[i]
+			for j := range pack.Queries {
+				query := pack.Queries[j]
+				queryMrnIdx[query.CodeId] = query
+			}
 		}
 	}
 
@@ -62,54 +64,62 @@ func ReportCollectionToCSV(data *explorer.ReportCollection, out shared.OutputHel
 			return err
 		}
 
-		errMsg, ok := data.Errors[asset.Mrn]
-		if ok {
-			err := w.Write(csvStruct{
-				AssetMrn:    asset.Mrn,
-				AssetId:     assetId,
-				AssetName:   asset.Name,
-				QueryMrn:    "",
-				QueryTitle:  "",
-				MQL:         "",
-				QueryResult: errMsg,
-			}.toSlice())
-			if err != nil {
-				return err
+		if data.Errors != nil {
+			errMsg, ok := data.Errors[asset.Mrn]
+			if ok {
+				err := w.Write(csvStruct{
+					AssetMrn:    asset.Mrn,
+					AssetId:     assetId,
+					AssetName:   asset.Name,
+					QueryMrn:    "",
+					QueryTitle:  "",
+					MQL:         "",
+					QueryResult: errMsg,
+				}.toSlice())
+				if err != nil {
+					return err
+				}
 			}
 		}
 
-		report, ok := data.Reports[asset.Mrn]
-		results := report.RawResults()
-		resolvedPack := data.Resolved[asset.Mrn]
-		for qid, query := range resolvedPack.ExecutionJob.Queries {
-			buf := &bytes.Buffer{}
-			resultWriter := &shared.IOWriter{Writer: buf}
-			err := ResultsToCsvEntry(query.Code, results, resultWriter)
-			if err != nil {
-				return err
-			}
+		if data.Reports != nil {
+			report, ok := data.Reports[asset.Mrn]
+			if ok {
+				results := report.RawResults()
+				resolvedPack := data.Resolved[asset.Mrn]
+				if resolvedPack != nil && resolvedPack.ExecutionJob != nil {
+					for qid, query := range resolvedPack.ExecutionJob.Queries {
+						buf := &bytes.Buffer{}
+						resultWriter := &shared.IOWriter{Writer: buf}
+						err := ResultsToCsvEntry(query.Code, results, resultWriter)
+						if err != nil {
+							return err
+						}
 
-			var queryMrn string
-			var queryTitle string
-			mQuery := queryMrnIdx[qid]
-			if mQuery != nil {
-				queryMrn = mQuery.Mrn
-				queryTitle = mQuery.Title
-			}
+						var queryMrn string
+						var queryTitle string
+						mQuery := queryMrnIdx[qid]
+						if mQuery != nil {
+							queryMrn = mQuery.Mrn
+							queryTitle = mQuery.Title
+						}
 
-			entry := csvStruct{
-				AssetMrn:    asset.Mrn,
-				AssetId:     assetId,
-				AssetName:   asset.Name,
-				QueryMrn:    queryMrn,
-				QueryTitle:  queryTitle,
-				MQL:         query.Query,
-				QueryResult: string(buf.Bytes()),
-			}
+						entry := csvStruct{
+							AssetMrn:    asset.Mrn,
+							AssetId:     assetId,
+							AssetName:   asset.Name,
+							QueryMrn:    queryMrn,
+							QueryTitle:  queryTitle,
+							MQL:         query.Query,
+							QueryResult: string(buf.Bytes()),
+						}
 
-			err = w.Write(entry.toSlice())
-			if err != nil {
-				return err
+						err = w.Write(entry.toSlice())
+						if err != nil {
+							return err
+						}
+					}
+				}
 			}
 		}
 	}
