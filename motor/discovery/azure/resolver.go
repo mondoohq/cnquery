@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
@@ -15,11 +14,6 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
-const (
-	DiscoverySubscriptions = "subscriptions"
-	DiscoveryInstances     = "instances"
-)
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -27,7 +21,11 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions, DiscoveryInstances}
+	return []string{
+		common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions, DiscoveryInstances,
+		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
+		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups,
+	}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -84,78 +82,97 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if err != nil {
 		return nil, err
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions) {
-		for _, sub := range subs {
-			name := root.Name
-			if name == "" {
-				subName := subscriptionID
-				if sub.DisplayName != nil {
-					subName = *sub.DisplayName
-				}
-				name = "Azure subscription " + subName
-			}
 
-			// make sure we assign the correct sub and tenant id per sub, so that motor works properly
-			cfg := tc.Clone()
-			if cfg.Options == nil {
-				cfg.Options = map[string]string{}
-			}
-			cfg.Options["subscription-id"] = *sub.SubscriptionID
-			if cfg.Options["tenant-id"] == "" {
-				cfg.Options["tenant-id"] = *sub.TenantID
-			}
-			provider, err := microsoft.New(cfg)
-			if err != nil {
-				return nil, err
-			}
+	subsConfig := []*providers.Config{}
 
-			// detect platform info for the asset
-			detector := detector.New(provider)
-			pf, err := detector.Platform()
-			if err != nil {
-				return nil, err
+	for _, sub := range subs {
+		name := root.Name
+		if name == "" {
+			subName := subscriptionID
+			if sub.DisplayName != nil {
+				subName = *sub.DisplayName
 			}
-			id, _ := provider.Identifier()
-			resolved = append(resolved, &asset.Asset{
-				PlatformIds: []string{id},
-				Name:        name,
-				Platform:    pf,
-				Connections: []*providers.Config{cfg},
-				Labels: map[string]string{
-					"azure.com/subscription": *sub.SubscriptionID,
-					"azure.com/tenant":       *sub.TenantID,
-					common.ParentId:          *sub.SubscriptionID,
-				},
-			})
+			name = "Azure subscription " + subName
 		}
+
+		// make sure we assign the correct sub and tenant id per sub, so that motor works properly
+		cfg := tc.Clone()
+		if cfg.Options == nil {
+			cfg.Options = map[string]string{}
+		}
+		cfg.Options["subscription-id"] = *sub.SubscriptionID
+		if cfg.Options["tenant-id"] == "" {
+			cfg.Options["tenant-id"] = *sub.TenantID
+		}
+		p, err := microsoft.New(cfg)
+		if err != nil {
+			return nil, err
+		}
+
+		// detect platform info for the asset
+		detector := detector.New(p)
+		pf, err := detector.Platform()
+		if err != nil {
+			return nil, err
+		}
+		id, _ := p.Identifier()
+		sub := &asset.Asset{
+			PlatformIds: []string{id},
+			Name:        name,
+			Platform:    pf,
+			Connections: []*providers.Config{cfg},
+			Labels: map[string]string{
+				"azure.com/subscription": *sub.SubscriptionID,
+				"azure.com/tenant":       *sub.TenantID,
+				common.ParentId:          *sub.SubscriptionID,
+			},
+		}
+		resolved = append(resolved, sub)
+		subsConfig = append(subsConfig, cfg)
 	}
-
-	// get all compute instances
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-		for _, s := range subs {
-			r := NewCompute(azureClient, *s.SubscriptionID)
-			ctx := context.Background()
-			assetList, err := r.ListInstances(ctx)
+	// resources as assets
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryInstances,
+		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
+		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups) {
+		for _, tc := range subsConfig {
+			assetList, err := GatherAssets(ctx, tc, credsResolver, sfn)
 			if err != nil {
-				return nil, errors.Wrap(err, "could not fetch azure compute instances")
+				return nil, err
 			}
-			log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
-
-			for i := range assetList {
-				a := assetList[i]
-
-				log.Debug().Str("name", a.Name).Msg("resolved azure compute instance")
-				// find the secret reference for the asset
-				common.EnrichAssetWithSecrets(a, sfn)
-
-				for i := range a.Connections {
-					a.Connections[i].Insecure = tc.Insecure
+			for _, a := range assetList {
+				if resolved[0] != nil {
+					a.RelatedAssets = append(a.RelatedAssets, resolved[0])
 				}
-
 				resolved = append(resolved, a)
 			}
 		}
 	}
+	// // get all compute instances
+	// if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
+	// 	for _, s := range subs {
+	// 		r := NewCompute(azureClient, *s.SubscriptionID)
+	// 		ctx := context.Background()
+	// 		assetList, err := r.ListInstances(ctx)
+	// 		if err != nil {
+	// 			return nil, errors.Wrap(err, "could not fetch azure compute instances")
+	// 		}
+	// 		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
+
+	// 		for i := range assetList {
+	// 			a := assetList[i]
+
+	// 			log.Debug().Str("name", a.Name).Msg("resolved azure compute instance")
+	// 			// find the secret reference for the asset
+	// 			common.EnrichAssetWithSecrets(a, sfn)
+
+	// 			for i := range a.Connections {
+	// 				a.Connections[i].Insecure = tc.Insecure
+	// 			}
+
+	// 			resolved = append(resolved, a)
+	// 		}
+	// 	}
+	// }
 
 	return resolved, nil
 }

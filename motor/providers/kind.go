@@ -28,6 +28,8 @@ func (x Kind) Name() string {
 		return "gcp-object"
 	case Kind_KIND_AWS_OBJECT:
 		return "aws-object"
+	case Kind_KIND_AZURE_OBJECT:
+		return "azure-object"
 	case Kind_KIND_UNKNOWN:
 		fallthrough
 	default:

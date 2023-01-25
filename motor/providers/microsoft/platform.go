@@ -34,7 +34,39 @@ func (p *Provider) Roles() map[string]struct{} {
 	return p.rolesMap
 }
 
+func getTitleForPlatformName(name string) string {
+	switch name {
+	case "azure-compute-vm":
+		return "Azure Virtual Machine"
+	case "azure-sql-server":
+		return "Azure SQL Server"
+	case "azure-mysql-server":
+		return "Azure MySQL Server"
+	case "azure-mariadb-server":
+		return "Azure MariaDB Server"
+	case "azure-postgresql-server":
+		return "Azure PostgreSQL Server"
+	case "azure-storage-account":
+		return "Azure Storage Account"
+	case "azure-storage-container":
+		return "Azure Storage Container"
+	case "azure-network-security-group":
+		return "Azure Network Security Group"
+	case "azure-keyvault-vault":
+		return "Azure Keyvault Vault"
+	}
+	return "Microsoft Azure"
+}
+
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {
+	if p.platformOverride != "" {
+		return &platform.Platform{
+			Name:    p.platformOverride,
+			Title:   getTitleForPlatformName(p.platformOverride),
+			Kind:    providers.Kind_KIND_AZURE_OBJECT,
+			Runtime: providers.RUNTIME_AZ,
+		}, nil
+	}
 	switch p.assetType {
 	case azure:
 		return &platform.Platform{
