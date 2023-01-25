@@ -16,7 +16,7 @@ import (
 
 func RunExecutionJob(
 	schema *resources.Schema, runtime *resources.Runtime, collectorSvc explorer.QueryConductor, assetMrn string,
-	job *explorer.ExecutionJob, features cnquery.Features, multiProgressBar progress.MultiProgress,
+	job *explorer.ExecutionJob, features cnquery.Features, progressReporter progress.Progress,
 ) (*instance, error) {
 	// We are setting a sensible default timeout for jobs here. This will need
 	// user-configuration.
@@ -29,7 +29,7 @@ func RunExecutionJob(
 		i++
 	}
 
-	res := newInstance(schema, runtime, multiProgressBar)
+	res := newInstance(schema, runtime, progressReporter)
 	res.assetMrn = assetMrn
 	res.collector = collectorSvc
 
@@ -143,14 +143,14 @@ type instance struct {
 	isAborted        bool
 	isDone           bool
 	done             chan struct{}
-	multiProgressBar progress.MultiProgress
+	progressReporter progress.Progress
 	collector        explorer.QueryConductor
 	assetMrn         string
 }
 
-func newInstance(schema *resources.Schema, runtime *resources.Runtime, multiProgressBar progress.MultiProgress) *instance {
-	if multiProgressBar == nil {
-		multiProgressBar = progress.NoopMultiProgressBars{}
+func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressReporter progress.Progress) *instance {
+	if progressReporter == nil {
+		progressReporter = progress.Noop{}
 	}
 
 	return &instance{
@@ -161,7 +161,7 @@ func newInstance(schema *resources.Schema, runtime *resources.Runtime, multiProg
 		isAborted:        false,
 		isDone:           false,
 		done:             make(chan struct{}),
-		multiProgressBar: multiProgressBar,
+		progressReporter: progressReporter,
 		assetMrn:         runtime.Motor.GetAsset().Mrn,
 	}
 }
@@ -212,10 +212,9 @@ func (i *instance) collect(res *llx.RawResult) {
 	isDone := cur == max
 	i.isDone = isDone
 	isAborted := i.isAborted
-	percentageDone := float64(cur) / float64(max)
-	i.multiProgressBar.OnProgress(i.assetMrn, percentageDone)
+	i.progressReporter.OnProgress(cur, max)
 	if isDone {
-		i.multiProgressBar.Completed(i.assetMrn)
+		i.progressReporter.Completed()
 	}
 	i.mutex.Unlock()
 

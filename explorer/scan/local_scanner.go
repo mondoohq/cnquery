@@ -194,8 +194,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	progressBarElements := map[string]string{}
 	orderedKeys := []string{}
 	for i := range assetList {
-		progressBarElements[assetList[i].Mrn] = assetList[i].Name
-		orderedKeys = append(orderedKeys, assetList[i].Mrn)
+		progressBarElements[assetList[i].PlatformIds[0]] = assetList[i].Name
+		orderedKeys = append(orderedKeys, assetList[i].PlatformIds[0])
 	}
 	var multiprogress progress.MultiProgress
 	if isatty.IsTerminal(os.Stdout.Fd()) {
@@ -227,6 +227,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 			default:
 			}
 
+			p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}
 			s.RunAssetJob(&AssetJob{
 				DoRecord:         job.DoRecord,
 				UpstreamConfig:   upstreamConfig,
@@ -236,7 +237,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Ctx:              ctx,
 				GetCredential:    im.GetCredential,
 				Reporter:         reporter,
-				MultiProgressBar: multiprogress,
+				ProgressReporter: p,
 			})
 		}
 		finished = true
@@ -292,7 +293,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 			if err != nil {
 				log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
 				job.Reporter.AddScanError(job.Asset, err)
-				job.MultiProgressBar.Errored(job.Asset.Mrn)
+				job.ProgressReporter.Errored()
 				return
 			}
 
@@ -497,7 +498,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	logger.DebugDumpJSON("resolvedPack", resolvedPack)
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.MultiProgressBar)
+	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.ProgressReporter)
 	if err != nil {
 		return nil, err
 	}

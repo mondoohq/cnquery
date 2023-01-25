@@ -38,6 +38,24 @@ const (
 	overallProgressIndexName = "overall"
 )
 
+type MultiProgressAdapter struct {
+	Multi MultiProgress
+	Key   string
+}
+
+func (m *MultiProgressAdapter) Open() error { return m.Multi.Open() }
+func (m *MultiProgressAdapter) OnProgress(current int, total int) {
+	percent := 0.0
+	if total > 0 {
+		percent = float64(current) / float64(total)
+	}
+	m.Multi.OnProgress(m.Key, percent)
+}
+func (m *MultiProgressAdapter) Score(score string) { m.Multi.Score(m.Key, score) }
+func (m *MultiProgressAdapter) Errored()           { m.Multi.Errored(m.Key) }
+func (m *MultiProgressAdapter) Completed()         { m.Multi.Completed(m.Key) }
+func (m *MultiProgressAdapter) Close()             { m.Multi.Close() }
+
 type MsgProgress struct {
 	Index   string
 	Percent float64
@@ -66,7 +84,6 @@ type modelProgress struct {
 	Score     string
 	Completed bool
 	Errored   bool
-	lock      sync.Mutex
 }
 
 type modelMultiProgress struct {
@@ -74,6 +91,7 @@ type modelMultiProgress struct {
 	maxNameWidth   int
 	maxItemsToShow int
 	orderedKeys    []string
+	lock           sync.Mutex
 }
 
 type multiProgressBars struct {
@@ -107,7 +125,7 @@ func NewMultiProgressBars(elements map[string]string, orderedKeys []string) (*mu
 
 // Start the progress bars
 // Form now on the progress bars can be updated
-func (m multiProgressBars) Open() error {
+func (m *multiProgressBars) Open() error {
 	(logger.LogOutputWriter.(*logger.BufferedWriter)).Pause()
 	defer (logger.LogOutputWriter.(*logger.BufferedWriter)).Resume()
 	if _, err := m.program.Run(); err != nil {
@@ -118,7 +136,7 @@ func (m multiProgressBars) Open() error {
 }
 
 // Set the current progress of a progress bar
-func (m multiProgressBars) OnProgress(index string, percent float64) {
+func (m *multiProgressBars) OnProgress(index string, percent float64) {
 	m.program.Send(MsgProgress{
 		Index:   index,
 		Percent: percent,
@@ -127,7 +145,7 @@ func (m multiProgressBars) OnProgress(index string, percent float64) {
 
 // Add a score to the progress bar
 // This should be called before Completed is called
-func (m multiProgressBars) Score(index string, score string) {
+func (m *multiProgressBars) Score(index string, score string) {
 	m.program.Send(MsgScore{
 		Index: index,
 		Score: score,
@@ -135,7 +153,7 @@ func (m multiProgressBars) Score(index string, score string) {
 }
 
 // This is called when an error occurs during the progress
-func (m multiProgressBars) Errored(index string) {
+func (m *multiProgressBars) Errored(index string) {
 	m.program.Send(MsgErrored{
 		Index: index,
 	})
@@ -144,14 +162,14 @@ func (m multiProgressBars) Errored(index string) {
 // Set a single bar to completed
 // For cnquery this should be called after the progress is 100%
 // For cnspec this should be called after the score is set
-func (m multiProgressBars) Completed(index string) {
+func (m *multiProgressBars) Completed(index string) {
 	m.program.Send(MsgCompleted{
 		Index: index,
 	})
 }
 
 // This ends the multiprogrssbar no matter the current progress
-func (m multiProgressBars) Close() {
+func (m *multiProgressBars) Close() {
 	m.program.Quit()
 }
 
@@ -195,11 +213,11 @@ func newMultiProgress(elements map[string]string) *modelMultiProgress {
 	return m
 }
 
-func (m modelMultiProgress) Init() tea.Cmd {
+func (m *modelMultiProgress) Init() tea.Cmd {
 	return nil
 }
 
-func (m modelMultiProgress) add(key string, name string) {
+func (m *modelMultiProgress) add(key string, name string) {
 	progressbar := newProgressBar()
 
 	m.Progress[key] = &modelProgress{
@@ -210,7 +228,7 @@ func (m modelMultiProgress) add(key string, name string) {
 	}
 }
 
-func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -236,9 +254,9 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if _, ok := m.Progress[msg.Index]; !ok {
 			return m, nil
 		}
-		m.Progress[msg.Index].lock.Lock()
+		m.lock.Lock()
 		m.Progress[msg.Index].Completed = true
-		m.Progress[msg.Index].lock.Unlock()
+		m.lock.Unlock()
 
 		if m.allDone() {
 			return m, tea.Quit
@@ -251,9 +269,9 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if msg.Percent != 0 {
-			m.Progress[msg.Index].lock.Lock()
+			m.lock.Lock()
 			m.Progress[msg.Index].percent = msg.Percent
-			m.Progress[msg.Index].lock.Unlock()
+			m.lock.Unlock()
 		}
 
 		m.updateOverallProgress()
@@ -265,13 +283,13 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		m.Progress[msg.Index].lock.Lock()
+		m.lock.Lock()
 		m.Progress[msg.Index].Errored = true
 		m.Progress[msg.Index].model.ShowPercentage = false
 		// settings ShowPercentage to false, expanse the progress bar to match the others
 		// we need to manually reduce the width to match the others without the percentage
 		m.Progress[msg.Index].model.Width -= 5
-		m.Progress[msg.Index].lock.Unlock()
+		m.lock.Unlock()
 
 		m.updateOverallProgress()
 
@@ -287,9 +305,9 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if msg.Score != "" {
-			m.Progress[msg.Index].lock.Lock()
+			m.lock.Lock()
 			m.Progress[msg.Index].Score = msg.Score
-			m.Progress[msg.Index].lock.Unlock()
+			m.lock.Unlock()
 		}
 		return m, nil
 
@@ -310,24 +328,24 @@ func (m modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m modelMultiProgress) allDone() bool {
+func (m *modelMultiProgress) allDone() bool {
 	finished := 0
 	for k := range m.Progress {
 		if k == overallProgressIndexName {
 			continue
 		}
-		m.Progress[k].lock.Lock()
+		m.lock.Lock()
 		if m.Progress[k].Errored || m.Progress[k].Completed {
 			finished++
 		}
-		m.Progress[k].lock.Unlock()
+		m.lock.Unlock()
 	}
 	allDone := false
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		if finished == len(m.Progress)-1 {
-			m.Progress[overallProgressIndexName].lock.Lock()
+			m.lock.Lock()
 			m.Progress[overallProgressIndexName].Completed = true
-			m.Progress[overallProgressIndexName].lock.Unlock()
+			m.lock.Unlock()
 		}
 		allDone = m.Progress[overallProgressIndexName].Completed
 	} else {
@@ -337,58 +355,54 @@ func (m modelMultiProgress) allDone() bool {
 	return allDone
 }
 
-func (m modelMultiProgress) updateOverallProgress() {
+func (m *modelMultiProgress) updateOverallProgress() {
 	if _, ok := m.Progress[overallProgressIndexName]; !ok {
 		return
 	}
 	overallPercent := 0.0
-	m.Progress[overallProgressIndexName].lock.Lock()
+	m.lock.Lock()
 	sumPercent := 0.0
 	validAssets := 0
 	for k := range m.Progress {
 		if k == overallProgressIndexName {
 			continue
 		}
-		m.Progress[k].lock.Lock()
 		errored := m.Progress[k].Errored
-		m.Progress[k].lock.Unlock()
 		if errored {
 			continue
 		}
-		m.Progress[k].lock.Lock()
 		sumPercent += m.Progress[k].percent
-		m.Progress[k].lock.Unlock()
 		validAssets++
 	}
 	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
 	m.Progress[overallProgressIndexName].percent = overallPercent
-	m.Progress[overallProgressIndexName].lock.Unlock()
+	m.lock.Unlock()
 	return
 }
 
-func (m modelMultiProgress) View() string {
+func (m *modelMultiProgress) View() string {
 	pad := strings.Repeat(" ", padding)
 	output := ""
 
 	completedAssets := 0
 	erroredAssets := 0
 	for _, k := range m.orderedKeys {
-		m.Progress[k].lock.Lock()
+		m.lock.Lock()
 		if m.Progress[k].Errored {
 			erroredAssets++
 		}
 		if m.Progress[k].Completed {
 			completedAssets++
 		}
-		m.Progress[k].lock.Unlock()
+		m.lock.Unlock()
 	}
 	outputFinished := ""
 	numItemsFinished := 0
 	for _, k := range m.orderedKeys {
-		m.Progress[k].lock.Lock()
+		m.lock.Lock()
 		errored := m.Progress[k].Errored
 		completed := m.Progress[k].Completed
-		m.Progress[k].lock.Unlock()
+		m.lock.Unlock()
 		if !errored && !completed {
 			continue
 		}
@@ -396,14 +410,14 @@ func (m modelMultiProgress) View() string {
 		if errored {
 			outputFinished += m.Progress[k].model.View() + theme.DefaultTheme.Error("    X "+m.Progress[k].Name)
 		} else if completed {
-			m.Progress[k].lock.Lock()
+			m.lock.Lock()
 			percent := m.Progress[k].percent
-			m.Progress[k].lock.Unlock()
+			m.lock.Unlock()
 			outputFinished += m.Progress[k].model.ViewAs(percent) + " " + m.Progress[k].Name
 		}
-		m.Progress[k].lock.Lock()
+		m.lock.Lock()
 		score := m.Progress[k].Score
-		m.Progress[k].lock.Unlock()
+		m.lock.Unlock()
 		if score != "" {
 			if errored {
 				outputFinished += pad + theme.DefaultTheme.Error(" score: "+score)
@@ -418,16 +432,16 @@ func (m modelMultiProgress) View() string {
 	itemsInProgress := 0
 	outputNotDone := ""
 	for _, k := range m.orderedKeys {
-		m.Progress[k].lock.Lock()
+		m.lock.Lock()
 		errored := m.Progress[k].Errored
 		completed := m.Progress[k].Completed
-		m.Progress[k].lock.Unlock()
+		m.lock.Unlock()
 		if errored || completed {
 			continue
 		}
-		m.Progress[k].lock.Lock()
+		m.lock.Lock()
 		percent := m.Progress[k].percent
-		m.Progress[k].lock.Unlock()
+		m.lock.Unlock()
 		outputNotDone += m.Progress[k].model.ViewAs(percent) + " " + m.Progress[k].Name + "\n"
 		itemsInProgress++
 		if itemsInProgress == m.maxItemsToShow {
@@ -441,9 +455,9 @@ func (m modelMultiProgress) View() string {
 
 	output += outputFinished + outputNotDone
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
-		m.Progress[overallProgressIndexName].lock.Lock()
+		m.lock.Lock()
 		percent := m.Progress[overallProgressIndexName].percent
-		m.Progress[overallProgressIndexName].lock.Unlock()
+		m.lock.Unlock()
 		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(percent) + " " + m.Progress[overallProgressIndexName].Name
 		output += fmt.Sprintf(" %d/%d scanned", completedAssets, len(m.Progress)-1)
 		if erroredAssets > 0 {
