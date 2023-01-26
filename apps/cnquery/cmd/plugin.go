@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
@@ -111,6 +112,9 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
+		if !assetPlatformNameMatchesQuery(conf.Command, connectAsset.Platform.Name) {
+			continue
+		}
 		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, conf.DoRecord)
 		if err != nil {
 			return errors.New("could not connect to asset")
@@ -153,4 +157,18 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	}
 
 	return nil
+}
+
+func assetPlatformNameMatchesQuery(cmd string, platformName string) bool {
+	switch platformName {
+	case "aws-s3-bucket":
+		if !strings.HasPrefix(cmd, "aws.s3.bucket") {
+			return false
+		}
+	case "aws-lambda-function":
+		if !strings.HasPrefix(cmd, "aws.lambda.function") {
+			return false
+		}
+	}
+	return true
 }
