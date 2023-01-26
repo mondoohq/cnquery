@@ -363,18 +363,26 @@ func (m *modelMultiProgress) updateOverallProgress() {
 	m.lock.Lock()
 	sumPercent := 0.0
 	validAssets := 0
+	erroredAssets := 0
 	for k := range m.Progress {
 		if k == overallProgressIndexName {
 			continue
 		}
 		errored := m.Progress[k].Errored
 		if errored {
+			erroredAssets++
 			continue
 		}
 		sumPercent += m.Progress[k].percent
 		validAssets++
 	}
-	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
+	if validAssets > 0 {
+		overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
+	}
+	_, ok := m.Progress[overallProgressIndexName]
+	if ok && erroredAssets == len(m.Progress)-1 {
+		overallPercent = 1.0
+	}
 	m.Progress[overallProgressIndexName].percent = overallPercent
 	m.lock.Unlock()
 	return
