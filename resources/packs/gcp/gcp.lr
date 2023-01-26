@@ -1280,8 +1280,10 @@ private gcp.project.gkeService.cluster @defaults("name") {
   enableKubernetesAlpha bool
   // Whether Autopilot is enabled for the cluster
   autopilotEnabled bool
-  // The name of the Google Compute Engine zone in which the cluster resides
+  // Deprecated. Use location instead.
   zone string
+  // Name of the Google Compute Engine zone/region in which the cluster exists
+  location string
   // The IP address of this cluster's master endpoint
   endpoint string
   // The initial Kubernetes version for this cluster

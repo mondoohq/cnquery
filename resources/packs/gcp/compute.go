@@ -1229,7 +1229,7 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceSubnetwork) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceSubnetwork, error) {
-	if len(*args) > 2 {
+	if len(*args) > 3 {
 		return args, nil, nil
 	}
 

@@ -54,7 +54,7 @@ func (md *MqlDiscovery) GetList(query string) []interface{} {
 	return a
 }
 
-func GatherMQLObjects(tc *providers.Config, project string) ([]*asset.Asset, error) {
+func GatherAssets(tc *providers.Config, project string) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	pCfg := tc.Clone()
 	at, err := gcpprovider.New(pCfg)

@@ -143,12 +143,12 @@ func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) []*
 
 func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	clusters := m.GetList("return gcp.project.gke.clusters { id name zone resourceLabels }")
+	clusters := m.GetList("return gcp.project.gke.clusters { id name location resourceLabels }")
 	for i := range clusters {
 		b := clusters[i].(map[string]interface{})
 		id := b["id"].(string)
 		name := b["name"].(string)
-		zone := b["zone"].(string)
+		zone := b["location"].(string)
 		tags := b["resourceLabels"].(map[string]interface{})
 		stringLabels := make(map[string]string)
 		for k, v := range tags {

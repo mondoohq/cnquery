@@ -40,13 +40,13 @@ func (g *mqlGcpProjectGkeServiceCluster) id() (string, error) {
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.Args, GcpProjectGkeServiceCluster, error) {
-	if len(*args) > 2 {
+	if len(*args) > 3 {
 		return args, nil, nil
 	}
 
 	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
 		(*args)["name"] = ids.name
-		(*args)["zone"] = ids.region
+		(*args)["location"] = ids.region
 		(*args)["projectId"] = ids.project
 	}
 
@@ -70,12 +70,12 @@ func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.
 		if err != nil {
 			return nil, nil, err
 		}
-		zone, err := cluster.Zone()
+		location, err := cluster.Location()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		if name == (*args)["name"] && projectId == (*args)["projectId"] && zone == (*args)["zone"] {
+		if name == (*args)["name"] && projectId == (*args)["projectId"] && location == (*args)["location"] {
 			return args, cluster, nil
 		}
 	}
@@ -201,6 +201,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"enableKubernetesAlpha", c.EnableKubernetesAlpha,
 			"autopilotEnabled", c.Autopilot.Enabled,
 			"zone", c.Zone,
+			"location", c.Location,
 			"endpoint", c.Endpoint,
 			"initialClusterVersion", c.InitialClusterVersion,
 			"currentMasterVersion", c.CurrentMasterVersion,

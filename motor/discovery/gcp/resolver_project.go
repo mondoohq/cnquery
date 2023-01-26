@@ -90,7 +90,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
 		DiscoveryBigQueryDatasets) {
-		assetList, err := GatherMQLObjects(tc, project)
+		assetList, err := GatherAssets(tc, project)
 		if err != nil {
 			return nil, err
 		}
