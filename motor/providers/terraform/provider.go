@@ -91,7 +91,7 @@ func New(tc *providers.Config) (*Provider, error) {
 				}
 				foundExamples := MODULE_EXAMPLES.FindString(path)
 				if foundExamples != "" {
-					log.Warn().Str("path", path).Msg("ignoring terraform module example")
+					log.Debug().Str("path", path).Msg("ignoring terraform module example")
 					return nil
 				}
 				if !d.IsDir() {
