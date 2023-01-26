@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 	"go.mondoo.com/cnquery/motor/vault"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -141,6 +142,10 @@ type Provider struct {
 	serviceAccountSubject string
 	cred                  *vault.Credential
 	platformOverride      string
+}
+
+func (p *Provider) GetCredential() *vault.Credential {
+	return proto.Clone(p.cred).(*vault.Credential)
 }
 
 func (p *Provider) FS() afero.Fs {
