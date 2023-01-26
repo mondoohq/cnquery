@@ -247,6 +247,32 @@ func getTitleForPlatformName(name string) string {
 	switch name {
 	case "aws-s3-bucket":
 		return "AWS S3 Bucket"
+	case "aws-cloudtrail-trail":
+		return "AWS Cloudtrail Trail"
+	case "aws-rds-dbinstance":
+		return "AWS RDS DBInstance"
+	case "aws-dynamodb-table":
+		return "AWS DynamoDB Table"
+	case "aws-redshift-cluster":
+		return "AWS Redshift Cluster"
+	case "aws-vpc":
+		return "AWS VPC"
+	case "aws-security-group":
+		return "AWS Security Group"
+	case "aws-ec2-volume":
+		return "AWS EC2 Volume"
+	case "aws-ec2-snapshot":
+		return "AWS EC2 Snapshot"
+	case "aws-iam-user":
+		return "AWS IAM User"
+	case "aws-iam-group":
+		return "AWS IAM Group"
+	case "aws-cloudwatch-loggroup":
+		return "AWS Cloudwatch Loggroup"
+	case "aws-lambda-function":
+		return "AWS Lambda Function"
+	case "aws-ecs-container":
+		return "AWS ECS Container"
 	}
-	return "AWS"
+	return "Amazon Web Services"
 }

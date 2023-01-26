@@ -19,37 +19,40 @@ const (
 	DiscoverySSM          = "ssm" // deprecated: use DiscoverySSMInstances instead
 	DiscoverySSMInstances = "ssm-instances"
 	DiscoveryECR          = "ecr"
+	DiscoveryECS          = "ecs"
 	// api-only scan
-	DiscoveryAccounts       = "accounts"
-	DiscoveryResources      = "resources"
-	DiscoveryECS            = "ecs" // todo move to mql, add policy
-	DiscoveryS3             = "s3"
-	DiscoveryCloudtrail     = "cloudtrail"
-	DiscoveryRds            = "rds"
-	DiscoveryVPC            = "vpc"
-	DiscoverySecurityGroups = "security-groups"
-	DiscoveryUsers          = "users"
-	DiscoveryGroups         = "groups"
-	DiscoveryCloudwatch     = "cloudwatch"
-	DiscoveryLambda         = "lambda"
-	DiscoveryDynamoDB       = "dynamodb"
-	DiscoveryRedshift       = "redshift"
-	DiscoveryVolumes        = "volumes"
-	DiscoverySnapshots      = "snapshots"
-	DiscoveryEFS            = "efs"       // todo resource, policy complete
-	DiscoveryAPIGateway     = "gateway"   // todo resource, policy complete
-	DiscoveryELB            = "elb"       // todo resource, policy complete
-	DiscoveryES             = "es"        // todo resource, policy complete
-	DiscoveryKMS            = "kms"       // todo resource, policy complete
-	DiscoverySagemaker      = "sagemaker" // todo resource, policy complete
+	DiscoveryAccounts                   = "accounts"
+	DiscoveryResources                  = "resources" // all the resources
+	DiscoveryECSContainersAPI           = "ecs-containers-api"
+	DiscoveryEC2InstanceAPI             = "ec2-instances-api" // todo
+	DiscoverySSMInstanceAPI             = "ssm-instances-api" // todo
+	DiscoveryS3Buckets                  = "s3-buckets"
+	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
+	DiscoveryRdsDbInstances             = "rds-dbinstances"
+	DiscoveryVPCs                       = "vpcs"
+	DiscoverySecurityGroups             = "security-groups"
+	DiscoveryIAMUsers                   = "iam-users"
+	DiscoveryIAMGroups                  = "iam-groups"
+	DiscoveryCloudwatchLoggroups        = "cloudwatch-loggroups"
+	DiscoveryLambdaFunctions            = "lambda-functions"
+	DiscoveryDynamoDBTables             = "dynamodb-tables"
+	DiscoveryRedshiftClusters           = "redshift-clusters"
+	DiscoveryVolumes                    = "ec2-volumes"
+	DiscoverySnapshots                  = "ec2-snapshots"
+	DiscoveryEFSFilesystems             = "efs-filesystems"             // todo resource, policy complete
+	DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"            // todo resource, policy complete
+	DiscoveryELBLoadBalancers           = "elb-loadbalancers"           // todo resource, policy complete
+	DiscoveryESDomains                  = "es-domains"                  // todo resource, policy complete
+	DiscoveryKMSKeys                    = "kms-keys"                    // todo resource, policy complete
+	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances" // todo resource, policy complete
 )
 
 var ResourceDiscoveryTargets = []string{
-	DiscoveryResources, DiscoveryS3, DiscoveryCloudtrail, DiscoveryRds,
-	DiscoveryVPC, DiscoverySecurityGroups, DiscoveryUsers, DiscoveryGroups,
-	DiscoveryCloudwatch, DiscoveryLambda, DiscoveryDynamoDB, DiscoveryRedshift,
-	DiscoveryVolumes, DiscoverySnapshots, DiscoveryEFS, DiscoveryECS,
-	DiscoveryAPIGateway, DiscoveryELB, DiscoveryES, DiscoveryKMS, DiscoverySagemaker,
+	DiscoveryResources, DiscoveryS3Buckets, DiscoveryCloudtrailTrails, DiscoveryRdsDbInstances,
+	DiscoveryVPCs, DiscoverySecurityGroups, DiscoveryIAMUsers, DiscoveryIAMGroups,
+	DiscoveryCloudwatchLoggroups, DiscoveryLambdaFunctions, DiscoveryDynamoDBTables, DiscoveryRedshiftClusters,
+	DiscoveryVolumes, DiscoverySnapshots, DiscoveryEFSFilesystems, DiscoveryECSContainersAPI,
+	DiscoveryAPIGatewayRestAPIs, DiscoveryELBLoadBalancers, DiscoveryESDomains, DiscoveryKMSKeys, DiscoverySagemakerNotebookInstances,
 }
 
 type Resolver struct{}
@@ -237,6 +240,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("assets", len(assetList)).Msg("completed ecs search")
 		for i := range assetList {
 			a := assetList[i]
+			if a == nil {
+				continue
+			}
 			if resolvedRoot != nil {
 				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}

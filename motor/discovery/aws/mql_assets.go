@@ -58,44 +58,48 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 	if err != nil {
 		return nil, err
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryS3) {
-		assets = append(assets, buckets(m, account, tc)...)
+
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryS3Buckets) {
+		assets = append(assets, s3Buckets(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryCloudtrail) {
-		assets = append(assets, trails(m, account, tc)...)
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryCloudtrailTrails) {
+		assets = append(assets, cloudtrailTrails(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRds) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRdsDbInstances) {
 		assets = append(assets, rdsInstances(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryVPC) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryVPCs) {
 		assets = append(assets, vpcs(m, account, tc)...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySecurityGroups) {
-		assets = append(assets, securitygroups(m, account, tc)...)
+		assets = append(assets, securityGroups(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryUsers) {
-		assets = append(assets, users(m, account, tc)...)
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryIAMUsers) {
+		assets = append(assets, iamUsers(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryGroups) {
-		assets = append(assets, groups(m, account, tc)...)
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryIAMGroups) {
+		assets = append(assets, iamGroups(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryCloudwatch) {
-		assets = append(assets, loggroups(m, account, tc)...)
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryCloudwatchLoggroups) {
+		assets = append(assets, cloudwatchLoggroups(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryLambda) {
-		assets = append(assets, lambdafunctions(m, account, tc)...)
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryLambdaFunctions) {
+		assets = append(assets, lambdaFunctions(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryDynamoDB) {
-		assets = append(assets, dynamodbtables(m, account, tc)...)
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryDynamoDBTables) {
+		assets = append(assets, dynamodbTables(m, account, tc)...)
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRedshift) {
-		assets = append(assets, redshiftclusters(m, account, tc)...)
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRedshiftClusters) {
+		assets = append(assets, redshiftClusters(m, account, tc)...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryVolumes) {
-		assets = append(assets, volumes(m, account, tc)...)
+		assets = append(assets, ec2Volumes(m, account, tc)...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySnapshots) {
-		assets = append(assets, snapshots(m, account, tc)...)
+		assets = append(assets, ec2Snapshots(m, account, tc)...)
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECSContainersAPI) {
+		assets = append(assets, ecsContainers(m, account, tc)...)
 	}
 
 	return assets, nil

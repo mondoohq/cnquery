@@ -5,6 +5,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -35,20 +36,20 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 			return awsObjectPlatformInfo{title: "AWS VPC", platform: "aws-vpc"}, nil
 		}
 	case "ec2":
-		if awsObject.objectType == "securitygroup" {
+		switch awsObject.objectType {
+		case "securitygroup":
 			return awsObjectPlatformInfo{title: "AWS Security Group", platform: "aws-security-group"}, nil
-		}
-		if awsObject.objectType == "volume" {
+		case "volume":
 			return awsObjectPlatformInfo{title: "AWS EC2 Volume", platform: "aws-ec2-volume"}, nil
-		}
-		if awsObject.objectType == "snapshot" {
+		case "snapshot":
 			return awsObjectPlatformInfo{title: "AWS EC2 Snapshot", platform: "aws-ec2-snapshot"}, nil
 		}
 	case "iam":
-		if awsObject.objectType == "user" {
+		switch awsObject.objectType {
+		case "user":
 			return awsObjectPlatformInfo{title: "AWS IAM User", platform: "aws-iam-user"}, nil
-		}
-		if awsObject.objectType == "group" {
+
+		case "group":
 			return awsObjectPlatformInfo{title: "AWS IAM Group", platform: "aws-iam-group"}, nil
 		}
 	case "cloudwatch":
@@ -59,11 +60,15 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		if awsObject.objectType == "function" {
 			return awsObjectPlatformInfo{title: "AWS Lambda Function", platform: "aws-lambda-function"}, nil
 		}
+	case "ecs":
+		if awsObject.objectType == "container" {
+			return awsObjectPlatformInfo{title: "AWS ECS Container", platform: "aws-ecs-container"}, nil
+		}
 	}
 	return awsObjectPlatformInfo{}, errors.Newf("missing runtime info for aws object service %s type %s", awsObject.service, awsObject.objectType)
 }
 
-func buckets(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func s3Buckets(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 	buckets := m.GetList("return aws.s3.buckets { arn name location tags }") // no id field
 	for i := range buckets {
@@ -89,7 +94,7 @@ func buckets(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Ass
 	return assets
 }
 
-func trails(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func cloudtrailTrails(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 	trails := m.GetList("return aws.cloudtrail.trails { arn name region }") // no id field
 	for i := range trails {
@@ -165,7 +170,7 @@ func vpcs(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset 
 	return assets
 }
 
-func securitygroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func securityGroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	securitygroups := m.GetList("return aws.ec2.securityGroups { id arn region tags name description }")
@@ -195,7 +200,7 @@ func securitygroups(m *MqlDiscovery, account string, tc *providers.Config) []*as
 	return assets
 }
 
-func users(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func iamUsers(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	users := m.GetList("return aws.iam.users { id arn tags name }")
@@ -222,7 +227,7 @@ func users(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset
 	return assets
 }
 
-func groups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func iamGroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	users := m.GetList("return aws.iam.groups { id arn name usernames }")
@@ -246,7 +251,7 @@ func groups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asse
 	return assets
 }
 
-func loggroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func cloudwatchLoggroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	loggroups := m.GetList("return aws.cloudwatch.logGroups { arn name region }")
@@ -269,7 +274,7 @@ func loggroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.A
 	return assets
 }
 
-func lambdafunctions(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func lambdaFunctions(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	lambdafunctions := m.GetList("return aws.lambda.functions { arn name region tags }")
@@ -296,7 +301,7 @@ func lambdafunctions(m *MqlDiscovery, account string, tc *providers.Config) []*a
 	return assets
 }
 
-func dynamodbtables(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func dynamodbTables(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	dynamodbtables := m.GetList("return aws.dynamodb.tables { arn name region tags }")
@@ -345,7 +350,7 @@ func dynamodbtables(m *MqlDiscovery, account string, tc *providers.Config) []*as
 	return assets
 }
 
-func redshiftclusters(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func redshiftClusters(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	clusters := m.GetList("return aws.redshift.clusters { arn name region tags }")
@@ -372,7 +377,7 @@ func redshiftclusters(m *MqlDiscovery, account string, tc *providers.Config) []*
 	return assets
 }
 
-func volumes(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func ec2Volumes(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	volumes := m.GetList("return aws.ec2.volumes { arn id region tags }")
@@ -399,7 +404,7 @@ func volumes(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Ass
 	return assets
 }
 
-func snapshots(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func ec2Snapshots(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
 
 	snapshots := m.GetList("return aws.ec2.snapshots { arn id region tags }")
@@ -420,6 +425,32 @@ func snapshots(m *MqlDiscovery, account string, tc *providers.Config) []*asset.A
 				awsObject: awsObject{
 					account: account, region: region, arn: arn,
 					id: id, service: "ec2", objectType: "snapshot",
+				},
+			}, tc))
+	}
+	return assets
+}
+
+func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+	assets := []*asset.Asset{}
+
+	containers := m.GetList("return aws.ecs.containers { arn taskDefinitionArn name publicIp image region }")
+	for i := range containers {
+		c := containers[i].(map[string]interface{})
+		arn := c["arn"].(string)
+		name := c["name"].(string)
+		publicIp := c["publicIp"].(string)
+		image := c["image"].(string)
+		region := c["region"].(string)
+		taskDefArn := c["taskDefinitionArn"].(string)
+		stringLabels := map[string]string{common.IPLabel: publicIp, "image": image, "taskDefinitionArn": taskDefArn}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: name, service: "ecs", objectType: "container",
 				},
 			}, tc))
 	}
