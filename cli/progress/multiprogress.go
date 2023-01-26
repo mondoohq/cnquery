@@ -330,22 +330,20 @@ func (m *modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *modelMultiProgress) allDone() bool {
 	finished := 0
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	for k := range m.Progress {
 		if k == overallProgressIndexName {
 			continue
 		}
-		m.lock.Lock()
 		if m.Progress[k].Errored || m.Progress[k].Completed {
 			finished++
 		}
-		m.lock.Unlock()
 	}
 	allDone := false
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		if finished == len(m.Progress)-1 {
-			m.lock.Lock()
 			m.Progress[overallProgressIndexName].Completed = true
-			m.lock.Unlock()
 		}
 		allDone = m.Progress[overallProgressIndexName].Completed
 	} else {
@@ -361,6 +359,7 @@ func (m *modelMultiProgress) updateOverallProgress() {
 	}
 	overallPercent := 0.0
 	m.lock.Lock()
+	defer m.lock.Unlock()
 	sumPercent := 0.0
 	validAssets := 0
 	for k := range m.Progress {
@@ -376,7 +375,7 @@ func (m *modelMultiProgress) updateOverallProgress() {
 	}
 	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
 	m.Progress[overallProgressIndexName].percent = overallPercent
-	m.lock.Unlock()
+
 	return
 }
 
@@ -384,25 +383,23 @@ func (m *modelMultiProgress) View() string {
 	pad := strings.Repeat(" ", padding)
 	output := ""
 
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	completedAssets := 0
 	erroredAssets := 0
 	for _, k := range m.orderedKeys {
-		m.lock.Lock()
 		if m.Progress[k].Errored {
 			erroredAssets++
 		}
 		if m.Progress[k].Completed {
 			completedAssets++
 		}
-		m.lock.Unlock()
 	}
 	outputFinished := ""
 	numItemsFinished := 0
 	for _, k := range m.orderedKeys {
-		m.lock.Lock()
 		errored := m.Progress[k].Errored
 		completed := m.Progress[k].Completed
-		m.lock.Unlock()
 		if !errored && !completed {
 			continue
 		}
@@ -410,14 +407,10 @@ func (m *modelMultiProgress) View() string {
 		if errored {
 			outputFinished += m.Progress[k].model.View() + theme.DefaultTheme.Error("    X "+m.Progress[k].Name)
 		} else if completed {
-			m.lock.Lock()
 			percent := m.Progress[k].percent
-			m.lock.Unlock()
 			outputFinished += m.Progress[k].model.ViewAs(percent) + " " + m.Progress[k].Name
 		}
-		m.lock.Lock()
 		score := m.Progress[k].Score
-		m.lock.Unlock()
 		if score != "" {
 			if errored {
 				outputFinished += pad + theme.DefaultTheme.Error(" score: "+score)
@@ -432,16 +425,12 @@ func (m *modelMultiProgress) View() string {
 	itemsInProgress := 0
 	outputNotDone := ""
 	for _, k := range m.orderedKeys {
-		m.lock.Lock()
 		errored := m.Progress[k].Errored
 		completed := m.Progress[k].Completed
-		m.lock.Unlock()
 		if errored || completed {
 			continue
 		}
-		m.lock.Lock()
 		percent := m.Progress[k].percent
-		m.lock.Unlock()
 		outputNotDone += m.Progress[k].model.ViewAs(percent) + " " + m.Progress[k].Name + "\n"
 		itemsInProgress++
 		if itemsInProgress == m.maxItemsToShow {
@@ -455,9 +444,7 @@ func (m *modelMultiProgress) View() string {
 
 	output += outputFinished + outputNotDone
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
-		m.lock.Lock()
 		percent := m.Progress[overallProgressIndexName].percent
-		m.lock.Unlock()
 		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(percent) + " " + m.Progress[overallProgressIndexName].Name
 		output += fmt.Sprintf(" %d/%d scanned", completedAssets, len(m.Progress)-1)
 		if erroredAssets > 0 {
