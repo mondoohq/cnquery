@@ -374,7 +374,9 @@ func (m *modelMultiProgress) updateOverallProgress() {
 		sumPercent += m.Progress[k].percent
 		validAssets++
 	}
-	overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
+	if validAssets > 0 {
+		overallPercent = math.Floor((sumPercent/float64(validAssets))*100) / 100
+	}
 	m.Progress[overallProgressIndexName].percent = overallPercent
 	m.lock.Unlock()
 	return

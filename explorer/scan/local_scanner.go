@@ -259,6 +259,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.GetCredential, job.DoRecord)
 	if err != nil {
 		job.Reporter.AddScanError(job.Asset, err)
+		job.ProgressReporter.Errored()
 		return
 	}
 
