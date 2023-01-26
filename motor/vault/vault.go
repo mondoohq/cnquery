@@ -42,6 +42,7 @@ func (x *Secret) Credential() (*Credential, error) {
 	}
 
 	cred.SecretId = x.Key
+	cred.SecretEncoding = x.Encoding
 	cred.PreProcess()
 
 	return &cred, nil
