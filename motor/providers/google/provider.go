@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -104,17 +105,20 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	case Organization:
 		_, err := t.GetOrganization(id)
 		if err != nil {
-			return nil, errors.New("could not find or have no access to organization " + id)
+			log.Error().Err(err).Msgf("could not find or have no access to organization %s", id)
+			return nil, err
 		}
 	case Project:
 		_, err := t.GetProject(id)
 		if err != nil {
-			return nil, errors.New("could not find or have no access to project " + id)
+			log.Error().Err(err).Msgf("could not find or have no access to project %s", id)
+			return nil, err
 		}
 	case Workspace:
 		_, err := t.GetWorkspaceCustomer(id)
 		if err != nil {
-			return nil, errors.New("could not find or have no access to workspace " + id)
+			log.Error().Err(err).Msgf("could not find or have no access to workspace %s", id)
+			return nil, err
 		}
 		t.serviceAccountSubject = pCfg.Options["impersonated-user-email"]
 
