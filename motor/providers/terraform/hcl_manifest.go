@@ -3,7 +3,6 @@ package terraform
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 )
 
 type ModuleManifest struct {
@@ -25,8 +24,7 @@ type Record struct {
 	Dir string `json:"Dir"`
 }
 
-func ParseTerraformModuleManifest(fullPath string) (*ModuleManifest, error) {
-	manifestPath := filepath.Join(fullPath, ".terraform/modules/modules.json")
+func ParseTerraformModuleManifest(manifestPath string) (*ModuleManifest, error) {
 	_, err := os.Stat(manifestPath)
 	if err != nil {
 		return nil, err

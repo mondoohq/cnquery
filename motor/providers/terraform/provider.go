@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 
@@ -89,12 +90,29 @@ func New(tc *providers.Config) (*Provider, error) {
 				if err != nil {
 					return err
 				}
+
+				// skip terraform module examples
 				foundExamples := MODULE_EXAMPLES.FindString(path)
 				if foundExamples != "" {
 					log.Debug().Str("path", path).Msg("ignoring terraform module example")
 					return nil
 				}
+
 				if !d.IsDir() {
+					if strings.HasSuffix(path, ".terraform/modules/modules.json") {
+						modulesManifest, err = ParseTerraformModuleManifest(path)
+						if errors.Is(err, os.ErrNotExist) {
+							log.Debug().Str("path", path).Msg("no terraform module manifest found")
+						} else {
+							return errors.Wrap(err, fmt.Sprintf("could not parse terraform module manifest %s", path))
+						}
+					}
+
+					// we do not want to parse hcl files from terraform modules .terraform files
+					if strings.Contains(path, ".terraform") {
+						return nil
+					}
+
 					log.Debug().Str("path", path).Msg("parsing hcl file")
 					err = loader.ParseHclFile(path)
 					if err != nil {
@@ -104,13 +122,6 @@ func New(tc *providers.Config) (*Provider, error) {
 					err = ReadTfVarsFromFile(path, tfVars)
 					if err != nil {
 						return errors.Wrap(err, "could not parse tfvars file")
-					}
-				} else if modulesManifest == nil {
-					modulesManifest, err = ParseTerraformModuleManifest(path)
-					if errors.Is(err, os.ErrNotExist) {
-						log.Debug().Str("path", path).Msg("no terraform module manifest found")
-					} else {
-						return errors.Wrap(err, fmt.Sprintf("could not parse terraform module manifest %s", path))
 					}
 				}
 				return nil
