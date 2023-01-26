@@ -40,7 +40,7 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 
 func computeImages(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	images := m.GetList("gcp.project.compute.images { id name labels }")
+	images := m.GetList("return gcp.project.compute.images { id name labels }")
 	for i := range images {
 		b := images[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -69,7 +69,7 @@ func computeImages(m *MqlDiscovery, project string, tc *providers.Config) []*ass
 
 func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	networks := m.GetList("gcp.project.compute.networks { id name }")
+	networks := m.GetList("return gcp.project.compute.networks { id name }")
 	for i := range networks {
 		b := networks[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -93,7 +93,7 @@ func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) []*a
 
 func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	subnets := m.GetList("gcp.project.compute.subnetworks { id name regionUrl }")
+	subnets := m.GetList("return gcp.project.compute.subnetworks { id name regionUrl }")
 	for i := range subnets {
 		b := subnets[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -119,7 +119,7 @@ func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) [
 
 func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	firewalls := m.GetList("gcp.project.compute.firewalls { id name }")
+	firewalls := m.GetList("return gcp.project.compute.firewalls { id name }")
 	for i := range firewalls {
 		b := firewalls[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -143,7 +143,7 @@ func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) []*
 
 func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	clusters := m.GetList("gcp.project.gke.clusters { id name zone resourceLabels }")
+	clusters := m.GetList("return gcp.project.gke.clusters { id name zone resourceLabels }")
 	for i := range clusters {
 		b := clusters[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -173,7 +173,7 @@ func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) []*asset
 
 func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	buckets := m.GetList("gcp.project.storage.buckets { id name location labels }")
+	buckets := m.GetList("return gcp.project.storage.buckets { id name location labels }")
 	for i := range buckets {
 		b := buckets[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -203,7 +203,7 @@ func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) []*as
 
 func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
 	assets := []*asset.Asset{}
-	datasets := m.GetList("gcp.project.bigquery.datasets { id location labels }")
+	datasets := m.GetList("return gcp.project.bigquery.datasets { id location labels }")
 	for i := range datasets {
 		b := datasets[i].(map[string]interface{})
 		id := b["id"].(string)
