@@ -273,6 +273,24 @@ func getTitleForPlatformName(name string) string {
 		return "AWS Lambda Function"
 	case "aws-ecs-container":
 		return "AWS ECS Container"
+	case "aws-efs-filesystem":
+		return "AWS EFS Filesystem"
+	case "aws-gateway-restapi":
+		return "AWS Gateway RESTAPI"
+	case "aws-elb-loadbalancer":
+		return "AWS ELB Load Balancer"
+	case "aws-es-domain":
+		return "AWS ES Domain"
+	case "aws-kms-key":
+		return "AWS KMS Key"
+	case "aws-sagemaker-notebookinstance":
+		return "AWS Sagemaker Notebook Instance"
+	case "aws-ec2-instance":
+		return "AWS EC2 Instance"
+	case "aws-ssm-instance":
+		return "AWS SSM Instance"
+	case "aws-ecr-image":
+		return "AWS ECR Image"
 	}
 	return "Amazon Web Services"
 }

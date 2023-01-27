@@ -3,10 +3,13 @@ package aws
 import (
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/resources/packs/aws"
 )
 
 func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
@@ -43,6 +46,8 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 			return awsObjectPlatformInfo{title: "AWS EC2 Volume", platform: "aws-ec2-volume"}, nil
 		case "snapshot":
 			return awsObjectPlatformInfo{title: "AWS EC2 Snapshot", platform: "aws-ec2-snapshot"}, nil
+		case "instance":
+			return awsObjectPlatformInfo{title: "AWS EC2 Instance", platform: "aws-ec2-instance"}, nil
 		}
 	case "iam":
 		switch awsObject.objectType {
@@ -63,6 +68,38 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 	case "ecs":
 		if awsObject.objectType == "container" {
 			return awsObjectPlatformInfo{title: "AWS ECS Container", platform: "aws-ecs-container"}, nil
+		}
+	case "efs":
+		if awsObject.objectType == "filesystem" {
+			return awsObjectPlatformInfo{title: "AWS EFS Filesystem", platform: "aws-efs-filesystem"}, nil
+		}
+	case "gateway":
+		if awsObject.objectType == "restapi" {
+			return awsObjectPlatformInfo{title: "AWS Gateway RESTAPI", platform: "aws-gateway-restapi"}, nil
+		}
+	case "elb":
+		if awsObject.objectType == "loadbalancer" {
+			return awsObjectPlatformInfo{title: "AWS ELB LoadBalancer", platform: "aws-elb-loadbalancer"}, nil
+		}
+	case "es":
+		if awsObject.objectType == "domain" {
+			return awsObjectPlatformInfo{title: "AWS ES Domain", platform: "aws-es-domain"}, nil
+		}
+	case "kms":
+		if awsObject.objectType == "key" {
+			return awsObjectPlatformInfo{title: "AWS KMS Key", platform: "aws-kms-key"}, nil
+		}
+	case "sagemaker":
+		if awsObject.objectType == "notebookinstance" {
+			return awsObjectPlatformInfo{title: "AWS Sagemaker NotebookInstance", platform: "aws-sagemaker-notebookinstance"}, nil
+		}
+	case "ssm":
+		if awsObject.objectType == "instance" {
+			return awsObjectPlatformInfo{title: "AWS SSM Instance", platform: "aws-ssm-instance"}, nil
+		}
+	case "ecr":
+		if awsObject.objectType == "image" {
+			return awsObjectPlatformInfo{title: "AWS ECR Image", platform: "aws-ecr-image"}, nil
 		}
 	}
 	return awsObjectPlatformInfo{}, errors.Newf("missing runtime info for aws object service %s type %s", awsObject.service, awsObject.objectType)
@@ -496,6 +533,284 @@ func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) ([]*as
 				awsObject: awsObject{
 					account: account, region: region, arn: arn,
 					id: name, service: "ecs", objectType: "container",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+func ecrImages(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	images, err := m.GetList("return aws.ecr.images { digest repoName arn tags region }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range images {
+		ecri := images[i].(map[string]interface{})
+		reponame := ecri["repoName"].(string)
+		region := ecri["region"].(string)
+		arn := ecri["arn"].(string)
+		digest := ecri["digest"].(string)
+		tags := ecri["tags"].([]interface{})
+		stringLabels := make(map[string]string)
+		for i := range tags {
+			stringLabels["tag"] = tags[i].(string)
+		}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: aws.EcrImageName(aws.ImageInfo{RepoName: reponame, Digest: digest}), labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: digest, service: "ecr", objectType: "image",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+func ec2Instances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	instances, err := m.GetList("return aws.ec2.instances { arn instanceId tags region }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range instances {
+		inst := instances[i].(map[string]interface{})
+		arn := inst["arn"].(string)
+		region := inst["region"].(string)
+		id := inst["instanceId"].(string)
+		tags := inst["tags"].(map[string]interface{})
+		stringLabels := make(map[string]string)
+		var name string
+		for k, v := range tags {
+			stringLabels[k] = v.(string)
+			if k == "Name" {
+				name = v.(string)
+			}
+		}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: id, service: "ec2", objectType: "instance",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+// func ssmInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+// 	assets := []*asset.Asset{}
+
+// 	instances, err := m.GetList("return aws.ssm.instances { arn instanceId tags region }")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	for i := range instances {
+// 		inst := instances[i].(map[string]interface{})
+// 		arn := inst["arn"].(string)
+// 		region := inst["region"].(string)
+// 		id := inst["instanceId"].(string)
+// 		tags := inst["tags"].(map[string]interface{})
+// 		stringLabels := make(map[string]string)
+// 		var name string
+// 		for k, v := range tags {
+// 			stringLabels[k] = v.(string)
+// 			if k == "Name" {
+// 				name = v.(string)
+// 			}
+// 		}
+
+// 		assets = append(assets, MqlObjectToAsset(account,
+// 			mqlObject{
+// 				name: name, labels: stringLabels,
+// 				awsObject: awsObject{
+// 					account: account, region: region, arn: arn,
+// 					id: id, service: "ssm", objectType: "instance",
+// 				},
+// 			}, tc))
+// 	}
+// 	return assets, nil
+// }
+
+func efsFilesystems(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	filesystems, err := m.GetList("return aws.efs.filesystems { arn name region tags id }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range filesystems {
+		f := filesystems[i].(map[string]interface{})
+		arn := f["arn"].(string)
+		id := f["id"].(string)
+		name := f["name"].(string)
+		tags := f["tags"].(map[string]interface{})
+		region := f["region"].(string)
+		stringLabels := make(map[string]string)
+		for k, v := range tags {
+			stringLabels[k] = v.(string)
+		}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: id, service: "efs", objectType: "filesystem",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+func gatewayRestApis(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	restapis, err := m.GetList("return aws.apigateway.restApis { arn name region tags id }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range restapis {
+		r := restapis[i].(map[string]interface{})
+		arn := r["arn"].(string)
+		id := r["id"].(string)
+		name := r["name"].(string)
+		tags := r["tags"].(map[string]interface{})
+		region := r["region"].(string)
+		stringLabels := make(map[string]string)
+		for k, v := range tags {
+			stringLabels[k] = v.(string)
+		}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: id, service: "gateway", objectType: "restapi",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+func elbLoadBalancers(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	loadbalancers, err := m.GetList("return aws.elb.loadBalancers { arn name }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range loadbalancers {
+		lb := loadbalancers[i].(map[string]interface{})
+		a := lb["arn"].(string)
+		name := lb["name"].(string)
+		stringLabels := make(map[string]string)
+		var region string
+		if arn.IsARN(a) {
+			if p, err := arn.Parse(a); err == nil {
+				region = p.Region
+			}
+		}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: a,
+					id: name, service: "elb", objectType: "loadbalancer",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+func esDomains(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	domains, err := m.GetList("return aws.es.domains { arn name region tags }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range domains {
+		d := domains[i].(map[string]interface{})
+		arn := d["arn"].(string)
+		name := d["name"].(string)
+		tags := d["tags"].(map[string]interface{})
+		region := d["region"].(string)
+		stringLabels := make(map[string]string)
+		for k, v := range tags {
+			stringLabels[k] = v.(string)
+		}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: name, service: "es", objectType: "domain",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+func kmsKeys(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	keys, err := m.GetList("return aws.kms.keys { arn region id }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range keys {
+		k := keys[i].(map[string]interface{})
+		arn := k["arn"].(string)
+		id := k["id"].(string)
+		region := k["region"].(string)
+		stringLabels := make(map[string]string)
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: id, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: id, service: "kms", objectType: "key",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
+
+func sagemakerNotebookInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+
+	notebookinstances, err := m.GetList("return aws.sagemaker.notebookInstances { arn name region tags }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range notebookinstances {
+		n := notebookinstances[i].(map[string]interface{})
+		arn := n["arn"].(string)
+		name := n["name"].(string)
+		tags := n["tags"].(map[string]interface{})
+		region := n["region"].(string)
+		stringLabels := make(map[string]string)
+		for k, v := range tags {
+			stringLabels[k] = v.(string)
+		}
+
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: name, service: "sagemaker", objectType: "notebookinstance",
 				},
 			}, tc))
 	}

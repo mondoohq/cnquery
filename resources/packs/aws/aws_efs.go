@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -101,6 +102,47 @@ func (e *mqlAwsEfs) getFilesystems(provider *aws_provider.Provider) []*jobpool.J
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (d *mqlAwsEfsFilesystem) init(args *resources.Args) (*resources.Args, AwsEfsFilesystem, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch efs filesystem")
+	}
+
+	obj, err := d.MotorRuntime.CreateResource("aws.efs")
+	if err != nil {
+		return nil, nil, err
+	}
+	efs := obj.(AwsEfs)
+
+	rawResources, err := efs.Filesystems()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		fs := rawResources[i].(AwsEfsFilesystem)
+		mqlFsArn, err := fs.Arn()
+		if err != nil {
+			return nil, nil, errors.New("efs filesystem does not exist")
+		}
+		if mqlFsArn == arnVal {
+			return args, fs, nil
+		}
+	}
+	return nil, nil, errors.New("efs filesystem does not exist")
 }
 
 func efsTagsToMap(tags []types.Tag) map[string]interface{} {

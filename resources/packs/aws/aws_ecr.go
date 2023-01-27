@@ -2,11 +2,13 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -168,6 +170,8 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 				"tags", tags,
 				"registryId", core.ToString(image.RegistryId),
 				"repoName", name,
+				"region", region,
+				"arn", ecrImageArn(ImageInfo{Region: region, RegistryId: core.ToString(image.RegistryId), RepoName: name, Digest: core.ToString(image.ImageDigest)}),
 			)
 			if err != nil {
 				return nil, err
@@ -192,6 +196,8 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 				"tags", tags,
 				"registryId", core.ToString(image.RegistryId),
 				"repoName", name,
+				"region", region,
+				"arn", ecrImageArn(ImageInfo{Region: region, RegistryId: core.ToString(image.RegistryId), RepoName: name, Digest: core.ToString(image.ImageDigest)}),
 			)
 			if err != nil {
 				return nil, err
@@ -200,6 +206,62 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 		}
 	}
 	return mqlres, nil
+}
+
+type ImageInfo struct {
+	Region     string
+	RepoName   string
+	Digest     string
+	RegistryId string
+}
+
+func ecrImageArn(i ImageInfo) string {
+	return fmt.Sprintf("arn:aws:ecr:%s:%s:image/%s/%s", i.Region, i.RegistryId, i.RepoName, i.Digest)
+}
+
+func EcrImageName(i ImageInfo) string {
+	return i.RepoName + "@" + i.Digest
+}
+
+func (d *mqlAwsEcrImage) init(args *resources.Args) (*resources.Args, AwsEcrImage, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch ecr image")
+	}
+
+	obj, err := d.MotorRuntime.CreateResource("aws.ecr")
+	if err != nil {
+		return nil, nil, err
+	}
+	ecr := obj.(AwsEcr)
+
+	rawResources, err := ecr.Images()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		image := rawResources[i].(AwsEcrImage)
+		mqlImArn, err := image.Arn()
+		if err != nil {
+			return nil, nil, errors.New("ecr image does not exist")
+		}
+		if mqlImArn == arnVal {
+			return args, image, nil
+		}
+	}
+	return nil, nil, errors.New("ecr image does not exist")
 }
 
 func (e *mqlAwsEcr) GetPublicRepositories() ([]interface{}, error) {

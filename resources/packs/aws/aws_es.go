@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/smithy-go/transport/http"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
@@ -78,6 +79,18 @@ func (e *mqlAwsEs) getDomains(provider *aws_provider.Provider) []*jobpool.Job {
 func (a *mqlAwsEsDomain) init(args *resources.Args) (*resources.Args, AwsEsDomain, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+			if arn.IsARN(ids.arn) {
+				if p, err := arn.Parse(ids.arn); err == nil {
+					(*args)["region"] = p.Region
+				}
+			}
+		}
 	}
 
 	if (*args)["name"] == nil || (*args)["region"] == nil {

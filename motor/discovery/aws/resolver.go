@@ -16,17 +16,18 @@ import (
 )
 
 const (
-	DiscoveryInstances    = "instances"
-	DiscoverySSM          = "ssm" // deprecated: use DiscoverySSMInstances instead
-	DiscoverySSMInstances = "ssm-instances"
-	DiscoveryECR          = "ecr"
-	DiscoveryECS          = "ecs"
-	// api-only scan
+	DiscoveryInstances    = "instances"     // todo: convert to using mql under the hood
+	DiscoverySSM          = "ssm"           // deprecated: use DiscoverySSMInstances instead
+	DiscoverySSMInstances = "ssm-instances" // todo: convert to using mql under the hood
+	DiscoveryECR          = "ecr"           // todo: convert to using mql under the hood
+	DiscoveryECS          = "ecs"           // todo: convert to using mql under the hood, add ecs-exec
+	// api scan
 	DiscoveryAccounts                   = "accounts"
-	DiscoveryResources                  = "resources" // all the resources
-	DiscoveryECSContainersAPI           = "ecs-containers-api"
-	DiscoveryEC2InstanceAPI             = "ec2-instances-api" // todo
-	DiscoverySSMInstanceAPI             = "ssm-instances-api" // todo
+	DiscoveryResources                  = "resources"          // all the resources
+	DiscoveryECSContainersAPI           = "ecs-containers-api" // need dedup story
+	DiscoveryECRImageAPI                = "ecr-image-api"      // need policy + dedup story
+	DiscoveryEC2InstanceAPI             = "ec2-instances-api"  // need policy + dedup story
+	DiscoverySSMInstanceAPI             = "ssm-instances-api"  // todo, also need policy + dedup story
 	DiscoveryS3Buckets                  = "s3-buckets"
 	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
 	DiscoveryRdsDbInstances             = "rds-dbinstances"
@@ -40,19 +41,20 @@ const (
 	DiscoveryRedshiftClusters           = "redshift-clusters"
 	DiscoveryVolumes                    = "ec2-volumes"
 	DiscoverySnapshots                  = "ec2-snapshots"
-	DiscoveryEFSFilesystems             = "efs-filesystems"             // todo resource, policy complete
-	DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"            // todo resource, policy complete
-	DiscoveryELBLoadBalancers           = "elb-loadbalancers"           // todo resource, policy complete
-	DiscoveryESDomains                  = "es-domains"                  // todo resource, policy complete
-	DiscoveryKMSKeys                    = "kms-keys"                    // todo resource, policy complete
-	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances" // todo resource, policy complete
+	DiscoveryEFSFilesystems             = "efs-filesystems"
+	DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"
+	DiscoveryELBLoadBalancers           = "elb-loadbalancers"
+	DiscoveryESDomains                  = "es-domains"
+	DiscoveryKMSKeys                    = "kms-keys"
+	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances"
 )
 
 var ResourceDiscoveryTargets = []string{
-	DiscoveryResources, DiscoveryS3Buckets, DiscoveryCloudtrailTrails, DiscoveryRdsDbInstances,
+	DiscoveryResources, DiscoveryECSContainersAPI, DiscoveryEC2InstanceAPI, DiscoverySSMInstanceAPI, DiscoveryECRImageAPI,
+	DiscoveryS3Buckets, DiscoveryCloudtrailTrails, DiscoveryRdsDbInstances,
 	DiscoveryVPCs, DiscoverySecurityGroups, DiscoveryIAMUsers, DiscoveryIAMGroups,
 	DiscoveryCloudwatchLoggroups, DiscoveryLambdaFunctions, DiscoveryDynamoDBTables, DiscoveryRedshiftClusters,
-	DiscoveryVolumes, DiscoverySnapshots, DiscoveryEFSFilesystems, DiscoveryECSContainersAPI,
+	DiscoveryVolumes, DiscoverySnapshots, DiscoveryEFSFilesystems,
 	DiscoveryAPIGatewayRestAPIs, DiscoveryELBLoadBalancers, DiscoveryESDomains, DiscoveryKMSKeys, DiscoverySagemakerNotebookInstances,
 }
 

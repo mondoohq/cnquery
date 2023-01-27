@@ -1237,6 +1237,10 @@ private aws.ecr.image {
   registryId string
   // Name of the repository for the image
   repoName string
+  // Region where the ECR image is located
+  region string
+  // ARN for the image
+  arn string
 }
 
 // AWS Database Migration Service (DMS)

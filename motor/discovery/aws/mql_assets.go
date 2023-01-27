@@ -61,6 +61,34 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 	if err != nil {
 		return nil, err
 	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECSContainersAPI) {
+		if a, err := ecsContainers(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ecs containers")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECRImageAPI) {
+		if a, err := ecrImages(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ecr images")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryEC2InstanceAPI) {
+		if a, err := ec2Instances(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ec2 instances")
+		}
+	}
+	// if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySSMInstanceAPI) {
+	// 	if a, err := ssmInstances(m, account, tc); err == nil {
+	// 		assets = append(assets, a...)
+	// 	} else {
+	// 		log.Error().Err(err).Msg("unable to query ssm instances")
+	// 	}
+	// }
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryS3Buckets) {
 		if a, err := s3Buckets(m, account, tc); err == nil {
@@ -73,7 +101,7 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 		if a, err := cloudtrailTrails(m, account, tc); err == nil {
 			assets = append(assets, a...)
 		} else {
-			log.Error().Err(err).Msg("unable to query cloutrail trails")
+			log.Error().Err(err).Msg("unable to query cloudtrail trails")
 		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRdsDbInstances) {
@@ -153,11 +181,46 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 			log.Error().Err(err).Msg("unable to query ec2 snapshots")
 		}
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECSContainersAPI) {
-		if a, err := ecsContainers(m, account, tc); err == nil {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryEFSFilesystems) {
+		if a, err := efsFilesystems(m, account, tc); err == nil {
 			assets = append(assets, a...)
 		} else {
-			log.Error().Err(err).Msg("unable to query ecs containers")
+			log.Error().Err(err).Msg("unable to query efs filesystems")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryAPIGatewayRestAPIs) {
+		if a, err := gatewayRestApis(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query gateway restapis")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryELBLoadBalancers) {
+		if a, err := elbLoadBalancers(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query elb loadbalancers")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryESDomains) {
+		if a, err := esDomains(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query es domains")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryKMSKeys) {
+		if a, err := kmsKeys(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query kms keys")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySagemakerNotebookInstances) {
+		if a, err := sagemakerNotebookInstances(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query sagemaker notebook instances")
 		}
 	}
 
