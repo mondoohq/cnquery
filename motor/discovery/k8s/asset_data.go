@@ -140,7 +140,7 @@ func addMondooAssetLabels(assetLabels map[string]string, objMeta v1.Object, objT
 	assetLabels["k8s.mondoo.com/apiVersion"] = objType.GetAPIVersion()
 	if objMeta.GetResourceVersion() != "" {
 		// objects discovered from manifest do not necessarily have a resource version
-		assetLabels["k8s.mondoo.com/resourceVersion"] = objMeta.GetResourceVersion()
+		assetLabels["k8s.mondoo.com/resource-version"] = objMeta.GetResourceVersion()
 	}
 	assetLabels["k8s.mondoo.com/cluster-id"] = clusterIdentifier
 
