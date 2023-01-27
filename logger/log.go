@@ -73,6 +73,10 @@ func Set(level string) {
 	}
 }
 
+func GetLevel() string {
+	return zerolog.GlobalLevel().String()
+}
+
 // InitTestEnv will set all log configurations for a test environment
 // verbose and colorful
 func InitTestEnv() {
