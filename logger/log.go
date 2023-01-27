@@ -64,15 +64,17 @@ func Set(level string) {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		Debug = true
 	case "trace":
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-		Debug = true
 	case "":
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	default:
 		log.Error().Msg("unknown log level: " + level)
 	}
+}
+
+func GetLevel() string {
+	return zerolog.GlobalLevel().String()
 }
 
 // InitTestEnv will set all log configurations for a test environment
