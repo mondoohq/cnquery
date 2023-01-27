@@ -448,16 +448,13 @@ func (g *mqlGithubBranch) GetProtectionRules() (interface{}, error) {
 
 	var ghDismissalRestrictions *githubDismissalRestrictions
 
-	rprr, err := core.JsonToDict(githubRequiredPullRequestReviews{})
-	if err != nil {
-		return nil, err
-	}
+	var rprr map[string]interface{}
 	if branchProtection.RequiredPullRequestReviews != nil {
 
 		if branchProtection.RequiredPullRequestReviews.DismissalRestrictions != nil {
 			ghDismissalRestrictions = &githubDismissalRestrictions{
-				Users: []string{},
-				Teams: []string{},
+				Users: make([]string, 0, len(branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Users)),
+				Teams: make([]string, 0, len(branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Teams)),
 			}
 
 			for i := range branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Teams {
