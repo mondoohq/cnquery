@@ -448,29 +448,36 @@ func (g *mqlGithubBranch) GetProtectionRules() (interface{}, error) {
 
 	var ghDismissalRestrictions *githubDismissalRestrictions
 
-	if branchProtection.RequiredPullRequestReviews.DismissalRestrictions != nil {
-		ghDismissalRestrictions = &githubDismissalRestrictions{
-			Users: []string{},
-			Teams: []string{},
-		}
-
-		for i := range branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Teams {
-			ghDismissalRestrictions.Teams = append(ghDismissalRestrictions.Teams, branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Teams[i].GetName())
-		}
-		for i := range branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Users {
-			ghDismissalRestrictions.Users = append(ghDismissalRestrictions.Users, branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Users[i].GetLogin())
-		}
-	}
-
-	// we use a separate struct to ensure that the output is proper camelCase
-	rprr, err := core.JsonToDict(githubRequiredPullRequestReviews{
-		DismissStaleReviews:          branchProtection.RequiredPullRequestReviews.DismissStaleReviews,
-		RequireCodeOwnerReviews:      branchProtection.RequiredPullRequestReviews.RequireCodeOwnerReviews,
-		RequiredApprovingReviewCount: branchProtection.RequiredPullRequestReviews.RequiredApprovingReviewCount,
-		DismissalRestrictions:        ghDismissalRestrictions,
-	})
+	rprr, err := core.JsonToDict(githubRequiredPullRequestReviews{})
 	if err != nil {
 		return nil, err
+	}
+	if branchProtection.RequiredPullRequestReviews != nil {
+
+		if branchProtection.RequiredPullRequestReviews.DismissalRestrictions != nil {
+			ghDismissalRestrictions = &githubDismissalRestrictions{
+				Users: []string{},
+				Teams: []string{},
+			}
+
+			for i := range branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Teams {
+				ghDismissalRestrictions.Teams = append(ghDismissalRestrictions.Teams, branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Teams[i].GetName())
+			}
+			for i := range branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Users {
+				ghDismissalRestrictions.Users = append(ghDismissalRestrictions.Users, branchProtection.RequiredPullRequestReviews.DismissalRestrictions.Users[i].GetLogin())
+			}
+		}
+
+		// we use a separate struct to ensure that the output is proper camelCase
+		rprr, err = core.JsonToDict(githubRequiredPullRequestReviews{
+			DismissStaleReviews:          branchProtection.RequiredPullRequestReviews.DismissStaleReviews,
+			RequireCodeOwnerReviews:      branchProtection.RequiredPullRequestReviews.RequireCodeOwnerReviews,
+			RequiredApprovingReviewCount: branchProtection.RequiredPullRequestReviews.RequiredApprovingReviewCount,
+			DismissalRestrictions:        ghDismissalRestrictions,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	ea, err := core.JsonToDict(branchProtection.EnforceAdmins)
