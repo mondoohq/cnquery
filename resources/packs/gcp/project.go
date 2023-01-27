@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -105,7 +106,7 @@ func (g *mqlGcpProject) GetLabels() (map[string]interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProject) GetIamPolicy() (interface{}, error) {
 	projectId, err := g.Id()
 	if err != nil {
 		return nil, err
@@ -132,22 +133,23 @@ func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	res := []interface{}{}
-	for i := range policy.Bindings {
-		b := policy.Bindings[i]
-
-		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
-			"id", projectId+"-"+strconv.Itoa(i),
-			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlServiceaccount)
+	policyId := fmt.Sprintf("gcp.project/%s/gcp.iamPolicy", projectId)
+	auditConfigs, err := auditConfigsToMql(g.MotorRuntime, policy.AuditConfigs, fmt.Sprintf("%s/auditConfigs", policyId))
+	if err != nil {
+		return nil, err
 	}
 
-	return res, nil
+	bindings, err := bindingsToMql(g.MotorRuntime, policy.Bindings, fmt.Sprintf("%s/bindings", policyId))
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.iamPolicy",
+		"id", policyId,
+		"auditConfigs", auditConfigs,
+		"bindings", bindings,
+		"version", policy.Version,
+	)
 }
 
 func (g *mqlGcpProject) GetCommonInstanceMetadata() (map[string]interface{}, error) {

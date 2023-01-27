@@ -2,7 +2,8 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/gcp"
 
 alias gcloud.organization = gcp.organization
 alias gcloud.project = gcp.project
-alias gcloud.resourcemanager.binding = gcp.resourcemanager.binding
+alias gcloud.resourcemanager.binding = gcp.iamPolicy.binding
+alias gcp.resourcemanager.binding = gcp.iamPolicy.binding
 alias gcp.compute = gcp.project.computeService
 alias gcloud.compute = gcp.project.computeService
 alias gcloud.compute.instance = gcp.project.computeService.instance
@@ -25,7 +26,7 @@ gcp.organization @defaults("id") {
   // Organization state
   lifecycleState string
   // Organization IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
 }
@@ -47,7 +48,7 @@ gcp.project @defaults("name") {
   // The labels associated with this project
   labels() map[string]string
   // IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
   // List of available and enabled services for project
   services() []gcp.service
   // List of recommendations
@@ -134,8 +135,20 @@ gcp.recommendation {
   state dict
 }
 
+// GCP IAM policy
+private gcp.iamPolicy @defaults("bindings") {
+  // Internal ID
+  id string
+  // Cloud audit logging configuration
+  auditConfigs []dict
+  // List of bindings associating lists of members, or principals, to roles
+  bindings []gcp.iamPolicy.binding
+  // Format of the policy
+  version int
+}
+
 // GCP Resource Manager Binding
-private gcp.resourcemanager.binding {
+private gcp.iamPolicy.binding {
   // Internal ID
   id string
   // Principals requesting access for a Google Cloud resource
@@ -767,7 +780,7 @@ private gcp.project.storageService.bucket @defaults("id") {
   // Update timestamp
   updated time
   // IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
   // IAM configuration
   iamConfiguration dict
   // Retention policy
@@ -1648,7 +1661,7 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose"){
   // List of cryptokey versions
   versions() []gcp.project.kmsService.keyring.cryptokey.version
   // Crypto key IAM policy
-  iamPolicy() []gcp.resourcemanager.binding
+  iamPolicy() gcp.iamPolicy
 }
 
 // GCP KMS crypto key version

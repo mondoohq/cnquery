@@ -2,8 +2,8 @@ package gcp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 
@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
+	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/cloud/location"
@@ -339,7 +340,7 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetVersions() ([]interface{}, 
 	return versions, nil
 }
 
-func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() ([]interface{}, error) {
+func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() (interface{}, error) {
 	cryptokey, err := g.ResourcePath()
 	if err != nil {
 		return nil, err
@@ -367,19 +368,34 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() ([]interface{},
 	if err != nil {
 		return nil, err
 	}
-	res := make([]interface{}, 0, len(policy.Bindings))
-	for i, b := range policy.Bindings {
-		mqlBinding, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
-			"id", cryptokey+"-"+strconv.Itoa(i),
-			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
-		)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, mqlBinding)
+
+	data, err := json.Marshal(policy)
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+
+	convPolicy := &cloudresourcemanager.Policy{}
+	if err := json.Unmarshal(data, convPolicy); err != nil {
+		return nil, err
+	}
+
+	policyId := fmt.Sprintf("gcp.project.kmsService.keyring.cryptokey/%s/gcp.iamPolicy", cryptokey)
+	auditConfigs, err := auditConfigsToMql(g.MotorRuntime, convPolicy.AuditConfigs, fmt.Sprintf("%s/auditConfigs", policyId))
+	if err != nil {
+		return nil, err
+	}
+
+	bindings, err := bindingsToMql(g.MotorRuntime, convPolicy.Bindings, fmt.Sprintf("%s/bindings", policyId))
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.iamPolicy",
+		"id", policyId,
+		"auditConfigs", auditConfigs,
+		"bindings", bindings,
+		"version", int64(policy.Version),
+	)
 }
 
 func cryptoKeyVersionToMql(runtime *resources.Runtime, v *kmspb.CryptoKeyVersion) (resources.ResourceType, error) {
