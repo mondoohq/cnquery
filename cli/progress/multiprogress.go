@@ -15,6 +15,14 @@ import (
 	"go.mondoo.com/cnquery/logger"
 )
 
+type ProgressOption = func(*modelMultiProgress)
+
+func WithScore() ProgressOption {
+	return func(p *modelMultiProgress) {
+		p.includeScore = true
+	}
+}
+
 type MultiProgress interface {
 	Open() error
 	OnProgress(index string, percent float64)
@@ -95,6 +103,7 @@ type modelMultiProgress struct {
 	orderedKeys        []string
 	lock               sync.Mutex
 	maxProgressBarWith int
+	includeScore       bool
 }
 
 type multiProgressBars struct {
@@ -122,8 +131,9 @@ func newProgressBar() progress.Model {
 // The key of the map is used to identify the progress bar.
 // The value of the map is used as the name displayed for the progress bar.
 // orderedKeys is used to define the order of the progress bars.
-func NewMultiProgressBars(elements map[string]string, orderedKeys []string) (*multiProgressBars, error) {
-	program, err := newMultiProgressProgram(elements, orderedKeys)
+// includeScore indicates if the score should be displayed after the progress bar. This will only be used for spacing
+func NewMultiProgressBars(elements map[string]string, orderedKeys []string, opts ...ProgressOption) (*multiProgressBars, error) {
+	program, err := newMultiProgressProgram(elements, orderedKeys, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,17 +191,17 @@ func (m *multiProgressBars) Close() {
 }
 
 // create the actual tea.Program
-func newMultiProgressProgram(elements map[string]string, orderedKeys []string) (*tea.Program, error) {
+func newMultiProgressProgram(elements map[string]string, orderedKeys []string, opts ...ProgressOption) (*tea.Program, error) {
 	if len(elements) != len(orderedKeys) {
 		return nil, fmt.Errorf("number of elements and orderedKeys must be equal")
 	}
-	m := newMultiProgress(elements)
+	m := newMultiProgress(elements, opts...)
 	m.maxItemsToShow = defaultProgressNumAssets
 	m.orderedKeys = orderedKeys
 	return tea.NewProgram(m), nil
 }
 
-func newMultiProgress(elements map[string]string) *modelMultiProgress {
+func newMultiProgress(elements map[string]string, opts ...ProgressOption) *modelMultiProgress {
 	numBars := len(elements)
 	if numBars > 1 {
 		numBars++
@@ -203,8 +213,11 @@ func newMultiProgress(elements map[string]string) *modelMultiProgress {
 		maxNameWidth:       0,
 		maxProgressBarWith: defaultWidth,
 	}
+	for _, opt := range opts {
+		opt(m)
+	}
 
-	maxNameWidth := ansi.PrintableRuneWidth("overall")
+	maxNameWidth := ansi.PrintableRuneWidth(overallProgressIndexName)
 	for _, v := range elements {
 		if len(v) > maxNameWidth {
 			maxNameWidth = ansi.PrintableRuneWidth(v)
@@ -212,16 +225,13 @@ func newMultiProgress(elements map[string]string) *modelMultiProgress {
 	}
 	m.maxNameWidth = maxNameWidth
 
-	terminalWidth, err := components.TerminalWidth(os.Stdout)
-	if err == nil {
-		w := terminalWidth - maxNameWidth - 8 // 5 for percentage + space
-		if w > 10 {
-			m.maxProgressBarWith = w
-		}
+	w := m.calculateMaxProgressBarWidth()
+	if w > 10 {
+		m.maxProgressBarWith = w
 	}
 
 	if numBars > 1 {
-		m.add(overallProgressIndexName, "overall", m.maxProgressBarWith)
+		m.add(overallProgressIndexName, overallProgressIndexName, m.maxProgressBarWith)
 	}
 
 	for k, v := range elements {
@@ -233,6 +243,19 @@ func newMultiProgress(elements map[string]string) *modelMultiProgress {
 
 func (m *modelMultiProgress) Init() tea.Cmd {
 	return nil
+}
+
+func (m *modelMultiProgress) calculateMaxProgressBarWidth() int {
+	w := 0
+	terminalWidth, err := components.TerminalWidth(os.Stdout)
+	if err == nil {
+		w = terminalWidth - m.maxNameWidth - 8 // 5 for percentage + space
+		// space for " score: F"
+		if m.includeScore {
+			w -= 9
+		}
+	}
+	return w
 }
 
 func (m modelMultiProgress) add(key string, name string, width int) {
@@ -257,14 +280,12 @@ func (m *modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
+		w := m.calculateMaxProgressBarWidth()
+		if w > 10 {
+			m.maxProgressBarWith = w
+		}
 		for k := range m.Progress {
-			m.Progress[k].model.Update(msg)
-
-			m.Progress[k].model.Width = msg.Width - padding*2 - 4 - m.maxNameWidth
-			if m.Progress[k].model.Width > m.maxProgressBarWith {
-				m.Progress[k].model.Width = m.maxProgressBarWith
-			}
-
+			m.Progress[k].model.Width = m.maxProgressBarWith
 		}
 		return m, nil
 
