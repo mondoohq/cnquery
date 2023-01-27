@@ -26,13 +26,17 @@ type cliReporter struct {
 
 func (r *cliReporter) print() error {
 	// catch case where the scan was not successful and no bundle was fetched from server
-	if r.data == nil || r.data.Bundle == nil {
+	if r.data == nil {
 		return nil
 	}
 
-	r.bundle = r.data.Bundle.ToMap()
+	if r.data.Bundle != nil {
+		r.bundle = r.data.Bundle.ToMap()
+	} else {
+		r.bundle = nil
+	}
 
-	if !r.isSummary {
+	if !r.isSummary && r.bundle != nil {
 		r.printQueryData()
 	}
 
