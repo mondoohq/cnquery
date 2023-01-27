@@ -217,26 +217,29 @@ func newMultiProgress(elements map[string]string, opts ...ProgressOption) *model
 		opt(m)
 	}
 
-	maxNameWidth := ansi.PrintableRuneWidth(overallProgressIndexName)
-	for _, v := range elements {
-		if len(v) > maxNameWidth {
-			maxNameWidth = ansi.PrintableRuneWidth(v)
-		}
+	if numBars > 1 {
+		// add overall with max possible length, so we do not have to move progress bars later on
+		// this can get especially ugly when the overall name gets longer than the other names during runtime
+		// overallName := fmt.Sprintf("overall %d/%d scanned %d/%d errored", numBars, numBars, numBars, numBars)
+		m.add(overallProgressIndexName, overallProgressIndexName, m.maxProgressBarWith)
 	}
-	m.maxNameWidth = maxNameWidth
 
 	w := m.calculateMaxProgressBarWidth()
 	if w > 10 {
 		m.maxProgressBarWith = w
 	}
 
-	if numBars > 1 {
-		m.add(overallProgressIndexName, overallProgressIndexName, m.maxProgressBarWith)
-	}
-
 	for k, v := range elements {
 		m.add(k, v, m.maxProgressBarWith)
 	}
+
+	maxNameWidth := 0
+	for k := range m.Progress {
+		if len(m.Progress[k].Name) > maxNameWidth {
+			maxNameWidth = ansi.PrintableRuneWidth(m.Progress[k].Name)
+		}
+	}
+	m.maxNameWidth = maxNameWidth
 
 	return m
 }
@@ -258,7 +261,7 @@ func (m *modelMultiProgress) calculateMaxProgressBarWidth() int {
 	return w
 }
 
-func (m modelMultiProgress) add(key string, name string, width int) {
+func (m *modelMultiProgress) add(key string, name string, width int) {
 	progressbar := newProgressBar()
 	progressbar.Width = width
 	m.Progress[key] = &modelProgress{
@@ -497,15 +500,16 @@ func (m *modelMultiProgress) View() string {
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		percent := m.Progress[overallProgressIndexName].percent
 		name := m.Progress[overallProgressIndexName].Name
-		name += fmt.Sprintf(" %d/%d scanned", completedAssets, len(m.Progress)-1)
+		stats := fmt.Sprintf("%d/%d scanned", completedAssets, len(m.Progress)-1)
 
 		if erroredAssets > 0 {
-			name += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
+			stats += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
 		}
 
 		pad := strings.Repeat(" ", m.maxNameWidth-len(name))
 		output += "\n"
-		output += " " + name + pad + " " + m.Progress[overallProgressIndexName].model.ViewAs(percent)
+		output += " " + name + pad + " " + m.Progress[overallProgressIndexName].model.ViewAs(percent) + "\n"
+		output += " " + stats
 	}
 
 	return "\n" + pad + output + "\n\n"
