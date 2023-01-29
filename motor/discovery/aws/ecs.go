@@ -12,6 +12,7 @@ import (
 	ecsservice "github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
@@ -20,6 +21,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/stringx"
 )
@@ -210,11 +212,27 @@ func ecsContainerToAsset(ctx context.Context, account string, region string, c e
 					if *detail.Name == "networkInterfaceId" {
 						publicIp = getPublicIpForContainer(ctx, clonedConfig, *detail.Value)
 					}
-
+					taskId := ""
+					if ok := arn.IsARN(*c.TaskArn); ok {
+						if parsed, err := arn.Parse(*c.TaskArn); err == nil {
+							taskIds := strings.Split(parsed.Resource, "/")
+							taskId = taskIds[len(taskIds)-1]
+						}
+					}
 					// add connections here
 					asset.Connections = append(asset.Connections, &providers.Config{
-						// Backend: providers.ProviderType_SSH, // looking into ecs-exec for this
-						Host: publicIp,
+						Backend: providers.ProviderType_SSH,
+						Host:    publicIp,
+						Runtime: providers.RUNTIME_AWS_ECS,
+						Credentials: []*vault.Credential{
+							{Type: vault.CredentialType_aws_ecs_connect},
+						},
+						Options: map[string]string{
+							"region":    region,
+							"cluster":   clusterName,
+							"task-id":   taskId,
+							"container": *c.Name,
+						},
 					})
 				}
 			}

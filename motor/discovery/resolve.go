@@ -152,7 +152,9 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialF
 
 		for ai := range resolvedAssets {
 			assetObj := resolvedAssets[ai]
-
+			if assetObj == nil {
+				continue
+			}
 			// copy over id detector overwrite
 			assetObj.IdDetector = root.IdDetector
 

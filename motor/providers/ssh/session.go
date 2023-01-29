@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -196,6 +198,35 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 
 			// NOTE: this creates a side-effect where the host is overwritten
 			pCfg.Host = creds.PublicIpAddress
+		case vault.CredentialType_aws_ecs_connect:
+			err := awsssmsession.CheckPlugin()
+			if err != nil {
+				return nil, nil, errors.New("Local AWS Session Manager plugin is missing. See https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html for information on the AWS Session Manager plugin and installation instructions")
+			}
+
+			loadOpts := []func(*config.LoadOptions) error{}
+			if pCfg.Options != nil && pCfg.Options["profile"] != "" {
+				loadOpts = append(loadOpts, config.WithSharedConfigProfile(pCfg.Options["profile"]))
+			}
+			log.Debug().Str("profile", pCfg.Options["profile"]).Str("region", pCfg.Options["region"]).Msg("using aws creds")
+
+			cfg, err := config.LoadDefaultConfig(context.Background(), loadOpts...)
+			if err != nil {
+				return nil, nil, err
+			}
+			cfg.Region = pCfg.Options["region"]
+			ecsservice := ecs.NewFromConfig(cfg)
+			_, err = ecsservice.ExecuteCommand(context.TODO(), &ecs.ExecuteCommandInput{
+				Task:      aws.String(pCfg.Options["task-id"]),
+				Cluster:   aws.String(pCfg.Options["cluster"]),
+				Container: aws.String(pCfg.Options["container"]),
+				// todo: replace command with download mondoo + run scan
+				Command:     aws.String("/bin/bash"),
+				Interactive: true,
+			})
+			if err != nil {
+				return nil, nil, err
+			}
 		default:
 			return nil, nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
 		}
