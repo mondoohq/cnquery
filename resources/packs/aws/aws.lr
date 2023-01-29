@@ -1058,6 +1058,46 @@ private aws.redshift.cluster @defaults("arn") {
   tags map[string]string
 }
 
+// AWS Elastic Container Registry
+aws.ecr {
+  // List of private repositories
+  privateRepositories() []aws.ecr.repository
+  // List of public repositories associated with the AWS account
+  publicRepositories() []aws.ecr.repository
+  // List of images
+  images() []aws.ecr.image
+}
+
+private aws.ecr.repository {
+  // ARN of the repository
+  arn string
+  // Name of the repository
+  name string
+  // URI of the repository, used for push/pull operations
+  uri string
+  // AWS Account ID associated with public registry for this repository
+  registryId string
+  // Denotes whether or not the repository is public
+  public bool
+  // List of images in the repository
+  images() []aws.ecr.image
+  // Region where the image is stored
+  region string
+}
+
+private aws.ecr.image {
+  // SHA256 of the image manifest
+  digest string
+  // Type of image manifest
+  mediaType string
+  // List of tags associated with image
+  tags []string
+  // AWS Account ID associated with public registry for this image
+  registryId string
+  // Name of the repository for the image
+  repoName string
+}
+
 // AWS Database Migration Service (DMS)
 aws.dms {
   // List of DMS replication instances
