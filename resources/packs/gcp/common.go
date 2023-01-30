@@ -4,8 +4,14 @@ import (
 	"strings"
 	"time"
 
+	"go.mondoo.com/cnquery/resources"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func RegionNameFromRegionUrl(regionUrl string) string {
+	regionUrlSegments := strings.Split(regionUrl, "/")
+	return regionUrlSegments[len(regionUrlSegments)-1]
+}
 
 func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
 	if t == nil {
@@ -19,4 +25,29 @@ func timestampAsTimePtr(t *timestamppb.Timestamp) *time.Time {
 func parseResourceName(fullPath string) string {
 	segments := strings.Split(fullPath, "/")
 	return segments[len(segments)-1]
+}
+
+type assetIdentifier struct {
+	name    string
+	region  string
+	project string
+}
+
+func getAssetIdentifier(runtime *resources.Runtime) *assetIdentifier {
+	a := runtime.Motor.GetAsset()
+	if a == nil {
+		return nil
+	}
+	var name, region, project string
+	for _, id := range a.PlatformIds {
+		if strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gcp/") {
+			// "//platformid.api.mondoo.app/runtime/gcp/{o.service}/v1/projects/{project}/regions/{region}/{objectType}/{name}"
+			segments := strings.Split(id, "/")
+			name = segments[len(segments)-1]
+			region = segments[10]
+			project = segments[8]
+			break
+		}
+	}
+	return &assetIdentifier{name: name, region: region, project: project}
 }

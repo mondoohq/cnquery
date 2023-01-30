@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 	"go.mondoo.com/cnquery/motor/vault"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -82,11 +83,17 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		requireServiceAccount = true
 	}
 
+	var override string
+	if pCfg.Options != nil {
+		override = pCfg.Options["platform-override"]
+	}
+
 	t := &Provider{
-		resourceType: resourceType,
-		id:           id,
-		opts:         pCfg.Options,
-		cred:         cred,
+		resourceType:     resourceType,
+		id:               id,
+		opts:             pCfg.Options,
+		cred:             cred,
+		platformOverride: override,
 	}
 
 	serviceAccount, err := loadCredentialsFromEnv("GOOGLEWORKSPACE_CREDENTIALS", "GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON", "GOOGLE_CREDENTIALS")
@@ -134,6 +141,11 @@ type Provider struct {
 	// serviceAccountSubject subject is used to impersonate a subject
 	serviceAccountSubject string
 	cred                  *vault.Credential
+	platformOverride      string
+}
+
+func (p *Provider) GetCredential() *vault.Credential {
+	return proto.Clone(p.cred).(*vault.Credential)
 }
 
 func (p *Provider) FS() afero.Fs {
@@ -170,6 +182,15 @@ func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 }
 
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {
+	if p.platformOverride != "" {
+		return &platform.Platform{
+			Name:    p.platformOverride,
+			Title:   getTitleForPlatformName(p.platformOverride),
+			Kind:    providers.Kind_KIND_GCP_OBJECT,
+			Runtime: providers.RUNTIME_GCP,
+		}, nil
+	}
+
 	name := "gcp"
 	title := "Google Cloud Platform"
 
@@ -184,6 +205,26 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 		Kind:    providers.Kind_KIND_API,
 		Runtime: p.Runtime(),
 	}, nil
+}
+
+func getTitleForPlatformName(name string) string {
+	switch name {
+	case "gcp-compute-image":
+		return "GCP Compute Image"
+	case "gcp-compute-network":
+		return "GCP Compute Network"
+	case "gcp-compute-subnetwork":
+		return "GCP Compute Subnetwork"
+	case "gcp-compute-firewall":
+		return "GCP Compute Firewall"
+	case "gcp-gke-cluster":
+		return "GCP GKE Cluster"
+	case "gcp-storage-bucket":
+		return "GCP Storage Bucket"
+	case "gcp-bigquery-dataset":
+		return "GCP BigQuery Dataset"
+	}
+	return "Google Cloud Platform"
 }
 
 func loadCredentialsFromEnv(envs ...string) ([]byte, error) {

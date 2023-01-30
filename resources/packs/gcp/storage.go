@@ -161,6 +161,48 @@ func (g *mqlGcpProjectStorageServiceBucket) id() (string, error) {
 	return fmt.Sprintf("gcp.project.storageService.bucket/%s/%s", projectId, id), nil
 }
 
+func (g *mqlGcpProjectStorageServiceBucket) init(args *resources.Args) (*resources.Args, GcpProjectStorageServiceBucket, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+		(*args)["name"] = ids.name
+		(*args)["projectId"] = ids.project
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.storageService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	storageSvc := obj.(GcpProjectStorageService)
+	buckets, err := storageSvc.Buckets()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, b := range buckets {
+		bucket := b.(GcpProjectStorageServiceBucket)
+		name, err := bucket.Name()
+		if err != nil {
+			return nil, nil, err
+		}
+		projectId, err := bucket.ProjectId()
+		if err != nil {
+			return nil, nil, err
+		}
+		location, err := bucket.Location()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if name == (*args)["name"] && projectId == (*args)["projectId"] && location == (*args)["location"] {
+			return args, bucket, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
+}
+
 func (g *mqlGcpProjectStorageServiceBucket) GetIamPolicy() ([]interface{}, error) {
 	bucketName, err := g.Name()
 	if err != nil {

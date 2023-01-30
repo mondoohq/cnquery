@@ -21,7 +21,13 @@ func (k *GcpProjectResolver) Name() string {
 }
 
 func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects, DiscoveryInstances}
+	return []string{
+		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects,
+		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
+		DiscoveryGkeClusters,
+		DiscoveryStorageBuckets,
+		DiscoveryBigQueryDatasets,
+	}
 }
 
 func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -45,6 +51,11 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		return nil, errors.New("could not create gcp provider")
 	}
 
+	// If there is a service account provided in the inventory, resolve it and then copy it to the provider config we use
+	if len(tc.Credentials) != 0 {
+		tc.Credentials[0] = provider.GetCredential()
+	}
+
 	identifier, err := provider.Identifier()
 	if err != nil {
 		return nil, err
@@ -65,8 +76,9 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 	}
 	// ^^
 
+	var resolvedRoot *asset.Asset
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects) {
-		resolved = append(resolved, &asset.Asset{
+		resolvedRoot = &asset.Asset{
 			PlatformIds: []string{identifier},
 			Name:        "GCP project " + project,
 			Platform:    pf,
@@ -74,7 +86,26 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 			Labels: map[string]string{
 				common.ParentId: project,
 			},
-		})
+		}
+		resolved = append(resolved, resolvedRoot)
+	}
+
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll,
+		DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
+		DiscoveryGkeClusters,
+		DiscoveryStorageBuckets,
+		DiscoveryBigQueryDatasets) {
+		assetList, err := GatherAssets(tc, project)
+		if err != nil {
+			return nil, err
+		}
+		for i := range assetList {
+			a := assetList[i]
+			if resolvedRoot != nil {
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			}
+			resolved = append(resolved, a)
+		}
 	}
 
 	// discover compute instances

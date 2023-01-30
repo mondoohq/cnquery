@@ -48,6 +48,11 @@ func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credential
 	if assetInfo.Platform != nil {
 		pCfg.Kind = assetInfo.Platform.Kind
 		pCfg.Runtime = assetInfo.Platform.Runtime
+		if pCfg.Options == nil {
+			pCfg.Options = map[string]string{}
+		}
+		// set platform name override to ensure we get the correct platform at policy execution time
+		pCfg.Options["platform-override"] = assetInfo.Platform.Name
 	}
 
 	// parse reference id and restore options
@@ -90,6 +95,11 @@ func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credentia
 		if assetInfo.Platform != nil {
 			pCfg.Kind = assetInfo.Platform.Kind
 			pCfg.Runtime = assetInfo.Platform.Runtime
+			if pCfg.Options == nil {
+				pCfg.Options = map[string]string{}
+			}
+			// set platform name override to ensure we get the correct platform at policy execution time
+			pCfg.Options["platform-override"] = assetInfo.Platform.Name
 		}
 
 		// parse reference id and restore options

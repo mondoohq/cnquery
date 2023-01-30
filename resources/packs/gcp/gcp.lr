@@ -434,6 +434,8 @@ private gcp.project.computeService.snapshot @defaults("name") {
 private gcp.project.computeService.image @defaults("id name") {
   // Unique identifier
   id string
+  // Project ID
+  projectId string
   // Name of the resource
   name string
   // Optional description
@@ -460,6 +462,8 @@ private gcp.project.computeService.image @defaults("id name") {
 private gcp.project.computeService.firewall @defaults("name") {
   // Unique Identifier
   id string
+  // Project ID
+  projectId string
   // User-provided name
   name string
   // An optional description of this resource
@@ -492,6 +496,8 @@ private gcp.project.computeService.firewall @defaults("name") {
 private gcp.project.computeService.network @defaults("name") {
   // Unique Identifier
   id string
+  // Project ID
+  projectId string
   // Name of the resource
   name string
   // An optional description of this resource
@@ -1013,7 +1019,7 @@ private gcp.project.bigqueryService {
 }
 
 // GCP BigQuery dataset
-private gcp.project.bigqueryService.dataset @defaults("name") {
+private gcp.project.bigqueryService.dataset @defaults("id name") {
   // Dataset ID
   id string
   // Project ID
@@ -1274,8 +1280,10 @@ private gcp.project.gkeService.cluster @defaults("name") {
   enableKubernetesAlpha bool
   // Whether Autopilot is enabled for the cluster
   autopilotEnabled bool
-  // The name of the Google Compute Engine zone in which the cluster resides
+  // Deprecated. Use location instead.
   zone string
+  // Name of the Google Compute Engine zone/region in which the cluster exists
+  location string
   // The IP address of this cluster's master endpoint
   endpoint string
   // The initial Kubernetes version for this cluster

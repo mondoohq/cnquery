@@ -174,6 +174,49 @@ func (g *mqlGcpProjectBigqueryServiceDataset) id() (string, error) {
 	return "gcp.project.bigqueryService.dataset/" + projectId + "/" + name, nil
 }
 
+func (g *mqlGcpProjectBigqueryServiceDataset) init(args *resources.Args) (*resources.Args, GcpProjectBigqueryServiceDataset, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+		(*args)["id"] = ids.name
+		(*args)["location"] = ids.region
+		(*args)["projectId"] = ids.project
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.bigqueryService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	bigquerySvc := obj.(GcpProjectBigqueryService)
+	datasets, err := bigquerySvc.Datasets()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, d := range datasets {
+		dataset := d.(GcpProjectBigqueryServiceDataset)
+		id, err := dataset.Id()
+		if err != nil {
+			return nil, nil, err
+		}
+		location, err := dataset.Location()
+		if err != nil {
+			return nil, nil, err
+		}
+		projectId, err := dataset.ProjectId()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if id == (*args)["id"] && projectId == (*args)["projectId"] && location == (*args)["location"] {
+			return args, dataset, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
+}
+
 func (g *mqlGcpProjectBigqueryServiceDatasetAccessEntry) id() (string, error) {
 	return g.Id()
 }
