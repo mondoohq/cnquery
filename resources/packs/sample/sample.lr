@@ -3,6 +3,7 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/sample"
 sample.project {
   id() string
   compute() sample.project.computeService
+  gke() sample.project.gkeService
 }
 
 private sample.project.computeService {
@@ -11,6 +12,16 @@ private sample.project.computeService {
 }
 
 private sample.project.compute.instance {
+  id string
+  name string
+}
+
+private sample.project.gkeService {
+  projectId string
+  clusters() []sample.project.gkeService.cluster
+}
+
+private sample.project.gkeService.cluster {
   id string
   name string
 }

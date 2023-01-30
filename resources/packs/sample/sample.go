@@ -74,3 +74,40 @@ func (g *mqlSampleProjectComputeService) GetInstances() ([]interface{}, error) {
 	}
 	return res, nil
 }
+
+func (g *mqlSampleProject) GetGke() (interface{}, error) {
+	return g.MotorRuntime.CreateResource("sample.project.gkeService",
+		"projectId", "sampleProjectId",
+	)
+}
+
+func (g *mqlSampleProjectGkeService) id() (string, error) {
+	id, err := g.ProjectId()
+	if err != nil {
+		return "", err
+	}
+	return "sample.project.gkeService/" + id, nil
+}
+
+func (g *mqlSampleProjectGkeServiceCluster) id() (string, error) {
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return "sample.project.gkeService.cluster/" + id, nil
+}
+
+func (g *mqlSampleProjectGkeService) GetClusters() ([]interface{}, error) {
+	res := make([]interface{}, 0, 3)
+	for i := 0; i < 3; i++ {
+		r, err := g.MotorRuntime.CreateResource("sample.project.gkeService.cluster",
+			"id", fmt.Sprintf("sampleId-%d", i),
+			"name", fmt.Sprintf("gke-cluster-%d", i),
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
+}

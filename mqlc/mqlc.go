@@ -1069,13 +1069,6 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 		}
 	}
 
-	h, _ := builtinFunction(typ, id)
-	if h != nil {
-		call = filterTrailingNullArgs(call)
-		typ, err := c.compileBuiltinFunction(h, id, binding, call)
-		return true, typ, err
-	}
-
 	return false, types.Nil, nil
 }
 
@@ -1093,8 +1086,20 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		if !ok {
 			break
 		}
+
 		resource, id = nuResource, nuID
+
 		calls = calls[1:]
+		// foundField := false
+		// for _, f := range nuResource.Fields {
+		// 	if len(calls) > 0 && !f.IsImplicitResource && f.Name == *calls[0].Ident {
+		// 		foundField = true
+		// 		break
+		// 	}
+		// }
+		// if foundField {
+		// 	break
+		// }
 	}
 
 	var call *parser.Call

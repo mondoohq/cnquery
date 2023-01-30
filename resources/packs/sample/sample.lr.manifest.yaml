@@ -2,6 +2,7 @@ resources:
   sample.project:
     fields:
       compute: {}
+      gke: {}
       id: {}
     min_mondoo_version: latest
   sample.project.compute.instance:
@@ -20,4 +21,16 @@ resources:
     fields:
       id: {}
       name: {}
+    min_mondoo_version: latest
+  sample.project.gkeService:
+    fields:
+      clusters: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+  sample.project.gkeService.cluster:
+    fields:
+      id: {}
+      name: {}
+    is_private: true
     min_mondoo_version: latest
