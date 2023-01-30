@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	mysql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
@@ -11,7 +12,11 @@ import (
 )
 
 func (a *mqlAzureSubscriptionMysqlService) id() (string, error) {
-	return "azure.mysql", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/mySqlService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionMysqlServiceServer) id() (string, error) {
@@ -55,7 +60,7 @@ func (a *mqlAzureSubscriptionMysqlService) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mysql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -101,7 +106,7 @@ func (a *mqlAzureSubscriptionMysqlService) GetFlexibleServers() ([]interface{}, 
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mysql.flexibleServer",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.flexibleServer",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -158,7 +163,7 @@ func (a *mqlAzureSubscriptionMysqlServiceServer) GetConfiguration() ([]interface
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -218,7 +223,7 @@ func (a *mqlAzureSubscriptionMysqlServiceServer) GetDatabases() ([]interface{}, 
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mysql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -275,7 +280,7 @@ func (a *mqlAzureSubscriptionMysqlServiceFlexibleServer) GetDatabases() ([]inter
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mysql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -332,7 +337,7 @@ func (a *mqlAzureSubscriptionMysqlServiceServer) GetFirewallRules() ([]interface
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -389,7 +394,7 @@ func (a *mqlAzureSubscriptionMysqlServiceFlexibleServer) GetConfiguration() ([]i
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -449,7 +454,7 @@ func (a *mqlAzureSubscriptionMysqlServiceFlexibleServer) GetFirewallRules() ([]i
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

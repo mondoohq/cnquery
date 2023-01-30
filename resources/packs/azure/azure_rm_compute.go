@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
@@ -14,7 +15,11 @@ import (
 )
 
 func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
-	return "azure.compute", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/computeService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionComputeService) GetDisks() ([]interface{}, error) {
@@ -80,7 +85,7 @@ func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.Resourc
 			zones = append(zones, *z)
 		}
 	}
-	return runtime.CreateResource("azure.compute.disk",
+	return runtime.CreateResource("azure.subscription.computeService.disk",
 		"id", core.ToString(disk.ID),
 		"name", core.ToString(disk.Name),
 		"location", core.ToString(disk.Location),
@@ -129,7 +134,7 @@ func (a *mqlAzureSubscriptionComputeService) GetVms() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureVm, err := a.MotorRuntime.CreateResource("azure.compute.vm",
+			mqlAzureVm, err := a.MotorRuntime.CreateResource("azure.subscription.computeService.vm",
 				"id", core.ToString(vm.ID),
 				"name", core.ToString(vm.Name),
 				"location", core.ToString(vm.Location),

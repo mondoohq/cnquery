@@ -298,6 +298,8 @@ private azure.subscription.resourcegroup @defaults("name location") {
 
 // Azure Compute
 private azure.subscription.computeService {
+  // The subscription identifier
+  subscriptionId string
   // Lists all compute instances
   vms() []azure.subscription.computeService.vm
   // Lists all the disks under a subscription
@@ -352,6 +354,8 @@ private azure.subscription.computeService.disk @defaults("id name location") {
 
 // Azure Network
 private azure.subscription.networkService {
+  // The subscription identifier
+  subscriptionId string
   // List of network interfaces
   interfaces() []azure.subscription.networkService.interface
   // List of network security groups
@@ -476,6 +480,8 @@ private azure.subscription.networkService.watcher.flowlog @defaults("name locati
 
 // Azure Storage
 private azure.subscription.storageService {
+  // The subscription identifier
+  subscriptionId string
   // List of storage accounts
   accounts() []azure.subscription.storageService.account
 }
@@ -618,6 +624,8 @@ private azure.subscription.storageService.container @defaults("id name") {
 
 // Azure Web
 private azure.subscription.webService {
+  // The subscription identifier
+  subscriptionId string
   // List of web apps
   apps() []azure.subscription.webService.appsite
   // Available runtimes 
@@ -686,6 +694,8 @@ private azure.subscription.webService.appsiteconfig @defaults("id name") {
 
 // Azure SQL
 private azure.subscription.sqlService {
+  // The subscription identifier
+  subscriptionId string
   // List of SQL servers
   servers() []azure.subscription.sqlService.server
 }
@@ -858,8 +868,10 @@ private azure.subscription.sqlService.databaseusage @defaults("id name") {
 
 // Azure Database for PostgreSQL
 private  azure.subscription.postgresqlService {
-   // List of PostgreSQL servers
-   servers() []azure.subscription.postgresqlService.server
+  // The subscription identifier
+  subscriptionId string
+  // List of PostgreSQL servers
+  servers() []azure.subscription.postgresqlService.server
 }
 
 // Azure Database for PostgreSQL Server
@@ -900,6 +912,8 @@ private azure.subscription.postgresqlService.database  @defaults("id name") {
 
 // Azure Database for MySQL
 private azure.subscription.mysqlService {
+  // The subscription identifier
+  subscriptionId string
   // List of MySQL servers
   servers() []azure.subscription.mysqlService.server
   // List of Flexible MySQL servers
@@ -966,6 +980,8 @@ private azure.subscription.mysqlService.flexibleServer @defaults("id name locati
 
 // Azure Database for MariaDB
 private azure.subscription.mariadbService {
+  // The subscription identifier
+  subscriptionId string
   // List of MariaDB servers
   servers() []azure.subscription.mariadbService.server
 }
@@ -1044,6 +1060,8 @@ private azure.subscription.sqlService.firewallrule  @defaults("id name") {
 
 // Azure Key Vault
 private azure.subscription.keyvaultService {
+  // The subscription identifier
+  subscriptionId string
   // List of Azure key vaults
   vaults() []azure.subscription.keyvaultService.vault
 }
@@ -1160,6 +1178,8 @@ private azure.subscription.keyvaultService.secret  @defaults("id secretName") {
 
 // Azure Monitor
 private azure.subscription.monitorService {
+  // The subscription identifier
+  subscriptionId string
   // List of log profiles
   logProfiles() []azure.subscription.monitorService.logprofile
   // List of diagnostic settings for the subscription
@@ -1230,6 +1250,8 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
 
 // Azure Microsoft Cloud Defender
 private azure.subscription.cloudDefenderService {
+  // The subscription identifier
+  subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
   // List of Defender For Server components and whether they are enabled
@@ -1256,6 +1278,8 @@ private azure.subscription.cloudDefenderService.securityContact {
 
 // Azure Authorization
 private azure.subscription.authorizationService {
+  // The subscription identifier
+  subscriptionId string
   // Role definitions for the Azure subscription
   roleDefinitions() []azure.subscription.authorizationService.roleDefinition
 }

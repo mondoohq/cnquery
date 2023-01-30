@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 
@@ -12,7 +13,11 @@ import (
 )
 
 func (a *mqlAzureSubscriptionPostgresqlService) id() (string, error) {
-	return "azure.postgresql", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/computeService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionPostgresqlServiceDatabase) id() (string, error) {
@@ -56,7 +61,7 @@ func (a *mqlAzureSubscriptionPostgresqlService) GetServers() ([]interface{}, err
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.postgresql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.postgresqlService.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -120,7 +125,7 @@ func (a *mqlAzureSubscriptionPostgresqlServiceServer) GetConfiguration() ([]inte
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -181,7 +186,7 @@ func (a *mqlAzureSubscriptionPostgresqlServiceServer) GetDatabases() ([]interfac
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.postgresql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.postgresqlService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -239,7 +244,7 @@ func (a *mqlAzureSubscriptionPostgresqlServiceServer) GetFirewallRules() ([]inte
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

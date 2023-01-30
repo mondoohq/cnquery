@@ -775,6 +775,7 @@ resources:
   azure.subscription.authorizationService:
     fields:
       roleDefinitions: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -832,6 +833,7 @@ resources:
       defenderForServers: {}
       monitoringAgentAutoProvision: {}
       securityContacts: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -891,6 +893,7 @@ resources:
   azure.subscription.computeService:
     fields:
       disks: {}
+      subscriptionId: {}
       vms: {}
     is_private: true
     min_mondoo_version: latest
@@ -1010,6 +1013,7 @@ resources:
       - azure
   azure.subscription.keyvaultService:
     fields:
+      subscriptionId: {}
       vaults: {}
     is_private: true
     min_mondoo_version: latest
@@ -1127,6 +1131,7 @@ resources:
   azure.subscription.mariadbService:
     fields:
       servers: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1220,6 +1225,7 @@ resources:
       activityLog: {}
       diagnosticSettings: {}
       logProfiles: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1328,6 +1334,7 @@ resources:
     fields:
       flexibleServers: {}
       servers: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1467,6 +1474,7 @@ resources:
     fields:
       interfaces: {}
       securityGroups: {}
+      subscriptionId: {}
       watchers: {}
     is_private: true
     min_mondoo_version: latest
@@ -1591,6 +1599,7 @@ resources:
   azure.subscription.postgresqlService:
     fields:
       servers: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1797,6 +1806,7 @@ resources:
   azure.subscription.sqlService:
     fields:
       servers: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2052,6 +2062,7 @@ resources:
   azure.subscription.storageService:
     fields:
       accounts: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -2224,6 +2235,7 @@ resources:
     fields:
       apps: {}
       availableRuntimes: {}
+      subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
     platform:

@@ -115,51 +115,111 @@ func (a *mqlAzureSubscription) GetResourceGroups() ([]interface{}, error) {
 }
 
 func (a *mqlAzureSubscription) GetCompute() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.compute")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.computeService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetNetwork() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.network")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.networkService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetStorage() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.storage")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.storageService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetWeb() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.web")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.webService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetSql() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.sql")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.sqlService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetMySql() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.mysql")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.mysqlService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetPostgreSql() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.postgresql")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.postgresqlService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetMariaDb() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.mariadb")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.mariadbService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetKeyVault() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.keyvault")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.keyvaultService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetAuthorization() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.authorization")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.authorizationService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetMonitor() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.monitor")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.monitorService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetCloudDefender() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.cloudDefender")
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return nil, err
+	}
+	return a.MotorRuntime.CreateResource("azure.subscription.cloudDefenderService",
+		"subscriptionId", subId)
 }
 
 func (a *mqlAzureSubscription) GetId() (string, error) {
@@ -262,7 +322,7 @@ func (a *mqlAzureSubscription) GetResources() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.resource",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.resource",
 				"id", core.ToString(resource.ID),
 				"name", core.ToString(resource.Name),
 				"kind", core.ToString(resource.Kind),

@@ -54,7 +54,7 @@ func (a *mqlAzure) GetResources() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.resource",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.resource",
 				"id", core.ToString(resource.ID),
 				"name", core.ToString(resource.Name),
 				"kind", core.ToString(resource.Kind),

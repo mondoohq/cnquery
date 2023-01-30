@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	sql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
@@ -12,7 +13,11 @@ import (
 )
 
 func (a *mqlAzureSubscriptionSqlService) id() (string, error) {
-	return "azure.sql", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/sqlService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceConfiguration) id() (string, error) {
@@ -56,7 +61,7 @@ func (a *mqlAzureSubscriptionSqlService) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.sql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -118,7 +123,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) GetDatabases() ([]interface{}, er
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.sql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -231,7 +236,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) GetVulnerabilityAssessmentSetting
 	if err != nil {
 		return nil, err
 	}
-	return a.MotorRuntime.CreateResource("azure.sql.server.vulnerabilityassessmentsettings",
+	return a.MotorRuntime.CreateResource("azure.subscription.sqlService.server.vulnerabilityassessmentsettings",
 		"id", core.ToString(vaSettings.ID),
 		"name", core.ToString(vaSettings.Name),
 		"type", core.ToString(vaSettings.Type),
@@ -286,7 +291,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) GetFirewallRules() ([]interface{}
 		}
 		for _, entry := range page.Value {
 
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -342,7 +347,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) GetAzureAdAdministrators() ([]int
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureSqlAdministrator, err := a.MotorRuntime.CreateResource("azure.sql.server.administrator",
+			mqlAzureSqlAdministrator, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.server.administrator",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -570,7 +575,7 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) GetUsage() ([]interface{}, erro
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureSqlUsage, err := a.MotorRuntime.CreateResource("azure.sql.databaseusage",
+			mqlAzureSqlUsage, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.databaseusage",
 				"id", id+"/metrics/"+core.ToString(entry.Name),
 				"name", core.ToString(entry.Name),
 				"resourceName", core.ToString(entry.Name),

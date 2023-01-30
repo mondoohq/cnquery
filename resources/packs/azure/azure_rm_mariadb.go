@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 
@@ -11,7 +12,11 @@ import (
 )
 
 func (a *mqlAzureSubscriptionMariadbService) id() (string, error) {
-	return "azure.mariadb", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/mariaDbService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionMariadbServiceServer) id() (string, error) {
@@ -51,7 +56,7 @@ func (a *mqlAzureSubscriptionMariadbService) GetServers() ([]interface{}, error)
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mariadb.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.mariadbService.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -109,7 +114,7 @@ func (a *mqlAzureSubscriptionMariadbServiceServer) GetConfiguration() ([]interfa
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -169,7 +174,7 @@ func (a *mqlAzureSubscriptionMariadbServiceServer) GetDatabases() ([]interface{}
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mariadb.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.mariadbService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -227,7 +232,7 @@ func (a *mqlAzureSubscriptionMariadbServiceServer) GetFirewallRules() ([]interfa
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

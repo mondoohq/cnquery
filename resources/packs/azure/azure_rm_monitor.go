@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	monitor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
@@ -10,7 +11,11 @@ import (
 )
 
 func (a *mqlAzureSubscriptionMonitorService) id() (string, error) {
-	return "azure.monitor", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/monitorService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionMonitorService) GetLogProfiles() ([]interface{}, error) {
@@ -47,7 +52,7 @@ func (a *mqlAzureSubscriptionMonitorService) GetLogProfiles() ([]interface{}, er
 			var mqlAzureStorageAccount interface{}
 			if entry.Properties != nil && entry.Properties.StorageAccountID != nil {
 				// the resource fetches the data itself
-				mqlAzureStorageAccount, err = a.MotorRuntime.CreateResource("azure.storage.account",
+				mqlAzureStorageAccount, err = a.MotorRuntime.CreateResource("azure.subscription.storageService.account",
 					"id", core.ToString(entry.Properties.StorageAccountID),
 				)
 				if err != nil {
@@ -55,7 +60,7 @@ func (a *mqlAzureSubscriptionMonitorService) GetLogProfiles() ([]interface{}, er
 				}
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.monitor.logprofile",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.monitorService.logprofile",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"location", core.ToString(entry.Location),
@@ -82,11 +87,11 @@ func (a *mqlAzureSubscriptionMonitorService) GetDiagnosticSettings() ([]interfac
 }
 
 func (a *mqlAzureSubscriptionMonitorService) GetActivityLog() (interface{}, error) {
-	return a.MotorRuntime.CreateResource("azure.monitor.activitylog")
+	return a.MotorRuntime.CreateResource("azure.subscription.monitorService.activitylog")
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceActivitylog) id() (string, error) {
-	return "azure.monitor.activitylog", nil
+	return "azure.subscription.monitorService.activitylog", nil
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceActivitylogAlert) id() (string, error) {
@@ -181,7 +186,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivitylog) GetAlerts() ([]interface
 				}
 				conditionsDict = append(conditionsDict, dict)
 			}
-			alert, err := a.MotorRuntime.CreateResource("azure.monitor.activitylog.alert",
+			alert, err := a.MotorRuntime.CreateResource("azure.subscription.monitorService.activitylog.alert",
 				"conditions", conditionsDict,
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
@@ -238,7 +243,7 @@ func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, 
 			var mqlAzureStorageAccount interface{}
 			if entry.Properties != nil && entry.Properties.StorageAccountID != nil {
 				// the resource fetches the data itself
-				mqlAzureStorageAccount, err = runtime.CreateResource("azure.storage.account",
+				mqlAzureStorageAccount, err = runtime.CreateResource("azure.subscription.storageService.account",
 					"id", core.ToString(entry.Properties.StorageAccountID),
 				)
 				if err != nil {
@@ -246,7 +251,7 @@ func diagnosticsSettings(runtime *resources.Runtime, id string) ([]interface{}, 
 				}
 			}
 
-			mqlAzure, err := runtime.CreateResource("azure.monitor.diagnosticsetting",
+			mqlAzure, err := runtime.CreateResource("azure.subscription.monitorService.diagnosticsetting",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

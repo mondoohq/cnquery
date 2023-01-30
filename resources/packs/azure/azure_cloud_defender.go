@@ -32,7 +32,11 @@ const (
 )
 
 func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
-	return "azure.cloudDefender", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/cloudDefenderService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionCloudDefenderService) GetMonitoringAgentAutoProvision() (interface{}, error) {
@@ -202,7 +206,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) GetSecurityContacts() (interf
 		if contact.Properties.Emails != nil {
 			mails = *contact.Properties.Emails
 		}
-		mqlSecurityContact, err := a.MotorRuntime.CreateResource("azure.cloudDefender.securityContact",
+		mqlSecurityContact, err := a.MotorRuntime.CreateResource("azure.subscription.cloudDefenderService.securityContact",
 			"id", core.ToString(contact.ID),
 			"name", core.ToString(contact.Name),
 			"emails", core.StrSliceToInterface(strings.Split(mails, ";")),

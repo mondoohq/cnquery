@@ -23,7 +23,11 @@ import (
 // NOTE: instead we use the keyvault/az(certificates/keys/secrets) modules even though they are still in beta.
 // NOTE: lets track https://github.com/Azure/azure-sdk-for-go/issues/19412 and see if there's any guidance there once its solved
 func (a *mqlAzureSubscriptionKeyvaultService) id() (string, error) {
-	return "azure.keyvault", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/keyVaultService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionKeyvaultService) GetVaults() ([]interface{}, error) {
@@ -51,7 +55,7 @@ func (a *mqlAzureSubscriptionKeyvaultService) GetVaults() ([]interface{}, error)
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.keyvault.vault",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService.vault",
 				"id", core.ToString(entry.ID),
 				// TODO: temporary
 				"vaultName", core.ToString(entry.Name),
@@ -111,7 +115,7 @@ func (a *mqlAzureSubscriptionKeyvaultServiceVault) GetKeys() ([]interface{}, err
 		}
 
 		for _, entry := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.keyvault.key",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService.key",
 				"kid", core.ToString((*string)(entry.KID)),
 				"managed", core.ToBool(entry.Attributes.Enabled),
 				"tags", azureTagsToInterface(entry.Tags),
@@ -158,7 +162,7 @@ func (a *mqlAzureSubscriptionKeyvaultServiceVault) GetCertificates() ([]interfac
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.keyvault.certificate",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService.certificate",
 				"id", core.ToString((*string)(entry.ID)),
 				"tags", azureTagsToInterface(entry.Tags),
 				"x5t", hex.EncodeToString(entry.X509Thumbprint),
@@ -209,7 +213,7 @@ func (a *mqlAzureSubscriptionKeyvaultServiceVault) GetSecrets() ([]interface{}, 
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.keyvault.secret",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService.secret",
 				"id", core.ToString((*string)(entry.ID)),
 				"tags", azureTagsToInterface(entry.Tags),
 				"contentType", core.ToString(entry.ContentType),
@@ -354,7 +358,7 @@ func (a *mqlAzureSubscriptionKeyvaultServiceKey) GetVersions() ([]interface{}, e
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.keyvault.key",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService.key",
 				"kid", core.ToString((*string)(entry.KID)),
 				"managed", core.ToBool(entry.Attributes.Enabled),
 				"tags", azureTagsToInterface(entry.Tags),
@@ -482,7 +486,7 @@ func (a *mqlAzureSubscriptionKeyvaultServiceCertificate) GetVersions() ([]interf
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.keyvault.certificate",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService.certificate",
 				"id", core.ToString((*string)(entry.ID)),
 				"tags", azureTagsToInterface(entry.Tags),
 				"x5t", hex.EncodeToString(entry.X509Thumbprint),
@@ -583,7 +587,7 @@ func (a *mqlAzureSubscriptionKeyvaultServiceSecret) GetVersions() ([]interface{}
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.keyvault.secret",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService.secret",
 				"id", core.ToString((*string)(entry.ID)),
 				"tags", azureTagsToInterface(entry.Tags),
 				"contentType", core.ToString(entry.ContentType),

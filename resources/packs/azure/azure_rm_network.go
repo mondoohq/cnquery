@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -13,7 +14,11 @@ import (
 )
 
 func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
-	return "azure.network", nil
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/networkService", subId), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkService) GetInterfaces() ([]interface{}, error) {
@@ -60,7 +65,7 @@ func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resou
 		return nil, err
 	}
 
-	return runtime.CreateResource("azure.network.interface",
+	return runtime.CreateResource("azure.subscription.networkService.interface",
 		"id", core.ToString(iface.ID),
 		"name", core.ToString(iface.Name),
 		"location", core.ToString(iface.Location),
@@ -169,7 +174,7 @@ func azureSecGroupToMql(runtime *resources.Runtime, secGroup network.SecurityGro
 		}
 	}
 
-	return runtime.CreateResource("azure.network.securitygroup",
+	return runtime.CreateResource("azure.subscription.networkService.securitygroup",
 		"id", core.ToString(secGroup.ID),
 		"name", core.ToString(secGroup.Name),
 		"location", core.ToString(secGroup.Location),
@@ -201,7 +206,7 @@ func azureSecurityRuleToMql(runtime *resources.Runtime, secRule network.Security
 		}
 	}
 
-	return runtime.CreateResource("azure.network.securityrule",
+	return runtime.CreateResource("azure.subscription.networkService.securityrule",
 		"id", core.ToString(secRule.ID),
 		"name", core.ToString(secRule.Name),
 		"etag", core.ToString(secRule.Etag),
@@ -275,7 +280,7 @@ func (a *mqlAzureSubscriptionNetworkService) GetWatchers() ([]interface{}, error
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.network.watcher",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.networkService.watcher",
 				"id", core.ToString(watcher.ID),
 				"name", core.ToString(watcher.Name),
 				"location", core.ToString(watcher.Location),
@@ -362,7 +367,7 @@ func (a *mqlAzureSubscriptionNetworkServiceWatcher) GetFlowLogs() ([]interface{}
 			if err != nil {
 				return nil, err
 			}
-			mqlFlowLog, err := a.MotorRuntime.CreateResource("azure.network.watcher.flowlog",
+			mqlFlowLog, err := a.MotorRuntime.CreateResource("azure.subscription.networkService.watcher.flowlog",
 				"id", core.ToString(flowLog.ID),
 				"name", core.ToString(flowLog.Name),
 				"location", core.ToString(flowLog.Location),
