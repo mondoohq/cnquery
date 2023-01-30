@@ -171,6 +171,9 @@ func (ctx *Runtime) CreateResourceWithID(name string, id string, args ...interfa
 	if err != nil {
 		return nil, err
 	}
+	// We could have looked up an aliased resource. We need to correct the name
+	// for caching
+	name = r.Name
 
 	argsMap, err := args2map(args)
 	if err != nil {
