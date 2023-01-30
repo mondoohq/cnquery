@@ -8,6 +8,7 @@ resources:
     fields:
       id: {}
       name: {}
+    is_private: true
     min_mondoo_version: latest
   sample.project.computeService:
     fields:
@@ -19,5 +20,4 @@ resources:
     fields:
       id: {}
       name: {}
-    is_private: true
     min_mondoo_version: latest

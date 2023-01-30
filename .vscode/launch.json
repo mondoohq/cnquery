@@ -101,16 +101,16 @@
     },
     // gcp.project.kms.keyrings
     {
-      "name": "cnquery-gcp-keyring",
+      "name": "cnquery-sample",
       "type": "go",
       "request": "launch",
       "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
       "cwd": "${workspaceRoot}/",
       "args": [
         "run",
-        "gcp",
+        "sample",
         "-c",
-        "gcp.project.kms.keyrings"
+        "sample.project"
       ],
     }
   ]

@@ -46,7 +46,7 @@ func (g *mqlSampleProjectComputeService) id() (string, error) {
 	return "sample.project.computeService/" + id, nil
 }
 
-func (g *mqlSampleProjectComputeServiceInstance) id() (string, error) {
+func (g *mqlSampleProjectComputeInstance) id() (string, error) {
 	id, err := g.Id()
 	if err != nil {
 		return "", err
@@ -63,7 +63,7 @@ func (g *mqlSampleProject) GetCompute() (interface{}, error) {
 func (g *mqlSampleProjectComputeService) GetInstances() ([]interface{}, error) {
 	res := make([]interface{}, 0, 3)
 	for i := 0; i < 3; i++ {
-		r, err := g.MotorRuntime.CreateResource("sample.project.computeService.instance",
+		r, err := g.MotorRuntime.CreateResource("sample.project.compute.instance",
 			"id", fmt.Sprintf("sampleId-%d", i),
 			"name", fmt.Sprintf("compute-instance-%d", i),
 		)

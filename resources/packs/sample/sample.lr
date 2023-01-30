@@ -7,10 +7,10 @@ sample.project {
 
 private sample.project.computeService {
   projectId string
-  instances() []sample.project.computeService.instance
+  instances() []sample.project.compute.instance
 }
 
-private sample.project.computeService.instance {
+private sample.project.compute.instance {
   id string
   name string
 }
