@@ -29,11 +29,10 @@ func TestMultiProgressBar(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "test1   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test2   ━━━━━━━━━━━━━━━━━━─────────────────  50%")
-	assert.Contains(t, buf.String(), "overall ━━━━━━━━━━━━━━━━━━─────────────────  50%")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━─────────────────  50%")
+	assert.Contains(t, buf.String(), "1/3 scanned             ━━━━━━━━━━━━━━━━━━─────────────────  50%")
 	assert.Contains(t, buf.String(), "... 1 more assets ...")
-	assert.Contains(t, buf.String(), "1/3 scanned")
 }
 
 func TestMultiProgressBarSingleAsset(t *testing.T) {
@@ -58,7 +57,7 @@ func TestMultiProgressBarSingleAsset(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, buf.String(), "test1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
 	assert.NotContains(t, buf.String(), "test2")
-	assert.NotContains(t, buf.String(), "overall")
+	assert.NotContains(t, buf.String(), "scanned")
 }
 
 func TestMultiProgressBarFinished(t *testing.T) {
@@ -84,11 +83,10 @@ func TestMultiProgressBarFinished(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "test1   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test2   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test3   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "overall ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
-	assert.Contains(t, buf.String(), "3/3 scanned")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "3/3 scanned             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 	assert.NotContains(t, buf.String(), "errored")
 }
 
@@ -114,11 +112,10 @@ func TestMultiProgressBarErrored(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "test1   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test2   ───────────────────────────────────    X")
-	assert.Contains(t, buf.String(), "test3   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "overall ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
-	assert.Contains(t, buf.String(), "2/3 scanned 1/3 errored")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ───────────────────────────────────    X")
+	assert.Contains(t, buf.String(), "test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "2/3 scanned 1/3 errored ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 }
 
 func TestMultiProgressBarLastErrored(t *testing.T) {
@@ -143,11 +140,10 @@ func TestMultiProgressBarLastErrored(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "test1   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test2   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test3   ───────────────────────────────────    X")
-	assert.Contains(t, buf.String(), "overall ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
-	assert.Contains(t, buf.String(), "2/3 scanned 1/3 errored")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test3                   ───────────────────────────────────    X")
+	assert.Contains(t, buf.String(), "2/3 scanned 1/3 errored ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 }
 
 func TestMultiProgressBarOnlyOneErrored(t *testing.T) {
@@ -190,10 +186,9 @@ func TestMultiProgressBarLimitedOneMore(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "test1   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test2   ━━━━───────────────────────────────  10%")
-	assert.Contains(t, buf.String(), "overall ━━━━━━━━━──────────────────────────  27%")
-	assert.Contains(t, buf.String(), "1/4 scanned")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━───────────────────────────────  10%")
+	assert.Contains(t, buf.String(), "1/4 scanned             ━━━━━━━━━──────────────────────────  27%")
 	assert.Contains(t, buf.String(), "2 more assets")
 }
 
@@ -230,13 +225,12 @@ func TestMultiProgressBarOrdering(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "test1   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test2   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "test3   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
-	assert.Contains(t, buf.String(), "overall ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
-	assert.Contains(t, buf.String(), "3/3 scanned")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "3/3 scanned             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 	// regexp is not working, perhaps because of ansi escape characters???
 	// ordering := regexp.MustCompile(`^.*test1.*test3.*test2.*$`)
 	// m := ordering.FindString(buf.String())
-	assert.Contains(t, buf.String(), "test1   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F\r\n test3   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F\r\n test2")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F\r\n test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F\r\n test2")
 }

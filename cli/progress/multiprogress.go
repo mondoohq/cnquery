@@ -219,9 +219,8 @@ func newMultiProgress(elements map[string]string, opts ...ProgressOption) *model
 
 	if numBars > 1 {
 		// add overall with max possible length, so we do not have to move progress bars later on
-		// this can get especially ugly when the overall name gets longer than the other names during runtime
-		// overallName := fmt.Sprintf("overall %d/%d scanned %d/%d errored", numBars, numBars, numBars, numBars)
-		m.add(overallProgressIndexName, overallProgressIndexName, m.maxProgressBarWith)
+		overallName := fmt.Sprintf("%d/%d scanned %d/%d errored", numBars, numBars, numBars, numBars)
+		m.add(overallProgressIndexName, overallName, m.maxProgressBarWith)
 	}
 
 	w := m.calculateMaxProgressBarWidth()
@@ -499,17 +498,15 @@ func (m *modelMultiProgress) View() string {
 	output += outputFinished + outputNotDone
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		percent := m.Progress[overallProgressIndexName].percent
-		name := m.Progress[overallProgressIndexName].Name
 		stats := fmt.Sprintf("%d/%d scanned", completedAssets, len(m.Progress)-1)
 
 		if erroredAssets > 0 {
 			stats += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
 		}
 
-		pad := strings.Repeat(" ", m.maxNameWidth-len(name))
+		pad := strings.Repeat(" ", m.maxNameWidth-len(stats))
 		output += "\n"
-		output += " " + name + pad + " " + m.Progress[overallProgressIndexName].model.ViewAs(percent) + "\n"
-		output += " " + stats
+		output += " " + stats + pad + " " + m.Progress[overallProgressIndexName].model.ViewAs(percent)
 	}
 
 	return "\n" + pad + output + "\n\n"
