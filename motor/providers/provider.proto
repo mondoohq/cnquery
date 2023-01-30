@@ -59,6 +59,7 @@ enum Kind {
   KIND_BARE_METAL = 9;
   KIND_NETWORK = 10;
   KIND_K8S_OBJECT = 11;
+  KIND_SAMPLE_OBJECT = 15;
 }
 
 message Config {

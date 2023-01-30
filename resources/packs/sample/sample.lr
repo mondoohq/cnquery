@@ -8,11 +8,19 @@ sample.project {
 
 private sample.project.computeService {
   projectId string
-  instances() []sample.project.compute.instance
+  instances() []sample.project.computeService.instance
+  disks() []sample.project.computeService.disk
 }
 
-private sample.project.compute.instance {
+private sample.project.computeService.instance {
   id string
+  projectId string
+  name string
+}
+
+private sample.project.computeService.disk {
+  id string
+  projectId string
   name string
 }
 
@@ -23,5 +31,6 @@ private sample.project.gkeService {
 
 private sample.project.gkeService.cluster {
   id string
+  projectId string
   name string
 }

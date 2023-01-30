@@ -7,6 +7,7 @@ const (
 	RUNTIME_AWS_ECR              = "aws-ecr"
 	RUNTIME_AWS_ECS              = "aws-ecs"
 	RUNTIME_GCP                  = "gcp" // api
+	RUNTIME_SAMPLE               = "sample"
 	RUNTIME_GCP_COMPUTE          = "gcp-vm"
 	RUNTIME_GCP_GCR              = "gcp-gcr"
 	RUNTIME_GOOGLE_WORKSPACE     = "google-workspace"

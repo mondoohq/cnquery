@@ -110,7 +110,33 @@
         "run",
         "sample",
         "-c",
-        "sample.project"
+        "sample.project.compute.instances"
+      ],
+    },
+    {
+      "name": "cnquery-sample-clusters",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "run",
+        "sample",
+        "-c",
+        "sample.project.gke.clusters"
+      ],
+    },
+    {
+      "name": "cnquery-sample-discovery",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "shell",
+        "sample",
+        "--discover",
+        "compute-instances"
       ],
     }
   ]

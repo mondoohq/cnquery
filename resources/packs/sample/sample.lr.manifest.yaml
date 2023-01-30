@@ -9,18 +9,28 @@ resources:
     fields:
       id: {}
       name: {}
-    is_private: true
     min_mondoo_version: latest
   sample.project.computeService:
     fields:
+      disks: {}
       instances: {}
+      projectId: {}
+    is_private: true
+    min_mondoo_version: latest
+  sample.project.computeService.disk:
+    fields:
+      id: {}
+      name: {}
       projectId: {}
     is_private: true
     min_mondoo_version: latest
   sample.project.computeService.instance:
     fields:
+      disk: {}
       id: {}
       name: {}
+      projectId: {}
+    is_private: true
     min_mondoo_version: latest
   sample.project.gkeService:
     fields:
@@ -32,5 +42,6 @@ resources:
     fields:
       id: {}
       name: {}
+      projectId: {}
     is_private: true
     min_mondoo_version: latest
