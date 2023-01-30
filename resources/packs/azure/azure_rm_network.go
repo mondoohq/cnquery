@@ -13,6 +13,21 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
+func (a *mqlAzureSubscriptionNetworkService) init(args *resources.Args) (*resources.Args, AzureSubscriptionNetworkService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
+}
+
 func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
 	subId, err := a.SubscriptionId()
 	if err != nil {

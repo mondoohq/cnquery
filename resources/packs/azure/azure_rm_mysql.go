@@ -8,8 +8,24 @@ import (
 	mysql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
 	flexible "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
+
+func (a *mqlAzureSubscriptionMysqlService) init(args *resources.Args) (*resources.Args, AzureSubscriptionMysqlService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
+}
 
 func (a *mqlAzureSubscriptionMysqlService) id() (string, error) {
 	subId, err := a.SubscriptionId()

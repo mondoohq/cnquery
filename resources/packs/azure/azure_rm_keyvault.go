@@ -14,8 +14,24 @@ import (
 
 	keyvault "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
+
+func (a *mqlAzureSubscriptionKeyvaultService) init(args *resources.Args) (*resources.Args, AzureSubscriptionKeyvaultService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
+}
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
 // type AzureStorageAccountProperties keyvault_vault.KeyPermissions

@@ -8,8 +8,24 @@ import (
 
 	mariadb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
+
+func (a *mqlAzureSubscriptionMariadbService) init(args *resources.Args) (*resources.Args, AzureSubscriptionMariadbService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
+}
 
 func (a *mqlAzureSubscriptionMariadbService) id() (string, error) {
 	subId, err := a.SubscriptionId()

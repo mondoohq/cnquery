@@ -115,111 +115,51 @@ func (a *mqlAzureSubscription) GetResourceGroups() ([]interface{}, error) {
 }
 
 func (a *mqlAzureSubscription) GetCompute() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.computeService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.computeService")
 }
 
 func (a *mqlAzureSubscription) GetNetwork() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.networkService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.networkService")
 }
 
 func (a *mqlAzureSubscription) GetStorage() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.storageService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.storageService")
 }
 
 func (a *mqlAzureSubscription) GetWeb() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.webService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.webService")
 }
 
 func (a *mqlAzureSubscription) GetSql() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.sqlService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.sqlService")
 }
 
 func (a *mqlAzureSubscription) GetMySql() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.mysqlService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.mysqlService")
 }
 
 func (a *mqlAzureSubscription) GetPostgreSql() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.postgresqlService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.postgresqlService")
 }
 
 func (a *mqlAzureSubscription) GetMariaDb() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.mariadbService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.mariadbService")
 }
 
 func (a *mqlAzureSubscription) GetKeyVault() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.keyvaultService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.keyvaultService")
 }
 
 func (a *mqlAzureSubscription) GetAuthorization() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.authorizationService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.authorizationService")
 }
 
 func (a *mqlAzureSubscription) GetMonitor() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.monitorService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.monitorService")
 }
 
 func (a *mqlAzureSubscription) GetCloudDefender() (interface{}, error) {
-	subId, err := a.SubscriptionId()
-	if err != nil {
-		return nil, err
-	}
-	return a.MotorRuntime.CreateResource("azure.subscription.cloudDefenderService",
-		"subscriptionId", subId)
+	return a.MotorRuntime.CreateResource("azure.subscription.cloudDefenderService")
 }
 
 func (a *mqlAzureSubscription) GetId() (string, error) {

@@ -17,6 +17,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	security "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -30,6 +31,21 @@ const (
 	arcClusterPolicyExtensionDefinitionId       string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 	kubernetesClusterPolicyExtensonDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 )
+
+func (a *mqlAzureSubscriptionCloudDefenderService) init(args *resources.Args) (*resources.Args, AzureSubscriptionCloudDefenderService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
+}
 
 func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
 	subId, err := a.SubscriptionId()

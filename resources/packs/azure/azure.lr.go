@@ -4007,6 +4007,15 @@ func newAzureSubscriptionComputeService(runtime *resources.Runtime, args *resour
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionComputeService{runtime.NewResource("azure.subscription.computeService")}
+	var existing AzureSubscriptionComputeService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -5037,6 +5046,15 @@ func newAzureSubscriptionNetworkService(runtime *resources.Runtime, args *resour
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionNetworkService{runtime.NewResource("azure.subscription.networkService")}
+	var existing AzureSubscriptionNetworkService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -7213,6 +7231,15 @@ func newAzureSubscriptionStorageService(runtime *resources.Runtime, args *resour
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionStorageService{runtime.NewResource("azure.subscription.storageService")}
+	var existing AzureSubscriptionStorageService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -9821,6 +9848,15 @@ func newAzureSubscriptionWebService(runtime *resources.Runtime, args *resources.
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionWebService{runtime.NewResource("azure.subscription.webService")}
+	var existing AzureSubscriptionWebService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -11146,6 +11182,15 @@ func newAzureSubscriptionSqlService(runtime *resources.Runtime, args *resources.
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionSqlService{runtime.NewResource("azure.subscription.sqlService")}
+	var existing AzureSubscriptionSqlService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -14350,6 +14395,15 @@ func newAzureSubscriptionPostgresqlService(runtime *resources.Runtime, args *res
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionPostgresqlService{runtime.NewResource("azure.subscription.postgresqlService")}
+	var existing AzureSubscriptionPostgresqlService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -15182,6 +15236,15 @@ func newAzureSubscriptionMysqlService(runtime *resources.Runtime, args *resource
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionMysqlService{runtime.NewResource("azure.subscription.mysqlService")}
+	var existing AzureSubscriptionMysqlService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -16477,6 +16540,15 @@ func newAzureSubscriptionMariadbService(runtime *resources.Runtime, args *resour
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionMariadbService{runtime.NewResource("azure.subscription.mariadbService")}
+	var existing AzureSubscriptionMariadbService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -17914,6 +17986,15 @@ func newAzureSubscriptionKeyvaultService(runtime *resources.Runtime, args *resou
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionKeyvaultService{runtime.NewResource("azure.subscription.keyvaultService")}
+	var existing AzureSubscriptionKeyvaultService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -20139,6 +20220,15 @@ func newAzureSubscriptionMonitorService(runtime *resources.Runtime, args *resour
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionMonitorService{runtime.NewResource("azure.subscription.monitorService")}
+	var existing AzureSubscriptionMonitorService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -21458,6 +21548,15 @@ func newAzureSubscriptionCloudDefenderService(runtime *resources.Runtime, args *
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionCloudDefenderService{runtime.NewResource("azure.subscription.cloudDefenderService")}
+	var existing AzureSubscriptionCloudDefenderService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -22013,6 +22112,15 @@ func newAzureSubscriptionAuthorizationService(runtime *resources.Runtime, args *
 	// User hooks
 	var err error
 	res := mqlAzureSubscriptionAuthorizationService{runtime.NewResource("azure.subscription.authorizationService")}
+	var existing AzureSubscriptionAuthorizationService
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
