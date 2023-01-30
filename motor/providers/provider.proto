@@ -39,6 +39,7 @@ enum ProviderType {
   GOOGLE_WORKSPACE = 30;
   SLACK = 31;
   VCD = 32;
+  SAMPLE = 33;
 }
 
 enum Kind {

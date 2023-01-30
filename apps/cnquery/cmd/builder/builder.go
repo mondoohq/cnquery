@@ -122,6 +122,9 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	gcpGcrCmd := scanGcpGcrCmd(commonCmdFlags, preRun, runFn, docs)
 	gcpCmd.AddCommand(gcpGcrCmd)
 
+	// sample subcommand
+	sampleCmd := scanSampleCmd(commonCmdFlags, preRun, runFn, docs)
+
 	// vsphere subcommand
 	vsphereCmd := vsphereProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	vsphereVmCmd := vsphereVmProviderCmd(commonCmdFlags, preRun, runFn, docs)
@@ -166,6 +169,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	baseCmd.AddCommand(scanGoogleWorkspaceCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanSlackCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanVcdCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(sampleCmd)
 }
 
 type CommandsDocs struct {
@@ -617,6 +621,23 @@ func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn
 	cmd.Flags().MarkHidden("organization")
 	cmd.Flags().MarkDeprecated("organization", "--organization is deprecated in favor of --organization-id")
 	cmd.Flags().String("organization-id", "", "specify the GCP organization ID to scan")
+	return cmd
+}
+
+func scanSampleCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sample",
+		Short: docs.GetShort("sample"),
+		Long:  docs.GetLong("sample"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_SAMPLE, DefaultAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
 	return cmd
 }
 

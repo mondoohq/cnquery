@@ -36,6 +36,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/network"
 	"go.mondoo.com/cnquery/motor/discovery/okta"
 	"go.mondoo.com/cnquery/motor/discovery/os"
+	"go.mondoo.com/cnquery/motor/discovery/sample"
 	"go.mondoo.com/cnquery/motor/discovery/slack"
 	"go.mondoo.com/cnquery/motor/discovery/tar"
 	"go.mondoo.com/cnquery/motor/discovery/terraform"
@@ -91,6 +92,7 @@ func init() {
 		providers.ProviderID_GOOGLE_WORKSPACE:   &googleworkspace.Resolver{},
 		providers.ProviderID_SLACK:              &slack.Resolver{},
 		providers.ProviderID_VCD:                &vcd.Resolver{},
+		providers.ProviderID_SAMPLE:             &sample.Resolver{},
 	}
 }
 

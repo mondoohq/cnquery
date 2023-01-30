@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/motor/providers/okta"
 	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/motor/providers/sample"
 	"go.mondoo.com/cnquery/motor/providers/slack"
 	"go.mondoo.com/cnquery/motor/providers/terraform"
 	"go.mondoo.com/cnquery/motor/providers/vcd"
@@ -144,6 +145,8 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 		}
 		pi.Kind = d.provider.Kind()
 		pi.Runtime = d.provider.Runtime()
+	case *sample.Provider:
+		return pt.PlatformInfo()
 	default:
 		return nil, errors.New("could not determine platform")
 	}

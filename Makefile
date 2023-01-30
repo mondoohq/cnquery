@@ -114,6 +114,9 @@ lr/build:
 	./lr go resources/packs/vcd/vcd.lr
 	./lr docs yaml resources/packs/vcd/vcd.lr --docs-file resources/packs/vcd/vcd.lr.manifest.yaml
 	./lr docs json resources/packs/vcd/vcd.lr.manifest.yaml
+	./lr go resources/packs/sample/sample.lr
+	./lr docs yaml resources/packs/sample/sample.lr --docs-file resources/packs/sample/sample.lr.manifest.yaml
+	./lr docs json resources/packs/sample/sample.lr.manifest.yaml
 
 lr/release:
 	go generate .

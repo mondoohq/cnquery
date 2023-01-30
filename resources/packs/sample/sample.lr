@@ -1,0 +1,16 @@
+option go_package = "go.mondoo.com/cnquery/resources/packs/sample"
+
+sample.project {
+  id() string
+  compute() sample.project.computeService
+}
+
+private sample.project.computeService {
+  projectId string
+  instances() []sample.project.computeService.instance
+}
+
+private sample.project.computeService.instance {
+  id string
+  name string
+}
