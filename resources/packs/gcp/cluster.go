@@ -186,6 +186,11 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			nodePools = append(nodePools, mqlNodePool)
 		}
 
+		autopilotEnabled := false
+		if c.Autopilot != nil {
+			autopilotEnabled = c.Autopilot.Enabled
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -199,7 +204,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"nodePools", nodePools,
 			"locations", core.StrSliceToInterface(c.Locations),
 			"enableKubernetesAlpha", c.EnableKubernetesAlpha,
-			"autopilotEnabled", c.Autopilot.Enabled,
+			"autopilotEnabled", autopilotEnabled,
 			"zone", c.Zone,
 			"location", c.Location,
 			"endpoint", c.Endpoint,
@@ -362,6 +367,11 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 		}
 	}
 
+	workloadMetadataMode := ""
+	if cfg.WorkloadMetadataConfig != nil {
+		workloadMetadataMode = cfg.WorkloadMetadataConfig.Mode.String()
+	}
+
 	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config",
 		"id", fmt.Sprintf("%s/config", nodePoolId),
 		"machineType", cfg.MachineType,
@@ -377,7 +387,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 		"accelerators", mqlAccelerators,
 		"diskType", cfg.DiskType,
 		"minCpuPlatform", cfg.MinCpuPlatform,
-		"workloadMetadataMode", cfg.WorkloadMetadataConfig.Mode.String(),
+		"workloadMetadataMode", workloadMetadataMode,
 		"taints", nodeTaints,
 		"sandboxConfig", mqlSandboxCfg,
 		"shieldedInstanceConfig", mqlShieldedInstanceCfg,
