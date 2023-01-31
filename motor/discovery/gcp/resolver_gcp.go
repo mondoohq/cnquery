@@ -37,7 +37,7 @@ func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *provid
 		// when the user has not provided a project, check if we got a project or try to determine it
 		// FIXME: DEPRECATED, update in v8.0 vv
 		// The option "project" has been deprecated in favor of project-id
-		if tc.Options == nil || (tc.Options["project"] == "" || tc.Options["project-id"] != "") {
+		if tc.Options == nil || (tc.Options["project"] == "" && tc.Options["project-id"] == "") {
 			// ^^
 			// try to determine current project
 			projectid, err := gcp_provider.GetCurrentProject()
