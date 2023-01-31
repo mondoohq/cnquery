@@ -1233,9 +1233,10 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) init(args *resources.Args) (*res
 		return args, nil, nil
 	}
 
+	regionName := ""
 	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
 		(*args)["name"] = ids.name
-		(*args)["region"] = ids.region
+		regionName = ids.region
 		(*args)["projectId"] = ids.project
 	}
 
@@ -1265,7 +1266,7 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) init(args *resources.Args) (*res
 			return nil, nil, err
 		}
 
-		if name == (*args)["name"] && projectId == (*args)["projectId"] && region == (*args)["region"] {
+		if name == (*args)["name"] && projectId == (*args)["projectId"] && region == regionName {
 			return args, subnetwork, nil
 		}
 	}
@@ -1399,6 +1400,8 @@ func (g *mqlGcpProjectComputeService) GetSubnetworks() ([]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Info().Msg("retrieving subnetworks")
 
 	regions, err := g.Regions()
 	if err != nil {
