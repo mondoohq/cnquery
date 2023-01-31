@@ -201,7 +201,8 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	if isatty.IsTerminal(os.Stdout.Fd()) && !strings.EqualFold(logger.GetLevel(), "debug") && !strings.EqualFold(logger.GetLevel(), "trace") {
 		multiprogress, err = progress.NewMultiProgressBars(progressBarElements, orderedKeys)
 		if err != nil {
-			return nil, false, errors.Wrap(err, "failed to create progress bars")
+			log.Error().Err(err).Msg("failed to create progress bars; using noop progress bar")
+			multiprogress = progress.NoopMultiProgressBars{}
 		}
 	} else {
 		// TODO: adjust naming

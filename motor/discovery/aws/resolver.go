@@ -107,7 +107,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 		for i := range assetList {
 			a := assetList[i]
-			if resolvedRoot != nil {
+			if resolvedRoot != nil && a != nil {
 				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}
 			log.Debug().Str("name", a.Name).Str("region", a.Labels[RegionLabel]).Str("state", strings.ToLower(a.State.String())).Msg("resolved ssm instance")
@@ -131,7 +131,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("instances", len(assetList)).Bool("insecure", r.Insecure).Msg("completed instance search")
 		for i := range assetList {
 			a := assetList[i]
-			if resolvedRoot != nil {
+			if resolvedRoot != nil && a != nil {
 				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}
 			log.Debug().Str("name", a.Name).Str("region", a.Labels[RegionLabel]).Str("state", strings.ToLower(a.State.String())).Msg("resolved ec2 instance")
@@ -168,7 +168,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("images", len(assetList)).Msg("completed ecr search")
 		for i := range assetList {
 			a := assetList[i]
-			if resolvedRoot != nil {
+			if resolvedRoot != nil && a != nil {
 				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}
 			resolved = append(resolved, a)
@@ -188,7 +188,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("assets", len(assetList)).Msg("completed ecs search")
 		for i := range assetList {
 			a := assetList[i]
-			if resolvedRoot != nil {
+			if resolvedRoot != nil && a != nil {
 				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}
 			resolved = append(resolved, a)
