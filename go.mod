@@ -142,6 +142,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/muesli/ansi v0.0.0-20221106050444-61f0cd9a192a
+	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.13.0
 	github.com/okta/okta-sdk-golang/v2 v2.14.0
 	github.com/olekukonko/tablewriter v0.0.5
@@ -173,6 +174,7 @@ require (
 	golang.org/x/oauth2 v0.3.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.3.0
+	golang.org/x/term v0.3.0
 	golang.org/x/text v0.5.0
 	golang.org/x/tools v0.3.0
 	google.golang.org/api v0.103.0
@@ -406,7 +408,6 @@ require (
 	github.com/moricho/tparallel v0.2.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 // indirect
@@ -486,7 +487,6 @@ require (
 	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20220827204233-334a2380cb91 // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/term v0.3.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

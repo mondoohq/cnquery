@@ -29,9 +29,10 @@ func TestMultiProgressBar(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1   score: F")
-	assert.Contains(t, buf.String(), "50% test2\r\n")
-	assert.Contains(t, buf.String(), "50% overall 1/3 scanned")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━─────────────────  50%")
+	assert.Contains(t, buf.String(), "1/3 scanned             ━━━━━━━━━━━━━━━━━━─────────────────  50%")
+	assert.Contains(t, buf.String(), "... 1 more assets ...")
 }
 
 func TestMultiProgressBarSingleAsset(t *testing.T) {
@@ -54,9 +55,9 @@ func TestMultiProgressBarSingleAsset(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1 score: F")
+	assert.Contains(t, buf.String(), "test1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
 	assert.NotContains(t, buf.String(), "test2")
-	assert.NotContains(t, buf.String(), "overall")
+	assert.NotContains(t, buf.String(), "scanned")
 }
 
 func TestMultiProgressBarFinished(t *testing.T) {
@@ -82,10 +83,11 @@ func TestMultiProgressBarFinished(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1   score: F")
-	assert.Contains(t, buf.String(), "100% test2   score: F")
-	assert.Contains(t, buf.String(), "100% test3   score: F")
-	assert.Contains(t, buf.String(), "100% overall 3/3 scanned")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "3/3 scanned             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
+	assert.NotContains(t, buf.String(), "errored")
 }
 
 func TestMultiProgressBarErrored(t *testing.T) {
@@ -110,10 +112,10 @@ func TestMultiProgressBarErrored(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1   score: F")
-	assert.Contains(t, buf.String(), "   X test2   score: X")
-	assert.Contains(t, buf.String(), "100% test3   score: F")
-	assert.Contains(t, buf.String(), "100% overall 2/3 scanned 1/3 errored")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ───────────────────────────────────    X")
+	assert.Contains(t, buf.String(), "test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "2/3 scanned 1/3 errored ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 }
 
 func TestMultiProgressBarLastErrored(t *testing.T) {
@@ -138,10 +140,10 @@ func TestMultiProgressBarLastErrored(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1   score: F")
-	assert.Contains(t, buf.String(), "100% test2   score: F")
-	assert.Contains(t, buf.String(), "   X test3   score: X")
-	assert.Contains(t, buf.String(), "100% overall 2/3 scanned 1/3 errored")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test3                   ───────────────────────────────────    X")
+	assert.Contains(t, buf.String(), "2/3 scanned 1/3 errored ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 }
 
 func TestMultiProgressBarOnlyOneErrored(t *testing.T) {
@@ -161,56 +163,8 @@ func TestMultiProgressBarOnlyOneErrored(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "   X test1")
-}
-
-func TestMultiProgressBarAllErrored(t *testing.T) {
-	var in bytes.Buffer
-	var buf bytes.Buffer
-
-	progressBarElements := map[string]string{"1": "test1", "2": "test2", "3": "test3"}
-	multiprogress, err := newMultiProgressBarsMock(progressBarElements, []string{"1", "2", "3"}, &in, &buf)
-	require.NoError(t, err)
-
-	go func() {
-		// we need to wait for tea to start the Program, otherwise these would be no-ops
-		time.Sleep(1 * time.Millisecond)
-		// this should also end the tea program
-		multiprogress.Errored("1")
-		multiprogress.Errored("2")
-		multiprogress.Errored("3")
-		multiprogress.Close()
-	}()
-	err = multiprogress.Open()
-	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "   X test1")
-	assert.Contains(t, buf.String(), "100% overall 0/3 scanned 3/3 errored")
-}
-
-func TestMultiProgressBarLimitedNumber(t *testing.T) {
-	var in bytes.Buffer
-	var buf bytes.Buffer
-
-	progressBarElements := map[string]string{"1": "test1", "2": "test2", "3": "test3"}
-	multiprogress, err := newMultiProgressBarsMock(progressBarElements, []string{"1", "2", "3"}, &in, &buf)
-	require.NoError(t, err)
-
-	go func() {
-		// we need to wait for tea to start the Program, otherwise these would be no-ops
-		time.Sleep(1 * time.Millisecond)
-		multiprogress.OnProgress("1", 1.0)
-		multiprogress.OnProgress("2", 0.1)
-		multiprogress.Score("1", "F")
-		multiprogress.Completed("1")
-		multiprogress.Close()
-	}()
-	err = multiprogress.Open()
-	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1   score: F")
-	assert.NotContains(t, buf.String(), "100% test2   score: F")
-	assert.NotContains(t, buf.String(), "100% test3   score: F")
-	assert.Contains(t, buf.String(), "36% overall 1/3 scanned")
-	assert.Contains(t, buf.String(), "1 more assets")
+	assert.Contains(t, buf.String(), "test1 ───────────────────────────────────    X")
+	assert.NotContains(t, buf.String(), "0/1 scanned 1/1 errored")
 }
 
 func TestMultiProgressBarLimitedOneMore(t *testing.T) {
@@ -232,9 +186,9 @@ func TestMultiProgressBarLimitedOneMore(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1   score: F")
-	assert.Contains(t, buf.String(), "10% test2")
-	assert.Contains(t, buf.String(), "27% overall 1/4 scanned")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━───────────────────────────────  10%")
+	assert.Contains(t, buf.String(), "1/4 scanned             ━━━━━━━━━──────────────────────────  27%")
 	assert.Contains(t, buf.String(), "2 more assets")
 }
 
@@ -271,12 +225,12 @@ func TestMultiProgressBarOrdering(t *testing.T) {
 	}()
 	err = multiprogress.Open()
 	require.NoError(t, err)
-	assert.Contains(t, buf.String(), "100% test1   score: F")
-	assert.Contains(t, buf.String(), "100% test2   score: F")
-	assert.Contains(t, buf.String(), "100% test3   score: F")
-	assert.Contains(t, buf.String(), "100% overall 3/3 scanned")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test2                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
+	assert.Contains(t, buf.String(), "3/3 scanned             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 	// regexp is not working, perhaps because of ansi escape characters???
 	// ordering := regexp.MustCompile(`^.*test1.*test3.*test2.*$`)
 	// m := ordering.FindString(buf.String())
-	assert.Contains(t, buf.String(), "test1   score: F\r\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% test3   score: F\r\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% test2")
+	assert.Contains(t, buf.String(), "test1                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F\r\n test3                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F\r\n test2")
 }

@@ -3,14 +3,25 @@ package progress
 import (
 	"fmt"
 	"math"
+	"os"
 	"strings"
 	"sync"
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/muesli/reflow/ansi"
+	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
 )
+
+type ProgressOption = func(*modelMultiProgress)
+
+func WithScore() ProgressOption {
+	return func(p *modelMultiProgress) {
+		p.includeScore = true
+	}
+}
 
 type MultiProgress interface {
 	Open() error
@@ -32,7 +43,6 @@ func (n NoopMultiProgressBars) Close()                     {}
 
 const (
 	padding                  = 0
-	maxWidth                 = 80
 	defaultWidth             = 40
 	defaultProgressNumAssets = 1
 	overallProgressIndexName = "overall"
@@ -87,15 +97,21 @@ type modelProgress struct {
 }
 
 type modelMultiProgress struct {
+	Progress           map[string]*modelProgress
+	maxNameWidth       int
+	maxItemsToShow     int
+	orderedKeys        []string
+	lock               sync.Mutex
+	maxProgressBarWith int
+	includeScore       bool
+}
+
+type multiProgressBars struct {
+	program        *tea.Program
 	Progress       map[string]*modelProgress
 	maxNameWidth   int
 	maxItemsToShow int
 	orderedKeys    []string
-	lock           sync.Mutex
-}
-
-type multiProgressBars struct {
-	program *tea.Program
 }
 
 func newProgressBar() progress.Model {
@@ -115,8 +131,9 @@ func newProgressBar() progress.Model {
 // The key of the map is used to identify the progress bar.
 // The value of the map is used as the name displayed for the progress bar.
 // orderedKeys is used to define the order of the progress bars.
-func NewMultiProgressBars(elements map[string]string, orderedKeys []string) (*multiProgressBars, error) {
-	program, err := newMultiProgressProgram(elements, orderedKeys)
+// includeScore indicates if the score should be displayed after the progress bar. This will only be used for spacing
+func NewMultiProgressBars(elements map[string]string, orderedKeys []string, opts ...ProgressOption) (*multiProgressBars, error) {
+	program, err := newMultiProgressProgram(elements, orderedKeys, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -174,17 +191,17 @@ func (m *multiProgressBars) Close() {
 }
 
 // create the actual tea.Program
-func newMultiProgressProgram(elements map[string]string, orderedKeys []string) (*tea.Program, error) {
+func newMultiProgressProgram(elements map[string]string, orderedKeys []string, opts ...ProgressOption) (*tea.Program, error) {
 	if len(elements) != len(orderedKeys) {
 		return nil, fmt.Errorf("number of elements and orderedKeys must be equal")
 	}
-	m := newMultiProgress(elements)
+	m := newMultiProgress(elements, opts...)
 	m.maxItemsToShow = defaultProgressNumAssets
 	m.orderedKeys = orderedKeys
 	return tea.NewProgram(m), nil
 }
 
-func newMultiProgress(elements map[string]string) *modelMultiProgress {
+func newMultiProgress(elements map[string]string, opts ...ProgressOption) *modelMultiProgress {
 	numBars := len(elements)
 	if numBars > 1 {
 		numBars++
@@ -192,21 +209,34 @@ func newMultiProgress(elements map[string]string) *modelMultiProgress {
 	multiprogress := make(map[string]*modelProgress, numBars)
 
 	m := &modelMultiProgress{
-		Progress:     multiprogress,
-		maxNameWidth: 0,
+		Progress:           multiprogress,
+		maxNameWidth:       0,
+		maxProgressBarWith: defaultWidth,
+	}
+	for _, opt := range opts {
+		opt(m)
 	}
 
-	maxNameWidth := 0
 	if numBars > 1 {
-		m.add(overallProgressIndexName, "overall")
-		maxNameWidth = len("overall")
+		// add overall with max possible length, so we do not have to move progress bars later on
+		overallName := fmt.Sprintf("%d/%d scanned %d/%d errored", numBars, numBars, numBars, numBars)
+		m.add(overallProgressIndexName, overallName, m.maxProgressBarWith)
+	}
+
+	w := m.calculateMaxProgressBarWidth()
+	if w > 10 {
+		m.maxProgressBarWith = w
 	}
 
 	for k, v := range elements {
-		if len(v) > maxNameWidth {
-			maxNameWidth = len(v)
+		m.add(k, v, m.maxProgressBarWith)
+	}
+
+	maxNameWidth := 0
+	for k := range m.Progress {
+		if len(m.Progress[k].Name) > maxNameWidth {
+			maxNameWidth = ansi.PrintableRuneWidth(m.Progress[k].Name)
 		}
-		m.add(k, v)
 	}
 	m.maxNameWidth = maxNameWidth
 
@@ -217,9 +247,22 @@ func (m *modelMultiProgress) Init() tea.Cmd {
 	return nil
 }
 
-func (m *modelMultiProgress) add(key string, name string) {
-	progressbar := newProgressBar()
+func (m *modelMultiProgress) calculateMaxProgressBarWidth() int {
+	w := 0
+	terminalWidth, err := components.TerminalWidth(os.Stdout)
+	if err == nil {
+		w = terminalWidth - m.maxNameWidth - 8 // 5 for percentage + space
+		// space for " score: F"
+		if m.includeScore {
+			w -= 9
+		}
+	}
+	return w
+}
 
+func (m *modelMultiProgress) add(key string, name string, width int) {
+	progressbar := newProgressBar()
+	progressbar.Width = width
 	m.Progress[key] = &modelProgress{
 		model:     &progressbar,
 		Name:      name,
@@ -239,14 +282,12 @@ func (m *modelMultiProgress) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
+		w := m.calculateMaxProgressBarWidth()
+		if w > 10 {
+			m.maxProgressBarWith = w
+		}
 		for k := range m.Progress {
-			m.Progress[k].model.Update(msg)
-
-			m.Progress[k].model.Width = msg.Width - padding*2 - 4 - m.maxNameWidth
-			if m.Progress[k].model.Width > maxWidth {
-				m.Progress[k].model.Width = maxWidth
-			}
-
+			m.Progress[k].model.Width = m.maxProgressBarWith
 		}
 		return m, nil
 
@@ -411,19 +452,21 @@ func (m *modelMultiProgress) View() string {
 		if !errored && !completed {
 			continue
 		}
-		pad := strings.Repeat(" ", m.maxNameWidth-len(m.Progress[k].Name))
+		name := m.Progress[k].Name
+		pad := strings.Repeat(" ", m.maxNameWidth-len(name))
 		if errored {
-			outputFinished += m.Progress[k].model.View() + theme.DefaultTheme.Error("    X "+m.Progress[k].Name)
+			outputFinished += " " + theme.DefaultTheme.Error(name) + pad + " " + m.Progress[k].model.View() + theme.DefaultTheme.Error("    X")
 		} else if completed {
 			percent := m.Progress[k].percent
-			outputFinished += m.Progress[k].model.ViewAs(percent) + " " + m.Progress[k].Name
+			outputFinished += " " + name + pad + " " + m.Progress[k].model.ViewAs(percent)
 		}
+
 		score := m.Progress[k].Score
 		if score != "" {
 			if errored {
-				outputFinished += pad + theme.DefaultTheme.Error(" score: "+score)
+				outputFinished += theme.DefaultTheme.Error(" score: " + score)
 			} else {
-				outputFinished += pad + " score: " + score
+				outputFinished += " score: " + score
 			}
 		}
 		outputFinished += "\n"
@@ -438,8 +481,10 @@ func (m *modelMultiProgress) View() string {
 		if errored || completed {
 			continue
 		}
+		name := m.Progress[k].Name
+		pad := strings.Repeat(" ", m.maxNameWidth-len(name))
 		percent := m.Progress[k].percent
-		outputNotDone += m.Progress[k].model.ViewAs(percent) + " " + m.Progress[k].Name + "\n"
+		outputNotDone += " " + name + pad + " " + m.Progress[k].model.ViewAs(percent) + "\n"
 		itemsInProgress++
 		if itemsInProgress == m.maxItemsToShow {
 			break
@@ -453,13 +498,16 @@ func (m *modelMultiProgress) View() string {
 	output += outputFinished + outputNotDone
 	if _, ok := m.Progress[overallProgressIndexName]; ok {
 		percent := m.Progress[overallProgressIndexName].percent
-		output += "\n" + m.Progress[overallProgressIndexName].model.ViewAs(percent) + " " + m.Progress[overallProgressIndexName].Name
-		output += fmt.Sprintf(" %d/%d scanned", completedAssets, len(m.Progress)-1)
+		stats := fmt.Sprintf("%d/%d scanned", completedAssets, len(m.Progress)-1)
+
 		if erroredAssets > 0 {
-			output += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
+			stats += fmt.Sprintf(" %d/%d errored", erroredAssets, len(m.Progress)-1)
 		}
+
+		pad := strings.Repeat(" ", m.maxNameWidth-len(stats))
 		output += "\n"
+		output += " " + stats + pad + " " + m.Progress[overallProgressIndexName].model.ViewAs(percent)
 	}
 
-	return "\n" + pad + output + "\n"
+	return "\n" + pad + output + "\n\n"
 }
