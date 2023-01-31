@@ -195,7 +195,17 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	return resolved, nil
+	assetMap := make(map[string]*asset.Asset)
+	// ensure we don't return the same asset twice
+	for i := range resolved {
+		assetMap[resolved[i].PlatformIds[0]] = resolved[i]
+	}
+	new := make([]*asset.Asset, 0, len(assetMap))
+	for _, v := range assetMap {
+		new = append(new, v)
+	}
+
+	return new, nil
 }
 
 func AssembleEc2InstancesFilters(opts map[string]string) Ec2InstancesFilters {
