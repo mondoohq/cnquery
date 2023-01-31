@@ -1,6 +1,6 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/azure"
 
-alias azurerm = azure
+alias azurerm = azure.subscription
 alias azurerm.resource = azure.subscription.resource
 alias azurerm.compute = azure.subscription.computeService
 alias azurerm.compute.vm = azure.subscription.computeService.vm
@@ -42,6 +42,7 @@ alias azurerm.monitor = azure.subscription.monitorService
 alias azurerm.monitor.logprofile = azure.subscription.monitorService.logprofile 
 alias azurerm.monitor.diagnosticsetting = azure.subscription.monitorService.diagnosticsetting
 
+alias azure = azure.subscription
 alias azure.authorization = azure.subscription.authorizationService
 alias azure.authorization.roleDefinition = azure.subscription.authorizationService.roleDefinition
 alias azure.authorization.roleDefinition.permission = azure.subscription.authorizationService.roleDefinition.permission
@@ -190,13 +191,6 @@ private azuread.serviceprincipal @defaults("id") {
   id string
 }
 
-// Azure Resources
-azure {
-  // Get all the resources in a subscription
-  resources() []azure.subscription.resource
-  // Get all the resource groups in a subscription
-  resourceGroups() []azure.subscription.resourcegroup
-}
 
 // Azure Subscription
 azure.subscription @defaults ("name") {

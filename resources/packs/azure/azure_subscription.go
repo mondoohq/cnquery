@@ -114,6 +114,10 @@ func (a *mqlAzureSubscription) GetResourceGroups() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionResourcegroup) id() (string, error) {
+	return a.Id()
+}
+
 func (a *mqlAzureSubscription) GetCompute() (interface{}, error) {
 	return a.MotorRuntime.CreateResource("azure.subscription.computeService")
 }
