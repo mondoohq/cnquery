@@ -40,7 +40,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	// we have 3 different asset types for terraform: hcl, plan and state
-	// platform name will differ: terraform, terraform-plan, terraform-state
+	// platform name will differ: terraform-hcl, terraform-plan, terraform-state
 	// platform family will be terraform
 
 	path, ok := tc.Options["path"]

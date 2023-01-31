@@ -27,4 +27,5 @@ const (
 	RUNTIME_GITHUB               = "github"        // api
 	RUNTIME_AWS_EC2_EBS          = "aws-ec2-ebs"
 	RUNTIME_GITLAB               = "gitlab" // api
+	RUNTIME_TERRAFORM            = "terraform"
 )

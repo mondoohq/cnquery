@@ -258,7 +258,7 @@ func terraformProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, r
 func terraformProviderStateCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "state PATH",
-		Short:  "Scan all Terraform state file (json)",
+		Short:  "Scan a Terraform state file (json)",
 		Args:   cobra.ExactArgs(1),
 		PreRun: preRun,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -273,7 +273,7 @@ func terraformProviderStateCmd(commonCmdFlags commonFlagsFn, preRun commonPreRun
 func terraformProviderPlanCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "plan PATH",
-		Short:  "Scan all Terraform plan file (json)",
+		Short:  "Scan a Terraform plan file (json)",
 		Args:   cobra.ExactArgs(1),
 		PreRun: preRun,
 		Run: func(cmd *cobra.Command, args []string) {
