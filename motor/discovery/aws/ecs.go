@@ -12,6 +12,7 @@ import (
 	ecsservice "github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
@@ -115,14 +116,15 @@ func (ecs *ECSContainers) getECSContainers(account string) []*jobpool.Job {
 				}
 				containerInstances, err := svc.ListContainerInstances(ctx, &ecsservice.ListContainerInstancesInput{Cluster: &cluster, Status: types.ContainerInstanceStatusActive})
 				if err != nil {
-					return nil, errors.Wrap(err, "could not list ecs container instances")
-				}
-				if len(containerInstances.ContainerInstanceArns) > 0 {
+					log.Error().Err(err).Msg("cannot list container instances")
+				} else if len(containerInstances.ContainerInstanceArns) > 0 {
 					containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &cluster, ContainerInstances: containerInstances.ContainerInstanceArns})
 					if err == nil {
 						for _, ci := range containerInstancesDetail.ContainerInstances {
 							// container instance assets
-							containerInstancesAssets = append(containerInstancesAssets, ecsContainerInstanceToAsset(account, region, ci, clonedConfig))
+							if containerInstanceAsset := ecsContainerInstanceToAsset(account, region, ci, clonedConfig); containerInstanceAsset != nil {
+								containerInstancesAssets = append(containerInstancesAssets, containerInstanceAsset)
+							}
 						}
 					} else {
 						log.Error().Err(err).Msg("could not gather ecs container instances")
@@ -141,7 +143,9 @@ func (ecs *ECSContainers) getECSContainers(account string) []*jobpool.Job {
 					for _, task := range taskdescriptions.Tasks {
 						for _, c := range task.Containers {
 							// container assets
-							containersAssets = append(containersAssets, ecsContainerToAsset(ctx, account, region, c, clonedConfig, task, clusterName))
+							if containerAsset := ecsContainerToAsset(ctx, account, region, c, clonedConfig, task, clusterName); containerAsset != nil {
+								containersAssets = append(containersAssets, containerAsset)
+							}
 						}
 					}
 				}
@@ -181,7 +185,7 @@ func mapContainerInstanceState(status *string) asset.State {
 }
 
 func ecsContainerToAsset(ctx context.Context, account string, region string, c ecstypes.Container, clonedConfig aws.Config, task ecstypes.Task, clusterName string) *asset.Asset {
-	if c.RuntimeId == nil {
+	if c.RuntimeId == nil { // container is not running, do not include it for now
 		return nil
 	}
 
@@ -202,6 +206,14 @@ func ecsContainerToAsset(ctx context.Context, account string, region string, c e
 	for _, ca := range c.NetworkInterfaces {
 		containerAttachmentIds = append(containerAttachmentIds, *ca.AttachmentId)
 	}
+	taskId := ""
+	if arn.IsARN(*c.TaskArn) {
+		if parsed, err := arn.Parse(*c.TaskArn); err == nil {
+			if taskIds := strings.Split(parsed.Resource, "/"); len(taskIds) > 1 {
+				taskId = taskIds[len(taskIds)-1]
+			}
+		}
+	}
 	var publicIp string
 	for _, a := range task.Attachments {
 		if stringx.Contains(containerAttachmentIds, *a.Id) {
@@ -213,19 +225,26 @@ func ecsContainerToAsset(ctx context.Context, account string, region string, c e
 
 					// add connections here
 					asset.Connections = append(asset.Connections, &providers.Config{
-						// Backend: providers.ProviderType_SSH, // looking into ecs-exec for this
-						Host: publicIp,
+						Backend: providers.ProviderType_SSH, // looking into ecs-exec for this, if we leave this out the scan assumes its local
+						Host:    publicIp,
+						Options: map[string]string{
+							"region":      region,
+							ContainerName: *c.Name,
+							TaskId:        taskId,
+						},
 					})
 				}
 			}
 		}
 	}
+
 	asset.Labels[common.IPLabel] = publicIp
+
 	if publicIp != "" {
 		asset.Name = *c.Name + "-" + publicIp
 	}
 	if c.Image != nil {
-		asset.Labels["image"] = *c.Image
+		asset.Labels[ImageLabel] = *c.Image
 	}
 	for j := range task.Tags {
 		tag := task.Tags[j]
@@ -238,10 +257,18 @@ func ecsContainerToAsset(ctx context.Context, account string, region string, c e
 			asset.Labels[key] = value
 		}
 	}
-	asset.Labels["cluster_name"] = clusterName
-	asset.Labels["task_definition_arn"] = *task.TaskDefinitionArn
+	asset.Labels[ClusterNameLabel] = clusterName
+	asset.Labels[TaskDefinitionArnLabel] = *task.TaskDefinitionArn
 	return asset
 }
+
+const (
+	ContainerName          = "container_name"
+	ClusterNameLabel       = "cluster_name"
+	TaskDefinitionArnLabel = "task_definition_arn"
+	TaskId                 = "task_id"
+	ImageLabel             = "image"
+)
 
 func getPublicIpForContainer(ctx context.Context, cfg aws.Config, nii string) string {
 	svc := ec2.NewFromConfig(cfg)
