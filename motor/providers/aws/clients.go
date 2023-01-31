@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -81,6 +83,54 @@ func (t *Provider) Iam(region string) *iam.Client {
 	cfg := t.config.Copy()
 	cfg.Region = region
 	client := iam.NewFromConfig(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Provider) Ecr(region string) *ecr.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_ecr_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached ecr client")
+		return c.Data.(*ecr.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := ecr.NewFromConfig(cfg)
+
+	// cache it
+	t.cache.Store(cacheVal, &CacheEntry{Data: client})
+	return client
+}
+
+func (t *Provider) EcrPublic(region string) *ecrpublic.Client {
+	// if no region value is sent in, use the configured region
+	if len(region) == 0 {
+		region = t.config.Region
+	}
+	cacheVal := "_ecrpublic_" + region
+
+	// check for cached client and return it if it exists
+	c, ok := t.cache.Load(cacheVal)
+	if ok {
+		log.Debug().Msg("use cached ecrpublic client")
+		return c.Data.(*ecrpublic.Client)
+	}
+
+	// create the client
+	cfg := t.config.Copy()
+	cfg.Region = region
+	client := ecrpublic.NewFromConfig(cfg)
 
 	// cache it
 	t.cache.Store(cacheVal, &CacheEntry{Data: client})
