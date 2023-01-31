@@ -169,6 +169,7 @@ func (g *mqlGcpProjectStorageServiceBucket) init(args *resources.Args) (*resourc
 	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
 		(*args)["name"] = ids.name
 		(*args)["projectId"] = ids.project
+		(*args)["location"] = ids.region
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.storageService", "projectId", (*args)["projectId"])
