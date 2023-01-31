@@ -194,6 +194,9 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	progressBarElements := map[string]string{}
 	orderedKeys := []string{}
 	for i := range assetList {
+		if assetList[i] == nil || len(assetList[i].PlatformIds) == 0 {
+			continue
+		}
 		progressBarElements[assetList[i].PlatformIds[0]] = assetList[i].Name
 		orderedKeys = append(orderedKeys, assetList[i].PlatformIds[0])
 	}
