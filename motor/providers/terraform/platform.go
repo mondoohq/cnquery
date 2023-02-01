@@ -11,6 +11,7 @@ func (p *Provider) PlatformInfo() *platform.Platform {
 		return &platform.Platform{
 			Name:    "terraform-state",
 			Title:   "Terraform State",
+			Family:  []string{"terraform"},
 			Kind:    providers.Kind_KIND_CODE,
 			Runtime: providers.RUNTIME_TERRAFORM,
 		}
@@ -18,6 +19,7 @@ func (p *Provider) PlatformInfo() *platform.Platform {
 		return &platform.Platform{
 			Name:    "terraform-plan",
 			Title:   "Terraform Plan",
+			Family:  []string{"terraform"},
 			Kind:    providers.Kind_KIND_CODE,
 			Runtime: providers.RUNTIME_TERRAFORM,
 		}
@@ -25,6 +27,7 @@ func (p *Provider) PlatformInfo() *platform.Platform {
 		return &platform.Platform{
 			Name:    "terraform-hcl",
 			Title:   "Terraform HCL",
+			Family:  []string{"terraform"},
 			Kind:    providers.Kind_KIND_CODE,
 			Runtime: providers.RUNTIME_TERRAFORM,
 		}
