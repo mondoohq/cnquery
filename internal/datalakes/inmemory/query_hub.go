@@ -72,7 +72,7 @@ func (db *Db) GetQueryPackFilters(ctx context.Context, in string) ([]*explorer.M
 	}
 	asset := x.(wrapAsset)
 
-	return asset.Bundle.AssetFilters(), nil
+	return asset.Bundle.Filters(), nil
 }
 
 func (db *Db) setQueryPack(ctx context.Context, in *explorer.QueryPack, filters []*explorer.Mquery) (wrapQueryPack, error) {

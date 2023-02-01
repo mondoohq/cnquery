@@ -19,13 +19,17 @@ import (
 // Compile a given query and return the bundle. Both v1 and v2 versions are compiled.
 // Both versions will be given the same code id.
 func (m *Mquery) Compile(props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	if m.Query == "" {
-		return nil, errors.New("query is not implemented '" + m.Mrn + "'")
+	if m.Mql == "" {
+		if m.Query == "" {
+			return nil, errors.New("query is not implemented '" + m.Mrn + "'")
+		}
+		m.Mql = m.Query
+		m.Query = ""
 	}
 
 	schema := info.Registry.Schema()
 
-	v2Code, err := mqlc.Compile(m.Query, props, mqlc.NewConfig(schema, cnquery.DefaultFeatures))
+	v2Code, err := mqlc.Compile(m.Mql, props, mqlc.NewConfig(schema, cnquery.DefaultFeatures))
 	if err != nil {
 		return nil, err
 	}
@@ -73,14 +77,30 @@ func (m *Mquery) RefreshMRN(ownerMRN string) error {
 }
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (m *Mquery) RefreshChecksumAndType(props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	return m.refreshChecksumAndType(props)
+func (m *Mquery) RefreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBundle, error) {
+	return m.refreshChecksumAndType(lookup)
 }
 
-func (m *Mquery) refreshChecksumAndType(props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	bundle, err := m.Compile(props)
+func (m *Mquery) refreshChecksumAndType(lookup map[string]queryRef) (*llx.CodeBundle, error) {
+	localProps := map[string]*llx.Primitive{}
+	for i := range m.Props {
+		prop := m.Props[i]
+
+		if prop.Mrn == "" {
+			return nil, errors.New("missing MRN (or UID) for property in query " + m.Mrn)
+		}
+
+		v, ok := lookup[prop.Mrn]
+		if !ok {
+			return nil, errors.New("cannot find property " + prop.Mrn + " in query " + m.Mrn)
+		}
+
+		localProps[v.name] = v.typ
+	}
+
+	bundle, err := m.Compile(localProps)
 	if err != nil {
-		return bundle, errors.New("failed to compile query '" + m.Query + "': " + err.Error())
+		return bundle, errors.New("failed to compile query '" + m.Mql + "': " + err.Error())
 	}
 
 	if bundle.GetCodeV2().GetId() == "" {
@@ -91,7 +111,7 @@ func (m *Mquery) refreshChecksumAndType(props map[string]*llx.Primitive) (*llx.C
 	m.CodeId = bundle.CodeV2.Id
 
 	// the compile step also dedents the code
-	m.Query = bundle.Source
+	m.Mql = bundle.Source
 
 	// TODO: record multiple entrypoints and types
 	// TODO(jaym): is it possible that the 2 could produce different types
@@ -105,23 +125,34 @@ func (m *Mquery) refreshChecksumAndType(props map[string]*llx.Primitive) (*llx.C
 	}
 
 	c := checksums.New.
-		Add(m.Query).
+		Add(m.Mql).
 		Add(m.CodeId).
 		Add(m.Mrn).
 		Add(m.Type).
 		Add(m.Title).Add("v2")
+
+	for i := range m.Props {
+		// we checked this above, so it has to exist
+		prop := m.Props[i]
+		v := lookup[prop.Mrn]
+
+		c = c.Add(v.query.Checksum)
+		if v.query.Mql != "" {
+			c = c.Add(v.query.Mql)
+		}
+	}
 
 	if m.Docs != nil {
 		c = c.
 			Add(m.Docs.Desc).
 			Add(m.Docs.Audit).
 			Add(m.Docs.Remediation)
-	}
 
-	for i := range m.Refs {
-		c = c.
-			Add(m.Refs[i].Title).
-			Add(m.Refs[i].Url)
+		for i := range m.Docs.Refs {
+			c = c.
+				Add(m.Docs.Refs[i].Title).
+				Add(m.Docs.Refs[i].Url)
+		}
 	}
 
 	keys := make([]string, len(m.Tags))
@@ -152,12 +183,12 @@ func (m *Mquery) Sanitize() {
 		m.Docs.Desc = strings.TrimSpace(m.Docs.Desc)
 		m.Docs.Audit = strings.TrimSpace(m.Docs.Audit)
 		m.Docs.Remediation = strings.TrimSpace(m.Docs.Remediation)
-	}
 
-	for i := range m.Refs {
-		r := m.Refs[i]
-		r.Title = strings.TrimSpace(r.Title)
-		r.Url = strings.TrimSpace(r.Url)
+		for i := range m.Docs.Refs {
+			r := m.Docs.Refs[i]
+			r.Title = strings.TrimSpace(r.Title)
+			r.Url = strings.TrimSpace(r.Url)
+		}
 	}
 
 	if m.Tags != nil {
@@ -168,6 +199,55 @@ func (m *Mquery) Sanitize() {
 			sanitizedTags[sk] = sv
 		}
 		m.Tags = sanitizedTags
+	}
+}
+
+func (m *Mquery) Merge(base *Mquery) {
+	if m.Mql == "" {
+		m.Mql = base.Mql
+	}
+	if m.Type == "" {
+		m.Type = base.Type
+	}
+	if m.Context == "" {
+		m.Context = base.Context
+	}
+	if m.Title == "" {
+		m.Title = base.Title
+	}
+	if m.Docs == nil {
+		m.Docs = base.Docs
+	} else if base.Docs != nil {
+		if m.Docs.Desc == "" {
+			m.Docs.Desc = base.Docs.Desc
+		}
+		if m.Docs.Audit == "" {
+			m.Docs.Audit = base.Docs.Audit
+		}
+		if m.Docs.Remediation == "" {
+			m.Docs.Remediation = base.Docs.Remediation
+		}
+		if m.Docs.Refs == nil {
+			m.Docs.Refs = base.Docs.Refs
+		}
+	}
+	if m.Desc == "" {
+		m.Desc = base.Desc
+	}
+	if m.Impact == nil {
+		m.Impact = base.Impact
+	}
+	if m.Tags == nil {
+		m.Tags = base.Tags
+	}
+	if m.Filter == nil {
+		m.Filter = base.Filter
+	}
+	if m.Props == nil {
+		m.Props = base.Props
+	}
+	if m.Compose == nil {
+		m.Compose = base.Compose
 	}
 }
 
@@ -193,7 +273,7 @@ func (v *ImpactValue) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func ChecksumAssetFilters(queries []*Mquery) (string, error) {
+func ChecksumFilters(queries []*Mquery) (string, error) {
 	for i := range queries {
 		if _, err := queries[i].refreshChecksumAndType(nil); err != nil {
 			return "", errors.New("failed to compile query: " + err.Error())
