@@ -52,7 +52,7 @@ message Credential {
   CredentialType type = 2;
   string user = 3;
   bytes secret = 4;
-  SecretEncoding secret_encoding = 5;
+  reserved 5;
 
   // the following are optional and sugar for defining a secret
   // those values are only allowed for reading in yaml values but not via API calls
