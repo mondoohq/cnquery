@@ -400,18 +400,20 @@ func (s *localAssetScanner) prepareAsset() error {
 		AssetMrn: s.job.Asset.Mrn,
 		PackMrns: querypackMrns,
 	})
+	if err != nil {
+		return err
+	}
 
 	if len(s.job.Props) != 0 {
 		propsReq := explorer.PropsReq{
 			EntityMrn: s.job.Asset.Mrn,
-			Props:     make([]*explorer.Mquery, len(s.job.Props)),
+			Props:     make([]*explorer.Property, len(s.job.Props)),
 		}
 		i := 0
 		for k, v := range s.job.Props {
-			propsReq.Props[i] = &explorer.Mquery{
-				Uid:    k,
-				Mql:    v,
-				Action: explorer.Mquery_MODIFY,
+			propsReq.Props[i] = &explorer.Property{
+				Uid: k,
+				Mql: v,
 			}
 			i++
 		}
@@ -422,7 +424,7 @@ func (s *localAssetScanner) prepareAsset() error {
 		}
 	}
 
-	return err
+	return nil
 }
 
 var assetDetectBundle = executor.MustCompile("asset { kind platform runtime version family }")

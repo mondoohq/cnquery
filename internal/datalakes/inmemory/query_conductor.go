@@ -179,3 +179,50 @@ func (db *Db) initDataValue(ctx context.Context, assetMrn string, checksum strin
 	}
 	return nil
 }
+
+// SetProps will override properties for a given entity (asset, space, org)
+func (db *Db) SetProps(ctx context.Context, req *explorer.PropsReq) error {
+	x, ok := db.cache.Get(dbIDAsset + req.EntityMrn)
+	if !ok {
+		return errors.New("failed to find entity " + req.EntityMrn)
+	}
+	asset := x.(wrapAsset)
+
+	if asset.Bundle == nil {
+		return errors.New("found an asset without a bundle configured in the DB")
+	}
+
+	propsIdx := make(map[string]*explorer.Property, len(asset.Bundle.Props))
+	for i := range asset.Bundle.Props {
+		cur := asset.Bundle.Props[i]
+		if cur.Mrn != "" {
+			propsIdx[cur.Mrn] = cur
+		}
+		if cur.Uid != "" {
+			propsIdx[cur.Uid] = cur
+		}
+	}
+
+	for i := range req.Props {
+		cur := req.Props[i]
+		id := cur.Mrn
+		if id == "" {
+			id = cur.Uid
+		}
+		if id == "" {
+			return errors.New("cannot set property without MRN: " + cur.Mql)
+		}
+
+		if x, ok := propsIdx[id]; ok {
+			x.Mql = cur.Mql
+			continue
+		}
+
+		asset.Bundle.Props = append(asset.Bundle.Props, cur)
+		propsIdx[id] = cur
+	}
+
+	db.cache.Set(dbIDAsset+req.EntityMrn, asset, 1)
+
+	return nil
+}

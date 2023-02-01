@@ -10,7 +10,7 @@ message Bundle {
   string owner_mrn = 1; 
   repeated QueryPack packs = 2;
   repeated Mquery queries = 3;
-  repeated Mquery props = 4;
+  repeated Property props = 4;
 }
 
 message QueryPack {
@@ -128,7 +128,7 @@ message Mquery {
   MqueryDocs docs = 21;
   // Desc is only used if docs.desc is not defined. It is not persisted.
   string desc = 35;
-  ImpactValue impact = 23;
+  Impact impact = 23;
   map<string,string> tags = 34;
   Filters filter = 37;
   repeated Property props = 38;
@@ -137,8 +137,24 @@ message Mquery {
   Action action = 41;
 }
 
-message ImpactValue {
+// Impact explains how important certain queries are. They are especially useful
+// in weighted testing where results need to be prioritized. They can also
+// serve as a priority list for data that is collected.
+message Impact {
+  enum ScoringSystem {
+    SCORING_UNSPECIFIED = 0;
+    WEIGHTED = 1;
+    WORST = 2;
+    AVERAGE = 3;
+    DATA_ONLY = 4;
+  }
+
+  // Value is between 0 to 100 (most impactful). -1 for unset
   int32 value = 1;
+  // The scoring system to apply for evaluating multiple results
+  ScoringSystem scoring = 2;
+  // The weight of this query. -1 for unset
+  int32 weight = 3;
 }
 
 message QueryPackDocs {
@@ -148,8 +164,17 @@ message QueryPackDocs {
 message MqueryDocs {
   string desc = 1;
   string audit = 2;
-  string remediation = 3;
+  Remediation remediation = 3;
   repeated MqueryRef refs = 4;
+}
+
+message Remediation {
+  repeated TypedDoc items = 1;
+}
+
+message TypedDoc {
+  string id = 1;
+  string desc = 2;
 }
 
 message Author {
@@ -259,7 +284,7 @@ message Assignment {
 // PropsReq is used to set, change, or remove properties.
 message PropsReq {
   string entity_mrn = 1;
-  repeated Mquery props = 2;
+  repeated Property props = 2;
 }
 
 // Resolve a given entity via its MRN. Typically used to resolve assets.
