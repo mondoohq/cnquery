@@ -1496,7 +1496,7 @@ resources:
     platform:
       name:
       - azure
-  azure.subscription.networkService.securitygroup:
+  azure.subscription.networkService.securityGroup:
     fields:
       defaultSecurityRules: {}
       etag: {}
@@ -1509,6 +1509,22 @@ resources:
       tags: {}
       type: {}
     is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.securitygroup:
+    fields:
+      defaultSecurityRules: {}
+      etag: {}
+      id: {}
+      interfaces: {}
+      location: {}
+      name: {}
+      properties: {}
+      securityRules: {}
+      tags: {}
+      type: {}
     min_mondoo_version: latest
     platform:
       name:
@@ -2100,6 +2116,18 @@ resources:
     platform:
       name:
       - azure
+  azure.subscription.storageService.account.container:
+    fields:
+      etag: {}
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
   azure.subscription.storageService.account.dataProtection:
     fields:
       blobRetentionDays: {}
@@ -2176,7 +2204,6 @@ resources:
       name: {}
       properties: {}
       type: {}
-    is_private: true
     min_mondoo_version: latest
     platform:
       name:

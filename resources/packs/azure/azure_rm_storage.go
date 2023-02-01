@@ -246,7 +246,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) GetContainers() ([]interface
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.storageService.container",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.storageService.account.container",
 				"id", core.ToString(container.ID),
 				"name", core.ToString(container.Name),
 				"etag", core.ToString(container.Etag),
@@ -362,7 +362,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) GetBlobProperties() (interfa
 	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "blob", parentId)
 }
 
-func (a *mqlAzureSubscriptionStorageServiceContainer) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountContainer) id() (string, error) {
 	return a.Id()
 }
 

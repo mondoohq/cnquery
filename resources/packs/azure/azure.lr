@@ -7,12 +7,12 @@ alias azurerm.compute.vm = azure.subscription.computeService.vm
 alias azurerm.compute.disk = azure.subscription.computeService.disk
 alias azurerm.network  = azure.subscription.networkService
 alias azurerm.network.interface = azure.subscription.networkService.interface
-alias azurerm.network.securitygroup = azure.subscription.networkService.securitygroup
+alias azurerm.network.securitygroup = azure.subscription.networkService.securityGroup
 alias azurerm.network.securityrule = azure.subscription.networkService.securityrule
 alias azurerm.network.watcher = azure.subscription.networkService.watcher
 alias azurerm.storage = azure.subscription.storageService
 alias azurerm.storage.account = azure.subscription.storageService.account
-alias azurerm.storage.container = azure.subscription.storageService.container
+alias azurerm.storage.container = azure.subscription.storageService.account.container
 alias azurerm.web = azure.subscription.webService
 alias azurerm.web.appsite = azure.subscription.webService.appsite
 alias azurerm.web.appsiteauthsettings = azure.subscription.webService.appsiteauthsettings
@@ -70,7 +70,7 @@ alias azure.mysql.flexibleServer = azure.subscription.mysqlService.flexibleServe
 alias azure.mysql.server = azure.subscription.mysqlService.server
 alias azure.network = azure.subscription.networkService
 alias azure.network.interface = azure.subscription.networkService.interface
-alias azure.network.securitygroup = azure.subscription.networkService.securitygroup
+alias azure.network.securitygroup = azure.subscription.networkService.securityGroup
 alias azure.network.securityrule = azure.subscription.networkService.securityrule
 alias azure.network.watcher = azure.subscription.networkService.watcher
 alias azure.network.watcher.flowlog = azure.subscription.networkService.watcher.flowlog
@@ -97,7 +97,7 @@ alias azure.storage.account.service.properties.metrics = azure.subscription.stor
 alias azure.storage.account.service.properties.retentionPolicy = azure.subscription.storageService.account.service.properties.retentionPolicy
 alias azure.storage.account.tableService.properties = azure.subscription.storageService.account.tableService.properties
 alias azure.storage.account.tableService.properties = azure.subscription.storageService.account.tableService.properties
-alias azure.storage.container = azure.subscription.storageService.container
+alias azure.storage.container = azure.subscription.storageService.account.container
 alias azure.web = azure.subscription.webService
 alias azure.web.appsite = azure.subscription.webService.appsite
 alias azure.web.appsiteauthsettings = azure.subscription.webService.appsiteauthsettings
@@ -353,7 +353,7 @@ private azure.subscription.networkService {
   // List of network interfaces
   interfaces() []azure.subscription.networkService.interface
   // List of network security groups
-  securityGroups() []azure.subscription.networkService.securitygroup
+  securityGroups() []azure.subscription.networkService.securityGroup
   // List of network watchers
   watchers() []azure.subscription.networkService.watcher
 }
@@ -379,7 +379,7 @@ private azure.subscription.networkService.interface @defaults("id name location"
 }
 
 // Azure Network Security Group
-private azure.subscription.networkService.securitygroup @defaults("id name location") {
+private azure.subscription.networkService.securityGroup @defaults("id name location") {
   // Security group ID
   id string
   // Security group name
@@ -501,7 +501,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // Storage account kind
   kind string
   // Storage account containers
-  containers() []azure.subscription.storageService.container
+  containers() []azure.subscription.storageService.account.container
   // Storage account queue properties
   queueProperties() azure.subscription.storageService.account.queueService.properties
   // Storage account table properties
@@ -603,7 +603,7 @@ private azure.subscription.storageService.account.service.properties.logging {
 }
 
 // Azure Storage Container
-private azure.subscription.storageService.container @defaults("id name") {
+private azure.subscription.storageService.account.container @defaults("id name") {
   // Storage container ID
   id string
   // Storage container name

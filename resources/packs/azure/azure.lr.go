@@ -26,7 +26,7 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("azure.subscription.computeService.disk", newAzureSubscriptionComputeServiceDisk)
 	registry.AddFactory("azure.subscription.networkService", newAzureSubscriptionNetworkService)
 	registry.AddFactory("azure.subscription.networkService.interface", newAzureSubscriptionNetworkServiceInterface)
-	registry.AddFactory("azure.subscription.networkService.securitygroup", newAzureSubscriptionNetworkServiceSecuritygroup)
+	registry.AddFactory("azure.subscription.networkService.securityGroup", newAzureSubscriptionNetworkServiceSecurityGroup)
 	registry.AddFactory("azure.subscription.networkService.securityrule", newAzureSubscriptionNetworkServiceSecurityrule)
 	registry.AddFactory("azure.subscription.networkService.watcher", newAzureSubscriptionNetworkServiceWatcher)
 	registry.AddFactory("azure.subscription.networkService.watcher.flowlog", newAzureSubscriptionNetworkServiceWatcherFlowlog)
@@ -39,7 +39,7 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("azure.subscription.storageService.account.service.properties.metrics", newAzureSubscriptionStorageServiceAccountServicePropertiesMetrics)
 	registry.AddFactory("azure.subscription.storageService.account.service.properties.retentionPolicy", newAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy)
 	registry.AddFactory("azure.subscription.storageService.account.service.properties.logging", newAzureSubscriptionStorageServiceAccountServicePropertiesLogging)
-	registry.AddFactory("azure.subscription.storageService.container", newAzureSubscriptionStorageServiceContainer)
+	registry.AddFactory("azure.subscription.storageService.account.container", newAzureSubscriptionStorageServiceAccountContainer)
 	registry.AddFactory("azure.subscription.webService", newAzureSubscriptionWebService)
 	registry.AddFactory("azure.subscription.webService.appsite", newAzureSubscriptionWebServiceAppsite)
 	registry.AddFactory("azure.subscription.webService.appsiteauthsettings", newAzureSubscriptionWebServiceAppsiteauthsettings)
@@ -5454,8 +5454,8 @@ func (s *mqlAzureSubscriptionNetworkServiceInterface) ComputeVm() error {
 	return nil
 }
 
-// AzureSubscriptionNetworkServiceSecuritygroup resource interface
-type AzureSubscriptionNetworkServiceSecuritygroup interface {
+// AzureSubscriptionNetworkServiceSecurityGroup resource interface
+type AzureSubscriptionNetworkServiceSecurityGroup interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -5473,21 +5473,21 @@ type AzureSubscriptionNetworkServiceSecuritygroup interface {
 	DefaultSecurityRules() ([]interface{}, error)
 }
 
-// mqlAzureSubscriptionNetworkServiceSecuritygroup for the azure.subscription.networkService.securitygroup resource
-type mqlAzureSubscriptionNetworkServiceSecuritygroup struct {
+// mqlAzureSubscriptionNetworkServiceSecurityGroup for the azure.subscription.networkService.securityGroup resource
+type mqlAzureSubscriptionNetworkServiceSecurityGroup struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) MqlResource() *resources.Resource {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azure.subscription.networkService.securitygroup resource
-func newAzureSubscriptionNetworkServiceSecuritygroup(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.subscription.networkService.securityGroup resource
+func newAzureSubscriptionNetworkServiceSecurityGroup(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzureSubscriptionNetworkServiceSecuritygroup{runtime.NewResource("azure.subscription.networkService.securitygroup")}
+	res := mqlAzureSubscriptionNetworkServiceSecurityGroup{runtime.NewResource("azure.subscription.networkService.securityGroup")}
 	// assign all named fields
 	var id string
 
@@ -5501,52 +5501,52 @@ func newAzureSubscriptionNetworkServiceSecuritygroup(runtime *resources.Runtime,
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "etag":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"etag\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"etag\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "interfaces":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"interfaces\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"interfaces\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "securityRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"securityRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"securityRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "defaultSecurityRules":
 			if _, ok := val.([]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"defaultSecurityRules\" argument has the wrong type (expected type \"[]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"defaultSecurityRules\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securitygroup\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.networkService.securityGroup\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azure.subscription.networkService.securitygroup with unknown argument " + name)
+			return nil, errors.New("Initialized azure.subscription.networkService.securityGroup with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -5564,45 +5564,45 @@ func newAzureSubscriptionNetworkServiceSecuritygroup(runtime *resources.Runtime,
 	return &res, nil
 }
 
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Validate() error {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("etag"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"etag\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"etag\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("interfaces"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"interfaces\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"interfaces\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("securityRules"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"securityRules\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"securityRules\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("defaultSecurityRules"); !ok {
-		return errors.New("Initialized \"azure.subscription.networkService.securitygroup\" resource without a \"defaultSecurityRules\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.networkService.securityGroup\" resource without a \"defaultSecurityRules\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azure.subscription.networkService.securitygroup].Register")
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.subscription.networkService.securityGroup].Register")
 	switch name {
 	case "id":
 		return nil
@@ -5625,13 +5625,13 @@ func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Register(name string) 
 	case "defaultSecurityRules":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.networkService.securitygroup\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.networkService.securityGroup\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azure.subscription.networkService.securitygroup].Field")
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.subscription.networkService.securityGroup].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -5654,173 +5654,173 @@ func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Field(name string) (in
 	case "defaultSecurityRules":
 		return s.DefaultSecurityRules()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.subscription.networkService.securitygroup\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.subscription.networkService.securityGroup\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Id() (string, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Name() (string, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Location() (string, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Type() (string, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Etag accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Etag() (string, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Etag() (string, error) {
 	res, ok := s.Cache.Load("etag")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"etag\"")
+		return "", errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"etag\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"etag\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"etag\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Properties() (interface{}, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Interfaces accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) Interfaces() ([]interface{}, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) Interfaces() ([]interface{}, error) {
 	res, ok := s.Cache.Load("interfaces")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"interfaces\"")
+		return nil, errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"interfaces\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"interfaces\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"interfaces\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // SecurityRules accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) SecurityRules() ([]interface{}, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) SecurityRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("securityRules")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"securityRules\"")
+		return nil, errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"securityRules\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"securityRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"securityRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // DefaultSecurityRules accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) DefaultSecurityRules() ([]interface{}, error) {
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) DefaultSecurityRules() ([]interface{}, error) {
 	res, ok := s.Cache.Load("defaultSecurityRules")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.networkService.securitygroup\" failed: no value provided for static field \"defaultSecurityRules\"")
+		return nil, errors.New("\"azure.subscription.networkService.securityGroup\" failed: no value provided for static field \"defaultSecurityRules\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.networkService.securitygroup\" failed to cast field \"defaultSecurityRules\" to the right type ([]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.networkService.securityGroup\" failed to cast field \"defaultSecurityRules\" to the right type ([]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[azure.subscription.networkService.securitygroup].MqlCompute")
+func (s *mqlAzureSubscriptionNetworkServiceSecurityGroup) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.subscription.networkService.securityGroup].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -5843,7 +5843,7 @@ func (s *mqlAzureSubscriptionNetworkServiceSecuritygroup) MqlCompute(name string
 	case "defaultSecurityRules":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.networkService.securitygroup\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.networkService.securityGroup\" resource")
 	}
 }
 
@@ -9387,8 +9387,8 @@ func (s *mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging) MqlC
 	}
 }
 
-// AzureSubscriptionStorageServiceContainer resource interface
-type AzureSubscriptionStorageServiceContainer interface {
+// AzureSubscriptionStorageServiceAccountContainer resource interface
+type AzureSubscriptionStorageServiceAccountContainer interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -9401,21 +9401,21 @@ type AzureSubscriptionStorageServiceContainer interface {
 	Properties() (interface{}, error)
 }
 
-// mqlAzureSubscriptionStorageServiceContainer for the azure.subscription.storageService.container resource
-type mqlAzureSubscriptionStorageServiceContainer struct {
+// mqlAzureSubscriptionStorageServiceAccountContainer for the azure.subscription.storageService.account.container resource
+type mqlAzureSubscriptionStorageServiceAccountContainer struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzureSubscriptionStorageServiceContainer) MqlResource() *resources.Resource {
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azure.subscription.storageService.container resource
-func newAzureSubscriptionStorageServiceContainer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.subscription.storageService.account.container resource
+func newAzureSubscriptionStorageServiceAccountContainer(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzureSubscriptionStorageServiceContainer{runtime.NewResource("azure.subscription.storageService.container")}
+	res := mqlAzureSubscriptionStorageServiceAccountContainer{runtime.NewResource("azure.subscription.storageService.account.container")}
 	// assign all named fields
 	var id string
 
@@ -9429,32 +9429,32 @@ func newAzureSubscriptionStorageServiceContainer(runtime *resources.Runtime, arg
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.container\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.account.container\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.container\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.account.container\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.container\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.account.container\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "etag":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.container\", its \"etag\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.account.container\", its \"etag\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.container\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.account.container\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.container\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.storageService.account.container\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azure.subscription.storageService.container with unknown argument " + name)
+			return nil, errors.New("Initialized azure.subscription.storageService.account.container with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -9472,30 +9472,30 @@ func newAzureSubscriptionStorageServiceContainer(runtime *resources.Runtime, arg
 	return &res, nil
 }
 
-func (s *mqlAzureSubscriptionStorageServiceContainer) Validate() error {
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azure.subscription.storageService.container\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.storageService.account.container\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azure.subscription.storageService.container\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.storageService.account.container\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azure.subscription.storageService.container\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.storageService.account.container\" resource without a \"type\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("etag"); !ok {
-		return errors.New("Initialized \"azure.subscription.storageService.container\" resource without a \"etag\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.storageService.account.container\" resource without a \"etag\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azure.subscription.storageService.container\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.storageService.account.container\" resource without a \"properties\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azure.subscription.storageService.container].Register")
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.subscription.storageService.account.container].Register")
 	switch name {
 	case "id":
 		return nil
@@ -9508,13 +9508,13 @@ func (s *mqlAzureSubscriptionStorageServiceContainer) Register(name string) erro
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.storageService.container\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.storageService.account.container\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azure.subscription.storageService.container].Field")
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.subscription.storageService.account.container].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -9527,93 +9527,93 @@ func (s *mqlAzureSubscriptionStorageServiceContainer) Field(name string) (interf
 	case "properties":
 		return s.Properties()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.subscription.storageService.container\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.subscription.storageService.account.container\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) Id() (string, error) {
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.storageService.container\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.subscription.storageService.account.container\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.storageService.container\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.storageService.account.container\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) Name() (string, error) {
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.storageService.container\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.subscription.storageService.account.container\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.storageService.container\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.storageService.account.container\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) Type() (string, error) {
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.storageService.container\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.subscription.storageService.account.container\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.storageService.container\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.storageService.account.container\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Etag accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) Etag() (string, error) {
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Etag() (string, error) {
 	res, ok := s.Cache.Load("etag")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.storageService.container\" failed: no value provided for static field \"etag\"")
+		return "", errors.New("\"azure.subscription.storageService.account.container\" failed: no value provided for static field \"etag\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.storageService.container\" failed to cast field \"etag\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.storageService.account.container\" failed to cast field \"etag\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) Properties() (interface{}, error) {
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.storageService.container\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.subscription.storageService.account.container\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.storageService.container\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.storageService.account.container\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzureSubscriptionStorageServiceContainer) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[azure.subscription.storageService.container].MqlCompute")
+func (s *mqlAzureSubscriptionStorageServiceAccountContainer) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.subscription.storageService.account.container].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -9626,7 +9626,7 @@ func (s *mqlAzureSubscriptionStorageServiceContainer) MqlCompute(name string) er
 	case "properties":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.storageService.container\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.storageService.account.container\" resource")
 	}
 }
 

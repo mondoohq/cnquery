@@ -189,7 +189,7 @@ func azureSecGroupToMql(runtime *resources.Runtime, secGroup network.SecurityGro
 		}
 	}
 
-	return runtime.CreateResource("azure.subscription.networkService.securitygroup",
+	return runtime.CreateResource("azure.subscription.networkService.securityGroup",
 		"id", core.ToString(secGroup.ID),
 		"name", core.ToString(secGroup.Name),
 		"location", core.ToString(secGroup.Location),
@@ -258,7 +258,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) GetVm() (interface{}, erro
 	return nil, errors.New("not implemented")
 }
 
-func (a *mqlAzureSubscriptionNetworkServiceSecuritygroup) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) id() (string, error) {
 	return a.Id()
 }
 
