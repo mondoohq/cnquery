@@ -16,6 +16,8 @@ type resolver struct {
 	vault vault.Vault
 }
 
+// New creates a new credentials resolver. The resolver allows for caching already resolved credentials
+// in memory such that they are not retrieved from vault again.
 func New(v vault.Vault, enableCaching bool) Resolver {
 	if enableCaching {
 		return &resolver{vault: newCachedVault(v)}
