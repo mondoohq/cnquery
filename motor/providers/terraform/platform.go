@@ -12,21 +12,21 @@ func (p *Provider) PlatformInfo() *platform.Platform {
 			Name:    "terraform-state",
 			Title:   "Terraform State",
 			Kind:    providers.Kind_KIND_CODE,
-			Runtime: "terraform-state",
+			Runtime: providers.RUNTIME_TERRAFORM,
 		}
 	case planfile:
 		return &platform.Platform{
 			Name:    "terraform-plan",
 			Title:   "Terraform Plan",
 			Kind:    providers.Kind_KIND_CODE,
-			Runtime: "terraform-plan",
+			Runtime: providers.RUNTIME_TERRAFORM,
 		}
 	default:
 		return &platform.Platform{
-			Name:    "terraform",
-			Title:   "Terraform",
+			Name:    "terraform-hcl",
+			Title:   "Terraform HCL",
 			Kind:    providers.Kind_KIND_CODE,
-			Runtime: "terraform-configuration",
+			Runtime: providers.RUNTIME_TERRAFORM,
 		}
 	}
 }

@@ -69,7 +69,7 @@ Provide the recording with mock data as an argument:
 				Short: "Scan a Vagrant host.",
 			},
 			"terraform": {
-				Short: "Scan all Terraform files in a path (.tf files).",
+				Short: "Scan Terraform HCL (files.tf and directories), plan files (json), and state files (json).",
 			},
 			"ssh": {
 				Short: "Scan an SSH target.",
