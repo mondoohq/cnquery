@@ -10,10 +10,9 @@ import (
 
 func TestSecretCredentialConversion(t *testing.T) {
 	cred := &Credential{
-		Type:           CredentialType_password,
-		User:           "username",
-		Password:       "pass1",
-		SecretEncoding: SecretEncoding_encoding_proto,
+		Type:     CredentialType_password,
+		User:     "username",
+		Password: "pass1",
 	}
 	cred.PreProcess()
 
