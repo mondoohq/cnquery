@@ -182,7 +182,7 @@ func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 }
 
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {
-	if p.platformOverride != "" {
+	if p.platformOverride != "" && p.platformOverride != "gcp" {
 		return &platform.Platform{
 			Name:    p.platformOverride,
 			Title:   getTitleForPlatformName(p.platformOverride),
