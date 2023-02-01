@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/github"
 	"go.mondoo.com/cnquery/resources/packs/gitlab"
 	"go.mondoo.com/cnquery/resources/packs/googleworkspace"
+	"go.mondoo.com/cnquery/resources/packs/ipmi"
 	"go.mondoo.com/cnquery/resources/packs/k8s"
 	"go.mondoo.com/cnquery/resources/packs/ms365"
 	"go.mondoo.com/cnquery/resources/packs/okta"
@@ -45,4 +46,5 @@ func init() {
 	Registry.Add(slack.Registry)
 	Registry.Add(vcd.Registry)
 	Registry.Add(arista.Registry)
+	Registry.Add(ipmi.Registry)
 }

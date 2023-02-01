@@ -20,6 +20,7 @@ import (
 	gcpInfo "go.mondoo.com/cnquery/resources/packs/gcp/info"
 	githubInfo "go.mondoo.com/cnquery/resources/packs/github/info"
 	gitlabInfo "go.mondoo.com/cnquery/resources/packs/gitlab/info"
+	ipmiInfo "go.mondoo.com/cnquery/resources/packs/ipmi/info"
 	k8sInfo "go.mondoo.com/cnquery/resources/packs/k8s/info"
 	ms365Info "go.mondoo.com/cnquery/resources/packs/ms365/info"
 	oktaInfo "go.mondoo.com/cnquery/resources/packs/okta/info"
@@ -48,6 +49,7 @@ func init() {
 	Registry.Add(slackInfo.Registry)
 	Registry.Add(vcdInfo.Registry)
 	Registry.Add(aristaInfo.Registry)
+	Registry.Add(ipmiInfo.Registry)
 
 	ResourceDocs = mergeDocs(
 		coreInfo.ResourceDocs,
@@ -66,6 +68,7 @@ func init() {
 		slackInfo.ResourceDocs,
 		vcdInfo.ResourceDocs,
 		aristaInfo.ResourceDocs,
+		ipmiInfo.ResourceDocs,
 	)
 }
 

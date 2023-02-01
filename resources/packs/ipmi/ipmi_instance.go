@@ -1,4 +1,4 @@
-package core
+package ipmi
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	ipmi_provider "go.mondoo.com/cnquery/motor/providers/ipmi"
 	ipmi "go.mondoo.com/cnquery/motor/providers/ipmi/client"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func getIpmiInstance(t providers.Instance) (*ipmi.IpmiClient, error) {
@@ -45,7 +46,7 @@ func (a *mqlIpmi) GetDeviceID() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	return JsonToDict(resp)
+	return core.JsonToDict(resp)
 }
 
 func (a *mqlIpmiChassis) id() (string, error) {
@@ -63,7 +64,7 @@ func (a *mqlIpmiChassis) GetStatus() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	return JsonToDict(resp)
+	return core.JsonToDict(resp)
 }
 
 func (a *mqlIpmiChassis) GetSystemBootOptions() (map[string]interface{}, error) {
@@ -77,5 +78,5 @@ func (a *mqlIpmiChassis) GetSystemBootOptions() (map[string]interface{}, error) 
 		return nil, err
 	}
 
-	return JsonToDict(resp)
+	return core.JsonToDict(resp)
 }
