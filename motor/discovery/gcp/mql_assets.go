@@ -21,8 +21,6 @@ import (
 	resource_pack "go.mondoo.com/cnquery/resources/packs/gcp"
 )
 
-const RegionLabel string = "mondoo.com/region"
-
 type MqlDiscovery struct {
 	rt *resources.Runtime
 }
@@ -57,7 +55,7 @@ func (md *MqlDiscovery) GetList(query string) []interface{} {
 	return a
 }
 
-func GatherAssets(ctx context.Context, tc *providers.Config, project string, credsResolver vault.Resolver) ([]*asset.Asset, error) {
+func GatherAssets(ctx context.Context, tc *providers.Config, project string, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	// Note: we use the resolver instead of the direct gcp_provider.New to resolve credentials properly
 	pCfg := tc.Clone()
@@ -74,6 +72,9 @@ func GatherAssets(ctx context.Context, tc *providers.Config, project string, cre
 	m, err := NewMQLAssetsDiscovery(provider)
 	if err != nil {
 		return nil, err
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
+		assets = append(assets, computeInstances(m, project, tc, sfn)...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeImages) {
 		assets = append(assets, computeImages(m, project, tc)...)
@@ -180,5 +181,6 @@ func addInformationalLabels(l map[string]string, o mqlObject) map[string]string 
 	}
 	l[RegionLabel] = o.gcpObject.region
 	l[common.ParentId] = o.gcpObject.project
+	l[ProjectLabel] = o.gcpObject.project
 	return l
 }

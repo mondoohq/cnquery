@@ -1,16 +1,23 @@
 package gcp
 
 import (
+	"encoding/json"
+
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources/packs/gcp"
+	"google.golang.org/api/compute/v1"
 )
 
 func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 	switch o.service {
 	case "compute":
 		switch o.objectType {
+		case "instance":
+			return gcpObjectPlatformInfo{title: "GCP Compute Instance", platform: "gcp-compute-instance"}, nil
 		case "image":
 			return gcpObjectPlatformInfo{title: "GCP Compute Image", platform: "gcp-compute-image"}, nil
 		case "network":
@@ -36,6 +43,72 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 		}
 	}
 	return gcpObjectPlatformInfo{}, errors.Newf("missing runtime info for gcp object service %s type %s", o.service, o.objectType)
+}
+
+func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn common.QuerySecretFn) []*asset.Asset {
+	assets := []*asset.Asset{}
+	instances := m.GetList("return gcp.project.compute.instances { id name labels zone status networkInterfaces }")
+	for i := range instances {
+		b := instances[i].(map[string]interface{})
+		id := b["id"].(string)
+		name := b["name"].(string)
+		tags := b["labels"].(map[string]interface{})
+		zone := b["zone"].(map[string]interface{})
+		zoneName := zone["name"].(string)
+		status := b["status"].(string)
+		stringLabels := make(map[string]string)
+		for k, v := range tags {
+			stringLabels[k] = v.(string)
+		}
+		stringLabels["mondoo.com/instance"] = id
+
+		data, err := json.Marshal(b["networkInterfaces"])
+		if err != nil {
+			log.Error().Msgf("failed to marshal network interfaces for gcp compute instance %s", name)
+			continue
+		}
+
+		var networkIfaces []*compute.NetworkInterface
+		if err := json.Unmarshal(data, &networkIfaces); err != nil {
+			log.Error().Msgf("failed to unmarshal network interfaces for gcp compute instance %s", name)
+			continue
+		}
+
+		connections := []*providers.Config{}
+		for _, ni := range networkIfaces {
+			for _, ac := range ni.AccessConfigs {
+				if len(ac.NatIP) > 0 {
+					log.Debug().Str("instance", name).Str("ip", ac.NatIP).Msg("found public ip")
+					connections = append(connections, &providers.Config{
+						Backend:  providers.ProviderType_SSH,
+						Host:     ac.NatIP,
+						Insecure: tc.Insecure,
+					})
+				}
+			}
+		}
+
+		a := MqlObjectToAsset(project,
+			mqlObject{
+				name: name, labels: stringLabels,
+				gcpObject: gcpObject{
+					project:    project,
+					region:     zoneName,
+					name:       name,
+					id:         id,
+					service:    "compute",
+					objectType: "image",
+				},
+			}, tc)
+		a.State = mapInstanceState(status)
+		a.Platform.Kind = providers.Kind_KIND_VIRTUAL_MACHINE
+		a.Platform.Runtime = providers.RUNTIME_GCP_COMPUTE
+		a.Connections = connections
+		// find the secret reference for the asset
+		common.EnrichAssetWithSecrets(a, sfn)
+		assets = append(assets, a)
+	}
+	return assets
 }
 
 func computeImages(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
