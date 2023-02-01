@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/checksums"
-	llx "go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mrn"
 	"sigs.k8s.io/yaml"
 )
@@ -207,10 +206,44 @@ func (p *Bundle) AddBundle(other *Bundle) error {
 	return nil
 }
 
-type queryRef struct {
-	name  string
-	typ   *llx.Primitive
-	query *Mquery
+type PropertyRef struct {
+	*Property
+	Name string
+}
+
+func (p *Bundle) compileProp(prop *Property, ownerMrn string, lookupProp map[string]PropertyRef, uid2mrn map[string]string) error {
+	var name string
+
+	if prop.Mrn == "" {
+		uid := prop.Uid
+		if err := prop.RefreshMRN(ownerMrn); err != nil {
+			return err
+		}
+		if uid != "" {
+			uid2mrn[uid] = prop.Mrn
+		}
+
+		// TODO: uid's can be namespaced, extract the name
+		name = uid
+	} else {
+		m, err := mrn.NewMRN(prop.Mrn)
+		if err != nil {
+			return errors.Wrap(err, "failed to compile prop, invalid mrn: "+prop.Mrn)
+		}
+
+		name = m.Basename()
+	}
+
+	if _, err := prop.RefreshChecksumAndType(); err != nil {
+		return err
+	}
+
+	lookupProp[prop.Mrn] = PropertyRef{
+		Property: prop,
+		Name:     name,
+	}
+
+	return nil
 }
 
 // Compile a bundle
@@ -234,7 +267,8 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 	uid2mrn := map[string]string{}
 
 	// Index properties
-	lookup := map[string]queryRef{}
+	lookupProp := map[string]PropertyRef{}
+	lookupQuery := map[string]*Mquery{}
 
 	// Index queries + update MRNs and checksums
 	for i := range p.Queries {
@@ -254,16 +288,12 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 		if uid != "" {
 			uid2mrn[uid] = query.Mrn
 		}
+		lookupQuery[query.Mrn] = query
 
 		// ensure MRNs for properties
 		for i := range query.Props {
-			prop := query.Props[i]
-			uid := prop.Uid
-			if err = prop.RefreshMRN(ownerMrn); err != nil {
+			if err = p.compileProp(query.Props[i], ownerMrn, lookupProp, uid2mrn); err != nil {
 				return nil, err
-			}
-			if uid != "" {
-				uid2mrn[uid] = prop.Mrn
 			}
 		}
 
@@ -280,14 +310,10 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 		}
 
 		// recalculate the checksums
-		_, err := query.RefreshChecksumAndType(lookup)
+		_, err := query.RefreshChecksumAndType(lookupProp)
 		if err != nil {
 			log.Error().Err(err).Msg("could not compile the query")
 			warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
-		}
-
-		lookup[query.Mrn] = queryRef{
-			query: query,
 		}
 	}
 
@@ -319,23 +345,21 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 				return nil, err
 			}
 
-			existing, ok := lookup[query.Mrn]
+			existing, ok := lookupQuery[query.Mrn]
 			if ok {
-				query.Merge(existing.query)
-				query.RefreshChecksumAndType(lookup)
+				query.Merge(existing)
+				query.RefreshChecksumAndType(lookupProp)
 				continue
 			}
 
 			// recalculate the checksums
-			_, err := query.RefreshChecksumAndType(lookup)
+			_, err := query.RefreshChecksumAndType(lookupProp)
 			if err != nil {
 				log.Error().Err(err).Msg("could not compile the query")
 				warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
 			}
 
-			lookup[query.Mrn] = queryRef{
-				query: query,
-			}
+			lookupQuery[query.Mrn] = query
 
 			// we may have embed-only queries, that we externalize and make available
 			p.Queries = append(p.Queries, query)

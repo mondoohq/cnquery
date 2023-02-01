@@ -22,18 +22,12 @@ func RunExecutionJob(
 	// user-configuration.
 	timeout := 30 * time.Minute
 
-	bundles := make([]*llx.CodeBundle, len(job.Queries))
-	i := 0
-	for _, query := range job.Queries {
-		bundles[i] = query.Code
-		i++
-	}
-
 	res := newInstance(schema, runtime, progressReporter)
 	res.assetMrn = assetMrn
 	res.collector = collectorSvc
+	res.datapoints = job.Datapoints
 
-	return res, res.runCode(bundles, timeout)
+	return res, res.runCode(job.Queries, timeout)
 }
 
 func RunFilterQueries(
@@ -41,25 +35,28 @@ func RunFilterQueries(
 	queries []*explorer.Mquery, timeout time.Duration,
 ) ([]*explorer.Mquery, []error) {
 	errs := []error{}
-	bundles := []*llx.CodeBundle{}
+	equeries := map[string]*explorer.ExecutionQuery{}
 	mqueries := map[string]*explorer.Mquery{}
 	for i := range queries {
 		query := queries[i]
-		bundle, err := query.Compile(nil)
+		code, err := query.Compile(nil)
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
 
-		bundles = append(bundles, bundle)
-		mqueries[bundle.CodeV2.Id] = query
+		equeries[code.CodeV2.Id] = &explorer.ExecutionQuery{
+			Query: query.Mql,
+			Code:  code,
+		}
+		mqueries[code.CodeV2.Id] = query
 	}
 	if len(errs) != 0 {
 		return nil, errs
 	}
 
 	instance := newInstance(schema, runtime, nil)
-	err := instance.runCode(bundles, timeout)
+	err := instance.runCode(equeries, timeout)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -67,8 +64,8 @@ func RunFilterQueries(
 	instance.WaitUntilDone(timeout)
 
 	res := []*explorer.Mquery{}
-	for i := range bundles {
-		bundle := bundles[i]
+	for _, equery := range equeries {
+		bundle := equery.Code
 		entrypoints := bundle.EntrypointChecksums()
 
 		allTrue := true
@@ -93,39 +90,57 @@ func RunFilterQueries(
 	return res, errs
 }
 
-func (e *instance) runCode(bundles []*llx.CodeBundle, timeout time.Duration) error {
-	e.execs = make(map[string]*llx.MQLExecutorV2, len(bundles))
+func (e *instance) runCode(queries map[string]*explorer.ExecutionQuery, timeout time.Duration) error {
+	e.execs = make(map[string]*llx.MQLExecutorV2, len(queries))
 
-	for i := range bundles {
-		bundle := bundles[i]
+	for i := range queries {
+		query := queries[i]
+		bundle := query.Code
+
+		e.queries[bundle.CodeV2.Id] = query
 
 		checksums := bundle.DatapointChecksums()
 		for j := range checksums {
-			e.datapointTracker[checksums[j]] = struct{}{}
+			e.datapointTracker[checksums[j]] = nil
 		}
+
 		checksums = bundle.EntrypointChecksums()
 		for j := range checksums {
-			e.datapointTracker[checksums[j]] = struct{}{}
+			e.datapointTracker[checksums[j]] = nil
+		}
+
+		for _, codeId := range query.Properties {
+			arr := e.notifyQuery[codeId]
+			arr = append(arr, query)
+			e.notifyQuery[codeId] = arr
+		}
+	}
+
+	// we need to only retain the checksums that notify other queries
+	// to be run later on
+	for codeID := range e.notifyQuery {
+		query := queries[codeID]
+		checksums := query.Code.EntrypointChecksums()
+
+		for k := range checksums {
+			checksum := checksums[k]
+
+			arr := e.datapointTracker[checksum]
+			arr = append(arr, query)
+			e.datapointTracker[checksum] = arr
 		}
 	}
 
 	var errs error
-	for i := range bundles {
-		bundle := bundles[i]
-
-		exec, err := llx.NewExecutorV2(bundle.CodeV2, e.runtime, nil, e.collect)
-		if err != nil {
-			multierror.Append(errs, err)
+	for i := range queries {
+		query := queries[i]
+		if len(query.Properties) != 0 {
 			continue
 		}
 
-		err = exec.Run()
-		if err != nil {
+		if err := e.runQuery(query.Code, nil); err != nil {
 			multierror.Append(errs, err)
-			continue
 		}
-
-		e.execs[bundle.CodeV2.Id] = exec
 	}
 
 	return errs
@@ -134,14 +149,26 @@ func (e *instance) runCode(bundles []*llx.CodeBundle, timeout time.Duration) err
 // One instance of the executor. May be returned but not instantiated
 // from outside this package.
 type instance struct {
-	schema           *resources.Schema
-	runtime          *resources.Runtime
-	datapointTracker map[string]struct{}
-	execs            map[string]*llx.MQLExecutorV2
-	results          map[string]*llx.RawResult
+	schema  *resources.Schema
+	runtime *resources.Runtime
+	// raw list of executino queries mapped via CodeID
+	queries map[string]*explorer.ExecutionQuery
+	// an optional list of datapoints as an allow-list of data that will be returned
+	datapoints map[string]*explorer.DataQueryInfo
+	// a tracker for all datapoints, that also references the queries that
+	// created them
+	datapointTracker map[string][]*explorer.ExecutionQuery
+	// all code executors that have been started
+	execs map[string]*llx.MQLExecutorV2
+	// raw results from CodeID to result
+	results map[string]*llx.RawResult
+	// identifies which queries (CodeID) trigger other queries
+	// this is used for properties, where a prop notifies a query that uses it
+	notifyQuery      map[string][]*explorer.ExecutionQuery
 	mutex            sync.Mutex
 	isAborted        bool
 	isDone           bool
+	errors           error
 	done             chan struct{}
 	progressReporter progress.Progress
 	collector        explorer.QueryConductor
@@ -156,8 +183,10 @@ func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressR
 	return &instance{
 		schema:           schema,
 		runtime:          runtime,
-		datapointTracker: map[string]struct{}{},
+		datapointTracker: map[string][]*explorer.ExecutionQuery{},
+		queries:          map[string]*explorer.ExecutionQuery{},
 		results:          map[string]*llx.RawResult{},
+		notifyQuery:      map[string][]*explorer.ExecutionQuery{},
 		isAborted:        false,
 		isDone:           false,
 		done:             make(chan struct{}),
@@ -166,16 +195,31 @@ func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressR
 	}
 }
 
-func (i *instance) WaitUntilDone(timeout time.Duration) error {
+func (e *instance) runQuery(bundle *llx.CodeBundle, props map[string]*llx.Primitive) error {
+	exec, err := llx.NewExecutorV2(bundle.CodeV2, e.runtime, props, e.collect)
+	if err != nil {
+		return err
+	}
+
+	err = exec.Run()
+	if err != nil {
+		return err
+	}
+
+	e.execs[bundle.CodeV2.Id] = exec
+	return nil
+}
+
+func (e *instance) WaitUntilDone(timeout time.Duration) error {
 	select {
-	case <-i.done:
+	case <-e.done:
 		return nil
 
 	case <-time.After(timeout):
-		i.mutex.Lock()
-		i.isAborted = true
-		isDone := i.isDone
-		i.mutex.Unlock()
+		e.mutex.Lock()
+		e.isAborted = true
+		isDone := e.isDone
+		e.mutex.Unlock()
 
 		if isDone {
 			return nil
@@ -184,43 +228,143 @@ func (i *instance) WaitUntilDone(timeout time.Duration) error {
 	}
 }
 
-func (i *instance) StoreData() error {
-	if i.collector == nil {
+func (e *instance) snapshotResults() map[string]*llx.Result {
+	if e.datapoints != nil {
+		e.mutex.Lock()
+		results := make(map[string]*llx.Result, len(e.datapoints))
+		for id := range e.datapoints {
+			c := e.results[id]
+			if c != nil {
+				results[id] = c.Result()
+			}
+		}
+		e.mutex.Unlock()
+		return results
+	}
+
+	e.mutex.Lock()
+	results := make(map[string]*llx.Result, len(e.results))
+	for id, v := range e.results {
+		results[id] = v.Result()
+	}
+	e.mutex.Unlock()
+	return results
+}
+
+func (e *instance) StoreData() error {
+	if e.collector == nil {
 		return errors.New("cannot store data, no collector provided")
 	}
 
-	i.mutex.Lock()
-	results := make(map[string]*llx.Result, len(i.results))
-	for id, cur := range i.results {
-		results[id] = cur.Result()
-	}
-	i.mutex.Unlock()
-
-	_, err := i.collector.StoreResults(context.Background(), &explorer.StoreResultsReq{
-		AssetMrn: i.assetMrn,
-		Data:     results,
+	_, err := e.collector.StoreResults(context.Background(), &explorer.StoreResultsReq{
+		AssetMrn: e.assetMrn,
+		Data:     e.snapshotResults(),
 	})
 
 	return err
 }
 
-func (i *instance) collect(res *llx.RawResult) {
-	i.mutex.Lock()
-	i.results[res.CodeID] = res
-	cur := len(i.results)
-	max := len(i.datapointTracker)
-	isDone := cur == max
-	i.isDone = isDone
-	isAborted := i.isAborted
-	i.progressReporter.OnProgress(cur, max)
-	if isDone {
-		i.progressReporter.Completed()
+func (e *instance) isCollected(query *llx.CodeBundle) bool {
+	checksums := query.EntrypointChecksums()
+	for i := range checksums {
+		checksum := checksums[i]
+		if _, ok := e.results[checksum]; !ok {
+			return false
+		}
 	}
-	i.mutex.Unlock()
+
+	return true
+}
+
+func (e *instance) getProps(query *explorer.ExecutionQuery) (map[string]*llx.Primitive, error) {
+	res := map[string]*llx.Primitive{}
+
+	for name, queryID := range query.Properties {
+		query, ok := e.queries[queryID]
+		if !ok {
+			return nil, errors.New("cannot find running process for properties of query " + query.Code.Source)
+		}
+
+		eps := query.Code.EntrypointChecksums()
+		checksum := eps[0]
+		result := e.results[checksum]
+		if result == nil {
+			return nil, errors.New("cannot find result for property of query " + query.Code.Source)
+		}
+
+		res[name] = result.Result().Data
+	}
+
+	return res, nil
+}
+
+func (e *instance) collect(res *llx.RawResult) {
+	var runQueries []*explorer.ExecutionQuery
+
+	e.mutex.Lock()
+
+	e.results[res.CodeID] = res
+	cur := len(e.results)
+	max := len(e.datapointTracker)
+	isDone := cur == max
+	e.isDone = isDone
+	isAborted := e.isAborted
+	e.progressReporter.OnProgress(cur, max)
+	if isDone {
+		e.progressReporter.Completed()
+	}
+
+	// collect all the queries we need to notify + update that list to remove
+	// any query that we are about to start (all while inside of mutex lock)
+	queries := e.datapointTracker[res.CodeID]
+	if len(queries) != 0 {
+		remaining := []*explorer.ExecutionQuery{}
+		for j := range queries {
+			if !e.isCollected(queries[j].Code) {
+				remaining = append(remaining, queries[j])
+				continue
+			}
+
+			codeID := queries[j].Code.CodeV2.Id
+			notified := e.notifyQuery[codeID]
+			for k := range notified {
+				runQueries = append(runQueries, notified[k])
+			}
+		}
+		e.datapointTracker[res.CodeID] = remaining
+	}
+
+	e.mutex.Unlock()
+
+	if len(runQueries) != 0 {
+		var fatalErr error
+		for i := range runQueries {
+			query := runQueries[i]
+			props, err := e.getProps(query)
+			if err != nil {
+				fatalErr = err
+				break
+			}
+
+			err = e.runQuery(query.Code, props)
+			if err != nil {
+				fatalErr = err
+				break
+			}
+		}
+
+		if fatalErr != nil {
+			e.mutex.Lock()
+			e.errors = multierror.Append(e.errors, fatalErr)
+			e.isAborted = true
+			isAborted = true
+			e.mutex.Unlock()
+		}
+	}
 
 	if isDone && !isAborted {
 		go func() {
-			i.done <- struct{}{}
+			e.done <- struct{}{}
 		}()
 	}
 }

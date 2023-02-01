@@ -34,6 +34,8 @@ type DataLake interface {
 	// MutateBundle runs the given mutation on a bundle, typically an asset.
 	// If it cannot find the owner, it will create it.
 	MutateBundle(ctx context.Context, mutation *BundleMutationDelta, createIfMissing bool) (*Bundle, error)
+	// SetProps will override properties for a given entity (asset, space, org)
+	SetProps(ctx context.Context, req *PropsReq) error
 
 	// EnsureAsset makes sure an asset with mrn exists
 	EnsureAsset(ctx context.Context, mrn string) error
