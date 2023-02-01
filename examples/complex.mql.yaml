@@ -1,0 +1,55 @@
+# Note: this is a very complex query pack, that is designed to
+# show off some of the more advanced features. It is meant as a demo only.
+packs:
+- uid: mixed-os
+  filters:
+  - asset.family.contains("unix")
+
+  # Queries can be grouped together, which gives us additional filters on each group.
+  # For example: the first group is for MacOS only, the second for is for Linux
+  groups:
+    - filters: asset.platform == "macos"
+      queries:
+        # This is a fully embedded query with a title and description
+        - uid: packages-ssl
+          title: Find all SSL packages
+          desc: This is a filtered query of packages, which only focuses on SSL.
+          mql: |
+            packages.
+              where(name == /ssl/i)
+          # note: that little 'i' after the regex indicates that it is case-insensitive
+
+    # This is the second group of queries
+    - filters: asset.family.contains("linux")
+      queries:
+        # This query is shared, i.e. it is found in the `queries` field below.
+        # These are helpful when multiple querypacks share similar queries.
+        # They are identified via their `uid` field.
+        - uid: shared-services
+          # We also demonstrate how overrides work. In this example, we are
+          # changing the title of the query
+          title: Collect all system services
+
+        # This query demonstrates how properties work. They are small configurable
+        # variables that are used in queries to give some configurability to users.
+        # It also shows how filters can be embedded.
+        - uid: home-info
+          title: Collect data about the home folder
+          filters:
+          - mql: asset.family.contains("linux")
+          props:
+            - uid: home
+              # when dealing with strings in yaml, make sure to write it like this,
+              # so that we don't loose the double quotes `"` from parsing the yaml
+              mql: |
+                "/home"
+          # This MQL uses the property defined above. You can override it via
+          # e.g. --props "home='/home/user'"
+          mql: |
+            file( props.home ) { * }
+
+# These are shared queries that can be used in any querypack
+queries:
+  - uid: shared-services
+    title: Collect all services that are running
+    mql: services { * }

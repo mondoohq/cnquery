@@ -1,18 +1,17 @@
 packs:
 - uid: linux-mixed-queries
-  context: os.linux
   filters:
   - asset.family.contains("unix")
 
   queries:
   - title: Find all SSH packages that are installed
-    query: |
+    mql: |
       packages.
         where(name == /ssh/)
   - title: Get SSH services
-    query: |
+    mql: |
       services.
         where(name == /ssh/)
   - title: All the SSH config
-    query: |
+    mql: |
       sshd.config.params

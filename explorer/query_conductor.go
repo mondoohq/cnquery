@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	llx "go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -129,26 +130,17 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 		f := req.AssetFilters[i]
 		supportedFilters[f.CodeId] = struct{}{}
 	}
-	applicablePacks := []*QueryPack{}
-	for i := range bundle.Packs {
-		pack := bundle.Packs[i]
-		if pack.Filters == nil {
-			continue
-		}
-		for k := range pack.Filters.Items {
-			if _, ok := supportedFilters[k]; ok {
-				applicablePacks = append(applicablePacks, pack)
-				break
-			}
-		}
-	}
 
 	job := ExecutionJob{
 		Queries:    make(map[string]*ExecutionQuery),
 		Datapoints: make(map[string]*DataQueryInfo),
 	}
-	for i := range applicablePacks {
-		pack := applicablePacks[i]
+	for i := range bundle.Packs {
+		pack := bundle.Packs[i]
+
+		if !pack.Filters.Supports(supportedFilters) {
+			continue
+		}
 
 		props := NewPropsCache()
 		props.Add(bundle.Props...)
@@ -156,22 +148,34 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 		for i := range pack.Queries {
 			query := pack.Queries[i]
 
-			if query.Filter != nil {
-				supported := true
-				for codeID := range query.Filter.Items {
-					if _, ok := supportedFilters[codeID]; !ok {
-						supported = false
-						break
-					}
-				}
-				if !supported {
-					continue
-				}
+			if !query.Filters.Supports(supportedFilters) {
+				continue
 			}
 
-			err := s.addQuery(ctx, &job, query, props)
+			err := s.addQueryToJob(ctx, query, &job, props)
 			if err != nil {
 				return nil, err
+			}
+		}
+
+		for i := range pack.Groups {
+			group := pack.Groups[i]
+
+			if !group.Filters.Supports(supportedFilters) {
+				continue
+			}
+
+			for i := range group.Queries {
+				query := group.Queries[i]
+
+				if !query.Filters.Supports(supportedFilters) {
+					continue
+				}
+
+				err := s.addQueryToJob(ctx, query, &job, props)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
@@ -189,7 +193,7 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	return res, err
 }
 
-func (s *LocalServices) addQuery(ctx context.Context, job *ExecutionJob, query *Mquery, propsCache PropsCache) error {
+func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *ExecutionJob, propsCache PropsCache) error {
 	var props map[string]*llx.Primitive
 	var propRefs map[string]string
 	if len(query.Props) != 0 {
@@ -197,9 +201,18 @@ func (s *LocalServices) addQuery(ctx context.Context, job *ExecutionJob, query *
 		propRefs = map[string]string{}
 
 		for i := range query.Props {
-			prop, name, err := propsCache.Get(ctx, query.Props[i].Mrn)
-			if err != nil {
-				return errors.Wrap(err, "failed to get property for query "+query.Mrn)
+			prop := query.Props[i]
+
+			override, name, _ := propsCache.Get(ctx, prop.Mrn)
+			if override != nil {
+				prop = override
+			}
+			if name == "" {
+				var err error
+				name, err = mrn.GetResource(prop.Mrn, MRN_RESOURCE_QUERY)
+				if err != nil {
+					return errors.New("failed to get property name")
+				}
 			}
 
 			props[name] = &llx.Primitive{Type: prop.Type}

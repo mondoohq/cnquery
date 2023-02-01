@@ -73,9 +73,9 @@ func SafeComponentString(s string) string {
 	return s
 }
 
-// ID: lowercase letters, digits, dots or hyphens, fewer than 200 chars, more than 5 chars.
+// ID: lowercase letters, digits, dots or hyphens, fewer than 200 chars, more than 4 chars.
 // They may include dots/hyphens etc, e.g. 1.1.2-tmp-configured
-var reResourceID = regexp.MustCompile(`^([\d-_\.]|[a-zA-Z]){5,200}$`)
+var reResourceID = regexp.MustCompile(`^([\d-_\.]|[a-zA-Z]){4,200}$`)
 
 func isValidResourceID(id string) bool {
 	return reResourceID.MatchString(id)

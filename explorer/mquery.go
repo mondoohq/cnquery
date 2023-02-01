@@ -146,13 +146,15 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 	}
 
 	// TODO: filters don't support properties yet
-	if m.Filter != nil {
-		for _, query := range m.Filter.Items {
-			_, err := query.RefreshAsFilter(m.Mrn)
-			if err != nil {
-				return nil, err
+	if m.Filters != nil {
+		for _, query := range m.Filters.Items {
+			if query.Checksum == "" {
+				// FIXME: we don't want this here, it should not be tied to the query
+				query.RefreshAsFilter(m.Mrn)
+				if query.Checksum == "" {
+					return nil, errors.New("cannot refresh checksum for query, its filters were not compiled")
+				}
 			}
-
 			c = c.Add(query.Checksum)
 		}
 	}
@@ -285,8 +287,8 @@ func (m *Mquery) Merge(base *Mquery) {
 	if m.Tags == nil {
 		m.Tags = base.Tags
 	}
-	if m.Filter == nil {
-		m.Filter = base.Filter
+	if m.Filters == nil {
+		m.Filters = base.Filters
 	}
 	if m.Props == nil {
 		m.Props = base.Props

@@ -264,9 +264,8 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 	var warnings []error
 	var err error
 
+	// helpful indices
 	uid2mrn := map[string]string{}
-
-	// Index properties
 	lookupProp := map[string]PropertyRef{}
 	lookupQuery := map[string]*Mquery{}
 
@@ -296,6 +295,8 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 				return nil, err
 			}
 		}
+
+		query.Filters.Compile(ownerMrn)
 
 		// ensure MRNs for compositions
 		for i := range query.Compose {
@@ -334,36 +335,32 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 			return nil, errors.New("failed to refresh query pack " + querypack.Mrn + ": " + err.Error())
 		}
 
-		for i := range querypack.Queries {
-			query := querypack.Queries[i]
+		// Filters: prep a data structure in case it doesn't exist yet and add
+		// any filters that child groups may carry with them.
+		if querypack.Filters == nil || querypack.Filters.Items == nil {
+			querypack.Filters = &Filters{Items: map[string]*Mquery{}}
+		}
+		querypack.Filters.Compile(ownerMrn)
 
-			// remove leading and trailing whitespace of docs, refs and tags
-			query.Sanitize()
+		for i := range querypack.Groups {
+			group := querypack.Groups[i]
 
-			// ensure the correct mrn is set
-			if err = query.RefreshMRN(ownerMrn); err != nil {
+			// When filters are initially added they haven't been compiled
+			group.Filters.Compile(ownerMrn)
+			querypack.Filters.RegisterChild(group.Filters)
+
+			warns, err := p.compileQueries(group.Queries, ownerMrn, querypack, lookupQuery, lookupProp, uid2mrn)
+			if err != nil {
 				return nil, err
 			}
-
-			existing, ok := lookupQuery[query.Mrn]
-			if ok {
-				query.Merge(existing)
-				query.RefreshChecksumAndType(lookupProp)
-				continue
-			}
-
-			// recalculate the checksums
-			_, err := query.RefreshChecksumAndType(lookupProp)
-			if err != nil {
-				log.Error().Err(err).Msg("could not compile the query")
-				warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
-			}
-
-			lookupQuery[query.Mrn] = query
-
-			// we may have embed-only queries, that we externalize and make available
-			p.Queries = append(p.Queries, query)
+			warnings = append(warnings, warns...)
 		}
+
+		warns, err := p.compileQueries(querypack.Queries, ownerMrn, querypack, lookupQuery, lookupProp, uid2mrn)
+		if err != nil {
+			return nil, err
+		}
+		warnings = append(warnings, warns...)
 	}
 
 	res := p.ToMap()
@@ -378,6 +375,55 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 	}
 
 	return res, nil
+}
+
+func (p *Bundle) compileQueries(queries []*Mquery, ownerMrn string, pack *QueryPack, lookupQuery map[string]*Mquery, lookupProp map[string]PropertyRef, uid2mrn map[string]string) ([]error, error) {
+	var warnings []error
+
+	for i := range queries {
+		query := queries[i]
+
+		// remove leading and trailing whitespace of docs, refs and tags
+		query.Sanitize()
+
+		// ensure the correct mrn is set
+		if err := query.RefreshMRN(ownerMrn); err != nil {
+			return warnings, err
+		}
+
+		existing, ok := lookupQuery[query.Mrn]
+		if ok {
+			query.Merge(existing)
+			query.Filters.Compile(ownerMrn)
+			pack.Filters.RegisterChild(query.Filters)
+			query.RefreshChecksumAndType(lookupProp)
+			continue
+		}
+
+		// ensure MRNs for properties
+		for i := range query.Props {
+			if err := p.compileProp(query.Props[i], ownerMrn, lookupProp, uid2mrn); err != nil {
+				return warnings, err
+			}
+		}
+
+		query.Filters.Compile(ownerMrn)
+		pack.Filters.RegisterChild(query.Filters)
+
+		// recalculate the checksums
+		_, err := query.RefreshChecksumAndType(lookupProp)
+		if err != nil {
+			log.Error().Err(err).Msg("could not compile the query")
+			warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
+		}
+
+		lookupQuery[query.Mrn] = query
+
+		// we may have embed-only queries, that we externalize and make available
+		p.Queries = append(p.Queries, query)
+	}
+
+	return warnings, nil
 }
 
 // FilterQueryPacks only keeps the given UIDs or MRNs and removes every other one.
