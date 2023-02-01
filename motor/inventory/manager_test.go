@@ -7,6 +7,7 @@ import (
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
 
 func TestInventoryIdempotent(t *testing.T) {
@@ -17,11 +18,15 @@ func TestInventoryIdempotent(t *testing.T) {
 
 	im, err := New(WithInventory(v1inventory))
 	require.NoError(t, err)
+
+	credsResolver := credentials_resolver.New(im.GetVault(), false)
 	// runs resolve step, especially the creds resolution
-	im.Resolve(ctx)
+	im.Resolve(ctx, credsResolver)
 
 	im, err = New(WithInventory(v1inventory))
 	require.NoError(t, err)
+
+	credsResolver = credentials_resolver.New(im.GetVault(), false)
 	// runs resolve step, especially the creds resolution
-	im.Resolve(ctx)
+	im.Resolve(ctx, credsResolver)
 }

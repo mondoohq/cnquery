@@ -11,6 +11,7 @@ import (
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	mockvault "go.mondoo.com/cnquery/motor/vault/mock"
 )
 
@@ -41,7 +42,8 @@ func TestSecretManagerPassword(t *testing.T) {
 	assert.Equal(t, "mockPassword", credential.SecretId)
 
 	// now we try to get the full credential with the secret
-	_, err = im.GetCredential(credential)
+	credsResolver := credentials_resolver.New(im.GetVault(), false)
+	_, err = credsResolver.GetCredential(credential)
 	assert.NoError(t, err)
 }
 
@@ -72,7 +74,8 @@ func TestSecretManagerPrivateKey(t *testing.T) {
 	assert.Equal(t, "mockPKey", credential.SecretId)
 
 	// now we try to get the full credential with the secret
-	_, err = im.GetCredential(credential)
+	credsResolver := credentials_resolver.New(im.GetVault(), false)
+	_, err = credsResolver.GetCredential(credential)
 	assert.NoError(t, err)
 }
 
@@ -103,6 +106,7 @@ func TestSecretManagerBadKey(t *testing.T) {
 	assert.Equal(t, "bad-id", credential.SecretId)
 
 	// now we try to get the full credential with the secret
-	_, err = im.GetCredential(credential)
+	credsResolver := credentials_resolver.New(im.GetVault(), false)
+	_, err = credsResolver.GetCredential(credential)
 	assert.Error(t, err)
 }

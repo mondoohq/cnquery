@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/providers/vmwareguestapi"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
 
 type VMGuestResolver struct{}
@@ -23,11 +24,11 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto}
 }
 
-func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	m, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
+	m, err := resolver.NewMotorConnection(ctx, pCfg, credsResolver)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,7 @@ func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *
 		a.Connections = []*providers.Config{pCfg}
 
 		// find the secret reference for the asset
-		EnrichVsphereToolsConnWithSecrets(a, cfn, sfn)
+		EnrichVsphereToolsConnWithSecrets(a, credsResolver, sfn)
 
 		return []*asset.Asset{a}, nil
 	} else {
@@ -79,7 +80,7 @@ func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *
 	}
 }
 
-func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) {
+func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn) {
 	// search secret for vm
 	// NOTE: we do not use `common.EnrichAssetWithSecrets(a, sfn)` here since vmware requires two secrets at the same time
 	for j := range a.Connections {
@@ -91,7 +92,7 @@ func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, cfn common.CredentialFn, 
 
 			secretRefCred, err := sfn(a)
 			if err == nil && secretRefCred != nil {
-				creds, err = cfn(secretRefCred)
+				creds, err = credsResolver.GetCredential(secretRefCred)
 			}
 
 			if err == nil && creds != nil {

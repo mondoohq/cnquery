@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
 
 type Resolver struct {
@@ -30,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	imageFetcher := NewContainerRegistryResolver()
@@ -49,7 +50,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	if err == nil {
 		log.Debug().Str("image", pCfg.Host).Msg("detected container image in container registry")
 
-		remoteOpts := AuthOption(pCfg.Credentials, cfn)
+		remoteOpts := AuthOption(pCfg.Credentials, credsResolver)
 		// we need to disable default keychain auth if an auth method was found
 		if len(remoteOpts) > 0 {
 			imageFetcher.DisableKeychainAuth = true
@@ -101,14 +102,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	return resolved, nil
 }
 
-func AuthOption(credentials []*vault.Credential, cfn common.CredentialFn) []remote.Option {
+func AuthOption(credentials []*vault.Credential, credsResolver credentials_resolver.Resolver) []remote.Option {
 	remoteOpts := []remote.Option{}
 	for i := range credentials {
 		cred := credentials[i]
 
 		// NOTE: normally the motor connection is resolving the credentials but here we need the credential earlier
 		// we probably want to write some mql resources to support the query of registries itself
-		resolvedCredential, err := cfn(cred)
+		resolvedCredential, err := credsResolver.GetCredential(cred)
 		if err != nil {
 			log.Warn().Err(err).Msg("could not resolve credential")
 		}

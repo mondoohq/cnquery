@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/container/docker_engine"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"go.mondoo.com/cnquery/resources/packs/testutils"
 
@@ -96,7 +97,8 @@ func TestDockerContainer_Platform(t *testing.T) {
 	im, err := inventory.New(inventory.WithAssets([]*asset.Asset{connAsset}))
 	require.NoError(t, err)
 
-	assetErrors := im.Resolve(ctx)
+	credsResolver := credentials_resolver.New(im.GetVault(), false)
+	assetErrors := im.Resolve(ctx, credsResolver)
 	require.Empty(t, assetErrors)
 	assetList := im.GetAssets()
 	container := assetList[0]

@@ -9,7 +9,7 @@ import (
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/resources"
 )
 
@@ -27,7 +27,7 @@ type AssetJob struct {
 	QueryPackFilters []string
 	Props            map[string]string
 	Ctx              context.Context
-	GetCredential    func(cred *vault.Credential) (*vault.Credential, error)
+	CredsResolver    credentials_resolver.Resolver
 	Reporter         Reporter
 	connection       *motor.Motor
 	ProgressReporter progress.Progress

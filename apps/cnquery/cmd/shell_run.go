@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/motor/inventory"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/resources"
 )
 
@@ -44,7 +45,8 @@ func StartShell(conf *ShellConfig) error {
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
-	assetErrors := im.Resolve(ctx)
+	credsResolver := credentials_resolver.New(im.GetVault(), true)
+	assetErrors := im.Resolve(ctx, credsResolver)
 	if len(assetErrors) > 0 {
 		for a := range assetErrors {
 			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not connect to asset")
@@ -81,7 +83,7 @@ func StartShell(conf *ShellConfig) error {
 		log.Fatal().Msg("no asset selected")
 	}
 
-	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, conf.DoRecord)
+	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, credsResolver, conf.DoRecord)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not connect to asset")
 	}

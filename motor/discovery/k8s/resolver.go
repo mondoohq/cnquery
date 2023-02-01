@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/k8s"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
 	"go.mondoo.com/cnquery/motor/providers/local"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/resources/packs/os/kubectl"
 )
 
@@ -64,7 +65,7 @@ type K8sResourceIdentifier struct {
 	Name      string
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	features := cnquery.GetFeatures(ctx)
 	resolved := []*asset.Asset{}
 	nsFilter := NamespaceFilterOpts{

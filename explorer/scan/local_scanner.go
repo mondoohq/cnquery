@@ -22,6 +22,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources"
@@ -127,7 +128,9 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		return nil, false, errors.Wrap(err, "could not load asset information")
 	}
 
-	assetErrors := im.Resolve(ctx)
+	credsResolver := credentials_resolver.New(im.GetVault(), true)
+
+	assetErrors := im.Resolve(ctx, credsResolver)
 	if len(assetErrors) > 0 {
 		for a := range assetErrors {
 			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
@@ -236,7 +239,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Props:            job.Props,
 				QueryPackFilters: job.QueryPackFilters,
 				Ctx:              ctx,
-				GetCredential:    im.GetCredential,
+				CredsResolver:    credsResolver,
 				Reporter:         reporter,
 				ProgressReporter: p,
 			})
@@ -257,7 +260,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 	log.Debug().Msgf("connecting to asset %s", job.Asset.HumanName())
 
 	// run over all connections
-	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.GetCredential, job.DoRecord)
+	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.CredsResolver, job.DoRecord)
 	if err != nil {
 		job.Reporter.AddScanError(job.Asset, err)
 		job.ProgressReporter.Errored()

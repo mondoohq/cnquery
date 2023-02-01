@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	microsoft "go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
 
 const DiscoveryTenant = "tenants"
@@ -23,11 +24,11 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryTenant}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// Note: we use the resolver instead of the direct ms365_provider.New to resolve credentials properly
-	m, err := resolver.NewMotorConnection(ctx, cc, cfn)
+	m, err := resolver.NewMotorConnection(ctx, cc, credsResolver)
 	if err != nil {
 		return nil, err
 	}
