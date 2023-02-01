@@ -114,6 +114,9 @@ lr/build:
 	./lr go resources/packs/vcd/vcd.lr
 	./lr docs yaml resources/packs/vcd/vcd.lr --docs-file resources/packs/vcd/vcd.lr.manifest.yaml
 	./lr docs json resources/packs/vcd/vcd.lr.manifest.yaml
+	./lr go resources/packs/arista/arista.lr
+	./lr docs yaml resources/packs/arista/arista.lr --docs-file resources/packs/arista/arista.lr.manifest.yaml
+	./lr docs json resources/packs/arista/arista.lr.manifest.yaml
 
 lr/release:
 	go generate .
@@ -197,6 +200,10 @@ lr/docs/markdown: lr/build
 		--pack-name "VMware Cloud Director" \
 		--docs-file resources/packs/vcd/vcd.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/vcd-pack
+	./lr markdown resources/packs/arista/arista.lr \
+		--pack-name "Arista EOS" \
+		--docs-file resources/packs/arista/arista.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/arista-pack
 
 .PHONY: resources
 resources: | lr resources/generate resources/test

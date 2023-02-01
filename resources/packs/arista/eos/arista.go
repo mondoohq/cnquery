@@ -1,4 +1,4 @@
-package arista
+package eos
 
 import (
 	"github.com/aristanetworks/goeapi"

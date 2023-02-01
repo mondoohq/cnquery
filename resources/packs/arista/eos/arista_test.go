@@ -1,7 +1,7 @@
 //go:build debugtest
 // +build debugtest
 
-package arista
+package eos
 
 import (
 	"fmt"
