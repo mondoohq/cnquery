@@ -51,11 +51,6 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		return nil, errors.New("could not create gcp provider")
 	}
 
-	// If there is a service account provided in the inventory, resolve it and then copy it to the provider config we use
-	if len(tc.Credentials) != 0 {
-		tc.Credentials[0] = provider.GetCredential()
-	}
-
 	identifier, err := provider.Identifier()
 	if err != nil {
 		return nil, err
@@ -95,7 +90,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
 		DiscoveryBigQueryDatasets) {
-		assetList, err := GatherAssets(tc, project)
+		assetList, err := GatherAssets(ctx, tc, project, cfn)
 		if err != nil {
 			return nil, err
 		}

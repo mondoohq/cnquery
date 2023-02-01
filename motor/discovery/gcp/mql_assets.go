@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"context"
 	"errors"
 
 	"github.com/mitchellh/mapstructure"
@@ -13,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	gcpprovider "go.mondoo.com/cnquery/motor/providers/google"
+	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/resources"
 	resource_pack "go.mondoo.com/cnquery/resources/packs/gcp"
@@ -54,14 +56,21 @@ func (md *MqlDiscovery) GetList(query string) []interface{} {
 	return a
 }
 
-func GatherAssets(tc *providers.Config, project string) ([]*asset.Asset, error) {
+func GatherAssets(ctx context.Context, tc *providers.Config, project string, cfn common.CredentialFn) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
+	// Note: we use the resolver instead of the direct gcp_provider.New to resolve credentials properly
 	pCfg := tc.Clone()
-	at, err := gcpprovider.New(pCfg)
+	motor, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
 	if err != nil {
 		return nil, err
 	}
-	m, err := NewMQLAssetsDiscovery(at)
+	defer motor.Close()
+
+	provider, ok := motor.Provider.(*gcpprovider.Provider)
+	if !ok {
+		return nil, errors.New("could not create gcp provider")
+	}
+	m, err := NewMQLAssetsDiscovery(provider)
 	if err != nil {
 		return nil, err
 	}
