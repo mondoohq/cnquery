@@ -655,10 +655,6 @@ func (a *mqlAzureSubscriptionSqlServiceDatabaseusage) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionSqlServiceDatabaseusage) GetNextResetTime() (interface{}, error) {
-	return nil, errors.New("deprecated, no longer supported")
-}
-
 func (a *mqlAzureSubscriptionSqlServiceDatabase) GetAdvisor() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -903,24 +899,4 @@ func (a *mqlAzureSubscriptionSqlServiceDatabase) GetTransparentDataEncryption() 
 	}
 
 	return core.JsonToDict(policy.LogicalDatabaseTransparentDataEncryption.Properties)
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) GetCurrentServiceObjectiveId() (interface{}, error) {
-	return nil, errors.New("deprecated, use 'serviceLevelObjective'")
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) GetContainmentState() (interface{}, error) {
-	return nil, errors.New("deprecated, no longer supported")
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) GetRequestedServiceObjectiveId() (interface{}, error) {
-	return nil, errors.New("deprecated, use 'requestedServiceObjectiveName'")
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) GetRecommendedIndex() (interface{}, error) {
-	return nil, errors.New("deprecated, use 'advisor.recommendedActions'")
-}
-
-func (a *mqlAzureSubscriptionSqlServiceDatabase) GetServiceTierAdvisors() (interface{}, error) {
-	return nil, errors.New("deprecated, no longer supported")
 }
