@@ -47,11 +47,18 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 
 func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn common.QuerySecretFn) []*asset.Asset {
 	assets := []*asset.Asset{}
-	instances := m.GetList("return gcp.project.compute.instances { id name labels zone status networkInterfaces }")
+	instances := m.GetList("return gcp.project.compute.instances { id name labels zone status networkInterfaces disks { guestOsFeatures } }")
 	for i := range instances {
 		b := instances[i].(map[string]interface{})
 		id := b["id"].(string)
 		name := b["name"].(string)
+
+		disks := b["disks"].([]interface{})
+		if disksContainWindows(disks) {
+			log.Debug().Msgf("skipping windows instance %s", name)
+			continue
+		}
+
 		tags := b["labels"].(map[string]interface{})
 		zone := b["zone"].(map[string]interface{})
 		zoneName := zone["name"].(string)
@@ -329,4 +336,16 @@ func mapInstanceStatus(state string) asset.State {
 		log.Warn().Str("state", state).Msg("unknown gcp instance state")
 		return asset.State_STATE_UNKNOWN
 	}
+}
+
+func disksContainWindows(disks []interface{}) bool {
+	for _, d := range disks {
+		feats := d.(map[string]interface{})["guestOsFeatures"].([]interface{})
+		for _, f := range feats {
+			if f == "WINDOWS" {
+				return true
+			}
+		}
+	}
+	return false
 }
