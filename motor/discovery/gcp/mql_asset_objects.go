@@ -100,7 +100,7 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 					objectType: "image",
 				},
 			}, tc)
-		a.State = mapInstanceState(status)
+		a.State = mapInstanceStatus(status)
 		a.Platform.Kind = providers.Kind_KIND_VIRTUAL_MACHINE
 		a.Platform.Runtime = providers.RUNTIME_GCP_COMPUTE
 		a.Connections = connections
@@ -302,4 +302,28 @@ func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) []*
 			}, tc))
 	}
 	return assets
+}
+
+func mapInstanceStatus(state string) asset.State {
+	switch state {
+	case "RUNNING":
+		return asset.State_STATE_RUNNING
+	case "PROVISIONING":
+		return asset.State_STATE_PENDING
+	case "STAGING":
+		return asset.State_STATE_PENDING
+	case "STOPPED":
+		return asset.State_STATE_STOPPED
+	case "STOPPING":
+		return asset.State_STATE_STOPPING
+	case "SUSPENDED":
+		return asset.State_STATE_STOPPED
+	case "SUSPENDING":
+		return asset.State_STATE_STOPPING
+	case "TERMINATED":
+		return asset.State_STATE_TERMINATED
+	default:
+		log.Warn().Str("state", state).Msg("unknown gcp instance state")
+		return asset.State_STATE_UNKNOWN
+	}
 }
