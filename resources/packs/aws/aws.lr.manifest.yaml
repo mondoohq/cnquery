@@ -943,6 +943,78 @@ resources:
     platform:
       name:
         - aws
+  aws.ecr:
+    docs:
+      desc: |
+        The `aws.ecr` resource can be used to assess the configuration of an Amazon Elastic Container Registry.
+    fields:
+      privateRepositories: {}
+      publicRepositories: {}
+      images: {}
+    min_mondoo_version: 7.15.0
+    platform:
+      name:
+        - aws
+    refs:
+      - title: Security in Amazon Elastic Container Registry
+        url: https://docs.aws.amazon.com/AmazonECR/latest/userguide/security.html
+    snippets:
+      - query: |
+          aws.ecr {*}
+        title: Return a `aws.ecr` resource representing the Elastic Container Registry.
+  aws.ecr.repository:
+    docs:
+      desc: |
+        The `aws.ecr.repository` resource can be used to assess the Amazon Elastic Container Registry repositories.
+    fields:
+      arn: {}
+      name: {}
+      uri: {}
+      registryId: {}
+      public: {}
+      images: {}
+      region: {}
+    is_private: true
+    min_mondoo_version: 7.15.0
+    platform:
+      name:
+        - aws
+    snippets:
+      - query: |
+          aws.ecr {
+            publicRepositories { 
+              name
+              uri
+            }
+          }
+        title: Return a list of `aws.ecr.repository` resources representing the public repositories.
+  aws.ecr.image:
+    docs:
+      desc: |
+        The `aws.ecr.image` resource can be used to assess a container image stored in an Amazon Elastic Container Registry.
+    fields:
+      digest: {}
+      mediaType: {}
+      tags: {}
+      registryId: {}
+      repoName: {}
+    is_private: true
+    min_mondoo_version: 7.15.0
+    platform:
+      name:
+        - aws
+    snippets:
+      - query: |
+          aws.ecr {
+            publicRepositories { 
+              images {
+                digest
+                repoName
+                tags
+              }
+            }
+          }
+        title: Return a list of `aws.ecr.image` resources representing the images stored in public repositories.
   aws.efs:
     docs:
       desc: |
