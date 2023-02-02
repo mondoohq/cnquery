@@ -106,7 +106,10 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 		a.Connections = connections
 		// find the secret reference for the asset
 		common.EnrichAssetWithSecrets(a, sfn)
-		assets = append(assets, a)
+
+		if a.State == asset.State_STATE_RUNNING {
+			assets = append(assets, a)
+		}
 	}
 	return assets
 }
