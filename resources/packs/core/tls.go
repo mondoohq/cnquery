@@ -177,6 +177,11 @@ func (s *mqlTls) GetParams(socket Socket, domainName string) (map[string]interfa
 	if err != nil {
 		return nil, err
 	}
+	// Windows and Darwin will list a port's "protocol" as "ipv4/6" which
+	// is an unrecognized protocol for golang's net package.
+	if proto == "ipv6" || proto == "ipv4" {
+		proto = "tcp"
+	}
 
 	tester := tlsshake.New(proto, domainName, host, int(port))
 	if err := tester.Test(tlsshake.DefaultScanConfig()); err != nil {
