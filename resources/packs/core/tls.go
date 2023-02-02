@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/llx"
@@ -166,6 +167,11 @@ func (s *mqlTls) GetParams(socket Socket, domainName string) (map[string]interfa
 	host, err := socket.Address()
 	if err != nil {
 		return nil, err
+	}
+	// listening on :: and passing that down as the host would fail, so
+	// make sure we format for ipv6
+	if strings.HasPrefix(host, "::") {
+		host = strings.Replace(host, "::", "[::]", 1)
 	}
 
 	port, err := socket.Port()
