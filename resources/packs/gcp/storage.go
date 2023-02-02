@@ -116,6 +116,8 @@ func (g *mqlGcpProjectStorageService) GetBuckets() ([]interface{}, error) {
 					"lockedTime": parsedLockTime,
 				}
 			}
+
+			iamConfigurationDict["publicAccessPrevention"] = iamConfiguration.PublicAccessPrevention
 		}
 
 		var retentionPolicy interface{}
