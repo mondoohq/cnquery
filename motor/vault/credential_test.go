@@ -44,18 +44,13 @@ func TestSecretEncoding(t *testing.T) {
 - type: password
   user: username
   password: pass
-  secret_encoding: binary
 - type: private_key
   user: username
   identity_file: /path/to/key
   password: password
-  secret_encoding: json
 `
 
 	v := []*Credential{}
 	yaml.Unmarshal([]byte(content), &v)
-
 	assert.Equal(t, 2, len(v))
-	assert.Equal(t, SecretEncoding_encoding_binary, v[0].SecretEncoding)
-	assert.Equal(t, SecretEncoding_encoding_json, v[1].SecretEncoding)
 }

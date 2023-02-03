@@ -197,11 +197,6 @@ func (im *inventoryManager) GetCredential(cred *vault.Credential) (*vault.Creden
 		return nil, err
 	}
 
-	// user can overwrite the encoding
-	if cred.SecretEncoding != vault.SecretEncoding_encoding_undefined {
-		secret.Encoding = cred.SecretEncoding
-	}
-
 	retrievedCred, err := secret.Credential()
 	if err != nil {
 		return nil, err
