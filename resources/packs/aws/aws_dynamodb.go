@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -73,6 +74,48 @@ func (d *mqlAwsDynamodb) getBackups(provider *aws_provider.Provider) []*jobpool.
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (d *mqlAwsDynamodbTable) init(args *resources.Args) (*resources.Args, AwsDynamodbTable, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch dynamodb table")
+	}
+
+	// load all rds db instances
+	obj, err := d.MotorRuntime.CreateResource("aws.dynamodb")
+	if err != nil {
+		return nil, nil, err
+	}
+	dynamodb := obj.(AwsDynamodb)
+
+	rawResources, err := dynamodb.Tables()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		dbInstance := rawResources[i].(AwsDynamodbTable)
+		mqlDbArn, err := dbInstance.Arn()
+		if err != nil {
+			return nil, nil, errors.New("rds dynamo db table does not exist")
+		}
+		if mqlDbArn == arnVal {
+			return args, dbInstance, nil
+		}
+	}
+	return nil, nil, errors.New("dynamo db table does not exist")
 }
 
 func (d *mqlAwsDynamodbTable) GetBackups() ([]interface{}, error) {
@@ -309,6 +352,47 @@ func (d *mqlAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error) 
 		return nil, errors.Wrap(err, "could not gather aws dynamodb table settings")
 	}
 	return core.JsonToDictSlice(tableSettingsResp.ReplicaSettings)
+}
+
+func (d *mqlAwsDynamodbGlobaltable) init(args *resources.Args) (*resources.Args, AwsDynamodbGlobaltable, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch dynamodb table")
+	}
+
+	obj, err := d.MotorRuntime.CreateResource("aws.dynamodb")
+	if err != nil {
+		return nil, nil, err
+	}
+	dynamodb := obj.(AwsDynamodb)
+
+	rawResources, err := dynamodb.GlobalTables()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		dbInstance := rawResources[i].(AwsDynamodbGlobaltable)
+		mqlDbArn, err := dbInstance.Arn()
+		if err != nil {
+			return nil, nil, errors.New("rds dynamo db table does not exist")
+		}
+		if mqlDbArn == arnVal {
+			return args, dbInstance, nil
+		}
+	}
+	return nil, nil, errors.New("dynamo db table does not exist")
 }
 
 func (d *mqlAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {

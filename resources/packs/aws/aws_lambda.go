@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/aws/awspolicy"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -100,6 +101,48 @@ func (l *mqlAwsLambda) getFunctions(provider *aws_provider.Provider) []*jobpool.
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (p *mqlAwsLambdaFunction) init(args *resources.Args) (*resources.Args, AwsLambdaFunction, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch lambda function")
+	}
+
+	// load all rds db instances
+	obj, err := p.MotorRuntime.CreateResource("aws.lambda")
+	if err != nil {
+		return nil, nil, err
+	}
+	l := obj.(AwsLambda)
+
+	rawResources, err := l.Functions()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		dbInstance := rawResources[i].(AwsLambdaFunction)
+		mqlDbArn, err := dbInstance.Arn()
+		if err != nil {
+			return nil, nil, errors.New("lambda function does not exist")
+		}
+		if mqlDbArn == arnVal {
+			return args, dbInstance, nil
+		}
+	}
+	return nil, nil, errors.New("lambda function does not exist")
 }
 
 func (l *mqlAwsLambdaFunction) GetConcurrency() (int64, error) {

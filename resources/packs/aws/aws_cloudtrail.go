@@ -2,11 +2,13 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -33,6 +35,55 @@ func (t *mqlAwsCloudtrail) GetTrails() ([]interface{}, error) {
 		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
 	}
 	return res, nil
+}
+
+func (p *mqlAwsCloudtrailTrail) init(args *resources.Args) (*resources.Args, AwsCloudtrailTrail, error) {
+	if len(*args) >= 2 {
+		return args, nil, nil
+	}
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+	if (*args)["arn"] == nil && (*args)["name"] == nil {
+		return nil, nil, errors.New("arn or name required to fetch aws cloudtrail trail")
+	}
+
+	// construct arn of cloudtrail if missing
+	var arn string
+	if (*args)["arn"] != nil {
+		arn = (*args)["arn"].(string)
+	} else {
+		nameVal := (*args)["name"].(string)
+		arn = fmt.Sprintf(s3ArnPattern, nameVal)
+	}
+	log.Debug().Str("arn", arn).Msg("init cloudtrail trail with arn")
+
+	// load all s3 buckets
+	obj, err := p.MotorRuntime.CreateResource("aws.cloudtrail")
+	if err != nil {
+		return nil, nil, err
+	}
+	awsCloudtrail := obj.(AwsCloudtrail)
+
+	rawResources, err := awsCloudtrail.Trails()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for i := range rawResources {
+		trail := rawResources[i].(AwsCloudtrailTrail)
+		mqlTrailArn, err := trail.Arn()
+		if err != nil {
+			return nil, nil, err
+		}
+		if mqlTrailArn == arn {
+			return args, trail, nil
+		}
+	}
+	return args, nil, err
 }
 
 func (t *mqlAwsCloudtrail) getTrails(provider *aws_provider.Provider) []*jobpool.Job {

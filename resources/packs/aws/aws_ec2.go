@@ -808,6 +808,13 @@ func (p *mqlAwsEc2Securitygroup) init(args *resources.Args) (*resources.Args, Aw
 		return args, nil, nil
 	}
 
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
 	if (*args)["arn"] == nil && (*args)["id"] == nil {
 		return nil, nil, errors.New("arn or id required to fetch aws security group")
 	}
@@ -1049,6 +1056,7 @@ func (s *mqlAwsEc2) getVolumes(provider *aws_provider.Provider) []*jobpool.Job {
 						"availabilityZone", core.ToString(vol.AvailabilityZone),
 						"volumeType", string(vol.VolumeType),
 						"createTime", vol.CreateTime,
+						"region", regionVal,
 					)
 					if err != nil {
 						return nil, err
@@ -1065,6 +1073,121 @@ func (s *mqlAwsEc2) getVolumes(provider *aws_provider.Provider) []*jobpool.Job {
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (p *mqlAwsEc2Volume) init(args *resources.Args) (*resources.Args, AwsEc2Volume, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws volume")
+	}
+
+	// load all security groups
+	obj, err := p.MotorRuntime.CreateResource("aws.ec2")
+	if err != nil {
+		return nil, nil, err
+	}
+	awsEc2 := obj.(AwsEc2)
+
+	rawResources, err := awsEc2.Volumes()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var match func(secGroup AwsEc2Volume) bool
+
+	if (*args)["arn"] != nil {
+		arnVal := (*args)["arn"].(string)
+		match = func(vol AwsEc2Volume) bool {
+			mqlVolArn, err := vol.Arn()
+			if err != nil {
+				log.Error().Err(err).Msg("volume is not properly initialized")
+				return false
+			}
+			return mqlVolArn == arnVal
+		}
+	}
+
+	for i := range rawResources {
+		volume := rawResources[i].(AwsEc2Volume)
+		if match(volume) {
+			return args, volume, nil
+		}
+	}
+
+	return nil, nil, errors.New("volume does not exist")
+}
+
+func (p *mqlAwsEc2Snapshot) init(args *resources.Args) (*resources.Args, AwsEc2Snapshot, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch aws snapshot")
+	}
+
+	// load all security groups
+	obj, err := p.MotorRuntime.CreateResource("aws.ec2")
+	if err != nil {
+		return nil, nil, err
+	}
+	awsEc2 := obj.(AwsEc2)
+
+	rawResources, err := awsEc2.Snapshots()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var match func(snapshot AwsEc2Snapshot) bool
+
+	if (*args)["arn"] != nil {
+		arnVal := (*args)["arn"].(string)
+		match = func(snapshot AwsEc2Snapshot) bool {
+			mqlSnapArn, err := snapshot.Arn()
+			if err != nil {
+				log.Error().Err(err).Msg("snapshot is not properly initialized")
+				return false
+			}
+			return mqlSnapArn == arnVal
+		}
+	}
+
+	if (*args)["id"] != nil {
+		idVal := (*args)["id"].(string)
+		match = func(snap AwsEc2Snapshot) bool {
+			mqlSnapId, err := snap.Id()
+			if err != nil {
+				log.Error().Err(err).Msg("snapshot is not properly initialized")
+				return false
+			}
+			return mqlSnapId == idVal
+		}
+	}
+
+	for i := range rawResources {
+		snapshot := rawResources[i].(AwsEc2Snapshot)
+		if match(snapshot) {
+			return args, snapshot, nil
+		}
+	}
+
+	return nil, nil, errors.New("snapshot does not exist")
 }
 
 func (s *mqlAwsEc2Volume) id() (string, error) {

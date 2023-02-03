@@ -2,12 +2,14 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -118,6 +120,48 @@ func redshiftTagsToMap(tags []types.Tag) map[string]interface{} {
 
 func (r *mqlAwsRedshiftCluster) id() (string, error) {
 	return r.Arn()
+}
+
+func (d *mqlAwsRedshiftCluster) init(args *resources.Args) (*resources.Args, AwsRedshiftCluster, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch redshift cluster")
+	}
+
+	// load all rds db instances
+	obj, err := d.MotorRuntime.CreateResource("aws.redshift")
+	if err != nil {
+		return nil, nil, err
+	}
+	redshift := obj.(AwsRedshift)
+
+	rawResources, err := redshift.Clusters()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		cluster := rawResources[i].(AwsRedshiftCluster)
+		mqlClusterArn, err := cluster.Arn()
+		if err != nil {
+			return nil, nil, errors.New("redshift cluster does not exist")
+		}
+		if mqlClusterArn == arnVal {
+			return args, cluster, nil
+		}
+	}
+	return nil, nil, errors.New("redshift cluster does not exist")
 }
 
 func (r *mqlAwsRedshiftCluster) GetParameters() ([]interface{}, error) {
