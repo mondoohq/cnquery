@@ -68,9 +68,12 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 	return awsObjectPlatformInfo{}, errors.Newf("missing runtime info for aws object service %s type %s", awsObject.service, awsObject.objectType)
 }
 
-func s3Buckets(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func s3Buckets(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	buckets := m.GetList("return aws.s3.buckets { arn name location tags }") // no id field
+	buckets, err := m.GetList("return aws.s3.buckets { arn name location tags }") // no id field
+	if err != nil {
+		return nil, err
+	}
 	for i := range buckets {
 		b := buckets[i].(map[string]interface{})
 		name := b["name"].(string)
@@ -91,12 +94,15 @@ func s3Buckets(m *MqlDiscovery, account string, tc *providers.Config) []*asset.A
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func cloudtrailTrails(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func cloudtrailTrails(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	trails := m.GetList("return aws.cloudtrail.trails { arn name region }") // no id field
+	trails, err := m.GetList("return aws.cloudtrail.trails { arn name region }") // no id field
+	if err != nil {
+		return nil, err
+	}
 	for i := range trails {
 		t := trails[i].(map[string]interface{})
 		name := t["name"].(string)
@@ -112,13 +118,16 @@ func cloudtrailTrails(m *MqlDiscovery, account string, tc *providers.Config) []*
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func rdsInstances(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func rdsInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	rdsinstances := m.GetList("return aws.rds.dbInstances { id arn name tags region }")
+	rdsinstances, err := m.GetList("return aws.rds.dbInstances { id arn name tags region }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range rdsinstances {
 		r := rdsinstances[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -140,13 +149,16 @@ func rdsInstances(m *MqlDiscovery, account string, tc *providers.Config) []*asse
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func vpcs(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func vpcs(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	vpcs := m.GetList("return aws.vpcs { id arn region tags }")
+	vpcs, err := m.GetList("return aws.vpcs { id arn region tags }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range vpcs {
 		r := vpcs[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -167,13 +179,16 @@ func vpcs(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset 
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func securityGroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func securityGroups(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	securitygroups := m.GetList("return aws.ec2.securityGroups { id arn region tags name description }")
+	securitygroups, err := m.GetList("return aws.ec2.securityGroups { id arn region tags name description }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range securitygroups {
 		r := securitygroups[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -197,13 +212,16 @@ func securityGroups(m *MqlDiscovery, account string, tc *providers.Config) []*as
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func iamUsers(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func iamUsers(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	users := m.GetList("return aws.iam.users { id arn tags name }")
+	users, err := m.GetList("return aws.iam.users { id arn tags name }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range users {
 		r := users[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -224,13 +242,16 @@ func iamUsers(m *MqlDiscovery, account string, tc *providers.Config) []*asset.As
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func iamGroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func iamGroups(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	users := m.GetList("return aws.iam.groups { id arn name usernames }")
+	users, err := m.GetList("return aws.iam.groups { id arn name usernames }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range users {
 		r := users[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -248,13 +269,16 @@ func iamGroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.A
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func cloudwatchLoggroups(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func cloudwatchLoggroups(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	loggroups := m.GetList("return aws.cloudwatch.logGroups { arn name region }")
+	loggroups, err := m.GetList("return aws.cloudwatch.logGroups { arn name region }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range loggroups {
 		r := loggroups[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -271,13 +295,16 @@ func cloudwatchLoggroups(m *MqlDiscovery, account string, tc *providers.Config) 
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func lambdaFunctions(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func lambdaFunctions(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	lambdafunctions := m.GetList("return aws.lambda.functions { arn name region tags }")
+	lambdafunctions, err := m.GetList("return aws.lambda.functions { arn name region tags }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range lambdafunctions {
 		r := lambdafunctions[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -298,13 +325,16 @@ func lambdaFunctions(m *MqlDiscovery, account string, tc *providers.Config) []*a
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func dynamodbTables(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func dynamodbTables(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	dynamodbtables := m.GetList("return aws.dynamodb.tables { arn name region tags }")
+	dynamodbtables, err := m.GetList("return aws.dynamodb.tables { arn name region tags }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range dynamodbtables {
 		r := dynamodbtables[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -326,13 +356,16 @@ func dynamodbTables(m *MqlDiscovery, account string, tc *providers.Config) []*as
 			}, tc))
 	}
 
-	globaltables := m.GetList("return aws.dynamodb.globalTables { arn name region tags }")
+	globaltables, err := m.GetList("return aws.dynamodb.globalTables { arn name tags }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range globaltables {
 		r := globaltables[i].(map[string]interface{})
-		arn := r["arn"].(string)
+		a := r["arn"].(string)
 		name := r["name"].(string)
 		tags := r["tags"].(map[string]interface{})
-		region := r["region"].(string)
+		region := "us-east-1" // global service
 		stringLabels := make(map[string]string)
 		for k, v := range tags {
 			stringLabels[k] = v.(string)
@@ -342,18 +375,21 @@ func dynamodbTables(m *MqlDiscovery, account string, tc *providers.Config) []*as
 			mqlObject{
 				name: name, labels: stringLabels,
 				awsObject: awsObject{
-					account: account, region: region, arn: arn,
+					account: account, region: region, arn: a,
 					id: name, service: "dynamodb", objectType: "table",
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func redshiftClusters(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func redshiftClusters(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	clusters := m.GetList("return aws.redshift.clusters { arn name region tags }")
+	clusters, err := m.GetList("return aws.redshift.clusters { arn name region tags }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range clusters {
 		r := clusters[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -374,13 +410,16 @@ func redshiftClusters(m *MqlDiscovery, account string, tc *providers.Config) []*
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func ec2Volumes(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func ec2Volumes(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	volumes := m.GetList("return aws.ec2.volumes { arn id region tags }")
+	volumes, err := m.GetList("return aws.ec2.volumes { arn id region tags }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range volumes {
 		r := volumes[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -401,13 +440,16 @@ func ec2Volumes(m *MqlDiscovery, account string, tc *providers.Config) []*asset.
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func ec2Snapshots(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func ec2Snapshots(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	snapshots := m.GetList("return aws.ec2.snapshots { arn id region tags }")
+	snapshots, err := m.GetList("return aws.ec2.snapshots { arn id region tags }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range snapshots {
 		r := snapshots[i].(map[string]interface{})
 		arn := r["arn"].(string)
@@ -428,13 +470,16 @@ func ec2Snapshots(m *MqlDiscovery, account string, tc *providers.Config) []*asse
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) []*asset.Asset {
+func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	containers := m.GetList("return aws.ecs.containers { arn taskDefinitionArn name publicIp image region }")
+	containers, err := m.GetList("return aws.ecs.containers { arn taskDefinitionArn name publicIp image region }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range containers {
 		c := containers[i].(map[string]interface{})
 		arn := c["arn"].(string)
@@ -454,5 +499,5 @@ func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) []*ass
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }

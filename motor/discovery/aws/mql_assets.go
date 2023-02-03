@@ -37,19 +37,22 @@ func (md *MqlDiscovery) Close() {
 	}
 }
 
-func (md *MqlDiscovery) GetList(query string) []interface{} {
+func (md *MqlDiscovery) GetList(query string) ([]interface{}, error) {
 	mqlExecutor := mql.New(md.rt, cnquery.DefaultFeatures)
 	value, err := mqlExecutor.Exec(query, map[string]*llx.Primitive{})
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	a := []interface{}{}
 	d, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result: &a,
 	})
-	d.Decode(value.Value)
-	return a
+	err = d.Decode(value.Value)
+	if err != nil {
+		return nil, err
+	}
+	return a, value.Error
 }
 
 func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, account string) ([]*asset.Asset, error) {
@@ -60,46 +63,102 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 	}
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryS3Buckets) {
-		assets = append(assets, s3Buckets(m, account, tc)...)
+		if a, err := s3Buckets(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query s3 buckets")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryCloudtrailTrails) {
-		assets = append(assets, cloudtrailTrails(m, account, tc)...)
+		if a, err := cloudtrailTrails(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query cloutrail trails")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRdsDbInstances) {
-		assets = append(assets, rdsInstances(m, account, tc)...)
+		if a, err := rdsInstances(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query rds instances")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryVPCs) {
-		assets = append(assets, vpcs(m, account, tc)...)
+		if a, err := vpcs(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query vpcs")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySecurityGroups) {
-		assets = append(assets, securityGroups(m, account, tc)...)
+		if a, err := securityGroups(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query security groups")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryIAMUsers) {
-		assets = append(assets, iamUsers(m, account, tc)...)
+		if a, err := iamUsers(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query iam users")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryIAMGroups) {
-		assets = append(assets, iamGroups(m, account, tc)...)
+		if a, err := iamGroups(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query iam groups")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryCloudwatchLoggroups) {
-		assets = append(assets, cloudwatchLoggroups(m, account, tc)...)
+		if a, err := cloudwatchLoggroups(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query cloudwatch log groups")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryLambdaFunctions) {
-		assets = append(assets, lambdaFunctions(m, account, tc)...)
+		if a, err := lambdaFunctions(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query lambda functions")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryDynamoDBTables) {
-		assets = append(assets, dynamodbTables(m, account, tc)...)
+		if a, err := dynamodbTables(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query dynamodb tables")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRedshiftClusters) {
-		assets = append(assets, redshiftClusters(m, account, tc)...)
+		if a, err := redshiftClusters(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query redshift clusters")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryVolumes) {
-		assets = append(assets, ec2Volumes(m, account, tc)...)
+		if a, err := ec2Volumes(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ec2 volumes")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySnapshots) {
-		assets = append(assets, ec2Snapshots(m, account, tc)...)
+		if a, err := ec2Snapshots(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ec2 snapshots")
+		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECSContainersAPI) {
-		assets = append(assets, ecsContainers(m, account, tc)...)
+		if a, err := ecsContainers(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ecs containers")
+		}
 	}
 
 	return assets, nil
