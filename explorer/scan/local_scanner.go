@@ -290,6 +290,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 					// resyncAssets = append(resyncAssets, assetEntry)
 				}
 			}
+
 			job.connection = m
 			results, err := s.runMotorizedAsset(job)
 			if err != nil {

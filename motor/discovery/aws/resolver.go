@@ -15,14 +15,45 @@ import (
 )
 
 const (
-	DiscoveryAccounts  = "accounts"
-	DiscoveryInstances = "instances"
-	// deprecated: use DiscoverySSMInstances instead
-	DiscoverySSM          = "ssm"
+	DiscoveryInstances    = "instances"
+	DiscoverySSM          = "ssm" // deprecated: use DiscoverySSMInstances instead
 	DiscoverySSMInstances = "ssm-instances"
 	DiscoveryECR          = "ecr"
 	DiscoveryECS          = "ecs"
+	// api-only scan
+	DiscoveryAccounts                   = "accounts"
+	DiscoveryResources                  = "resources" // all the resources
+	DiscoveryECSContainersAPI           = "ecs-containers-api"
+	DiscoveryEC2InstanceAPI             = "ec2-instances-api" // todo
+	DiscoverySSMInstanceAPI             = "ssm-instances-api" // todo
+	DiscoveryS3Buckets                  = "s3-buckets"
+	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
+	DiscoveryRdsDbInstances             = "rds-dbinstances"
+	DiscoveryVPCs                       = "vpcs"
+	DiscoverySecurityGroups             = "security-groups"
+	DiscoveryIAMUsers                   = "iam-users"
+	DiscoveryIAMGroups                  = "iam-groups"
+	DiscoveryCloudwatchLoggroups        = "cloudwatch-loggroups"
+	DiscoveryLambdaFunctions            = "lambda-functions"
+	DiscoveryDynamoDBTables             = "dynamodb-tables"
+	DiscoveryRedshiftClusters           = "redshift-clusters"
+	DiscoveryVolumes                    = "ec2-volumes"
+	DiscoverySnapshots                  = "ec2-snapshots"
+	DiscoveryEFSFilesystems             = "efs-filesystems"             // todo resource, policy complete
+	DiscoveryAPIGatewayRestAPIs         = "gateway-restapis"            // todo resource, policy complete
+	DiscoveryELBLoadBalancers           = "elb-loadbalancers"           // todo resource, policy complete
+	DiscoveryESDomains                  = "es-domains"                  // todo resource, policy complete
+	DiscoveryKMSKeys                    = "kms-keys"                    // todo resource, policy complete
+	DiscoverySagemakerNotebookInstances = "sagemaker-notebookinstances" // todo resource, policy complete
 )
+
+var ResourceDiscoveryTargets = []string{
+	DiscoveryResources, DiscoveryS3Buckets, DiscoveryCloudtrailTrails, DiscoveryRdsDbInstances,
+	DiscoveryVPCs, DiscoverySecurityGroups, DiscoveryIAMUsers, DiscoveryIAMGroups,
+	DiscoveryCloudwatchLoggroups, DiscoveryLambdaFunctions, DiscoveryDynamoDBTables, DiscoveryRedshiftClusters,
+	DiscoveryVolumes, DiscoverySnapshots, DiscoveryEFSFilesystems, DiscoveryECSContainersAPI,
+	DiscoveryAPIGatewayRestAPIs, DiscoveryELBLoadBalancers, DiscoveryESDomains, DiscoveryKMSKeys, DiscoverySagemakerNotebookInstances,
+}
 
 type Resolver struct{}
 
@@ -31,7 +62,13 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts, DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances, DiscoveryECR, DiscoveryECS}
+	discovery := []string{
+		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryAccounts,
+		DiscoveryInstances, DiscoverySSM, DiscoverySSMInstances,
+		DiscoveryECR, DiscoveryECS,
+	}
+	discovery = append(discovery, ResourceDiscoveryTargets...)
+	return discovery
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -88,6 +125,21 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	discoverFilter := map[string]string{}
 	if tc.Discover != nil {
 		discoverFilter = tc.Discover.Filter
+	}
+
+	// resources as assets
+	if tc.IncludesOneOfDiscoveryTarget(ResourceDiscoveryTargets...) { // todo: add auto, all when policies are ready
+		assetList, err := GatherMQLObjects(provider, tc.Clone(), info.ID)
+		if err != nil {
+			return nil, err
+		}
+		for i := range assetList {
+			a := assetList[i]
+			if resolvedRoot != nil {
+				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+			}
+			resolved = append(resolved, a)
+		}
 	}
 
 	instancesPlatformIdsMap := map[string]*asset.Asset{}
@@ -188,6 +240,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		log.Debug().Int("assets", len(assetList)).Msg("completed ecs search")
 		for i := range assetList {
 			a := assetList[i]
+			if a == nil {
+				continue
+			}
 			if resolvedRoot != nil {
 				a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
 			}

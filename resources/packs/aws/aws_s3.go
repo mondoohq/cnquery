@@ -62,7 +62,12 @@ func (p *mqlAwsS3Bucket) init(args *resources.Args) (*resources.Args, AwsS3Bucke
 	if len(*args) >= 2 {
 		return args, nil, nil
 	}
-
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
 	if (*args)["arn"] == nil && (*args)["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws s3 bucket")
 	}
@@ -103,6 +108,9 @@ func (p *mqlAwsS3Bucket) init(args *resources.Args) (*resources.Args, AwsS3Bucke
 	// it is possible for a resource to reference a non-existent/deleted bucket, so here we
 	// create the object, noting that it no longer exists but is still recorded as part of some resources
 	splitArn := strings.Split(arn, ":::")
+	if len(splitArn) != 2 {
+		return args, nil, nil
+	}
 	name := splitArn[1]
 	log.Debug().Msgf("no bucket found for %s", arn)
 	mqlAwsS3Bucket, err := p.MotorRuntime.CreateResource("aws.s3.bucket",

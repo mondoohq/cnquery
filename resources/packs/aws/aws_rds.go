@@ -161,6 +161,13 @@ func (p *mqlAwsRdsDbinstance) init(args *resources.Args) (*resources.Args, AwsRd
 		return args, nil, nil
 	}
 
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(p.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
 	if (*args)["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch rds db instance")
 	}

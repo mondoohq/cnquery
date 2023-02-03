@@ -55,7 +55,6 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	if d.cache != nil {
 		return d.cache, nil
 	}
-
 	var pi *platform.Platform
 	switch pt := d.provider.(type) {
 	case *vsphere.Provider:
@@ -80,12 +79,7 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Runtime: pt.Runtime(),
 		}, nil
 	case *aws.Provider:
-		return &platform.Platform{
-			Name:    "aws",
-			Title:   "Amazon Web Services",
-			Kind:    providers.Kind_KIND_API,
-			Runtime: providers.RUNTIME_AWS,
-		}, nil
+		return pt.PlatformInfo(), nil
 	case *google.Provider:
 		return pt.PlatformInfo()
 	case *microsoft.Provider:
