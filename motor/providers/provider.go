@@ -9,6 +9,7 @@ const (
 	MachineIdDetector PlatformIdDetector = "machine-id"
 	CloudDetector     PlatformIdDetector = "cloud-detect"
 	AWSEc2Detector    PlatformIdDetector = "aws-ec2"
+	AWSEcsDetector    PlatformIdDetector = "aws-ecs"
 	SshHostKey        PlatformIdDetector = "ssh-host-key"
 	// TransportPlatformIdentifierDetector is a detector that gets the platform id
 	// from the transports Identifier() method. This requires the

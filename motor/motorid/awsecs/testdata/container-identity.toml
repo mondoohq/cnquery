@@ -1,0 +1,31 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/redhat-release"]
+content = "Red Hat Enterprise Linux Server release 7.2 (Maipo)"
+
+[commands."curl ${ECS_CONTAINER_METADATA_URI_V4}"]
+stdout = """
+{
+  "DockerId":"f088b38d61ac45d6a946b5aebbe7197a-3681984407",
+  "Name":"fargate-app",
+  "DockerName":"fargate-app",
+  "Image":"public.ecr.aws/docker/library/httpd:latest",
+  "ImageID":"sha256:87a012bf99bf5e3e0f628ac1f69abbeab534282857fba3a359ca3a3f4a02429a",
+  "Labels":{"com.amazonaws.ecs.cluster":"arn:aws:ecs:us-east-1:172746783610:cluster/vjtest","com.amazonaws.ecs.container-name":"fargate-app","com.amazonaws.ecs.task-arn":"arn:aws:ecs:us-east-1:172746783610:task/vjtest/f088b38d61ac45d6a946b5aebbe7197a","com.amazonaws.ecs.task-definition-family":"sample-fargate","com.amazonaws.ecs.task-definition-version":"2"},
+  "DesiredStatus":"RUNNING",
+  "KnownStatus":"RUNNING",
+  "Limits":{"CPU":2},
+  "CreatedAt":"2023-01-31T06:19:11.226060573Z",
+  "StartedAt":"2023-01-31T06:19:11.226060573Z",
+  "Type":"NORMAL",
+  "Networks":[{"NetworkMode":"awsvpc","IPv4Addresses":["172.31.12.124"],"AttachmentIndex":0,"MACAddress":"02:ee:fc:59:ac:5f","IPv4SubnetCIDRBlock":"172.31.0.0/20","DomainNameServers":["172.31.0.2"],"DomainNameSearchList":["ec2.internal"],"PrivateDNSName":"ip-172-31-12-124.ec2.internal","SubnetGatewayIpv4Address":"172.31.0.1/20"}],
+  "ContainerARN":"arn:aws:ecs:us-east-1:172746783610:container/vjtest/f088b38d61ac45d6a946b5aebbe7197a/314e35e0-2d0a-4408-b37e-16063461d73a"
+}
+"""
