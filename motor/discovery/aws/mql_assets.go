@@ -61,34 +61,37 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 	if err != nil {
 		return nil, err
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECSContainersAPI) {
+
+	// todo: when the dedup story is in we should turn these on with the others
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryECSContainersAPI) {
 		if a, err := ecsContainers(m, account, tc); err == nil {
 			assets = append(assets, a...)
 		} else {
 			log.Error().Err(err).Msg("unable to query ecs containers")
 		}
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECRImageAPI) {
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryECRImageAPI) {
 		if a, err := ecrImages(m, account, tc); err == nil {
 			assets = append(assets, a...)
 		} else {
 			log.Error().Err(err).Msg("unable to query ecr images")
 		}
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryEC2InstanceAPI) {
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryEC2InstanceAPI) {
 		if a, err := ec2Instances(m, account, tc); err == nil {
 			assets = append(assets, a...)
 		} else {
 			log.Error().Err(err).Msg("unable to query ec2 instances")
 		}
 	}
-	// if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySSMInstanceAPI) {
-	// 	if a, err := ssmInstances(m, account, tc); err == nil {
-	// 		assets = append(assets, a...)
-	// 	} else {
-	// 		log.Error().Err(err).Msg("unable to query ssm instances")
-	// 	}
-	// }
+	if tc.IncludesOneOfDiscoveryTarget(DiscoverySSMInstanceAPI) {
+		if a, err := ssmInstances(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ssm instances")
+		}
+	}
+	// end todo
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryS3Buckets) {
 		if a, err := s3Buckets(m, account, tc); err == nil {

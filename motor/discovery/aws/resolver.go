@@ -27,7 +27,7 @@ const (
 	DiscoveryECSContainersAPI           = "ecs-containers-api" // need dedup story
 	DiscoveryECRImageAPI                = "ecr-image-api"      // need policy + dedup story
 	DiscoveryEC2InstanceAPI             = "ec2-instances-api"  // need policy + dedup story
-	DiscoverySSMInstanceAPI             = "ssm-instances-api"  // todo, also need policy + dedup story
+	DiscoverySSMInstanceAPI             = "ssm-instances-api"  // need policy + dedup story
 	DiscoveryS3Buckets                  = "s3-buckets"
 	DiscoveryCloudtrailTrails           = "cloudtrail-trails"
 	DiscoveryRdsDbInstances             = "rds-dbinstances"

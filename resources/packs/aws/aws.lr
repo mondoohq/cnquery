@@ -1317,6 +1317,26 @@ private aws.lambda.function @defaults("arn") {
   tags map[string]string
 }
 
+// Amazon Systems Manager
+aws.ssm {
+  instances() []aws.ssm.instance
+}
+
+private aws.ssm.instance {
+  // Instance ID for the SSM Instance
+  instanceId string
+  // Ping Status (e.g. online) for the SSM Instance
+  pingStatus string
+  // IP Address for the SSM Instance
+  ipAddress string
+  // Platform Name for the SSM Instance, as described by AWS
+  platformName string
+  // Region for the SSM Instance
+  region string
+  // ARN for the SSM Instance
+  arn string
+}
+
 // Amazon EC2
 aws.ec2 {
   // List of security groups available to the account

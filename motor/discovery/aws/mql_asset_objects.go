@@ -604,39 +604,33 @@ func ec2Instances(m *MqlDiscovery, account string, tc *providers.Config) ([]*ass
 	return assets, nil
 }
 
-// func ssmInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
-// 	assets := []*asset.Asset{}
+func ssmInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
 
-// 	instances, err := m.GetList("return aws.ssm.instances { arn instanceId tags region }")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	for i := range instances {
-// 		inst := instances[i].(map[string]interface{})
-// 		arn := inst["arn"].(string)
-// 		region := inst["region"].(string)
-// 		id := inst["instanceId"].(string)
-// 		tags := inst["tags"].(map[string]interface{})
-// 		stringLabels := make(map[string]string)
-// 		var name string
-// 		for k, v := range tags {
-// 			stringLabels[k] = v.(string)
-// 			if k == "Name" {
-// 				name = v.(string)
-// 			}
-// 		}
+	instances, err := m.GetList("return aws.ssm.instances { arn instanceId pingStatus platformName region }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range instances {
+		inst := instances[i].(map[string]interface{})
+		arn := inst["arn"].(string)
+		region := inst["region"].(string)
+		id := inst["instanceId"].(string)
+		pingStatus := inst["pingStatus"].(string)
+		platformName := inst["platformName"].(string)
+		stringLabels := map[string]string{"pingStatus": pingStatus, "platformName": platformName}
 
-// 		assets = append(assets, MqlObjectToAsset(account,
-// 			mqlObject{
-// 				name: name, labels: stringLabels,
-// 				awsObject: awsObject{
-// 					account: account, region: region, arn: arn,
-// 					id: id, service: "ssm", objectType: "instance",
-// 				},
-// 			}, tc))
-// 	}
-// 	return assets, nil
-// }
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: id, labels: stringLabels,
+				awsObject: awsObject{
+					account: account, region: region, arn: arn,
+					id: id, service: "ssm", objectType: "instance",
+				},
+			}, tc))
+	}
+	return assets, nil
+}
 
 func efsFilesystems(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
