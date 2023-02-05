@@ -29,7 +29,7 @@ packs:
     filters:
       - asset.family.contains("linux")
     queries:
-      - uid: mondoo-asset-info
+      - uid: mondoo-linux-asset-info
         title: Gather asset information
         query: asset { kind title platform name arch runtime }
       - uid: mondoo-linux-hostname

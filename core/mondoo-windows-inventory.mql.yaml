@@ -29,10 +29,10 @@ packs:
     filters:
       - asset.platform.contains("windows")
     queries:
-      - uid: mondoo-asset-info
+      - uid: mondoo-windows-asset-info
         title: Gather asset information
         query: asset { kind title platform name arch runtime }
-      - uid: mondoo-hostname
+      - uid: mondoo-windows-hostname
         title: Gather the hostname
         query: os.hostname
       - uid: mondoo-windows-users 
