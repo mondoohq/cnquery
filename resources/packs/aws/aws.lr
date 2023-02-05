@@ -751,6 +751,7 @@ aws.cloudfront {
   functions() []aws.cloudfront.function
 }
 
+// Distribution for AWS CloudFront
 private aws.cloudfront.distribution {
   // ARN of the CloudFront distribution
   arn string
@@ -766,6 +767,7 @@ private aws.cloudfront.distribution {
   cacheBehaviors []dict
 }
 
+// Distribution Origin for AWS CloudFront
 private aws.cloudfront.distribution.origin {
   // Domain name for the origin
   domainName string
@@ -781,6 +783,7 @@ private aws.cloudfront.distribution.origin {
   account string
 }
 
+// Function for AWS CloudFront
 private aws.cloudfront.function {
   // Name of the CloudFront function
   name string
