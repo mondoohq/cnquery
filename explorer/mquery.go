@@ -263,7 +263,11 @@ func (m *Mquery) Merge(base *Mquery) *Mquery {
 // in the query, is pulled from the base.
 func (m *Mquery) AddBase(base *Mquery) {
 	if m.Mql == "" {
+		// MQL, type and codeID go hand in hand, so make sure to always pull them
+		// fully when doing this.
 		m.Mql = base.Mql
+		m.CodeId = base.CodeId
+		m.Type = base.Type
 	}
 	if m.Type == "" {
 		m.Type = base.Type
