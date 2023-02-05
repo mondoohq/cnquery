@@ -393,7 +393,7 @@ func (p *Bundle) compileQueries(queries []*Mquery, ownerMrn string, pack *QueryP
 
 		existing, ok := lookupQuery[query.Mrn]
 		if ok {
-			query.Merge(existing)
+			query.AddBase(existing)
 			query.Filters.Compile(ownerMrn)
 			pack.Filters.RegisterChild(query.Filters)
 			query.RefreshChecksumAndType(lookupProp)

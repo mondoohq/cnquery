@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/types"
+	"google.golang.org/protobuf/proto"
 )
 
 // Compile a given query and return the bundle. Both v1 and v2 versions are compiled.
@@ -249,7 +250,18 @@ func (m *Mquery) Sanitize() {
 	}
 }
 
-func (m *Mquery) Merge(base *Mquery) {
+// Merge a given query with a base query and create a new query object as a
+// result of it. Anything that is not set in the query, is pulled from the base.
+func (m *Mquery) Merge(base *Mquery) *Mquery {
+	// TODO: lots of potential to speed things up here
+	res := proto.Clone(m).(*Mquery)
+	res.AddBase(base)
+	return res
+}
+
+// AddBase adds a base query into the query object. Anything that is not set
+// in the query, is pulled from the base.
+func (m *Mquery) AddBase(base *Mquery) {
 	if m.Mql == "" {
 		m.Mql = base.Mql
 	}
