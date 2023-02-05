@@ -37,7 +37,7 @@ func CheckApiHealth(endpoint string) (Status, error) {
 		status.API.Timestamp = healthResp.Time
 		status.API.Version = healthResp.ApiVersion
 
-		// do time check to make it easier to dected ssl/tls issues
+		// do time check to make it easier to detect ssl/tls issues
 		receivedResponseTime := time.Now()
 		roundTripDuration := receivedResponseTime.Sub(sendTime)
 		if roundTripDuration > time.Second*5 {

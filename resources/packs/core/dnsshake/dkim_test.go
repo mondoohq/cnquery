@@ -223,7 +223,7 @@ func TestDkimPublicKeyRepresentation(t *testing.T) {
 			IsValid: true,
 		},
 		{
-			Title:        "colon seperated service type list with supported and unsupported entries",
+			Title:        "colon separated service type list with supported and unsupported entries",
 			DnsTxtRecord: "v=DKIM1; s=email:unsupported; p=" + pubKey,
 			Expected: &DkimPublicKeyRepresentation{
 				Version:       "DKIM1",

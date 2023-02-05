@@ -138,10 +138,10 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 
 	// terraform subcommand
 	terraformCmd := terraformProviderCmd(commonCmdFlags, preRun, runFn, docs)
-	terrafromPlanCmd := terraformProviderPlanCmd(commonCmdFlags, preRun, runFn, docs)
-	terraformCmd.AddCommand(terrafromPlanCmd)
-	terrafromStateCmd := terraformProviderStateCmd(commonCmdFlags, preRun, runFn, docs)
-	terraformCmd.AddCommand(terrafromStateCmd)
+	terraformPlanCmd := terraformProviderPlanCmd(commonCmdFlags, preRun, runFn, docs)
+	terraformCmd.AddCommand(terraformPlanCmd)
+	terraformStateCmd := terraformProviderStateCmd(commonCmdFlags, preRun, runFn, docs)
+	terraformCmd.AddCommand(terraformStateCmd)
 
 	// subcommands
 	baseCmd.AddCommand(localProviderCmd(commonCmdFlags, preRun, runFn, docs))

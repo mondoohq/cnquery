@@ -67,7 +67,7 @@ func ParseGemfileLock(r io.Reader) ([]*mvd.Package, error) {
 }
 
 func parseSpecLine(line string) (*mvd.Package, error) {
-	// ignore everthing with 2 leading spaces, we do not need that info
+	// ignore everything with 2 leading spaces, we do not need that info
 	whitespace := LeadingSpaces(line)
 	// We do not need to scan whitespace = 6 since those are just dependencies
 	// of the package. At this point, we do not need the package graph
