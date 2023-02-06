@@ -13,6 +13,7 @@ import (
 
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/lr/docs"
+	aristaInfo "go.mondoo.com/cnquery/resources/packs/arista/info"
 	awsInfo "go.mondoo.com/cnquery/resources/packs/aws/info"
 	azureInfo "go.mondoo.com/cnquery/resources/packs/azure/info"
 	coreInfo "go.mondoo.com/cnquery/resources/packs/core/info"
@@ -46,6 +47,7 @@ func init() {
 	Registry.Add(oktaInfo.Registry)
 	Registry.Add(slackInfo.Registry)
 	Registry.Add(vcdInfo.Registry)
+	Registry.Add(aristaInfo.Registry)
 
 	ResourceDocs = mergeDocs(
 		coreInfo.ResourceDocs,
@@ -63,6 +65,7 @@ func init() {
 		oktaInfo.ResourceDocs,
 		slackInfo.ResourceDocs,
 		vcdInfo.ResourceDocs,
+		aristaInfo.ResourceDocs,
 	)
 }
 

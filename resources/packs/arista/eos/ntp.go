@@ -1,4 +1,4 @@
-package arista
+package eos
 
 type showNtpStatus struct {
 	Status string `json:"status"`

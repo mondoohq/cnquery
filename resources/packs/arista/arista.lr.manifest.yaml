@@ -1,0 +1,142 @@
+resources:
+  arista.eos:
+    fields:
+      fqdn: {}
+      hostname: {}
+      interfaces: {}
+      ipInterfaces: {}
+      ntp: {}
+      roles: {}
+      snmp: {}
+      systemConfig: {}
+      users: {}
+      version: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.interface:
+    fields:
+      bandwidth: {}
+      burnedInAddress: {}
+      description: {}
+      forwardingModel: {}
+      hardware: {}
+      interfaceAddress: {}
+      interfaceCounters: {}
+      interfaceMembership: {}
+      interfaceStatistics: {}
+      interfaceStatus: {}
+      l2Mtu: {}
+      lastStatusChangeTimestamp: {}
+      lineProtocolStatus: {}
+      mtu: {}
+      name: {}
+      physicalAddress: {}
+      status: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.ipInterface:
+    fields:
+      address: {}
+      mtu: {}
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.ntpSetting:
+    fields:
+      status: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.role:
+    fields:
+      default: {}
+      name: {}
+      rules: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.runningConfig:
+    fields:
+      content: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.runningConfig.section:
+    fields:
+      content: {}
+      name: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.snmpSetting:
+    fields:
+      enabled: {}
+      notifications: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.spt.mstInterface:
+    fields:
+      boundaryType: {}
+      cost: {}
+      counters: {}
+      detail: {}
+      features: {}
+      id: {}
+      inconsistentFeatures: {}
+      isEdgePort: {}
+      linkType: {}
+      mstInstanceId: {}
+      name: {}
+      portNumber: {}
+      priority: {}
+      role: {}
+      state: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.stp:
+    fields:
+      mstInstances: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.stp.mst:
+    fields:
+      bridge: {}
+      instanceId: {}
+      interfaces: {}
+      name: {}
+      protocol: {}
+      regionalRootBridge: {}
+      rootBridge: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos
+  arista.eos.user:
+    fields:
+      format: {}
+      name: {}
+      nopassword: {}
+      privilege: {}
+      role: {}
+      secret: {}
+      sshkey: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - arista-eos

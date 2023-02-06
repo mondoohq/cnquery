@@ -2,6 +2,7 @@ package all
 
 import (
 	"go.mondoo.com/cnquery/resources/packs/all/info"
+	"go.mondoo.com/cnquery/resources/packs/arista"
 	"go.mondoo.com/cnquery/resources/packs/aws"
 	"go.mondoo.com/cnquery/resources/packs/azure"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -43,4 +44,5 @@ func init() {
 	Registry.Add(googleworkspace.Registry)
 	Registry.Add(slack.Registry)
 	Registry.Add(vcd.Registry)
+	Registry.Add(arista.Registry)
 }

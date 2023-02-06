@@ -1,4 +1,4 @@
-package arista
+package eos
 
 type showSnmp struct {
 	Enabled bool `json:"enabled"`

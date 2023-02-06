@@ -1,4 +1,4 @@
-package os
+package arista
 
 import (
 	"errors"
@@ -7,17 +7,17 @@ import (
 
 	"go.mondoo.com/cnquery/motor/providers"
 	arista_provider "go.mondoo.com/cnquery/motor/providers/arista"
+	"go.mondoo.com/cnquery/resources/packs/arista/eos"
 	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/resources/packs/os/arista"
 )
 
-func aristaClientInstance(t providers.Instance) (*arista.Eos, *arista_provider.Provider, error) {
+func aristaClientInstance(t providers.Instance) (*eos.Eos, *arista_provider.Provider, error) {
 	provider, ok := t.(*arista_provider.Provider)
 	if !ok {
 		return nil, nil, errors.New("arista.eos resource is not supported on this provider")
 	}
 
-	eos := arista.NewEos(provider.Client())
+	eos := eos.NewEos(provider.Client())
 	return eos, provider, nil
 }
 
@@ -59,7 +59,7 @@ func (a *mqlAristaEosRunningConfigSection) id() (string, error) {
 }
 
 func (a *mqlAristaEosRunningConfigSection) GetContent() (string, error) {
-	eos, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
+	eosInstance, _, err := aristaClientInstance(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return "", err
 	}
@@ -70,9 +70,9 @@ func (a *mqlAristaEosRunningConfigSection) GetContent() (string, error) {
 	}
 
 	// todo: use content from arista.eos.runningconfig
-	content := eos.RunningConfig()
+	content := eosInstance.RunningConfig()
 
-	return arista.GetSection(strings.NewReader(content), name), nil
+	return eos.GetSection(strings.NewReader(content), name), nil
 }
 
 func (a *mqlAristaEos) GetSystemConfig() (map[string]interface{}, error) {

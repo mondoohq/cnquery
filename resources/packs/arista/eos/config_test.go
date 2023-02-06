@@ -1,4 +1,4 @@
-package arista
+package eos
 
 import (
 	"bytes"
