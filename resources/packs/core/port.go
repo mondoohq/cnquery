@@ -154,7 +154,8 @@ func hex2ipv6(s string) (string, error) {
 	ip := netip.AddrFrom16(ipBytes16)
 
 	if ip.Next().Is6() {
-		return ip.String(), nil
+		// ipv6-friendly formatting with the [] brackets
+		return fmt.Sprintf("[%s]", ip.String()), nil
 	} else {
 		return "", err
 	}
