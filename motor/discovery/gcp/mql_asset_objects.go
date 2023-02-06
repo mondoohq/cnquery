@@ -1,8 +1,6 @@
 package gcp
 
 import (
-	"encoding/json"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -47,49 +45,49 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 
 func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
+	type instanceDisk struct {
+		GuestOsFeatures []string
+	}
+	type instance struct {
+		Id                string
+		Name              string
+		Labels            map[string]string
+		Zone              struct{ Name string }
+		Status            string
+		NetworkInterfaces []compute.NetworkInterface
+		Disks             []instanceDisk
+	}
 
-	instances, err := m.GetList("return gcp.project.compute.instances.where( status == 'RUNNING' ) { id name labels zone { name } status networkInterfaces disks { guestOsFeatures } }")
+	disksContainWindows := func(disks []instanceDisk) bool {
+		for _, d := range disks {
+			for _, f := range d.GuestOsFeatures {
+				if f == "WINDOWS" {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	instances, err := GetList[instance](m, "return gcp.project.compute.instances.where( status == 'RUNNING' ) { id name labels zone { name } status networkInterfaces disks { guestOsFeatures } }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range instances {
-		b := instances[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["name"].(string)
 
-		disks := b["disks"].([]interface{})
-		if disksContainWindows(disks) {
-			log.Debug().Msgf("skipping windows instance %s", name)
+	for _, i := range instances {
+		if disksContainWindows(i.Disks) {
+			log.Debug().Msgf("skipping windows instance %s", i.Name)
 			continue
 		}
 
-		tags := b["labels"].(map[string]interface{})
-		zone := b["zone"].(map[string]interface{})
-		zoneName := zone["name"].(string)
-		status := b["status"].(string)
-		stringLabels := make(map[string]string)
-		for k, v := range tags {
-			stringLabels[k] = v.(string)
-		}
-		stringLabels[InstanceLabel] = id
-
-		data, err := json.Marshal(b["networkInterfaces"])
-		if err != nil {
-			log.Error().Msgf("failed to marshal network interfaces for gcp compute instance %s", name)
-			continue
-		}
-
-		var networkIfaces []*compute.NetworkInterface
-		if err := json.Unmarshal(data, &networkIfaces); err != nil {
-			log.Error().Msgf("failed to unmarshal network interfaces for gcp compute instance %s", name)
-			continue
-		}
+		stringLabels := i.Labels
+		stringLabels["mondoo.com/instance"] = i.Id
 
 		connections := []*providers.Config{}
-		for _, ni := range networkIfaces {
+		for _, ni := range i.NetworkInterfaces {
 			for _, ac := range ni.AccessConfigs {
 				if len(ac.NatIP) > 0 {
-					log.Debug().Str("instance", name).Str("ip", ac.NatIP).Msg("found public ip")
+					log.Debug().Str("instance", i.Name).Str("ip", ac.NatIP).Msg("found public ip")
 					connections = append(connections, &providers.Config{
 						Backend:  providers.ProviderType_SSH,
 						Host:     ac.NatIP,
@@ -101,17 +99,17 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 
 		a := MqlObjectToAsset(project,
 			mqlObject{
-				name: name, labels: stringLabels,
+				name: i.Name, labels: stringLabels,
 				gcpObject: gcpObject{
 					project:    project,
-					region:     zoneName,
-					name:       name,
-					id:         id,
+					region:     i.Zone.Name,
+					name:       i.Name,
+					id:         i.Id,
 					service:    "compute",
 					objectType: "image",
 				},
 			}, tc)
-		a.State = mapInstanceStatus(status)
+		a.State = mapInstanceStatus(i.Status)
 		a.Platform.Kind = providers.Kind_KIND_VIRTUAL_MACHINE
 		a.Platform.Runtime = providers.RUNTIME_GCP_COMPUTE
 		a.Connections = connections
@@ -124,28 +122,24 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 
 func computeImages(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	images, err := m.GetList("return gcp.project.compute.images { id name labels }")
+	type image struct {
+		Id     string
+		Name   string
+		Labels map[string]string
+	}
+	images, err := GetList[image](m, "return gcp.project.compute.images { id name labels }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range images {
-		b := images[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["name"].(string)
-		tags := b["labels"].(map[string]interface{})
-		stringLabels := make(map[string]string)
-		for k, v := range tags {
-			stringLabels[k] = v.(string)
-		}
-
+	for _, i := range images {
 		assets = append(assets, MqlObjectToAsset(project,
 			mqlObject{
-				name: name, labels: stringLabels,
+				name: i.Name, labels: i.Labels,
 				gcpObject: gcpObject{
 					project:    project,
 					region:     "global", // Not region-based
-					name:       name,
-					id:         id,
+					name:       i.Name,
+					id:         i.Id,
 					service:    "compute",
 					objectType: "image",
 				},
@@ -156,23 +150,23 @@ func computeImages(m *MqlDiscovery, project string, tc *providers.Config) ([]*as
 
 func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	networks, err := m.GetList("return gcp.project.compute.networks { id name }")
+	type network struct {
+		Id   string
+		Name string
+	}
+	networks, err := GetList[network](m, "return gcp.project.compute.networks { id name }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range networks {
-		b := networks[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["name"].(string)
-
+	for _, n := range networks {
 		assets = append(assets, MqlObjectToAsset(project,
 			mqlObject{
-				name: name,
+				name: n.Name,
 				gcpObject: gcpObject{
 					project:    project,
 					region:     "global", // Not region-based
-					name:       name,
-					id:         id,
+					name:       n.Name,
+					id:         n.Id,
 					service:    "compute",
 					objectType: "network",
 				},
@@ -183,25 +177,26 @@ func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) ([]*
 
 func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	subnets, err := m.GetList("return gcp.project.compute.subnetworks { id name regionUrl }")
+	type subnetwork struct {
+		Id        string
+		Name      string
+		RegionUrl string
+	}
+	subnets, err := GetList[subnetwork](m, "return gcp.project.compute.subnetworks { id name regionUrl }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range subnets {
-		b := subnets[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["name"].(string)
-		regionUrl := b["regionUrl"].(string)
-		region := gcp.RegionNameFromRegionUrl(regionUrl)
+	for _, s := range subnets {
+		region := gcp.RegionNameFromRegionUrl(s.RegionUrl)
 
 		assets = append(assets, MqlObjectToAsset(project,
 			mqlObject{
-				name: name,
+				name: s.Name,
 				gcpObject: gcpObject{
 					project:    project,
 					region:     region,
-					name:       name,
-					id:         id,
+					name:       s.Name,
+					id:         s.Id,
 					service:    "compute",
 					objectType: "subnetwork",
 				},
@@ -212,23 +207,23 @@ func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) (
 
 func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	firewalls, err := m.GetList("return gcp.project.compute.firewalls { id name }")
+	type firewall struct {
+		Id   string
+		Name string
+	}
+	firewalls, err := GetList[firewall](m, "return gcp.project.compute.firewalls { id name }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range firewalls {
-		b := firewalls[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["name"].(string)
-
+	for _, f := range firewalls {
 		assets = append(assets, MqlObjectToAsset(project,
 			mqlObject{
-				name: name,
+				name: f.Name,
 				gcpObject: gcpObject{
 					project:    project,
 					region:     "global", // Not region-based
-					name:       name,
-					id:         id,
+					name:       f.Name,
+					id:         f.Id,
 					service:    "compute",
 					objectType: "firewall",
 				},
@@ -239,29 +234,25 @@ func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) ([]
 
 func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	clusters, err := m.GetList("return gcp.project.gke.clusters { id name location resourceLabels }")
+	type cluster struct {
+		Id             string
+		Name           string
+		Location       string
+		ResourceLabels map[string]string
+	}
+	clusters, err := GetList[cluster](m, "return gcp.project.gke.clusters { id name location resourceLabels }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range clusters {
-		b := clusters[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["name"].(string)
-		zone := b["location"].(string)
-		tags := b["resourceLabels"].(map[string]interface{})
-		stringLabels := make(map[string]string)
-		for k, v := range tags {
-			stringLabels[k] = v.(string)
-		}
-
+	for _, c := range clusters {
 		assets = append(assets, MqlObjectToAsset(project,
 			mqlObject{
-				name: name, labels: stringLabels,
+				name: c.Name, labels: c.ResourceLabels,
 				gcpObject: gcpObject{
 					project:    project,
-					region:     zone,
-					name:       name,
-					id:         id,
+					region:     c.Location,
+					name:       c.Name,
+					id:         c.Id,
 					service:    "gke",
 					objectType: "cluster",
 				},
@@ -272,29 +263,25 @@ func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) ([]*asse
 
 func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	buckets, err := m.GetList("return gcp.project.storage.buckets { id name location labels }")
+	type bucket struct {
+		Id       string
+		Name     string
+		Location string
+		Labels   map[string]string
+	}
+	buckets, err := GetList[bucket](m, "return gcp.project.storage.buckets { id name location labels }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range buckets {
-		b := buckets[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["name"].(string)
-		location := b["location"].(string)
-		tags := b["labels"].(map[string]interface{})
-		stringLabels := make(map[string]string)
-		for k, v := range tags {
-			stringLabels[k] = v.(string)
-		}
-
+	for _, b := range buckets {
 		assets = append(assets, MqlObjectToAsset(project,
 			mqlObject{
-				name: name, labels: stringLabels,
+				name: b.Name, labels: b.Labels,
 				gcpObject: gcpObject{
 					project:    project,
-					region:     location,
-					name:       name,
-					id:         id,
+					region:     b.Location,
+					name:       b.Name,
+					id:         b.Id,
 					service:    "storage",
 					objectType: "bucket",
 				},
@@ -305,29 +292,24 @@ func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) ([]*a
 
 func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	datasets, err := m.GetList("return gcp.project.bigquery.datasets { id location labels }")
+	type dataset struct {
+		Id       string
+		Location string
+		Labels   map[string]string
+	}
+	datasets, err := GetList[dataset](m, "return gcp.project.bigquery.datasets { id location labels }")
 	if err != nil {
 		return nil, err
 	}
-	for i := range datasets {
-		b := datasets[i].(map[string]interface{})
-		id := b["id"].(string)
-		name := b["id"].(string)
-		location := b["location"].(string)
-		tags := b["labels"].(map[string]interface{})
-		stringLabels := make(map[string]string)
-		for k, v := range tags {
-			stringLabels[k] = v.(string)
-		}
-
+	for _, d := range datasets {
 		assets = append(assets, MqlObjectToAsset(project,
 			mqlObject{
-				name: name, labels: stringLabels,
+				name: d.Id, labels: d.Labels,
 				gcpObject: gcpObject{
 					project:    project,
-					region:     location,
-					name:       name,
-					id:         id,
+					region:     d.Location,
+					name:       d.Id,
+					id:         d.Id,
 					service:    "bigquery",
 					objectType: "dataset",
 				},
@@ -358,16 +340,4 @@ func mapInstanceStatus(state string) asset.State {
 		log.Warn().Str("state", state).Msg("unknown gcp instance state")
 		return asset.State_STATE_UNKNOWN
 	}
-}
-
-func disksContainWindows(disks []interface{}) bool {
-	for _, d := range disks {
-		feats := d.(map[string]interface{})["guestOsFeatures"].([]interface{})
-		for _, f := range feats {
-			if f == "WINDOWS" {
-				return true
-			}
-		}
-	}
-	return false
 }
