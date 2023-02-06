@@ -7,12 +7,14 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
-func (p *Provider) Identifier() (string, error) {
-	switch p.resourceType {
+func (t *Provider) Identifier() (string, error) {
+	switch t.ResourceType() {
+	case Organization:
+		return "//platformid.api.mondoo.app/runtime/gcp/organizations/" + t.id, nil
 	case Project:
-		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + p.id, nil
+		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + t.id, nil
 	case Workspace:
-		return "//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + p.id, nil
+		return "//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + t.id, nil
 	default:
 		return "", errors.New("unsupported resource type")
 	}
@@ -64,6 +66,8 @@ func getTitleForPlatformName(name string) string {
 	switch name {
 	case "gcp-project":
 		return "GCP Project"
+	case "gcp-organization":
+		return "GCP Organization"
 	case "gcp-compute-image":
 		return "GCP Compute Image"
 	case "gcp-compute-network":

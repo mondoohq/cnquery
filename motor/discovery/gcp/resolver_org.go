@@ -5,6 +5,7 @@ import (
 
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/vault"
@@ -17,7 +18,7 @@ func (k *GcpOrgResolver) Name() string {
 }
 
 func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryOrganization, DiscoveryProjects}
 }
 
 func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -33,6 +34,39 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 	provider, err := gcp_provider.New(tc)
 	if err != nil {
 		return nil, err
+	}
+
+	orgId, err := provider.OrganizationID()
+	if err != nil {
+		return nil, err
+	}
+	org, err := provider.GetOrganization(orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	identifier, err := provider.Identifier()
+	if err != nil {
+		return nil, err
+	}
+
+	// detect platform info for the asset
+	detector := detector.New(provider)
+	pf, err := detector.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	var rootAsset *asset.Asset
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryOrganization) {
+		pf.Name = "gcp-organization"
+		rootAsset = &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        "GCP organization " + org.DisplayName,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+		}
+		resolved = append(resolved, rootAsset)
 	}
 
 	// TODO: for now we do not add the organization as asset since we need to adapt the policies and queries to distinguish
@@ -59,14 +93,6 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 
 	// discover projects
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryProjects) {
-		orgId, err := provider.OrganizationID()
-		if err != nil {
-			return nil, err
-		}
-		org, err := provider.GetOrganization(orgId)
-		if err != nil {
-			return nil, err
-		}
 		projects, err := provider.GetProjectsForOrganization(org)
 		if err != nil {
 			return nil, err
