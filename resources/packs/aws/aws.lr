@@ -10,13 +10,13 @@ aws @defaults("account.id") {
   regions() []string
 }
 
-// AWS Access Analyzer resource for assessing the configuration of AWS IAM Access Analyzer
+// AWS IAM Access Analyzer resource for assessing the configuration of AWS IAM Access Analyzer
 aws.accessAnalyzer {
-  // List of `aws.accessanalyzer.analyzer` objects for all AWS Access Analyzers configured within the account 
+  // List of `aws.accessanalyzer.analyzer` objects for all AWS IAM Access Analyzers configured within the account 
   analyzers() []aws.accessanalyzer.analyzer
 }
 
-// AWS Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
+// AWS IAM Access Analyzer resource provides an object representing an individual AWS IAM Access Analyzer configuration
 private aws.accessanalyzer.analyzer @defaults("arn status") {
   // ARN for the analyzer
   arn string
@@ -517,7 +517,7 @@ private aws.secretsmanager.secret @defaults("arn") {
   tags map[string]string
 }
 
-// AWS ECS 
+// Amazon Elastic Container Service (ECS)
 aws.ecs {
   // List of AWS ECS Clusters
   clusters() []aws.ecs.cluster
@@ -593,7 +593,7 @@ private aws.ecs.container {
   taskArn string
 }
 
-// AWS EMR
+// Amazon EMR
 aws.emr {
   // List of EMR clusters
   clusters() []aws.emr.cluster
@@ -619,7 +619,7 @@ private aws.emr.cluster @defaults("arn") {
   tags map[string]string
 }
 
-// AWS CloudWatch
+// Amazon CloudWatch
 aws.cloudwatch {
   // List of CloudWatch log groups
   logGroups() []aws.cloudwatch.loggroup
@@ -629,7 +629,7 @@ aws.cloudwatch {
   metrics() []aws.cloudwatch.metric
 }
 
-// AWS CloudWatch Metrics Alarm
+// Amazon CloudWatch Metrics Alarm
 private aws.cloudwatch.metricsalarm @defaults("arn") {
   // ARN for the metric alarm
   arn string
@@ -653,7 +653,7 @@ private aws.cloudwatch.metricsalarm @defaults("arn") {
   name string
 }
 
-// AWS CloudWatch Metric
+// Amazon CloudWatch Metric
 private aws.cloudwatch.metric @defaults("name region") {
   // Name of the metric
   name string
@@ -669,7 +669,7 @@ private aws.cloudwatch.metric @defaults("name region") {
   statistics() aws.cloudwatch.metricstatistics 
 }
 
-// AWS CloudWatch Metric Dimension
+// Amazon CloudWatch Metric Dimension
 aws.cloudwatch.metricdimension @defaults("name value") {
   // Name of the dimension
   name string
@@ -677,7 +677,7 @@ aws.cloudwatch.metricdimension @defaults("name value") {
   value string
 }
 
-// AWS CloudWatch Metric Statistics
+// Amazon CloudWatch Metric Statistics
 aws.cloudwatch.metricstatistics @defaults("name region") {
   init(namespace string, region string, name string)
   // Namespace for the metric
@@ -692,7 +692,7 @@ aws.cloudwatch.metricstatistics @defaults("name region") {
   datapoints []aws.cloudwatch.metric.datapoint
 }
 
-// AWS CloudWatch Metric Datapoint
+// Amazon CloudWatch Metric Datapoint
 private aws.cloudwatch.metric.datapoint @defaults("id") {
   // Unique identifier for the datapoint
   id string
@@ -710,7 +710,7 @@ private aws.cloudwatch.metric.datapoint @defaults("id") {
   unit string
 }
 
-// AWS CloudWatch Log Group
+// Amazon CloudWatch Log Group
 private aws.cloudwatch.loggroup @defaults("arn") {
   // ARN of the log group
   arn string
@@ -724,7 +724,7 @@ private aws.cloudwatch.loggroup @defaults("arn") {
   region string
 }
 
-// AWS CloudWatch Log Group Metrics Filter
+// Amazon CloudWatch Log Group Metrics Filter
 private aws.cloudwatch.loggroup.metricsfilter @defaults("id") {
   // Unique ID for the metric
   id string
@@ -743,7 +743,7 @@ aws.cloudtrail {
 }
 
 
-// AWS CloudFront
+// Amazon CloudFront
 aws.cloudfront {
   // List of CloudFront distributions
   distributions() []aws.cloudfront.distribution
@@ -751,6 +751,7 @@ aws.cloudfront {
   functions() []aws.cloudfront.function
 }
 
+// Amazon CloudFront Distribution
 private aws.cloudfront.distribution {
   // ARN of the CloudFront distribution
   arn string
@@ -766,6 +767,7 @@ private aws.cloudfront.distribution {
   cacheBehaviors []dict
 }
 
+// Amazon CloudFront Distribution Origin
 private aws.cloudfront.distribution.origin {
   // Domain name for the origin
   domainName string
@@ -781,6 +783,7 @@ private aws.cloudfront.distribution.origin {
   account string
 }
 
+// Amazon CloudFront Function
 private aws.cloudfront.function {
   // Name of the CloudFront function
   name string
@@ -853,19 +856,19 @@ private aws.kms.key @defaults("arn") {
 }
 
 
-// AWS S3 Cloud Object Storage
+// Amazon S3 Cloud Object Storage
 aws.s3 {
   // List of S3 buckets across the account
   buckets() []aws.s3.bucket
 }
 
-// AWS S3 Bucket Control
+// Amazon S3 Bucket Control
 aws.s3control {
   // Account level public access configuration for S3
   accountPublicAccessBlock() dict
 }
 
-// AWS S3 Bucket
+// Amazon S3 Bucket
 private aws.s3.bucket @defaults("arn") {
   // ARN of the bucket
   arn string
@@ -903,7 +906,7 @@ private aws.s3.bucket @defaults("arn") {
   exists bool
 }
 
-// AWS S3 Bucket Grant
+// Amazon S3 Bucket Grant
 private aws.s3.bucket.grant @defaults("name permission") {
   // ID of the bucket grant
   id string
@@ -915,7 +918,7 @@ private aws.s3.bucket.grant @defaults("name permission") {
   grantee map[string]string
 }
 
-// AWS S3 Bucket CORS Rule
+// Amazon S3 Bucket CORS Rule
 private aws.s3.bucket.corsrule @defaults("name") {
   // Name of the rule
   name string
@@ -931,7 +934,7 @@ private aws.s3.bucket.corsrule @defaults("name") {
   maxAgeSeconds int
 }
 
-// AWS S3 Bucket Policy
+// Amazon S3 Bucket Policy
 private aws.s3.bucket.policy @defaults("name version") {
   // Name for the policy
   name string
@@ -1008,7 +1011,7 @@ private aws.backup.vaultRecoveryPoint @defaults("arn") {
   isEncrypted bool
 }
 
-// AWS DynamoDB
+// Amazon DynamoDB
 aws.dynamodb {
   // List of backups for DynamoDB
   backups() []dict
@@ -1020,7 +1023,7 @@ aws.dynamodb {
   limits() []aws.dynamodb.limit
 }
 
-// AWS DynamoDB Limits
+// Amazon DynamoDB Limits
 private aws.dynamodb.limit @defaults("arn") {
   // ARN representing the account + region where the limit applies 
   arn string
@@ -1036,7 +1039,7 @@ private aws.dynamodb.limit @defaults("arn") {
   tableMaxWrite int
 }
 
-// AWS DynamoDB Global Table
+// Amazon DynamoDB Global Table
 private aws.dynamodb.globaltable @defaults("arn") {
   // ARN for the global table
   arn string
@@ -1048,7 +1051,7 @@ private aws.dynamodb.globaltable @defaults("arn") {
   tags map[string]string
 }
 
-// AWS DynamoDB Table
+// Amazon DynamoDB Table
 private aws.dynamodb.table @defaults("arn") {
   // ARN for the table
   arn string
@@ -1068,7 +1071,7 @@ private aws.dynamodb.table @defaults("arn") {
   tags map[string]string
 }
 
-// AWS RDS
+// Amazon Relational Database Service (RDS)
 aws.rds {
   // List of database instances
   dbInstances() []aws.rds.dbinstance
@@ -1076,7 +1079,7 @@ aws.rds {
   dbClusters() []aws.rds.dbcluster
 }
 
-// AWS RDS Database Cluster
+// Amazon RDS Database Cluster
 private aws.rds.dbcluster @defaults("arn") {
   // ARN for the database cluster
   arn string
@@ -1092,7 +1095,7 @@ private aws.rds.dbcluster @defaults("arn") {
   tags map[string]string
 }
 
-// AWS RDS Snapshot
+// Amazon RDS Snapshot
 private aws.rds.snapshot @defaults("arn") {
   // ARN of the snapshot
   arn string
@@ -1112,7 +1115,7 @@ private aws.rds.snapshot @defaults("arn") {
   tags map[string]string
 }
 
-// AWS RDS Database Instance
+// Amazon RDS Database Instance
 private aws.rds.dbinstance @defaults("arn") {
   // ARN for the database instance
   arn string
@@ -1158,13 +1161,13 @@ aws.elasticache {
   clusters() []dict
 }
 
-// AWS Redshift
+// Amazon Redshift
 aws.redshift {
   // List of clusters
   clusters() []aws.redshift.cluster
 }
 
-// AWS Redshift Cluster
+// Amazon Redshift Cluster
 private aws.redshift.cluster @defaults("arn") {
   // ARN for the cluster
   arn string
@@ -1204,6 +1207,7 @@ aws.ecr {
   images() []aws.ecr.image
 }
 
+// AWS Elastic Container Registry Repository
 private aws.ecr.repository {
   // ARN of the repository
   arn string
@@ -1221,6 +1225,7 @@ private aws.ecr.repository {
   region string
 }
 
+// AWS Elastic Container Registry Image
 private aws.ecr.image {
   // SHA256 of the image manifest
   digest string
@@ -1532,7 +1537,7 @@ private aws.ec2.instance.device {
   deviceName string
 }
 
-// AWS Virtual Private Cloud (VPC)
+// Amazon Virtual Private Cloud (VPC)
 private aws.vpc @defaults("arn isDefault") {
   // ARN of the VPC
   arn string
@@ -1650,7 +1655,7 @@ private aws.config.recorder @defaults("name region") {
   region string
 }
 
-// Amazon EKS
+// Amazon Elastic Kubernetes Service (EKS)
 aws.eks {
   // EKS clusters
   clusters() []aws.eks.cluster
