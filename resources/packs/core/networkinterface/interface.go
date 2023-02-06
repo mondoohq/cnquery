@@ -412,7 +412,7 @@ func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch windows ip addresses")
 	}
-	winIpAdresses, err := i.ParseNetIpAdresses(cmd.Stdout)
+	winIpAddresses, err := i.ParseNetIpAdresses(cmd.Stdout)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not parse windows ip addresses")
 	}
@@ -430,7 +430,7 @@ func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 			Index:        winAdapter[i].IfIndex,
 			HardwareAddr: mac,
 			Flags:        windowsInterfaceFlags(winAdapter[i].Status, winAdapter[i].InterfaceType),
-			Addrs:        filterWinIpByInterface(winAdapter[i].Name, winIpAdresses),
+			Addrs:        filterWinIpByInterface(winAdapter[i].Name, winIpAddresses),
 		}
 	}
 
