@@ -45,9 +45,13 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 	return gcpObjectPlatformInfo{}, errors.Newf("missing runtime info for gcp object service %s type %s", o.service, o.objectType)
 }
 
-func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn common.QuerySecretFn) []*asset.Asset {
+func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	instances := m.GetList("return gcp.project.compute.instances { id name labels zone status networkInterfaces disks { guestOsFeatures } }")
+
+	instances, err := m.GetList("return gcp.project.compute.instances { id name labels zone { name } status networkInterfaces disks { guestOsFeatures } }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range instances {
 		b := instances[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -118,12 +122,15 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 			assets = append(assets, a)
 		}
 	}
-	return assets
+	return assets, nil
 }
 
-func computeImages(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+func computeImages(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	images := m.GetList("return gcp.project.compute.images { id name labels }")
+	images, err := m.GetList("return gcp.project.compute.images { id name labels }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range images {
 		b := images[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -147,12 +154,15 @@ func computeImages(m *MqlDiscovery, project string, tc *providers.Config) []*ass
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	networks := m.GetList("return gcp.project.compute.networks { id name }")
+	networks, err := m.GetList("return gcp.project.compute.networks { id name }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range networks {
 		b := networks[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -171,12 +181,15 @@ func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) []*a
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	subnets := m.GetList("return gcp.project.compute.subnetworks { id name regionUrl }")
+	subnets, err := m.GetList("return gcp.project.compute.subnetworks { id name regionUrl }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range subnets {
 		b := subnets[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -197,12 +210,15 @@ func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) [
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	firewalls := m.GetList("return gcp.project.compute.firewalls { id name }")
+	firewalls, err := m.GetList("return gcp.project.compute.firewalls { id name }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range firewalls {
 		b := firewalls[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -221,12 +237,15 @@ func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) []*
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	clusters := m.GetList("return gcp.project.gke.clusters { id name location resourceLabels }")
+	clusters, err := m.GetList("return gcp.project.gke.clusters { id name location resourceLabels }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range clusters {
 		b := clusters[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -251,12 +270,15 @@ func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) []*asset
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	buckets := m.GetList("return gcp.project.storage.buckets { id name location labels }")
+	buckets, err := m.GetList("return gcp.project.storage.buckets { id name location labels }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range buckets {
 		b := buckets[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -281,12 +303,15 @@ func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) []*as
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
-func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) []*asset.Asset {
+func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	datasets := m.GetList("return gcp.project.bigquery.datasets { id location labels }")
+	datasets, err := m.GetList("return gcp.project.bigquery.datasets { id location labels }")
+	if err != nil {
+		return nil, err
+	}
 	for i := range datasets {
 		b := datasets[i].(map[string]interface{})
 		id := b["id"].(string)
@@ -311,7 +336,7 @@ func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) []*
 				},
 			}, tc))
 	}
-	return assets
+	return assets, nil
 }
 
 func mapInstanceStatus(state string) asset.State {
