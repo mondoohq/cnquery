@@ -9,7 +9,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 	vcd_provider "go.mondoo.com/cnquery/motor/providers/vcd"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type Resolver struct{}
@@ -22,7 +22,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	m, err := resolver.NewMotorConnection(ctx, cc, credsResolver)

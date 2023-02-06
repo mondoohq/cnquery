@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/tar"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 const (
@@ -31,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if pCfg == nil {
 		return nil, errors.New("no transport configuration found")
 	}
@@ -163,7 +163,7 @@ func (k *Resolver) container(ctx context.Context, root *asset.Asset, pCfg *provi
 	}, nil
 }
 
-func (k *Resolver) images(ctx context.Context, root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *Resolver) images(ctx context.Context, root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(pCfg.Host)

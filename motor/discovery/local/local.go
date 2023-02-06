@@ -12,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type Resolver struct{}
@@ -30,7 +30,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	assetObj := &asset.Asset{
 		Name:        root.Name,
 		State:       asset.State_STATE_ONLINE,

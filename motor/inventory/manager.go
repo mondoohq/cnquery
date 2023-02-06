@@ -86,7 +86,7 @@ func New(opts ...Option) (*inventoryManager, error) {
 }
 
 type inventoryManager struct {
-	CredsResolver credentials_resolver.Resolver
+	CredsResolver vault.Resolver
 	assetList     []*asset.Asset
 	relatedAssets []*asset.Asset
 	// optional vault set by user

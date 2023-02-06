@@ -6,11 +6,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/motor/vault/cache"
 )
-
-type Resolver interface {
-	GetCredential(cred *vault.Credential) (*vault.Credential, error)
-}
 
 type resolver struct {
 	vault vault.Vault
@@ -18,9 +15,9 @@ type resolver struct {
 
 // New creates a new credentials resolver. The resolver allows for caching already resolved credentials
 // in memory such that they are not retrieved from vault again.
-func New(v vault.Vault, enableCaching bool) Resolver {
+func New(v vault.Vault, enableCaching bool) vault.Resolver {
 	if enableCaching {
-		return &resolver{vault: newCachedVault(v)}
+		return &resolver{vault: cache.New(v)}
 	}
 	return &resolver{vault: v}
 }
@@ -43,11 +40,6 @@ func (c *resolver) GetCredential(cred *vault.Credential) (*vault.Credential, err
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	// user can overwrite the encoding
-	if cred.SecretEncoding != vault.SecretEncoding_encoding_undefined {
-		secret.Encoding = cred.SecretEncoding
 	}
 
 	retrievedCred, err := secret.Credential()

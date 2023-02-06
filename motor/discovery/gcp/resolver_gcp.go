@@ -8,7 +8,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type GcpResolver struct{}
@@ -27,7 +27,7 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
-func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	// FIXME: DEPRECATED, update in v8.0 vv
 	// The option "organization" has been deprecated in favor of organization-id
 	if tc.Options != nil && (tc.Options["organization"] != "" || tc.Options["organization-id"] != "") {

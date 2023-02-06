@@ -45,13 +45,13 @@ import (
 	"go.mondoo.com/cnquery/motor/motorid"
 	"go.mondoo.com/cnquery/motor/providers"
 	pr "go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/stringx"
 )
 
 type Resolver interface {
 	Name() string
-	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn,
+	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn,
 		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
@@ -106,7 +106,7 @@ func InitCtx(ctx context.Context) context.Context {
 	return initCtx
 }
 
-func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// if the asset is missing a secret, we try to add this for the asset
@@ -191,7 +191,7 @@ type ResolvedAssets struct {
 	Errors        map[*asset.Asset]error
 }
 
-func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn) ResolvedAssets {
+func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	resolvedMap := map[string]struct{}{}
 	errors := map[*asset.Asset]error{}
@@ -247,7 +247,7 @@ func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, credsResolver
 	}
 }
 
-func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, platformIdToAssetMap map[string]*asset.Asset, credsResolver credentials_resolver.Resolver) {
+func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, platformIdToAssetMap map[string]*asset.Asset, credsResolver vault.Resolver) {
 	for _, assetObj := range relatedAssets {
 		if len(assetObj.PlatformIds) > 0 {
 			for _, platformId := range assetObj.PlatformIds {

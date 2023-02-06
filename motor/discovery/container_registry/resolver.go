@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
 
 type Resolver struct {
@@ -31,7 +30,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	imageFetcher := NewContainerRegistryResolver()
@@ -102,7 +101,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	return resolved, nil
 }
 
-func AuthOption(credentials []*vault.Credential, credsResolver credentials_resolver.Resolver) []remote.Option {
+func AuthOption(credentials []*vault.Credential, credsResolver vault.Resolver) []remote.Option {
 	remoteOpts := []remote.Option{}
 	for i := range credentials {
 		cred := credentials[i]

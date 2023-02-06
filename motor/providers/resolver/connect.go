@@ -8,10 +8,10 @@ import (
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
-func EstablishConnection(ctx context.Context, tc *providers.Config, credsResolver credentials_resolver.Resolver, insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -25,7 +25,7 @@ func EstablishConnection(ctx context.Context, tc *providers.Config, credsResolve
 	return NewMotorConnection(ctx, tc, credsResolver)
 }
 
-func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credsResolver credentials_resolver.Resolver, record bool) (*motor.Motor, error) {
+func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credsResolver vault.Resolver, record bool) (*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -70,7 +70,7 @@ func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credsResol
 	return m, nil
 }
 
-func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credsResolver credentials_resolver.Resolver, record bool) ([]*motor.Motor, error) {
+func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credsResolver vault.Resolver, record bool) ([]*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}

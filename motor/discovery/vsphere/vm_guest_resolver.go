@@ -11,7 +11,6 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/providers/vmwareguestapi"
 	"go.mondoo.com/cnquery/motor/vault"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
 
 type VMGuestResolver struct{}
@@ -24,7 +23,7 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto}
 }
 
-func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
@@ -80,7 +79,7 @@ func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *
 	}
 }
 
-func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, credsResolver credentials_resolver.Resolver, sfn common.QuerySecretFn) {
+func EnrichVsphereToolsConnWithSecrets(a *asset.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) {
 	// search secret for vm
 	// NOTE: we do not use `common.EnrichAssetWithSecrets(a, sfn)` here since vmware requires two secrets at the same time
 	for j := range a.Connections {

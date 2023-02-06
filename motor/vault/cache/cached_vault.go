@@ -1,4 +1,4 @@
-package credentials_resolver
+package cache
 
 import (
 	"context"
@@ -11,7 +11,7 @@ type cachedVault struct {
 	vault   vault.Vault
 }
 
-func newCachedVault(v vault.Vault) vault.Vault {
+func New(v vault.Vault) vault.Vault {
 	return &cachedVault{
 		secrets: map[string]*vault.Secret{},
 		vault:   v,
