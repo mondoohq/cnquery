@@ -2,6 +2,7 @@ package core
 
 import (
 	"bufio"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core/lsof"
@@ -140,7 +142,8 @@ func hex2ipv4(s string) (string, error) {
 }
 
 func hex2ipv6(s string) (string, error) {
-	ipBytes, err := hex.DecodeString(s)
+	networkEndian := ipv6EndianTranslation(s)
+	ipBytes, err := hex.DecodeString(networkEndian)
 	if err != nil {
 		return "", err
 	}
@@ -155,6 +158,49 @@ func hex2ipv6(s string) (string, error) {
 	} else {
 		return "", err
 	}
+}
+
+func ipv6EndianTranslation(s string) string {
+	var nativeEndianness binary.ByteOrder
+
+	buf := [2]byte{}
+	*(*uint16)(unsafe.Pointer(&buf[0])) = uint16(0xABCD)
+
+	switch buf {
+	case [2]byte{0xCD, 0xAB}:
+		nativeEndianness = binary.LittleEndian
+	case [2]byte{0xAB, 0xCD}:
+		nativeEndianness = binary.BigEndian
+	default:
+		panic("neither little nor big endian detected...")
+	}
+
+	if nativeEndianness == binary.BigEndian {
+		return s
+	}
+
+	if len(s) != 32 {
+		// not an IPv6 address in hex format
+		return ""
+	}
+
+	// read 8 bytes at a time and little-to-big byte swap
+	// Ex: fe80:0000:0000:0000:5578:afa9:4caf:27a1 becomes
+	//     0000:80fe:0000:0000:a9af:7855:a127:af4c
+	swappedBytes := make([]byte, len(s))
+	for i := 0; i < len(s); i += 8 {
+		swappedBytes[i] = s[i+6]
+		swappedBytes[i+1] = s[i+7]
+		swappedBytes[i+2] = s[i+4]
+		swappedBytes[i+3] = s[i+5]
+
+		swappedBytes[i+4] = s[i+2]
+		swappedBytes[i+5] = s[i+3]
+		swappedBytes[i+6] = s[i+0]
+		swappedBytes[i+7] = s[i+1]
+	}
+
+	return string(swappedBytes)
 }
 
 func (p *mqlPorts) users() (map[int64]User, error) {
