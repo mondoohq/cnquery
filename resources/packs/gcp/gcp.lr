@@ -28,6 +28,8 @@ gcp.organization @defaults("id") {
   iamPolicy() []gcp.resourcemanager.binding
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
+  // List of projects
+  projects() []gcp.project
 }
 
 // Google Cloud Platform Project

@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"time"
+	"strings"
 
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
-	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
@@ -46,18 +46,11 @@ func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject,
 	}
 
 	(*args)["id"] = project.ProjectId
-	(*args)["number"] = strconv.FormatInt(project.ProjectNumber, 10)
+	(*args)["number"] = strings.TrimPrefix(project.Name, "projects/")[0:10]
 	(*args)["name"] = project.Name
-	(*args)["state"] = project.LifecycleState
-	(*args)["lifecycleState"] = project.LifecycleState
-	var createTime *time.Time
-	parsedTime, err := time.Parse(time.RFC3339, project.CreateTime)
-	if err != nil {
-		return nil, nil, errors.New("could not parse gcp.project create time: " + project.CreateTime)
-	} else {
-		createTime = &parsedTime
-	}
-	(*args)["createTime"] = createTime
+	(*args)["state"] = project.State
+	(*args)["lifecycleState"] = project.State
+	(*args)["createTime"] = parseTime(project.CreateTime)
 	(*args)["labels"] = core.StrMapToInterface(project.Labels)
 	// TODO: add organization gcp.organization
 	return args, nil, nil
