@@ -77,56 +77,10 @@ func (m *Mquery) RefreshMRN(ownerMRN string) error {
 	return nil
 }
 
-// RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (m *Mquery) RefreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
-	return m.refreshChecksumAndType(lookup)
-}
-
-func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
-	localProps := map[string]*llx.Primitive{}
-	for i := range m.Props {
-		prop := m.Props[i]
-
-		if prop.Mrn == "" {
-			return nil, errors.New("missing MRN (or UID) for property in query " + m.Mrn)
-		}
-
-		v, ok := lookup[prop.Mrn]
-		if !ok {
-			return nil, errors.New("cannot find property " + prop.Mrn + " in query " + m.Mrn)
-		}
-
-		localProps[v.Name] = &llx.Primitive{
-			Type: v.Property.Type,
-		}
-	}
-
-	bundle, err := m.Compile(localProps)
-	if err != nil {
-		return bundle, errors.New("failed to compile query '" + m.Mql + "': " + err.Error())
-	}
-
-	if bundle.GetCodeV2().GetId() == "" {
-		return bundle, errors.New("failed to compile query: received empty result values")
-	}
-
-	// We think its ok to always use the new code id
-	m.CodeId = bundle.CodeV2.Id
-
-	// the compile step also dedents the code
-	m.Mql = bundle.Source
-
-	// TODO: record multiple entrypoints and types
-	// TODO(jaym): is it possible that the 2 could produce different types
-	if entrypoints := bundle.CodeV2.Entrypoints(); len(entrypoints) == 1 {
-		ep := entrypoints[0]
-		chunk := bundle.CodeV2.Chunk(ep)
-		typ := chunk.Type()
-		m.Type = string(typ)
-	} else {
-		m.Type = string(types.Any)
-	}
-
+// RefreshChecksum of a query without re-compiling anything. Note: this will
+// use whatever type and codeID we have in the query and just compute a checksum
+// from the rest.
+func (m *Mquery) RefreshChecksum() error {
 	c := checksums.New.
 		Add(m.Mql).
 		Add(m.CodeId).
@@ -138,12 +92,7 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 	for i := range m.Props {
 		// we checked this above, so it has to exist
 		prop := m.Props[i]
-		v := lookup[prop.Mrn]
-
-		c = c.Add(v.Checksum)
-		if v.Mql != "" {
-			c = c.Add(v.Mql)
-		}
+		c = c.Add(prop.Checksum)
 	}
 
 	// TODO: filters don't support properties yet
@@ -151,9 +100,13 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 		for _, query := range m.Filters.Items {
 			if query.Checksum == "" {
 				// FIXME: we don't want this here, it should not be tied to the query
+				log.Warn().
+					Str("mql", m.Mql).
+					Str("filter", query.Mql).
+					Msg("refresh checksum on filter of query , which should have been pre-compiled")
 				query.RefreshAsFilter(m.Mrn)
 				if query.Checksum == "" {
-					return nil, errors.New("cannot refresh checksum for query, its filters were not compiled")
+					return errors.New("cannot refresh checksum for query, its filters were not compiled")
 				}
 			}
 			c = c.Add(query.Checksum)
@@ -193,8 +146,64 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 	}
 
 	m.Checksum = c.String()
+	return nil
+}
 
-	return bundle, nil
+// RefreshChecksumAndType by compiling the query and updating the Checksum field
+func (m *Mquery) RefreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
+	return m.refreshChecksumAndType(lookup)
+}
+
+func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
+	localProps := map[string]*llx.Primitive{}
+	for i := range m.Props {
+		prop := m.Props[i]
+
+		if prop.Mrn == "" {
+			return nil, errors.New("missing MRN (or UID) for property in query " + m.Mrn)
+		}
+
+		v, ok := lookup[prop.Mrn]
+		if !ok {
+			return nil, errors.New("cannot find property " + prop.Mrn + " in query " + m.Mrn)
+		}
+
+		localProps[v.Name] = &llx.Primitive{
+			Type: v.Property.Type,
+		}
+
+		prop.Checksum = v.Checksum
+		prop.CodeId = v.CodeId
+		prop.Type = v.Type
+	}
+
+	bundle, err := m.Compile(localProps)
+	if err != nil {
+		return bundle, errors.New("failed to compile query '" + m.Mql + "': " + err.Error())
+	}
+
+	if bundle.GetCodeV2().GetId() == "" {
+		return bundle, errors.New("failed to compile query: received empty result values")
+	}
+
+	// We think its ok to always use the new code id
+	m.CodeId = bundle.CodeV2.Id
+
+	// the compile step also dedents the code
+	m.Mql = bundle.Source
+
+	// TODO: record multiple entrypoints and types
+	// TODO(jaym): is it possible that the 2 could produce different types
+	if entrypoints := bundle.CodeV2.Entrypoints(); len(entrypoints) == 1 {
+		ep := entrypoints[0]
+		chunk := bundle.CodeV2.Chunk(ep)
+		typ := chunk.Type()
+		m.Type = string(typ)
+	} else {
+		m.Type = string(types.Any)
+	}
+
+	return bundle, m.RefreshChecksum()
 }
 
 // RefreshAsFilter filters treats this query as an asset filter and sets its Mrn, Title, and Checksum
