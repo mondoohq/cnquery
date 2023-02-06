@@ -7,7 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/inventory/v1"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
 
 func TestInventoryLoader(t *testing.T) {
@@ -16,6 +17,8 @@ func TestInventoryLoader(t *testing.T) {
 
 	im, err := New(WithInventory(inventory))
 	require.NoError(t, err)
+
+	credsResolver := credentials_resolver.New(im.GetVault(), false)
 
 	// gather all assets and check their secrets
 	assetList := im.GetAssets()
@@ -27,7 +30,7 @@ func TestInventoryLoader(t *testing.T) {
 			conn := a.Connections[j]
 			for k := range conn.Credentials {
 				cred := conn.Credentials[k]
-				_, err := im.GetCredential(cred)
+				_, err := credsResolver.GetCredential(cred)
 				assert.NoError(t, err, cred.SecretId)
 			}
 		}
@@ -53,6 +56,8 @@ func TestAwsInventoryLoader(t *testing.T) {
 	im, err := New(WithInventory(inventory))
 	require.NoError(t, err)
 
+	credsResolver := credentials_resolver.New(im.GetVault(), false)
+
 	// gather all assets and check their secrets
 	assetList := im.GetAssets()
 	require.NoError(t, err)
@@ -63,7 +68,7 @@ func TestAwsInventoryLoader(t *testing.T) {
 			conn := a.Connections[j]
 			for k := range conn.Credentials {
 				cred := conn.Credentials[k]
-				resolvedCred, err := im.GetCredential(cred)
+				resolvedCred, err := credsResolver.GetCredential(cred)
 				assert.NoError(t, err, cred.SecretId)
 				assert.NotNil(t, resolvedCred)
 			}

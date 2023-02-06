@@ -45,12 +45,13 @@ import (
 	"go.mondoo.com/cnquery/motor/motorid"
 	"go.mondoo.com/cnquery/motor/providers"
 	pr "go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/stringx"
 )
 
 type Resolver interface {
 	Name() string
-	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn,
+	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn,
 		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
@@ -105,7 +106,7 @@ func InitCtx(ctx context.Context) context.Context {
 	return initCtx
 }
 
-func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// if the asset is missing a secret, we try to add this for the asset
@@ -144,7 +145,7 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, cfn common.CredentialF
 		userIdDetectors := providers.ToPlatformIdDetectors(root.IdDetector)
 
 		// resolve assets
-		resolvedAssets, err := r.Resolve(ctx, root, pCfg, cfn, sfn, userIdDetectors...)
+		resolvedAssets, err := r.Resolve(ctx, root, pCfg, credsResolver, sfn, userIdDetectors...)
 		if err != nil {
 			assetFallbackName(root, pCfg)
 			return nil, err
@@ -190,7 +191,7 @@ type ResolvedAssets struct {
 	Errors        map[*asset.Asset]error
 }
 
-func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn common.CredentialFn, sfn common.QuerySecretFn) ResolvedAssets {
+func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ResolvedAssets {
 	resolved := []*asset.Asset{}
 	resolvedMap := map[string]struct{}{}
 	errors := map[*asset.Asset]error{}
@@ -200,7 +201,7 @@ func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn common.Cr
 	for i := range rootAssets {
 		asset := rootAssets[i]
 
-		resolverAssets, err := ResolveAsset(ctx, asset, cfn, sfn)
+		resolverAssets, err := ResolveAsset(ctx, asset, credsResolver, sfn)
 		if err != nil {
 			errors[asset] = err
 			continue
@@ -222,7 +223,7 @@ func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn common.Cr
 		resolved = append(resolved, resolverAssets...)
 	}
 
-	resolveRelatedAssets(ctx, relatedAssets, platformIdToAssetMap, cfn)
+	resolveRelatedAssets(ctx, relatedAssets, platformIdToAssetMap, credsResolver)
 
 	neededRelatedAssets := []*asset.Asset{}
 	for _, a := range relatedAssets {
@@ -246,7 +247,7 @@ func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, cfn common.Cr
 	}
 }
 
-func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, platformIdToAssetMap map[string]*asset.Asset, cfn common.CredentialFn) {
+func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, platformIdToAssetMap map[string]*asset.Asset, credsResolver vault.Resolver) {
 	for _, assetObj := range relatedAssets {
 		if len(assetObj.PlatformIds) > 0 {
 			for _, platformId := range assetObj.PlatformIds {
@@ -263,7 +264,7 @@ func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, pla
 			}
 
 			func() {
-				m, err := pr.NewMotorConnection(ctx, tc, cfn)
+				m, err := pr.NewMotorConnection(ctx, tc, credsResolver)
 				if err != nil {
 					log.Warn().Err(err).Msg("could not connect to related asset")
 					return

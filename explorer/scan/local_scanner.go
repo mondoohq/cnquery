@@ -122,7 +122,7 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(job.Inventory))
+	im, err := inventory.New(inventory.WithInventory(job.Inventory), inventory.WithCachedCredsResolver())
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not load asset information")
 	}
@@ -236,7 +236,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Props:            job.Props,
 				QueryPackFilters: job.QueryPackFilters,
 				Ctx:              ctx,
-				GetCredential:    im.GetCredential,
+				CredsResolver:    im.CredsResolver,
 				Reporter:         reporter,
 				ProgressReporter: p,
 			})
@@ -257,7 +257,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 	log.Debug().Msgf("connecting to asset %s", job.Asset.HumanName())
 
 	// run over all connections
-	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.GetCredential, job.DoRecord)
+	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.CredsResolver, job.DoRecord)
 	if err != nil {
 		job.Reporter.AddScanError(job.Asset, err)
 		job.ProgressReporter.Errored()

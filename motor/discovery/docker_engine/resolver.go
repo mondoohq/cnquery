@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/tar"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 const (
@@ -30,7 +31,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryContainerRunning, DiscoveryContainerImages}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if pCfg == nil {
 		return nil, errors.New("no transport configuration found")
 	}
@@ -91,7 +92,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 
 	if pCfg.Backend == providers.ProviderType_DOCKER_ENGINE_IMAGE {
 		// NOTE, we ignore dockerEngErr here since we fallback to pulling the images directly
-		resolvedAssets, err := r.images(ctx, root, pCfg, ded, cfn, sfn)
+		resolvedAssets, err := r.images(ctx, root, pCfg, ded, credsResolver, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +120,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 		}
 	}
 
-	containerImageAssets, err := r.images(ctx, root, pCfg, ded, cfn, sfn)
+	containerImageAssets, err := r.images(ctx, root, pCfg, ded, credsResolver, sfn)
 	if err == nil {
 		return containerImageAssets, nil
 	}
@@ -162,7 +163,7 @@ func (k *Resolver) container(ctx context.Context, root *asset.Asset, pCfg *provi
 	}, nil
 }
 
-func (k *Resolver) images(ctx context.Context, root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery, cfn common.CredentialFn, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+func (k *Resolver) images(ctx context.Context, root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	// if we have a docker engine available, try to fetch it from there
 	if ded != nil {
 		ii, err := ded.ImageInfo(pCfg.Host)
@@ -194,7 +195,7 @@ func (k *Resolver) images(ctx context.Context, root *asset.Asset, pCfg *provider
 	rr := container_registry.Resolver{
 		NoStrictValidation: true,
 	}
-	return rr.Resolve(ctx, root, pCfg, cfn, sfn)
+	return rr.Resolve(ctx, root, pCfg, credsResolver, sfn)
 }
 
 func DiscoverDockerEngineAssets(pCfg *providers.Config) ([]*asset.Asset, error) {

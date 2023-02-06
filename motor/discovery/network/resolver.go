@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
 	network_transport "go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type Resolver struct{}
@@ -20,7 +21,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, conf *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, conf *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	transport, err := network_transport.New(conf)
 	if err != nil {
 		return nil, err

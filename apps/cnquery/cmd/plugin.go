@@ -74,7 +74,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	}
 
 	log.Info().Msgf("discover related assets for %d asset(s)", len(conf.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
+	im, err := inventory.New(inventory.WithInventory(conf.Inventory), inventory.WithCachedCredsResolver())
 	if err != nil {
 		return errors.Wrap(err, "could not load asset information")
 	}
@@ -111,7 +111,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
-		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredential, conf.DoRecord)
+		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.CredsResolver, conf.DoRecord)
 		if err != nil {
 			return errors.New("could not connect to asset")
 		}

@@ -17,11 +17,13 @@ func TestInventoryIdempotent(t *testing.T) {
 
 	im, err := New(WithInventory(v1inventory))
 	require.NoError(t, err)
+
 	// runs resolve step, especially the creds resolution
 	im.Resolve(ctx)
 
 	im, err = New(WithInventory(v1inventory))
 	require.NoError(t, err)
+
 	// runs resolve step, especially the creds resolution
 	im.Resolve(ctx)
 }
