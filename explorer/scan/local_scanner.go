@@ -22,7 +22,6 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources"
@@ -123,14 +122,12 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(job.Inventory))
+	im, err := inventory.New(inventory.WithInventory(job.Inventory), inventory.WithCachedCredsResolver())
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not load asset information")
 	}
 
-	credsResolver := credentials_resolver.New(im.GetVault(), true)
-
-	assetErrors := im.Resolve(ctx, credsResolver)
+	assetErrors := im.Resolve(ctx)
 	if len(assetErrors) > 0 {
 		for a := range assetErrors {
 			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
@@ -239,7 +236,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Props:            job.Props,
 				QueryPackFilters: job.QueryPackFilters,
 				Ctx:              ctx,
-				CredsResolver:    credsResolver,
+				CredsResolver:    im.CredsResolver,
 				Reporter:         reporter,
 				ProgressReporter: p,
 			})

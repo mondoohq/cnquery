@@ -63,6 +63,13 @@ func WithVault(v vault.Vault) Option {
 	}
 }
 
+func WithCachedCredsResolver() Option {
+	return func(im *inventoryManager) error {
+		im.CredsResolver = credentials_resolver.New(im.GetVault(), true)
+		return nil
+	}
+}
+
 func New(opts ...Option) (*inventoryManager, error) {
 	im := &inventoryManager{
 		assetList: []*asset.Asset{},
@@ -79,6 +86,7 @@ func New(opts ...Option) (*inventoryManager, error) {
 }
 
 type inventoryManager struct {
+	CredsResolver credentials_resolver.Resolver
 	assetList     []*asset.Asset
 	relatedAssets []*asset.Asset
 	// optional vault set by user
@@ -185,8 +193,8 @@ func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, er
 	return im.credentialQueryRunner.Run(a)
 }
 
-func (im *inventoryManager) Resolve(ctx context.Context, credsResolver credentials_resolver.Resolver) map[*asset.Asset]error {
-	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, credsResolver, im.QuerySecretId)
+func (im *inventoryManager) Resolve(ctx context.Context) map[*asset.Asset]error {
+	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.CredsResolver, im.QuerySecretId)
 
 	// TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
 	im.assetList = resolvedAssets.Assets

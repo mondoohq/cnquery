@@ -15,7 +15,6 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
 	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources/packs/all/info"
@@ -75,12 +74,11 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	}
 
 	log.Info().Msgf("discover related assets for %d asset(s)", len(conf.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
+	im, err := inventory.New(inventory.WithInventory(conf.Inventory), inventory.WithCachedCredsResolver())
 	if err != nil {
 		return errors.Wrap(err, "could not load asset information")
 	}
-	credsResolver := credentials_resolver.New(im.GetVault(), true)
-	assetErrors := im.Resolve(ctx, credsResolver)
+	assetErrors := im.Resolve(ctx)
 	if len(assetErrors) > 0 {
 		for a := range assetErrors {
 			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
@@ -113,7 +111,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
-		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, credsResolver, conf.DoRecord)
+		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.CredsResolver, conf.DoRecord)
 		if err != nil {
 			return errors.New("could not connect to asset")
 		}
