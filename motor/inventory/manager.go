@@ -2,7 +2,6 @@ package inventory
 
 import (
 	"context"
-	"errors"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
@@ -12,6 +11,7 @@ import (
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/motor/vault/config"
+	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/motor/vault/inmemory"
 	"go.mondoo.com/cnquery/motor/vault/multivault"
 )
@@ -63,6 +63,13 @@ func WithVault(v vault.Vault) Option {
 	}
 }
 
+func WithCachedCredsResolver() Option {
+	return func(im *inventoryManager) error {
+		im.CredsResolver = credentials_resolver.New(im.GetVault(), true)
+		return nil
+	}
+}
+
 func New(opts ...Option) (*inventoryManager, error) {
 	im := &inventoryManager{
 		assetList: []*asset.Asset{},
@@ -79,6 +86,7 @@ func New(opts ...Option) (*inventoryManager, error) {
 }
 
 type inventoryManager struct {
+	CredsResolver vault.Resolver
 	assetList     []*asset.Asset
 	relatedAssets []*asset.Asset
 	// optional vault set by user
@@ -172,48 +180,6 @@ func (im *inventoryManager) GetRelatedAssets() []*asset.Asset {
 	return im.relatedAssets
 }
 
-// GetCredential retrieves the credential from vault via the secret id
-func (im *inventoryManager) GetCredential(cred *vault.Credential) (*vault.Credential, error) {
-	if cred == nil {
-		return nil, errors.New("cannot find credential with empty input")
-	}
-
-	v := im.GetVault()
-	if v == nil {
-		return nil, vault.NotFoundError
-	}
-
-	info, _ := v.About(context.Background(), &vault.Empty{})
-	var name string
-	if info != nil {
-		name = info.Name
-	}
-	log.Debug().Str("secret-id", cred.SecretId).Str("vault", name).Msg("fetch secret from vault")
-	// TODO: do we need to provide the encoding from outside or inside?
-	secret, err := v.Get(context.Background(), &vault.SecretID{
-		Key: cred.SecretId,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	retrievedCred, err := secret.Credential()
-	if err != nil {
-		return nil, err
-	}
-
-	// merge creds since user can provide additional credential_type, user
-	if cred.User != "" {
-		retrievedCred.User = cred.User
-	}
-
-	if cred.Type != vault.CredentialType_undefined {
-		retrievedCred.Type = cred.Type
-	}
-
-	return retrievedCred, nil
-}
-
 // QuerySecretId provides an input and determines the credential information for an asset
 // The credential will only include the reference to the secret and not include the actual secret
 func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, error) {
@@ -228,7 +194,7 @@ func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, er
 }
 
 func (im *inventoryManager) Resolve(ctx context.Context) map[*asset.Asset]error {
-	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.GetCredential, im.QuerySecretId)
+	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.CredsResolver, im.QuerySecretId)
 
 	// TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
 	im.assetList = resolvedAssets.Assets

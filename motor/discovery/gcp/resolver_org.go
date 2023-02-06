@@ -7,6 +7,7 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type GcpOrgResolver struct{}
@@ -19,7 +20,7 @@ func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects}
 }
 
-func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// FIXME: DEPRECATED, update in v8.0 vv
@@ -78,7 +79,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cfn 
 				"project-id": project.ProjectId,
 			}
 
-			assets, err := (&GcpProjectResolver{}).Resolve(ctx, projectConfig, cfn, sfn, userIdDetectors...)
+			assets, err := (&GcpProjectResolver{}).Resolve(ctx, projectConfig, credsResolver, sfn, userIdDetectors...)
 			if err != nil {
 				return nil, err
 			}

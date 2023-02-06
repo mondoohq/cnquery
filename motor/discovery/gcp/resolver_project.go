@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -30,7 +31,7 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
-func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// FIXME: DEPRECATED, update in v8.0 vv
@@ -41,7 +42,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 	}
 
 	// Note: we use the resolver instead of the direct gcp_provider.New to resolve credentials properly
-	m, err := resolver.NewMotorConnection(ctx, tc, cfn)
+	m, err := resolver.NewMotorConnection(ctx, tc, credsResolver)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
 		DiscoveryBigQueryDatasets) {
-		assetList, err := GatherAssets(ctx, tc, project, cfn)
+		assetList, err := GatherAssets(ctx, tc, project, credsResolver)
 		if err != nil {
 			return nil, err
 		}

@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	gcpprovider "go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/resources"
 	resource_pack "go.mondoo.com/cnquery/resources/packs/gcp"
@@ -56,11 +57,11 @@ func (md *MqlDiscovery) GetList(query string) []interface{} {
 	return a
 }
 
-func GatherAssets(ctx context.Context, tc *providers.Config, project string, cfn common.CredentialFn) ([]*asset.Asset, error) {
+func GatherAssets(ctx context.Context, tc *providers.Config, project string, credsResolver vault.Resolver) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	// Note: we use the resolver instead of the direct gcp_provider.New to resolve credentials properly
 	pCfg := tc.Clone()
-	motor, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
+	motor, err := resolver.NewMotorConnection(ctx, pCfg, credsResolver)
 	if err != nil {
 		return nil, err
 	}

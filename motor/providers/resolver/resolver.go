@@ -48,7 +48,7 @@ func warnIncompleteFeature(backend providers.ProviderType) {
 // NewMotorConnection establishes a motor connection by using the provided provider configuration
 // By default, it uses the id detector mechanisms provided by the provider. User can overwrite that
 // behaviour by optionally passing id detector identifier
-func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn func(cred *vault.Credential) (*vault.Credential, error)) (*motor.Motor, error) {
+func NewMotorConnection(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver) (*motor.Motor, error) {
 	log.Debug().Msg("establish motor connection")
 	var m *motor.Motor
 
@@ -65,8 +65,8 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credentialFn 
 	resolvedCredentials := []*vault.Credential{}
 	for i := range resolvedConfig.Credentials {
 		credential := resolvedConfig.Credentials[i]
-		if credential.SecretId != "" && credentialFn != nil {
-			resolvedCredential, err := credentialFn(credential)
+		if credential.SecretId != "" && credsResolver != nil {
+			resolvedCredential, err := credsResolver.GetCredential(credential)
 			if err != nil {
 				log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
 				return nil, err

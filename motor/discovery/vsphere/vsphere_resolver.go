@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/providers/vsphere"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 const (
@@ -32,11 +33,11 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryInstances, DiscoveryHostMachines}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// we leverage the vpshere transport to establish a connection
-	m, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
+	m, err := resolver.NewMotorConnection(ctx, pCfg, credsResolver)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +128,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			}
 
 			// find the secret reference for the asset
-			EnrichVsphereToolsConnWithSecrets(vm, cfn, sfn)
+			EnrichVsphereToolsConnWithSecrets(vm, credsResolver, sfn)
 
 			resolved = append(resolved, vm)
 		}

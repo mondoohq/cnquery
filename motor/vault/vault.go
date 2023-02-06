@@ -10,6 +10,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+type Resolver interface {
+	GetCredential(cred *Credential) (*Credential, error)
+}
+
 //go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. vault.proto
 
 func EscapeSecretID(key string) string {
