@@ -171,7 +171,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 
 	workers.Wait()
 
-	return nil
+	return errs
 }
 
 // Attempts to connect to an endpoint with a given version and records
