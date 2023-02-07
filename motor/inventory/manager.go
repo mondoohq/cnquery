@@ -16,6 +16,8 @@ import (
 	"go.mondoo.com/cnquery/motor/vault/multivault"
 )
 
+var _ InventoryManager = (*inventoryManager)(nil)
+
 type InventoryManager interface {
 	// GetAssets returns all assets under management
 	GetAssets() []*asset.Asset
@@ -31,6 +33,7 @@ type InventoryManager interface {
 	QuerySecretId(a *asset.Asset) (*vault.Credential, error)
 	// GetVault returns the configured Vault
 	GetVault() vault.Vault
+	GetCredsResolver() vault.Resolver
 }
 
 type Option func(*inventoryManager) error
@@ -65,7 +68,7 @@ func WithVault(v vault.Vault) Option {
 
 func WithCachedCredsResolver() Option {
 	return func(im *inventoryManager) error {
-		im.CredsResolver = credentials_resolver.New(im.GetVault(), false)
+		im.isCached = true
 		return nil
 	}
 }
@@ -86,7 +89,7 @@ func New(opts ...Option) (*inventoryManager, error) {
 }
 
 type inventoryManager struct {
-	CredsResolver vault.Resolver
+	isCached      bool
 	assetList     []*asset.Asset
 	relatedAssets []*asset.Asset
 	// optional vault set by user
@@ -196,7 +199,7 @@ func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, er
 }
 
 func (im *inventoryManager) Resolve(ctx context.Context) map[*asset.Asset]error {
-	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.CredsResolver, im.QuerySecretId)
+	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.GetCredsResolver(), im.QuerySecretId)
 
 	// TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
 	im.assetList = resolvedAssets.Assets
@@ -205,6 +208,14 @@ func (im *inventoryManager) Resolve(ctx context.Context) map[*asset.Asset]error 
 	log.Info().Int("resolved-assets", len(im.assetList)).Msg("resolved assets")
 	logger.DebugDumpJSON("inventory-resolved-assets", im.assetList)
 	return resolvedAssets.Errors
+}
+
+func (im *inventoryManager) GetCredsResolver() vault.Resolver {
+	return credentials_resolver.New(im.accessVault, im.isCached)
+}
+
+func (im *inventoryManager) GetCredential(cred *vault.Credential) (*vault.Credential, error) {
+	return im.GetCredsResolver().GetCredential(cred)
 }
 
 func (im *inventoryManager) resetVault() {

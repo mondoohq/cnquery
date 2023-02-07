@@ -40,7 +40,7 @@ func StartShell(conf *ShellConfig) error {
 	ctx := discovery.InitCtx(context.Background())
 
 	log.Info().Msgf("discover related assets for %d asset(s)", len(conf.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(conf.Inventory), inventory.WithCachedCredsResolver())
+	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
@@ -81,7 +81,7 @@ func StartShell(conf *ShellConfig) error {
 		log.Fatal().Msg("no asset selected")
 	}
 
-	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.CredsResolver, conf.DoRecord)
+	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredsResolver(), conf.DoRecord)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not connect to asset")
 	}
