@@ -74,7 +74,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	}
 
 	log.Info().Msgf("discover related assets for %d asset(s)", len(conf.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(conf.Inventory), inventory.WithCachedCredsResolver())
+	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
 	if err != nil {
 		return errors.Wrap(err, "could not load asset information")
 	}
