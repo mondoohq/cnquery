@@ -158,7 +158,7 @@ func GcpPlatformID(o gcpObject) string {
 	return "//platformid.api.mondoo.app/runtime/gcp/" + o.service + "/v1/projects/" + o.project + "/regions/" + o.region + "/" + o.objectType + "/" + o.name
 }
 
-func MqlObjectToAsset(account string, mqlObject mqlObject, tc *providers.Config) *asset.Asset {
+func MqlObjectToAsset(mqlObject mqlObject, tc *providers.Config) *asset.Asset {
 	if mqlObject.name == "" {
 		mqlObject.name = mqlObject.gcpObject.id
 	}

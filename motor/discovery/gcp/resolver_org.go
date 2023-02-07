@@ -69,40 +69,25 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 		resolved = append(resolved, rootAsset)
 	}
 
-	// TODO: for now we do not add the organization as asset since we need to adapt the policies and queries to distinguish
-	// between them. Current resources most likely mix with the org, most gcp requests do not work on org level
-
-	//identifier, err := provider.Identifier()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//// detect platform info for the asset
-	//detector := platform.NewDetector(provider)
-	//pf, err := detector.Platform()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//resolved = append(resolved, &asset.Asset{
-	//	PlatformIds: []string{identifier},
-	//	Name:        "GCP organization " + tc.Options["organization"],
-	//	Platform:    pf,
-	//	Connections: []*transports.TransportConfig{tc}, // pass-in the current config
-	//})
-
 	// discover projects
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryProjects) {
-		projects, err := provider.GetProjectsForOrganization(org)
+		m, err := NewMQLAssetsDiscovery(provider)
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range projects {
-			project := projects[i]
+		type project struct {
+			Id string
+		}
+		projects, err := GetList[project](m, "return gcp.organization.projects { id }")
+		if err != nil {
+			return nil, err
+		}
+
+		for _, p := range projects {
 			projectConfig := tc.Clone()
 			projectConfig.Options = map[string]string{
-				"project-id": project.ProjectId,
+				"project-id": p.Id,
 			}
 
 			assets, err := (&GcpProjectResolver{}).Resolve(ctx, projectConfig, credsResolver, sfn, userIdDetectors...)

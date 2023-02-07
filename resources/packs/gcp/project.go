@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -15,7 +16,11 @@ import (
 )
 
 func (g *mqlGcpProject) id() (string, error) {
-	return "gcp.project", nil
+	id, err := g.Id()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("gcp.project/%s", id), nil
 }
 
 func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject, error) {
