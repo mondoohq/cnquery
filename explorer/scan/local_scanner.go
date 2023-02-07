@@ -122,7 +122,7 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(job.Inventory), inventory.WithCachedCredsResolver())
+	im, err := inventory.New(inventory.WithInventory(job.Inventory))
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not load asset information")
 	}
