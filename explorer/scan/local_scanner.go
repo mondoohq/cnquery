@@ -236,7 +236,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Props:            job.Props,
 				QueryPackFilters: job.QueryPackFilters,
 				Ctx:              ctx,
-				CredsResolver:    im.CredsResolver,
+				CredsResolver:    im.GetCredsResolver(),
 				Reporter:         reporter,
 				ProgressReporter: p,
 			})

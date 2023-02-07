@@ -111,7 +111,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
-		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.CredsResolver, conf.DoRecord)
+		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredsResolver(), conf.DoRecord)
 		if err != nil {
 			return errors.New("could not connect to asset")
 		}
