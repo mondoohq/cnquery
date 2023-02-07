@@ -1,6 +1,7 @@
 package gcp
 
 const (
+	// Discovery flags
 	DiscoveryInstances          = "instances"
 	DiscoveryProjects           = "projects"
 	DiscoveryComputeImages      = "compute-images"
@@ -10,4 +11,9 @@ const (
 	DiscoveryGkeClusters        = "gke-clusters"
 	DiscoveryStorageBuckets     = "storage-buckets"
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
+
+	// Labels
+	ProjectLabel  = "gcp.mondoo.com/project"
+	RegionLabel   = "mondoo.com/region"
+	InstanceLabel = "mondoo.com/instance"
 )

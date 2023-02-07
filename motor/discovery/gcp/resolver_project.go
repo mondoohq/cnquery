@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
@@ -12,7 +11,6 @@ import (
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/vault"
-	"google.golang.org/api/compute/v1"
 )
 
 type GcpProjectResolver struct{}
@@ -87,11 +85,11 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 	}
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll,
-		DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
+		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
 		DiscoveryBigQueryDatasets) {
-		assetList, err := GatherAssets(ctx, tc, project, credsResolver)
+		assetList, err := GatherAssets(ctx, tc, project, credsResolver, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -103,33 +101,5 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 			resolved = append(resolved, a)
 		}
 	}
-
-	// discover compute instances
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-		client, err := provider.Client(compute.ComputeReadonlyScope)
-		if err != nil {
-			return nil, errors.Wrap(err, "use `gcloud auth application-default login` to authenticate locally")
-		}
-
-		compute := NewCompute(client)
-		compute.Insecure = tc.Insecure
-
-		assetList, err := compute.ListInstancesInProject(project)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch gcp compute instances")
-		}
-		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
-
-		for i := range assetList {
-			a := assetList[i]
-			log.Debug().Str("name", a.Name).Msg("resolved gcp compute instance")
-
-			// find the secret reference for the asset
-			common.EnrichAssetWithSecrets(a, sfn)
-
-			resolved = append(resolved, a)
-		}
-	}
-
 	return resolved, nil
 }
