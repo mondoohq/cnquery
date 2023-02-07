@@ -54,6 +54,7 @@ func (g *mqlGcpOrganization) init(args *resources.Args) (*resources.Args, GcpOrg
 
 	(*args)["id"] = org.Name
 	(*args)["name"] = org.DisplayName
+	(*args)["state"] = org.State
 	(*args)["lifecycleState"] = org.State
 
 	return args, nil, nil

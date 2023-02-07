@@ -23,11 +23,33 @@ gcp.organization @defaults("id") {
   // Organization name
   name string
   // Organization state
+  state string
+  // Deprecated. Use `state` instead.
   lifecycleState string
   // Organization IAM policy
   iamPolicy() []gcp.resourcemanager.binding
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
+  // List of folders
+  folders() []gcp.folder
+}
+
+// GCP Folder
+private gcp.folder {
+  // Folder ID
+  id string
+  // Folder name
+  name string
+  // Creation timestamp
+  created time
+  // Update timestamp
+  updated time
+  // Parent ID
+  parent string
+  // Folder state
+  state string
+  // List of folders
+  folders() []gcp.folder
   // List of projects
   projects() []gcp.project
 }
