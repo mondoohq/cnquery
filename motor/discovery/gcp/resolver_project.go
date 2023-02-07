@@ -72,6 +72,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 
 	var resolvedRoot *asset.Asset
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects) {
+		pf.Name = "gcp-project"
 		resolvedRoot = &asset.Asset{
 			PlatformIds: []string{identifier},
 			Name:        "GCP project " + project,
