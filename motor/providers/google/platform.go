@@ -64,10 +64,10 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 
 func getTitleForPlatformName(name string) string {
 	switch name {
-	case "gcp-project":
-		return "GCP Project"
 	case "gcp-organization":
 		return "GCP Organization"
+	case "gcp-project":
+		return "GCP Project"
 	case "gcp-compute-image":
 		return "GCP Compute Image"
 	case "gcp-compute-network":
