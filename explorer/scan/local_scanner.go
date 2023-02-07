@@ -235,7 +235,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Bundle:           job.Bundle,
 				QueryPackFilters: job.QueryPackFilters,
 				Ctx:              ctx,
-				CredsResolver:    im.CredsResolver,
+				CredsResolver:    im.GetCredsResolver(),
 				Reporter:         reporter,
 				ProgressReporter: p,
 			})
