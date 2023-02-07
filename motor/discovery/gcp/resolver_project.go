@@ -101,33 +101,5 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 			resolved = append(resolved, a)
 		}
 	}
-
-	// // discover compute instances
-	// if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-	// 	client, err := provider.Client(compute.ComputeReadonlyScope)
-	// 	if err != nil {
-	// 		return nil, errors.Wrap(err, "use `gcloud auth application-default login` to authenticate locally")
-	// 	}
-
-	// 	compute := NewCompute(client)
-	// 	compute.Insecure = tc.Insecure
-
-	// 	assetList, err := compute.ListInstancesInProject(project)
-	// 	if err != nil {
-	// 		return nil, errors.Wrap(err, "could not fetch gcp compute instances")
-	// 	}
-	// 	log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
-
-	// 	for i := range assetList {
-	// 		a := assetList[i]
-	// 		log.Debug().Str("name", a.Name).Msg("resolved gcp compute instance")
-
-	// 		// find the secret reference for the asset
-	// 		common.EnrichAssetWithSecrets(a, sfn)
-
-	// 		resolved = append(resolved, a)
-	// 	}
-	// }
-
 	return resolved, nil
 }

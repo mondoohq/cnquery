@@ -48,7 +48,7 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 
-	instances, err := m.GetList("return gcp.project.compute.instances { id name labels zone { name } status networkInterfaces disks { guestOsFeatures } }")
+	instances, err := m.GetList("return gcp.project.compute.instances.where( status == 'RUNNING' ) { id name labels zone { name } status networkInterfaces disks { guestOsFeatures } }")
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 		for k, v := range tags {
 			stringLabels[k] = v.(string)
 		}
-		stringLabels["mondoo.com/instance"] = id
+		stringLabels[InstanceLabel] = id
 
 		data, err := json.Marshal(b["networkInterfaces"])
 		if err != nil {
@@ -117,10 +117,7 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 		a.Connections = connections
 		// find the secret reference for the asset
 		common.EnrichAssetWithSecrets(a, sfn)
-
-		if a.State == asset.State_STATE_RUNNING {
-			assets = append(assets, a)
-		}
+		assets = append(assets, a)
 	}
 	return assets, nil
 }

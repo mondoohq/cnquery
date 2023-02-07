@@ -13,6 +13,7 @@ const (
 	DiscoveryBigQueryDatasets   = "bigquery-datasets"
 
 	// Labels
-	ProjectLabel = "gcp.mondoo.com/project"
-	RegionLabel  = "mondoo.com/region"
+	ProjectLabel  = "gcp.mondoo.com/project"
+	RegionLabel   = "mondoo.com/region"
+	InstanceLabel = "mondoo.com/instance"
 )
