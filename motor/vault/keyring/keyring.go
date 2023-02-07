@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/99designs/keyring"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 

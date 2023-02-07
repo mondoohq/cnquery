@@ -44,6 +44,14 @@ func (t *VaultType) Value() string {
 	return vaultMarshalNameMap[*t]
 }
 
+func TypeIds() []string {
+	var types []string
+	for _, v := range vaultMarshalNameMap {
+		types = append(types, v)
+	}
+	return types
+}
+
 // UnmarshalJSON parses either an int or a string representation of
 // VaultType into the struct
 func (t *VaultType) UnmarshalJSON(data []byte) error {

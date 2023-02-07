@@ -65,7 +65,7 @@ func WithVault(v vault.Vault) Option {
 
 func WithCachedCredsResolver() Option {
 	return func(im *inventoryManager) error {
-		im.CredsResolver = credentials_resolver.New(im.GetVault(), true)
+		im.CredsResolver = credentials_resolver.New(im.GetVault(), false)
 		return nil
 	}
 }
@@ -122,9 +122,6 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 		secrets[secret.Key] = secret
 	}
 
-	im.inmemoryVault = inmemory.New(inmemory.WithSecretMap(secrets))
-	im.resetVault()
-
 	if inventory.Spec.CredentialQuery != "" {
 		err = im.SetCredentialQuery(inventory.Spec.CredentialQuery)
 		if err != nil {
@@ -132,6 +129,8 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 		}
 	}
 
+	// in-memory vault is used as fall-back store embedded credentials
+	im.inmemoryVault = inmemory.New(inmemory.WithSecretMap(secrets))
 	if inventory.Spec.Vault != nil {
 		var v vault.Vault
 		// when the type is not provided but a name was given, then look up in our internal vault configuration
@@ -158,6 +157,9 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 		}
 		im.vault = v
 	}
+
+	// determine the vault to use for accessing credentials
+	im.resetVault()
 
 	return nil
 }
