@@ -81,7 +81,7 @@ func StartShell(conf *ShellConfig) error {
 		log.Fatal().Msg("no asset selected")
 	}
 
-	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.CredsResolver, conf.DoRecord)
+	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredsResolver(), conf.DoRecord)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not connect to asset")
 	}
