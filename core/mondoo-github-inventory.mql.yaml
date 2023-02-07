@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-github-inventory-org
-    name: Mondoo GitHub Organization Inventory Pack
+    name: GitHub Organization Inventory Pack by Mondoo
     tags:
       mondoo.com/platform: github,saas
       mondoo.com/category: best-practices
@@ -8,7 +8,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo GitHub Organization Inventory query pack gathers configuration data about GitHub organization.
+        The GitHub Organization Inventory Pack by Mondoo query pack gathers configuration data about GitHub organization.
 
         ### Prerequisites
 

@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-incident-response-github-org
-    name: Mondoo GitHub Organization Incident Response
+    name: GitHub Organization Incident Response Pack by Mondoo
     tags:
       mondoo.com/platform: github,saas
       mondoo.com/category: security
@@ -8,7 +8,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo GitHub Organization Incident Response query pack gathers configuration data about GitHub Organizations and the repositories within for investigation during a security incident.
+        The GitHub Organization Incident Response Pack by Mondoo query pack gathers configuration data about GitHub Organizations and the repositories within for investigation during a security incident.
 
         ### Prerequisites
 

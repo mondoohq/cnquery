@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-ssl-tls-certificate-incident-response
-    name: Mondoo SSL/TLS Certificate Incident Response
+    name: SSL/TLS Certificate Incident Response Pack by Mondoo
     tags:
       mondoo.com/platform: host,network
       mondoo.com/category: security
@@ -8,7 +8,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo SSL/TLS Certificate Incident Response query pack gathers information about SSL/TLS certificates of a domain for investigation during a security incident.
+        The SSL/TLS Certificate Incident Response Pack by Mondoo query pack gathers information about SSL/TLS certificates of a domain for investigation during a security incident.
 
         ### Prerequisites
 

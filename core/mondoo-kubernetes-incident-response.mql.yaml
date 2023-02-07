@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-kubernetes-cluster-incident-response
-    name: Mondoo Kubernetes Cluster Incident Response
+    name: Kubernetes Cluster Incident Response Pack by Mondoo
     tags:
       mondoo.com/platform: kubernetes
       mondoo.com/category: security

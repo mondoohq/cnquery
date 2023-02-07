@@ -1,12 +1,12 @@
 packs:
   - uid: mondoo-windows-asset-inventory
-    name: Mondoo Windows Asset Inventory Pack
+    name: Windows Asset Inventory Pack by Mondoo
     tags:
       mondoo.com/platform: windows,host
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Mondoo Windows inventory pack is designed to gather data about Windows hosts for asset inventory. 
+        The Windows Asset Inventory Pack by Mondoo is designed to gather data about Windows hosts for asset inventory. 
 
         ## Local scan
         To run this pack locally on a Windows host:

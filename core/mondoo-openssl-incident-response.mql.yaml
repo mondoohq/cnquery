@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-openssl-incident-response
-    name: Mondoo OpenSSL Incident Response
+    name: OpenSSL Incident Response by Mondoo
     tags:
       mondoo.com/platform: linux,host
       mondoo.com/category: best-practices

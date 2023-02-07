@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-incident-response-aws
-    name: Mondoo AWS Incident Response
+    name: AWS Incident Response Pack by Mondoo
     tags:
       mondoo.com/platform: aws,cloud
       mondoo.com/category: security
@@ -8,7 +8,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo AWS Incident Response query pack gathers data about AWS services and resources for investigation during a security incident.
+        The AWS Incident Response Pack by Mondoo query pack gathers data about AWS services and resources for investigation during a security incident.
 
         ### Run query pack
 

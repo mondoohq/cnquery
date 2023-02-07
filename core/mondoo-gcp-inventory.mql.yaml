@@ -1,12 +1,12 @@
 packs:
   - uid: mondoo-asset-inventory-gcp
-    name: Mondoo mondoo-asset-inventory-gcp Asset Inventory
+    name: GCP Asset Inventory Pack by Mondoo
     tags:
       mondoo.com/platform: gcp,cloud
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Mondoo GCP Inventory query pack gathers information about GCP projects for asset inventory.
+        The GCP Asset Inventory by Mondoo query pack gathers information about GCP projects for asset inventory.
     filters:
       - asset.platform == "gcp"
     queries:

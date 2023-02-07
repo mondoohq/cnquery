@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-linux-incident-response
-    name: Mondoo Linux Incident Response
+    name: Linux Incident Response by Mondoo
     tags:
       mondoo.com/platform: linux,host
       mondoo.com/category: security

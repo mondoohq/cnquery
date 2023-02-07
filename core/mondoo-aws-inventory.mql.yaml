@@ -1,12 +1,12 @@
 packs:
   - uid: mondoo-asset-inventory-aws
-    name: Mondoo AWS Asset Inventory
+    name: AWS Asset Inventory Pack by Mondoo
     tags:
       mondoo.com/platform: aws,cloud
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Mondoo AWS Inventory query pack gathers information about AWS accounts for asset inventory.
+        The AWS Asset Inventory by Mondoo query pack gathers information about AWS accounts for asset inventory.
     filters:
       - asset.platform == "aws"
     queries:
