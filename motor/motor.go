@@ -39,7 +39,6 @@ func New(provider providers.Instance, motorOpts ...MotorOption) (*Motor, error) 
 	for i := range motorOpts {
 		motorOpts[i](m)
 	}
-
 	// set the detector after the opts have been applied to ensure its going via the recorder
 	// if activated
 	_, ok := m.Provider.(*local.Provider)
