@@ -675,6 +675,11 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			// lsof presents a process listening on any ipv6 address as listening on "*"
+			// change this to a more ipv6-friendly formatting
+			if protocol == "ipv6" && strings.HasPrefix(localAddress, "*") {
+				localAddress = strings.Replace(localAddress, "*", "[::]", 1)
+			}
 
 			state, ok := TCP_STATES[fd.TcpState()]
 			if !ok {
