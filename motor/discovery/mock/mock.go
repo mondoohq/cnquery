@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type Resolver struct{}
@@ -23,7 +24,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	assetObj := &asset.Asset{
 		State:       asset.State_STATE_ONLINE,
 		Connections: []*providers.Config{tc},
@@ -38,7 +39,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		Kind: providers.Kind_KIND_BARE_METAL,
 	}
 
-	m, err := resolver.NewMotorConnection(ctx, tc, cfn)
+	m, err := resolver.NewMotorConnection(ctx, tc, credsResolver)
 	if err != nil {
 		return nil, err
 	}

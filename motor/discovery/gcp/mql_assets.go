@@ -15,12 +15,11 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	gcpprovider "go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/resources"
 	resource_pack "go.mondoo.com/cnquery/resources/packs/gcp"
 )
-
-const RegionLabel string = "mondoo.com/region"
 
 type MqlDiscovery struct {
 	rt *resources.Runtime
@@ -41,26 +40,27 @@ func (md *MqlDiscovery) Close() {
 	}
 }
 
-func (md *MqlDiscovery) GetList(query string) []interface{} {
+func GetList[T any](md *MqlDiscovery, query string) ([]T, error) {
 	mqlExecutor := mql.New(md.rt, cnquery.DefaultFeatures)
 	value, err := mqlExecutor.Exec(query, map[string]*llx.Primitive{})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-
-	a := []interface{}{}
-	d, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result: &a,
-	})
-	d.Decode(value.Value)
-	return a
+	if value.Error != nil {
+		return nil, value.Error
+	}
+	var out []T
+	if err := mapstructure.Decode(value.Value, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-func GatherAssets(ctx context.Context, tc *providers.Config, project string, cfn common.CredentialFn) ([]*asset.Asset, error) {
+func GatherAssets(ctx context.Context, tc *providers.Config, project string, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	// Note: we use the resolver instead of the direct gcp_provider.New to resolve credentials properly
 	pCfg := tc.Clone()
-	motor, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
+	motor, err := resolver.NewMotorConnection(ctx, pCfg, credsResolver)
 	if err != nil {
 		return nil, err
 	}
@@ -74,26 +74,61 @@ func GatherAssets(ctx context.Context, tc *providers.Config, project string, cfn
 	if err != nil {
 		return nil, err
 	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
+		instances, err := computeInstances(m, project, tc, sfn)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, instances...)
+	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeImages) {
-		assets = append(assets, computeImages(m, project, tc)...)
+		images, err := computeImages(m, project, tc)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, images...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeNetworks) {
-		assets = append(assets, computeNetworks(m, project, tc)...)
+		networks, err := computeNetworks(m, project, tc)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, networks...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeSubnetworks) {
-		assets = append(assets, computeSubnetworks(m, project, tc)...)
+		subnetworks, err := computeSubnetworks(m, project, tc)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, subnetworks...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryComputeFirewalls) {
-		assets = append(assets, computeFirewalls(m, project, tc)...)
+		firewalls, err := computeFirewalls(m, project, tc)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, firewalls...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryGkeClusters) {
-		assets = append(assets, gkeClusters(m, project, tc)...)
+		clusters, err := gkeClusters(m, project, tc)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, clusters...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryStorageBuckets) {
-		assets = append(assets, storageBuckets(m, project, tc)...)
+		buckets, err := storageBuckets(m, project, tc)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, buckets...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryBigQueryDatasets) {
-		assets = append(assets, bigQueryDatasets(m, project, tc)...)
+		datasets, err := bigQueryDatasets(m, project, tc)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, datasets...)
 	}
 
 	return assets, nil
@@ -179,5 +214,6 @@ func addInformationalLabels(l map[string]string, o mqlObject) map[string]string 
 	}
 	l[RegionLabel] = o.gcpObject.region
 	l[common.ParentId] = o.gcpObject.project
+	l[ProjectLabel] = o.gcpObject.project
 	return l
 }

@@ -11,7 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
-func EstablishConnection(ctx context.Context, tc *providers.Config, credentialFn func(cred *vault.Credential) (*vault.Credential, error), insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -22,10 +22,10 @@ func EstablishConnection(ctx context.Context, tc *providers.Config, credentialFn
 		tc.Record = true
 	}
 
-	return NewMotorConnection(ctx, tc, credentialFn)
+	return NewMotorConnection(ctx, tc, credsResolver)
 }
 
-func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credentialFn func(cred *vault.Credential) (*vault.Credential, error), record bool) (*motor.Motor, error) {
+func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credsResolver vault.Resolver, record bool) (*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -60,7 +60,7 @@ func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credential
 		pCfg.PlatformId = assetInfo.PlatformIds[0]
 	}
 
-	m, err := EstablishConnection(ctx, pCfg, credentialFn, pCfg.Insecure, record)
+	m, err := EstablishConnection(ctx, pCfg, credsResolver, pCfg.Insecure, record)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credential
 	return m, nil
 }
 
-func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credentialFn func(cred *vault.Credential) (*vault.Credential, error), record bool) ([]*motor.Motor, error) {
+func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credsResolver vault.Resolver, record bool) ([]*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -107,7 +107,7 @@ func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credentia
 			pCfg.PlatformId = assetInfo.PlatformIds[0]
 		}
 
-		m, err := EstablishConnection(ctx, pCfg, credentialFn, pCfg.Insecure, record)
+		m, err := EstablishConnection(ctx, pCfg, credsResolver, pCfg.Insecure, record)
 		if err != nil {
 			return nil, err
 		}

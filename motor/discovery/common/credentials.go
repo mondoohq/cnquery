@@ -8,8 +8,6 @@ import (
 )
 
 type (
-	// CredentialFn retrieves the credentials to connect to the platform
-	CredentialFn func(cred *vault.Credential) (*vault.Credential, error)
 	// QuerySecretFn is used during discovery phase to identify a secret for an asset
 	QuerySecretFn func(a *asset.Asset) (*vault.Credential, error)
 )

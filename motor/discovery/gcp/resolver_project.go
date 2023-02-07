@@ -4,14 +4,13 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
-	"google.golang.org/api/compute/v1"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 type GcpProjectResolver struct{}
@@ -30,7 +29,7 @@ func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
 	}
 }
 
-func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
 	// FIXME: DEPRECATED, update in v8.0 vv
@@ -41,7 +40,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 	}
 
 	// Note: we use the resolver instead of the direct gcp_provider.New to resolve credentials properly
-	m, err := resolver.NewMotorConnection(ctx, tc, cfn)
+	m, err := resolver.NewMotorConnection(ctx, tc, credsResolver)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +72,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 
 	var resolvedRoot *asset.Asset
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects) {
+		pf.Name = "gcp-project"
 		resolvedRoot = &asset.Asset{
 			PlatformIds: []string{identifier},
 			Name:        "GCP project " + project,
@@ -86,11 +86,11 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 	}
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll,
-		DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
+		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
 		DiscoveryBigQueryDatasets) {
-		assetList, err := GatherAssets(ctx, tc, project, cfn)
+		assetList, err := GatherAssets(ctx, tc, project, credsResolver, sfn)
 		if err != nil {
 			return nil, err
 		}
@@ -102,33 +102,5 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 			resolved = append(resolved, a)
 		}
 	}
-
-	// discover compute instances
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-		client, err := provider.Client(compute.ComputeReadonlyScope)
-		if err != nil {
-			return nil, errors.Wrap(err, "use `gcloud auth application-default login` to authenticate locally")
-		}
-
-		compute := NewCompute(client)
-		compute.Insecure = tc.Insecure
-
-		assetList, err := compute.ListInstancesInProject(project)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch gcp compute instances")
-		}
-		log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
-
-		for i := range assetList {
-			a := assetList[i]
-			log.Debug().Str("name", a.Name).Msg("resolved gcp compute instance")
-
-			// find the secret reference for the asset
-			common.EnrichAssetWithSecrets(a, sfn)
-
-			resolved = append(resolved, a)
-		}
-	}
-
 	return resolved, nil
 }

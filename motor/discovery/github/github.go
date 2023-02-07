@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	github_provider "go.mondoo.com/cnquery/motor/providers/github"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/motor/vault"
 )
 
 const (
@@ -30,9 +31,9 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryRepository, DiscoveryUser}
 }
 
-func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, cfn common.CredentialFn, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
+func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	// establish connection to GitHub
-	m, err := resolver.NewMotorConnection(ctx, pCfg, cfn)
+	m, err := resolver.NewMotorConnection(ctx, pCfg, credsResolver)
 	if err != nil {
 		return nil, err
 	}
