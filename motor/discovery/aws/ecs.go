@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/motorid/awsec2"
+	awsecsid "go.mondoo.com/cnquery/motor/motorid/awsecs"
 	"go.mondoo.com/cnquery/motor/motorid/containerid"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -191,7 +192,7 @@ func ecsContainerToAsset(ctx context.Context, account string, region string, c e
 
 	asset := &asset.Asset{
 		Name:        *c.Name,
-		PlatformIds: []string{containerid.MondooContainerID(*c.RuntimeId)},
+		PlatformIds: []string{containerid.MondooContainerID(*c.RuntimeId), awsecsid.MondooECSContainerID(*c.ContainerArn)},
 		Platform: &platform.Platform{
 			Kind:    providers.Kind_KIND_CONTAINER,
 			Runtime: providers.RUNTIME_AWS_ECS,

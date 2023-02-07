@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/discovery/aws"
 	"go.mondoo.com/cnquery/motor/motorid/awsec2"
+	awsecsid "go.mondoo.com/cnquery/motor/motorid/awsecs"
 	"go.mondoo.com/cnquery/motor/motorid/clouddetect"
 	"go.mondoo.com/cnquery/motor/motorid/hostname"
 	"go.mondoo.com/cnquery/motor/motorid/machineid"
@@ -162,6 +163,23 @@ func GatherPlatformInfo(provider providers.Instance, pf *platform.Platform, idDe
 				IDs:                []string{ident.InstanceID},
 				Name:               ident.InstanceName,
 				RelatedPlatformIDs: []string{ident.AccountID},
+			}, nil
+		}
+		return &PlatformInfo{}, nil
+	case isOSProvider && idDetector == providers.AWSEcsDetector:
+		metadata, err := awsecsid.Resolve(osProvider, pf)
+		if err != nil {
+			return nil, err
+		}
+		ident, err := metadata.Identify()
+		if err != nil {
+			return nil, err
+		}
+		if len(ident.PlatformIds) != 0 {
+			return &PlatformInfo{
+				IDs:                ident.PlatformIds,
+				Name:               ident.Name,
+				RelatedPlatformIDs: []string{ident.AccountPlatformID},
 			}, nil
 		}
 		return &PlatformInfo{}, nil

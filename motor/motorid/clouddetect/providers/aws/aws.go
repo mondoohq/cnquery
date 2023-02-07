@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/motorid/awsec2"
+	awsecsid "go.mondoo.com/cnquery/motor/motorid/awsecs"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/resources/packs/os/smbios"
@@ -57,15 +58,30 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, 
 				return "", "", nil
 			}
 			id, err := mdsvc.Identify()
+			if err == nil {
+				return id.InstanceID, id.InstanceName, []string{id.AccountID}
+			}
+			log.Debug().Err(err).
+				Str("transport", provider.Kind().String()).
+				Strs("platform", p.GetFamily()).
+				Msg("failed to get aws platform id")
+			// try ecs
+			mdsvcEcs, err := awsecsid.Resolve(provider, p)
 			if err != nil {
+				log.Debug().Err(err).Msg("failed to get metadata resolver")
+				return "", "", nil
+			}
+			idEcs, err := mdsvcEcs.Identify()
+			if err == nil {
+				return idEcs.PlatformIds[0], idEcs.Name, []string{idEcs.AccountPlatformID}
+			} else {
 				log.Debug().Err(err).
 					Str("transport", provider.Kind().String()).
 					Strs("platform", p.GetFamily()).
 					Msg("failed to get aws platform id")
-				return "", "", nil
 			}
-			return id.InstanceID, id.InstanceName, []string{id.AccountID}
 		}
 	}
+
 	return "", "", nil
 }
