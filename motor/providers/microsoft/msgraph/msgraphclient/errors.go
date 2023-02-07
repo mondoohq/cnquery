@@ -5,13 +5,12 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/models/odataerrors"
 )
 
-func TransformODataError(err error) error {
-	oDataErr := err.(*odataerrors.ODataError)
-	if oDataErr != nil {
+func TransformError(err error) error {
+	oDataErr, ok := err.(*odataerrors.ODataError)
+	if ok && oDataErr != nil {
 		if err := oDataErr.GetError(); err != nil {
 			return errors.Newf("error while performing request. Code: %s, Message: %s", *err.GetCode(), *err.GetMessage())
 		}
 	}
-
 	return err
 }
