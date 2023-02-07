@@ -2,7 +2,9 @@ package ports
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"strings"
 )
 
 type State int64
@@ -42,6 +44,22 @@ func ParseWindowsNetTCPConnections(r io.Reader) ([]WinPort, error) {
 	err = json.Unmarshal(data, &entries)
 	if err != nil {
 		return nil, err
+	}
+
+	// convert any ipv6 address (basically if they contain a ':')
+	// to a more ipv6-friendly address surrounded by []s
+	for i := range entries {
+		localAddress := entries[i].LocalAddress
+		if strings.ContainsAny(entries[i].LocalAddress, ":") {
+			localAddress = fmt.Sprintf("[%s]", entries[i].LocalAddress)
+		}
+		remoteAddress := entries[i].RemoteAddress
+		if strings.ContainsAny(entries[i].RemoteAddress, ":") {
+			remoteAddress = fmt.Sprintf("[%s]", entries[i].RemoteAddress)
+		}
+
+		entries[i].LocalAddress = localAddress
+		entries[i].RemoteAddress = remoteAddress
 	}
 
 	return entries, nil
