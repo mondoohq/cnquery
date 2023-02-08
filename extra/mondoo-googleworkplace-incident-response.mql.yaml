@@ -49,7 +49,7 @@ packs:
         cnquery scan googleworkspace --customer-id <CUSTOMERID> --impersonated-user-email <EMAIL>
         ```
     filters:
-      - asset.platform == "googleworkspace"
+      - asset.platform == "googleworkspace" || asset.platform == "google-workspace"
     queries:
       - uid: mondoo-googleworkspace-incident-response-domain
         title: Retrieve Google Workspace Domains

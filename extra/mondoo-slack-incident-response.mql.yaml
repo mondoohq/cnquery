@@ -45,7 +45,7 @@ packs:
         cnquery scan slack --query-pack mondoo-incident-response-slack
         ```
     filters:
-      - asset.platform == "slack"
+      - asset.platform == "slack" || asset.platform == "slack-team"
     queries:
       - uid: mondoo-slack-incident-response-team-domain
         title: Retrieve Slack Team Domain
