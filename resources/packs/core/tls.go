@@ -177,8 +177,8 @@ func (s *mqlTls) GetParams(socket Socket, domainName string) (map[string]interfa
 	if err != nil {
 		return nil, err
 	}
-	// Windows and Darwin will list a port's "protocol" as "ipv4/6" which
-	// is an unrecognized protocol for golang's net package.
+
+	// a proto of ipv6 or ipv4 isn't usable by the golang net package
 	if proto == "ipv6" || proto == "ipv4" {
 		proto = "tcp"
 	}
