@@ -2,9 +2,9 @@ package okta
 
 import (
 	"context"
-	"errors"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
@@ -77,8 +77,7 @@ func (t *Provider) Kind() providers.Kind {
 }
 
 func (t *Provider) Runtime() string {
-	// TODO: fix me and add okta
-	return providers.RUNTIME_AZ
+	return providers.RUNTIME_OKTA
 }
 
 func (t *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
@@ -88,8 +87,12 @@ func (t *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 }
 
 func (t *Provider) Identifier() (string, error) {
-	// TODO: implement proper
-	return "", nil
+	settings, _, err := t.client.OrgSetting.GetOrgSettings(context.Background())
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get Okta org ID")
+	}
+
+	return settings.Id, nil
 }
 
 func (p *Provider) OrganizationID() string {
