@@ -54,7 +54,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 		}
 		resolved = append(resolved, &asset.Asset{
 			PlatformIds: []string{identifier},
-			Name:        "Slack organization " + teamName,
+			Name:        "Slack team " + teamName,
 			Platform:    pf,
 			Connections: []*providers.Config{cc}, // pass-in the current config
 			Labels:      map[string]string{},
