@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/cockroachdb/errors"
@@ -146,4 +148,47 @@ func (d *mqlAwsSsmInstance) init(args *resources.Args) (*resources.Args, AwsSsmI
 		}
 	}
 	return nil, nil, errors.New("ssm instance does not exist")
+}
+
+func (s *mqlAwsSsmInstance) GetTags() (map[string]interface{}, error) {
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	id, err := s.InstanceId()
+	if err != nil {
+		return nil, err
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, err
+	}
+	ec2svc := provider.Ec2(region)
+	tagresp, err := ec2svc.DescribeTags(context.Background(), &ec2.DescribeTagsInput{
+		Filters: []ec2types.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{id},
+			},
+		},
+	})
+	if err != nil {
+		log.Warn().Err(err).Msg("could not gather ssm instance tag information")
+	} else if tagresp != nil {
+		return Ec2SSMTagsToMap(tagresp.Tags), nil
+	}
+	return map[string]interface{}{}, nil
+}
+
+func Ec2SSMTagsToMap(tags []ec2types.TagDescription) map[string]interface{} {
+	tagsMap := make(map[string]interface{})
+
+	if len(tags) > 0 {
+		for i := range tags {
+			tag := tags[i]
+			tagsMap[core.ToString(tag.Key)] = core.ToString(tag.Value)
+		}
+	}
+
+	return tagsMap
 }

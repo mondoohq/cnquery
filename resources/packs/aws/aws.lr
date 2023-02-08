@@ -1322,6 +1322,7 @@ aws.ssm {
   instances() []aws.ssm.instance
 }
 
+// Amazon SSM Instance
 private aws.ssm.instance {
   // Instance ID for the SSM Instance
   instanceId string
@@ -1335,6 +1336,8 @@ private aws.ssm.instance {
   region string
   // ARN for the SSM Instance
   arn string
+  // Tags for the SSM Instance
+  tags() map[string]string
 }
 
 // Amazon EC2

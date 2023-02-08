@@ -37,22 +37,20 @@ func (md *MqlDiscovery) Close() {
 	}
 }
 
-func (md *MqlDiscovery) GetList(query string) ([]interface{}, error) {
+func GetList[T any](md *MqlDiscovery, query string) ([]T, error) {
 	mqlExecutor := mql.New(md.rt, cnquery.DefaultFeatures)
 	value, err := mqlExecutor.Exec(query, map[string]*llx.Primitive{})
 	if err != nil {
 		return nil, err
 	}
-
-	a := []interface{}{}
-	d, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result: &a,
-	})
-	err = d.Decode(value.Value)
-	if err != nil {
+	if value.Error != nil {
+		return nil, value.Error
+	}
+	var out []T
+	if err := mapstructure.Decode(value.Value, &out); err != nil {
 		return nil, err
 	}
-	return a, value.Error
+	return out, nil
 }
 
 func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, account string) ([]*asset.Asset, error) {
