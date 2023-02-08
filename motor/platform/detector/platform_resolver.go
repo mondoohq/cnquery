@@ -3,6 +3,7 @@ package detector
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/motor/providers/container/docker_engine"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/tar"
 )
@@ -34,6 +35,15 @@ func (r *PlatformResolver) Resolve(p os.OperatingSystemProvider) (*platform.Plat
 		if len(pi.Name) == 0 {
 			di.Name = "scratch"
 			di.Arch = tarTransport.PlatformArchitecture
+			return di, true
+		}
+	}
+
+	_, ok = p.(*docker_engine.Provider)
+	if resolved && ok {
+		// if the platform name is not set, we should fallback to the scratch operating system
+		if len(pi.Name) == 0 {
+			di.Name = "scratch"
 			return di, true
 		}
 	}
