@@ -18,7 +18,7 @@ func TestParseWindowsTCP(t *testing.T) {
 	assert.Equal(t, 1, len(ports))
 
 	assert.Equal(t, int64(49672), ports[0].LocalPort)
-	assert.Equal(t, "::", ports[0].LocalAddress)
+	assert.Equal(t, "[::]", ports[0].LocalAddress)
 	assert.Equal(t, int64(0), ports[0].RemotePort)
-	assert.Equal(t, "::", ports[0].RemoteAddress)
+	assert.Equal(t, "[::]", ports[0].RemoteAddress)
 }
