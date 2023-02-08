@@ -28,4 +28,5 @@ const (
 	RUNTIME_AWS_EC2_EBS          = "aws-ec2-ebs"
 	RUNTIME_GITLAB               = "gitlab" // api
 	RUNTIME_TERRAFORM            = "terraform"
+	RUNTIME_OKTA                 = "okta"
 )
