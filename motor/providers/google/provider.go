@@ -5,10 +5,7 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
@@ -143,10 +140,6 @@ type Provider struct {
 	platformOverride      string
 }
 
-func (p *Provider) FS() afero.Fs {
-	return &fsutil.NoFs{}
-}
-
 func (p *Provider) Close() {}
 
 func (p *Provider) Capabilities() providers.Capabilities {
@@ -174,54 +167,6 @@ func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
-}
-
-func (p *Provider) PlatformInfo() (*platform.Platform, error) {
-	if p.platformOverride != "" && p.platformOverride != "gcp" {
-		return &platform.Platform{
-			Name:    p.platformOverride,
-			Title:   getTitleForPlatformName(p.platformOverride),
-			Kind:    providers.Kind_KIND_GCP_OBJECT,
-			Runtime: providers.RUNTIME_GCP,
-		}, nil
-	}
-
-	name := "gcp"
-	title := "Google Cloud Platform"
-
-	if p.resourceType == Workspace {
-		name = "googleworkspace"
-		title = "Google Workspace"
-	}
-
-	return &platform.Platform{
-		Name:    name,
-		Title:   title,
-		Kind:    providers.Kind_KIND_API,
-		Runtime: p.Runtime(),
-	}, nil
-}
-
-func getTitleForPlatformName(name string) string {
-	switch name {
-	case "gcp-project":
-		return "GCP Project"
-	case "gcp-compute-image":
-		return "GCP Compute Image"
-	case "gcp-compute-network":
-		return "GCP Compute Network"
-	case "gcp-compute-subnetwork":
-		return "GCP Compute Subnetwork"
-	case "gcp-compute-firewall":
-		return "GCP Compute Firewall"
-	case "gcp-gke-cluster":
-		return "GCP GKE Cluster"
-	case "gcp-storage-bucket":
-		return "GCP Storage Bucket"
-	case "gcp-bigquery-dataset":
-		return "GCP BigQuery Dataset"
-	}
-	return "Google Cloud Platform"
 }
 
 func loadCredentialsFromEnv(envs ...string) ([]byte, error) {
