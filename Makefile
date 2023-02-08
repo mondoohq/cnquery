@@ -254,10 +254,10 @@ cnquery/install:
 	GOBIN=${GOPATH}/bin go install ${LDFLAGSDIST} apps/cnquery/cnquery.go
 
 cnquery/dist/goreleaser/stable:
-	goreleaser release --rm-dist --skip-publish --skip-validate	-f .goreleaser.yml --timeout 120m
+	goreleaser release --clean --skip-publish --skip-validate	-f .goreleaser.yml --timeout 120m
 
 cnquery/dist/goreleaser/edge:
-	goreleaser release --rm-dist --skip-publish --skip-validate	-f .goreleaser.yml --timeout 120m --snapshot
+	goreleaser release --clean --skip-publish --skip-validate	-f .goreleaser.yml --timeout 120m --snapshot
 
 shared/generate:
 	go generate ./shared/proto/.
