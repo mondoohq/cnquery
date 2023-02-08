@@ -29,4 +29,5 @@ const (
 	RUNTIME_GITLAB               = "gitlab" // api
 	RUNTIME_TERRAFORM            = "terraform"
 	RUNTIME_OKTA                 = "okta"
+	RUNTIME_SLACK                = "slack"
 )

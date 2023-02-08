@@ -71,7 +71,7 @@ func (p *Provider) Kind() providers.Kind {
 }
 
 func (p *Provider) Runtime() string {
-	return ""
+	return providers.RUNTIME_SLACK
 }
 
 func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
