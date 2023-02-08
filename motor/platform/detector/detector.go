@@ -121,9 +121,10 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 		}, nil
 	case *okta.Provider:
 		return &platform.Platform{
-			Name:    "okta",
-			Title:   "Okta API",
+			Name:    "okta-org",
+			Title:   "Okta Organization",
 			Kind:    providers.Kind_KIND_API,
+			Family:  []string{"okta"},
 			Runtime: pt.Runtime(), // TODO
 		}, nil
 	case *slack.Provider:
