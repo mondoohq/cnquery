@@ -1,46 +1,107 @@
 option go_package = "go.mondoo.com/cnquery/resources/packs/azure"
 
-alias azurerm = azure
-alias azurerm.resource = azure.resource
-alias azurerm.compute = azure.compute
-alias azurerm.compute.vm = azure.compute.vm
-alias azurerm.compute.disk = azure.compute.disk
-alias azurerm.network  = azure.network
-alias azurerm.network.interface = azure.network.interface
-alias azurerm.network.securitygroup = azure.network.securitygroup
-alias azurerm.network.securityrule = azure.network.securityrule
-alias azurerm.network.watcher = azure.network.watcher
-alias azurerm.storage = azure.storage
-alias azurerm.storage.account = azure.storage.account
-alias azurerm.storage.container = azure.storage.container
-alias azurerm.web = azure.web
-alias azurerm.web.appsite = azure.web.appsite
-alias azurerm.web.appsiteauthsettings = azure.web.appsiteauthsettings
-alias azurerm.web.appsiteconfig = azure.web.appsiteconfig
-alias azurerm.sql = azure.sql
-alias azurerm.sql.server = azure.sql.server
-alias azurerm.sql.server.administrator = azure.sql.server.administrator
-alias azurerm.sql.database = azure.sql.database
-alias azurerm.sql.databaseusage = azure.sql.databaseusage
-alias azurerm.postgresql = azure.postgresql
-alias azurerm.postgresql.server = azure.postgresql.server
-alias azurerm.postgresql.database = azure.postgresql.database
-alias azurerm.mysql = azure.mysql
-alias azurerm.mysql.server = azure.mysql.server
-alias azurerm.mysql.database = azure.mysql.database
-alias azurerm.mariadb = azure.mariadb
-alias azurerm.mariadb.server = azure.mariadb.server
-alias azurerm.mariadb.database = azure.mariadb.database
-alias azurerm.sql.configuration = azure.sql.configuration 
-alias azurerm.sql.firewallrule = azure.sql.firewallrule
-alias azurerm.keyvault = azure.keyvault
-alias azurerm.keyvault.vault = azure.keyvault.vault
-alias azurerm.keyvault.key = azure.keyvault.key
-alias azurerm.keyvault.certificate = azure.keyvault.certificate
-alias azurerm.keyvault.secret = azure.keyvault.secret
-alias azurerm.monitor = azure.monitor
-alias azurerm.monitor.logprofile = azure.monitor.logprofile 
-alias azurerm.monitor.diagnosticsetting = azure.monitor.diagnosticsetting
+alias azurerm = azure.subscription
+alias azurerm.resource = azure.subscription.resource
+alias azurerm.compute = azure.subscription.computeService
+alias azurerm.compute.vm = azure.subscription.computeService.vm
+alias azurerm.compute.disk = azure.subscription.computeService.disk
+alias azurerm.network  = azure.subscription.networkService
+alias azurerm.network.interface = azure.subscription.networkService.interface
+alias azurerm.network.securitygroup = azure.subscription.networkService.securityGroup
+alias azurerm.network.securityrule = azure.subscription.networkService.securityrule
+alias azurerm.network.watcher = azure.subscription.networkService.watcher
+alias azurerm.storage = azure.subscription.storageService
+alias azurerm.storage.account = azure.subscription.storageService.account
+alias azurerm.storage.container = azure.subscription.storageService.account.container
+alias azurerm.web = azure.subscription.webService
+alias azurerm.web.appsite = azure.subscription.webService.appsite
+alias azurerm.web.appsiteauthsettings = azure.subscription.webService.appsiteauthsettings
+alias azurerm.web.appsiteconfig = azure.subscription.webService.appsiteconfig
+alias azurerm.sql = azure.subscription.sqlService
+alias azurerm.sql.server = azure.subscription.sqlService.server
+alias azurerm.sql.server.administrator = azure.subscription.sqlService.server.administrator
+alias azurerm.sql.database = azure.subscription.sqlService.database
+alias azurerm.sql.databaseusage = azure.subscription.sqlService.databaseusage
+alias azurerm.postgresql = azure.subscription.postgresqlService
+alias azurerm.postgresql.server = azure.subscription.postgresqlService.server
+alias azurerm.postgresql.database = azure.subscription.postgresqlService.database
+alias azurerm.mysql = azure.subscription.mysqlService
+alias azurerm.mysql.server = azure.subscription.mysqlService.server
+alias azurerm.mysql.database = azure.subscription.mysqlService.database
+alias azurerm.mariadb = azure.subscription.mariadbService
+alias azurerm.mariadb.server = azure.subscription.mariadbService.server
+alias azurerm.mariadb.database = azure.subscription.mariadbService.database
+alias azurerm.sql.configuration = azure.subscription.sqlService.configuration 
+alias azurerm.sql.firewallrule = azure.subscription.sqlService.firewallrule
+alias azurerm.keyvault = azure.subscription.keyvaultService
+alias azurerm.keyvault.vault = azure.subscription.keyvaultService.vault
+alias azurerm.keyvault.key = azure.subscription.keyvaultService.key
+alias azurerm.keyvault.certificate = azure.subscription.keyvaultService.certificate
+alias azurerm.keyvault.secret = azure.subscription.keyvaultService.secret
+alias azurerm.monitor = azure.subscription.monitorService
+alias azurerm.monitor.logprofile = azure.subscription.monitorService.logprofile 
+alias azurerm.monitor.diagnosticsetting = azure.subscription.monitorService.diagnosticsetting
+
+alias azure = azure.subscription
+alias azure.authorization = azure.subscription.authorizationService
+alias azure.authorization.roleDefinition = azure.subscription.authorizationService.roleDefinition
+alias azure.authorization.roleDefinition.permission = azure.subscription.authorizationService.roleDefinition.permission
+alias azure.cloudDefender = azure.subscription.cloudDefenderService
+alias azure.cloudDefender.securityContact = azure.subscription.cloudDefenderService.securityContact
+alias azure.compute = azure.subscription.computeService
+alias azure.compute.disk = azure.subscription.computeService.disk
+alias azure.compute.vm = azure.subscription.computeService.vm
+alias azure.keyvault = azure.subscription.keyvaultService
+alias azure.keyvault.certificate = azure.subscription.keyvaultService.certificate
+alias azure.keyvault.key = azure.subscription.keyvaultService.key
+alias azure.keyvault.secret = azure.subscription.keyvaultService.secret
+alias azure.keyvault.vault = azure.subscription.keyvaultService.vault
+alias azure.mariadb = azure.subscription.mariadbService
+alias azure.mariadb.database = azure.subscription.mariadbService.database
+alias azure.mariadb.server = azure.subscription.mariadbService.server
+alias azure.monitor = azure.subscription.monitorService
+alias azure.monitor.activitylog = azure.subscription.monitorService.activitylog
+alias azure.monitor.activitylog.alert = azure.subscription.monitorService.activitylog.alert
+alias azure.monitor.diagnosticsetting = azure.subscription.monitorService.diagnosticsetting
+alias azure.monitor.logprofile = azure.subscription.monitorService.logprofile
+alias azure.mysql = azure.subscription.mysqlService
+alias azure.mysql.database = azure.subscription.mysqlService.database
+alias azure.mysql.flexibleServer = azure.subscription.mysqlService.flexibleServer
+alias azure.mysql.server = azure.subscription.mysqlService.server
+alias azure.network = azure.subscription.networkService
+alias azure.network.interface = azure.subscription.networkService.interface
+alias azure.network.securitygroup = azure.subscription.networkService.securityGroup
+alias azure.network.securityrule = azure.subscription.networkService.securityrule
+alias azure.network.watcher = azure.subscription.networkService.watcher
+alias azure.network.watcher.flowlog = azure.subscription.networkService.watcher.flowlog
+alias azure.postgresql = azure.subscription.postgresqlService
+alias azure.postgresql.database = azure.subscription.postgresqlService.database
+alias azure.postgresql.server = azure.subscription.postgresqlService.server
+alias azure.resource = azure.subscription.resource
+alias azure.resourcegroup = azure.subscription.resourcegroup
+alias azure.sql = azure.subscription.sqlService
+alias azure.sql.configuration = azure.subscription.sqlService.configuration
+alias azure.sql.database = azure.subscription.sqlService.database
+alias azure.sql.databaseusage = azure.subscription.sqlService.databaseusage
+alias azure.sql.firewallrule = azure.subscription.sqlService.firewallrule
+alias azure.sql.server = azure.subscription.sqlService.server
+alias azure.sql.server.administrator = azure.subscription.sqlService.server.administrator
+alias azure.sql.server.vulnerabilityassessmentsettings = azure.subscription.sqlService.server.vulnerabilityassessmentsettings
+alias azure.storage = azure.subscription.storageService
+alias azure.storage.account = azure.subscription.storageService.account
+alias azure.storage.account.blobService.properties = azure.subscription.storageService.account.blobService.properties
+alias azure.storage.account.dataProtection = azure.subscription.storageService.account.dataProtection
+alias azure.storage.account.queueService.properties = azure.subscription.storageService.account.queueService.properties
+alias azure.storage.account.service.properties.logging = azure.subscription.storageService.account.service.properties.logging
+alias azure.storage.account.service.properties.metrics = azure.subscription.storageService.account.service.properties.metrics
+alias azure.storage.account.service.properties.retentionPolicy = azure.subscription.storageService.account.service.properties.retentionPolicy
+alias azure.storage.account.tableService.properties = azure.subscription.storageService.account.tableService.properties
+alias azure.storage.account.tableService.properties = azure.subscription.storageService.account.tableService.properties
+alias azure.storage.container = azure.subscription.storageService.account.container
+alias azure.web = azure.subscription.webService
+alias azure.web.appsite = azure.subscription.webService.appsite
+alias azure.web.appsiteauthsettings = azure.subscription.webService.appsiteauthsettings
+alias azure.web.appsiteconfig = azure.subscription.webService.appsiteconfig
 
 // Azure Active Directory (deprecated, use microsoft resource pack instead)
 azuread {
@@ -130,16 +191,59 @@ private azuread.serviceprincipal @defaults("id") {
   id string
 }
 
-// Azure Resources
-azure {
+
+// Azure Subscription
+azure.subscription @defaults ("name") {
+  // Full resource identifier of the subscription
+  id() string
+  // Name of the subscription
+  name() string
+  // Subscription identifier
+  subscriptionId() string
+  // Subscription tenant identifier
+  tenantId() string
+  // List of tenants that manage the subscription
+  managedByTenants() []string
+  // Subscription tags
+  tags() map[string]string
+  // Subscription state
+  state() string
+  // Subscription authorization source
+  authorizationSource() string
+  // Subscription policies
+  subscriptionsPolicies() dict
+  // Get resource groups inside the subscription
+  resourceGroups() []azure.subscription.resourcegroup
+  // Get compute resources inside the subscription
+  compute() azure.subscription.computeService
+  // Get network resources inside the subscription
+  network() azure.subscription.networkService
+  // Get storage resources inside the subscription
+  storage() azure.subscription.storageService
+  // Get web resources inside the subscription
+  web() azure.subscription.webService
+  // Get SQL resources inside the subscription
+  sql() azure.subscription.sqlService
+  // Get MySQL resources inside the subscription
+  mySql() azure.subscription.mysqlService
+  // Get PostgreSQL resources inside the subscription
+  postgreSql() azure.subscription.postgresqlService
+  // Get MariaDB resources inside the subscription
+  mariaDb() azure.subscription.mariadbService
+  // Get key vault resources inside the subscription
+  keyVault() azure.subscription.keyvaultService
+  // Get authorization resources inside the subscription
+  authorization() azure.subscription.authorizationService
+  // Get monitor resources inside the subscription
+  monitor() azure.subscription.monitorService
+  // Get cloud defender resources inside the subscription
+  cloudDefender() azure.subscription.cloudDefenderService
   // Get all the resources in a subscription
-  resources() []azure.resource
-  // Get all the resource groups in a subscription
-  resourceGroups() []azure.resourcegroup
+  resources() []azure.subscription.resource
 }
 
 // Azure Resource
-private azure.resource @defaults("id name location") {
+private azure.subscription.resource @defaults("id name location") {
   // Resource ID
   id string
   // Resource name
@@ -169,7 +273,7 @@ private azure.resource @defaults("id name location") {
 }
 
 // Azure Resource Group
-private azure.resourcegroup @defaults("name location") {
+private azure.subscription.resourcegroup @defaults("name location") {
   // Resource Group ID
   id string
   // Resource Group name
@@ -187,15 +291,17 @@ private azure.resourcegroup @defaults("name location") {
 }
 
 // Azure Compute
-azure.compute {
+private azure.subscription.computeService {
+  // The subscription identifier
+  subscriptionId string
   // Lists all compute instances
-  vms() []azure.compute.vm
+  vms() []azure.subscription.computeService.vm
   // Lists all the disks under a subscription
-  disks() []azure.compute.disk
+  disks() []azure.subscription.computeService.disk
 }
 
 // Azure Compute Virtual Machine
-private azure.compute.vm @defaults("id name location ") {
+private azure.subscription.computeService.vm @defaults("id name location ") {
   // VM ID
   id string
   // VM name
@@ -211,13 +317,13 @@ private azure.compute.vm @defaults("id name location ") {
   // VM extension
   extensions() []dict
   // VM compute disk
-  osDisk() azure.compute.disk
+  osDisk() azure.subscription.computeService.disk
   // VM compute data disk
-  dataDisks() []azure.compute.disk
+  dataDisks() []azure.subscription.computeService.disk
 }
 
 // Azure Disk Resource
-private azure.compute.disk @defaults("id name location") {
+private azure.subscription.computeService.disk @defaults("id name location") {
   // Disk resource id
   id string
   // Disk resource name
@@ -241,17 +347,19 @@ private azure.compute.disk @defaults("id name location") {
 }
 
 // Azure Network
-azure.network {
+private azure.subscription.networkService {
+  // The subscription identifier
+  subscriptionId string
   // List of network interfaces
-  interfaces() []azure.network.interface
+  interfaces() []azure.subscription.networkService.interface
   // List of network security groups
-  securityGroups() []azure.network.securitygroup
+  securityGroups() []azure.subscription.networkService.securityGroup
   // List of network watchers
-  watchers() []azure.network.watcher
+  watchers() []azure.subscription.networkService.watcher
 }
 
 // Azure Network Interface
-private azure.network.interface @defaults("id name location") {
+private azure.subscription.networkService.interface @defaults("id name location") {
   // Network interface ID
   id string
   // Network interface name
@@ -267,11 +375,11 @@ private azure.network.interface @defaults("id name location") {
   // Network interface properties
   properties dict
   // Network interface compute vm
-  vm() azure.compute.vm
+  vm() azure.subscription.computeService.vm
 }
 
 // Azure Network Security Group
-private azure.network.securitygroup @defaults("id name location") {
+private azure.subscription.networkService.securityGroup @defaults("id name location") {
   // Security group ID
   id string
   // Security group name
@@ -287,15 +395,15 @@ private azure.network.securitygroup @defaults("id name location") {
   // Security group properties
   properties dict
   // Security group interfaces
-  interfaces []azure.network.interface
+  interfaces []azure.subscription.networkService.interface
   // Security group rules
-  securityRules []azure.network.securityrule
+  securityRules []azure.subscription.networkService.securityrule
   // Security group default security rules
-  defaultSecurityRules []azure.network.securityrule
+  defaultSecurityRules []azure.subscription.networkService.securityrule
 }
 
 // Azure Network Security Rule
-private azure.network.securityrule @defaults("id name") {
+private azure.subscription.networkService.securityrule @defaults("id name") {
   // Security rule ID
   id string
   // Security rule name
@@ -309,7 +417,7 @@ private azure.network.securityrule @defaults("id name") {
 }
 
 // Azure Network Watcher
-private azure.network.watcher @defaults("name location") {
+private azure.subscription.networkService.watcher @defaults("name location") {
   // Network watcher ID
   id string
   // Network watcher name
@@ -325,13 +433,13 @@ private azure.network.watcher @defaults("name location") {
   // Network watcher properties
   properties dict
   // Network watcher flow logs
-  flowLogs() []azure.network.watcher.flowlog
+  flowLogs() []azure.subscription.networkService.watcher.flowlog
   // Network watcher provisioning state
   provisioningState string
 }
 
 // Azure Network Watcher Flow Log
-private azure.network.watcher.flowlog @defaults("name location") {
+private azure.subscription.networkService.watcher.flowlog @defaults("name location") {
   // Network watcher flow log ID
   id string
   // Network watcher flow log name
@@ -365,13 +473,15 @@ private azure.network.watcher.flowlog @defaults("name location") {
 }
 
 // Azure Storage
-azure.storage {
+private azure.subscription.storageService {
+  // The subscription identifier
+  subscriptionId string
   // List of storage accounts
-  accounts() []azure.storage.account
+  accounts() []azure.subscription.storageService.account
 }
 
 // Azure Storage Account
-private azure.storage.account @defaults("id name location") {
+private azure.subscription.storageService.account @defaults("id name location") {
   // Storage account ID
   id string
   // Storage account name
@@ -391,19 +501,19 @@ private azure.storage.account @defaults("id name location") {
   // Storage account kind
   kind string
   // Storage account containers
-  containers() []azure.storage.container
+  containers() []azure.subscription.storageService.account.container
   // Storage account queue properties
-  queueProperties() azure.storage.account.queueService.properties
+  queueProperties() azure.subscription.storageService.account.queueService.properties
   // Storage account table properties
-  tableProperties() azure.storage.account.tableService.properties
+  tableProperties() azure.subscription.storageService.account.tableService.properties
   // Storage account blob properties
-  blobProperties() azure.storage.account.blobService.properties
+  blobProperties() azure.subscription.storageService.account.blobService.properties
   // Storage account data protection
-  dataProtection() azure.storage.account.dataProtection
+  dataProtection() azure.subscription.storageService.account.dataProtection
 }
 
 // Azure Storage Account Data Protection
-private azure.storage.account.dataProtection {
+private azure.subscription.storageService.account.dataProtection {
   // ID of the storage account
   storageAccountId string
   // Whether soft deletion of blobs is enabled
@@ -417,49 +527,49 @@ private azure.storage.account.dataProtection {
 }
 
 // Azure Storage Account Blob Service Properties
-private azure.storage.account.blobService.properties {
+private azure.subscription.storageService.account.blobService.properties {
   // ID of the service
   id string
   // Hourly metrics properties
-  hourMetrics azure.storage.account.service.properties.metrics
+  hourMetrics azure.subscription.storageService.account.service.properties.metrics
   // Minute metrics properties
-  minuteMetrics azure.storage.account.service.properties.metrics
+  minuteMetrics azure.subscription.storageService.account.service.properties.metrics
   // Logging properties
-  logging azure.storage.account.service.properties.logging
+  logging azure.subscription.storageService.account.service.properties.logging
 }
 
 // Azure Storage Account Queue Service Properties
-private azure.storage.account.queueService.properties {
+private azure.subscription.storageService.account.queueService.properties {
   // ID of the service
   id string
   // Hourly metrics properties
-  hourMetrics azure.storage.account.service.properties.metrics
+  hourMetrics azure.subscription.storageService.account.service.properties.metrics
   // Minute metrics properties
-  minuteMetrics azure.storage.account.service.properties.metrics
+  minuteMetrics azure.subscription.storageService.account.service.properties.metrics
   // Logging properties
-  logging azure.storage.account.service.properties.logging
+  logging azure.subscription.storageService.account.service.properties.logging
 }
 
 // Azure Storage Account Table Service Properties
-private azure.storage.account.tableService.properties {
+private azure.subscription.storageService.account.tableService.properties {
   // ID of the service
   id string
   // Hourly metrics properties
-  hourMetrics azure.storage.account.service.properties.metrics
+  hourMetrics azure.subscription.storageService.account.service.properties.metrics
   // Minute metrics properties
-  minuteMetrics azure.storage.account.service.properties.metrics
+  minuteMetrics azure.subscription.storageService.account.service.properties.metrics
   // Logging properties
-  logging azure.storage.account.service.properties.logging
+  logging azure.subscription.storageService.account.service.properties.logging
 }
 
 // Azure Storage Account Service Properties Metrics 
-private azure.storage.account.service.properties.metrics {
+private azure.subscription.storageService.account.service.properties.metrics {
   // ID of the metrics
   id string
   // Whether metrics generate summary statistics for called API operations
   includeAPIs bool
   // Retention policy for the metrics
-  retentionPolicy azure.storage.account.service.properties.retentionPolicy
+  retentionPolicy azure.subscription.storageService.account.service.properties.retentionPolicy
   // Whether the metrics are enabled
   enabled bool
   // Version of the metrics
@@ -467,7 +577,7 @@ private azure.storage.account.service.properties.metrics {
 }
 
 // Azure Storage Account Service Properties Retention Policy
-private azure.storage.account.service.properties.retentionPolicy {
+private azure.subscription.storageService.account.service.properties.retentionPolicy {
   // ID of the retention policy
   id string
   // Number of days that metrics or logging data is retained
@@ -477,7 +587,7 @@ private azure.storage.account.service.properties.retentionPolicy {
 }
 
 // Azure Storage Account Service Properties Logging
-private azure.storage.account.service.properties.logging {
+private azure.subscription.storageService.account.service.properties.logging {
   // ID of the logging configuration
   id string
   // Whether delete requests are being logged
@@ -489,11 +599,11 @@ private azure.storage.account.service.properties.logging {
   // Logging version
   version string
   // Retention policy for the logging metrics
-  retentionPolicy azure.storage.account.service.properties.retentionPolicy
+  retentionPolicy azure.subscription.storageService.account.service.properties.retentionPolicy
 }
 
 // Azure Storage Container
-private azure.storage.container @defaults("id name") {
+private azure.subscription.storageService.account.container @defaults("id name") {
   // Storage container ID
   id string
   // Storage container name
@@ -507,15 +617,17 @@ private azure.storage.container @defaults("id name") {
 }
 
 // Azure Web
-azure.web {
+private azure.subscription.webService {
+  // The subscription identifier
+  subscriptionId string
   // List of web apps
-  apps() []azure.web.appsite
+  apps() []azure.subscription.webService.appsite
   // Available runtimes 
   availableRuntimes() []dict
 }
 
 // Azure Web App Site
-private azure.web.appsite @defaults("id name location") {
+private azure.subscription.webService.appsite @defaults("id name location") {
   // Appsite ID
   id string
   // Appsite name
@@ -533,9 +645,9 @@ private azure.web.appsite @defaults("id name location") {
   // Appsite identity
   identity dict
   // Appsite configuration
-  configuration() azure.web.appsiteconfig
+  configuration() azure.subscription.webService.appsiteconfig
   // Appsite authentication settings
-  authenticationSettings() azure.web.appsiteauthsettings
+  authenticationSettings() azure.subscription.webService.appsiteauthsettings
   // Appsite metadata
   metadata() dict
   // Appsite application settings
@@ -547,7 +659,7 @@ private azure.web.appsite @defaults("id name location") {
 }
 
 // Azure AppSite Authentication Settings
-private azure.web.appsiteauthsettings @defaults("id name") {
+private azure.subscription.webService.appsiteauthsettings @defaults("id name") {
   // Auth settings ID
   id string
   // Auth settings name
@@ -561,7 +673,7 @@ private azure.web.appsiteauthsettings @defaults("id name") {
 }
 
 // Azure AppSite Config
-private azure.web.appsiteconfig @defaults("id name") {
+private azure.subscription.webService.appsiteconfig @defaults("id name") {
   // Appsite config ID
   id string
   // Appsite config name 
@@ -575,13 +687,15 @@ private azure.web.appsiteconfig @defaults("id name") {
 }
 
 // Azure SQL
-azure.sql {
+private azure.subscription.sqlService {
+  // The subscription identifier
+  subscriptionId string
   // List of SQL servers
-  servers() []azure.sql.server
+  servers() []azure.subscription.sqlService.server
 }
 
 // Azure SQL Server
-private azure.sql.server @defaults("name location") {
+private azure.subscription.sqlService.server @defaults("name location") {
   // SQL server ID
   id string
   // SQL server name
@@ -595,11 +709,11 @@ private azure.sql.server @defaults("name location") {
   // SQL server properties
   properties dict
   // SQL server databases
-  databases() []azure.sql.database
+  databases() []azure.subscription.sqlService.database
   // SQL server firewall rules
-  firewallRules() []azure.sql.firewallrule
+  firewallRules() []azure.subscription.sqlService.firewallrule
   // SQL server AD administrators
-  azureAdAdministrators() []azure.sql.server.administrator
+  azureAdAdministrators() []azure.subscription.sqlService.server.administrator
   // SQL server connection policy
   connectionPolicy() dict
   // SQL server auditing policy
@@ -611,11 +725,11 @@ private azure.sql.server @defaults("name location") {
   // SQL server threat detection policy
   threatDetectionPolicy() dict
   // SQL server vulnerability assessment settings
-  vulnerabilityAssessmentSettings() azure.sql.server.vulnerabilityassessmentsettings
+  vulnerabilityAssessmentSettings() azure.subscription.sqlService.server.vulnerabilityassessmentsettings
 }
 
 // Azure SQL Server Vulnerability Assessment Settings
-private azure.sql.server.vulnerabilityassessmentsettings {
+private azure.subscription.sqlService.server.vulnerabilityassessmentsettings {
   // ID of the vulnerability assessment
   id string
   // Name of the vulnerability assessment
@@ -635,8 +749,9 @@ private azure.sql.server.vulnerabilityassessmentsettings {
   // Whether the schedule scan notification is also sent to the subscription administrators
   mailSubscriptionAdmins bool
 }
+
 // Azure SQL Server Administrator
-private azure.sql.server.administrator @defaults("id name") {
+private azure.subscription.sqlService.server.administrator @defaults("id name") {
   // SQL administrator ID
   id string
   // SQL administrator name
@@ -654,7 +769,7 @@ private azure.sql.server.administrator @defaults("id name") {
 }
 
 // Azure SQL Server Database
-private azure.sql.database @defaults("id name") {
+private azure.subscription.sqlService.database @defaults("id name") {
   // SQL database ID
   id string
   // SQL database name
@@ -722,11 +837,11 @@ private azure.sql.database @defaults("id name") {
   // SQL database auditing policy
   auditingPolicy() dict
   // SQL database usage
-  usage() []azure.sql.databaseusage
+  usage() []azure.subscription.sqlService.databaseusage
 }
 
 // Azure SQL Database Usage
-private azure.sql.databaseusage @defaults("id name") {
+private azure.subscription.sqlService.databaseusage @defaults("id name") {
   // Database usage ID
   id string
   // Database usage name
@@ -746,13 +861,15 @@ private azure.sql.databaseusage @defaults("id name") {
 }
 
 // Azure Database for PostgreSQL
-azure.postgresql {
-   // List of PostgreSQL servers
-   servers() []azure.postgresql.server
+private  azure.subscription.postgresqlService {
+  // The subscription identifier
+  subscriptionId string
+  // List of PostgreSQL servers
+  servers() []azure.subscription.postgresqlService.server
 }
 
 // Azure Database for PostgreSQL Server
-private azure.postgresql.server  @defaults("id name location") {
+private azure.subscription.postgresqlService.server  @defaults("id name location") {
   // PostgreSQL server ID
   id string
   // PostgreSQL server name
@@ -766,15 +883,15 @@ private azure.postgresql.server  @defaults("id name location") {
   // PostgreSQL server properties
   properties dict
   // PostgreSQL server configuration
-  configuration() []azure.sql.configuration
+  configuration() []azure.subscription.sqlService.configuration
   // PostgreSQL server databases
-  databases() []azure.postgresql.database
+  databases() []azure.subscription.postgresqlService.database
   // PostgreSQL server firewall rules
-  firewallRules() []azure.sql.firewallrule
+  firewallRules() []azure.subscription.sqlService.firewallrule
 }
 
 // Azure Database for PostgreSQL Database
-private azure.postgresql.database  @defaults("id name") {
+private azure.subscription.postgresqlService.database  @defaults("id name") {
   // PostgreSQL database ID
   id string
   // PostgreSQL database name
@@ -788,15 +905,17 @@ private azure.postgresql.database  @defaults("id name") {
 }
 
 // Azure Database for MySQL
-azure.mysql {
+private azure.subscription.mysqlService {
+  // The subscription identifier
+  subscriptionId string
   // List of MySQL servers
-  servers() []azure.mysql.server
+  servers() []azure.subscription.mysqlService.server
   // List of Flexible MySQL servers
-  flexibleServers() []azure.mysql.flexibleServer
+  flexibleServers() []azure.subscription.mysqlService.flexibleServer
 }
 
 // Azure Database for MySQL Server
-private azure.mysql.server @defaults("id name location") {
+private azure.subscription.mysqlService.server @defaults("id name location") {
   // MySQL server ID
   id string
   // MySQL server name
@@ -810,15 +929,15 @@ private azure.mysql.server @defaults("id name location") {
   // MySQL server properties
   properties dict
   // MySQL server configuration
-  configuration() []azure.sql.configuration
+  configuration() []azure.subscription.sqlService.configuration
   // MySQL server databases
-  databases() []azure.mysql.database
+  databases() []azure.subscription.mysqlService.database
   // MySQL server firewall rules
-  firewallRules() []azure.sql.firewallrule
+  firewallRules() []azure.subscription.sqlService.firewallrule
 }
 
 // Azure Database for MySQL Database
-private azure.mysql.database @defaults("id name") {
+private azure.subscription.mysqlService.database @defaults("id name") {
   // MySQL database ID
   id string
   // MySQL database name
@@ -832,7 +951,7 @@ private azure.mysql.database @defaults("id name") {
 }
 
 // Azure Database for MySQL Flexible Server
-private azure.mysql.flexibleServer @defaults("id name location") {
+private azure.subscription.mysqlService.flexibleServer @defaults("id name location") {
   // MySQL flexible server ID
   id string
   // MySQL flexible server name
@@ -846,21 +965,23 @@ private azure.mysql.flexibleServer @defaults("id name location") {
   // MySQL flexible server properties
   properties dict
   // MySQL flexible server configuration
-  configuration() []azure.sql.configuration
+  configuration() []azure.subscription.sqlService.configuration
   // MySQL flexible server databases
-  databases() []azure.mysql.database
+  databases() []azure.subscription.mysqlService.database
   // MySQL flexible server firewall rules
-  firewallRules() []azure.sql.firewallrule
+  firewallRules() []azure.subscription.sqlService.firewallrule
 }
 
 // Azure Database for MariaDB
-azure.mariadb {
+private azure.subscription.mariadbService {
+  // The subscription identifier
+  subscriptionId string
   // List of MariaDB servers
-  servers() []azure.mariadb.server
+  servers() []azure.subscription.mariadbService.server
 }
 
 // Azure Database for MariaDB Server
-private azure.mariadb.server  @defaults("id name location") {
+private azure.subscription.mariadbService.server  @defaults("id name location") {
   // MariaDB server ID
   id string
   // MariaDB server name
@@ -874,15 +995,15 @@ private azure.mariadb.server  @defaults("id name location") {
   // MariaDB server properties
   properties dict
   // MariaDB server configuration
-  configuration() []azure.sql.configuration
+  configuration() []azure.subscription.sqlService.configuration
   // MariaDB server databases
-  databases() []azure.mariadb.database
+  databases() []azure.subscription.mariadbService.database
   // MariaDB server firewall rules
-  firewallRules() []azure.sql.firewallrule
+  firewallRules() []azure.subscription.sqlService.firewallrule
 }
 
 // Azure Database for MariaDB Database
-private azure.mariadb.database  @defaults("id name") {
+private azure.subscription.mariadbService.database  @defaults("id name") {
   // MariaDB database ID
   id string
   // MariaDB database name
@@ -896,7 +1017,7 @@ private azure.mariadb.database  @defaults("id name") {
 }
 
 // Azure SQL Configuration
-private azure.sql.configuration  @defaults("id name") {
+private azure.subscription.sqlService.configuration  @defaults("id name") {
   // SQL configuration ID
   id string
   // SQL configuration name
@@ -918,7 +1039,7 @@ private azure.sql.configuration  @defaults("id name") {
 }
 
 // Azure SQL Firewall Rule
-private azure.sql.firewallrule  @defaults("id name") {
+private azure.subscription.sqlService.firewallrule  @defaults("id name") {
   // SQL firewall rule ID
   id string
   // SQL firewall rule name
@@ -932,13 +1053,15 @@ private azure.sql.firewallrule  @defaults("id name") {
 }
 
 // Azure Key Vault
-azure.keyvault {
+private azure.subscription.keyvaultService {
+  // The subscription identifier
+  subscriptionId string
   // List of Azure key vaults
-  vaults() []azure.keyvault.vault
+  vaults() []azure.subscription.keyvaultService.vault
 }
 
 // Azure Key Vault Vault
-private azure.keyvault.vault  @defaults("id vaultName location") {
+private azure.subscription.keyvaultService.vault  @defaults("id vaultName location") {
   // Key Vault ID
   id string
   // Key Vault name
@@ -954,17 +1077,17 @@ private azure.keyvault.vault  @defaults("id vaultName location") {
   // Key Vault properties 
   properties() dict
   // Key Vault keys 
-  keys() []azure.keyvault.key
+  keys() []azure.subscription.keyvaultService.key
   // Key Vault certificates 
-  certificates() []azure.keyvault.certificate
+  certificates() []azure.subscription.keyvaultService.certificate
   // Key Vault secrets 
-  secrets() []azure.keyvault.secret
+  secrets() []azure.subscription.keyvaultService.secret
   // Key Vault diagnostic settings 
-  diagnosticSettings() []azure.monitor.diagnosticsetting
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
 }
 
 // Azure Key Vault Key
-private azure.keyvault.key  @defaults("kid keyName") {
+private azure.subscription.keyvaultService.key  @defaults("kid keyName") {
   // Key ID
   kid string
   // Key tags
@@ -988,11 +1111,11 @@ private azure.keyvault.key  @defaults("kid keyName") {
   // Key version
   version() string
   // List of key versions
-  versions() []azure.keyvault.key
+  versions() []azure.subscription.keyvaultService.key
 }
 
 // Azure Key Vault Certificate
-private azure.keyvault.certificate  @defaults("id certName") {
+private azure.subscription.keyvaultService.certificate  @defaults("id certName") {
   // Certificate ID
   id string
   // Certificate tags
@@ -1016,11 +1139,11 @@ private azure.keyvault.certificate  @defaults("id certName") {
   // Certificate version
   version() string
   // List of certificate versions
-  versions() []azure.keyvault.certificate
+  versions() []azure.subscription.keyvaultService.certificate
 }
 
 // Azure Key Vault Secret
-private azure.keyvault.secret  @defaults("id secretName") {
+private azure.subscription.keyvaultService.secret  @defaults("id secretName") {
   // Secret ID
   id string
   // Secret tags
@@ -1044,27 +1167,29 @@ private azure.keyvault.secret  @defaults("id secretName") {
   // Secret version
   version() string
   // List of secret versions
-  versions() []azure.keyvault.secret
+  versions() []azure.subscription.keyvaultService.secret
 }
 
 // Azure Monitor
-azure.monitor {
+private azure.subscription.monitorService {
+  // The subscription identifier
+  subscriptionId string
   // List of log profiles
-  logProfiles() []azure.monitor.logprofile
+  logProfiles() []azure.subscription.monitorService.logprofile
   // List of diagnostic settings for the subscription
-  diagnosticSettings() []azure.monitor.diagnosticsetting
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Activity log for the monitor
-  activityLog() azure.monitor.activitylog
+  activityLog() azure.subscription.monitorService.activitylog
 }
 
 // Azure Monitor Activity Log
-private azure.monitor.activitylog {
+private azure.subscription.monitorService.activitylog {
   // List of activity log alerts
-  alerts() []azure.monitor.activitylog.alert
+  alerts() []azure.subscription.monitorService.activitylog.alert
 }
 
 // Azure Monitor Activity Log Alert
-private azure.monitor.activitylog.alert {
+private azure.subscription.monitorService.activitylog.alert {
   // ID of the activity log alert
   id string
   // Type of the activity log alert
@@ -1086,7 +1211,7 @@ private azure.monitor.activitylog.alert {
 }
 
 // Azure Monitor Log Profile
-private azure.monitor.logprofile  @defaults("id name location") {
+private azure.subscription.monitorService.logprofile  @defaults("id name location") {
   // Log profile ID
   id string
   // Log profile name
@@ -1100,11 +1225,11 @@ private azure.monitor.logprofile  @defaults("id name location") {
   // Log profile properties
   properties dict
   // Log profile storage account
-  storageAccount azure.storage.account
+  storageAccount azure.subscription.storageService.account
 }
 
 // Azure Monitor Diagnostic Setting
-private azure.monitor.diagnosticsetting @defaults("id name") {
+private azure.subscription.monitorService.diagnosticsetting @defaults("id name") {
   // Diagnostic setting ID
   id string
   // Diagnostic setting name
@@ -1114,11 +1239,13 @@ private azure.monitor.diagnosticsetting @defaults("id name") {
   // Diagnostic setting properties
   properties dict
   // Diagnostic setting storage account
-  storageAccount azure.storage.account
+  storageAccount azure.subscription.storageService.account
 }
 
 // Azure Microsoft Cloud Defender
-azure.cloudDefender {
+private azure.subscription.cloudDefenderService {
+  // The subscription identifier
+  subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
   // List of Defender For Server components and whether they are enabled
@@ -1126,11 +1253,11 @@ azure.cloudDefender {
   // List of Defender For Container components and whether they are enabled
   defenderForContainers() dict
   // List of configured security contacts
-  securityContacts() []azure.cloudDefender.securityContact
+  securityContacts() []azure.subscription.cloudDefenderService.securityContact
 }
 
 // Azure Microsoft Cloud Defender Security Contact 
-private azure.cloudDefender.securityContact {
+private azure.subscription.cloudDefenderService.securityContact {
   // ID of the security contact
   id string
   // Name of the security contact
@@ -1144,13 +1271,15 @@ private azure.cloudDefender.securityContact {
 }
 
 // Azure Authorization
-azure.authorization {
+private azure.subscription.authorizationService {
+  // The subscription identifier
+  subscriptionId string
   // Role definitions for the Azure subscription
-  roleDefinitions() []azure.authorization.roleDefinition
+  roleDefinitions() []azure.subscription.authorizationService.roleDefinition
 }
 
 // Azure Role Definition
-azure.authorization.roleDefinition @defaults ("id name scopes") {
+private azure.subscription.authorizationService.roleDefinition @defaults ("id name scopes") {
   // ID of the role definition
   id string
   // Description of the role definition
@@ -1162,11 +1291,11 @@ azure.authorization.roleDefinition @defaults ("id name scopes") {
   // Scopes for which the role definition applies
   scopes []string
   // Permissions that are attached to the role definition
-  permissions []azure.authorization.roleDefinition.permission
+  permissions []azure.subscription.authorizationService.roleDefinition.permission
 }
 
 // Azure Role Definition Permission
-private azure.authorization.roleDefinition.permission @defaults ("allowedActions deniedActions") {
+private azure.subscription.authorizationService.roleDefinition.permission @defaults ("allowedActions deniedActions") {
   // ID of the permission
   id string
   // List of allowed actions that are attached to the permission

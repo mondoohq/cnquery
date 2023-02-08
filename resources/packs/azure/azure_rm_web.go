@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,14 +13,34 @@ import (
 	web "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice"
 	"github.com/rs/zerolog/log"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureWeb) id() (string, error) {
-	return "azure.web", nil
+func (a *mqlAzureSubscriptionWebService) init(args *resources.Args) (*resources.Args, AzureSubscriptionWebService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
 }
 
-func (a *mqlAzureWeb) GetApps() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/webService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionWebService) GetApps() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -53,7 +74,7 @@ func (a *mqlAzureWeb) GetApps() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.web.appsite",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.webService.appsite",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"location", core.ToString(entry.Location),
@@ -104,7 +125,7 @@ func isPlatformEol(platform string, version string) bool {
 }
 
 // all runtimes that are returned here are not EOL and are supported
-func (a *mqlAzureWeb) GetAvailableRuntimes() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionWebService) GetAvailableRuntimes() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -232,11 +253,11 @@ func (a *mqlAzureWeb) GetAvailableRuntimes() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureWebAppsite) id() (string, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureWebAppsite) GetConfiguration() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) GetConfiguration() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -280,7 +301,7 @@ func (a *mqlAzureWebAppsite) GetConfiguration() (interface{}, error) {
 		return nil, err
 	}
 
-	return a.MotorRuntime.CreateResource("azure.web.appsiteconfig",
+	return a.MotorRuntime.CreateResource("azure.subscription.webService.appsiteconfig",
 		"id", core.ToString(entry.ID),
 		"name", core.ToString(entry.Name),
 		"kind", core.ToString(entry.Kind),
@@ -289,7 +310,7 @@ func (a *mqlAzureWebAppsite) GetConfiguration() (interface{}, error) {
 	)
 }
 
-func (a *mqlAzureWebAppsite) GetAuthenticationSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) GetAuthenticationSettings() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -333,7 +354,7 @@ func (a *mqlAzureWebAppsite) GetAuthenticationSettings() (interface{}, error) {
 		return nil, err
 	}
 
-	return a.MotorRuntime.CreateResource("azure.web.appsiteauthsettings",
+	return a.MotorRuntime.CreateResource("azure.subscription.webService.appsiteauthsettings",
 		"id", core.ToString(entry.ID),
 		"name", core.ToString(entry.Name),
 		"kind", core.ToString(entry.Kind),
@@ -342,7 +363,7 @@ func (a *mqlAzureWebAppsite) GetAuthenticationSettings() (interface{}, error) {
 	)
 }
 
-func (a *mqlAzureWebAppsite) GetApplicationSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) GetApplicationSettings() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -389,7 +410,7 @@ func (a *mqlAzureWebAppsite) GetApplicationSettings() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureWebAppsite) GetMetadata() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) GetMetadata() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -436,7 +457,7 @@ func (a *mqlAzureWebAppsite) GetMetadata() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureWebAppsite) GetConnectionSettings() (interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) GetConnectionSettings() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -489,7 +510,7 @@ func (a *mqlAzureWebAppsite) GetConnectionSettings() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureWebAppsite) GetStack() (map[string]interface{}, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsite) GetStack() (map[string]interface{}, error) {
 	config, err := a.Configuration()
 	if err != nil {
 		return nil, err
@@ -581,11 +602,11 @@ func (a *mqlAzureWebAppsite) GetStack() (map[string]interface{}, error) {
 	// fetch available runtimes and check if they are included
 	// if they are included, leverage their additional properties
 	// if they are not included they are either eol or custom
-	obj, err := a.MotorRuntime.CreateResource("azure.web")
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.webService")
 	if err != nil {
 		return nil, err
 	}
-	azureWeb := obj.(AzureWeb)
+	azureWeb := obj.(AzureSubscriptionWebService)
 	runtimes, err := azureWeb.AvailableRuntimes()
 	if err != nil {
 		return nil, err
@@ -618,10 +639,10 @@ func (a *mqlAzureWebAppsite) GetStack() (map[string]interface{}, error) {
 	return core.JsonToDict(runtime)
 }
 
-func (a *mqlAzureWebAppsiteconfig) id() (string, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureWebAppsiteauthsettings) id() (string, error) {
+func (a *mqlAzureSubscriptionWebServiceAppsiteauthsettings) id() (string, error) {
 	return a.Id()
 }

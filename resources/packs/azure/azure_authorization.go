@@ -10,12 +10,31 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureAuthorization) id() (string, error) {
-	return "azure.authorization", nil
+func (a *mqlAzureSubscriptionAuthorizationService) init(args *resources.Args) (*resources.Args, AzureSubscriptionAuthorizationService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
+}
+
+func (a *mqlAzureSubscriptionAuthorizationService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/authorizationService", subId), nil
 }
 
 // note: requires Microsoft.Authorization/roleDefinitions/read to read role definitions
-func (a *mqlAzureAuthorization) GetRoleDefinitions() (interface{}, error) {
+func (a *mqlAzureSubscriptionAuthorizationService) GetRoleDefinitions() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -52,7 +71,7 @@ func (a *mqlAzureAuthorization) GetRoleDefinitions() (interface{}, error) {
 			}
 			permissions := []interface{}{}
 			for idx, p := range roleDef.Properties.Permissions {
-				id := fmt.Sprintf("%s/azure.authorization.roleDefinition.permission/%d", *roleDef.ID, idx)
+				id := fmt.Sprintf("%s/azure.subscription.authorization.roleDefinition.permission/%d", *roleDef.ID, idx)
 				permission, err := azureToMqlPermission(a.MotorRuntime, id, p)
 				if err != nil {
 					return nil, err
@@ -62,7 +81,7 @@ func (a *mqlAzureAuthorization) GetRoleDefinitions() (interface{}, error) {
 			if isCustom {
 				isCustom = true
 			}
-			mqlRoleDefinition, err := a.MotorRuntime.CreateResource("azure.authorization.roleDefinition",
+			mqlRoleDefinition, err := a.MotorRuntime.CreateResource("azure.subscription.authorizationService.roleDefinition",
 				"id", core.ToString(roleDef.ID),
 				"name", core.ToString(roleDef.Properties.RoleName),
 				"description", core.ToString(roleDef.Properties.Description),
@@ -106,7 +125,7 @@ func azureToMqlPermission(runtime *resources.Runtime, id string, permission *aut
 		}
 	}
 
-	p, err := runtime.CreateResource("azure.authorization.roleDefinition.permission",
+	p, err := runtime.CreateResource("azure.subscription.authorizationService.roleDefinition.permission",
 		"id", id,
 		"allowedActions", allowedActions,
 		"deniedActions", deniedActions,
@@ -118,10 +137,10 @@ func azureToMqlPermission(runtime *resources.Runtime, id string, permission *aut
 	return p, nil
 }
 
-func (a *mqlAzureAuthorizationRoleDefinition) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinition) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureAuthorizationRoleDefinitionPermission) id() (string, error) {
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleDefinitionPermission) id() (string, error) {
 	return a.Id()
 }

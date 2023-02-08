@@ -2,27 +2,48 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 
 	mariadb "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mariadb/armmariadb"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureMariadb) id() (string, error) {
-	return "azure.mariadb", nil
+func (a *mqlAzureSubscriptionMariadbService) init(args *resources.Args) (*resources.Args, AzureSubscriptionMariadbService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
 }
 
-func (a *mqlAzureMariadbServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMariadbService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/mariaDbService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionMariadbServiceServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMariadbDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionMariadbServiceDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMariadb) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadbService) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -51,7 +72,7 @@ func (a *mqlAzureMariadb) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mariadb.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.mariadbService.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -68,7 +89,7 @@ func (a *mqlAzureMariadb) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMariadbServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadbServiceServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -109,7 +130,7 @@ func (a *mqlAzureMariadbServer) GetConfiguration() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -129,7 +150,7 @@ func (a *mqlAzureMariadbServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMariadbServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadbServiceServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -169,7 +190,7 @@ func (a *mqlAzureMariadbServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mariadb.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.mariadbService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -186,7 +207,7 @@ func (a *mqlAzureMariadbServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMariadbServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMariadbServiceServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -227,7 +248,7 @@ func (a *mqlAzureMariadbServer) GetFirewallRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

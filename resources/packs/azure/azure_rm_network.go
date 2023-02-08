@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -12,11 +13,30 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureNetwork) id() (string, error) {
-	return "azure.network", nil
+func (a *mqlAzureSubscriptionNetworkService) init(args *resources.Args) (*resources.Args, AzureSubscriptionNetworkService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
 }
 
-func (a *mqlAzureNetwork) GetInterfaces() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/networkService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionNetworkService) GetInterfaces() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -60,7 +80,7 @@ func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resou
 		return nil, err
 	}
 
-	return runtime.CreateResource("azure.network.interface",
+	return runtime.CreateResource("azure.subscription.networkService.interface",
 		"id", core.ToString(iface.ID),
 		"name", core.ToString(iface.Name),
 		"location", core.ToString(iface.Location),
@@ -71,7 +91,7 @@ func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resou
 	)
 }
 
-func (a *mqlAzureNetwork) GetSecurityGroups() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) GetSecurityGroups() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -169,7 +189,7 @@ func azureSecGroupToMql(runtime *resources.Runtime, secGroup network.SecurityGro
 		}
 	}
 
-	return runtime.CreateResource("azure.network.securitygroup",
+	return runtime.CreateResource("azure.subscription.networkService.securityGroup",
 		"id", core.ToString(secGroup.ID),
 		"name", core.ToString(secGroup.Name),
 		"location", core.ToString(secGroup.Location),
@@ -201,7 +221,7 @@ func azureSecurityRuleToMql(runtime *resources.Runtime, secRule network.Security
 		}
 	}
 
-	return runtime.CreateResource("azure.network.securityrule",
+	return runtime.CreateResource("azure.subscription.networkService.securityrule",
 		"id", core.ToString(secRule.ID),
 		"name", core.ToString(secRule.Name),
 		"etag", core.ToString(secRule.Etag),
@@ -230,23 +250,23 @@ func parseAzureSecurityRulePortRange(portRange string) []AzureSecurityRulePortRa
 	return res
 }
 
-func (a *mqlAzureNetworkInterface) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceInterface) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureNetworkInterface) GetVm() (interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceInterface) GetVm() (interface{}, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (a *mqlAzureNetworkSecuritygroup) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureNetworkSecurityrule) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceSecurityrule) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureNetwork) GetWatchers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkService) GetWatchers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -275,7 +295,7 @@ func (a *mqlAzureNetwork) GetWatchers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.network.watcher",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.networkService.watcher",
 				"id", core.ToString(watcher.ID),
 				"name", core.ToString(watcher.Name),
 				"location", core.ToString(watcher.Location),
@@ -295,7 +315,7 @@ func (a *mqlAzureNetwork) GetWatchers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcher) GetFlowLogs() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -362,7 +382,7 @@ func (a *mqlAzureNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlFlowLog, err := a.MotorRuntime.CreateResource("azure.network.watcher.flowlog",
+			mqlFlowLog, err := a.MotorRuntime.CreateResource("azure.subscription.networkService.watcher.flowlog",
 				"id", core.ToString(flowLog.ID),
 				"name", core.ToString(flowLog.Name),
 				"location", core.ToString(flowLog.Location),
@@ -389,10 +409,10 @@ func (a *mqlAzureNetworkWatcher) GetFlowLogs() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureNetworkWatcher) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcher) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureNetworkWatcherFlowlog) id() (string, error) {
+func (a *mqlAzureSubscriptionNetworkServiceWatcherFlowlog) id() (string, error) {
 	return a.Id()
 }

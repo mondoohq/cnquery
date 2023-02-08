@@ -3,23 +3,44 @@ package azure
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 
 	postgresql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzurePostgresql) id() (string, error) {
-	return "azure.postgresql", nil
+func (a *mqlAzureSubscriptionPostgresqlService) init(args *resources.Args) (*resources.Args, AzureSubscriptionPostgresqlService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
 }
 
-func (a *mqlAzurePostgresqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgresqlService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/computeService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionPostgresqlServiceDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurePostgresql) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresqlService) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -56,7 +77,7 @@ func (a *mqlAzurePostgresql) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.postgresql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.postgresqlService.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -74,11 +95,11 @@ func (a *mqlAzurePostgresql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurePostgresqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionPostgresqlServiceServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzurePostgresqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresqlServiceServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -120,7 +141,7 @@ func (a *mqlAzurePostgresqlServer) GetConfiguration() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -141,7 +162,7 @@ func (a *mqlAzurePostgresqlServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurePostgresqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresqlServiceServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -181,7 +202,7 @@ func (a *mqlAzurePostgresqlServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.postgresql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.postgresqlService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -198,7 +219,7 @@ func (a *mqlAzurePostgresqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzurePostgresqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionPostgresqlServiceServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -239,7 +260,7 @@ func (a *mqlAzurePostgresqlServer) GetFirewallRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
