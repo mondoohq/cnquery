@@ -837,10 +837,11 @@ func scanOktaCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runF
 
 func scanGoogleWorkspaceCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "googleworkspace",
-		Short: docs.GetShort("googleworkspace"),
-		Long:  docs.GetLong("googleworkspace"),
-		Args:  cobra.ExactArgs(0),
+		Use:     "google-workspace",
+		Aliases: []string{"googleworkspace"},
+		Short:   docs.GetShort("googleworkspace"),
+		Long:    docs.GetLong("googleworkspace"),
+		Args:    cobra.ExactArgs(0),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlag("customer-id", cmd.Flags().Lookup("customer-id"))
 			viper.BindPFlag("impersonated-user-email", cmd.Flags().Lookup("impersonated-user-email"))
