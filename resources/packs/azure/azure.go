@@ -35,3 +35,11 @@ func msGraphTransport(t providers.Instance) (*microsoft_transport.Provider, erro
 	}
 	return at, nil
 }
+
+func azureTagsToInterface(data map[string]*string) map[string]interface{} {
+	labels := make(map[string]interface{})
+	for key := range data {
+		labels[key] = core.ToString(data[key])
+	}
+	return labels
+}

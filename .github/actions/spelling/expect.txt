@@ -3,7 +3,9 @@ activitylog
 Auths
 backupconfiguration
 bigquery
+Brotli
 cavium
+cdn
 certificatechains
 cmek
 CMKs
@@ -20,6 +22,7 @@ GOBIN
 gpu
 gvnic
 hostkeys
+iap
 iex
 ingresstls
 loggingservice
@@ -32,6 +35,7 @@ netfirewallprofile
 netfirewallrule
 nodepool
 Pids
+postgre
 preemptibility
 preemptible
 pushconfig
@@ -44,6 +48,8 @@ spo
 sqlserver
 sshkeys
 sysctls
+TTLs
+UDF
 unarchived
 vdcs
 vmknics
@@ -51,8 +57,3 @@ Vtpm
 vulnerabilityassessmentsettings
 wfascimprov
 wil
-Brotli
-cdn
-iap
-TTLs
-UDF
