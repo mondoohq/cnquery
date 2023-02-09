@@ -25,7 +25,7 @@ func (p *Provider) GetTokenCredential() (azcore.TokenCredential, error) {
 		case vault.CredentialType_pkcs12:
 			certs, privateKey, err := azidentity.ParseCertificates(p.cred.Secret, []byte(p.cred.Password))
 			if err != nil {
-				return nil, errors.Wrap(err, "could not parse pfx file")
+				return nil, errors.Wrap(err, "could not parse certificate")
 			}
 
 			credential, err = azidentity.NewClientCertificateCredential(p.tenantID, p.clientID, certs, privateKey, &azidentity.ClientCertificateCredentialOptions{})
