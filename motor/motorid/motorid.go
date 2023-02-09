@@ -111,6 +111,8 @@ func extractPlatformAndKindFromPlatformId(id string) (string, providers.Kind) {
 		return providers.RUNTIME_AWS_EC2, providers.Kind_KIND_VIRTUAL_MACHINE
 	} else if awsec2.IsValidMondooAccountId(id) {
 		return providers.RUNTIME_AWS, providers.Kind_KIND_API
+	} else if awsecsid.IsValidMondooECSContainerId(id) {
+		return providers.RUNTIME_AWS_ECS, providers.Kind_KIND_CONTAINER
 	}
 	return "", providers.Kind_KIND_UNKNOWN
 }
