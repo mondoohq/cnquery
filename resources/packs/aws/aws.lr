@@ -1237,6 +1237,10 @@ private aws.ecr.image {
   registryId string
   // Name of the repository for the image
   repoName string
+  // Region where the ECR image is located
+  region string
+  // ARN for the image
+  arn string
 }
 
 // AWS Database Migration Service (DMS)
@@ -1311,6 +1315,29 @@ private aws.lambda.function @defaults("arn") {
   region string
   // Tags for the function
   tags map[string]string
+}
+
+// Amazon Systems Manager
+aws.ssm {
+  instances() []aws.ssm.instance
+}
+
+// Amazon SSM Instance
+private aws.ssm.instance {
+  // Instance ID for the SSM Instance
+  instanceId string
+  // Ping Status (e.g. online) for the SSM Instance
+  pingStatus string
+  // IP Address for the SSM Instance
+  ipAddress string
+  // Platform Name for the SSM Instance, as described by AWS
+  platformName string
+  // Region for the SSM Instance
+  region string
+  // ARN for the SSM Instance
+  arn string
+  // Tags for the SSM Instance
+  tags() map[string]string
 }
 
 // Amazon EC2

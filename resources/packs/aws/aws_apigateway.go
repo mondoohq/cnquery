@@ -8,6 +8,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -94,6 +95,47 @@ func (a *mqlAwsApigateway) getRestApis(provider *aws_provider.Provider) []*jobpo
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (d *mqlAwsApigatewayRestapi) init(args *resources.Args) (*resources.Args, AwsApigatewayRestapi, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch gateway restapi")
+	}
+
+	obj, err := d.MotorRuntime.CreateResource("aws.apigateway")
+	if err != nil {
+		return nil, nil, err
+	}
+	gw := obj.(AwsApigateway)
+
+	rawResources, err := gw.RestApis()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		restApi := rawResources[i].(AwsApigatewayRestapi)
+		mqlRestAPIArn, err := restApi.Arn()
+		if err != nil {
+			return nil, nil, errors.New("gateway restapi does not exist")
+		}
+		if mqlRestAPIArn == arnVal {
+			return args, restApi, nil
+		}
+	}
+	return nil, nil, errors.New("gateway restapi does not exist")
 }
 
 func (a *mqlAwsApigatewayRestapi) GetStages() ([]interface{}, error) {

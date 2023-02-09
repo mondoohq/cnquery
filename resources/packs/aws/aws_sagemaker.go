@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/smithy-go/transport/http"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -181,6 +182,47 @@ func (s *mqlAwsSagemaker) getNotebookInstances(provider *aws_provider.Provider) 
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (d *mqlAwsSagemakerNotebookinstance) init(args *resources.Args) (*resources.Args, AwsSagemakerNotebookinstance, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch sagemaker notebookinstance")
+	}
+
+	obj, err := d.MotorRuntime.CreateResource("aws.sagemaker")
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := obj.(AwsSagemaker)
+
+	rawResources, err := sm.NotebookInstances()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		ni := rawResources[i].(AwsSagemakerNotebookinstance)
+		mqlSagemakerNIArn, err := ni.Arn()
+		if err != nil {
+			return nil, nil, errors.New("sagemaker notebookinstance does not exist")
+		}
+		if mqlSagemakerNIArn == arnVal {
+			return args, ni, nil
+		}
+	}
+	return nil, nil, errors.New("sagemaker notebookinstance does not exist")
 }
 
 func (s *mqlAwsSagemakerNotebookinstance) GetDetails() (interface{}, error) {

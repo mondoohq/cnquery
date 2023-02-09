@@ -1127,6 +1127,46 @@ func (p *mqlAwsEc2Volume) init(args *resources.Args) (*resources.Args, AwsEc2Vol
 	return nil, nil, errors.New("volume does not exist")
 }
 
+func (d *mqlAwsEc2Instance) init(args *resources.Args) (*resources.Args, AwsEc2Instance, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch ec2 instance")
+	}
+
+	obj, err := d.MotorRuntime.CreateResource("aws.ec2")
+	if err != nil {
+		return nil, nil, err
+	}
+	ec2 := obj.(AwsEc2)
+
+	rawResources, err := ec2.Instances()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AwsEc2Instance)
+		mqlInstArn, err := instance.Arn()
+		if err != nil {
+			return nil, nil, errors.New("ec2 instance does not exist")
+		}
+		if mqlInstArn == arnVal {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("ec2 instance does not exist")
+}
+
 func (p *mqlAwsEc2Snapshot) init(args *resources.Args) (*resources.Args, AwsEc2Snapshot, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
