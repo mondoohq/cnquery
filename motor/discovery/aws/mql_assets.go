@@ -37,22 +37,20 @@ func (md *MqlDiscovery) Close() {
 	}
 }
 
-func (md *MqlDiscovery) GetList(query string) ([]interface{}, error) {
+func GetList[T any](md *MqlDiscovery, query string) ([]T, error) {
 	mqlExecutor := mql.New(md.rt, cnquery.DefaultFeatures)
 	value, err := mqlExecutor.Exec(query, map[string]*llx.Primitive{})
 	if err != nil {
 		return nil, err
 	}
-
-	a := []interface{}{}
-	d, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result: &a,
-	})
-	err = d.Decode(value.Value)
-	if err != nil {
+	if value.Error != nil {
+		return nil, value.Error
+	}
+	var out []T
+	if err := mapstructure.Decode(value.Value, &out); err != nil {
 		return nil, err
 	}
-	return a, value.Error
+	return out, nil
 }
 
 func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, account string) ([]*asset.Asset, error) {
@@ -61,6 +59,37 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 	if err != nil {
 		return nil, err
 	}
+
+	// todo: when the dedup story is in we should turn these on with the others
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryECSContainersAPI) {
+		if a, err := ecsContainers(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ecs containers")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryECRImageAPI) {
+		if a, err := ecrImages(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ecr images")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryEC2InstanceAPI) {
+		if a, err := ec2Instances(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ec2 instances")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(DiscoverySSMInstanceAPI) {
+		if a, err := ssmInstances(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query ssm instances")
+		}
+	}
+	// end todo
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryS3Buckets) {
 		if a, err := s3Buckets(m, account, tc); err == nil {
@@ -73,7 +102,7 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 		if a, err := cloudtrailTrails(m, account, tc); err == nil {
 			assets = append(assets, a...)
 		} else {
-			log.Error().Err(err).Msg("unable to query cloutrail trails")
+			log.Error().Err(err).Msg("unable to query cloudtrail trails")
 		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryRdsDbInstances) {
@@ -153,11 +182,46 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 			log.Error().Err(err).Msg("unable to query ec2 snapshots")
 		}
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryECSContainersAPI) {
-		if a, err := ecsContainers(m, account, tc); err == nil {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryEFSFilesystems) {
+		if a, err := efsFilesystems(m, account, tc); err == nil {
 			assets = append(assets, a...)
 		} else {
-			log.Error().Err(err).Msg("unable to query ecs containers")
+			log.Error().Err(err).Msg("unable to query efs filesystems")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryAPIGatewayRestAPIs) {
+		if a, err := gatewayRestApis(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query gateway restapis")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryELBLoadBalancers) {
+		if a, err := elbLoadBalancers(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query elb loadbalancers")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryESDomains) {
+		if a, err := esDomains(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query es domains")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoveryKMSKeys) {
+		if a, err := kmsKeys(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query kms keys")
+		}
+	}
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryResources, DiscoverySagemakerNotebookInstances) {
+		if a, err := sagemakerNotebookInstances(m, account, tc); err == nil {
+			assets = append(assets, a...)
+		} else {
+			log.Error().Err(err).Msg("unable to query sagemaker notebook instances")
 		}
 	}
 

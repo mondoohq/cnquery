@@ -2,11 +2,13 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -160,6 +162,47 @@ func (e *mqlAwsElb) getLoadBalancers(provider *aws_provider.Provider) []*jobpool
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (d *mqlAwsElbLoadbalancer) init(args *resources.Args) (*resources.Args, AwsElbLoadbalancer, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(d.MqlResource().MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["arn"] = ids.arn
+		}
+	}
+
+	if (*args)["arn"] == nil {
+		return nil, nil, errors.New("arn required to fetch elb loadbalancer")
+	}
+
+	obj, err := d.MotorRuntime.CreateResource("aws.elb")
+	if err != nil {
+		return nil, nil, err
+	}
+	elb := obj.(AwsElb)
+
+	rawResources, err := elb.LoadBalancers()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	arnVal := (*args)["arn"].(string)
+	for i := range rawResources {
+		lb := rawResources[i].(AwsElbLoadbalancer)
+		mqlLbArn, err := lb.Arn()
+		if err != nil {
+			return nil, nil, errors.New("elb loadbalancer does not exist")
+		}
+		if mqlLbArn == arnVal {
+			return args, lb, nil
+		}
+	}
+	return nil, nil, errors.New("elb load balancer does not exist")
 }
 
 func (e *mqlAwsElbLoadbalancer) GetListenerDescriptions() ([]interface{}, error) {
