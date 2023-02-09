@@ -240,6 +240,8 @@ azure.subscription @defaults ("name") {
   cloudDefender() azure.subscription.cloudDefenderService
   // Get all the resources in a subscription
   resources() []azure.subscription.resource
+  // Get AKS resources inside the subscription
+  aks() azure.subscription.aksService
 }
 
 // Azure Resource
@@ -1306,4 +1308,56 @@ private azure.subscription.authorizationService.roleDefinition.permission @defau
   allowedDataActions []string
   // List of denied data actions that are attached to the permission
   deniedDataActions []string
+}
+
+// Azure Kubernetes Service
+private azure.subscription.aksService {
+  // The subscription identifier
+  subscriptionId string
+  // List all the AKS clusters inside the subscription
+	clusters() []azure.subscription.aksService.cluster
+}
+
+// Azure Kubernetes Service cluster
+private azure.subscription.aksService.cluster @defaults("name location") {
+  // ID of the AKS cluster
+  id string
+  // Name of the AKS cluster
+  name string
+  // Location of the AKS cluster
+  location string
+  // The kubernetes version of the AKS cluster
+  kubernetesVersion string
+  // The provisioning state of the AKS cluster
+  provisioningState string
+  // The power state of the AKS cluster
+  powerState string
+  // The tags of the AKS cluster
+  tags map[string]string
+  // The node resource group of the AKS cluster
+  nodeResourceGroup string
+  // Creation time of the AKS cluster
+  createdAt time
+  // Whether RBAC is enabled for the AKS cluster
+  rbacEnabled bool
+  // The fully qualified domain name of the AKS cluster
+  fqdn string
+  // The DNS prefix of the AKS cluster
+  dnsPrefix string
+  // The storage profile of the AKS cluster
+  storageProfile dict
+  // The workload autoscaler profile of the AKS cluster
+  workloadAutoScalerProfile dict
+  // The security profile of the AKS cluster
+  securityProfile dict
+  // The pod identity profile of the AKS cluster
+  podIdentityProfile dict
+  // The network profile of the AKS cluster
+  networkProfile dict
+  // The HTTP proxy config of the AKS cluster
+  httpProxyConfig dict
+  // The addon profiles of the AKS cluster
+  addonProfiles []dict
+  // The agent pool profiles of the AKS cluster
+  agentPoolProfiles []dict
 }

@@ -9,6 +9,56 @@ resources:
     platform:
       name:
       - azure
+  azure.aks.cluster:
+    fields:
+      addonProfiles: {}
+      agentPoolProfiles: {}
+      createdAt: {}
+      dnsPrefix: {}
+      fqdn: {}
+      httpProxyConfig: {}
+      id: {}
+      kubernetesVersion: {}
+      location: {}
+      name: {}
+      networkProfile: {}
+      nodeResourceGroup: {}
+      podIdentityProfile: {}
+      provisioningState: {}
+      rbacEnabled: {}
+      securityProfile: {}
+      storageProfile: {}
+      tags: {}
+      workloadAutoScalerProfile: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.aksService.cluster:
+    fields:
+      addonProfiles: {}
+      agentPoolProfiles: {}
+      createdAt: {}
+      dnsPrefix: {}
+      fqdn: {}
+      httpProxyConfig: {}
+      id: {}
+      kubernetesVersion: {}
+      location: {}
+      name: {}
+      networkProfile: {}
+      nodeResourceGroup: {}
+      podIdentityProfile: {}
+      provisioningState: {}
+      rbacEnabled: {}
+      securityProfile: {}
+      storageProfile: {}
+      tags: {}
+      workloadAutoScalerProfile: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
   azure.authorization:
     fields:
       roleDefinitions: {}
@@ -715,6 +765,7 @@ resources:
       - azure
   azure.subscription:
     fields:
+      aks: {}
       authorization: {}
       authorizationSource: {}
       cloudDefender: {}
@@ -738,6 +789,42 @@ resources:
       tags: {}
       tenantId: {}
       web: {}
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.aksService:
+    fields:
+      clusters: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.aksService.cluster:
+    fields:
+      addonProfiles: {}
+      agentPoolProfiles: {}
+      createdAt: {}
+      dnsPrefix: {}
+      fqdn: {}
+      httpProxyConfig: {}
+      id: {}
+      kubernetesVersion: {}
+      location: {}
+      name: {}
+      networkProfile: {}
+      nodeResourceGroup: {}
+      podIdentityProfile: {}
+      powerState: {}
+      provisioningState: {}
+      rbacEnabled: {}
+      securityProfile: {}
+      storageProfile: {}
+      tags: {}
+      workloadAutoScalerProfile: {}
+    is_private: true
     min_mondoo_version: latest
     platform:
       name:
