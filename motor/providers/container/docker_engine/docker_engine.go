@@ -3,6 +3,7 @@ package docker_engine
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog/log"
@@ -89,6 +90,15 @@ func (p *Provider) RunCommand(command string) (*os.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
 	c := &Command{dockerClient: p.dockerClient, Container: p.container}
 	res, err := c.Exec(command)
+	// this happens, when we try to run /bin/sh in a container, which does not have it
+	if err == nil && res.ExitStatus == 126 {
+		output := ""
+		b, err := io.ReadAll(res.Stdout)
+		if err == nil {
+			output = string(b)
+		}
+		err = errors.New("could not execute command: " + output)
+	}
 	return res, err
 }
 
