@@ -2,6 +2,8 @@ package awsecsid
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
@@ -21,6 +23,29 @@ func MondooECSContainerID(containerArn string) string {
 		}
 	}
 	return "//platformid.api.mondoo.app/runtime/aws/ecs/v1/accounts/" + account + "/regions/" + region + "/" + id
+}
+
+var VALID_MONDOO_ECSCONTAINER_ID = regexp.MustCompile(`^//platformid.api.mondoo.app/runtime/aws/ecs/v1/accounts/\d{12}/regions\/(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d\/container\/.+$`)
+
+type ECSContainer struct {
+	Account string
+	Region  string
+	Id      string
+}
+
+func ParseMondooECSContainerId(path string) (*ECSContainer, error) {
+	if !IsValidMondooECSContainerId(path) {
+		return nil, errors.New("invalid aws ecs container id")
+	}
+	keyValues := strings.Split(path, "/")
+	if len(keyValues) != 15 {
+		return nil, errors.New("invalid ecs container id length")
+	}
+	return &ECSContainer{Account: keyValues[8], Region: keyValues[10], Id: strings.Join(keyValues[12:], "/")}, nil
+}
+
+func IsValidMondooECSContainerId(path string) bool {
+	return VALID_MONDOO_ECSCONTAINER_ID.MatchString(path)
 }
 
 type Identity struct {
