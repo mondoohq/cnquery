@@ -178,6 +178,11 @@ func (s *mqlTls) GetParams(socket Socket, domainName string) (map[string]interfa
 		return nil, err
 	}
 
+	// a proto of ipv6 or ipv4 isn't usable by the golang net package
+	if proto == "ipv6" || proto == "ipv4" {
+		proto = "tcp"
+	}
+
 	tester := tlsshake.New(proto, domainName, host, int(port))
 	if err := tester.Test(tlsshake.DefaultScanConfig()); err != nil {
 		return nil, err
