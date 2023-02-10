@@ -9,7 +9,7 @@ import (
 )
 
 func (g *mqlGoogleworkspace) GetRoles() ([]interface{}, error) {
-	provider, directoryService, err := directoryService(g.MotorRuntime.Motor.Provider)
+	provider, directoryService, err := directoryService(g.MotorRuntime.Motor.Provider, directory.AdminDirectoryRolemanagementReadonlyScope)
 	if err != nil {
 		return nil, err
 	}

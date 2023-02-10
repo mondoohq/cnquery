@@ -6,7 +6,7 @@ import (
 )
 
 func (g *mqlGoogleworkspace) GetOrgUnits() ([]interface{}, error) {
-	provider, directoryService, err := directoryService(g.MotorRuntime.Motor.Provider)
+	provider, directoryService, err := directoryService(g.MotorRuntime.Motor.Provider, directory.AdminDirectoryOrgunitReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
