@@ -65,9 +65,23 @@ func TestParseLinuxProcNetIPv6(t *testing.T) {
 	require.NotNil(t, port)
 
 	assert.Equal(t, int64(22), (*port).Port)
-	assert.Equal(t, "::", port.Address)
+	assert.Equal(t, "[::]", port.Address)
 	assert.Equal(t, int64(0), port.RemotePort)
-	assert.Equal(t, "::", port.RemoteAddress)
+	assert.Equal(t, "[::]", port.RemoteAddress)
+
+	// third line tests little-to-big endian
+	// reading the hex ipv6 address 00000000000000000000000001000000
+	// to be [::1]
+	scanner.Scan()
+	line = scanner.Text()
+	port, err = parseProcNetLine(line)
+	require.NoError(t, err)
+	require.NotNil(t, port)
+
+	assert.Equal(t, int64(631), (*port).Port)
+	assert.Equal(t, "[::1]", port.Address)
+	assert.Equal(t, int64(0), port.RemotePort)
+	assert.Equal(t, "[::]", port.RemoteAddress)
 }
 
 func TestParseLinuxFind(t *testing.T) {
