@@ -14,8 +14,27 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureStorage) id() (string, error) {
-	return "azure.storage", nil
+func (a *mqlAzureSubscriptionStorageService) init(args *resources.Args) (*resources.Args, AzureSubscriptionStorageService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
+}
+
+func (a *mqlAzureSubscriptionStorageService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/storageService", subId), nil
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
@@ -24,7 +43,7 @@ type (
 	Kind                          storage.Kind
 )
 
-func (a *mqlAzureStorage) GetAccounts() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorageService) GetAccounts() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -72,7 +91,7 @@ func (a *mqlAzureStorage) GetAccounts() ([]interface{}, error) {
 			if account.Kind != nil {
 				kind = string(*account.Kind)
 			}
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.storage.account",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.storageService.account",
 				"id", core.ToString(account.ID),
 				"name", core.ToString(account.Name),
 				"location", core.ToString(account.Location),
@@ -93,11 +112,11 @@ func (a *mqlAzureStorage) GetAccounts() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureStorageAccount) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccount) init(args *resources.Args) (*resources.Args, AzureStorageAccount, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) init(args *resources.Args) (*resources.Args, AzureSubscriptionStorageServiceAccount, error) {
 	if len(*args) > 2 {
 		return args, nil, nil
 	}
@@ -179,7 +198,7 @@ func (a *mqlAzureStorageAccount) init(args *resources.Args) (*resources.Args, Az
 	return args, nil, nil
 }
 
-func (a *mqlAzureStorageAccount) GetContainers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) GetContainers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -227,7 +246,7 @@ func (a *mqlAzureStorageAccount) GetContainers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzure, err := a.MotorRuntime.CreateResource("azure.storage.container",
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.storageService.account.container",
 				"id", core.ToString(container.ID),
 				"name", core.ToString(container.Name),
 				"etag", core.ToString(container.Etag),
@@ -244,7 +263,7 @@ func (a *mqlAzureStorageAccount) GetContainers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureStorageAccount) GetDataProtection() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) GetDataProtection() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -298,7 +317,7 @@ func (a *mqlAzureStorageAccount) GetDataProtection() (interface{}, error) {
 	if properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy != nil {
 		containerRetentionDays = core.ToInt64From32(properties.BlobServiceProperties.BlobServiceProperties.ContainerDeleteRetentionPolicy.Days)
 	}
-	return a.MotorRuntime.CreateResource("azure.storage.account.dataProtection",
+	return a.MotorRuntime.CreateResource("azure.subscription.storageService.account.dataProtection",
 		"storageAccountId", id,
 		"blobSoftDeletionEnabled", blobSoftDeletionEnabled,
 		"blobRetentionDays", blobRetentionDays,
@@ -307,7 +326,7 @@ func (a *mqlAzureStorageAccount) GetDataProtection() (interface{}, error) {
 	)
 }
 
-func (a *mqlAzureStorageAccount) GetQueueProperties() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) GetQueueProperties() (interface{}, error) {
 	props, err := a.getServiceStorageProperties("queue")
 	if err != nil {
 		return nil, err
@@ -319,7 +338,7 @@ func (a *mqlAzureStorageAccount) GetQueueProperties() (interface{}, error) {
 	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "queue", parentId)
 }
 
-func (a *mqlAzureStorageAccount) GetTableProperties() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) GetTableProperties() (interface{}, error) {
 	props, err := a.getServiceStorageProperties("table")
 	if err != nil {
 		return nil, err
@@ -331,7 +350,7 @@ func (a *mqlAzureStorageAccount) GetTableProperties() (interface{}, error) {
 	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "table", parentId)
 }
 
-func (a *mqlAzureStorageAccount) GetBlobProperties() (interface{}, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) GetBlobProperties() (interface{}, error) {
 	props, err := a.getServiceStorageProperties("blob")
 	if err != nil {
 		return nil, err
@@ -343,11 +362,11 @@ func (a *mqlAzureStorageAccount) GetBlobProperties() (interface{}, error) {
 	return toMqlServiceStorageProperties(a.MotorRuntime, props.ServiceProperties, "blob", parentId)
 }
 
-func (a *mqlAzureStorageContainer) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountContainer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccount) getServiceStorageProperties(serviceType string) (table.GetPropertiesResponse, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return table.GetPropertiesResponse{}, err
@@ -389,11 +408,11 @@ func (a *mqlAzureStorageAccount) getServiceStorageProperties(serviceType string)
 	return props, nil
 }
 
-func (a *mqlAzureStorageAccountBlobServiceProperties) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountBlobServiceProperties) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountDataProtection) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountDataProtection) id() (string, error) {
 	storageAccId, err := a.StorageAccountId()
 	if err != nil {
 		return "", err
@@ -401,35 +420,35 @@ func (a *mqlAzureStorageAccountDataProtection) id() (string, error) {
 	return fmt.Sprintf("%s/dataProtection", storageAccId), nil
 }
 
-func (a *mqlAzureStorageAccountTableServiceProperties) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountTableServiceProperties) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountQueueServiceProperties) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountQueueServiceProperties) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountServicePropertiesLogging) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesLogging) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountServicePropertiesMetrics) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesMetrics) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureStorageAccountServicePropertiesRetentionPolicy) id() (string, error) {
+func (a *mqlAzureSubscriptionStorageServiceAccountServicePropertiesRetentionPolicy) id() (string, error) {
 	return a.Id()
 }
 
 func toMqlServiceStorageProperties(runtime *resources.Runtime, props table.ServiceProperties, serviceType, parentId string) (interface{}, error) {
-	loggingRetentionPolicy, err := runtime.CreateResource("azure.storage.account.service.properties.retentionPolicy",
+	loggingRetentionPolicy, err := runtime.CreateResource("azure.subscription.storageService.account.service.properties.retentionPolicy",
 		"id", fmt.Sprintf("%s/%s/properties/logging/retentionPolicy", parentId, serviceType),
 		"retentionDays", core.ToInt64From32(props.Logging.RetentionPolicy.Days),
 		"enabled", core.ToBool(props.Logging.RetentionPolicy.Enabled))
 	if err != nil {
 		return nil, err
 	}
-	logging, err := runtime.CreateResource("azure.storage.account.service.properties.logging",
+	logging, err := runtime.CreateResource("azure.subscription.storageService.account.service.properties.logging",
 		"retentionPolicy", loggingRetentionPolicy,
 		"id", fmt.Sprintf("%s/%s/properties/logging", parentId, serviceType),
 		"delete", core.ToBool(props.Logging.Delete),
@@ -440,7 +459,7 @@ func toMqlServiceStorageProperties(runtime *resources.Runtime, props table.Servi
 	if err != nil {
 		return nil, err
 	}
-	minuteMetricsRetentionPolicy, err := runtime.CreateResource("azure.storage.account.service.properties.retentionPolicy",
+	minuteMetricsRetentionPolicy, err := runtime.CreateResource("azure.subscription.storageService.account.service.properties.retentionPolicy",
 		"id", fmt.Sprintf("%s/%s/properties/minuteMetrics/retentionPolicy", parentId, serviceType),
 		"retentionDays", core.ToInt64From32(props.MinuteMetrics.RetentionPolicy.Days),
 		"enabled", core.ToBool(props.MinuteMetrics.Enabled),
@@ -448,7 +467,7 @@ func toMqlServiceStorageProperties(runtime *resources.Runtime, props table.Servi
 	if err != nil {
 		return nil, err
 	}
-	minuteMetrics, err := runtime.CreateResource("azure.storage.account.service.properties.metrics",
+	minuteMetrics, err := runtime.CreateResource("azure.subscription.storageService.account.service.properties.metrics",
 		"id", fmt.Sprintf("%s/%s/properties/minuteMetrics/", parentId, serviceType),
 		"retentionPolicy", minuteMetricsRetentionPolicy,
 		"enabled", core.ToBool(props.MinuteMetrics.Enabled),
@@ -458,7 +477,7 @@ func toMqlServiceStorageProperties(runtime *resources.Runtime, props table.Servi
 	if err != nil {
 		return nil, err
 	}
-	hourMetricsRetentionPolicy, err := runtime.CreateResource("azure.storage.account.service.properties.retentionPolicy",
+	hourMetricsRetentionPolicy, err := runtime.CreateResource("azure.subscription.storageService.account.service.properties.retentionPolicy",
 		"id", fmt.Sprintf("%s/%s/properties/hourMetrics/retentionPolicy", parentId, serviceType),
 		"retentionDays", core.ToInt64From32(props.HourMetrics.RetentionPolicy.Days),
 		"enabled", core.ToBool(props.HourMetrics.Enabled),
@@ -466,7 +485,7 @@ func toMqlServiceStorageProperties(runtime *resources.Runtime, props table.Servi
 	if err != nil {
 		return nil, err
 	}
-	hourMetrics, err := runtime.CreateResource("azure.storage.account.service.properties.metrics",
+	hourMetrics, err := runtime.CreateResource("azure.subscription.storageService.account.service.properties.metrics",
 		"id", fmt.Sprintf("%s/%s/properties/hourMetrics", parentId, serviceType),
 		"retentionPolicy", hourMetricsRetentionPolicy,
 		"enabled", core.ToBool(props.HourMetrics.Enabled),
@@ -476,7 +495,7 @@ func toMqlServiceStorageProperties(runtime *resources.Runtime, props table.Servi
 	if err != nil {
 		return nil, err
 	}
-	settings, err := runtime.CreateResource(fmt.Sprintf("azure.storage.account.%sService.properties", serviceType),
+	settings, err := runtime.CreateResource(fmt.Sprintf("azure.subscription.storageService.account.%sService.properties", serviceType),
 		"id", fmt.Sprintf("%s/%s/properties", parentId, serviceType),
 		"minuteMetrics", minuteMetrics,
 		"hourMetrics", hourMetrics,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
@@ -13,11 +14,30 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureCompute) id() (string, error) {
-	return "azure.compute", nil
+func (a *mqlAzureSubscriptionComputeService) init(args *resources.Args) (*resources.Args, AzureSubscriptionComputeService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
 }
 
-func (a *mqlAzureCompute) GetDisks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/computeService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionComputeService) GetDisks() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -80,7 +100,7 @@ func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.Resourc
 			zones = append(zones, *z)
 		}
 	}
-	return runtime.CreateResource("azure.compute.disk",
+	return runtime.CreateResource("azure.subscription.computeService.disk",
 		"id", core.ToString(disk.ID),
 		"name", core.ToString(disk.Name),
 		"location", core.ToString(disk.Location),
@@ -94,11 +114,11 @@ func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.Resourc
 	)
 }
 
-func (a *mqlAzureComputeDisk) id() (string, error) {
+func (a *mqlAzureSubscriptionComputeServiceDisk) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureCompute) GetVms() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeService) GetVms() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -129,7 +149,7 @@ func (a *mqlAzureCompute) GetVms() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureVm, err := a.MotorRuntime.CreateResource("azure.compute.vm",
+			mqlAzureVm, err := a.MotorRuntime.CreateResource("azure.subscription.computeService.vm",
 				"id", core.ToString(vm.ID),
 				"name", core.ToString(vm.Name),
 				"location", core.ToString(vm.Location),
@@ -147,11 +167,11 @@ func (a *mqlAzureCompute) GetVms() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureComputeVm) id() (string, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureComputeVm) GetExtensions() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) GetExtensions() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -210,7 +230,7 @@ func (a *mqlAzureComputeVm) GetExtensions() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureComputeVm) GetOsDisk() (interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) GetOsDisk() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -264,7 +284,7 @@ func (a *mqlAzureComputeVm) GetOsDisk() (interface{}, error) {
 	return diskToMql(a.MotorRuntime, disk.Disk)
 }
 
-func (a *mqlAzureComputeVm) GetDataDisks() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionComputeServiceVm) GetDataDisks() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err

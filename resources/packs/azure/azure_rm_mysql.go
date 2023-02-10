@@ -2,31 +2,52 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	mysql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
 	flexible "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
-func (a *mqlAzureMysql) id() (string, error) {
-	return "azure.mysql", nil
+func (a *mqlAzureSubscriptionMysqlService) init(args *resources.Args) (*resources.Args, AzureSubscriptionMysqlService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
 }
 
-func (a *mqlAzureMysqlServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMysqlService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/mySqlService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionMysqlServiceServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMysqlFlexibleServer) id() (string, error) {
+func (a *mqlAzureSubscriptionMysqlServiceFlexibleServer) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMysqlDatabase) id() (string, error) {
+func (a *mqlAzureSubscriptionMysqlServiceDatabase) id() (string, error) {
 	return a.Id()
 }
 
-func (a *mqlAzureMysql) GetServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlService) GetServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -55,7 +76,7 @@ func (a *mqlAzureMysql) GetServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mysql.server",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.server",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -72,7 +93,7 @@ func (a *mqlAzureMysql) GetServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysql) GetFlexibleServers() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlService) GetFlexibleServers() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -101,7 +122,7 @@ func (a *mqlAzureMysql) GetFlexibleServers() ([]interface{}, error) {
 				return nil, err
 			}
 
-			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.mysql.flexibleServer",
+			mqlAzureDbServer, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.flexibleServer",
 				"id", core.ToString(dbServer.ID),
 				"name", core.ToString(dbServer.Name),
 				"location", core.ToString(dbServer.Location),
@@ -118,7 +139,7 @@ func (a *mqlAzureMysql) GetFlexibleServers() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServiceServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -158,7 +179,7 @@ func (a *mqlAzureMysqlServer) GetConfiguration() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -178,7 +199,7 @@ func (a *mqlAzureMysqlServer) GetConfiguration() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServiceServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -218,7 +239,7 @@ func (a *mqlAzureMysqlServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mysql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -235,7 +256,7 @@ func (a *mqlAzureMysqlServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlFlexibleServer) GetDatabases() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServiceFlexibleServer) GetDatabases() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -275,7 +296,7 @@ func (a *mqlAzureMysqlFlexibleServer) GetDatabases() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.mysql.database",
+			mqlAzureDatabase, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService.database",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -292,7 +313,7 @@ func (a *mqlAzureMysqlFlexibleServer) GetDatabases() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServiceServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -332,7 +353,7 @@ func (a *mqlAzureMysqlServer) GetFirewallRules() ([]interface{}, error) {
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -349,7 +370,7 @@ func (a *mqlAzureMysqlServer) GetFirewallRules() ([]interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureMysqlFlexibleServer) GetConfiguration() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServiceFlexibleServer) GetConfiguration() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -389,7 +410,7 @@ func (a *mqlAzureMysqlFlexibleServer) GetConfiguration() ([]interface{}, error) 
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.configuration",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.configuration",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),
@@ -409,7 +430,7 @@ func (a *mqlAzureMysqlFlexibleServer) GetConfiguration() ([]interface{}, error) 
 	return res, nil
 }
 
-func (a *mqlAzureMysqlFlexibleServer) GetFirewallRules() ([]interface{}, error) {
+func (a *mqlAzureSubscriptionMysqlServiceFlexibleServer) GetFirewallRules() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -449,7 +470,7 @@ func (a *mqlAzureMysqlFlexibleServer) GetFirewallRules() ([]interface{}, error) 
 			return nil, err
 		}
 		for _, entry := range page.Value {
-			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.sql.firewallrule",
+			mqlAzureConfiguration, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.firewallrule",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"type", core.ToString(entry.Type),

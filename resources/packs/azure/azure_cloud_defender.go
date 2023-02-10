@@ -17,6 +17,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	security "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/security/armsecurity"
 
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -31,11 +32,30 @@ const (
 	kubernetesClusterPolicyExtensonDefinitionId string = "/providers/Microsoft.Authorization/policyDefinitions/0adc5395-9169-4b9b-8687-af838d69410a"
 )
 
-func (a *mqlAzureCloudDefender) id() (string, error) {
-	return "azure.cloudDefender", nil
+func (a *mqlAzureSubscriptionCloudDefenderService) init(args *resources.Args) (*resources.Args, AzureSubscriptionCloudDefenderService, error) {
+	if len(*args) > 0 {
+		return args, nil, nil
+	}
+
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["subscriptionId"] = at.SubscriptionID()
+
+	return args, nil, nil
 }
 
-func (a *mqlAzureCloudDefender) GetMonitoringAgentAutoProvision() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) id() (string, error) {
+	subId, err := a.SubscriptionId()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/subscriptions/%s/cloudDefenderService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderService) GetMonitoringAgentAutoProvision() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -59,7 +79,7 @@ func (a *mqlAzureCloudDefender) GetMonitoringAgentAutoProvision() (interface{}, 
 	return autoProvision == security.AutoProvisionOn, nil
 }
 
-func (a *mqlAzureCloudDefender) GetDefenderForContainers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) GetDefenderForContainers() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -117,7 +137,7 @@ func (a *mqlAzureCloudDefender) GetDefenderForContainers() (interface{}, error) 
 	return core.JsonToDict(def)
 }
 
-func (a *mqlAzureCloudDefender) GetDefenderForServers() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) GetDefenderForServers() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -166,7 +186,7 @@ func (a *mqlAzureCloudDefender) GetDefenderForServers() (interface{}, error) {
 	return core.JsonToDict(resp)
 }
 
-func (a *mqlAzureCloudDefender) GetSecurityContacts() (interface{}, error) {
+func (a *mqlAzureSubscriptionCloudDefenderService) GetSecurityContacts() (interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -202,7 +222,7 @@ func (a *mqlAzureCloudDefender) GetSecurityContacts() (interface{}, error) {
 		if contact.Properties.Emails != nil {
 			mails = *contact.Properties.Emails
 		}
-		mqlSecurityContact, err := a.MotorRuntime.CreateResource("azure.cloudDefender.securityContact",
+		mqlSecurityContact, err := a.MotorRuntime.CreateResource("azure.subscription.cloudDefenderService.securityContact",
 			"id", core.ToString(contact.ID),
 			"name", core.ToString(contact.Name),
 			"emails", core.StrSliceToInterface(strings.Split(mails, ";")),
@@ -217,7 +237,7 @@ func (a *mqlAzureCloudDefender) GetSecurityContacts() (interface{}, error) {
 	return res, nil
 }
 
-func (a *mqlAzureCloudDefenderSecurityContact) id() (string, error) {
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityContact) id() (string, error) {
 	return a.Id()
 }
 
