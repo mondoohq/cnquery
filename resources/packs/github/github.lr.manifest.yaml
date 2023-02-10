@@ -247,6 +247,10 @@ resources:
       archived: {}
       branches:
         min_mondoo_version: 6.4.0
+      cloneUrl:
+        min_mondoo_version: 7.14.0
+      closedIssues:
+        min_mondoo_version: 7.14.0
       collaborators:
         min_mondoo_version: 6.11.0
       commits:
@@ -260,12 +264,34 @@ resources:
       disabled: {}
       files:
         min_mondoo_version: 6.4.0
+      forks:
+        min_mondoo_version: 7.14.0
+      forksCount:
+        min_mondoo_version: 7.14.0
       fullName: {}
+      hasDownloads:
+        min_mondoo_version: 7.14.0
       hasIssues:
         min_mondoo_version: 6.4.0
+      hasPages:
+        min_mondoo_version: 7.14.0
+      hasProjects:
+        min_mondoo_version: 7.14.0
+      hasWiki:
+        min_mondoo_version: 7.14.0
       homepage: {}
       id: {}
+      isFork:
+        min_mondoo_version: 7.14.0
+      language:
+        min_mondoo_version: 7.14.0
+      license:
+        min_mondoo_version: 7.14.0
       name: {}
+      openIssues:
+        min_mondoo_version: 7.14.0
+      openIssuesCount:
+        min_mondoo_version: 7.14.0
       openMergeRequests:
         min_mondoo_version: 6.4.0
       organizationName:
@@ -273,10 +299,22 @@ resources:
       owner:
         min_mondoo_version: 6.4.0
       private: {}
+      pushedAt:
+        min_mondoo_version: 7.14.0
       releases:
         min_mondoo_version: 6.4.0
+      sshUrl:
+        min_mondoo_version: 7.14.0
+      stargazers:
+        min_mondoo_version: 7.14.0
+      stargazersCount:
+        min_mondoo_version: 7.14.0
+      topics:
+        min_mondoo_version: 7.14.0
       updatedAt: {}
       visibility: {}
+      watchersCount:
+        min_mondoo_version: 7.14.0
       webhooks:
         min_mondoo_version: 6.11.0
       workflows:
