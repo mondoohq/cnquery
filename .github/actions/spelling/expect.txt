@@ -3,7 +3,6 @@ activitylog
 Auths
 backupconfiguration
 bigquery
-Brotli
 cavium
 cdn
 certificatechains
@@ -48,8 +47,6 @@ spo
 sqlserver
 sshkeys
 sysctls
-TTLs
-UDF
 unarchived
 vdcs
 vmknics
