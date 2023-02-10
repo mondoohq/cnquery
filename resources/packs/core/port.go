@@ -427,25 +427,25 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 	}
 
 	var ports []interface{}
-	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp", users, getProcess)
+	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "ipv4", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPorts...)
 
-	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp", users, getProcess)
+	udpPorts, err := p.parseProcNet("/proc/net/udp", "ipv4", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, udpPorts...)
 
-	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp", users, getProcess)
+	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "ipv6", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPortsV6...)
 
-	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "udp", users, getProcess)
+	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "ipv6", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
