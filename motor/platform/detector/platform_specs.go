@@ -2,6 +2,7 @@ package detector
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"regexp"
 	"strconv"
@@ -565,6 +566,46 @@ var openwrt = &PlatformResolver{
 	},
 }
 
+var (
+	plcnextVersion      = regexp.MustCompile(`(?m)^Arpversion:\s+(.*)$`)
+	plcnextBuildVersion = regexp.MustCompile(`(?m)^GIT Commit Hash:\s+(.*)$`)
+)
+
+var plcnext = &PlatformResolver{
+	Name:     "plcnext",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *platform.Platform, p os.OperatingSystemProvider) (bool, error) {
+		// No clue why they are not using either lsb-release or os-release
+		f, err := p.FS().Open("/etc/plcnext/arpversion")
+		if err != nil {
+			return false, err
+		}
+		defer f.Close()
+
+		content, err := io.ReadAll(f)
+		if err != nil {
+			return false, err
+		}
+
+		m := plcnextVersion.FindStringSubmatch(string(content))
+		if len(m) >= 2 {
+			pf.Name = "plcnext"
+			pf.Title = "PLCnext"
+			pf.Release = m[1]
+			pf.Version = m[1]
+
+			bm := plcnextBuildVersion.FindStringSubmatch(string(content))
+			if len(bm) >= 2 {
+				pf.Build = bm[1]
+			}
+
+			return true, err
+		}
+
+		return false, nil
+	},
+}
+
 // fallback linux detection, since we do not know the system, the family detection may not be correct
 var defaultLinux = &PlatformResolver{
 	Name:     "generic-linux",
@@ -852,7 +893,7 @@ var archFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     platform.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, defaultLinux},
+	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, amazonlinux, alpine, gentoo, busybox, photon, windriver, openwrt, ubios, plcnext, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *platform.Platform, p os.OperatingSystemProvider) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(p)
