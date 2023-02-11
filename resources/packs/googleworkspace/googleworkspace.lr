@@ -151,7 +151,7 @@ private googleworkspace.role @defaults("name") {
 }
 
 // Google Workspace Apps Reports
-googleworkspace.report.apps {
+private googleworkspace.report.apps {
   drive() []googleworkspace.report.activity
 }
 
@@ -165,7 +165,7 @@ private googleworkspace.report.activity {
 }
 
 // Google Workspace User Usage Reports
-googleworkspace.report.users {
+private googleworkspace.report.users {
   []googleworkspace.report.usage
 }
 
