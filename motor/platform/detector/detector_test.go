@@ -731,6 +731,20 @@ func TestBusyboxLinuxDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
+func TestPlcNextLinuxDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-plcnext.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "plcnext", di.Name, "os name should be identified")
+	assert.Equal(t, "PLCnext", di.Title, "os title should be identified")
+	assert.Equal(t, "23.0.0.65", di.Version, "os version should be identified")
+	assert.Equal(t, "d755854b5b21ecb8dca26b0a560e6842a0c638d7", di.Build, "os build version should be identified")
+	assert.Equal(t, "armv7l", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
+}
+
 func TestWindows2016Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windows2016.toml")
 	assert.Nil(t, err, "was able to create the transport")

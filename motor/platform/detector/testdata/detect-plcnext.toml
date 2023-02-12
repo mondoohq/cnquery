@@ -1,0 +1,15 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "armv7l"
+
+[commands."uname -r"]
+stdout = "5.4.193-rt74-pxc"
+
+[files."/etc/plcnext/arpversion"]
+content = """
+Arpversion: 23.0.0.65
+GIT Commit Hash: d755854b5b21ecb8dca26b0a560e6842a0c638d7
+Build Job: "jenkins-PLCnext-Yocto_Targets-Yocto_AXCF2152-release%2F23.0.x-65"
+"""
