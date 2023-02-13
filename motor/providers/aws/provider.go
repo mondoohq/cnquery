@@ -94,14 +94,18 @@ func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
 	// gather information about the aws account
 	identity, err := CheckIam(t.config)
 	if err != nil {
+		log.Debug().Err(err).Msg("could not gather details of AWS account")
 		// try with govcloud region
 		t.config.Region = "us-gov-west-1"
 		identity, err = CheckIam(t.config)
 		if err != nil {
-			log.Warn().Err(err).Msg("could not gather details of AWS account")
-			// do not error since this break with localstack
+			log.Debug().Err(err).Msg("could not gather details of AWS account")
+			return nil, err
 		}
-	} else {
+	}
+
+	// either the regular check or the gov-check worked
+	if err == nil {
 		t.info = Info{
 			Account:          toString(identity.Account),
 			Arn:              toString(identity.Arn),
