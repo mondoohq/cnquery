@@ -31,16 +31,16 @@ gcp.organization @defaults("name") {
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
   // List of folders
-  folders() gcp.organization.foldersService
+  folders() gcp.folders
   // List of projects
-  projects() gcp.organization.projectsService
+  projects() gcp.projects
 }
 
-// GCP Organization folders
-private gcp.organization.foldersService {
+// GCP Folders
+private gcp.folders {
   []gcp.folder
-  // Organization ID
-  orgId string
+  // Parent ID
+  parentId string
   // Flat list of all folders within the organization
   all() []gcp.folder
 }
@@ -60,16 +60,16 @@ private gcp.folder @defaults("name") {
   // Folder state
   state string
   // List of folders
-  folders() []gcp.folder
+  folders() gcp.folders
   // List of projects
-  projects() []gcp.project
+  projects() gcp.projects
 }
 
-// GCP Organization projects
-private gcp.organization.projectsService {
+// GCP Projects
+private gcp.projects {
   []gcp.project
-  // Organization ID
-  orgId string
+  // Parent ID
+  parentId string
   // Flat list of all projects within the organization
   all() []gcp.project
 }

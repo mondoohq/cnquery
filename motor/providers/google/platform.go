@@ -16,6 +16,8 @@ func (t *Provider) Identifier() (string, error) {
 		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + t.id, nil
 	case Workspace:
 		return "//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + t.id, nil
+	case Folder:
+		return "//platformid.api.mondoo.app/runtime/gcp/folders/" + t.id, nil
 	default:
 		return "", fmt.Errorf("unsupported resource type %d", t.ResourceType())
 	}
@@ -64,6 +66,14 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 			Title:   "Google Workspace",
 			Family:  []string{"google"},
 			Kind:    providers.Kind_KIND_API,
+			Runtime: p.Runtime(),
+		}, nil
+	case Folder:
+		return &platform.Platform{
+			Name:    "gcp-folder",
+			Title:   "GCP Folder",
+			Family:  []string{"google"},
+			Kind:    providers.Kind_KIND_GCP_OBJECT,
 			Runtime: p.Runtime(),
 		}, nil
 	}

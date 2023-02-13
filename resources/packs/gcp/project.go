@@ -15,12 +15,12 @@ import (
 	"google.golang.org/api/option"
 )
 
-func (g *mqlGcpOrganizationProjectsService) id() (string, error) {
-	id, err := g.OrgId()
+func (g *mqlGcpProjects) id() (string, error) {
+	id, err := g.ParentId()
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("gcp.organization.projectsService/%s", id), nil
+	return fmt.Sprintf("gcp.projects/%s", id), nil
 }
 
 func (g *mqlGcpProject) id() (string, error) {
@@ -193,8 +193,8 @@ func (g *mqlGcpProject) GetCommonInstanceMetadata() (map[string]interface{}, err
 	return core.StrMapToInterface(metadata), nil
 }
 
-func (g *mqlGcpOrganizationProjectsService) GetList() ([]interface{}, error) {
-	orgId, err := g.OrgId()
+func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
+	parentId, err := g.ParentId()
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (g *mqlGcpOrganizationProjectsService) GetList() ([]interface{}, error) {
 		return nil, err
 	}
 
-	projects, err := svc.Projects.List().Parent(orgId).Do()
+	projects, err := svc.Projects.List().Parent(parentId).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -231,23 +231,23 @@ func (g *mqlGcpOrganizationProjectsService) GetList() ([]interface{}, error) {
 	return mqlProjects, nil
 }
 
-func (g *mqlGcpOrganizationProjectsService) GetAll() ([]interface{}, error) {
-	orgId, err := g.OrgId()
+func (g *mqlGcpProjects) GetAll() ([]interface{}, error) {
+	parentId, err := g.ParentId()
 	if err != nil {
 		return nil, err
 	}
 
-	obj, err := g.MotorRuntime.CreateResource("gcp.organization.foldersService", "orgId", orgId)
+	obj, err := g.MotorRuntime.CreateResource("gcp.folders", "parentId", parentId)
 	if err != nil {
 		return nil, err
 	}
-	foldersSvc := obj.(GcpOrganizationFoldersService)
+	foldersSvc := obj.(GcpFolders)
 	folders, err := foldersSvc.All()
 	if err != nil {
 		return nil, err
 	}
 
-	foldersMap := map[string]struct{}{orgId: {}}
+	foldersMap := map[string]struct{}{parentId: {}}
 	for _, f := range folders {
 		id, err := f.(GcpFolder).Id()
 		if err != nil {

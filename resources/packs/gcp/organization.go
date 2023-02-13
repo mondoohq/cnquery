@@ -136,7 +136,7 @@ func (g *mqlGcpOrganization) GetFolders() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return g.MotorRuntime.CreateResource("gcp.organization.foldersService", "orgId", orgId)
+	return g.MotorRuntime.CreateResource("gcp.folders", "parentId", orgId)
 }
 
 func (g *mqlGcpOrganization) GetProjects() (interface{}, error) {
@@ -144,7 +144,7 @@ func (g *mqlGcpOrganization) GetProjects() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return g.MotorRuntime.CreateResource("gcp.organization.projectsService", "orgId", orgId)
+	return g.MotorRuntime.CreateResource("gcp.projects", "parentId", orgId)
 }
 
 func (g *mqlGcpResourcemanagerBinding) id() (string, error) {

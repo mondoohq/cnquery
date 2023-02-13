@@ -90,7 +90,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 				"folder-id": f.Id,
 			}
 
-			assets, err := (&GcpProjectResolver{}).Resolve(ctx, folderConfig, credsResolver, sfn, userIdDetectors...)
+			assets, err := (&GcpFolderResolver{}).Resolve(ctx, folderConfig, credsResolver, sfn, userIdDetectors...)
 			if err != nil {
 				return nil, err
 			}
