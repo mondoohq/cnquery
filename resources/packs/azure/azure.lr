@@ -1315,7 +1315,7 @@ private azure.subscription.aksService {
   // The subscription identifier
   subscriptionId string
   // List all the AKS clusters inside the subscription
-	clusters() []azure.subscription.aksService.cluster
+  clusters() []azure.subscription.aksService.cluster
 }
 
 // Azure Kubernetes Service cluster
@@ -1326,7 +1326,7 @@ private azure.subscription.aksService.cluster @defaults("name location") {
   name string
   // Location of the AKS cluster
   location string
-  // The kubernetes version of the AKS cluster
+  // The Kubernetes version of the AKS cluster
   kubernetesVersion string
   // The provisioning state of the AKS cluster
   provisioningState string
