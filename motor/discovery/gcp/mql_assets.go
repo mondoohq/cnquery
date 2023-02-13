@@ -40,6 +40,22 @@ func (md *MqlDiscovery) Close() {
 	}
 }
 
+func GetValue[T any](md *MqlDiscovery, query string) (T, error) {
+	mqlExecutor := mql.New(md.rt, cnquery.DefaultFeatures)
+	value, err := mqlExecutor.Exec(query, map[string]*llx.Primitive{})
+	if err != nil {
+		return *new(T), err
+	}
+	if value.Error != nil {
+		return *new(T), value.Error
+	}
+	var out T
+	if err := mapstructure.Decode(value.Value, &out); err != nil {
+		return *new(T), err
+	}
+	return out, nil
+}
+
 func GetList[T any](md *MqlDiscovery, query string) ([]T, error) {
 	mqlExecutor := mql.New(md.rt, cnquery.DefaultFeatures)
 	value, err := mqlExecutor.Exec(query, map[string]*llx.Primitive{})

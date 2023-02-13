@@ -59,7 +59,16 @@ func (r *GcpFolderResolver) Resolve(ctx context.Context, tc *providers.Config, c
 		return nil, err
 	}
 
-	folder := tc.Options["folder-id"]
+	folderId := tc.Options["folder-id"]
+	md, err := NewMQLAssetsDiscovery(provider)
+	if err != nil {
+		return nil, err
+	}
+
+	folder, err := GetValue[string](md, fmt.Sprintf("return gcp.folder(id: '%s').name", folderId))
+	if err != nil {
+		return nil, err
+	}
 
 	var resolvedRoot *asset.Asset
 	if tc.IncludesOneOfDiscoveryTarget(DiscoveryFolders) {
@@ -78,15 +87,10 @@ func (r *GcpFolderResolver) Resolve(ctx context.Context, tc *providers.Config, c
 		DiscoveryGkeClusters,
 		DiscoveryStorageBuckets,
 		DiscoveryBigQueryDatasets) {
-		m, err := NewMQLAssetsDiscovery(provider)
-		if err != nil {
-			return nil, err
-		}
-
 		type project struct {
 			Id string
 		}
-		projects, err := GetList[project](m, fmt.Sprintf("return gcp.folder(id: '%s').projects.all { id }", folder))
+		projects, err := GetList[project](md, fmt.Sprintf("return gcp.folder(id: '%s').projects.all { id }", folderId))
 		if err != nil {
 			return nil, err
 		}

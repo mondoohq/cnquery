@@ -59,7 +59,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 
 	var rootAsset *asset.Asset
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryOrganization) {
-		pf.Name = "gcp-organization"
+		pf.Name = "gcp-org"
 		rootAsset = &asset.Asset{
 			PlatformIds: []string{identifier},
 			Name:        "GCP organization " + org.DisplayName,

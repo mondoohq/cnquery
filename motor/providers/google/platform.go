@@ -46,7 +46,7 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 	switch p.resourceType {
 	case Organization:
 		return &platform.Platform{
-			Name:    "gcp-organization",
+			Name:    "gcp-org",
 			Title:   "GCP Organization",
 			Family:  []string{"google"},
 			Kind:    providers.Kind_KIND_GCP_OBJECT,
