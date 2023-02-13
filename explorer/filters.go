@@ -8,6 +8,19 @@ import (
 	"go.mondoo.com/cnquery/checksums"
 )
 
+// NewFilters creates a Filters object from a simple list of MQL snippets
+func NewFilters(queries ...string) *Filters {
+	res := &Filters{
+		Items: map[string]*Mquery{},
+	}
+
+	for i := range queries {
+		res.Items[strconv.Itoa(i)] = &Mquery{Mql: queries[i]}
+	}
+
+	return res
+}
+
 // Computes the checksum for the filters and adds it to the aggregate
 // execution and content checksums. Filters must have been previously compiled!
 // We need it to be ready for checksums and don't want to do the compile
