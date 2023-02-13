@@ -2,6 +2,7 @@ package google
 
 import (
 	"errors"
+	"fmt"
 
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -16,7 +17,7 @@ func (t *Provider) Identifier() (string, error) {
 	case Workspace:
 		return "//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + t.id, nil
 	default:
-		return "", errors.New("unsupported resource type")
+		return "", fmt.Errorf("unsupported resource type %d", t.ResourceType())
 	}
 }
 
@@ -41,10 +42,18 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 	}
 
 	switch p.resourceType {
+	case Organization:
+		return &platform.Platform{
+			Name:    "gcp-organization",
+			Title:   "GCP Organization",
+			Family:  []string{"google"},
+			Kind:    providers.Kind_KIND_GCP_OBJECT,
+			Runtime: p.Runtime(),
+		}, nil
 	case Project:
 		return &platform.Platform{
-			Name:    "gcp",
-			Title:   "Google Cloud Platform",
+			Name:    "gcp-project",
+			Title:   "GCP Project",
 			Family:  []string{"google"},
 			Kind:    providers.Kind_KIND_GCP_OBJECT,
 			Runtime: p.Runtime(),

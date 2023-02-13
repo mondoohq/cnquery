@@ -17,19 +17,61 @@ alias gcp.bigquery = gcp.project.bigqueryService
 alias gcp.storage = gcp.project.storageService
 
 // GCP Cloud Organization
-gcp.organization @defaults("id") {
+gcp.organization @defaults("name") {
   // Organization ID
   id string
   // Organization name
   name string
   // Organization state
+  state string
+  // Deprecated. Use `state` instead.
   lifecycleState string
   // Organization IAM policy
   iamPolicy() []gcp.resourcemanager.binding
   // Access approval settings
   accessApprovalSettings() gcp.accessApprovalSettings
+  // List of folders
+  folders() gcp.organization.foldersService
+  // List of projects
+  projects() gcp.organization.projectsService
+}
+
+// GCP Organization folders
+private gcp.organization.foldersService {
+  []gcp.folder
+  // Organization ID
+  orgId string
+  // Flat list of all folders within the organization
+  all() []gcp.folder
+}
+
+// GCP Folder
+private gcp.folder @defaults("name") {
+  // Folder ID
+  id string
+  // Folder name
+  name string
+  // Creation timestamp
+  created time
+  // Update timestamp
+  updated time
+  // Parent ID
+  parent string
+  // Folder state
+  state string
+  // List of folders
+  folders() []gcp.folder
   // List of projects
   projects() []gcp.project
+}
+
+// GCP Organization projects
+private gcp.organization.projectsService {
+  []gcp.project
+  // Organization ID
+  orgId string
+  // Flat list of all projects within the organization
+  all() []gcp.project
 }
 
 // Google Cloud Platform Project
