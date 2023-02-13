@@ -44,7 +44,7 @@ func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject,
 		return nil, nil, err
 	}
 
-	projectId := provider.ResourceID()
+	projectId := fmt.Sprintf("projects/%s", provider.ResourceID())
 	project, err := svc.Projects.Get(projectId).Do()
 	if err != nil {
 		return nil, nil, err
