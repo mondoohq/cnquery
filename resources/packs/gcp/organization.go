@@ -3,7 +3,6 @@ package gcp
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources"
@@ -107,49 +106,20 @@ func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {
 	return res, nil
 }
 
-func (g *mqlGcpOrganization) GetProjects() ([]interface{}, error) {
+func (g *mqlGcpOrganization) GetFolders() (interface{}, error) {
 	orgId, err := g.Id()
 	if err != nil {
 		return nil, err
 	}
+	return g.MotorRuntime.CreateResource("gcp.organization.foldersService", "orgId", orgId)
+}
 
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+func (g *mqlGcpOrganization) GetProjects() (interface{}, error) {
+	orgId, err := g.Id()
 	if err != nil {
 		return nil, err
 	}
-
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.Background()
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-
-	projects, err := svc.Projects.List().Parent(orgId).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	mqlProjects := make([]interface{}, 0, len(projects.Projects))
-	for _, p := range projects.Projects {
-		project, err := g.MotorRuntime.CreateResource("gcp.project",
-			"id", p.ProjectId,
-			"number", strings.TrimPrefix(p.Name, "projects/")[0:10],
-			"name", p.DisplayName,
-			"state", p.State,
-			"createTime", parseTime(p.CreateTime),
-			"labels", core.StrMapToInterface(p.Labels),
-		)
-		if err != nil {
-			return nil, err
-		}
-		mqlProjects = append(mqlProjects, project)
-	}
-	return mqlProjects, nil
+	return g.MotorRuntime.CreateResource("gcp.organization.projectsService", "orgId", orgId)
 }
 
 func (g *mqlGcpResourcemanagerBinding) id() (string, error) {
