@@ -3,6 +3,7 @@ package gcp
 const (
 	// Discovery flags
 	DiscoveryOrganization       = "organization"
+	DiscoveryFolders            = "folders"
 	DiscoveryInstances          = "instances"
 	DiscoveryProjects           = "projects"
 	DiscoveryComputeImages      = "compute-images"

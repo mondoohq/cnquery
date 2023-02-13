@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -57,6 +58,30 @@ func (g *mqlGcpOrganization) init(args *resources.Args) (*resources.Args, GcpOrg
 	(*args)["lifecycleState"] = org.State
 
 	return args, nil, nil
+}
+
+func (g *mqlGcpOrganization) GetId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (g *mqlGcpOrganization) GetName() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (g *mqlGcpOrganization) GetState() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (g *mqlGcpOrganization) GetLifecycleState() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
 }
 
 func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {

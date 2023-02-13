@@ -75,6 +75,8 @@ func getTitleForPlatformName(name string) string {
 	switch name {
 	case "gcp-organization":
 		return "GCP Organization"
+	case "gcp-folder":
+		return "GCP Folder"
 	case "gcp-project":
 		return "GCP Project"
 	case "gcp-compute-image":

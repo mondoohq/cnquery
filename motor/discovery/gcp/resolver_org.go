@@ -18,7 +18,7 @@ func (k *GcpOrgResolver) Name() string {
 }
 
 func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryOrganization, DiscoveryProjects}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryOrganization, DiscoveryFolders, DiscoveryProjects}
 }
 
 func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -69,6 +69,35 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 		resolved = append(resolved, rootAsset)
 	}
 
+	// discover folders
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryFolders) {
+		m, err := NewMQLAssetsDiscovery(provider)
+		if err != nil {
+			return nil, err
+		}
+
+		type folder struct {
+			Id string
+		}
+		folders, err := GetList[folder](m, "return gcp.organization.folders.all { id }")
+		if err != nil {
+			return nil, err
+		}
+
+		for _, f := range folders {
+			folderConfig := tc.Clone()
+			folderConfig.Options = map[string]string{
+				"folder-id": f.Id,
+			}
+
+			assets, err := (&GcpProjectResolver{}).Resolve(ctx, folderConfig, credsResolver, sfn, userIdDetectors...)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, assets...)
+		}
+	}
+
 	// discover projects
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryProjects) {
 		m, err := NewMQLAssetsDiscovery(provider)
@@ -79,7 +108,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 		type project struct {
 			Id string
 		}
-		projects, err := GetList[project](m, "return gcp.organization.projects { id }")
+		projects, err := GetList[project](m, "return gcp.organization.projects.all { id }")
 		if err != nil {
 			return nil, err
 		}

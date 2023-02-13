@@ -19,13 +19,13 @@ alias gcp.storage = gcp.project.storageService
 // GCP Cloud Organization
 gcp.organization @defaults("name") {
   // Organization ID
-  id string
+  id() string
   // Organization name
-  name string
+  name() string
   // Organization state
-  state string
+  state() string
   // Deprecated. Use `state` instead.
-  lifecycleState string
+  lifecycleState() string
   // Organization IAM policy
   iamPolicy() []gcp.resourcemanager.binding
   // Access approval settings
