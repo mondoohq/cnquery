@@ -43,7 +43,7 @@ func (g *mqlGcpOrganization) GetFolders() ([]interface{}, error) {
 		return nil, err
 	}
 
-	folders, err := svc.Folders.List().Parent(fmt.Sprintf("organizations/%s", orgId)).Do()
+	folders, err := svc.Folders.List().Parent(orgId).Do()
 	if err != nil {
 		return nil, err
 	}

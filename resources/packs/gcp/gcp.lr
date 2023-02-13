@@ -32,6 +32,8 @@ gcp.organization @defaults("id") {
   accessApprovalSettings() gcp.accessApprovalSettings
   // List of folders
   folders() []gcp.folder
+  // List of projects
+  projects() []gcp.project
 }
 
 // GCP Folder
