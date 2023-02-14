@@ -90,7 +90,7 @@ func (r *GcpFolderResolver) Resolve(ctx context.Context, tc *providers.Config, c
 		type project struct {
 			Id string
 		}
-		projects, err := GetList[project](md, fmt.Sprintf("return gcp.folder(id: '%s').projects.all { id }", folderId))
+		projects, err := GetList[project](md, fmt.Sprintf("return gcp.folder(id: '%s').projects { id }", folderId))
 		if err != nil {
 			return nil, err
 		}

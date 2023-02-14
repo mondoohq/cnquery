@@ -79,7 +79,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 		type folder struct {
 			Id string
 		}
-		folders, err := GetList[folder](m, "return gcp.organization.folders.all { id }")
+		folders, err := GetList[folder](m, "return gcp.organization.folders { id }")
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +108,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 		type project struct {
 			Id string
 		}
-		projects, err := GetList[project](m, "return gcp.organization.projects.all { id }")
+		projects, err := GetList[project](m, "return gcp.organization.projects { id }")
 		if err != nil {
 			return nil, err
 		}
