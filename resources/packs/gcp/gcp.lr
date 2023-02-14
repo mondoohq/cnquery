@@ -41,8 +41,8 @@ private gcp.folders {
   []gcp.folder
   // Parent ID
   parentId string
-  // Flat list of all folders within the organization
-  all() []gcp.folder
+  // List of the children folders only (non-recursive)
+  children() []gcp.folder
 }
 
 // GCP Folder
@@ -70,8 +70,8 @@ private gcp.projects {
   []gcp.project
   // Parent ID
   parentId string
-  // Flat list of all projects within the organization
-  all() []gcp.project
+  // List of the children projects only (non-recursive)
+  children() []gcp.project
 }
 
 // Google Cloud Platform Project
@@ -81,7 +81,7 @@ gcp.project @defaults("name") {
   // The unique resource name
   name() string
   // Parent ID
-  parendId() string
+  parentId() string
   // Deprecated. Use `id` instead.
   number() string
   // The project lifecycle state

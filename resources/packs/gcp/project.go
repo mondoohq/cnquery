@@ -82,6 +82,12 @@ func (g *mqlGcpProject) GetName() (string, error) {
 	return "", errors.New("not implemented")
 }
 
+func (g *mqlGcpProject) GetParentId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
 func (g *mqlGcpProject) GetNumber() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
@@ -194,7 +200,7 @@ func (g *mqlGcpProject) GetCommonInstanceMetadata() (map[string]interface{}, err
 	return core.StrMapToInterface(metadata), nil
 }
 
-func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
+func (g *mqlGcpProjects) GetChildren() ([]interface{}, error) {
 	parentId, err := g.ParentId()
 	if err != nil {
 		return nil, err
@@ -232,7 +238,7 @@ func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
 	return mqlProjects, nil
 }
 
-func (g *mqlGcpProjects) GetAll() ([]interface{}, error) {
+func (g *mqlGcpProjects) GetList() ([]interface{}, error) {
 	parentId, err := g.ParentId()
 	if err != nil {
 		return nil, err
@@ -243,7 +249,7 @@ func (g *mqlGcpProjects) GetAll() ([]interface{}, error) {
 		return nil, err
 	}
 	foldersSvc := obj.(GcpFolders)
-	folders, err := foldersSvc.All()
+	folders, err := foldersSvc.List()
 	if err != nil {
 		return nil, err
 	}

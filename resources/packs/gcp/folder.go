@@ -63,7 +63,7 @@ func (g *mqlGcpFolder) init(args *resources.Args) (*resources.Args, GcpFolder, e
 	return args, nil, nil
 }
 
-func (g *mqlGcpFolders) GetList() ([]interface{}, error) {
+func (g *mqlGcpFolders) GetChildren() ([]interface{}, error) {
 	parentId, err := g.ParentId()
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (g *mqlGcpFolders) GetList() ([]interface{}, error) {
 	return mqlFolders, nil
 }
 
-func (g *mqlGcpFolders) GetAll() ([]interface{}, error) {
+func (g *mqlGcpFolders) GetList() ([]interface{}, error) {
 	parentId, err := g.ParentId()
 	if err != nil {
 		return nil, err
