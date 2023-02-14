@@ -57,6 +57,7 @@ resources:
   googleworkspace.report.apps:
     fields:
       drive: {}
+    is_private: true
     min_mondoo_version: latest
   googleworkspace.report.usage:
     fields:
@@ -75,6 +76,7 @@ resources:
   googleworkspace.report.users:
     fields:
       list: {}
+    is_private: true
     min_mondoo_version: latest
   googleworkspace.role:
     fields:
