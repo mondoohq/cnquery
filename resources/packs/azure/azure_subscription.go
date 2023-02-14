@@ -166,6 +166,10 @@ func (a *mqlAzureSubscription) GetCloudDefender() (interface{}, error) {
 	return a.MotorRuntime.CreateResource("azure.subscription.cloudDefenderService")
 }
 
+func (a *mqlAzureSubscription) GetAks() (interface{}, error) {
+	return a.MotorRuntime.CreateResource("azure.subscription.aksService")
+}
+
 func (a *mqlAzureSubscription) GetId() (string, error) {
 	// placeholder to convince MQL that this is an optional field
 	// should never be called since the data is initialized in init
@@ -237,7 +241,8 @@ func (a *mqlAzureSubscription) GetResources() ([]interface{}, error) {
 		return nil, err
 	}
 
-	pager := client.NewListPager(&azureres.ClientListOptions{})
+	expand := "createdTime,changedTime,provisioningState"
+	pager := client.NewListPager(&azureres.ClientListOptions{Expand: &expand})
 	res := []interface{}{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

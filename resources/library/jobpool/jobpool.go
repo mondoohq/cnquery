@@ -1,6 +1,7 @@
 package jobpool
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -72,7 +73,11 @@ func NewJob(f func() (JobResult, error)) *Job {
 
 // Run runs a job and does appropriate accounting via a given sync.WorkGroup
 func (t *Job) Run(wg *sync.WaitGroup) {
-	t.Result, t.Err = t.f()
+	if t.f == nil {
+		t.Err = fmt.Errorf("no funtion to run in jobpool: %s", t.Err)
+	} else {
+		t.Result, t.Err = t.f()
+	}
 	wg.Done()
 }
 
