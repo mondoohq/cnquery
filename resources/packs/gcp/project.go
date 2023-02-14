@@ -61,6 +61,7 @@ func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject,
 	(*args)["id"] = project.ProjectId
 	(*args)["number"] = strings.TrimPrefix(project.Name, "projects/")[0:10]
 	(*args)["name"] = project.Name
+	(*args)["parentId"] = project.Parent
 	(*args)["state"] = project.State
 	(*args)["lifecycleState"] = project.State
 	(*args)["createTime"] = parseTime(project.CreateTime)
@@ -294,6 +295,7 @@ func projectToMql(runtime *resources.Runtime, p *cloudresourcemanager.Project) (
 		"id", p.ProjectId,
 		"number", strings.TrimPrefix(p.Name, "projects/")[0:10],
 		"name", p.DisplayName,
+		"parentId", p.Parent,
 		"state", p.State,
 		"createTime", parseTime(p.CreateTime),
 		"labels", core.StrMapToInterface(p.Labels),

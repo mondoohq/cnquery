@@ -58,7 +58,7 @@ func (g *mqlGcpFolder) init(args *resources.Args) (*resources.Args, GcpFolder, e
 	(*args)["name"] = folder.DisplayName
 	(*args)["created"] = parseTime(folder.CreateTime)
 	(*args)["updated"] = parseTime(folder.CreateTime)
-	(*args)["parent"] = folder.Parent
+	(*args)["parentId"] = folder.Parent
 	(*args)["state"] = folder.State
 	return args, nil, nil
 }
@@ -173,7 +173,7 @@ func folderToMql(runtime *resources.Runtime, f *cloudresourcemanager.Folder) (in
 		"name", f.DisplayName,
 		"created", parseTime(f.CreateTime),
 		"updated", parseTime(f.UpdateTime),
-		"parent", f.Parent,
+		"parentId", f.Parent,
 		"state", f.State,
 	)
 }

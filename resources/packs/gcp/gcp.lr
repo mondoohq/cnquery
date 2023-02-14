@@ -56,7 +56,7 @@ private gcp.folder @defaults("name") {
   // Update timestamp
   updated time
   // Parent ID
-  parent string
+  parentId string
   // Folder state
   state string
   // List of folders
@@ -80,6 +80,8 @@ gcp.project @defaults("name") {
   id() string
   // The unique resource name
   name() string
+  // Parent ID
+  parendId() string
   // Deprecated. Use `id` instead.
   number() string
   // The project lifecycle state
