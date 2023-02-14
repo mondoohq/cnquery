@@ -43,6 +43,9 @@ func getAssetIdentifier(runtime *resources.Runtime) *assetIdentifier {
 		if strings.HasPrefix(id, "//platformid.api.mondoo.app/runtime/gcp/") {
 			// "//platformid.api.mondoo.app/runtime/gcp/{o.service}/v1/projects/{project}/regions/{region}/{objectType}/{name}"
 			segments := strings.Split(id, "/")
+			if len(segments) < 12 {
+				return nil
+			}
 			name = segments[len(segments)-1]
 			region = segments[10]
 			project = segments[8]

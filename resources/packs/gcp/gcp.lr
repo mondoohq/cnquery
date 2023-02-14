@@ -196,6 +196,8 @@ private gcp.project.computeService.address @defaults("name address addressType")
   name string
   // URL of the network in which to reserve the address
   networkUrl string
+  // Network in which to reserve the address
+  network() gcp.project.computeService.network
   // Network tier used for configuring this address
   networkTier string
   // Prefix length if the resource represents an IP range
@@ -208,8 +210,10 @@ private gcp.project.computeService.address @defaults("name address addressType")
   status string
   // URL of the subnetwork in which to reserve the address
   subnetworkUrl string
+  // Subnetwork in which to reserve the address
+  subnetwork() gcp.project.computeService.subnetwork
   // URLs of the resources that are using this address
-  userUrls []string
+  resourceUrls []string
 }
 
 // GCP Compute Region
