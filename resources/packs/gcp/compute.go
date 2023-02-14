@@ -1848,3 +1848,63 @@ func networkMode(n *compute.Network) string {
 		return "custom"
 	}
 }
+
+func (g *mqlGcpProjectComputeService) GetAddresses() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := computeSvc.Addresses.AggregatedList(projectId).Do()
+	if err != nil {
+		return nil, err
+	}
+	var mqlAddresses []interface{}
+	for _, as := range list.Items {
+		for _, a := range as.Addresses {
+			mqlA, err := g.MotorRuntime.CreateResource("gcp.project.computeService.address",
+				"id", fmt.Sprintf("%d", a.Id),
+				"address", a.Address,
+				"addressType", a.AddressType,
+				"created", parseTime(a.CreationTimestamp),
+				"description", a.Description,
+				"ipVersion", a.IpVersion,
+				"ipv6EndpointType", a.Ipv6EndpointType,
+				"name", a.Name,
+				"networkUrl", a.Network,
+				"networkTier", a.NetworkTier,
+				"prefixLength", a.PrefixLength,
+				"purpose", a.Purpose,
+				"regionUrl", a.Region,
+				"status", a.Status,
+				"subnetworkUrl", a.Subnetwork,
+				"userUrls", core.StrSliceToInterface(a.Users),
+			)
+			if err != nil {
+				return nil, err
+			}
+			mqlAddresses = append(mqlAddresses, mqlA)
+		}
+	}
+	return mqlAddresses, nil
+}
+
+func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
+	return g.Id()
+}
