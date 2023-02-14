@@ -41,9 +41,11 @@ func (r *PlatformResolver) Resolve(p os.OperatingSystemProvider) (*platform.Plat
 
 	_, ok = p.(*docker_engine.Provider)
 	if resolved && ok {
+		pi.Arch = p.(*docker_engine.Provider).PlatformArchitecture
 		// if the platform name is not set, we should fallback to the scratch operating system
 		if len(pi.Name) == 0 {
 			di.Name = "scratch"
+			di.Arch = pi.Arch
 			return di, true
 		}
 	}

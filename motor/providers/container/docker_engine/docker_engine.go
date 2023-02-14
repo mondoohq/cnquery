@@ -41,6 +41,16 @@ func New(container string) (*Provider, error) {
 		kind:         providers.Kind_KIND_CONTAINER,
 		runtime:      providers.RUNTIME_DOCKER_CONTAINER,
 	}
+
+	// this can later be used for containers build from scratch
+	serverVersion, err := dockerClient.ServerVersion(context.Background())
+	if err != nil {
+		log.Debug().Err(err).Msg("docker> cannot get server version")
+	} else {
+		log.Debug().Interface("serverVersion", serverVersion).Msg("docker> server version")
+		t.PlatformArchitecture = serverVersion.Arch
+	}
+
 	t.Fs = &FS{
 		dockerClient: t.dockerClient,
 		Container:    t.container,
@@ -55,7 +65,8 @@ type Provider struct {
 	container    string
 	Fs           *FS
 
-	PlatformIdentifier string
+	PlatformIdentifier   string
+	PlatformArchitecture string
 	// optional metadata to store additional information
 	Metadata struct {
 		Name   string
