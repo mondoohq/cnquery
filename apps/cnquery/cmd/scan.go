@@ -405,8 +405,9 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 
 	// determine the scan config from pipe or args
 	flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
-	iddetector, _ := cmd.Flags().GetString("id-detector")
-	flagAsset.IdDetector = []string{iddetector}
+	if iddetector, _ := cmd.Flags().GetString("id-detector"); iddetector != "" {
+		flagAsset.IdDetector = []string{iddetector}
+	}
 	conf.Inventory, err = inventoryloader.ParseOrUse(flagAsset, viper.GetBool("insecure"))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load configuration")
