@@ -30,7 +30,7 @@ resources:
       storageProfile: {}
       tags: {}
       workloadAutoScalerProfile: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 7.17.0
     platform:
       name:
       - azure
@@ -55,7 +55,7 @@ resources:
       storageProfile: {}
       tags: {}
       workloadAutoScalerProfile: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 7.17.0
     platform:
       name:
       - azure
@@ -798,7 +798,7 @@ resources:
       clusters: {}
       subscriptionId: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 7.17.0
     platform:
       name:
       - azure
@@ -825,7 +825,7 @@ resources:
       tags: {}
       workloadAutoScalerProfile: {}
     is_private: true
-    min_mondoo_version: latest
+    min_mondoo_version: 7.17.0
     platform:
       name:
       - azure
