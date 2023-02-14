@@ -1,6 +1,8 @@
 Acked
 activitylog
+aks
 Auths
+autoscaler
 backupconfiguration
 bigquery
 cavium
