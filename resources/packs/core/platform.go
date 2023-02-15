@@ -35,12 +35,10 @@ func (s *mqlPlatform) init(args *resources.Args) (*resources.Args, Platform, err
 		(*args)["name"] = platform.Name
 		(*args)["title"] = platform.PrettyTitle()
 		(*args)["arch"] = platform.Arch
-		// FIXME: remove in v8
-		(*args)["release"] = platform.Release
 		(*args)["version"] = platform.Version
+		(*args)["release"] = platform.Version
 		(*args)["build"] = platform.Build
 		(*args)["kind"] = platform.Kind.Name()
-		// FIXME: remove in v8
 		(*args)["runtimeEnv"] = platform.Runtime
 		// FIXME: With the introduction of v8, we need to go through all the runtime
 		// fields coming out of motor and make sure that they are written as

@@ -25,7 +25,6 @@ func convertMqlPlatform2ApiPlatform(pf Platform) *platform.Platform {
 	}
 
 	name, _ := pf.Name()
-	release, _ := pf.Release()
 	version, _ := pf.Version()
 	build, _ := pf.Build()
 	arch, _ := pf.Arch()
@@ -43,7 +42,6 @@ func convertMqlPlatform2ApiPlatform(pf Platform) *platform.Platform {
 
 	return &platform.Platform{
 		Name:    name,
-		Release: release,
 		Version: version,
 		Build:   build,
 		Arch:    arch,

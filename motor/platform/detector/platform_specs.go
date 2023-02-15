@@ -42,7 +42,6 @@ var macOS = &PlatformResolver{
 		pf.Name = "macos"
 		pf.Title = sv["ProductName"]
 		pf.Version = sv["ProductVersion"]
-		pf.Release = pf.Version
 		pf.Build = sv["ProductBuildVersion"]
 
 		return true, nil
@@ -72,7 +71,6 @@ var alpine = &PlatformResolver{
 		if osr["PRETTY_NAME"] == "Alpine Linux edge" {
 			pf.Name = "alpine"
 			pf.Version = "edge"
-			pf.Release = pf.Version
 			pf.Build = osr["VERSION_ID"]
 		}
 
@@ -146,7 +144,6 @@ var debian = &PlatformResolver{
 		}
 
 		pf.Version = strings.TrimSpace(string(c))
-		pf.Release = pf.Version
 
 		unamem, err := osrd.unamem()
 		if err == nil {
@@ -451,7 +448,6 @@ var gentoo = &PlatformResolver{
 			}
 			if len(pf.Version) == 0 {
 				pf.Version = release
-				pf.Release = pf.Version
 			}
 		}
 
@@ -511,7 +507,6 @@ var busybox = &PlatformResolver{
 					pf.Name = "busybox"
 					pf.Title = title
 					pf.Version = release
-					pf.Release = pf.Version
 					return true, nil
 				}
 			}
@@ -556,7 +551,6 @@ var openwrt = &PlatformResolver{
 			}
 			if len(lsb["DISTRIB_RELEASE"]) > 0 {
 				pf.Version = lsb["DISTRIB_RELEASE"]
-				pf.Release = pf.Version
 			}
 
 			return true, nil
@@ -591,7 +585,6 @@ var plcnext = &PlatformResolver{
 		if len(m) >= 2 {
 			pf.Name = "plcnext"
 			pf.Title = "PLCnext"
-			pf.Release = m[1]
 			pf.Version = m[1]
 
 			bm := plcnextBuildVersion.FindStringSubmatch(string(content))
@@ -629,7 +622,6 @@ var netbsd = &PlatformResolver{
 		release, err := osrd.unamer()
 		if err == nil {
 			pf.Version = release
-			pf.Release = pf.Version
 		}
 
 		return true, nil
@@ -648,7 +640,6 @@ var freebsd = &PlatformResolver{
 		release, err := osrd.unamer()
 		if err == nil {
 			pf.Version = release
-			pf.Release = pf.Version
 		}
 
 		return true, nil
@@ -667,7 +658,6 @@ var openbsd = &PlatformResolver{
 		release, err := osrd.unamer()
 		if err == nil {
 			pf.Version = release
-			pf.Release = pf.Version
 		}
 
 		return true, nil
@@ -687,7 +677,6 @@ var dragonflybsd = &PlatformResolver{
 		release, err := osrd.unamer()
 		if err == nil {
 			pf.Version = release
-			pf.Release = pf.Version
 		}
 
 		return true, nil
@@ -710,7 +699,6 @@ var windows = &PlatformResolver{
 		// instead of using windows major.minor.build.ubr we just use build.ubr since
 		// major and minor can be derived from the build version
 		pf.Version = data.BuildNumber
-		pf.Release = pf.Version
 
 		// FIXME: we need to ask wmic cpu get architecture
 		pf.Arch = data.OSArchitecture
@@ -759,7 +747,6 @@ var darwinFamily = &PlatformResolver{
 			}
 			if len(dsv["ProductVersion"]) > 0 {
 				pf.Version = dsv["ProductVersion"]
-				pf.Release = pf.Version
 			}
 		} else {
 			// TODO: we know its darwin, but without swversion support
@@ -829,7 +816,6 @@ var redhatFamily = &PlatformResolver{
 			// more accurate
 			if len(release) > 0 {
 				pf.Version = release
-				pf.Release = pf.Version
 			}
 
 			return true, nil
@@ -914,7 +900,6 @@ var linuxFamily = &PlatformResolver{
 			}
 			if len(lsb["DISTRIB_RELEASE"]) > 0 {
 				pf.Version = lsb["DISTRIB_RELEASE"]
-				pf.Release = pf.Version
 			}
 
 			detected = true
@@ -935,7 +920,6 @@ var linuxFamily = &PlatformResolver{
 			}
 			if len(osr["VERSION_ID"]) > 0 {
 				pf.Version = osr["VERSION_ID"]
-				pf.Release = pf.Version
 			}
 
 			if len(osr["BUILD_ID"]) > 0 {
@@ -1053,7 +1037,6 @@ var solaris = &PlatformResolver{
 			pf.Name = release.ID
 			pf.Title = release.Title
 			pf.Version = release.Release
-			pf.Release = pf.Version
 		}
 
 		return true, nil
@@ -1084,7 +1067,6 @@ var esxi = &PlatformResolver{
 		}
 
 		pf.Version = version
-		pf.Release = pf.Version
 		return true, nil
 	},
 }

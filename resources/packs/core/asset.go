@@ -19,7 +19,6 @@ func convertMqlAsset2ApiPlatform(a Asset) *platform.Platform {
 	}
 
 	name, _ := a.Platform()
-	release, _ := a.Version()
 	version, _ := a.Version()
 	build, _ := a.Build()
 	arch, _ := a.Arch()
@@ -37,7 +36,6 @@ func convertMqlAsset2ApiPlatform(a Asset) *platform.Platform {
 
 	return &platform.Platform{
 		Name:    name,
-		Release: release,
 		Version: version,
 		Build:   build,
 		Arch:    arch,

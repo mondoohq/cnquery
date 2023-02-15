@@ -101,7 +101,7 @@ func (y *mqlYum) GetVars() (map[string]interface{}, error) {
 	}
 
 	// fallback for older versions like 6 and 7 version to use yum script
-	if rhel67release.MatchString(pf.Release) {
+	if rhel67release.MatchString(pf.Version) {
 		script = yum.Rhel6VarsCommand
 	}
 
