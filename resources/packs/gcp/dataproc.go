@@ -164,7 +164,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 			defer wg.Done()
 			clusters, err := dataprocSvc.Projects.Regions.Clusters.List(projectId, regionName).Do()
 			if err != nil {
-				log.Error().Err(err).Send()
+				log.Error().Str("region", regionName).Err(err).Send()
 			} else {
 				for _, c := range clusters.Clusters {
 					var mqlConfig resources.ResourceType
