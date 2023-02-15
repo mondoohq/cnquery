@@ -1982,6 +1982,8 @@ private gcp.project.cloudFunction {
 private gcp.project.dataprocService {
   // Project ID
   projectId string
+  // Whether the DataProc service is enabled in the project or not
+  enabled bool
   // List of available regions
   regions() []string
   // List of Dataproc clusters in the current project
