@@ -474,25 +474,25 @@ func (p *mqlPorts) listLinux() ([]interface{}, error) {
 	}
 
 	var ports []interface{}
-	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "ipv4", users, getProcess)
+	tcpPorts, err := p.parseProcNet("/proc/net/tcp", "tcp4", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPorts...)
 
-	udpPorts, err := p.parseProcNet("/proc/net/udp", "ipv4", users, getProcess)
+	udpPorts, err := p.parseProcNet("/proc/net/udp", "udp4", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, udpPorts...)
 
-	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "ipv6", users, getProcess)
+	tcpPortsV6, err := p.parseProcNet("/proc/net/tcp6", "tcp6", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
 	ports = append(ports, tcpPortsV6...)
 
-	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "ipv6", users, getProcess)
+	udpPortsV6, err := p.parseProcNet("/proc/net/udp6", "udp6", users, getProcess)
 	if err != nil {
 		return nil, err
 	}
@@ -590,9 +590,9 @@ func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]Process) (
 
 		process := processes[port.OwningProcess]
 
-		protocol := "ipv4"
+		protocol := "tcp4"
 		if strings.Contains(port.LocalAddress, ":") {
-			protocol = "ipv6"
+			protocol = "tcp6"
 		}
 
 		obj, err := p.MotorRuntime.CreateResource("port",
@@ -666,9 +666,11 @@ func (p *mqlPorts) listMacos() ([]interface{}, error) {
 			}
 			mqlProcess := processes[int64(pid)]
 
-			protocol := "ipv4"
+			protocol := strings.ToLower(fd.Protocol)
 			if fd.Type == lsof.FileTypeIPv6 {
-				protocol = "ipv6"
+				protocol = protocol + "6"
+			} else {
+				protocol = protocol + "4"
 			}
 
 			localAddress, localPort, remoteAddress, remotePort, err := fd.NetworkFile()
