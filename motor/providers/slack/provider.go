@@ -2,7 +2,6 @@ package slack
 
 import (
 	"errors"
-	"os"
 
 	"github.com/rs/zerolog/log"
 	"github.com/slack-go/slack"
@@ -17,12 +16,8 @@ var (
 
 func New(pCfg *providers.Config) (*Provider, error) {
 	// check if the token was provided by the option. This way is deprecated since it does not pass the token as secret
+	// FIXME: remove me in v8.0
 	token := pCfg.Options["token"]
-
-	// if no token was provided, lets read the env variable
-	if token == "" {
-		token = os.Getenv("SLACK_TOKEN")
-	}
 
 	// if a secret was provided, it always overrides the env variable since it has precedence
 	if len(pCfg.Credentials) > 0 {
