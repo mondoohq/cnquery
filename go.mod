@@ -5,6 +5,7 @@ go 1.19
 require (
 	cloud.google.com/go/accessapproval v1.5.0
 	cloud.google.com/go/bigquery v1.44.0
+	cloud.google.com/go/compute v1.13.0
 	cloud.google.com/go/container v1.7.0
 	cloud.google.com/go/functions v1.9.0
 	cloud.google.com/go/iam v0.7.0
@@ -203,7 +204,6 @@ require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
 	cloud.google.com/go v0.105.0 // indirect
-	cloud.google.com/go/compute v1.13.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

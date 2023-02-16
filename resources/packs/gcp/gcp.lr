@@ -172,6 +172,48 @@ private gcp.project.computeService {
   zones() []gcp.project.computeService.zone
   // List of backend services
   backendServices() []gcp.project.computeService.backendService
+  // List of IP addresses
+  addresses() []gcp.project.computeService.address
+}
+
+// GCP Compute Address
+private gcp.project.computeService.address @defaults("name address addressType") {
+  // Unique identifier
+  id string
+  // Static IP address
+  address string
+  // Address type
+  addressType string
+  // Creation timestamp
+  created time
+  // Address description
+  description string
+  // IP version
+  ipVersion string
+  // Endpoint type
+  ipv6EndpointType string
+  // Address name
+  name string
+  // URL of the network in which to reserve the address
+  networkUrl string
+  // Network in which to reserve the address
+  network() gcp.project.computeService.network
+  // Network tier used for configuring this address
+  networkTier string
+  // Prefix length if the resource represents an IP range
+  prefixLength int
+  // Address purpose
+  purpose string
+  // Region URL
+  regionUrl string
+  // Address status
+  status string
+  // URL of the subnetwork in which to reserve the address
+  subnetworkUrl string
+  // Subnetwork in which to reserve the address
+  subnetwork() gcp.project.computeService.subnetwork
+  // URLs of the resources that are using this address
+  resourceUrls []string
 }
 
 // GCP Compute Region
