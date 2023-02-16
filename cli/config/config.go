@@ -173,6 +173,15 @@ func initConfig() {
 	} else {
 		Source = "default"
 	}
+	if strings.HasPrefix(Path, AWS_SSM_PARAMETERSTORE_PREFIX) {
+		err := loadAwsSSMParameterStore(Path)
+		if err != nil {
+			LoadedConfig = false
+			log.Error().Err(err).Str("path", Path).Msg("could not load aws parameter store config")
+		} else {
+			LoadedConfig = true
+		}
+	}
 
 	// check if the default config file is available
 	if Path == "" && Source != configSourceBase64 {
