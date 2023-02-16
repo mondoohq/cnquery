@@ -11,9 +11,10 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/resources"
-	resource_pack "go.mondoo.com/cnquery/resources/packs/os"
+	resource_pack "go.mondoo.com/cnquery/resources/packs/core"
 )
 
 var features cnquery.Features
@@ -52,6 +53,9 @@ func initRuntime() *resources.Runtime {
 	if err != nil {
 		panic(err.Error())
 	}
+	if info, err := motor.Platform(); err == nil {
+		motor.SetAsset(&asset.Asset{Platform: info})
+	}
 
 	runtime := resources.NewRuntime(resource_pack.Registry, motor)
 
@@ -63,12 +67,12 @@ func TestMqlSimple(t *testing.T) {
 		query     string
 		assertion interface{}
 	}{
-		{"platform.name", "arch"},
-		{"platform { name release }", map[string]interface{}{
-			"name":    "arch",
-			"release": "",
+		{"asset.platform", "arch"},
+		{"asset { platform version }", map[string]interface{}{
+			"platform": "arch",
+			"version":  "",
 		}},
-		{"users.list { name uid }", []interface{}{
+		{"users { name uid }", []interface{}{
 			map[string]interface{}{"name": "root", "uid": int64(0)},
 			map[string]interface{}{"name": "chris", "uid": int64(1000)},
 			map[string]interface{}{"name": "christopher", "uid": int64(1000)},

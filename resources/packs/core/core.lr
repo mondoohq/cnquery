@@ -288,6 +288,7 @@ parse.yaml {
 }
 
 // Common platform information (OS, API, Service)
+// Deprecated: please use asset instead. Remove in v9
 platform @defaults("name version") {
   // Name of the platform
   name string

@@ -73,7 +73,6 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 			Name:    "arista-eos",
 			Title:   "Arista EOS",
 			Arch:    v.Architecture,
-			Release: v.Version,
 			Version: v.Version,
 			Kind:    pt.Kind(),
 			Runtime: pt.Runtime(),

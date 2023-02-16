@@ -23,7 +23,7 @@ func TestOsDetection(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "centos", pf.Name)
-	assert.Equal(t, "8.2.2004", pf.Release)
+	assert.Equal(t, "8.2.2004", pf.Version)
 }
 
 func TestMountedDirectoryFile(t *testing.T) {

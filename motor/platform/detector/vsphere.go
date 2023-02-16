@@ -38,7 +38,6 @@ func VspherePlatform(t *vsphere.Provider, identifier string) (*platform.Platform
 			return &platform.Platform{
 				Name:    "vmware-esxi",
 				Title:   "VMware ESXi",
-				Release: esxi_version,
 				Version: esxi_version,
 				Build:   esxi_build,
 				Runtime: providers.RUNTIME_VSPHERE_HOSTS,
@@ -61,7 +60,6 @@ func VspherePlatform(t *vsphere.Provider, identifier string) (*platform.Platform
 	return &platform.Platform{
 		Name:    "vmware-vsphere",
 		Title:   info.FullName,
-		Release: info.Version,
 		Version: info.Version,
 		Build:   info.Build,
 		Kind:    providers.Kind_KIND_API,
