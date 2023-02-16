@@ -72,6 +72,12 @@ func newMqlOktaUser(runtime *resources.Runtime, user *okta.User) (interface{}, e
 		return nil, err
 	}
 
+	profileDict := map[string]interface{}{}
+	if user.Profile != nil {
+		for k, v := range *user.Profile {
+			profileDict[k] = v
+		}
+	}
 	return runtime.CreateResource("okta.user",
 		"id", user.Id,
 		"type", userType,
@@ -81,7 +87,7 @@ func newMqlOktaUser(runtime *resources.Runtime, user *okta.User) (interface{}, e
 		"lastLogin", user.LastLogin,
 		"lastUpdated", user.LastUpdated,
 		"passwordChanged", user.PasswordChanged,
-		"profile", user.Profile,
+		"profile", profileDict,
 		"status", user.Status,
 		"statusChanged", user.StatusChanged,
 		"transitioningToStatus", user.TransitioningToStatus,
