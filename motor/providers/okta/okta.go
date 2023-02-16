@@ -41,7 +41,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	}
 
 	if token == "" {
-		return nil, errors.New("a valid Okta token is required, pass --token '<yourtoken>'")
+		return nil, errors.New("a valid Okta token is required, pass --token '<yourtoken>' or set OKTA_CLIENT_TOKEN environment variable")
 	}
 
 	_, client, err := okta.NewClient(
