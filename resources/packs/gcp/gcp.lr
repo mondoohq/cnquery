@@ -174,6 +174,8 @@ private gcp.project.computeService {
   backendServices() []gcp.project.computeService.backendService
   // List of IP addresses
   addresses() []gcp.project.computeService.address
+  // List of forwarding rules
+  forwardingRules() []gcp.project.computeService.forwardingRule
 }
 
 // GCP Compute Address
@@ -214,6 +216,64 @@ private gcp.project.computeService.address @defaults("name address addressType")
   subnetwork() gcp.project.computeService.subnetwork
   // URLs of the resources that are using this address
   resourceUrls []string
+}
+
+// GCP Compute Forwarding Rules
+private gcp.project.computeService.forwardingRule {
+  // Unique identifier
+  id string
+  // IP address for which this forwarding rule accepts traffic
+  ipAddress string
+  // IP protocol to which this rule applies
+  ipProtocol string
+  // Whether to use all ports for forwarding traffic
+  allPorts bool
+  // Whether to allow accessing the load balancer from all regions
+  allowGlobalAccess bool
+  // Backend service to which the forwarding rule sends traffic
+  backendService string
+  // Creation timestamp
+  created time
+  // Optional resource description
+  description string
+  // IP version that is used by this forwarding rule
+  ipVersion string
+  // Whether this load balancer can be used as a collector for packet mirroring
+  isMirroringCollector bool
+  // User-defined labels
+  labels map[string]string
+  // Forwarding rule type
+  loadBalancingScheme string
+  // Opaque filter criteria used by load balancer to restrict routing configuration to a limited set of xDS compliant clients
+  metadataFilters []dict
+  // Forwarding rule name
+  name string
+  // URL of the network used for internal load balancing
+  networkUrl string
+  // Network used for internal load balancing
+  network() gcp.project.computeService.network
+  // Network tier used for configuring this load balancer
+  networkTier string
+  // Whether the forwarding rule should try to auto-generate a DNS zone or not
+  noAutomateDnsZone bool
+  // Port range to forward
+  portRange string
+  // Ports to forward
+  ports []string
+  // Region URL
+  regionUrl string
+  // Service Directory resources to register this forwarding rule with
+  serviceDirectoryRegistrations []dict
+  // Optional prefix to the service name for this forwarding rule
+  serviceLabel string
+  // Internal fully qualified service name for this forwarding rule
+  serviceName string
+  // URL of the subnetwork that the load balanced IP belongs to
+  subnetworkUrl string
+  // Subnetwork that the load balanced IP belongs to
+  subnetwork() gcp.project.computeService.subnetwork
+  // URL of the target resource to receive the matched traffic
+  targetUrl string
 }
 
 // GCP Compute Region
