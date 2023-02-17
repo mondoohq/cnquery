@@ -389,6 +389,29 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_GCP:
 		connection.Backend = providerType
 
+		// env vars have precedence over the --credentials-path arg
+		credsPath := readEnvs("GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CREDENTIALS")
+		if credsPath != "" {
+			serviceAccount, err := os.ReadFile(credsPath)
+			if err == nil {
+				connection.Credentials = append(connection.Credentials, &vault.Credential{
+					Type:   vault.CredentialType_json,
+					Secret: serviceAccount,
+				})
+			}
+		} else {
+			if credsPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
+				log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
+			} else if credsPath != "" {
+				serviceAccount, err := os.ReadFile(credsPath)
+				if err == nil {
+					connection.Credentials = append(connection.Credentials, &vault.Credential{
+						Type:   vault.CredentialType_json,
+						Secret: serviceAccount,
+					})
+				}
+			}
+		}
 		switch assetType {
 		case DefaultAssetType:
 			// deprecated, remove in v8
@@ -411,7 +434,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			if project, err := cmd.Flags().GetString("project-id"); err != nil {
 				log.Fatal().Err(err).Msg("cannot parse --project value")
 			} else if project != "" {
-				log.Warn().Msg("--organization-id flag is deprecated, use `scan gcp project` instead")
+				log.Warn().Msg("--project-id flag is deprecated, use `scan gcp project` instead")
 				connection.Options["project-id"] = project
 			}
 
@@ -633,6 +656,30 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 	case providers.ProviderType_GOOGLE_WORKSPACE:
 		connection.Backend = providerType
+
+		// env vars have precedence over the --credentials-path arg
+		credsPath := readEnvs("GOOGLEWORKSPACE_CREDENTIALS", "GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON", "GOOGLE_CREDENTIALS")
+		if credsPath != "" {
+			serviceAccount, err := os.ReadFile(credsPath)
+			if err == nil {
+				connection.Credentials = append(connection.Credentials, &vault.Credential{
+					Type:   vault.CredentialType_json,
+					Secret: serviceAccount,
+				})
+			}
+		} else {
+			if credsPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
+				log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
+			} else if credsPath != "" {
+				serviceAccount, err := os.ReadFile(credsPath)
+				if err == nil {
+					connection.Credentials = append(connection.Credentials, &vault.Credential{
+						Type:   vault.CredentialType_json,
+						Secret: serviceAccount,
+					})
+				}
+			}
+		}
 		if customerID, err := cmd.Flags().GetString("customer-id"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --customer-id value")
 		} else if customerID != "" {
@@ -640,7 +687,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 
 		if impersonatedUserEmail, err := cmd.Flags().GetString("impersonated-user-email"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --customer-id value")
+			log.Fatal().Err(err).Msg("cannot parse --impersonated-user-email value")
 		} else if impersonatedUserEmail != "" {
 			connection.Options["impersonated-user-email"] = impersonatedUserEmail
 		}
@@ -691,4 +738,16 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 
 	parsedAsset.Connections = []*providers.Config{connection}
 	return parsedAsset
+}
+
+// returns the first env var that is set, else returns an empty string if none of the specified env vars are set
+func readEnvs(envs ...string) string {
+	for i := range envs {
+		val := os.Getenv(envs[i])
+		if val != "" {
+			return val
+		}
+	}
+
+	return ""
 }

@@ -26,16 +26,15 @@ const (
 
 func New(pCfg *providers.Config) (*Provider, error) {
 	var cred *vault.Credential
+	if len(pCfg.Credentials) != 0 {
+		cred = pCfg.Credentials[0]
+	}
 	if pCfg.Backend == providers.ProviderType_GCP {
 		// FIXME: DEPRECATED, update in v8.0 vv
 		// The options "project" and "organization" have been deprecated in favor of project-id and organization-id
 		if pCfg.Options == nil || (pCfg.Options["project-id"] == "" && pCfg.Options["project"] == "" && pCfg.Options["organization-id"] == "" && pCfg.Options["organization"] == "" && pCfg.Options["folder-id"] == "") {
 			// ^^
 			return nil, errors.New("google provider requires a gcp organization id, gcp project id or google workspace customer id. please set option `project-id` or `organization-id` or `customer-id` or `folder-id`")
-		}
-
-		if len(pCfg.Credentials) != 0 {
-			cred = pCfg.Credentials[0]
 		}
 	} else if pCfg.Backend == providers.ProviderType_GOOGLE_WORKSPACE {
 		if pCfg.Options == nil || pCfg.Options["customer-id"] == "" {
@@ -96,14 +95,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		platformOverride: override,
 	}
 
-	serviceAccount, err := loadCredentialsFromEnv("GOOGLEWORKSPACE_CREDENTIALS", "GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON", "GOOGLE_CREDENTIALS")
-	if err != nil {
-		return nil, err
-	} else {
-		t.serviceAccount = serviceAccount
-	}
-
-	if serviceAccount == nil && requireServiceAccount {
+	if cred == nil && requireServiceAccount {
 		return nil, errors.New("google workspace provider requires a service account")
 	}
 
@@ -134,10 +126,9 @@ func New(pCfg *providers.Config) (*Provider, error) {
 }
 
 type Provider struct {
-	resourceType   ResourceType
-	id             string
-	opts           map[string]string
-	serviceAccount []byte
+	resourceType ResourceType
+	id           string
+	opts         map[string]string
 	// serviceAccountSubject subject is used to impersonate a subject
 	serviceAccountSubject string
 	cred                  *vault.Credential
