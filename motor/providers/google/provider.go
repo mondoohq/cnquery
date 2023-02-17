@@ -2,7 +2,6 @@ package google
 
 import (
 	"errors"
-	"os"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -162,15 +161,4 @@ func (p *Provider) PlatformIdDetectors() []providers.PlatformIdDetector {
 	return []providers.PlatformIdDetector{
 		providers.TransportPlatformIdentifierDetector,
 	}
-}
-
-func loadCredentialsFromEnv(envs ...string) ([]byte, error) {
-	for i := range envs {
-		val := os.Getenv(envs[i])
-		if val != "" {
-			return os.ReadFile(val)
-		}
-	}
-
-	return nil, nil
 }
