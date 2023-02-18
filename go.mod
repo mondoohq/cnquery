@@ -173,12 +173,12 @@ require (
 	go.mondoo.com/ranger-rpc v0.5.1-0.20220923135836-9e7732899d34
 	go.opentelemetry.io/otel v1.11.1
 	golang.org/x/crypto v0.2.0
-	golang.org/x/net v0.5.0
+	golang.org/x/net v0.7.0
 	golang.org/x/oauth2 v0.3.0
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.4.0
-	golang.org/x/term v0.4.0
-	golang.org/x/text v0.6.0
+	golang.org/x/sys v0.5.0
+	golang.org/x/term v0.5.0
+	golang.org/x/text v0.7.0
 	golang.org/x/tools v0.5.0
 	google.golang.org/api v0.103.0
 	google.golang.org/genproto v0.0.0-20221202195650-67e5cbc046fd
