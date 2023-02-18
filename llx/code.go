@@ -1,6 +1,7 @@
 package llx
 
 import (
+	"bytes"
 	"sort"
 
 	"go.mondoo.com/cnquery/checksums"
@@ -499,7 +500,15 @@ func ComparableLabel(label string) (string, bool) {
 		return "", false
 	}
 
-	x := label[0:1]
+	start := 0
+	for bytes.IndexByte(comparableIndicators, label[start]) == -1 {
+		start++
+		if start >= len(label) {
+			return "", false
+		}
+	}
+
+	x := label[start : start+1]
 	if _, ok := comparableOperations[x]; ok {
 		return x, true
 	}
@@ -507,13 +516,15 @@ func ComparableLabel(label string) (string, bool) {
 		return "", false
 	}
 
-	x = label[0:2]
+	x = label[start : start+2]
 	if _, ok := comparableOperations[x]; ok {
 		return x, true
 	}
 
 	return "", false
 }
+
+var comparableIndicators = []byte{'=', '!', '>', '<', '&', '|'}
 
 var comparableOperations = map[string]struct{}{
 	"==": {},
