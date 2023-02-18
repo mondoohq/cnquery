@@ -192,14 +192,14 @@ func (db *Db) SetProps(ctx context.Context, req *explorer.PropsReq) error {
 		return errors.New("found an asset without a bundle configured in the DB")
 	}
 
-	propsIdx := make(map[string]*explorer.Property, len(asset.Bundle.Props))
+	allProps := make(map[string]*explorer.Property, len(asset.Bundle.Props))
 	for i := range asset.Bundle.Props {
 		cur := asset.Bundle.Props[i]
 		if cur.Mrn != "" {
-			propsIdx[cur.Mrn] = cur
+			allProps[cur.Mrn] = cur
 		}
 		if cur.Uid != "" {
-			propsIdx[cur.Uid] = cur
+			allProps[cur.Uid] = cur
 		}
 	}
 
@@ -213,13 +213,20 @@ func (db *Db) SetProps(ctx context.Context, req *explorer.PropsReq) error {
 			return errors.New("cannot set property without MRN: " + cur.Mql)
 		}
 
-		if x, ok := propsIdx[id]; ok {
-			x.Mql = cur.Mql
+		if cur.Mql == "" {
+			delete(allProps, id)
+		}
+		allProps[id] = cur
+	}
+
+	asset.Bundle.Props = []*explorer.Property{}
+	for k, v := range allProps {
+		// since props can be in the list with both UIDs and MRNs, in the case
+		// where a property sets both we want to ignore one entry to avoid duplicates
+		if v.Mrn != "" && v.Uid != "" && k == v.Uid {
 			continue
 		}
-
-		asset.Bundle.Props = append(asset.Bundle.Props, cur)
-		propsIdx[id] = cur
+		asset.Bundle.Props = append(asset.Bundle.Props, v)
 	}
 
 	db.cache.Set(dbIDAsset+req.EntityMrn, asset, 1)
