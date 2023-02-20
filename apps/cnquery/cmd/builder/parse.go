@@ -632,12 +632,17 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_SLACK:
 		connection.Backend = providerType
 
-		if x, err := cmd.Flags().GetString("token"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --token value")
-		} else if x != "" {
+		// the env var has precedence over --token
+		token := os.Getenv("SLACK_TOKEN")
+		if token == "" {
+			if token, err = cmd.Flags().GetString("token"); err != nil {
+				log.Fatal().Err(err).Msg("cannot parse --token value")
+			}
+		}
+		if token != "" {
 			connection.Credentials = append(connection.Credentials, &vault.Credential{
 				Type:     vault.CredentialType_password,
-				Password: x,
+				Password: token,
 			})
 		}
 	case providers.ProviderType_VCD:
