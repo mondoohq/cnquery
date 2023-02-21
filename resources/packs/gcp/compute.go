@@ -10,6 +10,7 @@ import (
 
 	computev1 "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/aws/smithy-go/ptr"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
@@ -1071,7 +1072,7 @@ func (g *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() ([]interface{}, er
 	}
 	subnets := make([]interface{}, 0, len(subnetUrls))
 	for _, subnetUrl := range subnetUrls {
-		// Format is https://www.googleapis.com/compute/v1/projects/mondoo-edge/regions/us-central1/subnetworks/mondoo-gke-cluster-2-subnet
+		// Format is https://www.googleapis.com/compute/v1/projects/project1regions/us-central1/subnetworks/subnet-1
 		params := strings.TrimPrefix(subnetUrl.(string), "https://www.googleapis.com/compute/v1/")
 		parts := strings.Split(params, "/")
 		resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
@@ -1864,28 +1865,7 @@ func (g *mqlGcpProjectComputeServiceAddress) GetNetwork() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// A reference to a network is not mandatory for this resource
-	if networkUrl == "" {
-		return nil, nil
-	}
-
-	type resourceId struct {
-		Project string
-		Region  string
-		Name    string
-	}
-
-	// Format is https://www.googleapis.com/compute/v1/projects/mondoo-edge/regions/us-central1/networks/mondoo-gke-cluster-2-net
-	params := strings.TrimPrefix(networkUrl, "https://www.googleapis.com/compute/v1/")
-	parts := strings.Split(params, "/")
-	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
-
-	return g.MotorRuntime.CreateResource("gcp.project.computeService.network",
-		"name", resId.Name,
-		"projectId", resId.Project,
-		"region", resId.Region,
-	)
+	return getNetworkByUrl(networkUrl, g.MotorRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceAddress) GetSubnetwork() (interface{}, error) {
@@ -1893,30 +1873,121 @@ func (g *mqlGcpProjectComputeServiceAddress) GetSubnetwork() (interface{}, error
 	if err != nil {
 		return nil, err
 	}
-
-	// A reference to a subnetwork is not mandatory for this resource
-	if subnetUrl == "" {
-		return nil, nil
-	}
-
-	type resourceId struct {
-		Project string
-		Region  string
-		Name    string
-	}
-
-	// Format is https://www.googleapis.com/compute/v1/projects/mondoo-edge/regions/us-central1/subnetworks/mondoo-gke-cluster-2-subnet
-	params := strings.TrimPrefix(subnetUrl, "https://www.googleapis.com/compute/v1/")
-	parts := strings.Split(params, "/")
-	resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
-
-	return g.MotorRuntime.CreateResource("gcp.project.computeService.subnetwork",
-		"name", resId.Name,
-		"projectId", resId.Project,
-		"region", resId.Region,
-	)
+	return getSubnetworkByUrl(subnetUrl, g.MotorRuntime)
 }
 
 func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
 	return g.Id()
+}
+
+func (g *mqlGcpProjectComputeService) GetForwardingRules() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	fwrSvc, err := computev1.NewForwardingRulesRESTClient(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var fwRules []interface{}
+	it := fwrSvc.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{Project: projectId, IncludeAllScopes: ptr.Bool(true)})
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		for _, fwr := range resp.Value.ForwardingRules {
+			metadataFilters := make([]interface{}, 0, len(fwr.GetMetadataFilters()))
+			for _, m := range fwr.GetMetadataFilters() {
+				filterLabels := make([]interface{}, 0, len(m.GetFilterLabels()))
+				for _, l := range m.GetFilterLabels() {
+					filterLabels = append(filterLabels, map[string]interface{}{
+						"name":  l.GetName(),
+						"value": l.GetValue(),
+					})
+				}
+				metadataFilters = append(metadataFilters, map[string]interface{}{
+					"filterLabels":        filterLabels,
+					"filterMatchCriteria": m.GetFilterMatchCriteria(),
+				})
+			}
+
+			serviceDirRegs := make([]interface{}, 0, len(fwr.GetServiceDirectoryRegistrations()))
+			for _, s := range fwr.GetServiceDirectoryRegistrations() {
+				serviceDirRegs = append(serviceDirRegs, map[string]interface{}{
+					"namespace":              s.GetNamespace(),
+					"service":                s.GetService(),
+					"serviceDirectoryRegion": s.GetServiceDirectoryRegion(),
+				})
+			}
+			mqlFwr, err := g.MotorRuntime.CreateResource("gcp.project.computeService.forwardingRule",
+				"id", fmt.Sprintf("%d", fwr.Id),
+				"ipAddress", fwr.GetIPAddress(),
+				"ipProtocol", fwr.GetIPProtocol(),
+				"allPorts", fwr.GetAllPorts(),
+				"allowGlobalAccess", fwr.GetAllowGlobalAccess(),
+				"backendService", fwr.GetBackendService(),
+				"created", parseTime(fwr.GetCreationTimestamp()),
+				"description", fwr.GetDescription(),
+				"ipVersion", fwr.GetIpVersion(),
+				"isMirroringCollector", fwr.GetIsMirroringCollector(),
+				"labels", core.StrMapToInterface(fwr.GetLabels()),
+				"loadBalancingScheme", fwr.GetLoadBalancingScheme(),
+				"metadataFilters", metadataFilters,
+				"name", fwr.GetName(),
+				"networkUrl", fwr.GetNetwork(),
+				"networkTier", fwr.GetNetworkTier(),
+				"noAutomateDnsZone", fwr.GetNoAutomateDnsZone(),
+				"portRange", fwr.GetPortRange(),
+				"ports", core.StrSliceToInterface(fwr.GetPorts()),
+				"regionUrl", fwr.GetRegion(),
+				"serviceDirectoryRegistrations", serviceDirRegs,
+				"serviceLabel", fwr.GetServiceLabel(),
+				"serviceName", fwr.GetServiceName(),
+				"subnetworkUrl", fwr.GetSubnetwork(),
+				"targetUrl", fwr.GetTarget(),
+			)
+			if err != nil {
+				return nil, err
+			}
+			fwRules = append(fwRules, mqlFwr)
+		}
+	}
+	return fwRules, nil
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) GetNetwork() (interface{}, error) {
+	networkUrl, err := g.NetworkUrl()
+	if err != nil {
+		return nil, err
+	}
+	return getNetworkByUrl(networkUrl, g.MotorRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) GetSubnetwork() (interface{}, error) {
+	subnetUrl, err := g.SubnetworkUrl()
+	if err != nil {
+		return nil, err
+	}
+	return getSubnetworkByUrl(subnetUrl, g.MotorRuntime)
 }
