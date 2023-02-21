@@ -11,6 +11,8 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
+var OrgDiscoveryTargets = append(FolderDiscoveryTargets, DiscoveryOrganization, DiscoveryFolders, DiscoveryProjects)
+
 type GcpOrgResolver struct{}
 
 func (k *GcpOrgResolver) Name() string {
@@ -18,7 +20,7 @@ func (k *GcpOrgResolver) Name() string {
 }
 
 func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryOrganization, DiscoveryFolders, DiscoveryProjects}
+	return append(OrgDiscoveryTargets, common.DiscoveryAuto, common.DiscoveryAll)
 }
 
 func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {

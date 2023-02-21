@@ -14,6 +14,8 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
+var FolderDiscoveryTargets = append(ProjectDiscoveryTargets)
+
 type GcpFolderResolver struct{}
 
 func (k *GcpFolderResolver) Name() string {
@@ -21,13 +23,7 @@ func (k *GcpFolderResolver) Name() string {
 }
 
 func (r *GcpFolderResolver) AvailableDiscoveryTargets() []string {
-	return []string{
-		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects,
-		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
-		DiscoveryGkeClusters,
-		DiscoveryStorageBuckets,
-		DiscoveryBigQueryDatasets,
-	}
+	return append(FolderDiscoveryTargets, common.DiscoveryAuto, common.DiscoveryAll, DiscoveryFolders)
 }
 
 func (r *GcpFolderResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
