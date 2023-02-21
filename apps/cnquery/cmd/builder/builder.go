@@ -23,6 +23,9 @@ const (
 	Ec2ebsInstanceAssetType
 	Ec2ebsVolumeAssetType
 	Ec2ebsSnapshotAssetType
+	GcpOrganizationAssetType
+	GcpProjectAssetType
+	GcpFolderAssetType
 	GcrContainerRegistryAssetType
 	GithubOrganizationAssetType
 	GithubRepositoryAssetType
@@ -121,6 +124,9 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	gcpCmd := scanGcpCmd(commonCmdFlags, preRun, runFn, docs)
 	gcpGcrCmd := scanGcpGcrCmd(commonCmdFlags, preRun, runFn, docs)
 	gcpCmd.AddCommand(gcpGcrCmd)
+	gcpCmd.AddCommand(scanGcpOrgCmd(commonCmdFlags, preRun, runFn, docs))
+	gcpCmd.AddCommand(scanGcpProjectCmd(commonCmdFlags, preRun, runFn, docs))
+	gcpCmd.AddCommand(scanGcpFolderCmd(commonCmdFlags, preRun, runFn, docs))
 
 	// vsphere subcommand
 	vsphereCmd := vsphereProviderCmd(commonCmdFlags, preRun, runFn, docs)
@@ -617,6 +623,58 @@ func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn
 	cmd.Flags().MarkHidden("organization")
 	cmd.Flags().MarkDeprecated("organization", "--organization is deprecated in favor of --organization-id")
 	cmd.Flags().String("organization-id", "", "specify the GCP organization ID to scan")
+	return cmd
+}
+
+func scanGcpOrgCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "org ORGANIZATION-ID",
+		Aliases: []string{"organization"},
+		Short:   docs.GetShort("gcp-org"),
+		Long:    docs.GetLong("gcp-org"),
+		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_GCP, GcpOrganizationAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
+	return cmd
+}
+
+func scanGcpProjectCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "project PROJECT-ID",
+		Short: docs.GetShort("gcp-project"),
+		Long:  docs.GetLong("gcp-project"),
+		Args:  cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_GCP, GcpProjectAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
+	return cmd
+}
+
+func scanGcpFolderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "folder FOLDER-ID",
+		Short: docs.GetShort("gcp-folder"),
+		Long:  docs.GetLong("gcp-folder"),
+		Args:  cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			runFn(cmd, args, providers.ProviderType_GCP, GcpFolderAssetType)
+		},
+	}
+	commonCmdFlags(cmd)
 	return cmd
 }
 
