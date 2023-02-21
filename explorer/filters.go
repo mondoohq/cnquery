@@ -101,7 +101,9 @@ func (s *Filters) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	return json.Unmarshal(data, &s.Items)
+	// prevent recursive calls into UnmarshalJSON with a placeholder type
+	type tmp Filters
+	return json.Unmarshal(data, (*tmp)(s))
 }
 
 func (s *Filters) Compile(ownerMRN string) error {
