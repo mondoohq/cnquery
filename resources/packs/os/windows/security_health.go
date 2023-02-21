@@ -10,8 +10,8 @@ import (
 )
 
 // This implements the Windows Security Center API
-// Powershell does not offer a native method to gather this information, therefore we need
-// to write a C# script that is encapsulated in powershell
+// PowerShell does not offer a native method to gather this information, therefore we need
+// to write a C# script that is encapsulated in PowerShell
 //
 // https://docs.microsoft.com/en-us/windows/win32/api/Wscapi/ne-wscapi-wsc_security_provider
 // https://github.com/microsoft/Windows-classic-samples/tree/main/Samples/WebSecurityCenter

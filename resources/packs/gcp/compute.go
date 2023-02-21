@@ -8,6 +8,9 @@ import (
 	"strings"
 	"sync"
 
+	computev1 "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/aws/smithy-go/ptr"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
@@ -15,6 +18,7 @@ import (
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -1057,16 +1061,6 @@ func (g *mqlGcpProjectComputeServiceNetwork) id() (string, error) {
 }
 
 func (g *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() ([]interface{}, error) {
-	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
 	subnetUrls, err := g.SubnetworkUrls()
 	if err != nil {
 		return nil, err
@@ -1076,42 +1070,24 @@ func (g *mqlGcpProjectComputeServiceNetwork) GetSubnetworks() ([]interface{}, er
 		Region  string
 		Name    string
 	}
-	ids := make([]resourceId, 0, len(subnetUrls))
+	subnets := make([]interface{}, 0, len(subnetUrls))
 	for _, subnetUrl := range subnetUrls {
-		// Format is https://www.googleapis.com/compute/v1/projects/mondoo-edge/regions/us-central1/subnetworks/mondoo-gke-cluster-2-subnet
+		// Format is https://www.googleapis.com/compute/v1/projects/project1regions/us-central1/subnetworks/subnet-1
 		params := strings.TrimPrefix(subnetUrl.(string), "https://www.googleapis.com/compute/v1/")
 		parts := strings.Split(params, "/")
-		ids = append(ids, resourceId{Project: parts[1], Region: parts[3], Name: parts[5]})
-	}
+		resId := resourceId{Project: parts[1], Region: parts[3], Name: parts[5]}
 
-	ctx := context.Background()
-	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
+		subnet, err := g.MotorRuntime.CreateResource("gcp.project.computeService.subnetwork",
+			"name", resId.Name,
+			"projectId", resId.Project,
+			"region", resId.Region,
+		)
+		if err != nil {
+			return nil, err
+		}
+		subnets = append(subnets, subnet)
 	}
-
-	var wg sync.WaitGroup
-	res := []interface{}{}
-	wg.Add(len(ids))
-	mux := &sync.Mutex{}
-	for _, id := range ids {
-		go func(id resourceId) {
-			defer wg.Done()
-			subnet, err := computeSvc.Subnetworks.Get(id.Project, id.Region, id.Name).Do()
-			if err != nil {
-				log.Error().Err(err).Send()
-			}
-			mqlSubnet, err := newMqlSubnetwork(id.Project, g.MotorRuntime, subnet, nil)
-			if err != nil {
-				log.Error().Err(err).Send()
-			}
-			mux.Lock()
-			res = append(res, mqlSubnet)
-			mux.Unlock()
-		}(id)
-	}
-	wg.Wait()
-	return res, nil
+	return subnets, nil
 }
 
 func (g *mqlGcpProjectComputeServiceNetwork) init(args *resources.Args) (*resources.Args, GcpProjectComputeServiceNetwork, error) {
@@ -1346,18 +1322,18 @@ func newMqlRegion(runtime *resources.Runtime, r *compute.Region) (interface{}, e
 	)
 }
 
-func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *compute.Subnetwork, region GcpProjectComputeServiceRegion) (interface{}, error) {
-	subnetId := strconv.FormatUint(subnetwork.Id, 10)
+func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *computepb.Subnetwork, region GcpProjectComputeServiceRegion) (interface{}, error) {
+	subnetId := strconv.FormatUint(subnetwork.GetId(), 10)
 	var mqlLogConfig resources.ResourceType
 	var err error
 	if subnetwork.LogConfig != nil {
 		mqlLogConfig, err = runtime.CreateResource("gcp.project.computeService.subnetwork.logConfig",
 			"id", fmt.Sprintf("%s/logConfig", subnetId),
-			"aggregationInterval", subnetwork.LogConfig.AggregationInterval,
-			"enable", subnetwork.LogConfig.Enable,
-			"filterExpression", subnetwork.LogConfig.FilterExpr,
-			"flowSampling", subnetwork.LogConfig.FlowSampling,
-			"metadata", subnetwork.LogConfig.Metadata,
+			"aggregationInterval", subnetwork.LogConfig.GetAggregationInterval(),
+			"enable", subnetwork.LogConfig.GetEnable(),
+			"filterExpression", subnetwork.LogConfig.GetFilterExpr(),
+			"flowSampling", float64(subnetwork.LogConfig.GetFlowSampling()),
+			"metadata", subnetwork.LogConfig.GetMetadata(),
 			"metadataFields", core.StrSliceToInterface(subnetwork.LogConfig.MetadataFields),
 		)
 		if err != nil {
@@ -1368,25 +1344,25 @@ func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *
 	args := []interface{}{
 		"id", subnetId,
 		"projectId", projectId,
-		"name", subnetwork.Name,
-		"description", subnetwork.Description,
-		"enableFlowLogs", subnetwork.EnableFlowLogs,
-		"externalIpv6Prefix", subnetwork.ExternalIpv6Prefix,
-		"fingerprint", subnetwork.Fingerprint,
-		"gatewayAddress", subnetwork.GatewayAddress,
-		"internalIpv6Prefix", subnetwork.InternalIpv6Prefix,
-		"ipCidrRange", subnetwork.IpCidrRange,
-		"ipv6AccessType", subnetwork.Ipv6AccessType,
-		"ipv6CidrRange", subnetwork.Ipv6CidrRange,
+		"name", subnetwork.GetName(),
+		"description", subnetwork.GetDescription(),
+		"enableFlowLogs", subnetwork.GetEnableFlowLogs(),
+		"externalIpv6Prefix", subnetwork.GetExternalIpv6Prefix(),
+		"fingerprint", subnetwork.GetFingerprint(),
+		"gatewayAddress", subnetwork.GetGatewayAddress(),
+		"internalIpv6Prefix", subnetwork.GetInternalIpv6Prefix(),
+		"ipCidrRange", subnetwork.GetIpCidrRange(),
+		"ipv6AccessType", subnetwork.GetIpv6AccessType(),
+		"ipv6CidrRange", subnetwork.GetIpv6CidrRange(),
 		"logConfig", mqlLogConfig,
-		"privateIpGoogleAccess", subnetwork.PrivateIpGoogleAccess,
-		"privateIpv6GoogleAccess", subnetwork.PrivateIpv6GoogleAccess,
-		"purpose", subnetwork.Purpose,
-		"regionUrl", subnetwork.Region,
-		"role", subnetwork.Role,
-		"stackType", subnetwork.StackType,
-		"state", subnetwork.State,
-		"created", parseTime(subnetwork.CreationTimestamp),
+		"privateIpGoogleAccess", subnetwork.GetPrivateIpGoogleAccess(),
+		"privateIpv6GoogleAccess", subnetwork.GetPrivateIpv6GoogleAccess(),
+		"purpose", subnetwork.GetPurpose(),
+		"regionUrl", subnetwork.GetRegion(),
+		"role", subnetwork.GetRole(),
+		"stackType", subnetwork.GetStackType(),
+		"state", subnetwork.GetState(),
+		"created", parseTime(subnetwork.GetCreationTimestamp()),
 	}
 	if region != nil {
 		args = append(args, "region", region)
@@ -1396,11 +1372,6 @@ func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *
 
 func (g *mqlGcpProjectComputeService) GetSubnetworks() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
-	if err != nil {
-		return nil, err
-	}
-
-	regions, err := g.Regions()
 	if err != nil {
 		return nil, err
 	}
@@ -1417,46 +1388,30 @@ func (g *mqlGcpProjectComputeService) GetSubnetworks() ([]interface{}, error) {
 
 	ctx := context.Background()
 
-	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	subnetSvc, err := computev1.NewSubnetworksRESTClient(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
 
-	var wg sync.WaitGroup
 	res := []interface{}{}
-	wg.Add(len(regions))
-	mux := &sync.Mutex{}
-
-	for i := range regions {
-		r := regions[i].(GcpProjectComputeServiceRegion)
-		regionName, err := r.Name()
+	it := subnetSvc.AggregatedList(ctx, &computepb.AggregatedListSubnetworksRequest{Project: projectId})
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
 		if err != nil {
 			return nil, err
 		}
-		go func(svc *compute.Service, project string, region GcpProjectComputeServiceRegion, regionName string) {
-			req := computeSvc.Subnetworks.List(projectId, regionName)
-			if err := req.Pages(ctx, func(page *compute.SubnetworkList) error {
-				for _, subnetwork := range page.Items {
-
-					mqlSubnetwork, err := newMqlSubnetwork(projectId, g.MotorRuntime, subnetwork, region)
-					if err != nil {
-						return err
-					} else {
-						// mqlInstance.MqlResource().Cache.Store("_machineType", &resources.CacheEntry{Data: instance.MachineType})
-						mux.Lock()
-						res = append(res, mqlSubnetwork)
-						mux.Unlock()
-					}
-				}
-				return nil
-			}); err != nil {
-				log.Error().Err(err).Send()
+		subnets := resp.Value.GetSubnetworks()
+		for _, subnet := range subnets {
+			mqlSubnetwork, err := newMqlSubnetwork(projectId, g.MotorRuntime, subnet, nil)
+			if err != nil {
+				return nil, err
 			}
-			wg.Done()
-		}(computeSvc, projectId, r, regionName)
+			res = append(res, mqlSubnetwork)
+		}
 	}
-
-	wg.Wait()
 	return res, nil
 }
 
@@ -1847,4 +1802,192 @@ func networkMode(n *compute.Network) string {
 	} else {
 		return "custom"
 	}
+}
+
+func (g *mqlGcpProjectComputeService) GetAddresses() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := computeSvc.Addresses.AggregatedList(projectId).Do()
+	if err != nil {
+		return nil, err
+	}
+	var mqlAddresses []interface{}
+	for _, as := range list.Items {
+		for _, a := range as.Addresses {
+			mqlA, err := g.MotorRuntime.CreateResource("gcp.project.computeService.address",
+				"id", fmt.Sprintf("%d", a.Id),
+				"address", a.Address,
+				"addressType", a.AddressType,
+				"created", parseTime(a.CreationTimestamp),
+				"description", a.Description,
+				"ipVersion", a.IpVersion,
+				"ipv6EndpointType", a.Ipv6EndpointType,
+				"name", a.Name,
+				"networkUrl", a.Network,
+				"networkTier", a.NetworkTier,
+				"prefixLength", a.PrefixLength,
+				"purpose", a.Purpose,
+				"regionUrl", a.Region,
+				"status", a.Status,
+				"subnetworkUrl", a.Subnetwork,
+				"resourceUrls", core.StrSliceToInterface(a.Users),
+			)
+			if err != nil {
+				return nil, err
+			}
+			mqlAddresses = append(mqlAddresses, mqlA)
+		}
+	}
+	return mqlAddresses, nil
+}
+
+func (g *mqlGcpProjectComputeServiceAddress) GetNetwork() (interface{}, error) {
+	networkUrl, err := g.NetworkUrl()
+	if err != nil {
+		return nil, err
+	}
+	return getNetworkByUrl(networkUrl, g.MotorRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceAddress) GetSubnetwork() (interface{}, error) {
+	subnetUrl, err := g.SubnetworkUrl()
+	if err != nil {
+		return nil, err
+	}
+	return getSubnetworkByUrl(subnetUrl, g.MotorRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceAddress) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectComputeService) GetForwardingRules() ([]interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := gcpProvider(g.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := provider.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	fwrSvc, err := computev1.NewForwardingRulesRESTClient(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	var fwRules []interface{}
+	it := fwrSvc.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{Project: projectId, IncludeAllScopes: ptr.Bool(true)})
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		for _, fwr := range resp.Value.ForwardingRules {
+			metadataFilters := make([]interface{}, 0, len(fwr.GetMetadataFilters()))
+			for _, m := range fwr.GetMetadataFilters() {
+				filterLabels := make([]interface{}, 0, len(m.GetFilterLabels()))
+				for _, l := range m.GetFilterLabels() {
+					filterLabels = append(filterLabels, map[string]interface{}{
+						"name":  l.GetName(),
+						"value": l.GetValue(),
+					})
+				}
+				metadataFilters = append(metadataFilters, map[string]interface{}{
+					"filterLabels":        filterLabels,
+					"filterMatchCriteria": m.GetFilterMatchCriteria(),
+				})
+			}
+
+			serviceDirRegs := make([]interface{}, 0, len(fwr.GetServiceDirectoryRegistrations()))
+			for _, s := range fwr.GetServiceDirectoryRegistrations() {
+				serviceDirRegs = append(serviceDirRegs, map[string]interface{}{
+					"namespace":              s.GetNamespace(),
+					"service":                s.GetService(),
+					"serviceDirectoryRegion": s.GetServiceDirectoryRegion(),
+				})
+			}
+			mqlFwr, err := g.MotorRuntime.CreateResource("gcp.project.computeService.forwardingRule",
+				"id", fmt.Sprintf("%d", fwr.Id),
+				"ipAddress", fwr.GetIPAddress(),
+				"ipProtocol", fwr.GetIPProtocol(),
+				"allPorts", fwr.GetAllPorts(),
+				"allowGlobalAccess", fwr.GetAllowGlobalAccess(),
+				"backendService", fwr.GetBackendService(),
+				"created", parseTime(fwr.GetCreationTimestamp()),
+				"description", fwr.GetDescription(),
+				"ipVersion", fwr.GetIpVersion(),
+				"isMirroringCollector", fwr.GetIsMirroringCollector(),
+				"labels", core.StrMapToInterface(fwr.GetLabels()),
+				"loadBalancingScheme", fwr.GetLoadBalancingScheme(),
+				"metadataFilters", metadataFilters,
+				"name", fwr.GetName(),
+				"networkUrl", fwr.GetNetwork(),
+				"networkTier", fwr.GetNetworkTier(),
+				"noAutomateDnsZone", fwr.GetNoAutomateDnsZone(),
+				"portRange", fwr.GetPortRange(),
+				"ports", core.StrSliceToInterface(fwr.GetPorts()),
+				"regionUrl", fwr.GetRegion(),
+				"serviceDirectoryRegistrations", serviceDirRegs,
+				"serviceLabel", fwr.GetServiceLabel(),
+				"serviceName", fwr.GetServiceName(),
+				"subnetworkUrl", fwr.GetSubnetwork(),
+				"targetUrl", fwr.GetTarget(),
+			)
+			if err != nil {
+				return nil, err
+			}
+			fwRules = append(fwRules, mqlFwr)
+		}
+	}
+	return fwRules, nil
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) GetNetwork() (interface{}, error) {
+	networkUrl, err := g.NetworkUrl()
+	if err != nil {
+		return nil, err
+	}
+	return getNetworkByUrl(networkUrl, g.MotorRuntime)
+}
+
+func (g *mqlGcpProjectComputeServiceForwardingRule) GetSubnetwork() (interface{}, error) {
+	subnetUrl, err := g.SubnetworkUrl()
+	if err != nil {
+		return nil, err
+	}
+	return getSubnetworkByUrl(subnetUrl, g.MotorRuntime)
 }

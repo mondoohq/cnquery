@@ -567,7 +567,7 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) GetStack() (map[string]interface
 		if !ok {
 			// This doesn't seem to be consistently set
 			// https://stackoverflow.com/questions/63950946/azure-app-service-get-stack-settings-via-api#comment113188903_63987100
-			// https://github.com/mondoohq/client/issues/157
+			// https://github.com/mondoohq/installer/issues/157
 			return nil, nil
 		}
 		version := ""

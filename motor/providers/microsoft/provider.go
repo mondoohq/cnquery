@@ -33,7 +33,7 @@ var (
 //
 // At this point, this provider only supports application permissions
 // because we are not able to get the user consent on cli yet. Seems like
-// Microsoft is working on some Powershell features that may make it happen.
+// Microsoft is working on some PowerShell features that may make it happen.
 //
 // For authentication we need a tenant id, client id (appid), and either certificate or a client secret
 // cnquery scan ms365 --certificate-path certificate --certificate-secret password --client-id CLIENT_ID --tenant-id TENANT_ID

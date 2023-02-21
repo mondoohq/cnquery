@@ -214,9 +214,17 @@ func (g *mqlGcpProjectLoggingserviceMetric) GetAlertPolicies() ([]interface{}, e
 
 func parseAlertPolicyConditionFilterMetricName(condition map[string]interface{}) string {
 	filter := condition["filter"].(string)
-	// The filter looks like this: metric.type=\"logging.googleapis.com/user/log-metric-filter-and-alerts-exist-for-project-ownership-assignments-changes\"
-	// We are interested in the user part of that string
-	return strings.TrimSuffix(strings.TrimPrefix(filter, "metric.type=\"logging.googleapis.com/user/"), "\"")
+	// The filter is composed of multiple statements split by AND or OR and spaces in between
+	parts := strings.Split(filter, " ")
+	for _, p := range parts {
+		// If the statement starts with metric.type="logging.googleapis.com/user/ then we are interested in it
+		if strings.HasPrefix(p, "metric.type=\"logging.googleapis.com/user/") {
+			// The filter looks like this: metric.type=\"logging.googleapis.com/user/log-metric-filter-and-alerts-exist-for-project-ownership-assignments-changes\"
+			// We are interested in the user part of that string
+			return strings.TrimSuffix(strings.TrimPrefix(p, "metric.type=\"logging.googleapis.com/user/"), "\"")
+		}
+	}
+	return ""
 }
 
 func (g *mqlGcpProjectLoggingservice) GetSinks() ([]interface{}, error) {
