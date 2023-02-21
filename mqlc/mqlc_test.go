@@ -1867,7 +1867,7 @@ func TestCompiler_Entrypoints(t *testing.T) {
 				c = "c"
 				c == "c"
 			`,
-			nil,
+			[]uint64{(1 << 32) | 3, (1 << 32) | 5, (1 << 32) | 8},
 			[]uint64{(1 << 32) | 4, (1 << 32) | 6, (1 << 32) | 9},
 		},
 		{
@@ -1879,7 +1879,7 @@ func TestCompiler_Entrypoints(t *testing.T) {
 				c = a == b
 				c == false
 			`,
-			[]uint64{(1 << 32) | 9},
+			[]uint64{(1 << 32) | 3, (1 << 32) | 5, (1 << 32) | 10},
 			[]uint64{(1 << 32) | 4, (1 << 32) | 6, (1 << 32) | 11},
 		},
 	}
@@ -1944,7 +1944,7 @@ func TestCompiler_NestedEntrypoints(t *testing.T) {
 					j == k
 				}
 			`,
-			[]uint64{},
+			[]uint64{(1 << 32) | 2},
 			[]uint64{(1 << 32) | 6, (2 << 32) | 5, (3 << 32) | 5, (4 << 32) | 5},
 		},
 		{

@@ -344,12 +344,12 @@ func TestOperations_Equality(t *testing.T) {
 			simpleTests = append(simpleTests, []testutils.SimpleTest{
 				{a + " == " + b, 0, res},
 				{a + " != " + b, 0, !res},
-				{"a = " + a + "  a == " + b, 0, res},
-				{"a = " + a + "  a != " + b, 0, !res},
+				{"a = " + a + "  a == " + b, 1, res},
+				{"a = " + a + "  a != " + b, 1, !res},
 				{"b = " + b + "; " + a + " == b", 1, res},
 				{"b = " + b + "; " + a + " != b", 1, !res},
-				{"a = " + a + "; b = " + b + "; a == b", 1, res},
-				{"a = " + a + "; b = " + b + "; a != b", 1, !res},
+				{"a = " + a + "; b = " + b + "; a == b", 2, res},
+				{"a = " + a + "; b = " + b + "; a != b", 2, !res},
 			}...)
 		}
 	}

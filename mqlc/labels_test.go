@@ -165,6 +165,11 @@ func TestLabels(t *testing.T) {
 			&llx.Labels{
 				Labels: map[string]string{
 					"FU1/hdJ5vadWluEfeQHhklVNU86zhW3zNwxraoHDXJYJj7X2AsjJkhuQjaCfx607pvV/Yjez346tOwzg7i9inQ==": "c",
+					// TODO: optimize the code so we don't generate these 2 labels vv
+					// they are not needed
+					"M3Zw1U5oVhZQeXdyvlpQc6tJz7LG6NiZ7oGQCr1eDSloV75R7lRObrv53UuaHvBOuZG3zBt5BDx9MRoRJwIlfA==": "a",
+					"lUa7PEZHR8EfRzYDn+Q38ZZTckepgNlv1sFhRL6l+v7gmV+v/7IxTAoJ2VlAHkCpNU5p5KFLPzPwn6K1Eq27XQ==": "b",
+					// ^^
 				},
 			},
 		},

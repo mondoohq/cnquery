@@ -168,12 +168,11 @@ func compileComparable(c *compiler, id string, call *parser.Call) (types.Type, e
 	}
 
 	for left.Type() == types.Ref {
-		var ok bool
-		leftRef, ok = left.Primitive.RefV2()
+		ref, ok := left.Primitive.RefV2()
 		if !ok {
 			return types.Nil, errors.New("failed to get reference entry of left operand to " + id + ", this should not happen")
 		}
-		left = c.Result.CodeV2.Chunk(leftRef)
+		left = c.Result.CodeV2.Chunk(ref)
 	}
 
 	// find specialized or generalized builtin function
