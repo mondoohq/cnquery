@@ -8,6 +8,7 @@ import (
 )
 
 // cnquery codes start at 100 to avoid conflicts with GRPC and Ranger RPC codes
+// see https://github.com/mondoohq/ranger-rpc/blob/main/codes/codes.go
 type ErrorStatusCode uint32
 
 const (

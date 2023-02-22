@@ -509,7 +509,7 @@ func (m *modelMultiProgress) View() string {
 		case ProgressStateErrored:
 			outputFinished += " " + theme.DefaultTheme.Error(name) + pad + " " + m.Progress[k].model.View() + theme.DefaultTheme.Error("    X")
 		case ProgressStateNotApplicable:
-			outputFinished += " " + name + pad + " " + m.Progress[k].model.View() + "  N/A"
+			outputFinished += " " + name + pad + " " + m.Progress[k].model.View() + "  n/a"
 		case ProgressStateCompleted:
 			percent := m.Progress[k].percent
 			outputFinished += " " + name + pad + " " + m.Progress[k].model.ViewAs(percent)

@@ -264,6 +264,6 @@ func TestMultiProgressBarNotApplicable(t *testing.T) {
 
 	assert.Contains(t, buf.String(), "test1                           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% score: F")
 	assert.Contains(t, buf.String(), "test2                           ───────────────────────────────────    X score: X")
-	assert.Contains(t, buf.String(), "test3                           ───────────────────────────────────  N/A score: U")
+	assert.Contains(t, buf.String(), "test3                           ───────────────────────────────────  n/a score: U")
 	assert.Contains(t, buf.String(), "1/3 scanned 1/3 errored 1/3 n/a ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%")
 }
