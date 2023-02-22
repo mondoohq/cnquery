@@ -28,10 +28,8 @@
       "args": [
         "run",
         "local",
-        "--record",
-        "--sudo",
         "-c",
-        "processes.list"
+        "platform.eol"
       ],
     },
     {

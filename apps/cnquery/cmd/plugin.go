@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
+	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/shell"
@@ -17,9 +19,12 @@ import (
 	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/shared"
 	"go.mondoo.com/cnquery/shared/proto"
+	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/ranger-rpc"
 )
 
 // pluginCmd represents the version command
@@ -50,6 +55,13 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	if conf.Command == "" {
 		return errors.New("No command provided, nothing to do.")
 	}
+
+	opts, optsErr := cnquery_config.ReadConfig()
+	if optsErr != nil {
+		log.Fatal().Err(optsErr).Msg("could not load configuration")
+	}
+
+	config.DisplayUsedConfig()
 
 	ctx := discovery.InitCtx(context.Background())
 
@@ -109,6 +121,20 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		out.WriteString("[")
 	}
 
+	var upstreamConfig *resources.UpstreamConfig
+	serviceAccount := opts.GetServiceCredential()
+	if serviceAccount != nil {
+		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+
+		upstreamConfig = &resources.UpstreamConfig{
+			// we currently do not expose incognito to the plugin/run command
+			Incognito:   true,
+			SpaceMrn:    opts.GetParentMrn(),
+			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			Plugins:     []ranger.ClientPlugin{certAuth},
+		}
+	}
+
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
 		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredsResolver(), conf.DoRecord)
@@ -125,6 +151,10 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
 		shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
 		shellOptions = append(shellOptions, shell.WithOutput(out))
+
+		if upstreamConfig != nil {
+			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
+		}
 
 		sh, err := shell.New(m, shellOptions...)
 		if err != nil {
