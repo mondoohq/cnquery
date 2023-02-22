@@ -74,22 +74,3 @@ func (t *Provider) GetOrganization(name string) (*cloudresourcemanager.Organizat
 	}
 	return svc.Organizations.Get("organizations/" + name).Do()
 }
-
-func (t *Provider) GetProjectsForOrganization(org *cloudresourcemanager.Organization) ([]*cloudresourcemanager.Project, error) {
-	ctx := context.Background()
-
-	client, err := t.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope)
-	if err != nil {
-		return nil, err
-	}
-
-	svc, err := cloudresourcemanager.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return nil, err
-	}
-	projectResp, err := svc.Projects.List().Parent(org.Name).Do()
-	if err != nil {
-		return nil, err
-	}
-	return projectResp.Projects, nil
-}

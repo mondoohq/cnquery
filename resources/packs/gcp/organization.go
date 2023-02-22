@@ -2,12 +2,13 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
-	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
@@ -53,9 +54,34 @@ func (g *mqlGcpOrganization) init(args *resources.Args) (*resources.Args, GcpOrg
 
 	(*args)["id"] = org.Name
 	(*args)["name"] = org.DisplayName
-	(*args)["lifecycleState"] = org.LifecycleState
+	(*args)["state"] = org.State
+	(*args)["lifecycleState"] = org.State
 
 	return args, nil, nil
+}
+
+func (g *mqlGcpOrganization) GetId() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (g *mqlGcpOrganization) GetName() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (g *mqlGcpOrganization) GetState() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
+}
+
+func (g *mqlGcpOrganization) GetLifecycleState() (string, error) {
+	// placeholder to convince MQL that this is an optional field
+	// should never be called since the data is initialized in init
+	return "", errors.New("not implemented")
 }
 
 func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {
@@ -103,6 +129,22 @@ func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (g *mqlGcpOrganization) GetFolders() (interface{}, error) {
+	orgId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+	return g.MotorRuntime.CreateResource("gcp.folders", "parentId", orgId)
+}
+
+func (g *mqlGcpOrganization) GetProjects() (interface{}, error) {
+	orgId, err := g.Id()
+	if err != nil {
+		return nil, err
+	}
+	return g.MotorRuntime.CreateResource("gcp.projects", "parentId", orgId)
 }
 
 func (g *mqlGcpResourcemanagerBinding) id() (string, error) {
