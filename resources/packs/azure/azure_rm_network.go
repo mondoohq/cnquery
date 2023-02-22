@@ -258,6 +258,46 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) GetVm() (interface{}, erro
 	return nil, errors.New("not implemented")
 }
 
+func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) init(args *resources.Args) (*resources.Args, AzureSubscriptionNetworkServiceSecurityGroup, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure network security group")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.networkService")
+	if err != nil {
+		return nil, nil, err
+	}
+	networkSvc := obj.(*mqlAzureSubscriptionNetworkService)
+
+	rawResources, err := networkSvc.SecurityGroups()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AzureSubscriptionNetworkServiceSecurityGroup)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure network security group does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("azure network security group does not exist")
+}
+
 func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) id() (string, error) {
 	return a.Id()
 }

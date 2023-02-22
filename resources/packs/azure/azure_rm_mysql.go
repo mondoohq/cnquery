@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -33,6 +34,46 @@ func (a *mqlAzureSubscriptionMysqlService) id() (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("/subscriptions/%s/mySqlService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionMysqlServiceServer) init(args *resources.Args) (*resources.Args, AzureSubscriptionMysqlServiceServer, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure mysql server")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.mysqlService")
+	if err != nil {
+		return nil, nil, err
+	}
+	mysqlSvc := obj.(*mqlAzureSubscriptionMysqlService)
+
+	rawResources, err := mysqlSvc.Servers()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AzureSubscriptionMysqlServiceServer)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure mysql server does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("azure mysql server does not exist")
 }
 
 func (a *mqlAzureSubscriptionMysqlServiceServer) id() (string, error) {

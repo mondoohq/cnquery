@@ -53,7 +53,7 @@ func getTitleForPlatformName(name string) string {
 	case "azure-network-security-group":
 		return "Azure Network Security Group"
 	case "azure-keyvault-vault":
-		return "Azure Keyvault Vault"
+		return "Azure KeyVault Vault"
 	}
 	return "Microsoft Azure"
 }

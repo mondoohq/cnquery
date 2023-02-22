@@ -28,6 +28,46 @@ func (a *mqlAzureSubscriptionSqlService) init(args *resources.Args) (*resources.
 	return args, nil, nil
 }
 
+func (a *mqlAzureSubscriptionSqlServiceServer) init(args *resources.Args) (*resources.Args, AzureSubscriptionSqlServiceServer, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure sql server")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService")
+	if err != nil {
+		return nil, nil, err
+	}
+	sqlSvc := obj.(*mqlAzureSubscriptionSqlService)
+
+	rawResources, err := sqlSvc.Servers()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AzureSubscriptionSqlServiceServer)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure sql server does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("azure sql server does not exist")
+}
+
 func (a *mqlAzureSubscriptionSqlService) id() (string, error) {
 	subId, err := a.SubscriptionId()
 	if err != nil {
