@@ -13,6 +13,17 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
+var ProjectDiscoveryTargets = []string{
+	DiscoveryInstances,
+	DiscoveryComputeImages,
+	DiscoveryComputeNetworks,
+	DiscoveryComputeSubnetworks,
+	DiscoveryComputeFirewalls,
+	DiscoveryGkeClusters,
+	DiscoveryStorageBuckets,
+	DiscoveryBigQueryDatasets,
+}
+
 type GcpProjectResolver struct{}
 
 func (k *GcpProjectResolver) Name() string {
@@ -20,13 +31,7 @@ func (k *GcpProjectResolver) Name() string {
 }
 
 func (r *GcpProjectResolver) AvailableDiscoveryTargets() []string {
-	return []string{
-		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects,
-		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
-		DiscoveryGkeClusters,
-		DiscoveryStorageBuckets,
-		DiscoveryBigQueryDatasets,
-	}
+	return append(ProjectDiscoveryTargets, common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects)
 }
 
 func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -85,11 +90,7 @@ func (r *GcpProjectResolver) Resolve(ctx context.Context, tc *providers.Config, 
 		resolved = append(resolved, resolvedRoot)
 	}
 
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAuto, common.DiscoveryAll,
-		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
-		DiscoveryGkeClusters,
-		DiscoveryStorageBuckets,
-		DiscoveryBigQueryDatasets) {
+	if tc.IncludesOneOfDiscoveryTarget(append(ProjectDiscoveryTargets, common.DiscoveryAuto, common.DiscoveryAll)...) {
 		assetList, err := GatherAssets(ctx, tc, project, credsResolver, sfn)
 		if err != nil {
 			return nil, err

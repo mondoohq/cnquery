@@ -13,6 +13,9 @@ import (
 // Init all resources into the registry
 func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.organization", newGcpOrganization)
+	registry.AddFactory("gcp.folders", newGcpFolders)
+	registry.AddFactory("gcp.folder", newGcpFolder)
+	registry.AddFactory("gcp.projects", newGcpProjects)
 	registry.AddFactory("gcp.project", newGcpProject)
 	registry.AddFactory("gcp.service", newGcpService)
 	registry.AddFactory("gcp.recommendation", newGcpRecommendation)
@@ -139,9 +142,12 @@ type GcpOrganization interface {
 	Validate() error
 	Id() (string, error)
 	Name() (string, error)
+	State() (string, error)
 	LifecycleState() (string, error)
 	IamPolicy() ([]interface{}, error)
 	AccessApprovalSettings() (GcpAccessApprovalSettings, error)
+	Folders() (GcpFolders, error)
+	Projects() (GcpProjects, error)
 }
 
 // mqlGcpOrganization for the gcp.organization resource
@@ -187,6 +193,10 @@ func newGcpOrganization(runtime *resources.Runtime, args *resources.Args) (inter
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
+		case "state":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"state\" argument has the wrong type (expected type \"string\")")
+			}
 		case "lifecycleState":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"lifecycleState\" argument has the wrong type (expected type \"string\")")
@@ -198,6 +208,14 @@ func newGcpOrganization(runtime *resources.Runtime, args *resources.Args) (inter
 		case "accessApprovalSettings":
 			if _, ok := val.(GcpAccessApprovalSettings); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"accessApprovalSettings\" argument has the wrong type (expected type \"GcpAccessApprovalSettings\")")
+			}
+		case "folders":
+			if _, ok := val.(GcpFolders); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"folders\" argument has the wrong type (expected type \"GcpFolders\")")
+			}
+		case "projects":
+			if _, ok := val.(GcpProjects); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.organization\", its \"projects\" argument has the wrong type (expected type \"GcpProjects\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
@@ -226,15 +244,7 @@ func newGcpOrganization(runtime *resources.Runtime, args *resources.Args) (inter
 
 func (s *mqlGcpOrganization) Validate() error {
 	// required arguments
-	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"gcp.organization\" resource without a \"id\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"gcp.organization\" resource without a \"name\". This field is required.")
-	}
-	if _, ok := s.Cache.Load("lifecycleState"); !ok {
-		return errors.New("Initialized \"gcp.organization\" resource without a \"lifecycleState\". This field is required.")
-	}
+	// no required fields found
 
 	return nil
 }
@@ -247,11 +257,17 @@ func (s *mqlGcpOrganization) Register(name string) error {
 		return nil
 	case "name":
 		return nil
+	case "state":
+		return nil
 	case "lifecycleState":
 		return nil
 	case "iamPolicy":
 		return nil
 	case "accessApprovalSettings":
+		return nil
+	case "folders":
+		return nil
+	case "projects":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.organization\" resource")
@@ -266,12 +282,18 @@ func (s *mqlGcpOrganization) Field(name string) (interface{}, error) {
 		return s.Id()
 	case "name":
 		return s.Name()
+	case "state":
+		return s.State()
 	case "lifecycleState":
 		return s.LifecycleState()
 	case "iamPolicy":
 		return s.IamPolicy()
 	case "accessApprovalSettings":
 		return s.AccessApprovalSettings()
+	case "folders":
+		return s.Folders()
+	case "projects":
+		return s.Projects()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.organization\" resource")
 	}
@@ -281,7 +303,14 @@ func (s *mqlGcpOrganization) Field(name string) (interface{}, error) {
 func (s *mqlGcpOrganization) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.organization\" failed: no value provided for static field \"id\"")
+		if err := s.ComputeId(); err != nil {
+			return "", err
+		}
+		res, ok = s.Cache.Load("id")
+		if !ok {
+			return "", errors.New("\"gcp.organization\" calculated \"id\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "id")
 	}
 	if res.Error != nil {
 		return "", res.Error
@@ -297,7 +326,14 @@ func (s *mqlGcpOrganization) Id() (string, error) {
 func (s *mqlGcpOrganization) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.organization\" failed: no value provided for static field \"name\"")
+		if err := s.ComputeName(); err != nil {
+			return "", err
+		}
+		res, ok = s.Cache.Load("name")
+		if !ok {
+			return "", errors.New("\"gcp.organization\" calculated \"name\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "name")
 	}
 	if res.Error != nil {
 		return "", res.Error
@@ -309,11 +345,41 @@ func (s *mqlGcpOrganization) Name() (string, error) {
 	return tres, nil
 }
 
+// State accessor autogenerated
+func (s *mqlGcpOrganization) State() (string, error) {
+	res, ok := s.Cache.Load("state")
+	if !ok || !res.Valid {
+		if err := s.ComputeState(); err != nil {
+			return "", err
+		}
+		res, ok = s.Cache.Load("state")
+		if !ok {
+			return "", errors.New("\"gcp.organization\" calculated \"state\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "state")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.organization\" failed to cast field \"state\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // LifecycleState accessor autogenerated
 func (s *mqlGcpOrganization) LifecycleState() (string, error) {
 	res, ok := s.Cache.Load("lifecycleState")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.organization\" failed: no value provided for static field \"lifecycleState\"")
+		if err := s.ComputeLifecycleState(); err != nil {
+			return "", err
+		}
+		res, ok = s.Cache.Load("lifecycleState")
+		if !ok {
+			return "", errors.New("\"gcp.organization\" calculated \"lifecycleState\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "lifecycleState")
 	}
 	if res.Error != nil {
 		return "", res.Error
@@ -371,23 +437,131 @@ func (s *mqlGcpOrganization) AccessApprovalSettings() (GcpAccessApprovalSettings
 	return tres, nil
 }
 
+// Folders accessor autogenerated
+func (s *mqlGcpOrganization) Folders() (GcpFolders, error) {
+	res, ok := s.Cache.Load("folders")
+	if !ok || !res.Valid {
+		if err := s.ComputeFolders(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("folders")
+		if !ok {
+			return nil, errors.New("\"gcp.organization\" calculated \"folders\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "folders")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpFolders)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.organization\" failed to cast field \"folders\" to the right type (GcpFolders): %#v", res)
+	}
+	return tres, nil
+}
+
+// Projects accessor autogenerated
+func (s *mqlGcpOrganization) Projects() (GcpProjects, error) {
+	res, ok := s.Cache.Load("projects")
+	if !ok || !res.Valid {
+		if err := s.ComputeProjects(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("projects")
+		if !ok {
+			return nil, errors.New("\"gcp.organization\" calculated \"projects\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "projects")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjects)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.organization\" failed to cast field \"projects\" to the right type (GcpProjects): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpOrganization) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.organization].MqlCompute")
 	switch name {
 	case "id":
-		return nil
+		return s.ComputeId()
 	case "name":
-		return nil
+		return s.ComputeName()
+	case "state":
+		return s.ComputeState()
 	case "lifecycleState":
-		return nil
+		return s.ComputeLifecycleState()
 	case "iamPolicy":
 		return s.ComputeIamPolicy()
 	case "accessApprovalSettings":
 		return s.ComputeAccessApprovalSettings()
+	case "folders":
+		return s.ComputeFolders()
+	case "projects":
+		return s.ComputeProjects()
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.organization\" resource")
 	}
+}
+
+// ComputeId computer autogenerated
+func (s *mqlGcpOrganization) ComputeId() error {
+	var err error
+	if _, ok := s.Cache.Load("id"); ok {
+		return nil
+	}
+	vres, err := s.GetId()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("id", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeName computer autogenerated
+func (s *mqlGcpOrganization) ComputeName() error {
+	var err error
+	if _, ok := s.Cache.Load("name"); ok {
+		return nil
+	}
+	vres, err := s.GetName()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("name", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeState computer autogenerated
+func (s *mqlGcpOrganization) ComputeState() error {
+	var err error
+	if _, ok := s.Cache.Load("state"); ok {
+		return nil
+	}
+	vres, err := s.GetState()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("state", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeLifecycleState computer autogenerated
+func (s *mqlGcpOrganization) ComputeLifecycleState() error {
+	var err error
+	if _, ok := s.Cache.Load("lifecycleState"); ok {
+		return nil
+	}
+	vres, err := s.GetLifecycleState()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("lifecycleState", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // ComputeIamPolicy computer autogenerated
@@ -418,6 +592,850 @@ func (s *mqlGcpOrganization) ComputeAccessApprovalSettings() error {
 	return nil
 }
 
+// ComputeFolders computer autogenerated
+func (s *mqlGcpOrganization) ComputeFolders() error {
+	var err error
+	if _, ok := s.Cache.Load("folders"); ok {
+		return nil
+	}
+	vres, err := s.GetFolders()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("folders", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeProjects computer autogenerated
+func (s *mqlGcpOrganization) ComputeProjects() error {
+	var err error
+	if _, ok := s.Cache.Load("projects"); ok {
+		return nil
+	}
+	vres, err := s.GetProjects()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("projects", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpFolders resource interface
+type GcpFolders interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	ParentId() (string, error)
+	Children() ([]interface{}, error)
+	List() ([]interface{}, error)
+}
+
+// mqlGcpFolders for the gcp.folders resource
+type mqlGcpFolders struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpFolders) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.folders resource
+func newGcpFolders(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpFolders{runtime.NewResource("gcp.folders")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "parentId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folders\", its \"parentId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "children":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folders\", its \"children\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "list":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folders\", its \"list\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folders\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.folders with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpFolders) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("parentId"); !ok {
+		return errors.New("Initialized \"gcp.folders\" resource without a \"parentId\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpFolders) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.folders].Register")
+	switch name {
+	case "parentId":
+		return nil
+	case "children":
+		return nil
+	case "list":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.folders\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpFolders) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.folders].Field")
+	switch name {
+	case "parentId":
+		return s.ParentId()
+	case "children":
+		return s.Children()
+	case "list":
+		return s.List()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.folders\" resource")
+	}
+}
+
+// ParentId accessor autogenerated
+func (s *mqlGcpFolders) ParentId() (string, error) {
+	res, ok := s.Cache.Load("parentId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.folders\" failed: no value provided for static field \"parentId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.folders\" failed to cast field \"parentId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Children accessor autogenerated
+func (s *mqlGcpFolders) Children() ([]interface{}, error) {
+	res, ok := s.Cache.Load("children")
+	if !ok || !res.Valid {
+		if err := s.ComputeChildren(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("children")
+		if !ok {
+			return nil, errors.New("\"gcp.folders\" calculated \"children\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "children")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.folders\" failed to cast field \"children\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// List accessor autogenerated
+func (s *mqlGcpFolders) List() ([]interface{}, error) {
+	res, ok := s.Cache.Load("list")
+	if !ok || !res.Valid {
+		if err := s.ComputeList(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("list")
+		if !ok {
+			return nil, errors.New("\"gcp.folders\" calculated \"list\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "list")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.folders\" failed to cast field \"list\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpFolders) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.folders].MqlCompute")
+	switch name {
+	case "parentId":
+		return nil
+	case "children":
+		return s.ComputeChildren()
+	case "list":
+		return s.ComputeList()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.folders\" resource")
+	}
+}
+
+// ComputeChildren computer autogenerated
+func (s *mqlGcpFolders) ComputeChildren() error {
+	var err error
+	if _, ok := s.Cache.Load("children"); ok {
+		return nil
+	}
+	vres, err := s.GetChildren()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("children", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeList computer autogenerated
+func (s *mqlGcpFolders) ComputeList() error {
+	var err error
+	if _, ok := s.Cache.Load("list"); ok {
+		return nil
+	}
+	vres, err := s.GetList()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("list", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpFolder resource interface
+type GcpFolder interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	Name() (string, error)
+	Created() (*time.Time, error)
+	Updated() (*time.Time, error)
+	ParentId() (string, error)
+	State() (string, error)
+	Folders() (GcpFolders, error)
+	Projects() (GcpProjects, error)
+}
+
+// mqlGcpFolder for the gcp.folder resource
+type mqlGcpFolder struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpFolder) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.folder resource
+func newGcpFolder(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpFolder{runtime.NewResource("gcp.folder")}
+	var existing GcpFolder
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "name":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "created":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"created\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "updated":
+			if _, ok := val.(*time.Time); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"updated\" argument has the wrong type (expected type \"*time.Time\")")
+			}
+		case "parentId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"parentId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "state":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"state\" argument has the wrong type (expected type \"string\")")
+			}
+		case "folders":
+			if _, ok := val.(GcpFolders); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"folders\" argument has the wrong type (expected type \"GcpFolders\")")
+			}
+		case "projects":
+			if _, ok := val.(GcpProjects); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"projects\" argument has the wrong type (expected type \"GcpProjects\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.folder\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.folder with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpFolder) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.folder\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("name"); !ok {
+		return errors.New("Initialized \"gcp.folder\" resource without a \"name\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("created"); !ok {
+		return errors.New("Initialized \"gcp.folder\" resource without a \"created\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("updated"); !ok {
+		return errors.New("Initialized \"gcp.folder\" resource without a \"updated\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("parentId"); !ok {
+		return errors.New("Initialized \"gcp.folder\" resource without a \"parentId\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("state"); !ok {
+		return errors.New("Initialized \"gcp.folder\" resource without a \"state\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpFolder) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.folder].Register")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "created":
+		return nil
+	case "updated":
+		return nil
+	case "parentId":
+		return nil
+	case "state":
+		return nil
+	case "folders":
+		return nil
+	case "projects":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.folder\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpFolder) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.folder].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "name":
+		return s.Name()
+	case "created":
+		return s.Created()
+	case "updated":
+		return s.Updated()
+	case "parentId":
+		return s.ParentId()
+	case "state":
+		return s.State()
+	case "folders":
+		return s.Folders()
+	case "projects":
+		return s.Projects()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.folder\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpFolder) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.folder\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.folder\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Name accessor autogenerated
+func (s *mqlGcpFolder) Name() (string, error) {
+	res, ok := s.Cache.Load("name")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.folder\" failed: no value provided for static field \"name\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.folder\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Created accessor autogenerated
+func (s *mqlGcpFolder) Created() (*time.Time, error) {
+	res, ok := s.Cache.Load("created")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.folder\" failed: no value provided for static field \"created\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.folder\" failed to cast field \"created\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// Updated accessor autogenerated
+func (s *mqlGcpFolder) Updated() (*time.Time, error) {
+	res, ok := s.Cache.Load("updated")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.folder\" failed: no value provided for static field \"updated\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(*time.Time)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.folder\" failed to cast field \"updated\" to the right type (*time.Time): %#v", res)
+	}
+	return tres, nil
+}
+
+// ParentId accessor autogenerated
+func (s *mqlGcpFolder) ParentId() (string, error) {
+	res, ok := s.Cache.Load("parentId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.folder\" failed: no value provided for static field \"parentId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.folder\" failed to cast field \"parentId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// State accessor autogenerated
+func (s *mqlGcpFolder) State() (string, error) {
+	res, ok := s.Cache.Load("state")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.folder\" failed: no value provided for static field \"state\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.folder\" failed to cast field \"state\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Folders accessor autogenerated
+func (s *mqlGcpFolder) Folders() (GcpFolders, error) {
+	res, ok := s.Cache.Load("folders")
+	if !ok || !res.Valid {
+		if err := s.ComputeFolders(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("folders")
+		if !ok {
+			return nil, errors.New("\"gcp.folder\" calculated \"folders\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "folders")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpFolders)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.folder\" failed to cast field \"folders\" to the right type (GcpFolders): %#v", res)
+	}
+	return tres, nil
+}
+
+// Projects accessor autogenerated
+func (s *mqlGcpFolder) Projects() (GcpProjects, error) {
+	res, ok := s.Cache.Load("projects")
+	if !ok || !res.Valid {
+		if err := s.ComputeProjects(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("projects")
+		if !ok {
+			return nil, errors.New("\"gcp.folder\" calculated \"projects\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "projects")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjects)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.folder\" failed to cast field \"projects\" to the right type (GcpProjects): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpFolder) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.folder].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "name":
+		return nil
+	case "created":
+		return nil
+	case "updated":
+		return nil
+	case "parentId":
+		return nil
+	case "state":
+		return nil
+	case "folders":
+		return s.ComputeFolders()
+	case "projects":
+		return s.ComputeProjects()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.folder\" resource")
+	}
+}
+
+// ComputeFolders computer autogenerated
+func (s *mqlGcpFolder) ComputeFolders() error {
+	var err error
+	if _, ok := s.Cache.Load("folders"); ok {
+		return nil
+	}
+	vres, err := s.GetFolders()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("folders", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeProjects computer autogenerated
+func (s *mqlGcpFolder) ComputeProjects() error {
+	var err error
+	if _, ok := s.Cache.Load("projects"); ok {
+		return nil
+	}
+	vres, err := s.GetProjects()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("projects", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// GcpProjects resource interface
+type GcpProjects interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	ParentId() (string, error)
+	Children() ([]interface{}, error)
+	List() ([]interface{}, error)
+}
+
+// mqlGcpProjects for the gcp.projects resource
+type mqlGcpProjects struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjects) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.projects resource
+func newGcpProjects(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjects{runtime.NewResource("gcp.projects")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "parentId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.projects\", its \"parentId\" argument has the wrong type (expected type \"string\")")
+			}
+		case "children":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.projects\", its \"children\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "list":
+			if _, ok := val.([]interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.projects\", its \"list\" argument has the wrong type (expected type \"[]interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.projects\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.projects with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjects) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("parentId"); !ok {
+		return errors.New("Initialized \"gcp.projects\" resource without a \"parentId\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjects) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.projects].Register")
+	switch name {
+	case "parentId":
+		return nil
+	case "children":
+		return nil
+	case "list":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.projects\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjects) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.projects].Field")
+	switch name {
+	case "parentId":
+		return s.ParentId()
+	case "children":
+		return s.Children()
+	case "list":
+		return s.List()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.projects\" resource")
+	}
+}
+
+// ParentId accessor autogenerated
+func (s *mqlGcpProjects) ParentId() (string, error) {
+	res, ok := s.Cache.Load("parentId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.projects\" failed: no value provided for static field \"parentId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.projects\" failed to cast field \"parentId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Children accessor autogenerated
+func (s *mqlGcpProjects) Children() ([]interface{}, error) {
+	res, ok := s.Cache.Load("children")
+	if !ok || !res.Valid {
+		if err := s.ComputeChildren(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("children")
+		if !ok {
+			return nil, errors.New("\"gcp.projects\" calculated \"children\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "children")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.projects\" failed to cast field \"children\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// List accessor autogenerated
+func (s *mqlGcpProjects) List() ([]interface{}, error) {
+	res, ok := s.Cache.Load("list")
+	if !ok || !res.Valid {
+		if err := s.ComputeList(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("list")
+		if !ok {
+			return nil, errors.New("\"gcp.projects\" calculated \"list\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "list")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.projects\" failed to cast field \"list\" to the right type ([]interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjects) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.projects].MqlCompute")
+	switch name {
+	case "parentId":
+		return nil
+	case "children":
+		return s.ComputeChildren()
+	case "list":
+		return s.ComputeList()
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.projects\" resource")
+	}
+}
+
+// ComputeChildren computer autogenerated
+func (s *mqlGcpProjects) ComputeChildren() error {
+	var err error
+	if _, ok := s.Cache.Load("children"); ok {
+		return nil
+	}
+	vres, err := s.GetChildren()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("children", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeList computer autogenerated
+func (s *mqlGcpProjects) ComputeList() error {
+	var err error
+	if _, ok := s.Cache.Load("list"); ok {
+		return nil
+	}
+	vres, err := s.GetList()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("list", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
 // GcpProject resource interface
 type GcpProject interface {
 	MqlResource() (*resources.Resource)
@@ -427,6 +1445,7 @@ type GcpProject interface {
 	Validate() error
 	Id() (string, error)
 	Name() (string, error)
+	ParentId() (string, error)
 	Number() (string, error)
 	State() (string, error)
 	LifecycleState() (string, error)
@@ -497,6 +1516,10 @@ func newGcpProject(runtime *resources.Runtime, args *resources.Args) (interface{
 		case "name":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project\", its \"name\" argument has the wrong type (expected type \"string\")")
+			}
+		case "parentId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project\", its \"parentId\" argument has the wrong type (expected type \"string\")")
 			}
 		case "number":
 			if _, ok := val.(string); !ok {
@@ -642,6 +1665,8 @@ func (s *mqlGcpProject) Register(name string) error {
 		return nil
 	case "name":
 		return nil
+	case "parentId":
+		return nil
 	case "number":
 		return nil
 	case "state":
@@ -707,6 +1732,8 @@ func (s *mqlGcpProject) Field(name string) (interface{}, error) {
 		return s.Id()
 	case "name":
 		return s.Name()
+	case "parentId":
+		return s.ParentId()
 	case "number":
 		return s.Number()
 	case "state":
@@ -806,6 +1833,29 @@ func (s *mqlGcpProject) Name() (string, error) {
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.project\" failed to cast field \"name\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ParentId accessor autogenerated
+func (s *mqlGcpProject) ParentId() (string, error) {
+	res, ok := s.Cache.Load("parentId")
+	if !ok || !res.Valid {
+		if err := s.ComputeParentId(); err != nil {
+			return "", err
+		}
+		res, ok = s.Cache.Load("parentId")
+		if !ok {
+			return "", errors.New("\"gcp.project\" calculated \"parentId\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "parentId")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project\" failed to cast field \"parentId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -1416,6 +2466,8 @@ func (s *mqlGcpProject) MqlCompute(name string) error {
 		return s.ComputeId()
 	case "name":
 		return s.ComputeName()
+	case "parentId":
+		return s.ComputeParentId()
 	case "number":
 		return s.ComputeNumber()
 	case "state":
@@ -1498,6 +2550,20 @@ func (s *mqlGcpProject) ComputeName() error {
 		return err
 	}
 	s.Cache.Store("name", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeParentId computer autogenerated
+func (s *mqlGcpProject) ComputeParentId() error {
+	var err error
+	if _, ok := s.Cache.Load("parentId"); ok {
+		return nil
+	}
+	vres, err := s.GetParentId()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("parentId", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
 	return nil
 }
 

@@ -97,7 +97,7 @@ func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn
 			}
 		}
 
-		a := MqlObjectToAsset(project,
+		a := MqlObjectToAsset(
 			mqlObject{
 				name: i.Name, labels: stringLabels,
 				gcpObject: gcpObject{
@@ -132,7 +132,7 @@ func computeImages(m *MqlDiscovery, project string, tc *providers.Config) ([]*as
 		return nil, err
 	}
 	for _, i := range images {
-		assets = append(assets, MqlObjectToAsset(project,
+		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name: i.Name, labels: i.Labels,
 				gcpObject: gcpObject{
@@ -159,7 +159,7 @@ func computeNetworks(m *MqlDiscovery, project string, tc *providers.Config) ([]*
 		return nil, err
 	}
 	for _, n := range networks {
-		assets = append(assets, MqlObjectToAsset(project,
+		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name: n.Name,
 				gcpObject: gcpObject{
@@ -189,7 +189,7 @@ func computeSubnetworks(m *MqlDiscovery, project string, tc *providers.Config) (
 	for _, s := range subnets {
 		region := gcp.RegionNameFromRegionUrl(s.RegionUrl)
 
-		assets = append(assets, MqlObjectToAsset(project,
+		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name: s.Name,
 				gcpObject: gcpObject{
@@ -216,7 +216,7 @@ func computeFirewalls(m *MqlDiscovery, project string, tc *providers.Config) ([]
 		return nil, err
 	}
 	for _, f := range firewalls {
-		assets = append(assets, MqlObjectToAsset(project,
+		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name: f.Name,
 				gcpObject: gcpObject{
@@ -245,7 +245,7 @@ func gkeClusters(m *MqlDiscovery, project string, tc *providers.Config) ([]*asse
 		return nil, err
 	}
 	for _, c := range clusters {
-		assets = append(assets, MqlObjectToAsset(project,
+		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name: c.Name, labels: c.ResourceLabels,
 				gcpObject: gcpObject{
@@ -274,7 +274,7 @@ func storageBuckets(m *MqlDiscovery, project string, tc *providers.Config) ([]*a
 		return nil, err
 	}
 	for _, b := range buckets {
-		assets = append(assets, MqlObjectToAsset(project,
+		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name: b.Name, labels: b.Labels,
 				gcpObject: gcpObject{
@@ -302,7 +302,7 @@ func bigQueryDatasets(m *MqlDiscovery, project string, tc *providers.Config) ([]
 		return nil, err
 	}
 	for _, d := range datasets {
-		assets = append(assets, MqlObjectToAsset(project,
+		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name: d.Id, labels: d.Labels,
 				gcpObject: gcpObject{
