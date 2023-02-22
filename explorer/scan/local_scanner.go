@@ -260,7 +260,12 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.CredsResolver, job.DoRecord)
 	if err != nil {
 		job.Reporter.AddScanError(job.Asset, err)
-		job.ProgressReporter.Errored()
+		es := explorer.NewErrorStatus(err)
+		if es.ErrorCode() == explorer.NotApplicable {
+			job.ProgressReporter.NotApplicable()
+		} else {
+			job.ProgressReporter.Errored()
+		}
 		return
 	}
 
@@ -296,7 +301,13 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 			if err != nil {
 				log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
 				job.Reporter.AddScanError(job.Asset, err)
-				job.ProgressReporter.Errored()
+
+				es := explorer.NewErrorStatus(err)
+				if es.ErrorCode() == explorer.NotApplicable {
+					job.ProgressReporter.NotApplicable()
+				} else {
+					job.ProgressReporter.Errored()
+				}
 				return
 			}
 

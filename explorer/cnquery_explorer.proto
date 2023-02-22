@@ -5,6 +5,7 @@ option go_package = "go.mondoo.com/cnquery/explorer";
 
 import "llx/llx.proto";
 import "motor/asset/asset.proto";
+import "google/protobuf/any.proto";
 
 message Bundle {
   string owner_mrn = 1; 
@@ -359,8 +360,17 @@ message ReportCollection {
   map<string, Asset> assets = 1;
   Bundle bundle = 2;
   map<string, Report> reports = 3;
-  map<string, string> errors = 4;
+  map<string, ErrorStatus> errors = 4;
   map<string, ResolvedPack> resolved = 5;
+}
+
+message ErrorStatus {
+  // The status code.
+  int32 code = 1;
+  // A user-facing error message, which should be in English.
+  string message = 2;
+  // A list of messages that carry the error details.
+  repeated google.protobuf.Any details = 3;
 }
 
 message AssignmentDelta {

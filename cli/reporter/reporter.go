@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"go.mondoo.com/cnquery/logger"
+
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/theme/colors"
 	"go.mondoo.com/cnquery/explorer"
@@ -76,6 +78,7 @@ func New(typ string) (*Reporter, error) {
 }
 
 func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
+	logger.DebugDumpYAML("report_collection", data)
 	switch r.Format {
 	case Compact:
 		rr := &cliReporter{

@@ -62,18 +62,22 @@ func (r *cliReporter) printAssetSummary(assetMrn string, asset *explorer.Asset) 
 	report, ok := r.data.Reports[assetMrn]
 	if !ok {
 		// If scanning the asset has failed, there will be no report, we should first look if there's an error for that target.
-		if err, ok := r.data.Errors[assetMrn]; ok {
-			r.out.Write([]byte(termenv.String(fmt.Sprintf(
-				`✕ Error for asset %s: %s`,
-				target, err,
-			)).Foreground(r.Colors.Error).String()))
+		if errStatus, ok := r.data.Errors[assetMrn]; ok {
+			switch errStatus.ErrorCode().Category() {
+			case explorer.ErrorCategoryInformational:
+				r.out.Write([]byte(errStatus.Message + "\n\n"))
+			case explorer.ErrorCategoryWarning:
+				r.out.Write([]byte(r.Printer.Warn(errStatus.Message) + "\n\n"))
+			case explorer.ErrorCategoryError:
+				r.out.Write([]byte(r.Printer.Error(errStatus.Message) + "\n\n"))
+			}
 		} else {
 			r.out.Write([]byte(fmt.Sprintf(
 				`✕ Could not find asset %s`,
 				target,
 			)))
+			r.out.Write([]byte("\n\n"))
 		}
-		r.out.Write([]byte("\n\n"))
 		return
 	}
 
@@ -129,10 +133,16 @@ func (r *cliReporter) printQueryData() {
 		r.out.Write([]byte(r.Printer.H2("Asset: " + cur.Name)))
 
 		// check if the asset has an error
-		err, ok := r.data.Errors[k]
+		errStatus, ok := r.data.Errors[k]
 		if ok {
-			r.out.Write([]byte(r.Printer.Error(err)))
-			r.out.Write([]byte("\n\n"))
+			switch errStatus.ErrorCode().Category() {
+			case explorer.ErrorCategoryInformational:
+				r.out.Write([]byte(errStatus.Message + "\n\n"))
+			case explorer.ErrorCategoryWarning:
+				r.out.Write([]byte(r.Printer.Warn(errStatus.Message) + "\n\n"))
+			case explorer.ErrorCategoryError:
+				r.out.Write([]byte(r.Printer.Error(errStatus.Message) + "\n\n"))
+			}
 			continue
 		}
 

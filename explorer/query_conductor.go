@@ -312,7 +312,8 @@ func newAssetMatchError(mrn string, filters []*Mquery, supportedFilters map[stri
 			Domain: SERVICE_NAME,
 			Reason: "no-matching-packs",
 			Metadata: map[string]string{
-				"mrn": mrn,
+				"mrn":       mrn,
+				"errorCode": NotApplicable.String(),
 			},
 		})
 		if err != nil {

@@ -65,7 +65,7 @@ func ReportCollectionToCSV(data *explorer.ReportCollection, out shared.OutputHel
 		}
 
 		if data.Errors != nil {
-			errMsg, ok := data.Errors[asset.Mrn]
+			errStatus, ok := data.Errors[asset.Mrn]
 			if ok {
 				err := w.Write(csvStruct{
 					AssetMrn:    asset.Mrn,
@@ -74,7 +74,7 @@ func ReportCollectionToCSV(data *explorer.ReportCollection, out shared.OutputHel
 					QueryMrn:    "",
 					QueryTitle:  "",
 					MQL:         "",
-					QueryResult: errMsg,
+					QueryResult: errStatus.Message,
 				}.toSlice())
 				if err != nil {
 					return err
