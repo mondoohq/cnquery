@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-googleworkspace-incident-response
     name: Google Workspace Incident Response
+    version: 1.0.0
     docs:
       desc: |
         ### Overview

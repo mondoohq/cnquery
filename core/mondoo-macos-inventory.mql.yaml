@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-macos-inventory
     name: macOS Inventory Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: macos,host
       mondoo.com/category: best-practices

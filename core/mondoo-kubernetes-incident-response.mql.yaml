@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-kubernetes-cluster-incident-response
     name: Kubernetes Cluster Incident Response Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: kubernetes
       mondoo.com/category: security
@@ -30,6 +31,7 @@ packs:
           }
   - uid: mondoo-kubernetes-pods-incident-response
     name: Mondoo Kubernetes Pods Incident Response
+    version: 1.0.0
     tags:
       mondoo.com/platform: kubernetes
       mondoo.com/category: security
@@ -99,6 +101,7 @@ packs:
           }
   - uid: mondoo-kubernetes-cronjobs-incident-response
     name: Mondoo Kubernetes CronJobs Incident Response
+    version: 1.0.0
     tags:
       mondoo.com/platform: kubernetes
       mondoo.com/category: security

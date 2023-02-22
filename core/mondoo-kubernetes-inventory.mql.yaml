@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-kubernetes-cluster-inventory
     name: Kubernetes Cluster Inventory Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: kubernetes
       mondoo.com/category: best-practices
@@ -35,6 +36,7 @@ packs:
           k8s.nodes { * }
   - uid: mondoo-kubernetes-pods-inventory
     name: Mondoo Kubernetes Pods Inventory
+    version: 1.0.0
     filters:
       - asset.platform == "k8s-pod"
     queries:
@@ -44,6 +46,7 @@ packs:
           k8s.pod { * }
   - uid: mondoo-kubernetes-deployments-inventory
     name: Mondoo Kubernetes Deployments Inventory
+    version: 1.0.0
     filters:
       - asset.platform == "k8s-deployment"
     queries:
@@ -53,6 +56,7 @@ packs:
           k8s.deployment { * }
   - uid: mondoo-kubernetes-cronjobs-inventory
     name: Mondoo Kubernetes CronJobs Inventory
+    version: 1.0.0
     filters:
       - asset.platform == "k8s-cronjob"
     queries:
@@ -62,6 +66,7 @@ packs:
           k8s.cronjob { * }
   - uid: mondoo-kubernetes-jobs-inventory
     name: Mondoo Kubernetes Jobs Inventory
+    version: 1.0.0
     filters:
       - asset.platform == "k8s-job"
     queries:
@@ -71,6 +76,7 @@ packs:
           k8s.job { * }
   - uid: mondoo-kubernetes-daemonsets-inventory
     name: Mondoo Kubernetes DaemonSets Inventory
+    version: 1.0.0
     filters:
       - asset.platform == "k8s-daemonset"
     queries:
@@ -80,6 +86,7 @@ packs:
           k8s.daemonset { * }
   - uid: mondoo-kubernetes-statefulsets-inventory
     name: Mondoo Kubernetes StatefulSets Inventory
+    version: 1.0.0
     filters:
       - asset.platform == "k8s-statefulset"
     queries:
@@ -89,6 +96,7 @@ packs:
           k8s.statefulset { * }
   - uid: mondoo-kubernetes-replicasets-inventory
     name: Mondoo Kubernetes ReplicaSets Inventory
+    version: 1.0.0
     filters:
       - asset.platform == "k8s-replicaset"
     queries:

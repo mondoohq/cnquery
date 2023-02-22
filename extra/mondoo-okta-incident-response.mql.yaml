@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-okta-incident-response
     name: Mondoo Okta Incident Response
+    version: 1.0.0
     docs:
       desc: |
         ### Overview

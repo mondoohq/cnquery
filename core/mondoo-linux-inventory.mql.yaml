@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-linux-inventory
     name: Linux Inventory Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: linux,host
       mondoo.com/category: best-practices

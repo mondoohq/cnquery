@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-incident-response-github-org
     name: GitHub Organization Incident Response Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: github,saas
       mondoo.com/category: security

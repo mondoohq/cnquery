@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-asset-inventory-aws
     name: AWS Asset Inventory Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: aws,cloud
       mondoo.com/category: best-practices

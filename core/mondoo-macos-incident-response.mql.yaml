@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-macos-incident-response
     name: macOS Incident Response Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: macos,host
       mondoo.com/category: security

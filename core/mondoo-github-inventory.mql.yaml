@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-github-inventory-org
     name: GitHub Organization Inventory Pack by Mondoo
+    version: 1.0.0
     tags:
       mondoo.com/platform: github,saas
       mondoo.com/category: best-practices
@@ -66,6 +67,7 @@ packs:
         query: github.organization.updatedAt
   - uid: mondoo-github-inventory-user
     name: Mondoo GitHub User Inventory Pack
+    version: 1.0.0
     tags:
       mondoo.com/platform: github,saas
       mondoo.com/category: best-practices
@@ -131,6 +133,7 @@ packs:
         query: github.user.updatedAt
   - uid: mondoo-github-inventory-repo
     name: Mondoo GitHub Repository Inventory Pack
+    version: 1.0.0
     tags:
       mondoo.com/platform: github,saas
       mondoo.com/category: best-practices
