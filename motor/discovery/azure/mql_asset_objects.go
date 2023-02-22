@@ -4,6 +4,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/providers"
+	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 )
 
 func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
@@ -50,16 +51,36 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	type instance struct {
-		Id       string
-		Name     string
-		Tags     map[string]string
-		Location string
+		Id         string
+		Name       string
+		Tags       map[string]string
+		Location   string
+		Properties map[string]interface{}
 	}
-	vms, err := GetList[instance](m, "return azure.subscription.compute.vms {name location tags id}")
+	vms, err := GetList[instance](m, "return azure.subscription.compute.vms {id name tags location properties}")
 	if err != nil {
 		return nil, err
 	}
 	for _, vm := range vms {
+		osProfile, ok := vm.Properties["osProfile"]
+		if ok {
+			if osProfileDict, ok := osProfile.(map[string]interface{}); ok {
+				vm.Tags["azure.mondoo.com/computername"] = osProfileDict["computerName"].(string)
+			}
+		}
+		vmId, ok := vm.Properties["vmId"]
+		if ok {
+			if casted, ok := vmId.(string); ok {
+				vm.Tags["mondoo.com/instance"] = casted
+			}
+		}
+
+		res, err := azure.ParseResourceID(vm.Id)
+		if err != nil {
+			return nil, err
+		}
+		vm.Tags["azure.mondoo.com/resourcegroup"] = res.ResourceGroup
+
 		assets = append(assets, MqlObjectToAsset(
 			mqlObject{
 				name:   vm.Name,

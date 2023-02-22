@@ -59,7 +59,8 @@ func getTitleForPlatformName(name string) string {
 }
 
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {
-	if p.platformOverride != "" {
+	// TODO: that's a hack, figure out a better way
+	if p.platformOverride != "" && p.platformOverride != "azure" {
 		return &platform.Platform{
 			Name:    p.platformOverride,
 			Title:   getTitleForPlatformName(p.platformOverride),

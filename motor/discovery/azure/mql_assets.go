@@ -74,64 +74,65 @@ func GatherAssets(ctx context.Context, tc *providers.Config, credsResolver vault
 	if err != nil {
 		return nil, err
 	}
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-		instances, err := computeInstances(m, provider.SubscriptionID(), tc)
-		if err != nil {
-			return nil, err
-		}
-		assets = append(assets, instances...)
-	}
+	// TODO: make this work by having the ip addresses available via mql
+	// if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
+	// 	instances, err := computeInstances(m, provider.SubscriptionID(), pCfg)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	assets = append(assets, instances...)
+	// }
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoverySqlServers) {
-		servers, err := computeSqlServers(m, provider.SubscriptionID(), tc)
+		servers, err := computeSqlServers(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, servers...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryPostgresServers) {
-		servers, err := computePostgresqlServers(m, provider.SubscriptionID(), tc)
+		servers, err := computePostgresqlServers(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, servers...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryMySqlServers) {
-		servers, err := computeMySqlServers(m, provider.SubscriptionID(), tc)
+		servers, err := computeMySqlServers(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, servers...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryMariaDbServers) {
-		servers, err := computeMariaDbServers(m, provider.SubscriptionID(), tc)
+		servers, err := computeMariaDbServers(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, servers...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryStorageAccounts) {
-		accounts, err := computeStorageAccounts(m, provider.SubscriptionID(), tc)
+		accounts, err := computeStorageAccounts(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, accounts...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryStorageContainers) {
-		containers, err := computeStorageAccountContainers(m, provider.SubscriptionID(), tc)
+		containers, err := computeStorageAccountContainers(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, containers...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryKeyVaults) {
-		vaults, err := computeKeyVaultsVaults(m, provider.SubscriptionID(), tc)
+		vaults, err := computeKeyVaultsVaults(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
 		assets = append(assets, vaults...)
 	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoverySecurityGroups) {
-		securityGroups, err := computeNetworkSecurityGroups(m, provider.SubscriptionID(), tc)
+		securityGroups, err := computeNetworkSecurityGroups(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
 			return nil, err
 		}
