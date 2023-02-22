@@ -90,7 +90,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		Sub armsubscriptions.Subscription
 	}
 	subsConfig := map[string]SubConfig{}
-
+	subsAssets := map[string]*asset.Asset{}
 	// we always look up subscriptions to be able to fetch their subid and tenantid to make the authentication work
 	// note these are not being added as assets here, that is done only if the right targets are set down below
 	for _, sub := range subs {
@@ -128,7 +128,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 				return nil, err
 			}
 			id, _ := p.Identifier()
-			sub := &asset.Asset{
+			subAsset := &asset.Asset{
 				PlatformIds: []string{id},
 				Name:        name,
 				Platform:    pf,
@@ -139,7 +139,8 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 					common.ParentId:          *sub.Sub.SubscriptionID,
 				},
 			}
-			resolved = append(resolved, sub)
+			subsAssets[*sub.Sub.SubscriptionID] = subAsset
+			resolved = append(resolved, subAsset)
 		}
 	}
 	// resources as assets
@@ -147,14 +148,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto,
 		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
 		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups) {
-		for _, tc := range subsConfig {
+		for id, tc := range subsConfig {
 			assetList, err := GatherAssets(ctx, tc.Cfg, credsResolver, sfn)
 			if err != nil {
 				return nil, err
 			}
 			for _, a := range assetList {
-				if len(resolved) > 0 && resolved[0] != nil {
-					a.RelatedAssets = append(a.RelatedAssets, resolved[0])
+				if rootSub := subsAssets[id]; rootSub != nil {
+					a.RelatedAssets = append(a.RelatedAssets, rootSub)
 				}
 				resolved = append(resolved, a)
 			}
@@ -183,6 +184,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 					a.Connections[i].Insecure = tc.Insecure
 				}
 
+				if rootSub := subsAssets[*s.SubscriptionID]; rootSub != nil {
+					a.RelatedAssets = append(a.RelatedAssets, rootSub)
+				}
 				resolved = append(resolved, a)
 			}
 		}
