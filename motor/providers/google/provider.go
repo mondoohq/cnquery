@@ -21,6 +21,7 @@ const (
 	Project
 	Organization
 	Workspace
+	Folder
 )
 
 func New(pCfg *providers.Config) (*Provider, error) {
@@ -28,9 +29,9 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	if pCfg.Backend == providers.ProviderType_GCP {
 		// FIXME: DEPRECATED, update in v8.0 vv
 		// The options "project" and "organization" have been deprecated in favor of project-id and organization-id
-		if pCfg.Options == nil || (pCfg.Options["project-id"] == "" && pCfg.Options["project"] == "" && pCfg.Options["organization-id"] == "" && pCfg.Options["organization"] == "") {
+		if pCfg.Options == nil || (pCfg.Options["project-id"] == "" && pCfg.Options["project"] == "" && pCfg.Options["organization-id"] == "" && pCfg.Options["organization"] == "" && pCfg.Options["folder-id"] == "") {
 			// ^^
-			return nil, errors.New("google provider requires a gcp organization id, gcp project id or google workspace customer id. please set option `project-id` or `organization-id` or `customer-id`")
+			return nil, errors.New("google provider requires a gcp organization id, gcp project id or google workspace customer id. please set option `project-id` or `organization-id` or `customer-id` or `folder-id`")
 		}
 
 		if len(pCfg.Credentials) != 0 {
@@ -77,6 +78,9 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		resourceType = Workspace
 		id = pCfg.Options["customer-id"]
 		requireServiceAccount = true
+	} else if pCfg.Options["folder-id"] != "" {
+		resourceType = Folder
+		id = pCfg.Options["folder-id"]
 	}
 
 	var override string

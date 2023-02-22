@@ -165,7 +165,16 @@ configuration for the account scan. To scan Azure virtual machines, you must
 configure your Azure credentials and have SSH access to the virtual machines.`,
 			},
 			"gcp": {
-				Short: "Scan a Google Cloud Platform (GCP) organization or project.",
+				Short: "Scan a Google Cloud Platform (GCP) organization, project or folder.",
+			},
+			"gcp-org": {
+				Short: "Scan a Google Cloud Platform (GCP) organization.",
+			},
+			"gcp-project": {
+				Short: "Scan a Google Cloud Platform (GCP) project.",
+			},
+			"gcp-folder": {
+				Short: "Scan a Google Cloud Platform (GCP) folder.",
 			},
 			"gcp-gcr": {
 				Short: "Scan a Google Container Registry (GCR).",

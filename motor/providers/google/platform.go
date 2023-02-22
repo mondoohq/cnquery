@@ -2,19 +2,24 @@ package google
 
 import (
 	"errors"
+	"fmt"
 
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
-func (p *Provider) Identifier() (string, error) {
-	switch p.resourceType {
+func (t *Provider) Identifier() (string, error) {
+	switch t.ResourceType() {
+	case Organization:
+		return "//platformid.api.mondoo.app/runtime/gcp/organizations/" + t.id, nil
 	case Project:
-		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + p.id, nil
+		return "//platformid.api.mondoo.app/runtime/gcp/projects/" + t.id, nil
 	case Workspace:
-		return "//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + p.id, nil
+		return "//platformid.api.mondoo.app/runtime/googleworkspace/customer/" + t.id, nil
+	case Folder:
+		return "//platformid.api.mondoo.app/runtime/gcp/folders/" + t.id, nil
 	default:
-		return "", errors.New("unsupported resource type")
+		return "", fmt.Errorf("unsupported resource type %d", t.ResourceType())
 	}
 }
 
@@ -39,10 +44,18 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 	}
 
 	switch p.resourceType {
+	case Organization:
+		return &platform.Platform{
+			Name:    "gcp-org",
+			Title:   "GCP Organization",
+			Family:  []string{"google"},
+			Kind:    providers.Kind_KIND_GCP_OBJECT,
+			Runtime: p.Runtime(),
+		}, nil
 	case Project:
 		return &platform.Platform{
-			Name:    "gcp",
-			Title:   "Google Cloud Platform",
+			Name:    "gcp-project",
+			Title:   "GCP Project",
 			Family:  []string{"google"},
 			Kind:    providers.Kind_KIND_GCP_OBJECT,
 			Runtime: p.Runtime(),
@@ -55,6 +68,14 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 			Kind:    providers.Kind_KIND_API,
 			Runtime: p.Runtime(),
 		}, nil
+	case Folder:
+		return &platform.Platform{
+			Name:    "gcp-folder",
+			Title:   "GCP Folder",
+			Family:  []string{"google"},
+			Kind:    providers.Kind_KIND_GCP_OBJECT,
+			Runtime: p.Runtime(),
+		}, nil
 	}
 
 	return nil, errors.New("unsupported resource type")
@@ -62,6 +83,10 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 
 func getTitleForPlatformName(name string) string {
 	switch name {
+	case "gcp-organization":
+		return "GCP Organization"
+	case "gcp-folder":
+		return "GCP Folder"
 	case "gcp-project":
 		return "GCP Project"
 	case "gcp-compute-image":

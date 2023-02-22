@@ -5,10 +5,13 @@ import (
 
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
 	gcp_provider "go.mondoo.com/cnquery/motor/providers/google"
 	"go.mondoo.com/cnquery/motor/vault"
 )
+
+var OrgDiscoveryTargets = append(FolderDiscoveryTargets, DiscoveryOrganization, DiscoveryFolders, DiscoveryProjects)
 
 type GcpOrgResolver struct{}
 
@@ -17,7 +20,7 @@ func (k *GcpOrgResolver) Name() string {
 }
 
 func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects}
+	return append(OrgDiscoveryTargets, common.DiscoveryAuto, common.DiscoveryAll)
 }
 
 func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -35,48 +38,87 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 		return nil, err
 	}
 
-	// TODO: for now we do not add the organization as asset since we need to adapt the policies and queries to distinguish
-	// between them. Current resources most likely mix with the org, most gcp requests do not work on org level
+	orgId, err := provider.OrganizationID()
+	if err != nil {
+		return nil, err
+	}
+	org, err := provider.GetOrganization(orgId)
+	if err != nil {
+		return nil, err
+	}
 
-	//identifier, err := provider.Identifier()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//// detect platform info for the asset
-	//detector := platform.NewDetector(provider)
-	//pf, err := detector.Platform()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//resolved = append(resolved, &asset.Asset{
-	//	PlatformIds: []string{identifier},
-	//	Name:        "GCP organization " + tc.Options["organization"],
-	//	Platform:    pf,
-	//	Connections: []*transports.TransportConfig{tc}, // pass-in the current config
-	//})
+	identifier, err := provider.Identifier()
+	if err != nil {
+		return nil, err
+	}
+
+	// detect platform info for the asset
+	detector := detector.New(provider)
+	pf, err := detector.Platform()
+	if err != nil {
+		return nil, err
+	}
+
+	var rootAsset *asset.Asset
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryOrganization) {
+		pf.Name = "gcp-org"
+		rootAsset = &asset.Asset{
+			PlatformIds: []string{identifier},
+			Name:        "GCP organization " + org.DisplayName,
+			Platform:    pf,
+			Connections: []*providers.Config{tc}, // pass-in the current config
+		}
+		resolved = append(resolved, rootAsset)
+	}
+
+	// discover folders
+	if tc.IncludesOneOfDiscoveryTarget(DiscoveryFolders) {
+		m, err := NewMQLAssetsDiscovery(provider)
+		if err != nil {
+			return nil, err
+		}
+
+		type folder struct {
+			Id string
+		}
+		folders, err := GetList[folder](m, "return gcp.organization.folders { id }")
+		if err != nil {
+			return nil, err
+		}
+
+		for _, f := range folders {
+			folderConfig := tc.Clone()
+			folderConfig.Options = map[string]string{
+				"folder-id": f.Id,
+			}
+
+			assets, err := (&GcpFolderResolver{}).Resolve(ctx, folderConfig, credsResolver, sfn, userIdDetectors...)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, assets...)
+		}
+	}
 
 	// discover projects
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryProjects) {
-		orgId, err := provider.OrganizationID()
-		if err != nil {
-			return nil, err
-		}
-		org, err := provider.GetOrganization(orgId)
-		if err != nil {
-			return nil, err
-		}
-		projects, err := provider.GetProjectsForOrganization(org)
+		m, err := NewMQLAssetsDiscovery(provider)
 		if err != nil {
 			return nil, err
 		}
 
-		for i := range projects {
-			project := projects[i]
+		type project struct {
+			Id string
+		}
+		projects, err := GetList[project](m, "return gcp.organization.projects { id }")
+		if err != nil {
+			return nil, err
+		}
+
+		for _, p := range projects {
 			projectConfig := tc.Clone()
 			projectConfig.Options = map[string]string{
-				"project-id": project.ProjectId,
+				"project-id": p.Id,
 			}
 
 			assets, err := (&GcpProjectResolver{}).Resolve(ctx, projectConfig, credsResolver, sfn, userIdDetectors...)

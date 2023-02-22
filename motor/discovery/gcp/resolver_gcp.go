@@ -18,13 +18,7 @@ func (k *GcpResolver) Name() string {
 }
 
 func (r *GcpResolver) AvailableDiscoveryTargets() []string {
-	return []string{
-		common.DiscoveryAuto, common.DiscoveryAll, DiscoveryProjects,
-		DiscoveryInstances, DiscoveryComputeImages, DiscoveryComputeNetworks, DiscoveryComputeSubnetworks, DiscoveryComputeFirewalls,
-		DiscoveryGkeClusters,
-		DiscoveryStorageBuckets,
-		DiscoveryBigQueryDatasets,
-	}
+	return append(OrgDiscoveryTargets, append(ProjectDiscoveryTargets, common.DiscoveryAuto, common.DiscoveryAll)...)
 }
 
 func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -34,6 +28,8 @@ func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *provid
 		// ^^
 		// discover the full organization
 		return (&GcpOrgResolver{}).Resolve(ctx, tc, credsResolver, sfn, userIdDetectors...)
+	} else if tc.Options != nil && tc.Options["folder-id"] != "" {
+		return (&GcpFolderResolver{}).Resolve(ctx, tc, credsResolver, sfn, userIdDetectors...)
 	} else {
 		// when the user has not provided a project, check if we got a project or try to determine it
 		// FIXME: DEPRECATED, update in v8.0 vv
