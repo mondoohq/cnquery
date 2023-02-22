@@ -49,6 +49,9 @@ func (g *mqlGcpFolder) init(args *resources.Args) (*resources.Args, GcpFolder, e
 	}
 
 	folderId := provider.ResourceID()
+	if (*args)["id"] != "" {
+		folderId = fmt.Sprintf("folders/%s", (*args)["id"].(string))
+	}
 	folder, err := svc.Folders.Get(folderId).Do()
 	if err != nil {
 		return nil, nil, err
