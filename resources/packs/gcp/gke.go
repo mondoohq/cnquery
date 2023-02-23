@@ -36,7 +36,7 @@ func (g *mqlGcpProjectGkeServiceCluster) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return id, nil
+	return fmt.Sprintf("gcp.project.gkeService.cluster/%s", id), nil
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.Args, GcpProjectGkeServiceCluster, error) {
@@ -142,6 +142,10 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) id() (st
 	return g.Id()
 }
 
+func (g *mqlGcpProjectGkeServiceClusterAddonsConfig) id() (string, error) {
+	return g.Id()
+}
+
 func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -191,6 +195,97 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			autopilotEnabled = c.Autopilot.Enabled
 		}
 
+		var addonsConfig interface{}
+		if c.AddonsConfig != nil {
+			var httpLoadBalancing map[string]interface{}
+			if c.AddonsConfig.HttpLoadBalancing != nil {
+				httpLoadBalancing = map[string]interface{}{
+					"disabled": c.AddonsConfig.HttpLoadBalancing.Disabled,
+				}
+			}
+
+			var horizontalPodAutoscaling map[string]interface{}
+			if c.AddonsConfig.HorizontalPodAutoscaling != nil {
+				horizontalPodAutoscaling = map[string]interface{}{
+					"disabled": c.AddonsConfig.HorizontalPodAutoscaling.Disabled,
+				}
+			}
+
+			var kubernetesDashboard map[string]interface{}
+			if c.AddonsConfig.KubernetesDashboard != nil {
+				kubernetesDashboard = map[string]interface{}{
+					"disabled": c.AddonsConfig.KubernetesDashboard.Disabled,
+				}
+			}
+
+			var networkPolicyConfig map[string]interface{}
+			if c.AddonsConfig.NetworkPolicyConfig != nil {
+				networkPolicyConfig = map[string]interface{}{
+					"disabled": c.AddonsConfig.NetworkPolicyConfig.Disabled,
+				}
+			}
+
+			var cloudRunConfig map[string]interface{}
+			if c.AddonsConfig.CloudRunConfig != nil {
+				cloudRunConfig = map[string]interface{}{
+					"disabled":         c.AddonsConfig.CloudRunConfig.Disabled,
+					"loadBalancerType": c.AddonsConfig.CloudRunConfig.LoadBalancerType.String(),
+				}
+			}
+
+			var dnsCacheConfig map[string]interface{}
+			if c.AddonsConfig.DnsCacheConfig != nil {
+				dnsCacheConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.DnsCacheConfig.Enabled,
+				}
+			}
+
+			var configConnectorConfig map[string]interface{}
+			if c.AddonsConfig.ConfigConnectorConfig != nil {
+				configConnectorConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.ConfigConnectorConfig.Enabled,
+				}
+			}
+
+			var gcePersistentDiskCsiDriverConfig map[string]interface{}
+			if c.AddonsConfig.GcePersistentDiskCsiDriverConfig != nil {
+				gcePersistentDiskCsiDriverConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.GcePersistentDiskCsiDriverConfig.Enabled,
+				}
+			}
+
+			var gcpFilestoreCsiDriverConfig map[string]interface{}
+			if c.AddonsConfig.GcpFilestoreCsiDriverConfig != nil {
+				gcpFilestoreCsiDriverConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.GcpFilestoreCsiDriverConfig.Enabled,
+				}
+			}
+
+			var gkeBackupAgentConfig map[string]interface{}
+			if c.AddonsConfig.GkeBackupAgentConfig != nil {
+				gkeBackupAgentConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.GkeBackupAgentConfig.Enabled,
+				}
+			}
+
+			addonsConfig, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.addonsConfig",
+				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id),
+				"httpLoadBalancing", httpLoadBalancing,
+				"horizontalPodAutoscaling", horizontalPodAutoscaling,
+				"kubernetesDashboard", kubernetesDashboard,
+				"networkPolicyConfig", networkPolicyConfig,
+				"cloudRunConfig", cloudRunConfig,
+				"dnsCacheConfig", dnsCacheConfig,
+				"configConnectorConfig", configConnectorConfig,
+				"gcePersistentDiskCsiDriverConfig", gcePersistentDiskCsiDriverConfig,
+				"gcpFilestoreCsiDriverConfig", gcpFilestoreCsiDriverConfig,
+				"gkeBackupAgentConfig", gkeBackupAgentConfig,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -214,6 +309,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"resourceLabels", core.StrMapToInterface(c.ResourceLabels),
 			"created", parseTime(c.CreateTime),
 			"expirationTime", parseTime(c.ExpireTime),
+			"addonsConfig", addonsConfig,
 		)
 		if err != nil {
 			return nil, err
@@ -278,7 +374,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlSandboxCfg resources.ResourceType
 	if cfg.SandboxConfig != nil {
-		mqlSandboxCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.sandbox",
+		mqlSandboxCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.sandboxConfig",
 			"id", fmt.Sprintf("%s/sandbox", nodePoolId),
 			"type", cfg.SandboxConfig.Type.String(),
 		)
