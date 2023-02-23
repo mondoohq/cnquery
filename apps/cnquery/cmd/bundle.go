@@ -179,7 +179,11 @@ var queryPackUploadCmd = &cobra.Command{
 			log.Fatal().Msg("cnquery has no credentials. Log in with `cnquery login`")
 		}
 
-		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+		if err != nil {
+			log.Error().Err(err).Msg("could not initialize client authentication")
+			os.Exit(ConfigurationErrorCode)
+		}
 		queryHubServices, err := explorer.NewQueryHubClient(opts.UpstreamApiEndpoint(), ranger.DefaultHttpClient(), certAuth)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not connect to query hub")

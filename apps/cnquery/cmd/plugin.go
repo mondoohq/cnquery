@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
@@ -124,7 +125,11 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	var upstreamConfig *resources.UpstreamConfig
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount != nil {
-		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+		if err != nil {
+			log.Error().Err(err).Msg("could not initialize client authentication")
+			os.Exit(ConfigurationErrorCode)
+		}
 
 		upstreamConfig = &resources.UpstreamConfig{
 			// we currently do not expose incognito to the plugin/run command
