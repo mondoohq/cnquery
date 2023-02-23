@@ -1446,6 +1446,34 @@ private gcp.project.gkeService.cluster @defaults("name") {
   created time
   // The time the cluster will be automatically deleted in
   expirationTime time
+  // Configurations for the various addons available to run in the cluster
+  addonsConfig gcp.project.gkeService.cluster.addonsConfig
+}
+
+// GKE Cluster Addons Config
+private gcp.project.gkeService.cluster.addonsConfig {
+  // Internal ID
+  id string
+  // Configuration for the HTTP (L7) load balancing controller addon
+  httpLoadBalancing dict
+  // Configuration for the horizontal pod autoscaling feature
+  horizontalPodAutoscaling dict
+  // Configuration for the Kubernetes Dashboard
+  kubernetesDashboard dict
+  // Configuration for NetworkPolicy
+  networkPolicyConfig dict
+  // Configuration for the Cloud Run addon
+  cloudRunConfig dict
+  // Configuration for NodeLocalDNS, a DNS cache running on cluster nodes
+  dnsCacheConfig dict
+  // Configuration for the ConfigConnector addon
+  configConnectorConfig dict
+  // Configuration for the Compute Engine Persistent Disk CSI driver
+  gcePersistentDiskCsiDriverConfig dict
+  // Configuration for the GCP Filestore CSI driver
+  gcpFilestoreCsiDriverConfig dict
+  // Configuration for the backup for GKE agent addon
+  gkeBackupAgentConfig dict
 }
 
 // GKE Cluster Node Pool

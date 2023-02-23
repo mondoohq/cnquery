@@ -60,7 +60,7 @@ func (g *mqlGcpProject) init(args *resources.Args) (*resources.Args, GcpProject,
 
 	(*args)["id"] = project.ProjectId
 	(*args)["number"] = strings.TrimPrefix(project.Name, "projects/")[0:10]
-	(*args)["name"] = project.Name
+	(*args)["name"] = project.DisplayName
 	(*args)["parentId"] = project.Parent
 	(*args)["state"] = project.State
 	(*args)["lifecycleState"] = project.State
