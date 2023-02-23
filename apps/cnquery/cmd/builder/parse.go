@@ -389,27 +389,18 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_GCP:
 		connection.Backend = providerType
 
-		var credsPaths []string
-		// env vars have precedence over the --credentials-path arg
-		credsPaths = readEnvs("GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CREDENTIALS", "GOOGLE_CLOUD_KEYFILE_JSON", "GCLOUD_KEYFILE_JSON")
-
-		if credPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
-		} else if credPath != "" {
-			credsPaths = append(credsPaths, credPath)
+		envVars := []string{
+			"GOOGLE_APPLICATION_CREDENTIALS",
+			"GOOGLE_CREDENTIALS",
+			"GOOGLE_CLOUD_KEYFILE_JSON",
+			"GCLOUD_KEYFILE_JSON",
 		}
-
-		for i := range credsPaths {
-			path := credsPaths[i]
-
-			serviceAccount, err := os.ReadFile(path)
-			if err == nil {
-				connection.Credentials = append(connection.Credentials, &vault.Credential{
-					Type:   vault.CredentialType_json,
-					Secret: serviceAccount,
-				})
-				break // abort loop since we found credential
-			}
+		serviceAccount := getGoogleCreds(cmd, envVars...)
+		if serviceAccount != nil {
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type:   vault.CredentialType_json,
+				Secret: serviceAccount,
+			})
 		}
 		switch assetType {
 		case DefaultAssetType:
@@ -656,27 +647,18 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_GOOGLE_WORKSPACE:
 		connection.Backend = providerType
 
-		var credsPaths []string
-		// env vars have precedence over the --credentials-path arg
-		credsPaths = readEnvs("GOOGLE_APPLICATION_CREDENTIALS", "GOOGLEWORKSPACE_CREDENTIALS", "GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON", "GOOGLE_CREDENTIALS")
-
-		if credPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
-		} else if credPath != "" {
-			credsPaths = append(credsPaths, credPath)
+		envVars := []string{
+			"GOOGLE_APPLICATION_CREDENTIALS",
+			"GOOGLEWORKSPACE_CREDENTIALS",
+			"GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON",
+			"GOOGLE_CREDENTIALS",
 		}
-
-		for i := range credsPaths {
-			path := credsPaths[i]
-
-			serviceAccount, err := os.ReadFile(path)
-			if err == nil {
-				connection.Credentials = append(connection.Credentials, &vault.Credential{
-					Type:   vault.CredentialType_json,
-					Secret: serviceAccount,
-				})
-				break // abort loop since we found credential
-			}
+		serviceAccount := getGoogleCreds(cmd, envVars...)
+		if serviceAccount != nil {
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type:   vault.CredentialType_json,
+				Secret: serviceAccount,
+			})
 		}
 		if customerID, err := cmd.Flags().GetString("customer-id"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --customer-id value")
@@ -749,4 +731,27 @@ func readEnvs(envs ...string) []string {
 	}
 
 	return vals
+}
+
+// to be used by gcp/googleworkspace cmds, fetches the creds from either the env vars provided or from a flag in the provided cmd
+func getGoogleCreds(cmd *cobra.Command, envs ...string) []byte {
+	var credsPaths []string
+	// env vars have precedence over the --credentials-path arg
+	credsPaths = readEnvs(envs...)
+
+	if credPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
+		log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
+	} else if credPath != "" {
+		credsPaths = append(credsPaths, credPath)
+	}
+
+	for i := range credsPaths {
+		path := credsPaths[i]
+
+		serviceAccount, err := os.ReadFile(path)
+		if err == nil {
+			return serviceAccount
+		}
+	}
+	return nil
 }
