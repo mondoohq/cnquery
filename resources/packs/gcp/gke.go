@@ -286,6 +286,13 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			}
 		}
 
+		var workloadIdCfg map[string]interface{}
+		if c.WorkloadIdentityConfig != nil {
+			workloadIdCfg = map[string]interface{}{
+				"workloadPool": c.WorkloadIdentityConfig.WorkloadPool,
+			}
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -310,6 +317,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"created", parseTime(c.CreateTime),
 			"expirationTime", parseTime(c.ExpireTime),
 			"addonsConfig", addonsConfig,
+			"workloadIdentityConfig", workloadIdCfg,
 		)
 		if err != nil {
 			return nil, err
