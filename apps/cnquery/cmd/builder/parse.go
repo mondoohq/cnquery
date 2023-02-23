@@ -389,27 +389,26 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_GCP:
 		connection.Backend = providerType
 
+		var credsPaths []string
 		// env vars have precedence over the --credentials-path arg
-		credsPath := readEnvs("GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CREDENTIALS")
-		if credsPath != "" {
-			serviceAccount, err := os.ReadFile(credsPath)
+		credsPaths = readEnvs("GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CREDENTIALS", "GOOGLE_CLOUD_KEYFILE_JSON", "GCLOUD_KEYFILE_JSON")
+
+		if credPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
+		} else if credPath != "" {
+			credsPaths = append(credsPaths, credPath)
+		}
+
+		for i := range credsPaths {
+			path := credsPaths[i]
+
+			serviceAccount, err := os.ReadFile(path)
 			if err == nil {
 				connection.Credentials = append(connection.Credentials, &vault.Credential{
 					Type:   vault.CredentialType_json,
 					Secret: serviceAccount,
 				})
-			}
-		} else {
-			if credsPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
-				log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
-			} else if credsPath != "" {
-				serviceAccount, err := os.ReadFile(credsPath)
-				if err == nil {
-					connection.Credentials = append(connection.Credentials, &vault.Credential{
-						Type:   vault.CredentialType_json,
-						Secret: serviceAccount,
-					})
-				}
+				break // abort loop since we found credential
 			}
 		}
 		switch assetType {
@@ -657,27 +656,26 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_GOOGLE_WORKSPACE:
 		connection.Backend = providerType
 
+		var credsPaths []string
 		// env vars have precedence over the --credentials-path arg
-		credsPath := readEnvs("GOOGLEWORKSPACE_CREDENTIALS", "GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON", "GOOGLE_CREDENTIALS")
-		if credsPath != "" {
-			serviceAccount, err := os.ReadFile(credsPath)
+		credsPaths = readEnvs("GOOGLE_APPLICATION_CREDENTIALS", "GOOGLEWORKSPACE_CREDENTIALS", "GOOGLEWORKSPACE_CLOUD_KEYFILE_JSON", "GOOGLE_CREDENTIALS")
+
+		if credPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
+		} else if credPath != "" {
+			credsPaths = append(credsPaths, credPath)
+		}
+
+		for i := range credsPaths {
+			path := credsPaths[i]
+
+			serviceAccount, err := os.ReadFile(path)
 			if err == nil {
 				connection.Credentials = append(connection.Credentials, &vault.Credential{
 					Type:   vault.CredentialType_json,
 					Secret: serviceAccount,
 				})
-			}
-		} else {
-			if credsPath, err := cmd.Flags().GetString("credentials-path"); err != nil {
-				log.Fatal().Err(err).Msg("cannot parse --credentials-path value")
-			} else if credsPath != "" {
-				serviceAccount, err := os.ReadFile(credsPath)
-				if err == nil {
-					connection.Credentials = append(connection.Credentials, &vault.Credential{
-						Type:   vault.CredentialType_json,
-						Secret: serviceAccount,
-					})
-				}
+				break // abort loop since we found credential
 			}
 		}
 		if customerID, err := cmd.Flags().GetString("customer-id"); err != nil {
@@ -740,14 +738,15 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	return parsedAsset
 }
 
-// returns the first env var that is set, else returns an empty string if none of the specified env vars are set
-func readEnvs(envs ...string) string {
+// returns only the env vars that have a set value
+func readEnvs(envs ...string) []string {
+	vals := []string{}
 	for i := range envs {
 		val := os.Getenv(envs[i])
 		if val != "" {
-			return val
+			vals = append(vals, val)
 		}
 	}
 
-	return ""
+	return vals
 }
