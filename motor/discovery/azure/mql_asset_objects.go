@@ -265,9 +265,10 @@ func computeStorageAccountContainers(m *MqlDiscovery, subscription string, tc *p
 					name:   container.Name,
 					labels: map[string]string{},
 					azureObject: azureObject{
-						id:           container.Id,
-						service:      "storage",
-						objectType:   "container",
+						id:         container.Id,
+						service:    "storage",
+						objectType: "container",
+						// use the same region as the account to which the container belongs
 						region:       a.Location,
 						subscription: subscription,
 					},
