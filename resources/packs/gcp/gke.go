@@ -368,6 +368,22 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		return nil, err
 	}
 
+	var management map[string]interface{}
+	if np.Management != nil {
+		var upgradeOpts map[string]interface{}
+		if np.Management.UpgradeOptions != nil {
+			upgradeOpts = map[string]interface{}{
+				"autoUpgradeStartTime": np.Management.UpgradeOptions.AutoUpgradeStartTime,
+				"description":          np.Management.UpgradeOptions.Description,
+			}
+		}
+		management = map[string]interface{}{
+			"autoRepair":     np.Management.AutoRepair,
+			"autoUpgrade":    np.Management.AutoUpgrade,
+			"upgradeOptions": upgradeOpts,
+		}
+	}
+
 	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool",
 		"id", nodePoolId,
 		"name", np.Name,
@@ -378,6 +394,7 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		"version", np.Version,
 		"instanceGroupUrls", core.StrSliceToInterface(np.InstanceGroupUrls),
 		"status", np.Status.String(),
+		"management", management,
 	)
 }
 

@@ -1530,6 +1530,8 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   instanceGroupUrls []string
   // The current status of this node pool
   status string
+  // Node management configuration
+  management dict
 }
 
 // GCP GKE node pool-level network configuration
