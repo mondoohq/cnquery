@@ -1,0 +1,57 @@
+packs:
+  - uid: mondoo-vmware-incident-response
+    name: VMware vCenter Incident Response Pack by Mondoo
+    version: "1.0.0"
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: vmware,vmware-vsphere
+      mondoo.com/category: security
+    docs:
+      desc: |
+        ## Overview
+
+        VMware vCenter Incident Response Pack by Mondoo is designed to gather data about vCenter and its ESXi hosts.
+
+        ### Run query pack
+
+        To run this querz pack against VMware vCenter:
+
+        ```bash
+        cnquery scan vsphere user@domain.local@192.168.5.24 --ask-pass -f core/mondoo-vmware-incident-response.mql.yaml
+        ```
+
+        ## Join the community!
+
+        Our goal is to build policies that are simple to deploy, accurate, and actionable. 
+        
+        If you have any suggestions on how to improve this policy, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
+    filters:
+      - asset.platform == "vmware-esxi"
+    queries:
+      - uid: mondoo-vmware-incident-response-kernel-modules
+        title: Retrieve list of kernel modules
+        query: vsphere.host.kernelModules { * }
+      - uid: mondoo-vmware-incident-response-installed-packages
+        title: Retrieve list of installed packages
+        query: vsphere.host.packages { * } 
+      - uid: mondoo-vmware-incident-response-running-services
+        title: Retrieve list of running services
+        query: vsphere.host.services.where (running) { * }
+        refs:
+          - title: VMSA-2021-0002
+            url: https://www.vmware.com/security/advisories/VMSA-2021-0002.html
+          - title: How to Disable/Enable the SLP Service on VMware ESXi (76372)
+            url: https://kb.vmware.com/s/article/76372
+      - uid: mondoo-vmware-incident-response-acceptance-level
+        title: Retrieve host acceptance level
+        docs:
+          desc: The host acceptance level determines which VIBs can be installed to a host. 
+        query: vsphere.host.acceptanceLevel
+        refs:
+          - title:
+            url: https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.upgrade.doc/GUID-27BBBAB8-01EA-4238-8140-1C3C3EFC0AA6.html
+      - uid: mondoo-vmware-incident-response-acceptanceLevel
+        title: Retrieve list configured ntp server
+        query: vsphere.host.ntp.server
