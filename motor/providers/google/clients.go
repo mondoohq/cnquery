@@ -29,11 +29,6 @@ func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, erro
 		return googleoauth.CredentialsFromJSONWithParams(ctx, data, credParams)
 	}
 
-	if t.serviceAccountSubject != "" {
-		// use custom service account provided by user
-		return googleoauth.CredentialsFromJSONWithParams(ctx, t.serviceAccount, credParams)
-	}
-
 	// otherwise fallback to default google sdk authentication
 	log.Debug().Msg("fallback to default google sdk authentication")
 	return googleoauth.FindDefaultCredentials(ctx, scopes...)
@@ -49,11 +44,6 @@ func (t *Provider) Client(scope ...string) (*http.Client, error) {
 			return nil, err
 		}
 		return serviceAccountAuth(ctx, t.serviceAccountSubject, data, scope...)
-	}
-
-	// use service account authentication if we loaded a service account
-	if t.serviceAccount != nil {
-		return serviceAccountAuth(ctx, t.serviceAccountSubject, t.serviceAccount, scope...)
 	}
 
 	// otherwise fallback to default google sdk authentication

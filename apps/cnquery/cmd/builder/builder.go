@@ -609,6 +609,7 @@ func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn
 			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
 			viper.BindPFlag("project-id", cmd.Flags().Lookup("project-id"))
 			viper.BindPFlag("organization-id", cmd.Flags().Lookup("organization-id"))
+			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_GCP, DefaultAssetType)
@@ -623,6 +624,7 @@ func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn
 	cmd.Flags().MarkHidden("organization")
 	cmd.Flags().MarkDeprecated("organization", "--organization is deprecated in favor of --organization-id")
 	cmd.Flags().String("organization-id", "", "specify the GCP organization ID to scan")
+	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
 	return cmd
 }
 
@@ -635,12 +637,14 @@ func scanGcpOrgCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn ru
 		Args:    cobra.ExactArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
+			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_GCP, GcpOrganizationAssetType)
 		},
 	}
 	commonCmdFlags(cmd)
+	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
 	return cmd
 }
 
@@ -652,12 +656,14 @@ func scanGcpProjectCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runF
 		Args:  cobra.ExactArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
+			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_GCP, GcpProjectAssetType)
 		},
 	}
 	commonCmdFlags(cmd)
+	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
 	return cmd
 }
 
@@ -669,12 +675,14 @@ func scanGcpFolderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn
 		Args:  cobra.ExactArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
+			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runFn(cmd, args, providers.ProviderType_GCP, GcpFolderAssetType)
 		},
 	}
 	commonCmdFlags(cmd)
+	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
 	return cmd
 }
 
@@ -903,6 +911,7 @@ func scanGoogleWorkspaceCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlag("customer-id", cmd.Flags().Lookup("customer-id"))
 			viper.BindPFlag("impersonated-user-email", cmd.Flags().Lookup("impersonated-user-email"))
+			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
 
 			preRun(cmd, args)
 		},
@@ -913,6 +922,8 @@ func scanGoogleWorkspaceCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn,
 	commonCmdFlags(cmd)
 	cmd.Flags().String("customer-id", "", "Specify the Google Workspace customer id to scan")
 	cmd.Flags().String("impersonated-user-email", "", "The impersonated user's email with access to the Admin APIs")
+	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+
 	return cmd
 }
 
