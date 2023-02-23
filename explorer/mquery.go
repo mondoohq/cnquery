@@ -346,7 +346,6 @@ func (v *Impact) UnmarshalJSON(data []byte) error {
 		if err := json.Unmarshal(data, &v); err != nil {
 			return err
 		}
-		v.Value = v.Value
 	}
 
 	if v.Value < -1 || v.Value > 100 {
