@@ -115,6 +115,13 @@ message Property {
   string desc = 35;
 }
 
+enum Action {
+  UNSPECIFIED = 0;
+  ACTIVATE = 1;
+  DEACTIVATE = 2;
+  MODIFY = 3;
+}
+
 // Mquery represents the MQL and metadata that form a query
 message Mquery {
   // FIXME: DEPRECATED, remove in v9.0 vv
@@ -123,13 +130,6 @@ message Mquery {
   // This is moved into docs.refs
   repeated MqueryRef refs = 22;
   // ^^
-
-  enum Action {
-    UNKNOWN = 0;
-    ADD = 1;
-    DELETE = 2;
-    MODIFY = 3;
-  }
 
   string mql = 1;
   string code_id = 2;
