@@ -101,11 +101,11 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm64
     dockerfile: Dockerfile-ubi
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64v8"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64v8"
-      - "mondoo/{{ .ProjectName }}:latest-ubi-arm64v8"
+      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64"
+      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64"
+      - "mondoo/{{ .ProjectName }}:latest-ubi-arm64"
     build_flag_templates:
-      - "--platform=linux/arm64/v8"
+      - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
