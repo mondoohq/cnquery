@@ -10,7 +10,7 @@
 
 **Open source, cloud-native asset inventory and discovery**
 
-`cnquery` is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
+cnquery is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
 ![cnquery run example](docs/gif/cnquery-run.gif)
 
@@ -28,9 +28,11 @@ cnquery shell aws
 > aws.ec2.instances{*}
 ```
 
+[:books: To learn more, read the cnquery docs.](https://mondoo.com/docs/cnquery/home)
+
 ## Installation
 
-Install `cnquery` with our installation script:
+Install cnquery with our installation script:
 
 **Linux and macOS**
 
@@ -51,7 +53,7 @@ If you prefer a package, find it on [GitHub releases](https://github.com/mondooh
 
 ## Interactive shell
 
-The easiest way to explore `cnquery` is to use our interactive shell, which has auto-complete to guide you:
+The easiest way to explore cnquery is to use our interactive shell, which has auto-complete to guide you:
 
 ```bash
 cnquery shell
@@ -93,13 +95,13 @@ You can then pipe the output to [jq](https://stedolan.github.io/jq/) or other ap
 
 ## Query packs
 
-You can combine multiple queries into query packs, which can run together. `cnquery` comes with default [query packs](https://github.com/mondoohq/cnquery-packs) out of the box for most systems. You can run:
+You can combine multiple queries into query packs, which can run together. cnquery comes with default [query packs](https://github.com/mondoohq/cnquery-packs) out of the box for most systems. You can run:
 
 ```bash
 cnquery scan
 ```
 
-Without specifying anything else, `cnquery` tries to find and run the default query pack for the given system.
+Without specifying anything else, cnquery tries to find and run the default query pack for the given system.
 
 You can specify a query pack that you want to run. Use the `--querypack` argument:
 
@@ -131,11 +133,11 @@ To more easily explore your infrastructure, sign up for a free Mondoo Platform a
 
 Go to [console.mondoo.com](http://console.mondoo.com) to sign up.
 
-To learn about Mondoo Platform, read the [Mondoo Platform docs](../intro.md) or visit [mondoo.com](https://www.mondoo.com).
+To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://www.mondoo.com).
 
 ## Private query packs
 
-Distributing cnqueries across your fleet
+Distributing queries across your fleet
 
 You can create and share query packs using the Query Hub feature of the Mondoo Console. The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
 
@@ -193,11 +195,11 @@ cnquery bundle upload mypack.mql.yaml
 
 ## What's next?
 
-There are so many things `cnquery` can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, and share data with auditors… `cnquery` is nearly limitless in capabilities.
+There are so many things cnquery can do! Gather information about your fleet, find tool-sprawl across systems, run incident response, and share data with auditors… cnquery is nearly limitless in capabilities.
 
 Explore:
 
-- [cnquery docs](https://mondoo.com/docs/cnquery/)
+- [cnquery docs](https://mondoo.com/docs/cnquery/home)
 - [Query packs](https://github.com/mondoohq/cnquery-packs)
 - [MQL introduction](https://mondoohq.github.io/mql-intro/index.html)
 - [MQL language reference](https://mondoo.com/docs/mql/resources/)
