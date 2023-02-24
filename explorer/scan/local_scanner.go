@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
@@ -61,6 +62,73 @@ func NewLocalScanner(opts ...ScannerOption) *LocalScanner {
 	}
 
 	return ls
+}
+
+type gatherRelatedAssetsAccumulator struct {
+	assets                  []*asset.Asset
+	visited                 map[*asset.Asset]struct{}
+	platformIdRelationships map[string][]string
+}
+
+func newGatherRelatedAssetsAccumulator() *gatherRelatedAssetsAccumulator {
+	return &gatherRelatedAssetsAccumulator{
+		visited:                 map[*asset.Asset]struct{}{},
+		platformIdRelationships: make(map[string][]string),
+	}
+}
+
+func (acc *gatherRelatedAssetsAccumulator) getRelationshipUpdates(platformIDToMrn map[string]*explorer.SynchronizeAssetsRespAssetDetail) []*explorer.AssetRelationshipUpdate {
+	mrnRelationships := map[string]map[string]struct{}{}
+	for rootPlatformId, childPlatformIds := range acc.platformIdRelationships {
+		root := platformIDToMrn[rootPlatformId]
+		if root.AssetMrn == "" {
+			continue
+		}
+		relationshipsForRoot := mrnRelationships[root.AssetMrn]
+		if relationshipsForRoot == nil {
+			relationshipsForRoot = make(map[string]struct{})
+			mrnRelationships[root.AssetMrn] = relationshipsForRoot
+		}
+		for _, childPlatformId := range childPlatformIds {
+			child := platformIDToMrn[childPlatformId]
+			if child.AssetMrn == "" {
+				continue
+			}
+			relationshipsForRoot[child.AssetMrn] = struct{}{}
+		}
+	}
+
+	updates := []*explorer.AssetRelationshipUpdate{}
+	for rootMrn, childMrns := range mrnRelationships {
+		for childMrn := range childMrns {
+			updates = append(updates, &explorer.AssetRelationshipUpdate{
+				MrnA:   rootMrn,
+				MrnB:   childMrn,
+				Action: explorer.AssetRelationshipUpdate_SET,
+			})
+		}
+	}
+
+	return updates
+}
+
+func gatherRelatedAssets(acc *gatherRelatedAssetsAccumulator, rootAsset *asset.Asset) {
+	if rootAsset.Category == asset.AssetCategory_CATEGORY_CICD {
+		return
+	}
+	_, visited := acc.visited[rootAsset]
+	if visited {
+		return
+	}
+	acc.assets = append(acc.assets, rootAsset)
+	for _, childAsset := range rootAsset.RelatedAssets {
+		for _, rootAssetPlatformID := range rootAsset.PlatformIds {
+			for _, childAssetPlatformID := range childAsset.PlatformIds {
+				acc.platformIdRelationships[rootAssetPlatformID] = append(acc.platformIdRelationships[rootAssetPlatformID], childAssetPlatformID)
+			}
+		}
+		gatherRelatedAssets(acc, childAsset)
+	}
 }
 
 func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportCollection, error) {
@@ -147,6 +215,16 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		if err != nil {
 			return nil, false, err
 		}
+
+		relatedAssetsAcc := newGatherRelatedAssetsAccumulator()
+		rootAssetSet := map[string]struct{}{}
+		for _, a := range assetList {
+			for _, p := range a.PlatformIds {
+				rootAssetSet[p] = struct{}{}
+			}
+			gatherRelatedAssets(relatedAssetsAcc, a)
+		}
+
 		resp, err := upstream.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
 			SpaceMrn: s.spaceMrn,
 			List:     assetList,
@@ -161,12 +239,34 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 			platformAssetMapping[resp.Details[i].PlatformMrn] = resp.Details[i]
 		}
 
-		// attach the asset details to the assets list
+		// attach the asset details to the assets list, including the related assets
 		for i := range assetList {
 			log.Debug().Str("asset", assetList[i].Name).Strs("platform-ids", assetList[i].PlatformIds).Msg("update asset")
 			platformMrn := assetList[i].PlatformIds[0]
 			assetList[i].Mrn = platformAssetMapping[platformMrn].AssetMrn
 			assetList[i].Url = platformAssetMapping[platformMrn].Url
+			for _, ra := range assetList[i].RelatedAssets {
+				log.Debug().Str("asset", ra.Name).Strs("platform-ids", ra.PlatformIds).Msg("update related asset")
+				childPlatformMrn := ra.PlatformIds[0]
+				details := platformAssetMapping[childPlatformMrn]
+				if details != nil {
+					ra.Mrn = details.AssetMrn
+					ra.Url = details.Url
+				} else {
+					log.Debug().Str("asset", ra.Name).Strs("platform-ids", ra.PlatformIds).Msg("asset not found in platform asset mapping, skipping")
+				}
+			}
+		}
+
+		// gather relationships between assets
+		updates := relatedAssetsAcc.getRelationshipUpdates(platformAssetMapping)
+
+		_, err = upstream.UpdateAssetRelationships(context.Background(), &explorer.UpdateAssetRelationshipsRequest{
+			SpaceMrn: s.spaceMrn,
+			Updates:  updates,
+		})
+		if err != nil {
+			return nil, false, err
 		}
 	} else {
 		// ensure we have non-empty asset MRNs

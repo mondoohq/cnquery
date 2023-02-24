@@ -288,6 +288,7 @@ service QueryConductor {
   rpc GetReport(EntityDataRequest) returns (Report) {}
 
   rpc SynchronizeAssets(SynchronizeAssetsReq) returns (SynchronizeAssetsResp) {}
+  rpc UpdateAssetRelationships(UpdateAssetRelationshipsRequest) returns (UpdateAssetRelationshipsResponse) {}
 }
 
 // Assign a number of packs to an asset. All of these are identified by MRN.
@@ -403,3 +404,20 @@ message SynchronizeAssetsResp {
   map<string, SynchronizeAssetsRespAssetDetail> details = 1;
 }
 
+message AssetRelationshipUpdate {
+  enum Action {
+    INVALID = 0;
+    SET = 1;
+    // Maybe REMOVE will be needed one day
+  }
+  string mrn_a = 1;
+  string mrn_b = 2;
+  Action action = 3;
+}
+
+message UpdateAssetRelationshipsRequest {
+  string space_mrn = 1;
+  repeated AssetRelationshipUpdate updates = 2;
+}
+
+message UpdateAssetRelationshipsResponse {}

@@ -365,3 +365,7 @@ func (s *LocalServices) GetReport(ctx context.Context, req *EntityDataRequest) (
 func (s *LocalServices) SynchronizeAssets(context.Context, *SynchronizeAssetsReq) (*SynchronizeAssetsResp, error) {
 	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
+
+func (s *LocalServices) UpdateAssetRelationships(context.Context, *UpdateAssetRelationshipsRequest) (*UpdateAssetRelationshipsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "not implemented")
+}
