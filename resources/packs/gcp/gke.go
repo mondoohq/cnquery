@@ -146,6 +146,10 @@ func (g *mqlGcpProjectGkeServiceClusterAddonsConfig) id() (string, error) {
 	return g.Id()
 }
 
+func (g *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) id() (string, error) {
+	return g.Id()
+}
+
 func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -293,6 +297,28 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			}
 		}
 
+		var ipAllocPolicy interface{}
+		if c.IpAllocationPolicy != nil {
+			ipAllocPolicy, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.ipAllocationPolicy",
+				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/ipAllocationPolicy", c.Id),
+				"useIpAliases", c.IpAllocationPolicy.UseIpAliases,
+				"createSubnetwork", c.IpAllocationPolicy.CreateSubnetwork,
+				"subnetworkName", c.IpAllocationPolicy.SubnetworkName,
+				"clusterSecondaryRangeName", c.IpAllocationPolicy.ClusterSecondaryRangeName,
+				"servicesSecondaryRangeName", c.IpAllocationPolicy.ServicesSecondaryRangeName,
+				"clusterIpv4CidrBlock", c.IpAllocationPolicy.ClusterIpv4CidrBlock,
+				"nodeIpv4CidrBlock", c.IpAllocationPolicy.NodeIpv4CidrBlock,
+				"servicesIpv4CidrBlock", c.IpAllocationPolicy.ServicesIpv4CidrBlock,
+				"tpuIpv4CidrBlock", c.IpAllocationPolicy.TpuIpv4CidrBlock,
+				"useRoutes", c.IpAllocationPolicy.UseRoutes,
+				"stackType", c.IpAllocationPolicy.StackType.String(),
+				"ipv6AccessType", c.IpAllocationPolicy.Ipv6AccessType.String(),
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -318,6 +344,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"expirationTime", parseTime(c.ExpireTime),
 			"addonsConfig", addonsConfig,
 			"workloadIdentityConfig", workloadIdCfg,
+			"ipAllocationPolicy", ipAllocPolicy,
 		)
 		if err != nil {
 			return nil, err
