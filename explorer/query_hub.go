@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-const defaultQueryHubUrl = "https://hub.api.mondoo.com"
+const defaultRegistryUrl = "https://registry.api.mondoo.com"
 
 var tracer = otel.Tracer("go.mondoo.com/cnquery/explorer")
 
@@ -215,12 +215,12 @@ func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) 
 		return s.Upstream.DefaultPacks(ctx, req)
 	}
 
-	queryHubURL := os.Getenv("QUERYHUB_URL")
-	if queryHubURL == "" {
-		queryHubURL = defaultQueryHubUrl
+	registryEndpoint := os.Getenv("REGISTRY_URL")
+	if registryEndpoint == "" {
+		registryEndpoint = defaultRegistryUrl
 	}
 
-	client, err := NewQueryHubClient(queryHubURL, ranger.DefaultHttpClient())
+	client, err := NewQueryHubClient(registryEndpoint, ranger.DefaultHttpClient())
 	if err != nil {
 		return nil, err
 	}
