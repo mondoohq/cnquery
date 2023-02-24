@@ -1,0 +1,13 @@
+FROM registry.access.redhat.com/ubi8-minimal AS root
+
+RUN microdnf upgrade -y &&\
+    rm -rf /var/cache/dnf/*
+
+COPY cnquery /usr/local/bin
+
+ENTRYPOINT [ "cnquery" ]
+CMD ["help"]
+
+# Rootless version of the container
+FROM root AS rootless
+USER 100:101
