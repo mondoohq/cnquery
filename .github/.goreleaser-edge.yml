@@ -202,7 +202,7 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--target=rootless"
 docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
     # UBI containers
-  - name_template: mondoo/edge-{{ .ProjectName }}:edge-{{ .Version }}-ubi
+  - name_template: mondoo/{{ .ProjectName }}:edge-{{ .Version }}-ubi
     image_templates:
       - mondoo/{{ .ProjectName }}:edge-{{ .Version }}-ubi-amd64
       - mondoo/{{ .ProjectName }}:edge-{{ .Version }}-ubi-arm64
