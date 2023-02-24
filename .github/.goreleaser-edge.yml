@@ -117,15 +117,14 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--target=root"
   # Rootless
-  # UBI containers
+    # UBI containers
   - use: buildx
     goos: linux
     goarch: amd64
     dockerfile: Dockerfile-ubi
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-amd64-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-ubi-amd64-rootless"
+      - "mondoo/{{ .ProjectName }}:edge-{{ .Version }}-ubi-amd64-rootless"
+      - "mondoo/{{ .ProjectName }}:edge-latest-ubi-amd64-rootless"
     build_flag_templates:
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -138,11 +137,10 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm64
     dockerfile: Dockerfile-ubi
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-ubi-arm64-rootless"
+      - "mondoo/{{ .ProjectName }}:edge-{{ .Version }}-ubi-arm64-rootless"
+      - "mondoo/{{ .ProjectName }}:edge-latest-ubi-arm64-rootless"
     build_flag_templates:
-      - "--platform=linux/arm64/v8"
+      - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
