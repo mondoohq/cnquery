@@ -140,6 +140,8 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		osm = &AlpineOpenrcServiceManager{provider: osProvider}
 	case pf.Name == "cos":
 		osm = ResolveSystemdServiceManager(osProvider)
+	case pf.Name == "kali": // debian based with versions from 2015 onwards being systemd based
+		osm = ResolveSystemdServiceManager(osProvider)
 	}
 
 	if osm == nil {
