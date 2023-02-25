@@ -12,6 +12,8 @@ googleworkspace {
   groups() []googleworkspace.group
   // Retrieves a list of all roles for the Google Workspace account
   roles() []googleworkspace.role
+  // Retrieves a list of all apps for the Google Workspace account
+  connectedApps() []googleworkspace.connectedApp
 }
 
 // Google Workspace organizational unit
@@ -94,6 +96,20 @@ private googleworkspace.token @defaults("displayText") {
   scopes []string
   // The unique ID of the user that issued the token
   userKey string
+}
+
+// Google Workspace Third-party Connected Apps
+private googleworkspace.connectedApp @defaults("name clientId") {
+  // The unique ID of the application
+  clientId string
+  // The application's name
+  name string
+  // Aggregated scopes across all tokens issued to the application
+  scopes []string
+  // Google Workspace User that use the 3rd-party application
+  users []googleworkspace.user
+  // Returns the user-issued tokens to 3rd party applications
+  tokens []googleworkspace.token
 }
 
 // Google Workspace Group

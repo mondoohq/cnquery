@@ -1,11 +1,25 @@
 resources:
   googleworkspace:
     fields:
+      connectedApps: {}
       domains: {}
       groups: {}
       orgUnits: {}
       roles: {}
       users: {}
+    min_mondoo_version: latest
+  googleworkspace.connectedApp:
+    fields:
+      access: {}
+      clientId: {}
+      id: {}
+      name: {}
+      scopes: {}
+      tokens: {}
+      type: {}
+      users: {}
+      verified: {}
+    is_private: true
     min_mondoo_version: latest
   googleworkspace.domain:
     fields:
