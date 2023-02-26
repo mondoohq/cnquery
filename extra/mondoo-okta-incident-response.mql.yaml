@@ -2,6 +2,9 @@ packs:
   - uid: mondoo-okta-incident-response
     name: Mondoo Okta Incident Response
     version: 1.0.0
+    tags:
+      mondoo.com/platform: okta-org,saas
+      mondoo.com/category: security
     docs:
       desc: |
         ### Overview

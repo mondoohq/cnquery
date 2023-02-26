@@ -2,6 +2,9 @@ packs:
   - uid: mondoo-slack-incident-response
     name: Mondoo Slack Incident Response
     version: 1.0.0
+    tags:
+      mondoo.com/platform: slack-team,saas
+      mondoo.com/category: security
     docs:
       desc: |
         ### Overview

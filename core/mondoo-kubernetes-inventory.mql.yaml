@@ -37,6 +37,9 @@ packs:
   - uid: mondoo-kubernetes-pods-inventory
     name: Mondoo Kubernetes Pods Inventory
     version: 1.0.0
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-pod"
     queries:
@@ -47,6 +50,9 @@ packs:
   - uid: mondoo-kubernetes-deployments-inventory
     name: Mondoo Kubernetes Deployments Inventory
     version: 1.0.0
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-deployment"
     queries:
@@ -57,6 +63,9 @@ packs:
   - uid: mondoo-kubernetes-cronjobs-inventory
     name: Mondoo Kubernetes CronJobs Inventory
     version: 1.0.0
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-cronjob"
     queries:
@@ -67,6 +76,9 @@ packs:
   - uid: mondoo-kubernetes-jobs-inventory
     name: Mondoo Kubernetes Jobs Inventory
     version: 1.0.0
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-job"
     queries:
@@ -77,6 +89,9 @@ packs:
   - uid: mondoo-kubernetes-daemonsets-inventory
     name: Mondoo Kubernetes DaemonSets Inventory
     version: 1.0.0
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-daemonset"
     queries:
@@ -87,6 +102,9 @@ packs:
   - uid: mondoo-kubernetes-statefulsets-inventory
     name: Mondoo Kubernetes StatefulSets Inventory
     version: 1.0.0
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-statefulset"
     queries:
@@ -97,6 +115,9 @@ packs:
   - uid: mondoo-kubernetes-replicasets-inventory
     name: Mondoo Kubernetes ReplicaSets Inventory
     version: 1.0.0
+    tags:
+      mondoo.com/platform: kubernetes
+      mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-replicaset"
     queries:
