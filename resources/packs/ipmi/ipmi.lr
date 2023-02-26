@@ -1,0 +1,19 @@
+option go_package = "go.mondoo.com/cnquery/resources/packs/ipmi"
+
+// Intelligent Platform Management Interface (IPMI) resource
+//
+// Provides access to BIOS and UEFI configuration
+ipmi {
+  // The hardware & firmware device ID
+  deviceID() dict
+  // GUID (Globally Unique ID) for management controller
+  guid() string
+}
+
+// IPMI system chassis resource
+ipmi.chassis {
+  // High-level status of the system chassis and main power subsystem
+  status() dict
+  // The system boot options
+  systemBootOptions() dict
+}

@@ -1,0 +1,11 @@
+resources:
+  ipmi:
+    fields:
+      deviceID: {}
+      guid: {}
+    min_mondoo_version: latest
+  ipmi.chassis:
+    fields:
+      status: {}
+      systemBootOptions: {}
+    min_mondoo_version: latest

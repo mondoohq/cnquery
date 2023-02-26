@@ -117,6 +117,9 @@ lr/build:
 	./lr go resources/packs/arista/arista.lr
 	./lr docs yaml resources/packs/arista/arista.lr --docs-file resources/packs/arista/arista.lr.manifest.yaml
 	./lr docs json resources/packs/arista/arista.lr.manifest.yaml
+	./lr go resources/packs/ipmi/ipmi.lr
+	./lr docs yaml resources/packs/ipmi/ipmi.lr --docs-file resources/packs/ipmi/ipmi.lr.manifest.yaml
+	./lr docs json resources/packs/ipmi/ipmi.lr.manifest.yaml
 
 lr/release:
 	go generate .
@@ -204,6 +207,10 @@ lr/docs/markdown: lr/build
 		--pack-name "Arista EOS" \
 		--docs-file resources/packs/arista/arista.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/arista-pack
+	./lr markdown resources/packs/ipmi/ipmi.lr \
+		--pack-name "IPMI" \
+		--docs-file resources/packs/ipmi/ipmi.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/ipmi-pack
 
 .PHONY: resources
 resources: | lr resources/generate resources/test
