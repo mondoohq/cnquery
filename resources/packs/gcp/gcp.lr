@@ -1452,6 +1452,8 @@ private gcp.project.gkeService.cluster @defaults("name") {
   workloadIdentityConfig dict
   // Configuration for cluster IP allocation
   ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
+  // Configuration for cluster networking
+  networkConfig gcp.project.gkeService.cluster.networkConfig
 }
 
 // GKE Cluster Addons Config
@@ -1508,6 +1510,34 @@ private gcp.project.gkeService.cluster.ipAllocationPolicy {
   stackType string
   // IPv6 access type
   ipv6AccessType string
+}
+
+// GKE Cluster Network Config
+private gcp.project.gkeService.cluster.networkConfig {
+  // Internal ID
+  id string
+  // Relative path of the network to which the cluster is connected
+  networkPath string
+  // Network to which the cluster is connected
+  network() gcp.project.computeService.network
+  // Relative path of the subnetwork to which the cluster is connected
+  subnetworkPath string
+  // Subnetwork to which the cluster is connected
+  subnetwork() gcp.project.computeService.subnetwork
+  // Whether intra-node visibility is enabled for this cluster
+  enableIntraNodeVisibility bool
+  // Whether the cluster disables default in-node sNAT rules
+  defaultSnatStatus dict
+  // Whether L4ILB subsetting is enabled for this cluster
+  enableL4IlbSubsetting bool
+  // Desired datapath provider for this cluster
+  datapathProvider string
+  // Desired state of IPv6 connectivity to Google Services
+  privateIpv6GoogleAccess string
+  // Cluster DNS configuration
+  dnsConfig dict
+  // Configuration specifying whether services with externalIPs field are blocked
+  serviceExternalIpsConfig dict
 }
 
 // GKE Cluster Node Pool
