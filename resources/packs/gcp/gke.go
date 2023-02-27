@@ -367,6 +367,39 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			}
 		}
 
+		var binAuth map[string]interface{}
+		if c.BinaryAuthorization != nil {
+			binAuth = map[string]interface{}{
+				"enabled":        c.BinaryAuthorization.Enabled,
+				"evaluationMode": c.BinaryAuthorization.EvaluationMode.String(),
+			}
+		}
+
+		var legacyAbac map[string]interface{}
+		if c.LegacyAbac != nil {
+			legacyAbac = map[string]interface{}{
+				"enabled": c.LegacyAbac.Enabled,
+			}
+		}
+
+		var masterAuth map[string]interface{}
+		if c.MasterAuth != nil {
+			var clientCertCfg map[string]interface{}
+			if c.MasterAuth.ClientCertificateConfig != nil {
+				clientCertCfg = map[string]interface{}{
+					"issueClientCertificate": c.MasterAuth.ClientCertificateConfig.IssueClientCertificate,
+				}
+			}
+			masterAuth = map[string]interface{}{
+				"username":                c.MasterAuth.Username,
+				"password":                c.MasterAuth.Password,
+				"clientCertificateConfig": clientCertCfg,
+				"clusterCaCertificate":    c.MasterAuth.ClusterCaCertificate,
+				"clientCertificate":       c.MasterAuth.ClientCertificate,
+				"clientKey":               c.MasterAuth.ClientKey,
+			}
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -394,6 +427,9 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"workloadIdentityConfig", workloadIdCfg,
 			"ipAllocationPolicy", ipAllocPolicy,
 			"networkConfig", networkConfig,
+			"binaryAuthorization", binAuth,
+			"legacyAbac", legacyAbac,
+			"masterAuth", masterAuth,
 		)
 		if err != nil {
 			return nil, err

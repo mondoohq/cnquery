@@ -1454,6 +1454,12 @@ private gcp.project.gkeService.cluster @defaults("name") {
   ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
   // Configuration for cluster networking
   networkConfig gcp.project.gkeService.cluster.networkConfig
+  // Binary authorization configuration
+  binaryAuthorization dict
+  // Legacy ABAC authorization configuration
+  legacyAbac dict
+  // Authentication information for accessing the master endpoint
+  masterAuth dict
 }
 
 // GKE Cluster Addons Config
