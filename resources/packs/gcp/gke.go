@@ -45,10 +45,13 @@ func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.
 		return args, nil, nil
 	}
 
-	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-		(*args)["name"] = ids.name
-		(*args)["location"] = ids.region
-		(*args)["projectId"] = ids.project
+	// If no args are set, try reading them from the platform ID
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["location"] = ids.region
+			(*args)["projectId"] = ids.project
+		}
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.gkeService", "projectId", (*args)["projectId"])
