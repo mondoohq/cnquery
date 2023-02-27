@@ -1450,6 +1450,8 @@ private gcp.project.gkeService.cluster @defaults("name") {
   addonsConfig gcp.project.gkeService.cluster.addonsConfig
   // Configuration for the use of Kubernetes Service Accounts in GCP IAM policies
   workloadIdentityConfig dict
+  // Configuration for cluster IP allocation
+  ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
 }
 
 // GKE Cluster Addons Config
@@ -1476,6 +1478,36 @@ private gcp.project.gkeService.cluster.addonsConfig {
   gcpFilestoreCsiDriverConfig dict
   // Configuration for the backup for GKE agent addon
   gkeBackupAgentConfig dict
+}
+
+// GKE Cluster IP Allocation Policy
+private gcp.project.gkeService.cluster.ipAllocationPolicy {
+  // Internal ID
+  id string
+  // Whether alias IPs will be used for pod IPs in the cluster
+  useIpAliases bool
+  // Whether a new subnetwork will be created automatically for the cluster
+  createSubnetwork bool
+  // Custom subnetwork name to be used if createSubnetwork is true
+  subnetworkName string
+  // Name of the secondary range to be used for the cluster CIDR block
+  clusterSecondaryRangeName string
+  // Name of the secondary range to be used for the services CIDR block
+  servicesSecondaryRangeName string
+  // IP address range for the cluster pod IPs
+  clusterIpv4CidrBlock string
+  // IP address range of the instance IPs in this cluster
+  nodeIpv4CidrBlock string
+  // IP address range of the services IPs in this cluster
+  servicesIpv4CidrBlock string
+  // IP address range of the Cloud TPUs in this cluster
+  tpuIpv4CidrBlock string
+  // Whether routes will be used for pod IPs in this cluster
+  useRoutes bool
+  // IP stack type
+  stackType string
+  // IPv6 access type
+  ipv6AccessType string
 }
 
 // GKE Cluster Node Pool
