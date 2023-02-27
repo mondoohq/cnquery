@@ -319,7 +319,7 @@ func (g *mqlGithubOrganization) GetWebhooks() ([]interface{}, error) {
 		mqlUser, err := g.MotorRuntime.CreateResource("github.webhook",
 			"id", core.ToInt64(h.ID),
 			"name", core.ToString(h.Name),
-			"events", core.StrSliceToInterface(h.Events),
+			"events", core.SliceToInterfaceSlice(h.Events),
 			"config", config,
 			"url", core.ToString(h.URL),
 			"name", core.ToString(h.Name),

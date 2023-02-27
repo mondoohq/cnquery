@@ -77,25 +77,13 @@ func (g *mqlGoogleworkspace) GetConnectedApps() ([]interface{}, error) {
 	i := 0
 	for k := range connectedApps {
 		connectedApp := connectedApps[k]
-
-		mqlUsers := make([]interface{}, len(connectedApp.users))
-		if connectedApp.users != nil && len(connectedApp.users) > 0 {
-			for i := range connectedApp.users {
-				mqlUsers[i] = connectedApp.users[i]
-			}
-		}
-
-		mqlTokens := make([]interface{}, len(connectedApp.tokens))
-		if connectedApp.tokens != nil && len(connectedApp.tokens) > 0 {
-			for i := range connectedApp.tokens {
-				mqlTokens[i] = connectedApp.tokens[i]
-			}
-		}
+		mqlUsers := core.SliceToInterfaceSlice(connectedApp.users)
+		mqlTokens := core.SliceToInterfaceSlice(connectedApp.tokens)
 
 		mqlApp, err := runtime.CreateResource("googleworkspace.connectedApp",
 			"clientId", connectedApp.clientID,
 			"name", connectedApp.name,
-			"scopes", core.StrSliceToInterface(connectedApp.scopes),
+			"scopes", core.SliceToInterfaceSlice(connectedApp.scopes),
 			"users", mqlUsers,
 			"tokens", mqlTokens,
 		)

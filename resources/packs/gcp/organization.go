@@ -120,7 +120,7 @@ func (g *mqlGcpOrganization) GetIamPolicy() ([]interface{}, error) {
 		mqlServiceaccount, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
 			"id", name+"-"+strconv.Itoa(i),
 			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
+			"members", core.SliceToInterfaceSlice(b.Members),
 		)
 		if err != nil {
 			return nil, err

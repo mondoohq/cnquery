@@ -168,7 +168,7 @@ func (m *mqlMacosSystemsetup) GetNetworkTimeServer() (string, error) {
 
 func (m *mqlMacosSystemsetup) GetSleep() ([]interface{}, error) {
 	data, err := m.runCmd("systemsetup -getsleep")
-	return core.StrSliceToInterface(macos.SystemSetupCmdOutput{}.ParseSleep(data)), err
+	return core.SliceToInterfaceSlice(macos.SystemSetupCmdOutput{}.ParseSleep(data)), err
 }
 
 func (m *mqlMacosSystemsetup) GetDisplaySleep() (string, error) {

@@ -337,7 +337,7 @@ func (g *mqlGcpProjectSqlService) GetInstances() ([]interface{}, error) {
 
 		mqlInstance, err := g.MotorRuntime.CreateResource("gcp.project.sqlService.instance",
 			"projectId", projectId,
-			"availableMaintenanceVersions", core.StrSliceToInterface(instance.AvailableMaintenanceVersions),
+			"availableMaintenanceVersions", core.SliceToInterfaceSlice(instance.AvailableMaintenanceVersions),
 			"backendType", instance.BackendType,
 			"connectionName", instance.ConnectionName,
 			"created", parseTime(instance.CreateTime),
@@ -357,7 +357,7 @@ func (g *mqlGcpProjectSqlService) GetInstances() ([]interface{}, error) {
 			// ref project
 			"project", instance.Project,
 			"region", instance.Region,
-			"replicaNames", core.StrSliceToInterface(instance.ReplicaNames),
+			"replicaNames", core.SliceToInterfaceSlice(instance.ReplicaNames),
 			"settings", mqlSettings,
 			"serviceAccountEmailAddress", instance.ServiceAccountEmailAddress,
 			"state", instance.State,

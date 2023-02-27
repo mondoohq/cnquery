@@ -104,8 +104,8 @@ func getContainers(
 			"name", c.Name,
 			"imageName", c.Image,
 			"image", c.Image, // deprecated, will be replaced with the containerImage going forward
-			"command", core.StrSliceToInterface(c.Command),
-			"args", core.StrSliceToInterface(c.Args),
+			"command", core.SliceToInterfaceSlice(c.Command),
+			"args", core.SliceToInterfaceSlice(c.Args),
 			"volumeMounts", volumeMounts,
 			"volumeDevices", volumeDevices,
 			"imagePullPolicy", string(c.ImagePullPolicy),

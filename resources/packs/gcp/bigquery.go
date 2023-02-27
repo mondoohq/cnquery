@@ -275,7 +275,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) GetTables() ([]interface{}, error)
 
 		var clusteringFields []interface{}
 		if metadata.Clustering != nil {
-			clusteringFields = core.StrSliceToInterface(metadata.Clustering.Fields)
+			clusteringFields = core.SliceToInterfaceSlice(metadata.Clustering.Fields)
 		}
 
 		externalDataConfig, err := core.JsonToDict(metadata.ExternalDataConfig)

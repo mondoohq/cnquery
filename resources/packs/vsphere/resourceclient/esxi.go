@@ -47,7 +47,7 @@ func esxiValuesToDict(val esxcli.Values) map[string]interface{} {
 			dict[k] = val[k][0]
 		} else {
 			// convert to []interface
-			dict[k] = core.StrSliceToInterface(val[k])
+			dict[k] = core.SliceToInterfaceSlice(val[k])
 		}
 	}
 	return dict

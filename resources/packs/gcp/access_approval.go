@@ -71,7 +71,7 @@ func accessApprovalSettings(motorProvider providers.Instance, runtime *resources
 
 	return runtime.CreateResource("gcp.accessApprovalSettings",
 		"resourcePath", settings.Name,
-		"notificationEmails", core.StrSliceToInterface(settings.NotificationEmails),
+		"notificationEmails", core.SliceToInterfaceSlice(settings.NotificationEmails),
 		"enrolledServices", mqlEnrolledServices,
 		"enrolledAncestor", settings.EnrolledAncestor,
 		"activeKeyVersion", settings.ActiveKeyVersion,

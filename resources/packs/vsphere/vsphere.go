@@ -473,7 +473,7 @@ func (v *mqlVsphereHost) GetVmknics() ([]interface{}, error) {
 			"properties", entry.Properties,
 			"ipv4", entry.Ipv4,
 			"ipv6", entry.Ipv6,
-			"tags", core.StrSliceToInterface(entry.Tags),
+			"tags", core.SliceToInterfaceSlice(entry.Tags),
 		)
 		if err != nil {
 			return nil, err
@@ -621,7 +621,7 @@ func (v *mqlVsphereHost) GetServices() ([]interface{}, error) {
 			"required", s.Required,
 			"uninstallable", s.Uninstallable,
 			"running", s.Running,
-			"ruleset", core.StrSliceToInterface(s.Ruleset),
+			"ruleset", core.SliceToInterfaceSlice(s.Ruleset),
 			"policy", s.Policy, // on, off, automatic
 		)
 		if err != nil {
@@ -695,8 +695,8 @@ func (v *mqlVsphereHost) GetNtp() (interface{}, error) {
 	var config []interface{}
 
 	if datetimeinfo != nil && datetimeinfo.NtpConfig != nil {
-		server = core.StrSliceToInterface(datetimeinfo.NtpConfig.Server)
-		config = core.StrSliceToInterface(datetimeinfo.NtpConfig.ConfigFile)
+		server = core.SliceToInterfaceSlice(datetimeinfo.NtpConfig.Server)
+		config = core.SliceToInterfaceSlice(datetimeinfo.NtpConfig.ConfigFile)
 	}
 
 	mqlNtpConfig, err := v.MotorRuntime.CreateResource("esxi.ntpconfig",

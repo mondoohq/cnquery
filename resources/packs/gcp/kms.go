@@ -372,7 +372,7 @@ func (g *mqlGcpProjectKmsServiceKeyringCryptokey) GetIamPolicy() ([]interface{},
 		mqlBinding, err := g.MotorRuntime.CreateResource("gcp.resourcemanager.binding",
 			"id", cryptokey+"-"+strconv.Itoa(i),
 			"role", b.Role,
-			"members", core.StrSliceToInterface(b.Members),
+			"members", core.SliceToInterfaceSlice(b.Members),
 		)
 		if err != nil {
 			return nil, err
@@ -387,9 +387,9 @@ func cryptoKeyVersionToMql(runtime *resources.Runtime, v *kmspb.CryptoKeyVersion
 	if v.Attestation != nil {
 		mqlAttestationCertChains, err := runtime.CreateResource("gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains",
 			"cryptoKeyVersionName", v.Name,
-			"caviumCerts", core.StrSliceToInterface(v.Attestation.CertChains.CaviumCerts),
-			"googleCardCerts", core.StrSliceToInterface(v.Attestation.CertChains.GoogleCardCerts),
-			"googlePartitionCerts", core.StrSliceToInterface(v.Attestation.CertChains.GooglePartitionCerts),
+			"caviumCerts", core.SliceToInterfaceSlice(v.Attestation.CertChains.CaviumCerts),
+			"googleCardCerts", core.SliceToInterfaceSlice(v.Attestation.CertChains.GoogleCardCerts),
+			"googlePartitionCerts", core.SliceToInterfaceSlice(v.Attestation.CertChains.GooglePartitionCerts),
 		)
 		if err != nil {
 			return nil, err

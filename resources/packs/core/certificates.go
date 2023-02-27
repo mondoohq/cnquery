@@ -104,13 +104,13 @@ func pkixnameToMql(runtime *resources.Runtime, name pkix.Name, id string) (PkixN
 		"dn", name.String(),
 		"serialNumber", name.SerialNumber,
 		"commonName", name.CommonName,
-		"country", StrSliceToInterface(name.Country),
-		"organization", StrSliceToInterface(name.Organization),
-		"organizationalUnit", StrSliceToInterface(name.OrganizationalUnit),
-		"locality", StrSliceToInterface(name.Locality),
-		"province", StrSliceToInterface(name.Province),
-		"streetAddress", StrSliceToInterface(name.StreetAddress),
-		"postalCode", StrSliceToInterface(name.PostalCode),
+		"country", SliceToInterfaceSlice(name.Country),
+		"organization", SliceToInterfaceSlice(name.Organization),
+		"organizationalUnit", SliceToInterfaceSlice(name.OrganizationalUnit),
+		"locality", SliceToInterfaceSlice(name.Locality),
+		"province", SliceToInterfaceSlice(name.Province),
+		"streetAddress", SliceToInterfaceSlice(name.StreetAddress),
+		"postalCode", SliceToInterfaceSlice(name.PostalCode),
 		"names", names,
 		"extraNames", extraNames,
 	)
@@ -383,17 +383,17 @@ func (s *mqlCertificate) GetSignature() (string, error) {
 
 func (s *mqlCertificate) GetCrlDistributionPoints() ([]interface{}, error) {
 	cert := s.getGoCert()
-	return StrSliceToInterface(cert.CRLDistributionPoints), nil
+	return SliceToInterfaceSlice(cert.CRLDistributionPoints), nil
 }
 
 func (s *mqlCertificate) GetOcspServer() ([]interface{}, error) {
 	cert := s.getGoCert()
-	return StrSliceToInterface(cert.OCSPServer), nil
+	return SliceToInterfaceSlice(cert.OCSPServer), nil
 }
 
 func (s *mqlCertificate) GetIssuingCertificateUrl() ([]interface{}, error) {
 	cert := s.getGoCert()
-	return StrSliceToInterface(cert.IssuingCertificateURL), nil
+	return SliceToInterfaceSlice(cert.IssuingCertificateURL), nil
 }
 
 func (s *mqlCertificate) GetIsRevoked() (bool, error) {

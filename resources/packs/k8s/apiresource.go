@@ -26,8 +26,8 @@ func (k *mqlK8s) GetApiResources() ([]interface{}, error) {
 			"group", entry.Resource.Group,
 			"version", entry.Resource.Version,
 			"kind", entry.Resource.Kind,
-			"shortNames", core.StrSliceToInterface(entry.Resource.ShortNames),
-			"categories", core.StrSliceToInterface(entry.Resource.Categories),
+			"shortNames", core.SliceToInterfaceSlice(entry.Resource.ShortNames),
+			"categories", core.SliceToInterfaceSlice(entry.Resource.Categories),
 		)
 		if err != nil {
 			return nil, err

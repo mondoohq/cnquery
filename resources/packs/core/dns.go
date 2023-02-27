@@ -37,7 +37,7 @@ func (d *mqlDomainName) init(args *resources.Args) (*resources.Args, DomainName,
 	(*args)["effectiveTLDPlusOne"] = dn.EffectiveTLDPlusOne
 	(*args)["tld"] = dn.TLD
 	(*args)["tldIcannManaged"] = dn.IcannManagedTLD
-	(*args)["labels"] = StrSliceToInterface(dn.Labels)
+	(*args)["labels"] = SliceToInterfaceSlice(dn.Labels)
 
 	return args, nil, nil
 }
@@ -236,12 +236,12 @@ func (d *mqlDns) GetDkim(params interface{}) ([]interface{}, error) {
 			"domain", name,
 			"dnsTxt", entry,
 			"version", dkimRepr.Version,
-			"hashAlgorithms", StrSliceToInterface(dkimRepr.HashAlgorithms),
+			"hashAlgorithms", SliceToInterfaceSlice(dkimRepr.HashAlgorithms),
 			"keyType", dkimRepr.KeyType,
 			"notes", dkimRepr.Notes,
 			"publicKeyData", dkimRepr.PublicKeyData,
-			"serviceTypes", StrSliceToInterface(dkimRepr.ServiceType),
-			"flags", StrSliceToInterface(dkimRepr.Flags),
+			"serviceTypes", SliceToInterfaceSlice(dkimRepr.ServiceType),
+			"flags", SliceToInterfaceSlice(dkimRepr.Flags),
 		)
 		if err != nil {
 			return nil, err

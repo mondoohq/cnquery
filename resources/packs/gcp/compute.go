@@ -346,7 +346,7 @@ func (g *mqlGcpProjectComputeServiceInstance) GetMachineType() (interface{}, err
 func newMqlServiceAccount(runtime *resources.Runtime, sa *compute.ServiceAccount) (interface{}, error) {
 	return runtime.CreateResource("gcp.project.computeService.serviceaccount",
 		"email", sa.Email,
-		"scopes", core.StrSliceToInterface(sa.Scopes),
+		"scopes", core.SliceToInterfaceSlice(sa.Scopes),
 	)
 }
 
@@ -366,10 +366,10 @@ func newMqlAttachedDisk(id string, projectId string, runtime *resources.Runtime,
 		"deviceName", attachedDisk.DeviceName,
 		"diskSizeGb", attachedDisk.DiskSizeGb,
 		"forceAttach", attachedDisk.ForceAttach,
-		"guestOsFeatures", core.StrSliceToInterface(guestOsFeatures),
+		"guestOsFeatures", core.SliceToInterfaceSlice(guestOsFeatures),
 		"index", attachedDisk.Index,
 		"interface", attachedDisk.Interface,
-		"licenses", core.StrSliceToInterface(attachedDisk.Licenses),
+		"licenses", core.SliceToInterfaceSlice(attachedDisk.Licenses),
 		"mode", attachedDisk.Mode,
 		"type", attachedDisk.Type,
 	)
@@ -519,7 +519,7 @@ func newMqlInstance(projectId string, zone GcpProjectComputeServiceZone, runtime
 		"networkInterfaces", networkInterfaces,
 		"privateIpv6GoogleAccess", instance.PrivateIpv6GoogleAccess,
 		"reservationAffinity", reservationAffinity,
-		"resourcePolicies", core.StrSliceToInterface(instance.ResourcePolicies),
+		"resourcePolicies", core.SliceToInterfaceSlice(instance.ResourcePolicies),
 		"physicalHostResourceStatus", physicalHost,
 		"scheduling", scheduling,
 		"enableIntegrityMonitoring", enableIntegrityMonitoring,
@@ -529,7 +529,7 @@ func newMqlInstance(projectId string, zone GcpProjectComputeServiceZone, runtime
 		"status", instance.Status,
 		"statusMessage", instance.StatusMessage,
 		"sourceMachineImage", instance.SourceMachineImage,
-		"tags", core.StrSliceToInterface(instance.Tags.Items),
+		"tags", core.SliceToInterfaceSlice(instance.Tags.Items),
 		"totalEgressBandwidthTier", totalEgressBandwidthTier,
 		"serviceAccounts", mqlServiceAccounts,
 		"disks", attachedDisks,
@@ -697,18 +697,18 @@ func (g *mqlGcpProjectComputeService) GetDisks() ([]interface{}, error) {
 						"name", disk.Name,
 						"architecture", disk.Architecture,
 						"description", disk.Description,
-						"guestOsFeatures", core.StrSliceToInterface(guestOsFeatures),
+						"guestOsFeatures", core.SliceToInterfaceSlice(guestOsFeatures),
 						"labels", core.StrMapToInterface(disk.Labels),
 						"lastAttachTimestamp", parseTime(disk.LastAttachTimestamp),
 						"lastDetachTimestamp", parseTime(disk.LastDetachTimestamp),
 						"locationHint", disk.LocationHint,
-						"licenses", core.StrSliceToInterface(disk.Licenses),
+						"licenses", core.SliceToInterfaceSlice(disk.Licenses),
 						"physicalBlockSizeBytes", disk.PhysicalBlockSizeBytes,
 						"provisionedIops", disk.ProvisionedIops,
 						// TODO: link to resources
 						//"region", disk.Region,
-						//"replicaZones", core.StrSliceToInterface(disk.ReplicaZones),
-						//"resourcePolicies", core.StrSliceToInterface(disk.ResourcePolicies),
+						//"replicaZones", core.SliceToInterfaceSlice(disk.ReplicaZones),
+						//"resourcePolicies", core.SliceToInterfaceSlice(disk.ResourcePolicies),
 						"sizeGb", disk.SizeGb,
 						// TODO: link to resources
 						//"sourceDiskId", disk.SourceDiskId,
@@ -852,11 +852,11 @@ func (g *mqlGcpProjectComputeService) GetFirewalls() ([]interface{}, error) {
 				"priority", firewall.Priority,
 				"disabled", firewall.Disabled,
 				"direction", firewall.Direction,
-				"sourceRanges", core.StrSliceToInterface(firewall.SourceRanges),
-				"sourceServiceAccounts", core.StrSliceToInterface(firewall.SourceServiceAccounts),
-				"sourceTags", core.StrSliceToInterface(firewall.SourceTags),
-				"destinationRanges", core.StrSliceToInterface(firewall.DestinationRanges),
-				"targetServiceAccounts", core.StrSliceToInterface(firewall.TargetServiceAccounts),
+				"sourceRanges", core.SliceToInterfaceSlice(firewall.SourceRanges),
+				"sourceServiceAccounts", core.SliceToInterfaceSlice(firewall.SourceServiceAccounts),
+				"sourceTags", core.SliceToInterfaceSlice(firewall.SourceTags),
+				"destinationRanges", core.SliceToInterfaceSlice(firewall.DestinationRanges),
+				"targetServiceAccounts", core.SliceToInterfaceSlice(firewall.TargetServiceAccounts),
 				"created", parseTime(firewall.CreationTimestamp),
 				"allowed", allowedDict,
 				"denied", deniedDict,
@@ -929,7 +929,7 @@ func (g *mqlGcpProjectComputeService) GetSnapshots() ([]interface{}, error) {
 				"storageBytes", snapshot.StorageBytes,
 				"storageBytesStatus", snapshot.StorageBytesStatus,
 				"snapshotType", snapshot.SnapshotType,
-				"licenses", core.StrSliceToInterface(snapshot.Licenses),
+				"licenses", core.SliceToInterfaceSlice(snapshot.Licenses),
 				"labels", core.StrMapToInterface(snapshot.Labels),
 				"status", snapshot.Status,
 				"created", parseTime(snapshot.CreationTimestamp),
@@ -1039,7 +1039,7 @@ func (g *mqlGcpProjectComputeService) GetImages() ([]interface{}, error) {
 				"archiveSizeBytes", image.ArchiveSizeBytes,
 				"diskSizeGb", image.DiskSizeGb,
 				"family", image.Family,
-				"licenses", core.StrSliceToInterface(image.Licenses),
+				"licenses", core.SliceToInterfaceSlice(image.Licenses),
 				"labels", core.StrMapToInterface(image.Labels),
 				"status", image.Status,
 				"created", parseTime(image.CreationTimestamp),
@@ -1189,7 +1189,7 @@ func (g *mqlGcpProjectComputeService) GetNetworks() ([]interface{}, error) {
 				"peerings", peerings,
 				"routingMode", routingMode,
 				"mode", networkMode(network),
-				"subnetworkUrls", core.StrSliceToInterface(network.Subnetworks),
+				"subnetworkUrls", core.SliceToInterfaceSlice(network.Subnetworks),
 			)
 			if err != nil {
 				return err
@@ -1346,7 +1346,7 @@ func newMqlSubnetwork(projectId string, runtime *resources.Runtime, subnetwork *
 			"filterExpression", subnetwork.LogConfig.GetFilterExpr(),
 			"flowSampling", float64(subnetwork.LogConfig.GetFlowSampling()),
 			"metadata", subnetwork.LogConfig.GetMetadata(),
-			"metadataFields", core.StrSliceToInterface(subnetwork.LogConfig.MetadataFields),
+			"metadataFields", core.SliceToInterfaceSlice(subnetwork.LogConfig.MetadataFields),
 		)
 		if err != nil {
 			return nil, err
@@ -1605,12 +1605,12 @@ func (g *mqlGcpProjectComputeService) GetBackendServices() ([]interface{}, error
 				if b.CdnPolicy.CacheKeyPolicy != nil {
 					mqlCacheKeyPolicy = map[string]interface{}{
 						"includeHost":          b.CdnPolicy.CacheKeyPolicy.IncludeHost,
-						"includeHttpHeaders":   core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
-						"includeNamedCookies":  core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
+						"includeHttpHeaders":   core.SliceToInterfaceSlice(b.CdnPolicy.CacheKeyPolicy.IncludeHttpHeaders),
+						"includeNamedCookies":  core.SliceToInterfaceSlice(b.CdnPolicy.CacheKeyPolicy.IncludeNamedCookies),
 						"includeProtocol":      b.CdnPolicy.CacheKeyPolicy.IncludeProtocol,
 						"includeQueryString":   b.CdnPolicy.CacheKeyPolicy.IncludeQueryString,
-						"queryStringBlacklist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
-						"queryStringWhitelist": core.StrSliceToInterface(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
+						"queryStringBlacklist": core.SliceToInterfaceSlice(b.CdnPolicy.CacheKeyPolicy.QueryStringBlacklist),
+						"queryStringWhitelist": core.SliceToInterfaceSlice(b.CdnPolicy.CacheKeyPolicy.QueryStringWhitelist),
 					}
 				}
 
@@ -1636,7 +1636,7 @@ func (g *mqlGcpProjectComputeService) GetBackendServices() ([]interface{}, error
 					"requestCoalescing", b.CdnPolicy.RequestCoalescing,
 					"serveWhileStale", b.CdnPolicy.ServeWhileStale,
 					"signedUrlCacheMaxAgeSec", b.CdnPolicy.SignedUrlCacheMaxAgeSec,
-					"signedUrlKeyNames", core.StrSliceToInterface(b.CdnPolicy.SignedUrlKeyNames),
+					"signedUrlKeyNames", core.SliceToInterfaceSlice(b.CdnPolicy.SignedUrlKeyNames),
 				)
 				if err != nil {
 					return nil, err
@@ -1737,7 +1737,7 @@ func (g *mqlGcpProjectComputeService) GetBackendServices() ([]interface{}, error
 			if b.SecuritySettings != nil {
 				mqlSecuritySettings = map[string]interface{}{
 					"clientTlsPolicy": b.SecuritySettings.ClientTlsPolicy,
-					"subjectAltNames": core.StrSliceToInterface(b.SecuritySettings.SubjectAltNames),
+					"subjectAltNames": core.SliceToInterfaceSlice(b.SecuritySettings.SubjectAltNames),
 				}
 			}
 
@@ -1757,13 +1757,13 @@ func (g *mqlGcpProjectComputeService) GetBackendServices() ([]interface{}, error
 				"connectionTrackingPolicy", mqlConnectionTrackingPolicy,
 				"consistentHash", mqlConsistentHash,
 				"created", parseTime(b.CreationTimestamp),
-				"customRequestHeaders", core.StrSliceToInterface(b.CustomRequestHeaders),
-				"customResponseHeaders", core.StrSliceToInterface(b.CustomResponseHeaders),
+				"customRequestHeaders", core.SliceToInterfaceSlice(b.CustomRequestHeaders),
+				"customResponseHeaders", core.SliceToInterfaceSlice(b.CustomResponseHeaders),
 				"description", b.Description,
 				"edgeSecurityPolicy", b.EdgeSecurityPolicy,
 				"enableCDN", b.EnableCDN,
 				"failoverPolicy", mqlFailoverPolicy,
-				"healthChecks", core.StrSliceToInterface(b.HealthChecks),
+				"healthChecks", core.SliceToInterfaceSlice(b.HealthChecks),
 				"iap", mqlIap,
 				"loadBalancingScheme", b.LoadBalancingScheme,
 				"localityLbPolicies", mqlLocalityLbPolicy,
@@ -1777,7 +1777,7 @@ func (g *mqlGcpProjectComputeService) GetBackendServices() ([]interface{}, error
 				"regionUrl", b.Region,
 				"securityPolicyUrl", b.SecurityPolicy,
 				"securitySettings", mqlSecuritySettings,
-				"serviceBindingUrls", core.StrSliceToInterface(b.ServiceBindings),
+				"serviceBindingUrls", core.SliceToInterfaceSlice(b.ServiceBindings),
 				"sessionAffinity", b.SessionAffinity,
 				"timeoutSec", b.TimeoutSec,
 			)
@@ -1861,7 +1861,7 @@ func (g *mqlGcpProjectComputeService) GetAddresses() ([]interface{}, error) {
 				"regionUrl", a.Region,
 				"status", a.Status,
 				"subnetworkUrl", a.Subnetwork,
-				"resourceUrls", core.StrSliceToInterface(a.Users),
+				"resourceUrls", core.SliceToInterfaceSlice(a.Users),
 			)
 			if err != nil {
 				return nil, err
@@ -1967,7 +1967,7 @@ func (g *mqlGcpProjectComputeService) GetForwardingRules() ([]interface{}, error
 				"networkTier", fwr.GetNetworkTier(),
 				"noAutomateDnsZone", fwr.GetNoAutomateDnsZone(),
 				"portRange", fwr.GetPortRange(),
-				"ports", core.StrSliceToInterface(fwr.GetPorts()),
+				"ports", core.SliceToInterfaceSlice(fwr.GetPorts()),
 				"regionUrl", fwr.GetRegion(),
 				"serviceDirectoryRegistrations", serviceDirRegs,
 				"serviceLabel", fwr.GetServiceLabel(),

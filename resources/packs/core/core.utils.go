@@ -35,22 +35,12 @@ func ToBool(b *bool) bool {
 	return *b
 }
 
-func StrSliceToInterface(value []string) []interface{} {
-	res := make([]interface{}, len(value))
-	for i := range value {
-		res[i] = value[i]
+func SliceToInterfaceSlice[T any](ss []T) []interface{} {
+	ssI := make([]interface{}, 0, len(ss))
+	for _, s := range ss {
+		ssI = append(ssI, s)
 	}
-	return res
-}
-
-func PtrStrSliceToInterface(value []*string) []interface{} {
-	res := make([]interface{}, len(value))
-	for i := range value {
-		if value[i] != nil {
-			res[i] = value[i]
-		}
-	}
-	return res
+	return ssI
 }
 
 func PtrStrSliceToStr(value []*string) []string {

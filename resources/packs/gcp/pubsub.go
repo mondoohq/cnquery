@@ -209,7 +209,7 @@ func (g *mqlGcpProjectPubsubServiceTopic) GetConfig() (interface{}, error) {
 
 	messageStoragePolicy, err := g.MotorRuntime.CreateResource("gcp.project.pubsubService.topic.config.messagestoragepolicy",
 		"configId", pubsubConfigId(projectId, t.ID()),
-		"allowedPersistenceRegions", core.StrSliceToInterface(cfg.MessageStoragePolicy.AllowedPersistenceRegions),
+		"allowedPersistenceRegions", core.SliceToInterfaceSlice(cfg.MessageStoragePolicy.AllowedPersistenceRegions),
 	)
 	if err != nil {
 		return nil, err

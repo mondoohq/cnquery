@@ -117,5 +117,5 @@ func (a *mqlAsset) GetIds() ([]interface{}, error) {
 	if asset == nil {
 		return nil, errors.New("unimplemented")
 	}
-	return StrSliceToInterface(asset.PlatformIds), nil
+	return SliceToInterfaceSlice(asset.PlatformIds), nil
 }

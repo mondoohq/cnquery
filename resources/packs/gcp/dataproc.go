@@ -264,7 +264,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 									"id", fmt.Sprintf("%s/dataproc/%s/config/gceCluster/reservationAffinity", projectId, c.ClusterName),
 									"consumeReservationType", c.Config.GceClusterConfig.ReservationAffinity.ConsumeReservationType,
 									"key", c.Config.GceClusterConfig.ReservationAffinity.Key,
-									"values", core.StrSliceToInterface(c.Config.GceClusterConfig.ReservationAffinity.Values),
+									"values", core.SliceToInterfaceSlice(c.Config.GceClusterConfig.ReservationAffinity.Values),
 								)
 								if err != nil {
 									log.Error().Err(err).Send()
@@ -294,10 +294,10 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 								"privateIpv6GoogleAccess", c.Config.GceClusterConfig.PrivateIpv6GoogleAccess,
 								"reservationAffinity", mqlReservationAffinity,
 								"serviceAccount", c.Config.GceClusterConfig.ServiceAccount,
-								"serviceAccountScopes", core.StrSliceToInterface(c.Config.GceClusterConfig.ServiceAccountScopes),
+								"serviceAccountScopes", core.SliceToInterfaceSlice(c.Config.GceClusterConfig.ServiceAccountScopes),
 								"shieldedInstanceConfig", mqlShieldedCfg,
 								"subnetworkUri", c.Config.GceClusterConfig.SubnetworkUri,
-								"tags", core.StrSliceToInterface(c.Config.GceClusterConfig.Tags),
+								"tags", core.SliceToInterfaceSlice(c.Config.GceClusterConfig.Tags),
 								"zoneUri", c.Config.GceClusterConfig.ZoneUri,
 							)
 							if err != nil {
@@ -785,7 +785,7 @@ func instaceGroupConfigToMql(runtime *resources.Runtime, igc *dataproc.InstanceG
 		"accelerators", mqlAccs,
 		"diskConfig", mqlDiskCfg,
 		"imageUri", igc.ImageUri,
-		"instanceNames", core.StrSliceToInterface(igc.InstanceNames),
+		"instanceNames", core.SliceToInterfaceSlice(igc.InstanceNames),
 		"instanceReferences", mqlInstanceRefs,
 		"isPreemptible", igc.IsPreemptible,
 		"machineTypeUri", igc.MachineTypeUri,

@@ -199,7 +199,7 @@ func (m *mqlMicrosoft) GetUsers() ([]interface{}, error) {
 			"jobTitle", core.ToString(user.GetJobTitle()),
 			"mail", core.ToString(user.GetMail()),
 			"mobilePhone", core.ToString(user.GetMobilePhone()),
-			"otherMails", core.StrSliceToInterface(user.GetOtherMails()),
+			"otherMails", core.SliceToInterfaceSlice(user.GetOtherMails()),
 			"officeLocation", core.ToString(user.GetOfficeLocation()),
 			"postalCode", core.ToString(user.GetPostalCode()),
 			"state", core.ToString(user.GetState()),
@@ -301,7 +301,7 @@ func (m *mqlMicrosoft) GetDomains() ([]interface{}, error) {
 			"isVerified", core.ToBool(domain.GetIsVerified()),
 			"passwordNotificationWindowInDays", core.ToInt64From32(domain.GetPasswordNotificationWindowInDays()),
 			"passwordValidityPeriodInDays", core.ToInt64From32(domain.GetPasswordValidityPeriodInDays()),
-			"supportedServices", core.StrSliceToInterface(domain.GetSupportedServices()),
+			"supportedServices", core.SliceToInterfaceSlice(domain.GetSupportedServices()),
 		)
 		if err != nil {
 			return nil, err
@@ -452,7 +452,7 @@ func (m *mqlMicrosoft) GetApplications() ([]interface{}, error) {
 			"id", core.ToString(app.GetId()),
 			"appId", core.ToString(app.GetAppId()),
 			"createdDateTime", app.GetCreatedDateTime(),
-			"identifierUris", core.StrSliceToInterface(app.GetIdentifierUris()),
+			"identifierUris", core.SliceToInterfaceSlice(app.GetIdentifierUris()),
 			"displayName", core.ToString(app.GetDisplayName()),
 			"publisherDomain", core.ToString(app.GetPublisherDomain()),
 			"signInAudience", core.ToString(app.GetSignInAudience()),
@@ -537,7 +537,7 @@ func msSecureScoreToMql(runtime *resources.Runtime, score models.SecureScoreable
 		"controlScores", controlScores,
 		"createdDateTime", score.GetCreatedDateTime(),
 		"currentScore", core.ToFloat64(score.GetCurrentScore()),
-		"enabledServices", core.StrSliceToInterface(score.GetEnabledServices()),
+		"enabledServices", core.SliceToInterfaceSlice(score.GetEnabledServices()),
 		"licensedUserCount", core.ToInt64From32(score.GetLicensedUserCount()),
 		"maxScore", core.ToFloat64(score.GetMaxScore()),
 		"vendorInformation", vendorInformation,

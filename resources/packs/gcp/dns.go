@@ -114,7 +114,7 @@ func (g *mqlGcpProjectDnsService) GetManagedZones() ([]interface{}, error) {
 				"dnssecConfig", mqlDnssecCfg,
 				"dnsName", managedZone.DnsName,
 				"nameServerSet", managedZone.NameServerSet,
-				"nameServers", core.StrSliceToInterface(managedZone.NameServers),
+				"nameServers", core.SliceToInterfaceSlice(managedZone.NameServers),
 				"visibility", managedZone.Visibility,
 				"created", parseTime(managedZone.CreationTime),
 			)
@@ -288,8 +288,8 @@ func (g *mqlGcpProjectDnsServiceManagedzone) GetRecordSets() ([]interface{}, err
 			mqlDnsPolicy, err := g.MotorRuntime.CreateResource("gcp.project.dnsService.recordset",
 				"projectId", projectId,
 				"name", rSet.Name,
-				"rrdatas", core.StrSliceToInterface(rSet.Rrdatas),
-				"signatureRrdatas", core.StrSliceToInterface(rSet.SignatureRrdatas),
+				"rrdatas", core.SliceToInterfaceSlice(rSet.Rrdatas),
+				"signatureRrdatas", core.SliceToInterfaceSlice(rSet.SignatureRrdatas),
 				"ttl", rSet.Ttl,
 				"type", rSet.Type,
 			)

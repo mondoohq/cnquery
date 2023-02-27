@@ -316,7 +316,7 @@ func newMqlResource(runtime *resources.Runtime, resource *terraform.Resource) (r
 		"providerName", resource.ProviderName,
 		"schemaVersion", int64(resource.SchemaVersion),
 		"values", resource.AttributeValues,
-		"dependsOn", core.StrSliceToInterface(resource.DependsOn),
+		"dependsOn", core.SliceToInterfaceSlice(resource.DependsOn),
 		"tainted", resource.Tainted,
 		"deposedKey", resource.DeposedKey,
 	)

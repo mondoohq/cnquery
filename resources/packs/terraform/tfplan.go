@@ -93,7 +93,7 @@ func (t *mqlTerraformPlan) GetResourceChanges() ([]interface{}, error) {
 
 		lumiChange, err := t.MotorRuntime.CreateResource("terraform.plan.proposedChange",
 			"address", rc.Address,
-			"actions", core.StrSliceToInterface(rc.Change.Actions),
+			"actions", core.SliceToInterfaceSlice(rc.Change.Actions),
 			"before", before,
 			"after", after,
 			"afterUnknown", afterUnknown,

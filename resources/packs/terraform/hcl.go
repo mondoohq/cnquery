@@ -190,7 +190,7 @@ func newMqlHclBlock(runtime *resources.Runtime, block *hcl.Block, file *hcl.File
 
 	r, err := runtime.CreateResource("terraform.block",
 		"type", block.Type,
-		"labels", core.StrSliceToInterface(block.Labels),
+		"labels", core.SliceToInterfaceSlice(block.Labels),
 		"start", start,
 		"end", end,
 		"snippet", snippet,

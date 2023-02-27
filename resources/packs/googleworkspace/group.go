@@ -53,7 +53,7 @@ func newMqlGoogleWorkspaceGroup(runtime *resources.Runtime, entry *directory.Gro
 		"name", entry.Name,
 		"email", entry.Email,
 		"description", entry.Description,
-		"aliases", core.StrSliceToInterface(entry.Aliases),
+		"aliases", core.SliceToInterfaceSlice(entry.Aliases),
 		"directMembersCount", entry.DirectMembersCount,
 		"adminCreated", entry.AdminCreated,
 	)

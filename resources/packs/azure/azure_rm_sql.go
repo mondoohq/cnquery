@@ -260,7 +260,7 @@ func (a *mqlAzureSubscriptionSqlServiceServer) GetVulnerabilityAssessmentSetting
 		"storageAccountAccessKey", core.ToString(vaSettings.Properties.StorageAccountAccessKey),
 		"storageContainerSasKey", core.ToString(vaSettings.Properties.StorageContainerSasKey),
 		"recurringScanEnabled", core.ToBool(vaSettings.Properties.RecurringScans.IsEnabled),
-		"recurringScanEmails", core.PtrStrSliceToInterface(vaSettings.Properties.RecurringScans.Emails),
+		"recurringScanEmails", core.SliceToInterfaceSlice(vaSettings.Properties.RecurringScans.Emails),
 		"mailSubscriptionAdmins", core.ToBool(vaSettings.Properties.RecurringScans.EmailSubscriptionAdmins),
 	)
 }

@@ -225,7 +225,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) GetSecurityContacts() (interf
 		mqlSecurityContact, err := a.MotorRuntime.CreateResource("azure.subscription.cloudDefenderService.securityContact",
 			"id", core.ToString(contact.ID),
 			"name", core.ToString(contact.Name),
-			"emails", core.StrSliceToInterface(strings.Split(mails, ";")),
+			"emails", core.SliceToInterfaceSlice(strings.Split(mails, ";")),
 			"notificationsByRole", notificationsByRole,
 			"alertNotifications", alertNotifications,
 		)

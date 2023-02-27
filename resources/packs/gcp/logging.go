@@ -102,7 +102,7 @@ func (g *mqlGcpProjectLoggingservice) GetBuckets() ([]interface{}, error) {
 			"lifecycleState", bucket.LifecycleState,
 			"locked", bucket.Locked,
 			"name", bucket.Name,
-			"restrictedFields", core.StrSliceToInterface(bucket.RestrictedFields),
+			"restrictedFields", core.SliceToInterfaceSlice(bucket.RestrictedFields),
 			"retentionDays", bucket.RetentionDays,
 			"updated", parseTime(bucket.UpdateTime),
 		)

@@ -177,7 +177,7 @@ func (g *mqlGcpProjectMonitoringService) GetAlertPolicies() ([]interface{}, erro
 			"combiner", p.Combiner.String(),
 			"enabled", p.Enabled.Value,
 			"validity", mqlValidity,
-			"notificationChannelUrls", core.StrSliceToInterface(p.NotificationChannels),
+			"notificationChannelUrls", core.SliceToInterfaceSlice(p.NotificationChannels),
 			"created", core.MqlTime(p.CreationRecord.MutateTime.AsTime()),
 			"createdBy", p.CreationRecord.MutatedBy,
 			"updated", core.MqlTime(p.MutationRecord.MutateTime.AsTime()),

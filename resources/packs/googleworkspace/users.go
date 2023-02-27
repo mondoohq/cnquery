@@ -67,7 +67,7 @@ func newMqlGoogleWorkspaceUser(runtime *resources.Runtime, entry *directory.User
 		"recoveryEmail", entry.RecoveryEmail,
 		"recoveryPhone", entry.RecoveryPhone,
 		"agreedToTerms", entry.AgreedToTerms,
-		"aliases", core.StrSliceToInterface(entry.Aliases),
+		"aliases", core.SliceToInterfaceSlice(entry.Aliases),
 		"suspended", entry.Suspended,
 		"suspensionReason", entry.SuspensionReason,
 		"archived", entry.Archived,
@@ -166,7 +166,7 @@ func newMqlGoogleWorkspaceToken(runtime *resources.Runtime, entry *directory.Tok
 		"clientId", entry.ClientId,
 		"displayText", entry.DisplayText,
 		"nativeApp", entry.NativeApp,
-		"scopes", core.StrSliceToInterface(entry.Scopes),
+		"scopes", core.SliceToInterfaceSlice(entry.Scopes),
 		"userKey", entry.UserKey,
 	)
 }

@@ -99,7 +99,7 @@ func newMqlOktaApplication(runtime *resources.Runtime, entry *okta.Application) 
 		"created", entry.Created,
 		"lastUpdated", entry.LastUpdated,
 		"credentials", credentials,
-		"features", core.StrSliceToInterface(entry.Features),
+		"features", core.SliceToInterfaceSlice(entry.Features),
 		"licensing", licensing,
 		"profile", profile,
 		"settings", settings,

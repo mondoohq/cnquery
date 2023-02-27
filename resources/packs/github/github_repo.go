@@ -31,7 +31,7 @@ func newMqlGithubRepository(runtime *resources.Runtime, repo *github.Repository)
 		"fullName", core.ToString(repo.FullName),
 		"description", core.ToString(repo.Description),
 		"homepage", core.ToString(repo.Homepage),
-		"topics", core.StrSliceToInterface(repo.Topics),
+		"topics", core.SliceToInterfaceSlice(repo.Topics),
 		"language", repo.GetLanguage(),
 		"createdAt", githubTimestamp(repo.CreatedAt),
 		"updatedAt", githubTimestamp(repo.UpdatedAt),
@@ -146,7 +146,7 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 		(*args)["fullName"] = core.ToString(repo.FullName)
 		(*args)["description"] = core.ToString(repo.Description)
 		(*args)["homepage"] = core.ToString(repo.Homepage)
-		(*args)["topics"] = core.StrSliceToInterface(repo.Topics)
+		(*args)["topics"] = core.SliceToInterfaceSlice(repo.Topics)
 		(*args)["language"] = repo.GetLanguage()
 		(*args)["watchersCount"] = int64(repo.GetWatchersCount())
 		(*args)["forksCount"] = int64(repo.GetForksCount())
@@ -852,7 +852,7 @@ func (g *mqlGithubRepository) GetCollaborators() ([]interface{}, error) {
 		mqlContributor, err := g.MotorRuntime.CreateResource("github.collaborator",
 			"id", core.ToInt64(contributor.ID),
 			"user", mqlUser,
-			"permissions", core.StrSliceToInterface(permissions),
+			"permissions", core.SliceToInterfaceSlice(permissions),
 		)
 		if err != nil {
 			return nil, err
@@ -973,7 +973,7 @@ func (g *mqlGithubRepository) GetWebhooks() ([]interface{}, error) {
 		mqlWebhook, err := g.MotorRuntime.CreateResource("github.webhook",
 			"id", core.ToInt64(h.ID),
 			"name", core.ToString(h.Name),
-			"events", core.StrSliceToInterface(h.Events),
+			"events", core.SliceToInterfaceSlice(h.Events),
 			"config", config,
 			"url", core.ToString(h.URL),
 			"name", core.ToString(h.Name),

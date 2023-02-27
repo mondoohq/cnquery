@@ -58,7 +58,7 @@ func (y *mqlYum) GetRepos() ([]interface{}, error) {
 			"id", repo.Id,
 			"name", repo.Name,
 			"status", repo.Status,
-			"baseurl", core.StrSliceToInterface(repo.Baseurl),
+			"baseurl", core.SliceToInterfaceSlice(repo.Baseurl),
 			"expire", repo.Expire,
 			"filename", repo.Filename,
 			"file", f,
