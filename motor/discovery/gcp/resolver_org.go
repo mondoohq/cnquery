@@ -134,7 +134,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 			}
 			for i := range assets {
 				a := assets[i]
-				if rootAsset != nil {
+				if rootAsset != nil && a.Platform.Name == "gcp-project" {
 					a.RelatedAssets = append(a.RelatedAssets, rootAsset)
 				}
 				resolved = append(resolved, a)
