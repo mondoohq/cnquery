@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
@@ -44,10 +45,13 @@ func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.
 		return args, nil, nil
 	}
 
-	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-		(*args)["name"] = ids.name
-		(*args)["location"] = ids.region
-		(*args)["projectId"] = ids.project
+	// If no args are set, try reading them from the platform ID
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["location"] = ids.region
+			(*args)["projectId"] = ids.project
+		}
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.gkeService", "projectId", (*args)["projectId"])
@@ -147,6 +151,10 @@ func (g *mqlGcpProjectGkeServiceClusterAddonsConfig) id() (string, error) {
 }
 
 func (g *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) id() (string, error) {
 	return g.Id()
 }
 
@@ -318,6 +326,46 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 				return nil, err
 			}
 		}
+		var networkConfig interface{}
+		if c.NetworkConfig != nil {
+			var defaultSnatStatus map[string]interface{}
+			if c.NetworkConfig.DefaultSnatStatus != nil {
+				defaultSnatStatus = map[string]interface{}{
+					"disabled": c.NetworkConfig.DefaultSnatStatus.Disabled,
+				}
+			}
+
+			var dnsConfig map[string]interface{}
+			if c.NetworkConfig.DnsConfig != nil {
+				dnsConfig = map[string]interface{}{
+					"clusterDns":       c.NetworkConfig.DnsConfig.ClusterDns.String(),
+					"clusterDnsScope":  c.NetworkConfig.DnsConfig.ClusterDnsScope.String(),
+					"clusterDnsDomain": c.NetworkConfig.DnsConfig.ClusterDnsDomain,
+				}
+			}
+
+			var serviceExternalIpsConfig map[string]interface{}
+			if c.NetworkConfig.ServiceExternalIpsConfig != nil {
+				serviceExternalIpsConfig = map[string]interface{}{
+					"enabled": c.NetworkConfig.ServiceExternalIpsConfig.Enabled,
+				}
+			}
+			networkConfig, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.networkConfig",
+				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/networkConfig", c.Id),
+				"networkPath", c.NetworkConfig.Network,
+				"subnetworkPath", c.NetworkConfig.Subnetwork,
+				"enableIntraNodeVisibility", c.NetworkConfig.EnableIntraNodeVisibility,
+				"defaultSnatStatus", defaultSnatStatus,
+				"enableL4IlbSubsetting", c.NetworkConfig.EnableL4IlbSubsetting,
+				"datapathProvider", c.NetworkConfig.DatapathProvider.String(),
+				"privateIpv6GoogleAccess", c.NetworkConfig.PrivateIpv6GoogleAccess.String(),
+				"dnsConfig", dnsConfig,
+				"serviceExternalIpsConfig", serviceExternalIpsConfig,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
@@ -345,6 +393,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"addonsConfig", addonsConfig,
 			"workloadIdentityConfig", workloadIdCfg,
 			"ipAllocationPolicy", ipAllocPolicy,
+			"networkConfig", networkConfig,
 		)
 		if err != nil {
 			return nil, err
@@ -600,5 +649,34 @@ func createMqlAccelerator(runtime *resources.Runtime, acc *containerpb.Accelerat
 		"type", acc.AcceleratorType,
 		"gpuPartitionSize", acc.GpuPartitionSize,
 		"gpuSharingConfig", gpuSharingConfig,
+	)
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) GetNetwork() (interface{}, error) {
+	networkPath, err := g.NetworkPath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Format is projects/project-1/global/networks/net-1
+	params := strings.Split(networkPath, "/")
+	return g.MotorRuntime.CreateResource("gcp.project.computeService.network",
+		"name", params[len(params)-1],
+		"projectId", params[1],
+	)
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) GetSubnetwork() (interface{}, error) {
+	subnetPath, err := g.SubnetworkPath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Format is projects/project-1/regions/us-central1/subnetworks/subnet-1
+	params := strings.Split(subnetPath, "/")
+	return g.MotorRuntime.CreateResource("gcp.project.computeService.subnetwork",
+		"name", params[len(params)-1],
+		"projectId", params[1],
+		"region", params[3],
 	)
 }

@@ -758,9 +758,12 @@ func (g *mqlGcpProjectComputeServiceFirewall) init(args *resources.Args) (*resou
 		return args, nil, nil
 	}
 
-	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-		(*args)["name"] = ids.name
-		(*args)["projectId"] = ids.project
+	// If no args are set, try reading them from the platform ID
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["projectId"] = ids.project
+		}
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
@@ -959,9 +962,12 @@ func (g *mqlGcpProjectComputeServiceImage) init(args *resources.Args) (*resource
 		return args, nil, nil
 	}
 
-	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-		(*args)["name"] = ids.name
-		(*args)["projectId"] = ids.project
+	// If no args are set, try reading them from the platform ID
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["projectId"] = ids.project
+		}
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
@@ -1095,9 +1101,12 @@ func (g *mqlGcpProjectComputeServiceNetwork) init(args *resources.Args) (*resour
 		return args, nil, nil
 	}
 
-	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-		(*args)["name"] = ids.name
-		(*args)["projectId"] = ids.project
+	// If no args are set, try reading them from the platform ID
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["projectId"] = ids.project
+		}
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
@@ -1209,10 +1218,13 @@ func (g *mqlGcpProjectComputeServiceSubnetwork) init(args *resources.Args) (*res
 		return args, nil, nil
 	}
 
-	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-		(*args)["name"] = ids.name
-		(*args)["region"] = ids.region
-		(*args)["projectId"] = ids.project
+	// If no args are set, try reading them from the platform ID
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["region"] = ids.region
+			(*args)["projectId"] = ids.project
+		}
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.computeService", "projectId", (*args)["projectId"])
