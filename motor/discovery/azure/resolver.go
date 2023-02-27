@@ -127,7 +127,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			if err != nil {
 				return nil, err
 			}
-			id, _ := p.Identifier()
+			id, _ := provider.Identifier()
 			subAsset := &asset.Asset{
 				PlatformIds: []string{id},
 				Name:        name,
@@ -140,6 +140,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 				},
 			}
 			subsAssets[*sub.Sub.SubscriptionID] = subAsset
+			if root != nil {
+				subAsset.RelatedAssets = append(subAsset.RelatedAssets, root)
+			}
 			resolved = append(resolved, subAsset)
 		}
 	}
@@ -154,8 +157,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 				return nil, err
 			}
 			for _, a := range assetList {
-				if rootSub := subsAssets[id]; rootSub != nil {
-					a.RelatedAssets = append(a.RelatedAssets, rootSub)
+				if sub := subsAssets[id]; sub != nil {
+					a.RelatedAssets = append(a.RelatedAssets, sub)
+				}
+
+				if root != nil {
+					a.RelatedAssets = append(a.RelatedAssets, root)
 				}
 				resolved = append(resolved, a)
 			}
@@ -184,9 +191,13 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 					a.Connections[i].Insecure = tc.Insecure
 				}
 
-				if rootSub := subsAssets[*s.SubscriptionID]; rootSub != nil {
-					a.RelatedAssets = append(a.RelatedAssets, rootSub)
+				if sub := subsAssets[*s.SubscriptionID]; sub != nil {
+					a.RelatedAssets = append(a.RelatedAssets, sub)
 				}
+				if root != nil {
+					a.RelatedAssets = append(a.RelatedAssets, root)
+				}
+
 				resolved = append(resolved, a)
 			}
 		}

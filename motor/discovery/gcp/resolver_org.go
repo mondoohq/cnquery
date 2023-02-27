@@ -96,6 +96,13 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 			if err != nil {
 				return nil, err
 			}
+			for i := range assets {
+				a := assets[i]
+				if rootAsset != nil {
+					a.RelatedAssets = append(a.RelatedAssets, rootAsset)
+				}
+				resolved = append(resolved, a)
+			}
 			resolved = append(resolved, assets...)
 		}
 	}
@@ -124,6 +131,13 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 			assets, err := (&GcpProjectResolver{}).Resolve(ctx, projectConfig, credsResolver, sfn, userIdDetectors...)
 			if err != nil {
 				return nil, err
+			}
+			for i := range assets {
+				a := assets[i]
+				if rootAsset != nil {
+					a.RelatedAssets = append(a.RelatedAssets, rootAsset)
+				}
+				resolved = append(resolved, a)
 			}
 			resolved = append(resolved, assets...)
 		}
