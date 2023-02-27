@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -291,7 +293,11 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount != nil {
-		certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+		if err != nil {
+			log.Error().Err(err).Msg("could not initialize client authentication")
+			os.Exit(ConfigurationErrorCode)
+		}
 
 		conf.UpstreamConfig = &resources.UpstreamConfig{
 			SpaceMrn:    opts.GetParentMrn(),

@@ -439,7 +439,11 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	if !conf.IsIncognito {
 		serviceAccount = opts.GetServiceCredential()
 		if serviceAccount != nil {
-			certAuth, _ := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+			certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
+			if err != nil {
+				log.Error().Err(err).Msg("could not initialize client authentication")
+				os.Exit(ConfigurationErrorCode)
+			}
 			plugins := []ranger.ClientPlugin{certAuth}
 			// determine information about the client
 			sysInfo, err := sysinfo.GatherSystemInfo()
