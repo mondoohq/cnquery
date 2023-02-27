@@ -1448,6 +1448,8 @@ private gcp.project.gkeService.cluster @defaults("name") {
   expirationTime time
   // Configurations for the various addons available to run in the cluster
   addonsConfig gcp.project.gkeService.cluster.addonsConfig
+  // Configuration for the use of Kubernetes Service Accounts in GCP IAM policies
+  workloadIdentityConfig dict
 }
 
 // GKE Cluster Addons Config
