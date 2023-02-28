@@ -101,7 +101,13 @@ func (r *GcpFolderResolver) Resolve(ctx context.Context, tc *providers.Config, c
 			if err != nil {
 				return nil, err
 			}
-			resolved = append(resolved, assets...)
+			for i := range assets {
+				a := assets[i]
+				if resolvedRoot != nil && a.Platform.Name == "gcp-project" {
+					a.RelatedAssets = append(a.RelatedAssets, resolvedRoot)
+				}
+				resolved = append(resolved, a)
+			}
 		}
 	}
 	return resolved, nil
