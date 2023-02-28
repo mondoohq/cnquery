@@ -13,10 +13,11 @@ import (
 type microsoftAssetType int32
 
 const (
-	OptionTenantID       = "tenant-id"
-	OptionClientID       = "client-id"
-	OptionDataReport     = "mondoo-ms365-datareport"
-	OptionSubscriptionID = "subscription-id"
+	OptionTenantID         = "tenant-id"
+	OptionClientID         = "client-id"
+	OptionDataReport       = "mondoo-ms365-datareport"
+	OptionSubscriptionID   = "subscription-id"
+	OptionPlatformOverride = "platform-override"
 )
 
 const (
@@ -111,6 +112,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		opts:                     pCfg.Options,
 		cred:                     cred,
 		rolesMap:                 map[string]struct{}{},
+		platformOverride:         pCfg.Options[OptionPlatformOverride],
 	}
 	// map the roles that we request
 	// TODO: check that actual credentials include permissions, this is included in the tokens
@@ -133,6 +135,7 @@ type Provider struct {
 	powershellDataReportFile    string
 	ms365PowershellReport       *ms365report.Microsoft365Report
 	ms365PowershellReportLoader sync.Mutex
+	platformOverride            string
 }
 
 func (p *Provider) Close() {}

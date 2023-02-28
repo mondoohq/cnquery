@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -15,11 +16,6 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
-const (
-	DiscoverySubscriptions = "subscriptions"
-	DiscoveryInstances     = "instances"
-)
-
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -27,7 +23,11 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions, DiscoveryInstances}
+	return []string{
+		common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions, DiscoveryInstances,
+		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
+		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups,
+	}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -84,53 +84,85 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if err != nil {
 		return nil, err
 	}
+
+	type SubConfig struct {
+		Cfg *providers.Config
+		Sub armsubscriptions.Subscription
+	}
+	subsConfig := map[string]SubConfig{}
+	subsAssets := map[string]*asset.Asset{}
+	// we always look up subscriptions to be able to fetch their subid and tenantid to make the authentication work
+	// note these are not being added as assets here, that is done only if the right targets are set down below
+	for _, sub := range subs {
+		// make sure we assign the correct sub and tenant id per sub, so that motor works properly
+		cfg := tc.Clone()
+		if cfg.Options == nil {
+			cfg.Options = map[string]string{}
+		}
+		cfg.Options["subscription-id"] = *sub.SubscriptionID
+		if cfg.Options["tenant-id"] == "" {
+			cfg.Options["tenant-id"] = *sub.TenantID
+		}
+		subsConfig[*sub.SubscriptionID] = SubConfig{Cfg: cfg, Sub: sub}
+	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions) {
-		for _, sub := range subs {
+		for _, sub := range subsConfig {
 			name := root.Name
 			if name == "" {
-				subName := subscriptionID
-				if sub.DisplayName != nil {
-					subName = *sub.DisplayName
+				subName := *sub.Sub.SubscriptionID
+				if sub.Sub.DisplayName != nil {
+					subName = *sub.Sub.DisplayName
 				}
 				name = "Azure subscription " + subName
 			}
-
-			// make sure we assign the correct sub and tenant id per sub, so that motor works properly
-			cfg := tc.Clone()
-			if cfg.Options == nil {
-				cfg.Options = map[string]string{}
-			}
-			cfg.Options["subscription-id"] = *sub.SubscriptionID
-			if cfg.Options["tenant-id"] == "" {
-				cfg.Options["tenant-id"] = *sub.TenantID
-			}
-			provider, err := microsoft.New(cfg)
+			tc := sub.Cfg.Clone()
+			p, err := microsoft.New(tc)
 			if err != nil {
 				return nil, err
 			}
 
 			// detect platform info for the asset
-			detector := detector.New(provider)
+			detector := detector.New(p)
 			pf, err := detector.Platform()
 			if err != nil {
 				return nil, err
 			}
-			id, _ := provider.Identifier()
-			resolved = append(resolved, &asset.Asset{
+			id, _ := p.Identifier()
+			subAsset := &asset.Asset{
 				PlatformIds: []string{id},
 				Name:        name,
 				Platform:    pf,
-				Connections: []*providers.Config{cfg},
+				Connections: []*providers.Config{tc},
 				Labels: map[string]string{
-					"azure.com/subscription": *sub.SubscriptionID,
-					"azure.com/tenant":       *sub.TenantID,
-					common.ParentId:          *sub.SubscriptionID,
+					"azure.com/subscription": *sub.Sub.SubscriptionID,
+					"azure.com/tenant":       *sub.Sub.TenantID,
+					common.ParentId:          *sub.Sub.SubscriptionID,
 				},
-			})
+			}
+			subsAssets[*sub.Sub.SubscriptionID] = subAsset
+			resolved = append(resolved, subAsset)
 		}
 	}
-
+	// resources as assets
+	// TODO: add instances here once the ip address is available viq mql
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto,
+		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
+		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups) {
+		for id, tc := range subsConfig {
+			assetList, err := GatherAssets(ctx, tc.Cfg, credsResolver, sfn)
+			if err != nil {
+				return nil, err
+			}
+			for _, a := range assetList {
+				if rootSub := subsAssets[id]; rootSub != nil {
+					a.RelatedAssets = append(a.RelatedAssets, rootSub)
+				}
+				resolved = append(resolved, a)
+			}
+		}
+	}
 	// get all compute instances
+	// TODO: remove this once instances are available through GatherAssets
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
 		for _, s := range subs {
 			r := NewCompute(azureClient, *s.SubscriptionID)
@@ -152,6 +184,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 					a.Connections[i].Insecure = tc.Insecure
 				}
 
+				if rootSub := subsAssets[*s.SubscriptionID]; rootSub != nil {
+					a.RelatedAssets = append(a.RelatedAssets, rootSub)
+				}
 				resolved = append(resolved, a)
 			}
 		}

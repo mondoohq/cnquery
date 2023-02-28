@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -116,18 +117,93 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) id() (string, error) {
 	return a.Id()
 }
 
+func (a *mqlAzureSubscriptionStorageServiceAccountContainer) init(args *resources.Args) (*resources.Args, AzureSubscriptionStorageServiceAccountContainer, error) {
+	if len(*args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure storage container")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.storageService")
+	if err != nil {
+		return nil, nil, err
+	}
+	storageSvc := obj.(*mqlAzureSubscriptionStorageService)
+
+	accs, err := storageSvc.Accounts()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range accs {
+		instance := accs[i].(AzureSubscriptionStorageServiceAccount)
+		containers, err := instance.Containers()
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, container := range containers {
+			c := container.(AzureSubscriptionStorageServiceAccountContainer)
+			instanceId, err := c.Id()
+			if err != nil {
+				return nil, nil, errors.New("azure storage container does not exist")
+			}
+			if instanceId == id {
+				return args, c, nil
+			}
+		}
+	}
+	return nil, nil, errors.New("azure storage container does not exist")
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccount) init(args *resources.Args) (*resources.Args, AzureSubscriptionStorageServiceAccount, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 
-	idRaw := (*args)["id"]
-	if idRaw == nil {
-		return args, nil, nil
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
 	}
 
-	id, ok := idRaw.(string)
-	if !ok {
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure storage container")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.storageService")
+	if err != nil {
+		return nil, nil, err
+	}
+	storageSvc := obj.(*mqlAzureSubscriptionStorageService)
+
+	accs, err := storageSvc.Accounts()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range accs {
+		instance := accs[i].(AzureSubscriptionStorageServiceAccount)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure storage account does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+
+	}
+
+	if (*args)["id"] == nil {
 		return args, nil, nil
 	}
 

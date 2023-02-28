@@ -29,6 +29,46 @@ func (a *mqlAzureSubscriptionComputeService) init(args *resources.Args) (*resour
 	return args, nil, nil
 }
 
+func (a *mqlAzureSubscriptionComputeServiceVm) init(args *resources.Args) (*resources.Args, AzureSubscriptionComputeServiceVm, error) {
+	if len(*args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure compute vm instance")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.computeService")
+	if err != nil {
+		return nil, nil, err
+	}
+	computeSvc := obj.(AzureSubscriptionComputeService)
+
+	rawResources, err := computeSvc.Vms()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AzureSubscriptionComputeServiceVm)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure compute instance does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("azure compute instance does not exist")
+}
+
 func (a *mqlAzureSubscriptionComputeService) id() (string, error) {
 	subId, err := a.SubscriptionId()
 	if err != nil {

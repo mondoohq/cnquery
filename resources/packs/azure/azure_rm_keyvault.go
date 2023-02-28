@@ -88,6 +88,46 @@ func (a *mqlAzureSubscriptionKeyvaultService) GetVaults() ([]interface{}, error)
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionKeyvaultServiceVault) init(args *resources.Args) (*resources.Args, AzureSubscriptionKeyvaultServiceVault, error) {
+	if len(*args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure keyvault vault")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.keyvaultService")
+	if err != nil {
+		return nil, nil, err
+	}
+	keyvaultSvc := obj.(*mqlAzureSubscriptionKeyvaultService)
+
+	rawResources, err := keyvaultSvc.Vaults()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AzureSubscriptionKeyvaultServiceVault)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure keyvault vault does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("azure keyvault vault does not exist")
+}
+
 func (a *mqlAzureSubscriptionKeyvaultServiceVault) id() (string, error) {
 	return a.Id()
 }
