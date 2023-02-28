@@ -30,7 +30,7 @@ func (a *mqlAzureSubscriptionComputeService) init(args *resources.Args) (*resour
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) init(args *resources.Args) (*resources.Args, AzureSubscriptionComputeServiceVm, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 

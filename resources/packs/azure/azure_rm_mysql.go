@@ -37,7 +37,7 @@ func (a *mqlAzureSubscriptionMysqlService) id() (string, error) {
 }
 
 func (a *mqlAzureSubscriptionMysqlServiceServer) init(args *resources.Args) (*resources.Args, AzureSubscriptionMysqlServiceServer, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 

@@ -29,7 +29,7 @@ func (a *mqlAzureSubscriptionSqlService) init(args *resources.Args) (*resources.
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServer) init(args *resources.Args) (*resources.Args, AzureSubscriptionSqlServiceServer, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 

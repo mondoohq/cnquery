@@ -37,7 +37,7 @@ func (p *Provider) Roles() map[string]struct{} {
 func getTitleForPlatformName(name string) string {
 	switch name {
 	case "azure-compute-vm":
-		return "Azure Virtual Machine"
+		return "Azure Compute VM"
 	case "azure-sql-server":
 		return "Azure SQL Server"
 	case "azure-mysql-server":
@@ -49,7 +49,7 @@ func getTitleForPlatformName(name string) string {
 	case "azure-storage-account":
 		return "Azure Storage Account"
 	case "azure-storage-container":
-		return "Azure Storage Container"
+		return "Azure Storage Account Container"
 	case "azure-network-security-group":
 		return "Azure Network Security Group"
 	case "azure-keyvault-vault":

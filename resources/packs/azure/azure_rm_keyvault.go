@@ -89,7 +89,7 @@ func (a *mqlAzureSubscriptionKeyvaultService) GetVaults() ([]interface{}, error)
 }
 
 func (a *mqlAzureSubscriptionKeyvaultServiceVault) init(args *resources.Args) (*resources.Args, AzureSubscriptionKeyvaultServiceVault, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 

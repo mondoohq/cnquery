@@ -97,7 +97,7 @@ func (a *mqlAzureSubscriptionPostgresqlService) GetServers() ([]interface{}, err
 }
 
 func (a *mqlAzureSubscriptionPostgresqlServiceServer) init(args *resources.Args) (*resources.Args, AzureSubscriptionPostgresqlServiceServer, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 

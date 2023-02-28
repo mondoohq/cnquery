@@ -162,7 +162,8 @@ type azureObjectPlatformInfo struct {
 }
 
 func AzureObjectPlatformId(azureObject azureObject) string {
-	// the azure resources have an unique id throughout the whole subscription
+	// the azure resources have an unique id (even throughout multiple subscriptions), e.g.
+	// /subscriptions/f1a2873a-6b27-4097-aa7c-3df51f103e96/resourceGroups/MS365-CIS/providers/Microsoft.Compute/virtualMachines/ms365-windows
 	// that should be enough for an unique platform id
 	return "//platformid.api.mondoo.app/runtime/azure/v1" + azureObject.id
 }

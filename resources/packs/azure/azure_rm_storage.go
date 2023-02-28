@@ -118,7 +118,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) id() (string, error) {
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccountContainer) init(args *resources.Args) (*resources.Args, AzureSubscriptionStorageServiceAccountContainer, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 
@@ -165,7 +165,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccountContainer) init(args *resource
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) init(args *resources.Args) (*resources.Args, AzureSubscriptionStorageServiceAccount, error) {
-	if len(*args) > 2 {
+	if len(*args) > 1 {
 		return args, nil, nil
 	}
 
