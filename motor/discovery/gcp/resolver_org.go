@@ -139,7 +139,6 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 				}
 				resolved = append(resolved, a)
 			}
-			resolved = append(resolved, assets...)
 		}
 	}
 

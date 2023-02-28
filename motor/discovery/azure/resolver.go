@@ -140,6 +140,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 				},
 			}
 			subsAssets[*sub.Sub.SubscriptionID] = subAsset
+			// if there's a root, link the sub to it
 			if root != nil {
 				subAsset.RelatedAssets = append(subAsset.RelatedAssets, root)
 			}
@@ -157,10 +158,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 				return nil, err
 			}
 			for _, a := range assetList {
+				// if there's a sub available, link the asset to it
 				if sub := subsAssets[id]; sub != nil {
 					a.RelatedAssets = append(a.RelatedAssets, sub)
 				}
 
+				// if there's a root available, link the asset to it
 				if root != nil {
 					a.RelatedAssets = append(a.RelatedAssets, root)
 				}
@@ -191,9 +194,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 					a.Connections[i].Insecure = tc.Insecure
 				}
 
+				// if there's a sub available, link the asset to it
 				if sub := subsAssets[*s.SubscriptionID]; sub != nil {
 					a.RelatedAssets = append(a.RelatedAssets, sub)
 				}
+
+				// if there's a root available, link the asset to it
 				if root != nil {
 					a.RelatedAssets = append(a.RelatedAssets, root)
 				}
