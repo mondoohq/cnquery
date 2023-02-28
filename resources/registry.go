@@ -7,9 +7,9 @@ package resources
 import (
 	"encoding/json"
 	"errors"
-	"sort"
 	"strings"
 
+	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -57,14 +57,7 @@ func (ctx *Registry) LoadJson(raw []byte) error {
 
 	// since we establish the resource chain of any missing resources,
 	// it is important to add things in the right order (for now)
-	keys := make([]string, len(schema.Resources))
-	var i int
-	for k := range schema.Resources {
-		keys[i] = k
-		i++
-	}
-
-	sort.Strings(keys)
+	keys := sortx.Keys(schema.Resources)
 
 	// make sure we import aliases last. aliases should always refer to existing resources
 	// so we want to make sure those are properly registered in the registry first before we import aliases too

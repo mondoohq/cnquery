@@ -24,6 +24,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
+	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -343,11 +344,7 @@ func (s *Shell) listAvailableResources() {
 	schema := all.Registry.Schema()
 
 	// sort by keys
-	keys := []string{}
-	for k := range schema.Resources {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := sortx.Keys(schema.Resources)
 	s.renderResources(schema, keys)
 }
 
@@ -405,14 +402,7 @@ func (s *Shell) renderResources(schema *resources.Schema, keys []string) {
 			maxk = keyLength
 		}
 
-		fields := make([]string, len(resource.Fields))
-		var idx int
-		for fk := range resource.Fields {
-			fields[idx] = fk
-			idx += 1
-		}
-		sort.Strings(fields)
-
+		fields := sortx.Keys(resource.Fields)
 		for i := range fields {
 			field := resource.Fields[fields[i]]
 			if field.IsPrivate {

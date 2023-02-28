@@ -3,8 +3,8 @@ package llx
 import (
 	"encoding/base64"
 	"encoding/binary"
-	"sort"
 
+	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 	"golang.org/x/crypto/blake2b"
 )
@@ -82,11 +82,7 @@ func (p *Primitive) checksumV1(code *CodeV1) []byte {
 		res = append(res, entry.checksumV1(code)...)
 	}
 
-	keys := make([]string, 0, len(p.Map))
-	for k := range p.Map {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := sortx.Keys(p.Map)
 
 	for _, k := range keys {
 		v := p.Map[k]
@@ -165,11 +161,7 @@ func (p *Primitive) checksumV2(code *CodeV2) []byte {
 		res = append(res, entry.checksumV2(code)...)
 	}
 
-	keys := make([]string, 0, len(p.Map))
-	for k := range p.Map {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := sortx.Keys(p.Map)
 	for _, k := range keys {
 		v := p.Map[k]
 		res = append(res, k...)

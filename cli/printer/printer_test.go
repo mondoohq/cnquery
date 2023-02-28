@@ -3,7 +3,6 @@ package printer
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"testing"
 
@@ -18,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/resources"
 	resource_pack "go.mondoo.com/cnquery/resources/packs/os"
+	"go.mondoo.com/cnquery/sortx"
 )
 
 var features cnquery.Features
@@ -94,15 +94,10 @@ func runSimpleTests(t *testing.T, tests []simpleTest) {
 			length := len(results)
 
 			assert.Equal(t, length, len(cur.results), "make sure the right number of results are returned")
-			keys := make([]string, 0, len(results))
-			for k := range results {
-				keys = append(keys, k)
-			}
 
-			sort.Strings(keys)
-
+			keys := sortx.Keys(results)
 			for idx, id := range keys {
-				result, _ := results[id]
+				result := results[id]
 				s = DefaultPrinter.Result(result, bundle)
 				assert.Equal(t, cur.results[idx], s)
 			}

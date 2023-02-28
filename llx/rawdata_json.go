@@ -11,18 +11,9 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 )
-
-func stringKeys(m map[string]interface{}) []string {
-	keys := make([]string, len(m))
-	var i int
-	for k := range m {
-		keys[i] = k
-		i++
-	}
-	return keys
-}
 
 func intKeys(m map[int]interface{}) []int {
 	keys := make([]int, len(m))
@@ -94,8 +85,7 @@ func removeUnderscoreKeys(keys []string) []string {
 func refMapJSON(typ types.Type, data map[string]interface{}, codeID string, bundle *CodeBundle, buf *bytes.Buffer) error {
 	buf.WriteByte('{')
 
-	keys := stringKeys(data)
-	sort.Strings(keys)
+	keys := sortx.Keys(data)
 
 	// What is the best explanation for why we do this?
 	keys = removeUnderscoreKeys(keys)
@@ -170,8 +160,7 @@ func rawDictJSON(typ types.Type, raw interface{}, buf *bytes.Buffer) error {
 	case map[string]interface{}:
 		buf.WriteByte('{')
 
-		keys := stringKeys(data)
-		sort.Strings(keys)
+		keys := sortx.Keys(data)
 
 		last := len(keys) - 1
 		for i, k := range keys {
@@ -229,9 +218,7 @@ func rawStringMapJSON(typ types.Type, data map[string]interface{}, codeID string
 
 	last := len(data) - 1
 	childType := typ.Child()
-
-	keys := stringKeys(data)
-	sort.Strings(keys)
+	keys := sortx.Keys(data)
 
 	var err error
 	for i, key := range keys {
