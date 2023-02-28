@@ -30,7 +30,7 @@ func (g *mqlGoogleworkspace) GetDomains() ([]interface{}, error) {
 }
 
 func newMqlGoogleWorkspaceDomain(runtime *resources.Runtime, entry *directory.Domains) (interface{}, error) {
-	unixTimeUTC := time.Unix(entry.CreationTime, 0)
+	unixTimeUTC := time.UnixMilli(entry.CreationTime)
 	return runtime.CreateResource("googleworkspace.domain",
 		"domainName", entry.DomainName,
 		"isPrimary", entry.IsPrimary,
