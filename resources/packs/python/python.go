@@ -7,6 +7,7 @@ import (
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -20,10 +21,15 @@ import (
 
 var Registry = info.Registry
 
-var pythonDirectories = []string{
+var pythonDirectoriesUnix = []string{
 	"/usr/local/lib/python*",
 	"/usr/lib/python*",
 	"/opt/homebrew/lib/python*",
+}
+
+var pythonDirectoriesDarwin = []string{
+	"/System/Library/Frameworks/Python.framework/Versions",
+	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions",
 }
 
 func init() {
@@ -60,33 +66,18 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 
 	afs := &afero.Afero{Fs: provider.FS()}
 
-	// Look through each potential location for the existence of a matching python* directory
-	for _, pyPath := range pythonDirectories {
-		parentDir := filepath.Dir(pyPath)
+	searchFunctions := []func(*afero.Afero) ([]pythonPackageDetails, error){
+		linuxSearch,
+		darwinSearch,
+	}
 
-		fileList, err := afs.ReadDir(parentDir)
+	for _, sFunc := range searchFunctions {
+		results, err := sFunc(afs)
 		if err != nil {
-			if !os.IsNotExist(err) {
-				log.Warn().Err(err).Str("dir", parentDir).Msg("unable to read directory")
-			}
-			continue
+			log.Error().Err(err).Msg("error while searching for python packages")
+			return nil, err
 		}
-		for _, dEntry := range fileList {
-			base := filepath.Base(pyPath)
-			matched, err := filepath.Match(base, dEntry.Name())
-			if err != nil {
-				return nil, err
-			}
-			if matched {
-				matchedPath := filepath.Join(parentDir, dEntry.Name())
-				log.Debug().Str("filepath", matchedPath).Msg("found matching python path")
-				results, err := k.gatherFoundPackages(afs, matchedPath)
-				if err != nil {
-					return nil, err
-				}
-				allResults = append(allResults, results...)
-			}
-		}
+		allResults = append(allResults, results...)
 	}
 
 	resp := []interface{}{}
@@ -132,7 +123,7 @@ type pythonPackageDetails struct {
 	version string
 }
 
-func (k *mqlPython) gatherFoundPackages(afs *afero.Afero, path string) ([]pythonPackageDetails, error) {
+func gatherFoundPackages(afs *afero.Afero, path string) []pythonPackageDetails {
 	allResults := []pythonPackageDetails{}
 
 	packageDirs := []string{"site-packages", "dist-packages"}
@@ -173,7 +164,7 @@ func (k *mqlPython) gatherFoundPackages(afs *afero.Afero, path string) ([]python
 			}
 
 			pythonPackageFilepath := filepath.Join(parentDir, packagePayload)
-			ppd, err := parseMIME(pythonPackageFilepath)
+			ppd, err := parseMIME(afs, pythonPackageFilepath)
 			if err != nil {
 				continue
 			}
@@ -182,11 +173,11 @@ func (k *mqlPython) gatherFoundPackages(afs *afero.Afero, path string) ([]python
 		}
 	}
 
-	return allResults, nil
+	return allResults
 }
 
-func parseMIME(pythonMIMEFilepath string) (*pythonPackageDetails, error) {
-	f, err := os.Open(pythonMIMEFilepath)
+func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetails, error) {
+	f, err := afs.Open(pythonMIMEFilepath)
 	if err != nil {
 		log.Warn().Err(err).Msg("error opening python metadata file")
 		return nil, err
@@ -210,4 +201,95 @@ func parseMIME(pythonMIMEFilepath string) (*pythonPackageDetails, error) {
 		version: mimeData.Get("Version"),
 		path:    pythonMIMEFilepath,
 	}, nil
+}
+
+func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
+	allResults := []pythonPackageDetails{}
+
+	if runtime.GOOS == "windows" {
+		return allResults, nil
+	}
+
+	// Look through each potential location for the existence of a matching python* directory
+	for _, pyPath := range pythonDirectoriesUnix {
+		parentDir := filepath.Dir(pyPath)
+
+		fileList, err := afs.ReadDir(parentDir)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				log.Warn().Err(err).Str("dir", parentDir).Msg("unable to read directory")
+			}
+			continue
+		}
+		for _, dEntry := range fileList {
+			base := filepath.Base(pyPath)
+			matched, err := filepath.Match(base, dEntry.Name())
+			if err != nil {
+				return nil, err
+			}
+			if matched {
+				matchedPath := filepath.Join(parentDir, dEntry.Name())
+				log.Debug().Str("filepath", matchedPath).Msg("found matching python path")
+				results := gatherFoundPackages(afs, matchedPath)
+				allResults = append(allResults, results...)
+			}
+		}
+	}
+	return allResults, nil
+}
+
+func darwinSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
+	allResults := []pythonPackageDetails{}
+
+	if runtime.GOOS != "darwin" {
+		return allResults, nil
+	}
+
+	for _, pyPath := range pythonDirectoriesDarwin {
+
+		fileList, err := afs.ReadDir(pyPath)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				log.Warn().Err(err).Str("dir", pyPath).Msg("unable to read directory")
+			}
+			continue
+		}
+		for _, aFile := range fileList {
+			// FIXME: doesn't work with AFS
+			// fStat, err := afs.Stat(filepath.Join(pyPath, aFile.Name()))
+			// if err != nil {
+			// 	log.Warn().Err(err).Str("file", aFile.Name()).Msg("error trying to stat file")
+			// 	continue
+			// }
+			// if fStat.Mode()&os.ModeSymlink != 0 {
+			// 	// ignore symlinks (basically the Current -> 3.9 symlink) so that
+			// 	// we don't process the same set of packages twice
+			// 	continue
+			// }
+			if aFile.Name() == "Current" {
+				continue
+			}
+
+			pythonPackagePath := filepath.Join(pyPath, aFile.Name(), "lib")
+			fileList, err := afs.ReadDir(pythonPackagePath)
+			if err != nil {
+				log.Warn().Err(err).Str("path", pythonPackagePath).Msg("failed to read directory")
+				continue
+			}
+			for _, oneFile := range fileList {
+				match, err := filepath.Match("python*", oneFile.Name())
+				if err != nil {
+					log.Error().Err(err).Msg("unexpected error while checking for file pattern")
+					continue
+				}
+				if match {
+					matchedPath := filepath.Join(pythonPackagePath, oneFile.Name())
+					log.Debug().Str("filepath", matchedPath).Msg("found matching python path")
+					results := gatherFoundPackages(afs, matchedPath)
+					allResults = append(allResults, results...)
+				}
+			}
+		}
+	}
+	return allResults, nil
 }
