@@ -1,0 +1,19 @@
+
+import "../core/core.lr"
+
+// Python packages resource
+python {
+  init(path? string)
+  packages() []python.package
+  children() []python.package
+}
+
+python.package {
+  id string
+  name string
+  path string
+  version string
+  license string
+  author string
+  summary string
+}

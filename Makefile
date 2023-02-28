@@ -120,6 +120,9 @@ lr/build:
 	./lr go resources/packs/ipmi/ipmi.lr
 	./lr docs yaml resources/packs/ipmi/ipmi.lr --docs-file resources/packs/ipmi/ipmi.lr.manifest.yaml
 	./lr docs json resources/packs/ipmi/ipmi.lr.manifest.yaml
+	./lr go resources/packs/python/python.lr
+	./lr docs yaml resources/packs/python/python.lr --docs-file resources/packs/python/python.lr.manifest.yaml
+	./lr docs json resources/packs/python/python.lr.manifest.yaml
 
 lr/release:
 	go generate .
@@ -244,6 +247,10 @@ explorer/generate:
 	go generate ./explorer/scan
 
 #   🏗 Binary / Build   #
+
+.PHONY: cnquery/build
+cnquery/build:
+	go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
 
 .PHONY: cnquery/build/linux
 cnquery/build/linux:
