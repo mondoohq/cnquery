@@ -97,7 +97,16 @@ func (m *Mquery) RefreshChecksum() error {
 
 	// TODO: filters don't support properties yet
 	if m.Filters != nil {
-		for _, query := range m.Filters.Items {
+		keys := make([]string, len(m.Filters.Items))
+		i := 0
+		for k := range m.Filters.Items {
+			keys[i] = k
+			i++
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			query := m.Filters.Items[k]
 			if query.Checksum == "" {
 				// FIXME: we don't want this here, it should not be tied to the query
 				log.Warn().
