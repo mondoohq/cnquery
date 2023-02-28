@@ -64,6 +64,9 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("gcp.project.dnsService.policy", newGcpProjectDnsServicePolicy)
 	registry.AddFactory("gcp.project.gkeService", newGcpProjectGkeService)
 	registry.AddFactory("gcp.project.gkeService.cluster", newGcpProjectGkeServiceCluster)
+	registry.AddFactory("gcp.project.gkeService.cluster.addonsConfig", newGcpProjectGkeServiceClusterAddonsConfig)
+	registry.AddFactory("gcp.project.gkeService.cluster.ipAllocationPolicy", newGcpProjectGkeServiceClusterIpAllocationPolicy)
+	registry.AddFactory("gcp.project.gkeService.cluster.networkConfig", newGcpProjectGkeServiceClusterNetworkConfig)
 	registry.AddFactory("gcp.project.gkeService.cluster.nodepool", newGcpProjectGkeServiceClusterNodepool)
 	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.networkConfig", newGcpProjectGkeServiceClusterNodepoolNetworkConfig)
 	registry.AddFactory("gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig", newGcpProjectGkeServiceClusterNodepoolNetworkConfigPerformanceConfig)
@@ -24194,6 +24197,13 @@ type GcpProjectGkeServiceCluster interface {
 	ResourceLabels() (map[string]interface{}, error)
 	Created() (*time.Time, error)
 	ExpirationTime() (*time.Time, error)
+	AddonsConfig() (GcpProjectGkeServiceClusterAddonsConfig, error)
+	WorkloadIdentityConfig() (interface{}, error)
+	IpAllocationPolicy() (GcpProjectGkeServiceClusterIpAllocationPolicy, error)
+	NetworkConfig() (GcpProjectGkeServiceClusterNetworkConfig, error)
+	BinaryAuthorization() (interface{}, error)
+	LegacyAbac() (interface{}, error)
+	MasterAuth() (interface{}, error)
 }
 
 // mqlGcpProjectGkeServiceCluster for the gcp.project.gkeService.cluster resource
@@ -24319,6 +24329,34 @@ func newGcpProjectGkeServiceCluster(runtime *resources.Runtime, args *resources.
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"expirationTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
+		case "addonsConfig":
+			if _, ok := val.(GcpProjectGkeServiceClusterAddonsConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"addonsConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterAddonsConfig\")")
+			}
+		case "workloadIdentityConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"workloadIdentityConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "ipAllocationPolicy":
+			if _, ok := val.(GcpProjectGkeServiceClusterIpAllocationPolicy); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"ipAllocationPolicy\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterIpAllocationPolicy\")")
+			}
+		case "networkConfig":
+			if _, ok := val.(GcpProjectGkeServiceClusterNetworkConfig); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"networkConfig\" argument has the wrong type (expected type \"GcpProjectGkeServiceClusterNetworkConfig\")")
+			}
+		case "binaryAuthorization":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"binaryAuthorization\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "legacyAbac":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"legacyAbac\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "masterAuth":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster\", its \"masterAuth\" argument has the wrong type (expected type \"interface{}\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -24412,6 +24450,27 @@ func (s *mqlGcpProjectGkeServiceCluster) Validate() error {
 	if _, ok := s.Cache.Load("expirationTime"); !ok {
 		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"expirationTime\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("addonsConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"addonsConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("workloadIdentityConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"workloadIdentityConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("ipAllocationPolicy"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"ipAllocationPolicy\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("networkConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"networkConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("binaryAuthorization"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"binaryAuthorization\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("legacyAbac"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"legacyAbac\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("masterAuth"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster\" resource without a \"masterAuth\". This field is required.")
+	}
 
 	return nil
 }
@@ -24463,6 +24522,20 @@ func (s *mqlGcpProjectGkeServiceCluster) Register(name string) error {
 	case "created":
 		return nil
 	case "expirationTime":
+		return nil
+	case "addonsConfig":
+		return nil
+	case "workloadIdentityConfig":
+		return nil
+	case "ipAllocationPolicy":
+		return nil
+	case "networkConfig":
+		return nil
+	case "binaryAuthorization":
+		return nil
+	case "legacyAbac":
+		return nil
+	case "masterAuth":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster\" resource")
@@ -24517,6 +24590,20 @@ func (s *mqlGcpProjectGkeServiceCluster) Field(name string) (interface{}, error)
 		return s.Created()
 	case "expirationTime":
 		return s.ExpirationTime()
+	case "addonsConfig":
+		return s.AddonsConfig()
+	case "workloadIdentityConfig":
+		return s.WorkloadIdentityConfig()
+	case "ipAllocationPolicy":
+		return s.IpAllocationPolicy()
+	case "networkConfig":
+		return s.NetworkConfig()
+	case "binaryAuthorization":
+		return s.BinaryAuthorization()
+	case "legacyAbac":
+		return s.LegacyAbac()
+	case "masterAuth":
+		return s.MasterAuth()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster\" resource")
 	}
@@ -24874,6 +24961,118 @@ func (s *mqlGcpProjectGkeServiceCluster) ExpirationTime() (*time.Time, error) {
 	return tres, nil
 }
 
+// AddonsConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceCluster) AddonsConfig() (GcpProjectGkeServiceClusterAddonsConfig, error) {
+	res, ok := s.Cache.Load("addonsConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"addonsConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterAddonsConfig)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"addonsConfig\" to the right type (GcpProjectGkeServiceClusterAddonsConfig): %#v", res)
+	}
+	return tres, nil
+}
+
+// WorkloadIdentityConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceCluster) WorkloadIdentityConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("workloadIdentityConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"workloadIdentityConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"workloadIdentityConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// IpAllocationPolicy accessor autogenerated
+func (s *mqlGcpProjectGkeServiceCluster) IpAllocationPolicy() (GcpProjectGkeServiceClusterIpAllocationPolicy, error) {
+	res, ok := s.Cache.Load("ipAllocationPolicy")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"ipAllocationPolicy\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterIpAllocationPolicy)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"ipAllocationPolicy\" to the right type (GcpProjectGkeServiceClusterIpAllocationPolicy): %#v", res)
+	}
+	return tres, nil
+}
+
+// NetworkConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceCluster) NetworkConfig() (GcpProjectGkeServiceClusterNetworkConfig, error) {
+	res, ok := s.Cache.Load("networkConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"networkConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectGkeServiceClusterNetworkConfig)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"networkConfig\" to the right type (GcpProjectGkeServiceClusterNetworkConfig): %#v", res)
+	}
+	return tres, nil
+}
+
+// BinaryAuthorization accessor autogenerated
+func (s *mqlGcpProjectGkeServiceCluster) BinaryAuthorization() (interface{}, error) {
+	res, ok := s.Cache.Load("binaryAuthorization")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"binaryAuthorization\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"binaryAuthorization\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// LegacyAbac accessor autogenerated
+func (s *mqlGcpProjectGkeServiceCluster) LegacyAbac() (interface{}, error) {
+	res, ok := s.Cache.Load("legacyAbac")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"legacyAbac\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"legacyAbac\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// MasterAuth accessor autogenerated
+func (s *mqlGcpProjectGkeServiceCluster) MasterAuth() (interface{}, error) {
+	res, ok := s.Cache.Load("masterAuth")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster\" failed: no value provided for static field \"masterAuth\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster\" failed to cast field \"masterAuth\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpProjectGkeServiceCluster) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster].MqlCompute")
@@ -24922,9 +25121,1418 @@ func (s *mqlGcpProjectGkeServiceCluster) MqlCompute(name string) error {
 		return nil
 	case "expirationTime":
 		return nil
+	case "addonsConfig":
+		return nil
+	case "workloadIdentityConfig":
+		return nil
+	case "ipAllocationPolicy":
+		return nil
+	case "networkConfig":
+		return nil
+	case "binaryAuthorization":
+		return nil
+	case "legacyAbac":
+		return nil
+	case "masterAuth":
+		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster\" resource")
 	}
+}
+
+// GcpProjectGkeServiceClusterAddonsConfig resource interface
+type GcpProjectGkeServiceClusterAddonsConfig interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	HttpLoadBalancing() (interface{}, error)
+	HorizontalPodAutoscaling() (interface{}, error)
+	KubernetesDashboard() (interface{}, error)
+	NetworkPolicyConfig() (interface{}, error)
+	CloudRunConfig() (interface{}, error)
+	DnsCacheConfig() (interface{}, error)
+	ConfigConnectorConfig() (interface{}, error)
+	GcePersistentDiskCsiDriverConfig() (interface{}, error)
+	GcpFilestoreCsiDriverConfig() (interface{}, error)
+	GkeBackupAgentConfig() (interface{}, error)
+}
+
+// mqlGcpProjectGkeServiceClusterAddonsConfig for the gcp.project.gkeService.cluster.addonsConfig resource
+type mqlGcpProjectGkeServiceClusterAddonsConfig struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.gkeService.cluster.addonsConfig resource
+func newGcpProjectGkeServiceClusterAddonsConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectGkeServiceClusterAddonsConfig{runtime.NewResource("gcp.project.gkeService.cluster.addonsConfig")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "httpLoadBalancing":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"httpLoadBalancing\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "horizontalPodAutoscaling":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"horizontalPodAutoscaling\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "kubernetesDashboard":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"kubernetesDashboard\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "networkPolicyConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"networkPolicyConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "cloudRunConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"cloudRunConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "dnsCacheConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"dnsCacheConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "configConnectorConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"configConnectorConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "gcePersistentDiskCsiDriverConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"gcePersistentDiskCsiDriverConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "gcpFilestoreCsiDriverConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"gcpFilestoreCsiDriverConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "gkeBackupAgentConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"gkeBackupAgentConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.addonsConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.addonsConfig with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("httpLoadBalancing"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"httpLoadBalancing\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("horizontalPodAutoscaling"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"horizontalPodAutoscaling\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("kubernetesDashboard"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"kubernetesDashboard\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("networkPolicyConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"networkPolicyConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("cloudRunConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"cloudRunConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("dnsCacheConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"dnsCacheConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("configConnectorConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"configConnectorConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gcePersistentDiskCsiDriverConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"gcePersistentDiskCsiDriverConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gcpFilestoreCsiDriverConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"gcpFilestoreCsiDriverConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("gkeBackupAgentConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.addonsConfig\" resource without a \"gkeBackupAgentConfig\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.addonsConfig].Register")
+	switch name {
+	case "id":
+		return nil
+	case "httpLoadBalancing":
+		return nil
+	case "horizontalPodAutoscaling":
+		return nil
+	case "kubernetesDashboard":
+		return nil
+	case "networkPolicyConfig":
+		return nil
+	case "cloudRunConfig":
+		return nil
+	case "dnsCacheConfig":
+		return nil
+	case "configConnectorConfig":
+		return nil
+	case "gcePersistentDiskCsiDriverConfig":
+		return nil
+	case "gcpFilestoreCsiDriverConfig":
+		return nil
+	case "gkeBackupAgentConfig":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.addonsConfig\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.addonsConfig].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "httpLoadBalancing":
+		return s.HttpLoadBalancing()
+	case "horizontalPodAutoscaling":
+		return s.HorizontalPodAutoscaling()
+	case "kubernetesDashboard":
+		return s.KubernetesDashboard()
+	case "networkPolicyConfig":
+		return s.NetworkPolicyConfig()
+	case "cloudRunConfig":
+		return s.CloudRunConfig()
+	case "dnsCacheConfig":
+		return s.DnsCacheConfig()
+	case "configConnectorConfig":
+		return s.ConfigConnectorConfig()
+	case "gcePersistentDiskCsiDriverConfig":
+		return s.GcePersistentDiskCsiDriverConfig()
+	case "gcpFilestoreCsiDriverConfig":
+		return s.GcpFilestoreCsiDriverConfig()
+	case "gkeBackupAgentConfig":
+		return s.GkeBackupAgentConfig()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.addonsConfig\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// HttpLoadBalancing accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) HttpLoadBalancing() (interface{}, error) {
+	res, ok := s.Cache.Load("httpLoadBalancing")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"httpLoadBalancing\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"httpLoadBalancing\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// HorizontalPodAutoscaling accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) HorizontalPodAutoscaling() (interface{}, error) {
+	res, ok := s.Cache.Load("horizontalPodAutoscaling")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"horizontalPodAutoscaling\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"horizontalPodAutoscaling\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// KubernetesDashboard accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) KubernetesDashboard() (interface{}, error) {
+	res, ok := s.Cache.Load("kubernetesDashboard")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"kubernetesDashboard\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"kubernetesDashboard\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// NetworkPolicyConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) NetworkPolicyConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("networkPolicyConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"networkPolicyConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"networkPolicyConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// CloudRunConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) CloudRunConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("cloudRunConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"cloudRunConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"cloudRunConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// DnsCacheConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) DnsCacheConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("dnsCacheConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"dnsCacheConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"dnsCacheConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ConfigConnectorConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) ConfigConnectorConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("configConnectorConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"configConnectorConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"configConnectorConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// GcePersistentDiskCsiDriverConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) GcePersistentDiskCsiDriverConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("gcePersistentDiskCsiDriverConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"gcePersistentDiskCsiDriverConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"gcePersistentDiskCsiDriverConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// GcpFilestoreCsiDriverConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) GcpFilestoreCsiDriverConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("gcpFilestoreCsiDriverConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"gcpFilestoreCsiDriverConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"gcpFilestoreCsiDriverConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// GkeBackupAgentConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) GkeBackupAgentConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("gkeBackupAgentConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.addonsConfig\" failed: no value provided for static field \"gkeBackupAgentConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.addonsConfig\" failed to cast field \"gkeBackupAgentConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterAddonsConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.addonsConfig].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "httpLoadBalancing":
+		return nil
+	case "horizontalPodAutoscaling":
+		return nil
+	case "kubernetesDashboard":
+		return nil
+	case "networkPolicyConfig":
+		return nil
+	case "cloudRunConfig":
+		return nil
+	case "dnsCacheConfig":
+		return nil
+	case "configConnectorConfig":
+		return nil
+	case "gcePersistentDiskCsiDriverConfig":
+		return nil
+	case "gcpFilestoreCsiDriverConfig":
+		return nil
+	case "gkeBackupAgentConfig":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.addonsConfig\" resource")
+	}
+}
+
+// GcpProjectGkeServiceClusterIpAllocationPolicy resource interface
+type GcpProjectGkeServiceClusterIpAllocationPolicy interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	UseIpAliases() (bool, error)
+	CreateSubnetwork() (bool, error)
+	SubnetworkName() (string, error)
+	ClusterSecondaryRangeName() (string, error)
+	ServicesSecondaryRangeName() (string, error)
+	ClusterIpv4CidrBlock() (string, error)
+	NodeIpv4CidrBlock() (string, error)
+	ServicesIpv4CidrBlock() (string, error)
+	TpuIpv4CidrBlock() (string, error)
+	UseRoutes() (bool, error)
+	StackType() (string, error)
+	Ipv6AccessType() (string, error)
+}
+
+// mqlGcpProjectGkeServiceClusterIpAllocationPolicy for the gcp.project.gkeService.cluster.ipAllocationPolicy resource
+type mqlGcpProjectGkeServiceClusterIpAllocationPolicy struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.gkeService.cluster.ipAllocationPolicy resource
+func newGcpProjectGkeServiceClusterIpAllocationPolicy(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectGkeServiceClusterIpAllocationPolicy{runtime.NewResource("gcp.project.gkeService.cluster.ipAllocationPolicy")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "useIpAliases":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"useIpAliases\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "createSubnetwork":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"createSubnetwork\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "subnetworkName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"subnetworkName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "clusterSecondaryRangeName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"clusterSecondaryRangeName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "servicesSecondaryRangeName":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"servicesSecondaryRangeName\" argument has the wrong type (expected type \"string\")")
+			}
+		case "clusterIpv4CidrBlock":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"clusterIpv4CidrBlock\" argument has the wrong type (expected type \"string\")")
+			}
+		case "nodeIpv4CidrBlock":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"nodeIpv4CidrBlock\" argument has the wrong type (expected type \"string\")")
+			}
+		case "servicesIpv4CidrBlock":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"servicesIpv4CidrBlock\" argument has the wrong type (expected type \"string\")")
+			}
+		case "tpuIpv4CidrBlock":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"tpuIpv4CidrBlock\" argument has the wrong type (expected type \"string\")")
+			}
+		case "useRoutes":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"useRoutes\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "stackType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"stackType\" argument has the wrong type (expected type \"string\")")
+			}
+		case "ipv6AccessType":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"ipv6AccessType\" argument has the wrong type (expected type \"string\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.ipAllocationPolicy\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.ipAllocationPolicy with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("useIpAliases"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"useIpAliases\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("createSubnetwork"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"createSubnetwork\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("subnetworkName"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"subnetworkName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("clusterSecondaryRangeName"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"clusterSecondaryRangeName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("servicesSecondaryRangeName"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"servicesSecondaryRangeName\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("clusterIpv4CidrBlock"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"clusterIpv4CidrBlock\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("nodeIpv4CidrBlock"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"nodeIpv4CidrBlock\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("servicesIpv4CidrBlock"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"servicesIpv4CidrBlock\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("tpuIpv4CidrBlock"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"tpuIpv4CidrBlock\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("useRoutes"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"useRoutes\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("stackType"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"stackType\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("ipv6AccessType"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource without a \"ipv6AccessType\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.ipAllocationPolicy].Register")
+	switch name {
+	case "id":
+		return nil
+	case "useIpAliases":
+		return nil
+	case "createSubnetwork":
+		return nil
+	case "subnetworkName":
+		return nil
+	case "clusterSecondaryRangeName":
+		return nil
+	case "servicesSecondaryRangeName":
+		return nil
+	case "clusterIpv4CidrBlock":
+		return nil
+	case "nodeIpv4CidrBlock":
+		return nil
+	case "servicesIpv4CidrBlock":
+		return nil
+	case "tpuIpv4CidrBlock":
+		return nil
+	case "useRoutes":
+		return nil
+	case "stackType":
+		return nil
+	case "ipv6AccessType":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.ipAllocationPolicy].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "useIpAliases":
+		return s.UseIpAliases()
+	case "createSubnetwork":
+		return s.CreateSubnetwork()
+	case "subnetworkName":
+		return s.SubnetworkName()
+	case "clusterSecondaryRangeName":
+		return s.ClusterSecondaryRangeName()
+	case "servicesSecondaryRangeName":
+		return s.ServicesSecondaryRangeName()
+	case "clusterIpv4CidrBlock":
+		return s.ClusterIpv4CidrBlock()
+	case "nodeIpv4CidrBlock":
+		return s.NodeIpv4CidrBlock()
+	case "servicesIpv4CidrBlock":
+		return s.ServicesIpv4CidrBlock()
+	case "tpuIpv4CidrBlock":
+		return s.TpuIpv4CidrBlock()
+	case "useRoutes":
+		return s.UseRoutes()
+	case "stackType":
+		return s.StackType()
+	case "ipv6AccessType":
+		return s.Ipv6AccessType()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// UseIpAliases accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) UseIpAliases() (bool, error) {
+	res, ok := s.Cache.Load("useIpAliases")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"useIpAliases\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"useIpAliases\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// CreateSubnetwork accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) CreateSubnetwork() (bool, error) {
+	res, ok := s.Cache.Load("createSubnetwork")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"createSubnetwork\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"createSubnetwork\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// SubnetworkName accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) SubnetworkName() (string, error) {
+	res, ok := s.Cache.Load("subnetworkName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"subnetworkName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"subnetworkName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ClusterSecondaryRangeName accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) ClusterSecondaryRangeName() (string, error) {
+	res, ok := s.Cache.Load("clusterSecondaryRangeName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"clusterSecondaryRangeName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"clusterSecondaryRangeName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServicesSecondaryRangeName accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) ServicesSecondaryRangeName() (string, error) {
+	res, ok := s.Cache.Load("servicesSecondaryRangeName")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"servicesSecondaryRangeName\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"servicesSecondaryRangeName\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ClusterIpv4CidrBlock accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) ClusterIpv4CidrBlock() (string, error) {
+	res, ok := s.Cache.Load("clusterIpv4CidrBlock")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"clusterIpv4CidrBlock\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"clusterIpv4CidrBlock\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// NodeIpv4CidrBlock accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) NodeIpv4CidrBlock() (string, error) {
+	res, ok := s.Cache.Load("nodeIpv4CidrBlock")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"nodeIpv4CidrBlock\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"nodeIpv4CidrBlock\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServicesIpv4CidrBlock accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) ServicesIpv4CidrBlock() (string, error) {
+	res, ok := s.Cache.Load("servicesIpv4CidrBlock")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"servicesIpv4CidrBlock\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"servicesIpv4CidrBlock\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// TpuIpv4CidrBlock accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) TpuIpv4CidrBlock() (string, error) {
+	res, ok := s.Cache.Load("tpuIpv4CidrBlock")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"tpuIpv4CidrBlock\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"tpuIpv4CidrBlock\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// UseRoutes accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) UseRoutes() (bool, error) {
+	res, ok := s.Cache.Load("useRoutes")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"useRoutes\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"useRoutes\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// StackType accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) StackType() (string, error) {
+	res, ok := s.Cache.Load("stackType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"stackType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"stackType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Ipv6AccessType accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) Ipv6AccessType() (string, error) {
+	res, ok := s.Cache.Load("ipv6AccessType")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed: no value provided for static field \"ipv6AccessType\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.ipAllocationPolicy\" failed to cast field \"ipv6AccessType\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.ipAllocationPolicy].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "useIpAliases":
+		return nil
+	case "createSubnetwork":
+		return nil
+	case "subnetworkName":
+		return nil
+	case "clusterSecondaryRangeName":
+		return nil
+	case "servicesSecondaryRangeName":
+		return nil
+	case "clusterIpv4CidrBlock":
+		return nil
+	case "nodeIpv4CidrBlock":
+		return nil
+	case "servicesIpv4CidrBlock":
+		return nil
+	case "tpuIpv4CidrBlock":
+		return nil
+	case "useRoutes":
+		return nil
+	case "stackType":
+		return nil
+	case "ipv6AccessType":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.ipAllocationPolicy\" resource")
+	}
+}
+
+// GcpProjectGkeServiceClusterNetworkConfig resource interface
+type GcpProjectGkeServiceClusterNetworkConfig interface {
+	MqlResource() (*resources.Resource)
+	MqlCompute(string) error
+	Field(string) (interface{}, error)
+	Register(string) error
+	Validate() error
+	Id() (string, error)
+	NetworkPath() (string, error)
+	Network() (GcpProjectComputeServiceNetwork, error)
+	SubnetworkPath() (string, error)
+	Subnetwork() (GcpProjectComputeServiceSubnetwork, error)
+	EnableIntraNodeVisibility() (bool, error)
+	DefaultSnatStatus() (interface{}, error)
+	EnableL4IlbSubsetting() (bool, error)
+	DatapathProvider() (string, error)
+	PrivateIpv6GoogleAccess() (string, error)
+	DnsConfig() (interface{}, error)
+	ServiceExternalIpsConfig() (interface{}, error)
+}
+
+// mqlGcpProjectGkeServiceClusterNetworkConfig for the gcp.project.gkeService.cluster.networkConfig resource
+type mqlGcpProjectGkeServiceClusterNetworkConfig struct {
+	*resources.Resource
+}
+
+// MqlResource to retrieve the underlying resource info
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) MqlResource() *resources.Resource {
+	return s.Resource
+}
+
+// create a new instance of the gcp.project.gkeService.cluster.networkConfig resource
+func newGcpProjectGkeServiceClusterNetworkConfig(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+	// User hooks
+	var err error
+	res := mqlGcpProjectGkeServiceClusterNetworkConfig{runtime.NewResource("gcp.project.gkeService.cluster.networkConfig")}
+	// assign all named fields
+	var id string
+
+	now := time.Now().Unix()
+	for name, val := range *args {
+		if val == nil {
+			res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+			continue
+		}
+
+		switch name {
+		case "id":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"id\" argument has the wrong type (expected type \"string\")")
+			}
+		case "networkPath":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"networkPath\" argument has the wrong type (expected type \"string\")")
+			}
+		case "network":
+			if _, ok := val.(GcpProjectComputeServiceNetwork); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"network\" argument has the wrong type (expected type \"GcpProjectComputeServiceNetwork\")")
+			}
+		case "subnetworkPath":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"subnetworkPath\" argument has the wrong type (expected type \"string\")")
+			}
+		case "subnetwork":
+			if _, ok := val.(GcpProjectComputeServiceSubnetwork); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"subnetwork\" argument has the wrong type (expected type \"GcpProjectComputeServiceSubnetwork\")")
+			}
+		case "enableIntraNodeVisibility":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"enableIntraNodeVisibility\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "defaultSnatStatus":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"defaultSnatStatus\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "enableL4IlbSubsetting":
+			if _, ok := val.(bool); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"enableL4IlbSubsetting\" argument has the wrong type (expected type \"bool\")")
+			}
+		case "datapathProvider":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"datapathProvider\" argument has the wrong type (expected type \"string\")")
+			}
+		case "privateIpv6GoogleAccess":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"privateIpv6GoogleAccess\" argument has the wrong type (expected type \"string\")")
+			}
+		case "dnsConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"dnsConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "serviceExternalIpsConfig":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"serviceExternalIpsConfig\" argument has the wrong type (expected type \"interface{}\")")
+			}
+		case "__id":
+			idVal, ok := val.(string)
+			if !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.networkConfig\", its \"__id\" argument has the wrong type (expected type \"string\")")
+			}
+			id = idVal
+		default:
+			return nil, errors.New("Initialized gcp.project.gkeService.cluster.networkConfig with unknown argument " + name)
+		}
+		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
+	}
+
+	// Get the ID
+	if id == "" {
+		res.Resource.Id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res.Resource.Id = id
+	}
+
+	return &res, nil
+}
+
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) Validate() error {
+	// required arguments
+	if _, ok := s.Cache.Load("id"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"id\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("networkPath"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"networkPath\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("subnetworkPath"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"subnetworkPath\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableIntraNodeVisibility"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"enableIntraNodeVisibility\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("defaultSnatStatus"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"defaultSnatStatus\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("enableL4IlbSubsetting"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"enableL4IlbSubsetting\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("datapathProvider"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"datapathProvider\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("privateIpv6GoogleAccess"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"privateIpv6GoogleAccess\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("dnsConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"dnsConfig\". This field is required.")
+	}
+	if _, ok := s.Cache.Load("serviceExternalIpsConfig"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.networkConfig\" resource without a \"serviceExternalIpsConfig\". This field is required.")
+	}
+
+	return nil
+}
+
+// Register accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.networkConfig].Register")
+	switch name {
+	case "id":
+		return nil
+	case "networkPath":
+		return nil
+	case "network":
+		return nil
+	case "subnetworkPath":
+		return nil
+	case "subnetwork":
+		return nil
+	case "enableIntraNodeVisibility":
+		return nil
+	case "defaultSnatStatus":
+		return nil
+	case "enableL4IlbSubsetting":
+		return nil
+	case "datapathProvider":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "dnsConfig":
+		return nil
+	case "serviceExternalIpsConfig":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.networkConfig\" resource")
+	}
+}
+
+// Field accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.networkConfig].Field")
+	switch name {
+	case "id":
+		return s.Id()
+	case "networkPath":
+		return s.NetworkPath()
+	case "network":
+		return s.Network()
+	case "subnetworkPath":
+		return s.SubnetworkPath()
+	case "subnetwork":
+		return s.Subnetwork()
+	case "enableIntraNodeVisibility":
+		return s.EnableIntraNodeVisibility()
+	case "defaultSnatStatus":
+		return s.DefaultSnatStatus()
+	case "enableL4IlbSubsetting":
+		return s.EnableL4IlbSubsetting()
+	case "datapathProvider":
+		return s.DatapathProvider()
+	case "privateIpv6GoogleAccess":
+		return s.PrivateIpv6GoogleAccess()
+	case "dnsConfig":
+		return s.DnsConfig()
+	case "serviceExternalIpsConfig":
+		return s.ServiceExternalIpsConfig()
+	default:
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.networkConfig\" resource")
+	}
+}
+
+// Id accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) Id() (string, error) {
+	res, ok := s.Cache.Load("id")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"id\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// NetworkPath accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) NetworkPath() (string, error) {
+	res, ok := s.Cache.Load("networkPath")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"networkPath\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"networkPath\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Network accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) Network() (GcpProjectComputeServiceNetwork, error) {
+	res, ok := s.Cache.Load("network")
+	if !ok || !res.Valid {
+		if err := s.ComputeNetwork(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("network")
+		if !ok {
+			return nil, errors.New("\"gcp.project.gkeService.cluster.networkConfig\" calculated \"network\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "network")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectComputeServiceNetwork)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"network\" to the right type (GcpProjectComputeServiceNetwork): %#v", res)
+	}
+	return tres, nil
+}
+
+// SubnetworkPath accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) SubnetworkPath() (string, error) {
+	res, ok := s.Cache.Load("subnetworkPath")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"subnetworkPath\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"subnetworkPath\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// Subnetwork accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) Subnetwork() (GcpProjectComputeServiceSubnetwork, error) {
+	res, ok := s.Cache.Load("subnetwork")
+	if !ok || !res.Valid {
+		if err := s.ComputeSubnetwork(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("subnetwork")
+		if !ok {
+			return nil, errors.New("\"gcp.project.gkeService.cluster.networkConfig\" calculated \"subnetwork\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "subnetwork")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectComputeServiceSubnetwork)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"subnetwork\" to the right type (GcpProjectComputeServiceSubnetwork): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableIntraNodeVisibility accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) EnableIntraNodeVisibility() (bool, error) {
+	res, ok := s.Cache.Load("enableIntraNodeVisibility")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"enableIntraNodeVisibility\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"enableIntraNodeVisibility\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// DefaultSnatStatus accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) DefaultSnatStatus() (interface{}, error) {
+	res, ok := s.Cache.Load("defaultSnatStatus")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"defaultSnatStatus\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"defaultSnatStatus\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// EnableL4IlbSubsetting accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) EnableL4IlbSubsetting() (bool, error) {
+	res, ok := s.Cache.Load("enableL4IlbSubsetting")
+	if !ok || !res.Valid {
+		return false, errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"enableL4IlbSubsetting\"")
+	}
+	if res.Error != nil {
+		return false, res.Error
+	}
+	tres, ok := res.Data.(bool)
+	if !ok {
+		return false, fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"enableL4IlbSubsetting\" to the right type (bool): %#v", res)
+	}
+	return tres, nil
+}
+
+// DatapathProvider accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) DatapathProvider() (string, error) {
+	res, ok := s.Cache.Load("datapathProvider")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"datapathProvider\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"datapathProvider\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// PrivateIpv6GoogleAccess accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) PrivateIpv6GoogleAccess() (string, error) {
+	res, ok := s.Cache.Load("privateIpv6GoogleAccess")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"privateIpv6GoogleAccess\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"privateIpv6GoogleAccess\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// DnsConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) DnsConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("dnsConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"dnsConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"dnsConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceExternalIpsConfig accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) ServiceExternalIpsConfig() (interface{}, error) {
+	res, ok := s.Cache.Load("serviceExternalIpsConfig")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.networkConfig\" failed: no value provided for static field \"serviceExternalIpsConfig\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.networkConfig\" failed to cast field \"serviceExternalIpsConfig\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
+// Compute accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.networkConfig].MqlCompute")
+	switch name {
+	case "id":
+		return nil
+	case "networkPath":
+		return nil
+	case "network":
+		return s.ComputeNetwork()
+	case "subnetworkPath":
+		return nil
+	case "subnetwork":
+		return s.ComputeSubnetwork()
+	case "enableIntraNodeVisibility":
+		return nil
+	case "defaultSnatStatus":
+		return nil
+	case "enableL4IlbSubsetting":
+		return nil
+	case "datapathProvider":
+		return nil
+	case "privateIpv6GoogleAccess":
+		return nil
+	case "dnsConfig":
+		return nil
+	case "serviceExternalIpsConfig":
+		return nil
+	default:
+		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.networkConfig\" resource")
+	}
+}
+
+// ComputeNetwork computer autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) ComputeNetwork() error {
+	var err error
+	if _, ok := s.Cache.Load("network"); ok {
+		return nil
+	}
+	vres, err := s.GetNetwork()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("network", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
+}
+
+// ComputeSubnetwork computer autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNetworkConfig) ComputeSubnetwork() error {
+	var err error
+	if _, ok := s.Cache.Load("subnetwork"); ok {
+		return nil
+	}
+	vres, err := s.GetSubnetwork()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("subnetwork", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpProjectGkeServiceClusterNodepool resource interface
@@ -24943,6 +26551,7 @@ type GcpProjectGkeServiceClusterNodepool interface {
 	Version() (string, error)
 	InstanceGroupUrls() ([]interface{}, error)
 	Status() (string, error)
+	Management() (interface{}, error)
 }
 
 // mqlGcpProjectGkeServiceClusterNodepool for the gcp.project.gkeService.cluster.nodepool resource
@@ -25007,6 +26616,10 @@ func newGcpProjectGkeServiceClusterNodepool(runtime *resources.Runtime, args *re
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"status\" argument has the wrong type (expected type \"string\")")
 			}
+		case "management":
+			if _, ok := val.(interface{}); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool\", its \"management\" argument has the wrong type (expected type \"interface{}\")")
+			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
@@ -25061,6 +26674,9 @@ func (s *mqlGcpProjectGkeServiceClusterNodepool) Validate() error {
 	if _, ok := s.Cache.Load("status"); !ok {
 		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"status\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("management"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool\" resource without a \"management\". This field is required.")
+	}
 
 	return nil
 }
@@ -25086,6 +26702,8 @@ func (s *mqlGcpProjectGkeServiceClusterNodepool) Register(name string) error {
 	case "instanceGroupUrls":
 		return nil
 	case "status":
+		return nil
+	case "management":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool\" resource")
@@ -25114,6 +26732,8 @@ func (s *mqlGcpProjectGkeServiceClusterNodepool) Field(name string) (interface{}
 		return s.InstanceGroupUrls()
 	case "status":
 		return s.Status()
+	case "management":
+		return s.Management()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool\" resource")
 	}
@@ -25263,6 +26883,22 @@ func (s *mqlGcpProjectGkeServiceClusterNodepool) Status() (string, error) {
 	return tres, nil
 }
 
+// Management accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNodepool) Management() (interface{}, error) {
+	res, ok := s.Cache.Load("management")
+	if !ok || !res.Valid {
+		return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool\" failed: no value provided for static field \"management\"")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(interface{})
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool\" failed to cast field \"management\" to the right type (interface{}): %#v", res)
+	}
+	return tres, nil
+}
+
 // Compute accessor autogenerated
 func (s *mqlGcpProjectGkeServiceClusterNodepool) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[gcp.project.gkeService.cluster.nodepool].MqlCompute")
@@ -25284,6 +26920,8 @@ func (s *mqlGcpProjectGkeServiceClusterNodepool) MqlCompute(name string) error {
 	case "instanceGroupUrls":
 		return nil
 	case "status":
+		return nil
+	case "management":
 		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool\" resource")

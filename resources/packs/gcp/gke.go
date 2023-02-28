@@ -3,6 +3,7 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
@@ -36,7 +37,7 @@ func (g *mqlGcpProjectGkeServiceCluster) id() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return id, nil
+	return fmt.Sprintf("gcp.project.gkeService.cluster/%s", id), nil
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.Args, GcpProjectGkeServiceCluster, error) {
@@ -44,10 +45,13 @@ func (g *mqlGcpProjectGkeServiceCluster) init(args *resources.Args) (*resources.
 		return args, nil, nil
 	}
 
-	if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
-		(*args)["name"] = ids.name
-		(*args)["location"] = ids.region
-		(*args)["projectId"] = ids.project
+	// If no args are set, try reading them from the platform ID
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(g.MotorRuntime); ids != nil {
+			(*args)["name"] = ids.name
+			(*args)["location"] = ids.region
+			(*args)["projectId"] = ids.project
+		}
 	}
 
 	obj, err := g.MotorRuntime.CreateResource("gcp.project.gkeService", "projectId", (*args)["projectId"])
@@ -142,6 +146,18 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfigConfidentialNodes) id() (st
 	return g.Id()
 }
 
+func (g *mqlGcpProjectGkeServiceClusterAddonsConfig) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectGkeServiceClusterIpAllocationPolicy) id() (string, error) {
+	return g.Id()
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) id() (string, error) {
+	return g.Id()
+}
+
 func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -191,6 +207,199 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			autopilotEnabled = c.Autopilot.Enabled
 		}
 
+		var addonsConfig interface{}
+		if c.AddonsConfig != nil {
+			var httpLoadBalancing map[string]interface{}
+			if c.AddonsConfig.HttpLoadBalancing != nil {
+				httpLoadBalancing = map[string]interface{}{
+					"disabled": c.AddonsConfig.HttpLoadBalancing.Disabled,
+				}
+			}
+
+			var horizontalPodAutoscaling map[string]interface{}
+			if c.AddonsConfig.HorizontalPodAutoscaling != nil {
+				horizontalPodAutoscaling = map[string]interface{}{
+					"disabled": c.AddonsConfig.HorizontalPodAutoscaling.Disabled,
+				}
+			}
+
+			var kubernetesDashboard map[string]interface{}
+			if c.AddonsConfig.KubernetesDashboard != nil {
+				kubernetesDashboard = map[string]interface{}{
+					"disabled": c.AddonsConfig.KubernetesDashboard.Disabled,
+				}
+			}
+
+			var networkPolicyConfig map[string]interface{}
+			if c.AddonsConfig.NetworkPolicyConfig != nil {
+				networkPolicyConfig = map[string]interface{}{
+					"disabled": c.AddonsConfig.NetworkPolicyConfig.Disabled,
+				}
+			}
+
+			var cloudRunConfig map[string]interface{}
+			if c.AddonsConfig.CloudRunConfig != nil {
+				cloudRunConfig = map[string]interface{}{
+					"disabled":         c.AddonsConfig.CloudRunConfig.Disabled,
+					"loadBalancerType": c.AddonsConfig.CloudRunConfig.LoadBalancerType.String(),
+				}
+			}
+
+			var dnsCacheConfig map[string]interface{}
+			if c.AddonsConfig.DnsCacheConfig != nil {
+				dnsCacheConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.DnsCacheConfig.Enabled,
+				}
+			}
+
+			var configConnectorConfig map[string]interface{}
+			if c.AddonsConfig.ConfigConnectorConfig != nil {
+				configConnectorConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.ConfigConnectorConfig.Enabled,
+				}
+			}
+
+			var gcePersistentDiskCsiDriverConfig map[string]interface{}
+			if c.AddonsConfig.GcePersistentDiskCsiDriverConfig != nil {
+				gcePersistentDiskCsiDriverConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.GcePersistentDiskCsiDriverConfig.Enabled,
+				}
+			}
+
+			var gcpFilestoreCsiDriverConfig map[string]interface{}
+			if c.AddonsConfig.GcpFilestoreCsiDriverConfig != nil {
+				gcpFilestoreCsiDriverConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.GcpFilestoreCsiDriverConfig.Enabled,
+				}
+			}
+
+			var gkeBackupAgentConfig map[string]interface{}
+			if c.AddonsConfig.GkeBackupAgentConfig != nil {
+				gkeBackupAgentConfig = map[string]interface{}{
+					"enabled": c.AddonsConfig.GkeBackupAgentConfig.Enabled,
+				}
+			}
+
+			addonsConfig, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.addonsConfig",
+				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/addonsConfig", c.Id),
+				"httpLoadBalancing", httpLoadBalancing,
+				"horizontalPodAutoscaling", horizontalPodAutoscaling,
+				"kubernetesDashboard", kubernetesDashboard,
+				"networkPolicyConfig", networkPolicyConfig,
+				"cloudRunConfig", cloudRunConfig,
+				"dnsCacheConfig", dnsCacheConfig,
+				"configConnectorConfig", configConnectorConfig,
+				"gcePersistentDiskCsiDriverConfig", gcePersistentDiskCsiDriverConfig,
+				"gcpFilestoreCsiDriverConfig", gcpFilestoreCsiDriverConfig,
+				"gkeBackupAgentConfig", gkeBackupAgentConfig,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var workloadIdCfg map[string]interface{}
+		if c.WorkloadIdentityConfig != nil {
+			workloadIdCfg = map[string]interface{}{
+				"workloadPool": c.WorkloadIdentityConfig.WorkloadPool,
+			}
+		}
+
+		var ipAllocPolicy interface{}
+		if c.IpAllocationPolicy != nil {
+			ipAllocPolicy, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.ipAllocationPolicy",
+				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/ipAllocationPolicy", c.Id),
+				"useIpAliases", c.IpAllocationPolicy.UseIpAliases,
+				"createSubnetwork", c.IpAllocationPolicy.CreateSubnetwork,
+				"subnetworkName", c.IpAllocationPolicy.SubnetworkName,
+				"clusterSecondaryRangeName", c.IpAllocationPolicy.ClusterSecondaryRangeName,
+				"servicesSecondaryRangeName", c.IpAllocationPolicy.ServicesSecondaryRangeName,
+				"clusterIpv4CidrBlock", c.IpAllocationPolicy.ClusterIpv4CidrBlock,
+				"nodeIpv4CidrBlock", c.IpAllocationPolicy.NodeIpv4CidrBlock,
+				"servicesIpv4CidrBlock", c.IpAllocationPolicy.ServicesIpv4CidrBlock,
+				"tpuIpv4CidrBlock", c.IpAllocationPolicy.TpuIpv4CidrBlock,
+				"useRoutes", c.IpAllocationPolicy.UseRoutes,
+				"stackType", c.IpAllocationPolicy.StackType.String(),
+				"ipv6AccessType", c.IpAllocationPolicy.Ipv6AccessType.String(),
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+		var networkConfig interface{}
+		if c.NetworkConfig != nil {
+			var defaultSnatStatus map[string]interface{}
+			if c.NetworkConfig.DefaultSnatStatus != nil {
+				defaultSnatStatus = map[string]interface{}{
+					"disabled": c.NetworkConfig.DefaultSnatStatus.Disabled,
+				}
+			}
+
+			var dnsConfig map[string]interface{}
+			if c.NetworkConfig.DnsConfig != nil {
+				dnsConfig = map[string]interface{}{
+					"clusterDns":       c.NetworkConfig.DnsConfig.ClusterDns.String(),
+					"clusterDnsScope":  c.NetworkConfig.DnsConfig.ClusterDnsScope.String(),
+					"clusterDnsDomain": c.NetworkConfig.DnsConfig.ClusterDnsDomain,
+				}
+			}
+
+			var serviceExternalIpsConfig map[string]interface{}
+			if c.NetworkConfig.ServiceExternalIpsConfig != nil {
+				serviceExternalIpsConfig = map[string]interface{}{
+					"enabled": c.NetworkConfig.ServiceExternalIpsConfig.Enabled,
+				}
+			}
+			networkConfig, err = g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster.networkConfig",
+				"id", fmt.Sprintf("gcp.project.gkeService.cluster/%s/networkConfig", c.Id),
+				"networkPath", c.NetworkConfig.Network,
+				"subnetworkPath", c.NetworkConfig.Subnetwork,
+				"enableIntraNodeVisibility", c.NetworkConfig.EnableIntraNodeVisibility,
+				"defaultSnatStatus", defaultSnatStatus,
+				"enableL4IlbSubsetting", c.NetworkConfig.EnableL4IlbSubsetting,
+				"datapathProvider", c.NetworkConfig.DatapathProvider.String(),
+				"privateIpv6GoogleAccess", c.NetworkConfig.PrivateIpv6GoogleAccess.String(),
+				"dnsConfig", dnsConfig,
+				"serviceExternalIpsConfig", serviceExternalIpsConfig,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var binAuth map[string]interface{}
+		if c.BinaryAuthorization != nil {
+			binAuth = map[string]interface{}{
+				"enabled":        c.BinaryAuthorization.Enabled,
+				"evaluationMode": c.BinaryAuthorization.EvaluationMode.String(),
+			}
+		}
+
+		var legacyAbac map[string]interface{}
+		if c.LegacyAbac != nil {
+			legacyAbac = map[string]interface{}{
+				"enabled": c.LegacyAbac.Enabled,
+			}
+		}
+
+		var masterAuth map[string]interface{}
+		if c.MasterAuth != nil {
+			var clientCertCfg map[string]interface{}
+			if c.MasterAuth.ClientCertificateConfig != nil {
+				clientCertCfg = map[string]interface{}{
+					"issueClientCertificate": c.MasterAuth.ClientCertificateConfig.IssueClientCertificate,
+				}
+			}
+			masterAuth = map[string]interface{}{
+				"username":                c.MasterAuth.Username,
+				"password":                c.MasterAuth.Password,
+				"clientCertificateConfig": clientCertCfg,
+				"clusterCaCertificate":    c.MasterAuth.ClusterCaCertificate,
+				"clientCertificate":       c.MasterAuth.ClientCertificate,
+				"clientKey":               c.MasterAuth.ClientKey,
+			}
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -214,6 +423,13 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"resourceLabels", core.StrMapToInterface(c.ResourceLabels),
 			"created", parseTime(c.CreateTime),
 			"expirationTime", parseTime(c.ExpireTime),
+			"addonsConfig", addonsConfig,
+			"workloadIdentityConfig", workloadIdCfg,
+			"ipAllocationPolicy", ipAllocPolicy,
+			"networkConfig", networkConfig,
+			"binaryAuthorization", binAuth,
+			"legacyAbac", legacyAbac,
+			"masterAuth", masterAuth,
 		)
 		if err != nil {
 			return nil, err
@@ -237,6 +453,22 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		return nil, err
 	}
 
+	var management map[string]interface{}
+	if np.Management != nil {
+		var upgradeOpts map[string]interface{}
+		if np.Management.UpgradeOptions != nil {
+			upgradeOpts = map[string]interface{}{
+				"autoUpgradeStartTime": np.Management.UpgradeOptions.AutoUpgradeStartTime,
+				"description":          np.Management.UpgradeOptions.Description,
+			}
+		}
+		management = map[string]interface{}{
+			"autoRepair":     np.Management.AutoRepair,
+			"autoUpgrade":    np.Management.AutoUpgrade,
+			"upgradeOptions": upgradeOpts,
+		}
+	}
+
 	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool",
 		"id", nodePoolId,
 		"name", np.Name,
@@ -247,6 +479,7 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 		"version", np.Version,
 		"instanceGroupUrls", core.StrSliceToInterface(np.InstanceGroupUrls),
 		"status", np.Status.String(),
+		"management", management,
 	)
 }
 
@@ -278,7 +511,7 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	var mqlSandboxCfg resources.ResourceType
 	if cfg.SandboxConfig != nil {
-		mqlSandboxCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.sandbox",
+		mqlSandboxCfg, err = runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config.sandboxConfig",
 			"id", fmt.Sprintf("%s/sandbox", nodePoolId),
 			"type", cfg.SandboxConfig.Type.String(),
 		)
@@ -452,5 +685,34 @@ func createMqlAccelerator(runtime *resources.Runtime, acc *containerpb.Accelerat
 		"type", acc.AcceleratorType,
 		"gpuPartitionSize", acc.GpuPartitionSize,
 		"gpuSharingConfig", gpuSharingConfig,
+	)
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) GetNetwork() (interface{}, error) {
+	networkPath, err := g.NetworkPath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Format is projects/project-1/global/networks/net-1
+	params := strings.Split(networkPath, "/")
+	return g.MotorRuntime.CreateResource("gcp.project.computeService.network",
+		"name", params[len(params)-1],
+		"projectId", params[1],
+	)
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) GetSubnetwork() (interface{}, error) {
+	subnetPath, err := g.SubnetworkPath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Format is projects/project-1/regions/us-central1/subnetworks/subnet-1
+	params := strings.Split(subnetPath, "/")
+	return g.MotorRuntime.CreateResource("gcp.project.computeService.subnetwork",
+		"name", params[len(params)-1],
+		"projectId", params[1],
+		"region", params[3],
 	)
 }

@@ -1446,6 +1446,104 @@ private gcp.project.gkeService.cluster @defaults("name") {
   created time
   // The time the cluster will be automatically deleted in
   expirationTime time
+  // Configurations for the various addons available to run in the cluster
+  addonsConfig gcp.project.gkeService.cluster.addonsConfig
+  // Configuration for the use of Kubernetes Service Accounts in GCP IAM policies
+  workloadIdentityConfig dict
+  // Configuration for cluster IP allocation
+  ipAllocationPolicy gcp.project.gkeService.cluster.ipAllocationPolicy
+  // Configuration for cluster networking
+  networkConfig gcp.project.gkeService.cluster.networkConfig
+  // Binary authorization configuration
+  binaryAuthorization dict
+  // Legacy ABAC authorization configuration
+  legacyAbac dict
+  // Authentication information for accessing the master endpoint
+  masterAuth dict
+}
+
+// GKE Cluster Addons Config
+private gcp.project.gkeService.cluster.addonsConfig {
+  // Internal ID
+  id string
+  // Configuration for the HTTP (L7) load balancing controller addon
+  httpLoadBalancing dict
+  // Configuration for the horizontal pod autoscaling feature
+  horizontalPodAutoscaling dict
+  // Configuration for the Kubernetes Dashboard
+  kubernetesDashboard dict
+  // Configuration for NetworkPolicy
+  networkPolicyConfig dict
+  // Configuration for the Cloud Run addon
+  cloudRunConfig dict
+  // Configuration for NodeLocalDNS, a DNS cache running on cluster nodes
+  dnsCacheConfig dict
+  // Configuration for the ConfigConnector addon
+  configConnectorConfig dict
+  // Configuration for the Compute Engine Persistent Disk CSI driver
+  gcePersistentDiskCsiDriverConfig dict
+  // Configuration for the GCP Filestore CSI driver
+  gcpFilestoreCsiDriverConfig dict
+  // Configuration for the backup for GKE agent addon
+  gkeBackupAgentConfig dict
+}
+
+// GKE Cluster IP Allocation Policy
+private gcp.project.gkeService.cluster.ipAllocationPolicy {
+  // Internal ID
+  id string
+  // Whether alias IPs will be used for pod IPs in the cluster
+  useIpAliases bool
+  // Whether a new subnetwork will be created automatically for the cluster
+  createSubnetwork bool
+  // Custom subnetwork name to be used if createSubnetwork is true
+  subnetworkName string
+  // Name of the secondary range to be used for the cluster CIDR block
+  clusterSecondaryRangeName string
+  // Name of the secondary range to be used for the services CIDR block
+  servicesSecondaryRangeName string
+  // IP address range for the cluster pod IPs
+  clusterIpv4CidrBlock string
+  // IP address range of the instance IPs in this cluster
+  nodeIpv4CidrBlock string
+  // IP address range of the services IPs in this cluster
+  servicesIpv4CidrBlock string
+  // IP address range of the Cloud TPUs in this cluster
+  tpuIpv4CidrBlock string
+  // Whether routes will be used for pod IPs in this cluster
+  useRoutes bool
+  // IP stack type
+  stackType string
+  // IPv6 access type
+  ipv6AccessType string
+}
+
+// GKE Cluster Network Config
+private gcp.project.gkeService.cluster.networkConfig {
+  // Internal ID
+  id string
+  // Relative path of the network to which the cluster is connected
+  networkPath string
+  // Network to which the cluster is connected
+  network() gcp.project.computeService.network
+  // Relative path of the subnetwork to which the cluster is connected
+  subnetworkPath string
+  // Subnetwork to which the cluster is connected
+  subnetwork() gcp.project.computeService.subnetwork
+  // Whether intra-node visibility is enabled for this cluster
+  enableIntraNodeVisibility bool
+  // Whether the cluster disables default in-node sNAT rules
+  defaultSnatStatus dict
+  // Whether L4ILB subsetting is enabled for this cluster
+  enableL4IlbSubsetting bool
+  // Desired datapath provider for this cluster
+  datapathProvider string
+  // Desired state of IPv6 connectivity to Google Services
+  privateIpv6GoogleAccess string
+  // Cluster DNS configuration
+  dnsConfig dict
+  // Configuration specifying whether services with externalIPs field are blocked
+  serviceExternalIpsConfig dict
 }
 
 // GKE Cluster Node Pool
@@ -1468,6 +1566,8 @@ private gcp.project.gkeService.cluster.nodepool @defaults("name") {
   instanceGroupUrls []string
   // The current status of this node pool
   status string
+  // Node management configuration
+  management dict
 }
 
 // GCP GKE node pool-level network configuration
