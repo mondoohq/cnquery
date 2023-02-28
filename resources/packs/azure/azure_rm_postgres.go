@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -93,6 +94,46 @@ func (a *mqlAzureSubscriptionPostgresqlService) GetServers() ([]interface{}, err
 	}
 
 	return res, nil
+}
+
+func (a *mqlAzureSubscriptionPostgresqlServiceServer) init(args *resources.Args) (*resources.Args, AzureSubscriptionPostgresqlServiceServer, error) {
+	if len(*args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure postgresql server")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.postgresqlService")
+	if err != nil {
+		return nil, nil, err
+	}
+	postgreSvc := obj.(*mqlAzureSubscriptionPostgresqlService)
+
+	rawResources, err := postgreSvc.Servers()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AzureSubscriptionPostgresqlServiceServer)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure postgresql server does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("azure postgresql server does not exist")
 }
 
 func (a *mqlAzureSubscriptionPostgresqlServiceServer) id() (string, error) {

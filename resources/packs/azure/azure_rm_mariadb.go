@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -33,6 +34,46 @@ func (a *mqlAzureSubscriptionMariadbService) id() (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("/subscriptions/%s/mariaDbService", subId), nil
+}
+
+func (a *mqlAzureSubscriptionMariadbServiceServer) init(args *resources.Args) (*resources.Args, AzureSubscriptionMariadbServiceServer, error) {
+	if len(*args) > 1 {
+		return args, nil, nil
+	}
+
+	if len(*args) == 0 {
+		if ids := getAssetIdentifier(a.MqlResource().MotorRuntime); ids != nil {
+			(*args)["id"] = ids.id
+		}
+	}
+
+	if (*args)["id"] == nil {
+		return nil, nil, errors.New("id required to fetch azure mariadb server")
+	}
+
+	obj, err := a.MotorRuntime.CreateResource("azure.subscription.mariadbService")
+	if err != nil {
+		return nil, nil, err
+	}
+	mariaDbSvc := obj.(*mqlAzureSubscriptionMariadbService)
+
+	rawResources, err := mariaDbSvc.Servers()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	id := (*args)["id"].(string)
+	for i := range rawResources {
+		instance := rawResources[i].(AzureSubscriptionMariadbServiceServer)
+		instanceId, err := instance.Id()
+		if err != nil {
+			return nil, nil, errors.New("azure mariadb server does not exist")
+		}
+		if instanceId == id {
+			return args, instance, nil
+		}
+	}
+	return nil, nil, errors.New("azure mariadb server does not exist")
 }
 
 func (a *mqlAzureSubscriptionMariadbServiceServer) id() (string, error) {

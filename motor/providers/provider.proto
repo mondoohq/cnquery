@@ -60,6 +60,7 @@ enum Kind {
   KIND_K8S_OBJECT = 11;
   KIND_AWS_OBJECT = 12;
   KIND_GCP_OBJECT = 13;
+  KIND_AZURE_OBJECT= 14;
 }
 
 message Config {
