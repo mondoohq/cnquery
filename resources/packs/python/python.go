@@ -63,7 +63,6 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("provider is not an operating system provider")
 	}
-
 	afs := &afero.Afero{Fs: provider.FS()}
 
 	searchFunctions := []func(*afero.Afero) ([]pythonPackageDetails, error){
@@ -137,9 +136,13 @@ func gatherFoundPackages(afs *afero.Afero, path string) []pythonPackageDetails {
 			continue
 		}
 		for _, dEntry := range fileList {
+			// handle the case where the directory entry is
+			// a .egg-type file with metadata directly available
 			packagePayload := dEntry.Name()
 
+			// in the event the directory entry is itself another directory
 			// go into each directory looking for our parsable payload
+			// (ie. METADATA and PKG-INFO files)
 			if dEntry.IsDir() {
 				pythonPackageDir := filepath.Join(parentDir, packagePayload)
 				packageDirFiles, err := afs.ReadDir(pythonPackageDir)
@@ -151,13 +154,15 @@ func gatherFoundPackages(afs *afero.Afero, path string) []pythonPackageDetails {
 				foundMeta := false
 				for _, packageFile := range packageDirFiles {
 					if packageFile.Name() == "METADATA" || packageFile.Name() == "PKG-INFO" {
+						// use the METADATA / PKG-INFO file as our source of python package info
 						packagePayload = filepath.Join(dEntry.Name(), packageFile.Name())
 						foundMeta = true
 						break
 					}
 				}
 				if !foundMeta {
-					// nothing to process...move along
+					// nothing to process (happens when we've traversed a directory
+					// containing the actual python source files)
 					continue
 				}
 
@@ -203,9 +208,12 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetai
 	}, nil
 }
 
+// linuxSearch handles a list of file glob entries (like /usr/local/lib/python*)
+// to then crawl through the site-packages/dist-packages for python packages
 func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 	allResults := []pythonPackageDetails{}
 
+	// safe to run this on both linux and darwin
 	if runtime.GOOS == "windows" {
 		return allResults, nil
 	}
@@ -221,6 +229,7 @@ func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 			}
 			continue
 		}
+
 		for _, dEntry := range fileList {
 			base := filepath.Base(pyPath)
 			matched, err := filepath.Match(base, dEntry.Name())
@@ -238,6 +247,8 @@ func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 	return allResults, nil
 }
 
+// darwinSearch has custom handling for the specific way that darwin
+// can structure the paths holding python packages
 func darwinSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 	allResults := []pythonPackageDetails{}
 
@@ -254,8 +265,12 @@ func darwinSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 			}
 			continue
 		}
+
 		for _, aFile := range fileList {
-			// FIXME: doesn't work with AFS
+			// want to not double-search the case where the files look like:
+			// 3.9
+			// Current -> 3.9
+			// FIXME: doesn't work with AFS (we actually want an Lstat() call here)
 			// fStat, err := afs.Stat(filepath.Join(pyPath, aFile.Name()))
 			// if err != nil {
 			// 	log.Warn().Err(err).Str("file", aFile.Name()).Msg("error trying to stat file")
@@ -277,9 +292,11 @@ func darwinSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 				continue
 			}
 			for _, oneFile := range fileList {
+				// if we run into a directory name that starts with "python"
+				// then we have a candidate to search through
 				match, err := filepath.Match("python*", oneFile.Name())
 				if err != nil {
-					log.Error().Err(err).Msg("unexpected error while checking for file pattern")
+					log.Error().Err(err).Msg("unexpected error while checking for python file pattern")
 					continue
 				}
 				if match {
