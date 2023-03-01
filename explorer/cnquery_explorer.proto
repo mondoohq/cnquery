@@ -185,10 +185,12 @@ message QueryPackDocs {
 }
 
 message MqueryDocs {
+  reserved 3;
+
   string desc = 1;
   string audit = 2;
-  Remediation remediation = 3;
   repeated MqueryRef refs = 4;
+  Remediation remediation = 5;
 }
 
 message Remediation {
