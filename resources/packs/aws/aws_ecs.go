@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -51,6 +52,34 @@ func (e *mqlAwsEcs) GetContainers() ([]interface{}, error) {
 		}
 	}
 	return containers, nil
+}
+
+func (e *mqlAwsEcs) GetContainerInstances() ([]interface{}, error) {
+	obj, err := e.MotorRuntime.CreateResource("aws.ecs")
+	if err != nil {
+		return nil, err
+	}
+	ecs := obj.(AwsEcs)
+
+	clusters, err := ecs.Clusters()
+	if err != nil {
+		return nil, err
+	}
+	containerInstances := []interface{}{}
+
+	for i := range clusters {
+		ci, err := clusters[i].(AwsEcsCluster).ContainerInstances()
+		if err != nil {
+			return nil, err
+		}
+		containerInstances = append(containerInstances, ci...)
+
+	}
+	return containerInstances, nil
+}
+
+func (e *mqlAwsEcsInstance) GetEc2Instance() ([]interface{}, error) {
+	return nil, nil
 }
 
 func (ecs *mqlAwsEcs) GetClusters() ([]interface{}, error) {
@@ -175,6 +204,72 @@ func ecsTags(t []ecstypes.Tag) map[string]interface{} {
 	return res
 }
 
+func (ecs *mqlAwsEcsCluster) GetContainerInstances() ([]interface{}, error) {
+	provider, err := awsProvider(ecs.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	account, err := provider.Account()
+	if err != nil {
+		return nil, err
+	}
+	clustera, err := ecs.Arn()
+	if err != nil {
+		return nil, err
+	}
+	region := ""
+	if arn.IsARN(clustera) {
+		if val, err := arn.Parse(clustera); err == nil {
+			region = val.Region
+		}
+	}
+	svc := provider.Ecs(region)
+	ctx := context.Background()
+	res := []interface{}{}
+
+	params := &ecsservice.ListContainerInstancesInput{Cluster: &clustera}
+	containerInstances, err := svc.ListContainerInstances(ctx, params)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot list container instances") // no fail
+	} else if len(containerInstances.ContainerInstanceArns) > 0 {
+		containerInstancesDetail, err := svc.DescribeContainerInstances(ctx, &ecsservice.DescribeContainerInstancesInput{Cluster: &clustera, ContainerInstances: containerInstances.ContainerInstanceArns})
+		if err == nil {
+			for _, ci := range containerInstancesDetail.ContainerInstances {
+				// container instance assets
+				args := []interface{}{
+					"arn", core.ToString(ci.ContainerInstanceArn),
+					"agentConnected", ci.AgentConnected,
+					"id", core.ToString(ci.Ec2InstanceId),
+					"capacityProvider", core.ToString(ci.CapacityProviderName),
+					"region", region,
+				}
+				if strings.HasPrefix(core.ToString(ci.Ec2InstanceId), "i-") {
+					mqlInstanceResource, err := ecs.MotorRuntime.CreateResource("aws.ec2.instance",
+						"arn", fmt.Sprintf(ec2InstanceArnPattern, region, account, core.ToString(ci.Ec2InstanceId)),
+					)
+					if err == nil && mqlInstanceResource != nil {
+						mqlInstance := mqlInstanceResource.(AwsEc2Instance)
+						args = append(args, "ec2Instance", mqlInstance)
+					}
+				}
+
+				mqlEcsInstance, err := ecs.MotorRuntime.CreateResource("aws.ecs.instance", args...)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlEcsInstance)
+			}
+		} else {
+			log.Error().Err(err).Msg("could not gather ecs container instances")
+		}
+	}
+	return res, nil
+}
+
+func (s *mqlAwsEcsInstance) id() (string, error) {
+	return s.Arn()
+}
+
 func (s *mqlAwsEcsCluster) id() (string, error) {
 	return s.Arn()
 }
@@ -296,20 +391,30 @@ func (e *mqlAwsEcsTask) init(args *resources.Args) (*resources.Args, AwsEcsTask,
 	(*args)["connectivity"] = string(t.Connectivity)
 	(*args)["lastStatus"] = core.ToString(t.LastStatus)
 	(*args)["platformFamily"] = core.ToString(t.PlatformFamily)
+	(*args)["platformVersion"] = core.ToString(t.PlatformVersion)
 	(*args)["tags"] = ecsTags(t.Tags)
 
 	containers := []interface{}{}
 	pf, _ := e.PlatformFamily()
+	pv, _ := e.PlatformVersion()
+
 	for _, c := range t.Containers {
 		cmds := []interface{}{}
 		for i := range containerCommandMap[core.ToString(c.Name)] {
 			cmds = append(cmds, containerCommandMap[core.ToString(c.Name)][i])
 		}
+		publicIp := getContainerIP(ctx, provider, t.Attachments, c, region)
+		name := core.ToString(c.Name)
+		if publicIp != "" {
+			name = name + "-" + publicIp
+		}
+
 		mqlContainer, err := e.MotorRuntime.CreateResource("aws.ecs.container",
-			"name", core.ToString(c.Name),
+			"name", name,
 			"platformFamily", pf,
+			"platformVersion", pv,
 			"status", core.ToString(c.LastStatus),
-			"publicIp", getContainerIP(ctx, provider, t.Attachments, c, region),
+			"publicIp", publicIp,
 			"arn", core.ToString(c.ContainerArn),
 			"logDriver", containerLogDriverMap[core.ToString(c.Name)],
 			"image", core.ToString(c.Image),
@@ -318,6 +423,7 @@ func (e *mqlAwsEcsTask) init(args *resources.Args) (*resources.Args, AwsEcsTask,
 			"region", region,
 			"command", cmds,
 			"taskArn", core.ToString(t.TaskArn),
+			"runtimeId", core.ToString(c.RuntimeId),
 		)
 		if err != nil {
 			return args, nil, err

@@ -15,6 +15,8 @@ const (
 	EBSScanLabel        string = "mondoo.com/ebs-volume-scan"
 	PlatformLabel       string = "mondoo.com/platform"
 	StateLabel          string = "mondoo.com/instance-state"
+	ImageNameLabel      string = "mondoo.com/image-name"
+	ArnLabel            string = "arn"
 )
 
 func addAWSMetadataLabels(assetLabels map[string]string, instance basicInstanceInfo) map[string]string {
@@ -56,28 +58,4 @@ type basicInstanceInfo struct {
 	PlatformType  string
 	State         string
 	AccountId     string
-}
-
-func ssmInstanceToBasicInstanceInfo(instanceInfo ssmInstanceInfo) basicInstanceInfo {
-	return basicInstanceInfo{
-		InstanceId:    instanceInfo.instance.InstanceId,
-		IPAddress:     instanceInfo.instance.IPAddress,
-		Region:        instanceInfo.region,
-		SSMPingStatus: string(instanceInfo.instance.PingStatus),
-		PlatformType:  string(instanceInfo.instance.PlatformType),
-		AccountId:     instanceInfo.account,
-	}
-}
-
-func ec2InstanceToBasicInstanceInfo(instanceInfo instanceInfo) basicInstanceInfo {
-	return basicInstanceInfo{
-		InstanceId:    instanceInfo.instance.InstanceId,
-		IPAddress:     instanceInfo.instance.PublicIpAddress,
-		Region:        instanceInfo.region,
-		PublicDnsName: instanceInfo.instance.PublicDnsName,
-		ImageId:       instanceInfo.instance.ImageId,
-		PlatformType:  string(instanceInfo.instance.Platform),
-		State:         string(instanceInfo.instance.State.Name),
-		AccountId:     instanceInfo.account,
-	}
 }

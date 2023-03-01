@@ -130,9 +130,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		discoverFilter = tc.Discover.Filter
 	}
 
+	mqldiscovery, err := NewMQLAssetsDiscovery(provider)
+	if err != nil {
+		return nil, err
+	}
+
 	// resources as assets
 	if tc.IncludesOneOfDiscoveryTarget(ResourceDiscoveryTargets...) { // todo: add auto, all when policies are ready
-		assetList, err := GatherMQLObjects(provider, tc.Clone(), info.ID)
+		assetList, err := GatherMQLObjects(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +154,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	// discover ssm instances
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoverySSM, DiscoverySSMInstances) {
 		// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
-		s, err := NewSSMManagedInstancesDiscovery(provider.Config())
+		s, err := NewSSMManagedInstancesDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
 		}
@@ -171,7 +176,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 	// discover ec2 instances
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-		r, err := NewEc2Discovery(provider.Config())
+		r, err := NewEc2Discovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}
@@ -204,13 +209,13 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
-	// add all the detected ssm instanced and ec2 instances to the list
+	// add all the detected ssm instance and ec2 instances to the list
 	for k := range instancesPlatformIdsMap {
 		resolved = append(resolved, instancesPlatformIdsMap[k])
 	}
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECR) {
-		r, err := NewEcrDiscovery(provider.Config())
+		r, err := NewEcrDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ecr discovery")
 		}
@@ -231,11 +236,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECS) {
-		r, err := NewECSContainersDiscovery(provider.Config())
+		r, err := NewECSContainersDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ecs discovery")
 		}
-
 		assetList, err := r.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ecs clusters information")

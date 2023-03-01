@@ -523,6 +523,8 @@ aws.ecs {
   clusters() []aws.ecs.cluster
   // List of AWS ECS Containers
   containers() []aws.ecs.container
+  // List of AWS ECS Container Instances
+  containerInstances() []aws.ecs.instance
 }
 
 // Amazon ECS Cluster
@@ -545,6 +547,24 @@ private aws.ecs.cluster {
   status string
   // List of AWS ECS Task Definitions
   tasks() []aws.ecs.task
+  // List of AWS ECS Container Instances
+  containerInstances() []aws.ecs.instance
+}
+
+// AWS ECS Container Instance
+private aws.ecs.instance {
+  // True if agent is connected to ECS
+  agentConnected bool
+  // Id for the container instance
+  id string
+  // ARN for the container instance
+  arn string
+  // Capacity Provider associated with the container instance
+  capacityProvider string
+  // If container instance is EC2 instance, this is the EC2 instance resource
+  ec2Instance() aws.ec2.instance
+  // Region for the container instance
+  region string
 }
 
 // Amazon ECS Task
@@ -559,6 +579,8 @@ private aws.ecs.task {
   lastStatus string
   // Platform Family assigned to the ECS Task
   platformFamily string
+  // Platform Version assigned to the ECS Task
+  platformVersion string
   // User-defined tags associated with the ECS Task
   tags map[string]string
   // List of AWS ECS Containers
@@ -583,6 +605,8 @@ private aws.ecs.container {
   logDriver string
   // Platform Family associated with the ECS Container
   platformFamily string
+  // Platform Version assigned to the ECS Task
+  platformVersion string
   // Status of the ECS Container
   status string
   // Region where the ECS Container is located
@@ -591,6 +615,8 @@ private aws.ecs.container {
   command []string
   // ARN for the task used to create the container
   taskArn string
+  // Runtime id for the container
+  runtimeId string
 }
 
 // Amazon EMR
@@ -1241,6 +1267,8 @@ private aws.ecr.image {
   region string
   // ARN for the image
   arn string
+  // uri for the image repository
+  uri string
 }
 
 // AWS Database Migration Service (DMS)
