@@ -28,6 +28,8 @@ message QueryGroup {
 }
 
 message QueryPack {
+  reserved 20;
+
   // FIXME: DEPRECATED, remove in v9.0 vv and reserve number
   // This is replaced by the field "filters"
   map<string,Mquery> asset_filters = 7; // key == checksum
@@ -35,13 +37,9 @@ message QueryPack {
 
   // FIXME: DEPRECATED, remove in v9.0 vv and reserve number
   // This is replaced by the field "filters"
-  repeated string old_filters = 43;
+  repeated string deprecated_filters = 43;
   // ^^
-
-  // FIXME: DEPRECATED, remove in v9.0 vv and reserve number
-  bool is_public = 20;
-  // ^^
-
+  
   // user-defined UID, which is used to generate the MRN
   string uid = 36;
   // user-defined, only used during query ingest in case they have no context
