@@ -3,13 +3,13 @@ package printer
 import (
 	"fmt"
 	"math"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -199,28 +199,6 @@ func (print *Printer) array(typ types.Type, data []interface{}, codeID string, b
 	return res.String()
 }
 
-func mapKeys(m map[string]interface{}) []string {
-	keys := make([]string, len(m))
-	var i int
-	for k := range m {
-		keys[i] = k
-		i++
-	}
-	return keys
-}
-
-func isRefMap(v interface{}) bool {
-	smap, ok := v.(map[string]interface{})
-	if !ok {
-		return false
-	}
-	for _, vv := range smap {
-		_, ok = vv.(*llx.RawData)
-		return ok
-	}
-	return false
-}
-
 func (print *Printer) assessmentTemplate(template string, data []string) string {
 	res := template
 	for i := range data {
@@ -282,11 +260,9 @@ func (print *Printer) refMap(typ types.Type, data map[string]interface{}, codeID
 	var res strings.Builder
 	res.WriteString("{\n")
 
-	keys := mapKeys(data)
-	sort.Strings(keys)
-
 	// we need to separate entries that are unlabelled (eg part of an assertion)
 	labeledKeys := []string{}
+	keys := sortx.Keys(data)
 	for i := range keys {
 		if _, ok := bundle.Labels.Labels[keys[i]]; ok {
 			labeledKeys = append(labeledKeys, keys[i])
@@ -333,9 +309,7 @@ func (print *Printer) stringMap(typ types.Type, data map[string]interface{}, cod
 	var res strings.Builder
 	res.WriteString("{\n")
 
-	keys := mapKeys(data)
-	sort.Strings(keys)
-
+	keys := sortx.Keys(data)
 	for _, k := range keys {
 		v := data[k]
 		val := print.Data(typ.Child(), v, k, bundle, indent+"  ")
@@ -397,9 +371,7 @@ func (print *Printer) dict(typ types.Type, raw interface{}, codeID string, bundl
 		var res strings.Builder
 		res.WriteString("{\n")
 
-		keys := mapKeys(data)
-		sort.Strings(keys)
-
+		keys := sortx.Keys(data)
 		for _, k := range keys {
 			s := print.dict(typ, data[k], "", bundle, indent+"  ")
 			res.WriteString(fmt.Sprintf(indent+"  %s: %s\n", k, s))

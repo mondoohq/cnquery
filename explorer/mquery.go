@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources/packs/all/info"
+	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 	"google.golang.org/protobuf/proto"
 )
@@ -97,14 +98,7 @@ func (m *Mquery) RefreshChecksum() error {
 
 	// TODO: filters don't support properties yet
 	if m.Filters != nil {
-		keys := make([]string, len(m.Filters.Items))
-		i := 0
-		for k := range m.Filters.Items {
-			keys[i] = k
-			i++
-		}
-		sort.Strings(keys)
-
+		keys := sortx.Keys(m.Filters.Items)
 		for _, k := range keys {
 			query := m.Filters.Items[k]
 			if query.Checksum == "" {
@@ -141,13 +135,7 @@ func (m *Mquery) RefreshChecksum() error {
 		}
 	}
 
-	keys := make([]string, len(m.Tags))
-	i := 0
-	for k := range m.Tags {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
+	keys := sortx.Keys(m.Tags)
 	for _, k := range keys {
 		c = c.
 			Add(k).

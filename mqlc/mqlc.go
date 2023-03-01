@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
+	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -284,16 +285,9 @@ func (c *compiler) compileBlock(expressions []*parser.Expression, typ types.Type
 				fields = availableGlobFields(c, typ, true)
 			}
 
-			fieldNames := make([]string, len(fields))
-			var i int
-			for k := range fields {
-				fieldNames[i] = k
-				i++
-			}
-			sort.Strings(fieldNames)
-
 			expressions = []*parser.Expression{}
-			for _, v := range fieldNames {
+			keys := sortx.Keys(fields)
+			for _, v := range keys {
 				name := v
 				expressions = append(expressions, &parser.Expression{
 					Operand: &parser.Operand{

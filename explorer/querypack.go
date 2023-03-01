@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/checksums"
+	"go.mondoo.com/cnquery/sortx"
 )
 
 func (p *QueryPack) InvalidateAllChecksums() {
@@ -34,7 +35,6 @@ func (p *QueryPack) UpdateChecksums() error {
 
 	// Note: this relies on the fact that the bundle was compiled before
 
-	var i int
 	executionChecksum := checksums.New
 	contentChecksum := checksums.New
 
@@ -52,14 +52,8 @@ func (p *QueryPack) UpdateChecksums() error {
 	executionChecksum = executionChecksum.Add(p.Mrn)
 
 	// tags
-	arr := make([]string, len(p.Tags))
-	i = 0
-	for k := range p.Tags {
-		arr[i] = k
-		i++
-	}
-	sort.Strings(arr)
-	for _, k := range arr {
+	keys := sortx.Keys(p.Tags)
+	for _, k := range keys {
 		contentChecksum = contentChecksum.Add(k).Add(p.Tags[k])
 	}
 
