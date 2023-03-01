@@ -59,17 +59,17 @@ func getTitleForPlatformName(name string) string {
 }
 
 func (p *Provider) PlatformInfo() (*platform.Platform, error) {
-	// TODO: that's a hack, figure out a better way
-	if p.platformOverride != "" && p.platformOverride != "azure" {
-		return &platform.Platform{
-			Name:    p.platformOverride,
-			Title:   getTitleForPlatformName(p.platformOverride),
-			Kind:    providers.Kind_KIND_AZURE_OBJECT,
-			Runtime: providers.RUNTIME_AZ,
-		}, nil
-	}
 	switch p.assetType {
 	case azure:
+		// TODO: that's a hack, figure out a better way
+		if p.platformOverride != "" && p.platformOverride != "azure" {
+			return &platform.Platform{
+				Name:    p.platformOverride,
+				Title:   getTitleForPlatformName(p.platformOverride),
+				Kind:    providers.Kind_KIND_AZURE_OBJECT,
+				Runtime: providers.RUNTIME_AZ,
+			}, nil
+		}
 		return &platform.Platform{
 			Name:    "azure",
 			Title:   "Microsoft Azure",
