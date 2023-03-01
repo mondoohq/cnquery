@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"go.mondoo.com/cnquery/motor"
@@ -38,6 +39,9 @@ func ToBool(b *bool) bool {
 func SliceToInterfaceSlice[T any](ss []T) []interface{} {
 	ssI := make([]interface{}, 0, len(ss))
 	for _, s := range ss {
+		if v := reflect.ValueOf(s); v.Kind() == reflect.Ptr && v.IsNil() {
+			continue
+		}
 		ssI = append(ssI, s)
 	}
 	return ssI
