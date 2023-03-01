@@ -32,6 +32,11 @@ var pythonDirectoriesDarwin = []string{
 	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions",
 }
 
+var pythonDirectoriesWindows = []string{
+	// this is case-sensitive even on Windows
+	"C:/Python*",
+}
+
 func init() {
 	Init(Registry)
 }
@@ -68,6 +73,7 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 	searchFunctions := []func(*afero.Afero) ([]pythonPackageDetails, error){
 		linuxSearch,
 		darwinSearch,
+		windowsSearch,
 	}
 
 	for _, sFunc := range searchFunctions {
@@ -244,6 +250,39 @@ func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 			}
 		}
 	}
+	return allResults, nil
+}
+
+func windowsSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
+	allResults := []pythonPackageDetails{}
+
+	for _, pyPath := range pythonDirectoriesWindows {
+		parentDir := filepath.Dir(pyPath)
+
+		files, err := afs.ReadDir(parentDir)
+		if err != nil {
+			log.Warn().Err(err).Str("dir", parentDir).Msg("error walking through directory")
+			continue
+		}
+		for _, dEntry := range files {
+			fmt.Printf("GOT: %+v\n", dEntry.Name())
+			base := filepath.Base(pyPath)
+			matched, err := filepath.Match(base, dEntry.Name())
+			if err != nil {
+				return nil, err
+			}
+			if matched {
+				matchedPath := filepath.Join(parentDir, dEntry.Name())
+				log.Debug().Str("filepath", matchedPath).Msg("found matching python path")
+				// for Windows, our site-packages directory would be found under
+				// "Lib/site-packages", so add the "Lib" dir to the start of our search.
+				matchedPath = filepath.Join(matchedPath, "Lib")
+				results := gatherFoundPackages(afs, matchedPath)
+				allResults = append(allResults, results...)
+			}
+		}
+	}
+
 	return allResults, nil
 }
 
