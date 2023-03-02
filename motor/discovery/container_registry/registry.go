@@ -136,6 +136,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 		return nil, handleUnauthorizedError(err, repo.Name())
 	}
 
+	foundDigests := map[string]struct{}{}
 	for i := range tags {
 		repoWithTag := repo.Name() + ":" + tags[i]
 
@@ -148,6 +149,11 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 		if err != nil {
 			return nil, err
 		}
+		if _, ok := foundDigests[a.PlatformIds[0]]; ok {
+			// skip duplicate digests
+			continue
+		}
+		foundDigests[a.PlatformIds[0]] = struct{}{}
 		assets = append(assets, a)
 	}
 	return assets, nil
