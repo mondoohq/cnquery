@@ -160,6 +160,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 		s.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
 		s.profile = tc.Options["profile"]
+		s.PassInLabels = root.Labels
 		assetList, err := s.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
@@ -176,19 +177,20 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 	// discover ec2 instances
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-		r, err := NewEc2Discovery(mqldiscovery, tc.Clone(), info.ID)
+		e, err := NewEc2Discovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
 		}
 
-		r.Insecure = tc.Insecure
-		r.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
-		r.profile = tc.Options["profile"]
-		assetList, err := r.List()
+		e.Insecure = tc.Insecure
+		e.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
+		e.profile = tc.Options["profile"]
+		e.PassInLabels = root.Labels
+		assetList, err := e.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ec2 instances")
 		}
-		log.Debug().Int("instances", len(assetList)).Bool("insecure", r.Insecure).Msg("completed instance search")
+		log.Debug().Int("instances", len(assetList)).Bool("insecure", e.Insecure).Msg("completed instance search")
 		for i := range assetList {
 			a := assetList[i]
 			if resolvedRoot != nil {
@@ -215,13 +217,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECR) {
-		r, err := NewEcrDiscovery(mqldiscovery, tc.Clone(), info.ID)
+		i, err := NewEcrDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ecr discovery")
 		}
 
-		r.profile = tc.Options["profile"]
-		assetList, err := r.List()
+		i.profile = tc.Options["profile"]
+		i.PassInLabels = root.Labels
+		assetList, err := i.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ecr repositories information")
 		}
@@ -236,11 +239,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECS) {
-		r, err := NewECSContainersDiscovery(mqldiscovery, tc.Clone(), info.ID)
+		c, err := NewECSContainersDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not initialize aws ecs discovery")
 		}
-		assetList, err := r.List()
+		c.PassInLabels = root.Labels
+		assetList, err := c.List()
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fetch ecs clusters information")
 		}

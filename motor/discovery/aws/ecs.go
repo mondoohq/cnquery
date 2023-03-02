@@ -24,6 +24,7 @@ type ECSContainers struct {
 	mqlDiscovery   *MqlDiscovery
 	providerConfig *providers.Config
 	account        string
+	PassInLabels   map[string]string
 }
 
 func (ecs *ECSContainers) Name() string {
@@ -37,7 +38,7 @@ func (ecs *ECSContainers) List() ([]*asset.Asset, error) {
 	}
 	assetsWithConnection := []*asset.Asset{}
 	for i := range ecsContainers {
-		if a := addConnectionInfoToECSContainerAsset(ecsContainers[i]); a != nil {
+		if a := ecs.addConnectionInfoToECSContainerAsset(ecsContainers[i]); a != nil {
 			assetsWithConnection = append(assetsWithConnection, a)
 		}
 	}
@@ -93,10 +94,15 @@ func (ecs *ECSContainers) addConnectionInfoToECSContainerInstanceAsset(asset *as
 			"region": asset.Labels[RegionLabel],
 		},
 	}}
+	if len(ecs.PassInLabels) > 0 {
+		for k, v := range ecs.PassInLabels {
+			asset.Labels[k] = v
+		}
+	}
 	return asset
 }
 
-func addConnectionInfoToECSContainerAsset(asset *asset.Asset) *asset.Asset {
+func (ecs *ECSContainers) addConnectionInfoToECSContainerAsset(asset *asset.Asset) *asset.Asset {
 	runtimeId := asset.Labels[RuntimeIdLabel]
 	if runtimeId == "" {
 		return nil
@@ -134,6 +140,12 @@ func addConnectionInfoToECSContainerAsset(asset *asset.Asset) *asset.Asset {
 		}}
 	} else {
 		log.Warn().Str("asset", asset.Name).Msg("no public ip address found")
+	}
+
+	if len(ecs.PassInLabels) > 0 {
+		for k, v := range ecs.PassInLabels {
+			asset.Labels[k] = v
+		}
 	}
 
 	return asset

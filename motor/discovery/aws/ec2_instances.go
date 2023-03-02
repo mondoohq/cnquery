@@ -26,6 +26,7 @@ type Ec2Instances struct {
 	mqlDiscovery   *MqlDiscovery
 	providerConfig *providers.Config
 	account        string
+	PassInLabels   map[string]string
 }
 
 type Ec2InstanceState int
@@ -94,6 +95,11 @@ func (ec2i *Ec2Instances) addConnectionInfoToEc2Asset(instance *asset.Asset) *as
 		}}
 	} else {
 		log.Warn().Str("asset", asset.Name).Msg("no public ip address found")
+	}
+	if len(ec2i.PassInLabels) > 0 {
+		for k, v := range ec2i.PassInLabels {
+			asset.Labels[k] = v
+		}
 	}
 	return asset
 }
