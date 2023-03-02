@@ -27,6 +27,40 @@ message QueryGroup {
   int64 modified = 33;
 }
 
+message DeprecatedV7_Bundle {
+  string owner_mrn = 1;
+  repeated DeprecatedV7_QueryPack packs = 2;
+}
+
+message DeprecatedV7_QueryPack {
+  // user-defined UID, which is used to generate the MRN
+  string uid = 36;
+  // MRN to universally identify this query.
+  // UIDs are local to QueryPacks, MRNs are global
+  string mrn = 1;
+
+  string name = 2;
+  string version = 3;
+  string owner_mrn = 4; // auto-generated
+
+  repeated Mquery queries = 6;
+  map<string,Mquery> asset_filters = 7; // key == checksum, internal
+  repeated string filters = 43; // user-defined
+  string context = 8;
+
+  reserved 20;
+  string license = 21;
+  QueryPackDocs docs = 22;
+
+  repeated Author authors = 30;
+  int64 created = 32;
+  int64 modified = 33;
+  map<string,string> tags = 34;
+
+  string local_content_checksum = 23;
+  string local_execution_checksum = 24;
+}
+
 message QueryPack {
   reserved 20;
 
