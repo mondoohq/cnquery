@@ -400,6 +400,41 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			}
 		}
 
+		var masterAuthorizedNetworksCfg map[string]interface{}
+		if c.MasterAuthorizedNetworksConfig != nil {
+			cidrBlocks := make([]map[string]interface{}, 0, len(c.MasterAuthorizedNetworksConfig.CidrBlocks))
+			for _, cidrBlock := range c.MasterAuthorizedNetworksConfig.CidrBlocks {
+				cidrBlocks = append(cidrBlocks, map[string]interface{}{
+					"displayName": cidrBlock.DisplayName,
+					"cidrBlock":   cidrBlock.CidrBlock,
+				})
+			}
+			masterAuthorizedNetworksCfg = map[string]interface{}{
+				"enabled":    c.MasterAuthorizedNetworksConfig.Enabled,
+				"cidrBlocks": cidrBlocks,
+			}
+		}
+
+		var privateClusterCfg map[string]interface{}
+		if c.PrivateClusterConfig != nil {
+			var masterGlobalAccessCfg map[string]interface{}
+			if c.PrivateClusterConfig.MasterGlobalAccessConfig != nil {
+				masterGlobalAccessCfg = map[string]interface{}{
+					"enabled": c.PrivateClusterConfig.MasterGlobalAccessConfig.Enabled,
+				}
+			}
+
+			privateClusterCfg = map[string]interface{}{
+				"enablePrivateNodes":       c.PrivateClusterConfig.EnablePrivateNodes,
+				"enablePrivateEndpoint":    c.PrivateClusterConfig.EnablePrivateEndpoint,
+				"masterIpv4CidrBlock":      c.PrivateClusterConfig.MasterIpv4CidrBlock,
+				"privateEndpoint":          c.PrivateClusterConfig.PrivateEndpoint,
+				"publicEndpoint":           c.PrivateClusterConfig.PublicEndpoint,
+				"peeringName":              c.PrivateClusterConfig.PeeringName,
+				"masterGlobalAccessConfig": masterGlobalAccessCfg,
+			}
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -430,6 +465,8 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"binaryAuthorization", binAuth,
 			"legacyAbac", legacyAbac,
 			"masterAuth", masterAuth,
+			"masterAuthorizedNetworksConfig", masterAuthorizedNetworksCfg,
+			"privateClusterConfig", privateClusterCfg,
 		)
 		if err != nil {
 			return nil, err
