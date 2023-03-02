@@ -140,7 +140,7 @@ func (g *mqlGcpProject) GetIamPolicy() ([]interface{}, error) {
 		return nil, err
 	}
 
-	policy, err := svc.Projects.GetIamPolicy(projectId, &cloudresourcemanager.GetIamPolicyRequest{}).Do()
+	policy, err := svc.Projects.GetIamPolicy(fmt.Sprintf("projects/%s", projectId), &cloudresourcemanager.GetIamPolicyRequest{}).Do()
 	if err != nil {
 		return nil, err
 	}
