@@ -1460,6 +1460,10 @@ private gcp.project.gkeService.cluster @defaults("name") {
   legacyAbac dict
   // Authentication information for accessing the master endpoint
   masterAuth dict
+  // Master authorized networks configuration
+  masterAuthorizedNetworksConfig dict
+  // Private cluster configuration
+  privateClusterConfig dict
 }
 
 // GKE Cluster Addons Config
