@@ -206,12 +206,12 @@ message Impact {
     DATA_ONLY = 4;
   }
 
-  // Value is between 0 to 100 (most impactful). -1 for unset
-  int32 value = 1;
+  // Value is between 0 to 100 (most impactful).
+  ImpactValue value = 1;
   // The scoring system to apply for evaluating multiple results
   ScoringSystem scoring = 2;
-  // The weight of this query. -1 for unset
-  int32 weight = 3;
+  // The weight of this query.
+  WeightValue weight = 3;
 }
 
 message QueryPackDocs {
@@ -446,3 +446,10 @@ message SynchronizeAssetsResp {
   map<string, SynchronizeAssetsRespAssetDetail> details = 1;
 }
 
+message ImpactValue {
+  int32 value = 1;
+}
+
+message WeightValue {
+  int32 value = 1;
+}
