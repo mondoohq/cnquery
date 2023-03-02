@@ -10,6 +10,7 @@ python {
 }
 
 python.package {
+  init(path? string)
   id string
   name string
   file core.file
