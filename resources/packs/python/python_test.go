@@ -28,6 +28,15 @@ func TestResource_Python(t *testing.T) {
 		require.True(t, ok, "type assertion failed")
 		assert.Equal(t, 2, len(values), "expected two parsed packages")
 	})
+
+	t.Run("parse child packages", func(t *testing.T) {
+		res := x.TestQuery(t, "python.children")
+		assert.NotEmpty(t, res)
+		require.Empty(t, res[0].Result().Error)
+		values, ok := res[0].Data.Value.([]interface{})
+		require.True(t, ok, "type assertion failed")
+		assert.Equal(t, 1, len(values), "expected a single child/leaf package")
+	})
 }
 
 func TestResource_PythonPackage(t *testing.T) {

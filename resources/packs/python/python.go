@@ -71,7 +71,7 @@ func (k *mqlPython) id() (string, error) {
 	return "python", nil
 }
 
-func (k *mqlPython) GetPackages() ([]interface{}, error) {
+func (k *mqlPython) getAllPackages() ([]pythonPackageDetails, error) {
 	allResults := []pythonPackageDetails{}
 
 	provider, ok := k.MotorRuntime.Motor.Provider.(motoros.OperatingSystemProvider)
@@ -102,6 +102,15 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 			}
 			allResults = append(allResults, results...)
 		}
+	}
+
+	return allResults, nil
+}
+
+func (k *mqlPython) GetPackages() ([]interface{}, error) {
+	allResults, err := k.getAllPackages()
+	if err != nil {
+		return nil, err
 	}
 
 	resp := []interface{}{}
@@ -141,7 +150,26 @@ func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonP
 }
 
 func (k *mqlPython) GetChildren() ([]interface{}, error) {
-	return nil, nil
+	allResults, err := k.getAllPackages()
+	if err != nil {
+		return nil, err
+	}
+
+	resp := []interface{}{}
+
+	for _, result := range allResults {
+		if !result.isLeaf {
+			continue
+		}
+
+		r, err := pythonPackageDetailsToResource(k.MotorRuntime, result)
+		if err != nil {
+			continue
+		}
+		resp = append(resp, r)
+	}
+
+	return resp, nil
 }
 
 type pythonPackageDetails struct {
@@ -151,6 +179,7 @@ type pythonPackageDetails struct {
 	author  string
 	summary string
 	version string
+	isLeaf  bool
 }
 
 func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []pythonPackageDetails) {
@@ -165,6 +194,10 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 		// handle the case where the directory entry is
 		// a .egg-type file with metadata directly available
 		packagePayload := dEntry.Name()
+
+		// requestedPackage just marks whether we found the empty REQUESTED file
+		// to indicate a child/leaf package
+		requestedPackage := false
 
 		// in the event the directory entry is itself another directory
 		// go into each directory looking for our parsable payload
@@ -183,6 +216,11 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 					// use the METADATA / PKG-INFO file as our source of python package info
 					packagePayload = filepath.Join(dEntry.Name(), packageFile.Name())
 					foundMeta = true
+				}
+				if packageFile.Name() == "REQUESTED" {
+					requestedPackage = true
+				}
+				if foundMeta && requestedPackage {
 					break
 				}
 			}
@@ -199,6 +237,7 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 		if err != nil {
 			continue
 		}
+		ppd.isLeaf = requestedPackage
 
 		allResults = append(allResults, *ppd)
 	}
