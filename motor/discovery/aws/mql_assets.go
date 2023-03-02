@@ -53,12 +53,8 @@ func GetList[T any](md *MqlDiscovery, query string) ([]T, error) {
 	return out, nil
 }
 
-func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, account string) ([]*asset.Asset, error) {
+func GatherMQLObjects(m *MqlDiscovery, tc *providers.Config, account string) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
-	m, err := NewMQLAssetsDiscovery(provider)
-	if err != nil {
-		return nil, err
-	}
 
 	// todo: when the dedup story is in we should turn these on with the others
 	if tc.IncludesOneOfDiscoveryTarget(DiscoveryECSContainersAPI) {
@@ -76,14 +72,14 @@ func GatherMQLObjects(provider *awsprovider.Provider, tc *providers.Config, acco
 		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(DiscoveryEC2InstanceAPI) {
-		if a, err := ec2Instances(m, account, tc); err == nil {
+		if a, err := ec2Instances(m, account, tc, ""); err == nil {
 			assets = append(assets, a...)
 		} else {
 			log.Error().Err(err).Msg("unable to query ec2 instances")
 		}
 	}
 	if tc.IncludesOneOfDiscoveryTarget(DiscoverySSMInstanceAPI) {
-		if a, err := ssmInstances(m, account, tc); err == nil {
+		if a, err := ssmInstances(m, account, tc, ""); err == nil {
 			assets = append(assets, a...)
 		} else {
 			log.Error().Err(err).Msg("unable to query ssm instances")

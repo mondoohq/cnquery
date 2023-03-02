@@ -145,6 +145,10 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse public val")
 	}
+	uri, err := e.Uri()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to parse uri val")
+	}
 	at, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, err
@@ -172,6 +176,7 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 				"repoName", name,
 				"region", region,
 				"arn", ecrImageArn(ImageInfo{Region: region, RegistryId: core.ToString(image.RegistryId), RepoName: name, Digest: core.ToString(image.ImageDigest)}),
+				"uri", uri,
 			)
 			if err != nil {
 				return nil, err
@@ -198,6 +203,7 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 				"repoName", name,
 				"region", region,
 				"arn", ecrImageArn(ImageInfo{Region: region, RegistryId: core.ToString(image.RegistryId), RepoName: name, Digest: core.ToString(image.ImageDigest)}),
+				"uri", uri,
 			)
 			if err != nil {
 				return nil, err

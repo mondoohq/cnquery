@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -68,6 +70,9 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 	case "ecs":
 		if awsObject.objectType == "container" {
 			return awsObjectPlatformInfo{title: "AWS ECS Container", platform: "aws-ecs-container"}, nil
+		}
+		if awsObject.objectType == "instance" {
+			return awsObjectPlatformInfo{title: "AWS ECS Container Instance", platform: "aws-ecs-instance"}, nil
 		}
 	case "efs":
 		if awsObject.objectType == "filesystem" {
@@ -487,14 +492,26 @@ func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) ([]*as
 		PublicIp          string
 		Image             string
 		Region            string
+		RuntimeId         string
+		Status            string
+		ClusterName       string
 	}
-	containers, err := GetList[data](m, "return aws.ecs.containers { arn taskDefinitionArn name publicIp image region }")
+	containers, err := GetList[data](m, "return aws.ecs.containers { arn taskDefinitionArn name publicIp image region runtimeId status platformFamily platformVersion }")
 	if err != nil {
 		return nil, err
 	}
 	for i := range containers {
 		c := containers[i]
-		tags := map[string]string{common.IPLabel: c.PublicIp, "image": c.Image, "taskDefinitionArn": c.TaskDefinitionArn}
+		tags := map[string]string{
+			common.IPLabel:         c.PublicIp,
+			ImageLabel:             c.Image,
+			TaskDefinitionArnLabel: c.TaskDefinitionArn,
+			RuntimeIdLabel:         c.RuntimeId,
+			StateLabel:             c.Status,
+			RegionLabel:            c.Region,
+			ArnLabel:               c.Arn,
+			ClusterNameLabel:       c.ClusterName,
+		}
 
 		assets = append(assets, MqlObjectToAsset(account,
 			mqlObject{
@@ -508,6 +525,56 @@ func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) ([]*as
 	return assets, nil
 }
 
+func ecsContainerInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+	type data struct {
+		Arn              string
+		AgentConnected   bool
+		CapacityProvider string
+		Id               string
+		Region           string
+		Ec2Instance      map[string]interface{}
+	}
+
+	instances, err := GetList[data](m, "return aws.ecs.containerInstances { arn region agentConnected capacityProvider id ec2Instance { arn instanceId tags region state image { name } } }")
+	if err != nil {
+		return nil, err
+	}
+	for i := range instances {
+		inst := instances[i]
+		name := inst.Id
+		tags := map[string]string{AgentConnectedLabel: strconv.FormatBool(inst.AgentConnected), CapacityProviderLabel: inst.CapacityProvider}
+
+		ec2Instance := inst.Ec2Instance
+
+		if ec2Instance != nil {
+			if ec2Instance["tags"] != nil {
+				if val, ok := ec2Instance["tags"].(map[string]interface{})[AWSNameLabel]; ok {
+					name = val.(string)
+				}
+			}
+			if ec2Instance["state"] != nil {
+				tags[StateLabel] = ec2Instance["state"].(string)
+			}
+			if ec2Instance["image"] != nil {
+				if val, ok := ec2Instance["tags"].(map[string]interface{})[ImageNameLabel]; ok {
+					tags[ImageNameLabel] = val.(string)
+				}
+			}
+		}
+		assets = append(assets, MqlObjectToAsset(account,
+			mqlObject{
+				name: name, labels: tags,
+				awsObject: awsObject{
+					account: account, region: inst.Region, arn: inst.Arn,
+					id: inst.Id, service: "ecs", objectType: "instance",
+				},
+			}, tc))
+	}
+
+	return assets, nil
+}
+
 func ecrImages(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	type data struct {
@@ -516,8 +583,9 @@ func ecrImages(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.
 		Tags     []string
 		Digest   string
 		RepoName string
+		Uri      string
 	}
-	images, err := GetList[data](m, "return aws.ecr.images { digest repoName arn tags region }")
+	images, err := GetList[data](m, "return aws.ecr.images { digest repoName arn tags region uri }")
 	if err != nil {
 		return nil, err
 	}
@@ -527,6 +595,8 @@ func ecrImages(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.
 		for _, t := range ecri.Tags {
 			tags["tag"] = t
 		}
+		tags[DigestLabel] = ecri.Digest
+		tags[RepoUrlLabel] = ecri.Uri
 
 		assets = append(assets, MqlObjectToAsset(account,
 			mqlObject{
@@ -540,23 +610,37 @@ func ecrImages(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.
 	return assets, nil
 }
 
-func ec2Instances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+func ec2Instances(m *MqlDiscovery, account string, tc *providers.Config, whereFilter string) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	type data struct {
 		Arn        string
 		Region     string
 		Tags       map[string]string
 		InstanceId string
+		State      string
+		Name       string
+		Image      map[string]interface{}
+		PublicIp   string
 	}
-	instances, err := GetList[data](m, "return aws.ec2.instances { arn instanceId tags region }")
+	query := "return aws.ec2.instances { arn instanceId tags region state publicIp image { name } }"
+	if len(whereFilter) > 0 {
+		query = fmt.Sprintf("return aws.ec2.instances.where(%s) { arn instanceId tags region state publicIp image { name } }", whereFilter)
+	}
+	instances, err := GetList[data](m, query)
 	if err != nil {
 		return nil, err
 	}
 	for i := range instances {
 		inst := instances[i]
 		name := inst.InstanceId
-		if val, ok := inst.Tags["Name"]; ok {
+		if val, ok := inst.Tags[AWSNameLabel]; ok {
 			name = val
+		}
+		inst.Tags[common.IPLabel] = inst.PublicIp
+		inst.Tags[InstanceLabel] = inst.InstanceId
+		inst.Tags[StateLabel] = inst.State
+		if inst.Image != nil {
+			inst.Tags[ImageNameLabel] = inst.Image["name"].(string)
 		}
 
 		assets = append(assets, MqlObjectToAsset(account,
@@ -571,7 +655,7 @@ func ec2Instances(m *MqlDiscovery, account string, tc *providers.Config) ([]*ass
 	return assets, nil
 }
 
-func ssmInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {
+func ssmInstances(m *MqlDiscovery, account string, tc *providers.Config, whereFilter string) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	type data struct {
 		Arn          string
@@ -580,15 +664,22 @@ func ssmInstances(m *MqlDiscovery, account string, tc *providers.Config) ([]*ass
 		PlatformName string
 		PingStatus   string
 		Tags         map[string]string
+		IPAddress    string
 	}
-	instances, err := GetList[data](m, "return aws.ssm.instances { arn instanceId pingStatus platformName region tags }")
+	query := "return aws.ssm.instances { arn instanceId pingStatus platformName region tags ipAddress }"
+	if len(whereFilter) > 0 {
+		query = fmt.Sprintf("return aws.ssm.instances.where(%s) { arn instanceId pingStatus platformName region tags ipAddress }", whereFilter)
+	}
+	instances, err := GetList[data](m, query)
 	if err != nil {
 		return nil, err
 	}
 	for i := range instances {
 		inst := instances[i]
-		inst.Tags["pingStatus"] = inst.PingStatus
-		inst.Tags["platformName"] = inst.PlatformName
+		inst.Tags[SSMPingLabel] = inst.PingStatus
+		inst.Tags[PlatformLabel] = inst.PlatformName
+		inst.Tags[InstanceLabel] = inst.InstanceId
+		inst.Tags[common.IPLabel] = inst.IPAddress
 		name := inst.InstanceId
 		if val, ok := inst.Tags["Name"]; ok {
 			name = val
