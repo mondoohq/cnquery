@@ -12,29 +12,41 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
-	//"go.mondoo.com/cnquery/resources/packs/core"
-
 	motoros "go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
 	"go.mondoo.com/cnquery/resources/packs/python/info"
 )
 
 var Registry = info.Registry
 
-var pythonDirectoriesUnix = []string{
-	"/usr/local/lib/python*",
-	"/usr/lib/python*",
-	"/opt/homebrew/lib/python*",
+type pythonDirectory struct {
+	path   string
+	addLib bool
+}
+
+var pythonDirectories = []pythonDirectory{
+	{
+		path: "/usr/local/lib/python*",
+	},
+	{
+		path: "/usr/lib/python*",
+	},
+	{
+		path: "/opt/homebrew/lib/python*",
+	},
+	{
+		// surprisingly, this is handled in a case-sensitive way in go (the filepath.Match() glob/pattern matching)
+		path: "C:/Python*",
+		// true because in Windows the 'site-packages' dir lives in a path like:
+		// C:\Python3.11\Lib\site-packages
+		addLib: true,
+	},
 }
 
 var pythonDirectoriesDarwin = []string{
 	"/System/Library/Frameworks/Python.framework/Versions",
 	"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions",
-}
-
-var pythonDirectoriesWindows = []string{
-	// this is case-sensitive even on Windows
-	"C:/Python*",
 }
 
 func init() {
@@ -43,17 +55,15 @@ func init() {
 
 func (k *mqlPython) init(args *resources.Args) (*resources.Args, Python, error) {
 	if x, ok := (*args)["path"]; ok {
-		path, ok := x.(string)
+		_, ok := x.(string)
 		if !ok {
 			return nil, nil, errors.New("Wrong type for 'path' in python initialization, it must be a string")
 		}
-
-		f, err := k.MotorRuntime.CreateResource("file", "path", path)
-		if err != nil {
-			return nil, nil, err
-		}
-		(*args)["file"] = f
+	} else {
+		// empty path means search through default locations
+		(*args)["path"] = ""
 	}
+
 	return args, nil, nil
 }
 
@@ -70,19 +80,28 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 	}
 	afs := &afero.Afero{Fs: provider.FS()}
 
-	searchFunctions := []func(*afero.Afero) ([]pythonPackageDetails, error){
-		linuxSearch,
-		darwinSearch,
-		windowsSearch,
+	pyPath, err := k.Path()
+	if err != nil {
+		return nil, err
 	}
-
-	for _, sFunc := range searchFunctions {
-		results, err := sFunc(afs)
-		if err != nil {
-			log.Error().Err(err).Msg("error while searching for python packages")
-			return nil, err
+	if pyPath != "" {
+		// only search the specific path provided (if it was provided)
+		allResults = gatherPackages(afs, pyPath)
+	} else {
+		// search through default locations
+		searchFunctions := []func(*afero.Afero) ([]pythonPackageDetails, error){
+			genericSearch,
+			darwinSearch,
 		}
-		allResults = append(allResults, results...)
+
+		for _, sFunc := range searchFunctions {
+			results, err := sFunc(afs)
+			if err != nil {
+				log.Error().Err(err).Msg("error while searching for python packages")
+				return nil, err
+			}
+			allResults = append(allResults, results...)
+		}
 	}
 
 	resp := []interface{}{}
@@ -99,14 +118,20 @@ func (k *mqlPython) GetPackages() ([]interface{}, error) {
 }
 
 func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonPackageDetails) (resources.ResourceType, error) {
+	f, err := motorRuntime.CreateResource("file", "path", ppd.file)
+	if err != nil {
+		log.Error().Err(err).Msg("error while creating file resource for python package resource")
+		return nil, err
+	}
+
 	r, err := motorRuntime.CreateResource("python.package",
-		"id", ppd.path,
+		"id", ppd.file,
 		"name", ppd.name,
 		"version", ppd.version,
 		"author", ppd.author,
 		"summary", ppd.summary,
 		"license", ppd.license,
-		"path", ppd.path,
+		"file", f.(core.File),
 	)
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
@@ -121,67 +146,73 @@ func (k *mqlPython) GetChildren() ([]interface{}, error) {
 
 type pythonPackageDetails struct {
 	name    string
-	path    string
+	file    string
 	license string
 	author  string
 	summary string
 	version string
 }
 
-func gatherFoundPackages(afs *afero.Afero, path string) []pythonPackageDetails {
+func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []pythonPackageDetails) {
+	fileList, err := afs.ReadDir(pythonPackagePath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Warn().Err(err).Str("dir", pythonPackagePath).Msg("unable to open directory")
+		}
+		return
+	}
+	for _, dEntry := range fileList {
+		// handle the case where the directory entry is
+		// a .egg-type file with metadata directly available
+		packagePayload := dEntry.Name()
+
+		// in the event the directory entry is itself another directory
+		// go into each directory looking for our parsable payload
+		// (ie. METADATA and PKG-INFO files)
+		if dEntry.IsDir() {
+			pythonPackageDir := filepath.Join(pythonPackagePath, packagePayload)
+			packageDirFiles, err := afs.ReadDir(pythonPackageDir)
+			if err != nil {
+				log.Warn().Err(err).Str("dir", pythonPackageDir).Msg("error while walking through files in directory")
+				return
+			}
+
+			foundMeta := false
+			for _, packageFile := range packageDirFiles {
+				if packageFile.Name() == "METADATA" || packageFile.Name() == "PKG-INFO" {
+					// use the METADATA / PKG-INFO file as our source of python package info
+					packagePayload = filepath.Join(dEntry.Name(), packageFile.Name())
+					foundMeta = true
+					break
+				}
+			}
+			if !foundMeta {
+				// nothing to process (happens when we've traversed a directory
+				// containing the actual python source files)
+				continue
+			}
+
+		}
+
+		pythonPackageFilepath := filepath.Join(pythonPackagePath, packagePayload)
+		ppd, err := parseMIME(afs, pythonPackageFilepath)
+		if err != nil {
+			continue
+		}
+
+		allResults = append(allResults, *ppd)
+	}
+
+	return
+}
+
+func searchForPythonPackages(afs *afero.Afero, path string) []pythonPackageDetails {
 	allResults := []pythonPackageDetails{}
 
 	packageDirs := []string{"site-packages", "dist-packages"}
 	for _, packageDir := range packageDirs {
-		parentDir := filepath.Join(path, packageDir)
-		fileList, err := afs.ReadDir(parentDir)
-		if err != nil {
-			if !os.IsNotExist(err) {
-				log.Warn().Err(err).Str("dir", parentDir).Msg("unable to open directory")
-			}
-			continue
-		}
-		for _, dEntry := range fileList {
-			// handle the case where the directory entry is
-			// a .egg-type file with metadata directly available
-			packagePayload := dEntry.Name()
-
-			// in the event the directory entry is itself another directory
-			// go into each directory looking for our parsable payload
-			// (ie. METADATA and PKG-INFO files)
-			if dEntry.IsDir() {
-				pythonPackageDir := filepath.Join(parentDir, packagePayload)
-				packageDirFiles, err := afs.ReadDir(pythonPackageDir)
-				if err != nil {
-					log.Warn().Err(err).Str("dir", pythonPackageDir).Msg("error while walking through files in directory")
-					continue
-				}
-
-				foundMeta := false
-				for _, packageFile := range packageDirFiles {
-					if packageFile.Name() == "METADATA" || packageFile.Name() == "PKG-INFO" {
-						// use the METADATA / PKG-INFO file as our source of python package info
-						packagePayload = filepath.Join(dEntry.Name(), packageFile.Name())
-						foundMeta = true
-						break
-					}
-				}
-				if !foundMeta {
-					// nothing to process (happens when we've traversed a directory
-					// containing the actual python source files)
-					continue
-				}
-
-			}
-
-			pythonPackageFilepath := filepath.Join(parentDir, packagePayload)
-			ppd, err := parseMIME(afs, pythonPackageFilepath)
-			if err != nil {
-				continue
-			}
-
-			allResults = append(allResults, *ppd)
-		}
+		pythonPackageDir := filepath.Join(path, packageDir)
+		allResults = append(allResults, gatherPackages(afs, pythonPackageDir)...)
 	}
 
 	return allResults
@@ -210,23 +241,16 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetai
 		author:  mimeData.Get("Author"),
 		license: mimeData.Get("License"),
 		version: mimeData.Get("Version"),
-		path:    pythonMIMEFilepath,
+		file:    pythonMIMEFilepath,
 	}, nil
 }
 
-// linuxSearch handles a list of file glob entries (like /usr/local/lib/python*)
-// to then crawl through the site-packages/dist-packages for python packages
-func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
+func genericSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 	allResults := []pythonPackageDetails{}
 
-	// safe to run this on both linux and darwin
-	if runtime.GOOS == "windows" {
-		return allResults, nil
-	}
-
 	// Look through each potential location for the existence of a matching python* directory
-	for _, pyPath := range pythonDirectoriesUnix {
-		parentDir := filepath.Dir(pyPath)
+	for _, pyDir := range pythonDirectories {
+		parentDir := filepath.Dir(pyDir.path)
 
 		fileList, err := afs.ReadDir(parentDir)
 		if err != nil {
@@ -237,7 +261,7 @@ func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 		}
 
 		for _, dEntry := range fileList {
-			base := filepath.Base(pyPath)
+			base := filepath.Base(pyDir.path)
 			matched, err := filepath.Match(base, dEntry.Name())
 			if err != nil {
 				return nil, err
@@ -245,44 +269,16 @@ func linuxSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 			if matched {
 				matchedPath := filepath.Join(parentDir, dEntry.Name())
 				log.Debug().Str("filepath", matchedPath).Msg("found matching python path")
-				results := gatherFoundPackages(afs, matchedPath)
+
+				if pyDir.addLib {
+					matchedPath = filepath.Join(matchedPath, "lib")
+				}
+
+				results := searchForPythonPackages(afs, matchedPath)
 				allResults = append(allResults, results...)
 			}
 		}
 	}
-	return allResults, nil
-}
-
-func windowsSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
-	allResults := []pythonPackageDetails{}
-
-	for _, pyPath := range pythonDirectoriesWindows {
-		parentDir := filepath.Dir(pyPath)
-
-		files, err := afs.ReadDir(parentDir)
-		if err != nil {
-			log.Warn().Err(err).Str("dir", parentDir).Msg("error walking through directory")
-			continue
-		}
-		for _, dEntry := range files {
-			fmt.Printf("GOT: %+v\n", dEntry.Name())
-			base := filepath.Base(pyPath)
-			matched, err := filepath.Match(base, dEntry.Name())
-			if err != nil {
-				return nil, err
-			}
-			if matched {
-				matchedPath := filepath.Join(parentDir, dEntry.Name())
-				log.Debug().Str("filepath", matchedPath).Msg("found matching python path")
-				// for Windows, our site-packages directory would be found under
-				// "Lib/site-packages", so add the "Lib" dir to the start of our search.
-				matchedPath = filepath.Join(matchedPath, "Lib")
-				results := gatherFoundPackages(afs, matchedPath)
-				allResults = append(allResults, results...)
-			}
-		}
-	}
-
 	return allResults, nil
 }
 
@@ -341,7 +337,7 @@ func darwinSearch(afs *afero.Afero) ([]pythonPackageDetails, error) {
 				if match {
 					matchedPath := filepath.Join(pythonPackagePath, oneFile.Name())
 					log.Debug().Str("filepath", matchedPath).Msg("found matching python path")
-					results := gatherFoundPackages(afs, matchedPath)
+					results := searchForPythonPackages(afs, matchedPath)
 					allResults = append(allResults, results...)
 				}
 			}

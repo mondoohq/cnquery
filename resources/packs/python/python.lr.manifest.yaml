@@ -7,10 +7,12 @@ resources:
     fields:
       children: {}
       packages: {}
+      path: {}
     min_mondoo_version: latest
   python.package:
     fields:
       author: {}
+      file: {}
       id: {}
       licences: {}
       license: {}

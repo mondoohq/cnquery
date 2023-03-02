@@ -18,7 +18,7 @@ func (p *mqlPythonPackage) init(args *resources.Args) (*resources.Args, PythonPa
 	if len(*args) > 1 {
 		return args, nil, nil
 	}
-	if x, ok := (*args)["path"]; ok {
+	if x, ok := (*args)["file"]; ok {
 		provider, ok := p.MotorRuntime.Motor.Provider.(motoros.OperatingSystemProvider)
 		if !ok {
 			return nil, nil, fmt.Errorf("provider is not an operating system provider")
@@ -28,7 +28,7 @@ func (p *mqlPythonPackage) init(args *resources.Args) (*resources.Args, PythonPa
 
 		path, ok := x.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in python.package initialization, it must be a string")
+			return nil, nil, errors.New("Wrong type for 'file' in python.package initialization, it must be a string")
 		}
 
 		ppd, err := parseMIME(afs, path)

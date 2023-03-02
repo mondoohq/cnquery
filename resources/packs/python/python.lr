@@ -4,6 +4,7 @@ import "../core/core.lr"
 // Python packages resource
 python {
   init(path? string)
+  path string
   packages() []python.package
   children() []python.package
 }
@@ -11,7 +12,7 @@ python {
 python.package {
   id string
   name string
-  path string
+  file core.file
   version string
   license string
   author string
