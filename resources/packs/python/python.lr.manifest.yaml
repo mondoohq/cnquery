@@ -12,6 +12,7 @@ resources:
   python.package:
     fields:
       author: {}
+      dependencies: {}
       file: {}
       id: {}
       licences: {}
