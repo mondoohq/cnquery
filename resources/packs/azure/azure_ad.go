@@ -6,11 +6,13 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
+	msgraphclient "github.com/microsoftgraph/msgraph-sdk-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/domains"
 	"github.com/microsoftgraph/msgraph-sdk-go/groups"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	microsoft_provider "go.mondoo.com/cnquery/motor/providers/microsoft"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
+
+	msgraphadapter "go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -20,9 +22,9 @@ func graphClient(t *microsoft_provider.Provider) (*msgraphclient.GraphServiceCli
 		return nil, err
 	}
 	providerFunc := func() (authentication.AuthenticationProvider, error) {
-		return a.NewAzureIdentityAuthenticationProviderWithScopes(auth, msgraphclient.DefaultMSGraphScopes)
+		return a.NewAzureIdentityAuthenticationProviderWithScopes(auth, msgraphadapter.DefaultMSGraphScopes)
 	}
-	adapter, err := msgraphclient.NewGraphRequestAdapterWithFn(providerFunc)
+	adapter, err := msgraphadapter.NewGraphRequestAdapterWithFn(providerFunc)
 	if err != nil {
 		return nil, err
 	}
