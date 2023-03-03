@@ -324,18 +324,38 @@ func (v *Impact) Merge(base *Impact) {
 	if base == nil {
 		return
 	}
+
 	if v.Scoring == Impact_SCORING_UNSPECIFIED {
 		v.Scoring = base.Scoring
 	}
+	if v.Value == nil {
+		v.Value = base.Value
+	}
+	if v.Weight < 1 {
+		v.Weight = base.Weight
+	}
 }
 
-func (v ImpactValue) MarshalJSON() ([]byte, error) {
+func (v *Impact) UnmarshalJSON(data []byte) error {
+	var res int32
+	if err := json.Unmarshal(data, &res); err == nil {
+		v.Value = &ImpactValue{Value: res}
+		return nil
+	}
+
+	type tmp Impact
+	return json.Unmarshal(data, (*tmp)(v))
+}
+
+func (v *ImpactValue) MarshalJSON() ([]byte, error) {
+	if v == nil {
+		return []byte{}, nil
+	}
 	return json.Marshal(v.Value)
 }
 
 func (v *ImpactValue) UnmarshalJSON(data []byte) error {
 	var res int32
-
 	if err := json.Unmarshal(data, &res); err == nil {
 		v.Value = res
 	} else {
@@ -353,32 +373,6 @@ func (v *ImpactValue) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
-}
-
-func (v *WeightValue) UnmarshalJSON(data []byte) error {
-	var res int32
-
-	if err := json.Unmarshal(data, &res); err == nil {
-		v.Value = res
-	} else {
-		vInternal := &struct {
-			Value int32 `json:"value"`
-		}{}
-		if err := json.Unmarshal(data, &vInternal); err != nil {
-			return err
-		}
-		v.Value = vInternal.Value
-	}
-
-	if v.Value < 0 {
-		return errors.New("weight must be greater than or equal to 0")
-	}
-
-	return nil
-}
-
-func (v WeightValue) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Value)
 }
 
 func (r *Remediation) UnmarshalJSON(data []byte) error {
