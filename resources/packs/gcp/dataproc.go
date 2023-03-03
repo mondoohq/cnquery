@@ -286,6 +286,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 
 							mqlGceClusterCfg, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config.gceCluster",
 								"id", fmt.Sprintf("%s/dataproc/%s/config/gceCluster", projectId, c.ClusterName),
+								"projectId", projectId,
 								"confidentialInstance", mqlConfidentialInstanceCfg,
 								"internalIpOnly", c.Config.GceClusterConfig.InternalIpOnly,
 								"metadata", core.StrMapToInterface(c.Config.GceClusterConfig.Metadata),
@@ -293,7 +294,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 								"nodeGroupAffinity", mqlNodeGroupAffinityCfg,
 								"privateIpv6GoogleAccess", c.Config.GceClusterConfig.PrivateIpv6GoogleAccess,
 								"reservationAffinity", mqlReservationAffinity,
-								"serviceAccount", c.Config.GceClusterConfig.ServiceAccount,
+								"serviceAccountEmail", c.Config.GceClusterConfig.ServiceAccount,
 								"serviceAccountScopes", core.StrSliceToInterface(c.Config.GceClusterConfig.ServiceAccountScopes),
 								"shieldedInstanceConfig", mqlShieldedCfg,
 								"subnetworkUri", c.Config.GceClusterConfig.SubnetworkUri,
@@ -460,6 +461,7 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 						}
 
 						mqlConfig, err = g.MotorRuntime.CreateResource("gcp.project.dataprocService.cluster.config",
+							"projectId", c.ProjectId,
 							"parentResourcePath", fmt.Sprintf("%s/dataproc/%s", projectId, c.ClusterName),
 							"autoscaling", mqlAutoscalingCfg,
 							"configBucket", c.Config.ConfigBucket,
@@ -617,6 +619,23 @@ func (g *mqlGcpProjectDataprocService) GetClusters() ([]interface{}, error) {
 	}
 	wg.Wait()
 	return mqlClusters, nil
+}
+
+func (g *mqlGcpProjectDataprocServiceClusterConfigGceCluster) GetServiceAccount() (interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	email, err := g.ServiceAccountEmail()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
+		"projectId", projectId,
+		"email", email,
+	)
 }
 
 func (g *mqlGcpProjectDataprocServiceCluster) id() (string, error) {

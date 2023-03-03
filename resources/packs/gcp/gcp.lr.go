@@ -27362,10 +27362,12 @@ type GcpProjectGkeServiceClusterNodepoolConfig interface {
 	Register(string) error
 	Validate() error
 	Id() (string, error)
+	ProjectId() (string, error)
 	MachineType() (string, error)
 	DiskSizeGb() (int64, error)
 	OauthScopes() ([]interface{}, error)
-	ServiceAccount() (string, error)
+	ServiceAccountEmail() (string, error)
+	ServiceAccount() (GcpProjectIamServiceServiceAccount, error)
 	Metadata() (map[string]interface{}, error)
 	ImageType() (string, error)
 	Labels() (map[string]interface{}, error)
@@ -27419,6 +27421,10 @@ func newGcpProjectGkeServiceClusterNodepoolConfig(runtime *resources.Runtime, ar
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
 		case "machineType":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"machineType\" argument has the wrong type (expected type \"string\")")
@@ -27431,9 +27437,13 @@ func newGcpProjectGkeServiceClusterNodepoolConfig(runtime *resources.Runtime, ar
 			if _, ok := val.([]interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"oauthScopes\" argument has the wrong type (expected type \"[]interface{}\")")
 			}
-		case "serviceAccount":
+		case "serviceAccountEmail":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"serviceAccount\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"serviceAccountEmail\" argument has the wrong type (expected type \"string\")")
+			}
+		case "serviceAccount":
+			if _, ok := val.(GcpProjectIamServiceServiceAccount); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.gkeService.cluster.nodepool.config\", its \"serviceAccount\" argument has the wrong type (expected type \"GcpProjectIamServiceServiceAccount\")")
 			}
 		case "metadata":
 			if _, ok := val.(map[string]interface{}); !ok {
@@ -27549,6 +27559,9 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Validate() error {
 	if _, ok := s.Cache.Load("id"); !ok {
 		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"id\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"projectId\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("machineType"); !ok {
 		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"machineType\". This field is required.")
 	}
@@ -27558,8 +27571,8 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Validate() error {
 	if _, ok := s.Cache.Load("oauthScopes"); !ok {
 		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"oauthScopes\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("serviceAccount"); !ok {
-		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"serviceAccount\". This field is required.")
+	if _, ok := s.Cache.Load("serviceAccountEmail"); !ok {
+		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"serviceAccountEmail\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("metadata"); !ok {
 		return errors.New("Initialized \"gcp.project.gkeService.cluster.nodepool.config\" resource without a \"metadata\". This field is required.")
@@ -27634,11 +27647,15 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Register(name string) err
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "machineType":
 		return nil
 	case "diskSizeGb":
 		return nil
 	case "oauthScopes":
+		return nil
+	case "serviceAccountEmail":
 		return nil
 	case "serviceAccount":
 		return nil
@@ -27695,12 +27712,16 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Field(name string) (inter
 	switch name {
 	case "id":
 		return s.Id()
+	case "projectId":
+		return s.ProjectId()
 	case "machineType":
 		return s.MachineType()
 	case "diskSizeGb":
 		return s.DiskSizeGb()
 	case "oauthScopes":
 		return s.OauthScopes()
+	case "serviceAccountEmail":
+		return s.ServiceAccountEmail()
 	case "serviceAccount":
 		return s.ServiceAccount()
 	case "metadata":
@@ -27766,6 +27787,22 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) Id() (string, error) {
 	return tres, nil
 }
 
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"projectId\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
 // MachineType accessor autogenerated
 func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) MachineType() (string, error) {
 	res, ok := s.Cache.Load("machineType")
@@ -27814,18 +27851,41 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) OauthScopes() ([]interfac
 	return tres, nil
 }
 
-// ServiceAccount accessor autogenerated
-func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ServiceAccount() (string, error) {
-	res, ok := s.Cache.Load("serviceAccount")
+// ServiceAccountEmail accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ServiceAccountEmail() (string, error) {
+	res, ok := s.Cache.Load("serviceAccountEmail")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"serviceAccount\"")
+		return "", errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" failed: no value provided for static field \"serviceAccountEmail\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"serviceAccount\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"serviceAccountEmail\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceAccount accessor autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ServiceAccount() (GcpProjectIamServiceServiceAccount, error) {
+	res, ok := s.Cache.Load("serviceAccount")
+	if !ok || !res.Valid {
+		if err := s.ComputeServiceAccount(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("serviceAccount")
+		if !ok {
+			return nil, errors.New("\"gcp.project.gkeService.cluster.nodepool.config\" calculated \"serviceAccount\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "serviceAccount")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectIamServiceServiceAccount)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.gkeService.cluster.nodepool.config\" failed to cast field \"serviceAccount\" to the right type (GcpProjectIamServiceServiceAccount): %#v", res)
 	}
 	return tres, nil
 }
@@ -28172,14 +28232,18 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) MqlCompute(name string) e
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "machineType":
 		return nil
 	case "diskSizeGb":
 		return nil
 	case "oauthScopes":
 		return nil
-	case "serviceAccount":
+	case "serviceAccountEmail":
 		return nil
+	case "serviceAccount":
+		return s.ComputeServiceAccount()
 	case "metadata":
 		return nil
 	case "imageType":
@@ -28225,6 +28289,20 @@ func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) MqlCompute(name string) e
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.gkeService.cluster.nodepool.config\" resource")
 	}
+}
+
+// ComputeServiceAccount computer autogenerated
+func (s *mqlGcpProjectGkeServiceClusterNodepoolConfig) ComputeServiceAccount() error {
+	var err error
+	if _, ok := s.Cache.Load("serviceAccount"); ok {
+		return nil
+	}
+	vres, err := s.GetServiceAccount()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("serviceAccount", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpProjectGkeServiceClusterNodepoolConfigAccelerator resource interface
@@ -36831,6 +36909,15 @@ func newGcpProjectIamServiceServiceAccount(runtime *resources.Runtime, args *res
 	// User hooks
 	var err error
 	res := mqlGcpProjectIamServiceServiceAccount{runtime.NewResource("gcp.project.iamService.serviceAccount")}
+	var existing GcpProjectIamServiceServiceAccount
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	// assign all named fields
 	var id string
 
@@ -39788,6 +39875,7 @@ type GcpProjectDataprocServiceClusterConfigGceCluster interface {
 	Register(string) error
 	Validate() error
 	Id() (string, error)
+	ProjectId() (string, error)
 	ConfidentialInstance() (interface{}, error)
 	InternalIpOnly() (bool, error)
 	Metadata() (map[string]interface{}, error)
@@ -39795,7 +39883,8 @@ type GcpProjectDataprocServiceClusterConfigGceCluster interface {
 	NodeGroupAffinity() (interface{}, error)
 	PrivateIpv6GoogleAccess() (string, error)
 	ReservationAffinity() (GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity, error)
-	ServiceAccount() (string, error)
+	ServiceAccountEmail() (string, error)
+	ServiceAccount() (GcpProjectIamServiceServiceAccount, error)
 	ServiceAccountScopes() ([]interface{}, error)
 	ShieldedInstanceConfig() (GcpProjectDataprocServiceClusterConfigGceClusterShieldedInstanceConfig, error)
 	SubnetworkUri() (string, error)
@@ -39833,6 +39922,10 @@ func newGcpProjectDataprocServiceClusterConfigGceCluster(runtime *resources.Runt
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
 		case "confidentialInstance":
 			if _, ok := val.(interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"confidentialInstance\" argument has the wrong type (expected type \"interface{}\")")
@@ -39861,9 +39954,13 @@ func newGcpProjectDataprocServiceClusterConfigGceCluster(runtime *resources.Runt
 			if _, ok := val.(GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"reservationAffinity\" argument has the wrong type (expected type \"GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity\")")
 			}
-		case "serviceAccount":
+		case "serviceAccountEmail":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"serviceAccount\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"serviceAccountEmail\" argument has the wrong type (expected type \"string\")")
+			}
+		case "serviceAccount":
+			if _, ok := val.(GcpProjectIamServiceServiceAccount); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.dataprocService.cluster.config.gceCluster\", its \"serviceAccount\" argument has the wrong type (expected type \"GcpProjectIamServiceServiceAccount\")")
 			}
 		case "serviceAccountScopes":
 			if _, ok := val.([]interface{}); !ok {
@@ -39915,6 +40012,9 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Validate() error {
 	if _, ok := s.Cache.Load("id"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"id\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"projectId\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("confidentialInstance"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"confidentialInstance\". This field is required.")
 	}
@@ -39936,8 +40036,8 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Validate() error {
 	if _, ok := s.Cache.Load("reservationAffinity"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"reservationAffinity\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("serviceAccount"); !ok {
-		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"serviceAccount\". This field is required.")
+	if _, ok := s.Cache.Load("serviceAccountEmail"); !ok {
+		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"serviceAccountEmail\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("serviceAccountScopes"); !ok {
 		return errors.New("Initialized \"gcp.project.dataprocService.cluster.config.gceCluster\" resource without a \"serviceAccountScopes\". This field is required.")
@@ -39964,6 +40064,8 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Register(name stri
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "confidentialInstance":
 		return nil
 	case "internalIpOnly":
@@ -39977,6 +40079,8 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Register(name stri
 	case "privateIpv6GoogleAccess":
 		return nil
 	case "reservationAffinity":
+		return nil
+	case "serviceAccountEmail":
 		return nil
 	case "serviceAccount":
 		return nil
@@ -40001,6 +40105,8 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Field(name string)
 	switch name {
 	case "id":
 		return s.Id()
+	case "projectId":
+		return s.ProjectId()
 	case "confidentialInstance":
 		return s.ConfidentialInstance()
 	case "internalIpOnly":
@@ -40015,6 +40121,8 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Field(name string)
 		return s.PrivateIpv6GoogleAccess()
 	case "reservationAffinity":
 		return s.ReservationAffinity()
+	case "serviceAccountEmail":
+		return s.ServiceAccountEmail()
 	case "serviceAccount":
 		return s.ServiceAccount()
 	case "serviceAccountScopes":
@@ -40044,6 +40152,22 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) Id() (string, erro
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -40160,18 +40284,41 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ReservationAffinit
 	return tres, nil
 }
 
-// ServiceAccount accessor autogenerated
-func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ServiceAccount() (string, error) {
-	res, ok := s.Cache.Load("serviceAccount")
+// ServiceAccountEmail accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ServiceAccountEmail() (string, error) {
+	res, ok := s.Cache.Load("serviceAccountEmail")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"serviceAccount\"")
+		return "", errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed: no value provided for static field \"serviceAccountEmail\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"serviceAccount\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"serviceAccountEmail\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceAccount accessor autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ServiceAccount() (GcpProjectIamServiceServiceAccount, error) {
+	res, ok := s.Cache.Load("serviceAccount")
+	if !ok || !res.Valid {
+		if err := s.ComputeServiceAccount(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("serviceAccount")
+		if !ok {
+			return nil, errors.New("\"gcp.project.dataprocService.cluster.config.gceCluster\" calculated \"serviceAccount\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "serviceAccount")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectIamServiceServiceAccount)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.dataprocService.cluster.config.gceCluster\" failed to cast field \"serviceAccount\" to the right type (GcpProjectIamServiceServiceAccount): %#v", res)
 	}
 	return tres, nil
 }
@@ -40262,6 +40409,8 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) MqlCompute(name st
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "confidentialInstance":
 		return nil
 	case "internalIpOnly":
@@ -40276,8 +40425,10 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) MqlCompute(name st
 		return nil
 	case "reservationAffinity":
 		return nil
-	case "serviceAccount":
+	case "serviceAccountEmail":
 		return nil
+	case "serviceAccount":
+		return s.ComputeServiceAccount()
 	case "serviceAccountScopes":
 		return nil
 	case "shieldedInstanceConfig":
@@ -40291,6 +40442,20 @@ func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) MqlCompute(name st
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.dataprocService.cluster.config.gceCluster\" resource")
 	}
+}
+
+// ComputeServiceAccount computer autogenerated
+func (s *mqlGcpProjectDataprocServiceClusterConfigGceCluster) ComputeServiceAccount() error {
+	var err error
+	if _, ok := s.Cache.Load("serviceAccount"); ok {
+		return nil
+	}
+	vres, err := s.GetServiceAccount()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("serviceAccount", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpProjectDataprocServiceClusterConfigGceClusterReservationAffinity resource interface
@@ -43685,13 +43850,15 @@ type GcpProjectCloudRunServiceServiceRevisionTemplate interface {
 	Register(string) error
 	Validate() error
 	Id() (string, error)
+	ProjectId() (string, error)
 	Name() (string, error)
 	Labels() (map[string]interface{}, error)
 	Annotations() (map[string]interface{}, error)
 	Scaling() (interface{}, error)
 	VpcAccess() (interface{}, error)
 	Timeout() (*time.Time, error)
-	ServiceAccount() (string, error)
+	ServiceAccountEmail() (string, error)
+	ServiceAccount() (GcpProjectIamServiceServiceAccount, error)
 	Containers() ([]interface{}, error)
 	Volumes() ([]interface{}, error)
 	ExecutionEnvironment() (string, error)
@@ -43729,6 +43896,10 @@ func newGcpProjectCloudRunServiceServiceRevisionTemplate(runtime *resources.Runt
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service.revisionTemplate\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service.revisionTemplate\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
 		case "name":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service.revisionTemplate\", its \"name\" argument has the wrong type (expected type \"string\")")
@@ -43753,9 +43924,13 @@ func newGcpProjectCloudRunServiceServiceRevisionTemplate(runtime *resources.Runt
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service.revisionTemplate\", its \"timeout\" argument has the wrong type (expected type \"*time.Time\")")
 			}
-		case "serviceAccount":
+		case "serviceAccountEmail":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service.revisionTemplate\", its \"serviceAccount\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service.revisionTemplate\", its \"serviceAccountEmail\" argument has the wrong type (expected type \"string\")")
+			}
+		case "serviceAccount":
+			if _, ok := val.(GcpProjectIamServiceServiceAccount); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.service.revisionTemplate\", its \"serviceAccount\" argument has the wrong type (expected type \"GcpProjectIamServiceServiceAccount\")")
 			}
 		case "containers":
 			if _, ok := val.([]interface{}); !ok {
@@ -43807,6 +43982,9 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Validate() error {
 	if _, ok := s.Cache.Load("id"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.service.revisionTemplate\" resource without a \"id\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudRunService.service.revisionTemplate\" resource without a \"projectId\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("name"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.service.revisionTemplate\" resource without a \"name\". This field is required.")
 	}
@@ -43825,8 +44003,8 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Validate() error {
 	if _, ok := s.Cache.Load("timeout"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.service.revisionTemplate\" resource without a \"timeout\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("serviceAccount"); !ok {
-		return errors.New("Initialized \"gcp.project.cloudRunService.service.revisionTemplate\" resource without a \"serviceAccount\". This field is required.")
+	if _, ok := s.Cache.Load("serviceAccountEmail"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudRunService.service.revisionTemplate\" resource without a \"serviceAccountEmail\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("containers"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.service.revisionTemplate\" resource without a \"containers\". This field is required.")
@@ -43853,6 +44031,8 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Register(name stri
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "name":
 		return nil
 	case "labels":
@@ -43864,6 +44044,8 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Register(name stri
 	case "vpcAccess":
 		return nil
 	case "timeout":
+		return nil
+	case "serviceAccountEmail":
 		return nil
 	case "serviceAccount":
 		return nil
@@ -43888,6 +44070,8 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Field(name string)
 	switch name {
 	case "id":
 		return s.Id()
+	case "projectId":
+		return s.ProjectId()
 	case "name":
 		return s.Name()
 	case "labels":
@@ -43900,6 +44084,8 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Field(name string)
 		return s.VpcAccess()
 	case "timeout":
 		return s.Timeout()
+	case "serviceAccountEmail":
+		return s.ServiceAccountEmail()
 	case "serviceAccount":
 		return s.ServiceAccount()
 	case "containers":
@@ -43929,6 +44115,22 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Id() (string, erro
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.project.cloudRunService.service.revisionTemplate\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudRunService.service.revisionTemplate\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudRunService.service.revisionTemplate\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -44029,18 +44231,41 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) Timeout() (*time.T
 	return tres, nil
 }
 
-// ServiceAccount accessor autogenerated
-func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) ServiceAccount() (string, error) {
-	res, ok := s.Cache.Load("serviceAccount")
+// ServiceAccountEmail accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) ServiceAccountEmail() (string, error) {
+	res, ok := s.Cache.Load("serviceAccountEmail")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cloudRunService.service.revisionTemplate\" failed: no value provided for static field \"serviceAccount\"")
+		return "", errors.New("\"gcp.project.cloudRunService.service.revisionTemplate\" failed: no value provided for static field \"serviceAccountEmail\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cloudRunService.service.revisionTemplate\" failed to cast field \"serviceAccount\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.cloudRunService.service.revisionTemplate\" failed to cast field \"serviceAccountEmail\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceAccount accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) ServiceAccount() (GcpProjectIamServiceServiceAccount, error) {
+	res, ok := s.Cache.Load("serviceAccount")
+	if !ok || !res.Valid {
+		if err := s.ComputeServiceAccount(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("serviceAccount")
+		if !ok {
+			return nil, errors.New("\"gcp.project.cloudRunService.service.revisionTemplate\" calculated \"serviceAccount\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "serviceAccount")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectIamServiceServiceAccount)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudRunService.service.revisionTemplate\" failed to cast field \"serviceAccount\" to the right type (GcpProjectIamServiceServiceAccount): %#v", res)
 	}
 	return tres, nil
 }
@@ -44131,6 +44356,8 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) MqlCompute(name st
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "name":
 		return nil
 	case "labels":
@@ -44143,8 +44370,10 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) MqlCompute(name st
 		return nil
 	case "timeout":
 		return nil
-	case "serviceAccount":
+	case "serviceAccountEmail":
 		return nil
+	case "serviceAccount":
+		return s.ComputeServiceAccount()
 	case "containers":
 		return nil
 	case "volumes":
@@ -44158,6 +44387,20 @@ func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) MqlCompute(name st
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cloudRunService.service.revisionTemplate\" resource")
 	}
+}
+
+// ComputeServiceAccount computer autogenerated
+func (s *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) ComputeServiceAccount() error {
+	var err error
+	if _, ok := s.Cache.Load("serviceAccount"); ok {
+		return nil
+	}
+	vres, err := s.GetServiceAccount()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("serviceAccount", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpProjectCloudRunServiceContainer resource interface
@@ -46223,9 +46466,11 @@ type GcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate interface {
 	Register(string) error
 	Validate() error
 	Id() (string, error)
+	ProjectId() (string, error)
 	VpcAccess() (interface{}, error)
 	Timeout() (*time.Time, error)
-	ServiceAccount() (string, error)
+	ServiceAccountEmail() (string, error)
+	ServiceAccount() (GcpProjectIamServiceServiceAccount, error)
 	Containers() ([]interface{}, error)
 	Volumes() ([]interface{}, error)
 	ExecutionEnvironment() (string, error)
@@ -46263,6 +46508,10 @@ func newGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate(runtime *resou
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
+		case "projectId":
+			if _, ok := val.(string); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\", its \"projectId\" argument has the wrong type (expected type \"string\")")
+			}
 		case "vpcAccess":
 			if _, ok := val.(interface{}); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\", its \"vpcAccess\" argument has the wrong type (expected type \"interface{}\")")
@@ -46271,9 +46520,13 @@ func newGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate(runtime *resou
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\", its \"timeout\" argument has the wrong type (expected type \"*time.Time\")")
 			}
-		case "serviceAccount":
+		case "serviceAccountEmail":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\", its \"serviceAccount\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\", its \"serviceAccountEmail\" argument has the wrong type (expected type \"string\")")
+			}
+		case "serviceAccount":
+			if _, ok := val.(GcpProjectIamServiceServiceAccount); !ok {
+				return nil, errors.New("Failed to initialize \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\", its \"serviceAccount\" argument has the wrong type (expected type \"GcpProjectIamServiceServiceAccount\")")
 			}
 		case "containers":
 			if _, ok := val.([]interface{}); !ok {
@@ -46325,14 +46578,17 @@ func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) Validate(
 	if _, ok := s.Cache.Load("id"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource without a \"id\". This field is required.")
 	}
+	if _, ok := s.Cache.Load("projectId"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource without a \"projectId\". This field is required.")
+	}
 	if _, ok := s.Cache.Load("vpcAccess"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource without a \"vpcAccess\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("timeout"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource without a \"timeout\". This field is required.")
 	}
-	if _, ok := s.Cache.Load("serviceAccount"); !ok {
-		return errors.New("Initialized \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource without a \"serviceAccount\". This field is required.")
+	if _, ok := s.Cache.Load("serviceAccountEmail"); !ok {
+		return errors.New("Initialized \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource without a \"serviceAccountEmail\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("containers"); !ok {
 		return errors.New("Initialized \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource without a \"containers\". This field is required.")
@@ -46359,9 +46615,13 @@ func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) Register(
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "vpcAccess":
 		return nil
 	case "timeout":
+		return nil
+	case "serviceAccountEmail":
 		return nil
 	case "serviceAccount":
 		return nil
@@ -46386,10 +46646,14 @@ func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) Field(nam
 	switch name {
 	case "id":
 		return s.Id()
+	case "projectId":
+		return s.ProjectId()
 	case "vpcAccess":
 		return s.VpcAccess()
 	case "timeout":
 		return s.Timeout()
+	case "serviceAccountEmail":
+		return s.ServiceAccountEmail()
 	case "serviceAccount":
 		return s.ServiceAccount()
 	case "containers":
@@ -46419,6 +46683,22 @@ func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) Id() (str
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed to cast field \"id\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ProjectId accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) ProjectId() (string, error) {
+	res, ok := s.Cache.Load("projectId")
+	if !ok || !res.Valid {
+		return "", errors.New("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed: no value provided for static field \"projectId\"")
+	}
+	if res.Error != nil {
+		return "", res.Error
+	}
+	tres, ok := res.Data.(string)
+	if !ok {
+		return "", fmt.Errorf("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed to cast field \"projectId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -46455,18 +46735,41 @@ func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) Timeout()
 	return tres, nil
 }
 
-// ServiceAccount accessor autogenerated
-func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) ServiceAccount() (string, error) {
-	res, ok := s.Cache.Load("serviceAccount")
+// ServiceAccountEmail accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) ServiceAccountEmail() (string, error) {
+	res, ok := s.Cache.Load("serviceAccountEmail")
 	if !ok || !res.Valid {
-		return "", errors.New("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed: no value provided for static field \"serviceAccount\"")
+		return "", errors.New("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed: no value provided for static field \"serviceAccountEmail\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed to cast field \"serviceAccount\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed to cast field \"serviceAccountEmail\" to the right type (string): %#v", res)
+	}
+	return tres, nil
+}
+
+// ServiceAccount accessor autogenerated
+func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) ServiceAccount() (GcpProjectIamServiceServiceAccount, error) {
+	res, ok := s.Cache.Load("serviceAccount")
+	if !ok || !res.Valid {
+		if err := s.ComputeServiceAccount(); err != nil {
+			return nil, err
+		}
+		res, ok = s.Cache.Load("serviceAccount")
+		if !ok {
+			return nil, errors.New("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" calculated \"serviceAccount\" but didn't find its value in cache.")
+		}
+		s.MotorRuntime.Trigger(s, "serviceAccount")
+	}
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	tres, ok := res.Data.(GcpProjectIamServiceServiceAccount)
+	if !ok {
+		return nil, fmt.Errorf("\"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" failed to cast field \"serviceAccount\" to the right type (GcpProjectIamServiceServiceAccount): %#v", res)
 	}
 	return tres, nil
 }
@@ -46557,12 +46860,16 @@ func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) MqlComput
 	switch name {
 	case "id":
 		return nil
+	case "projectId":
+		return nil
 	case "vpcAccess":
 		return nil
 	case "timeout":
 		return nil
-	case "serviceAccount":
+	case "serviceAccountEmail":
 		return nil
+	case "serviceAccount":
+		return s.ComputeServiceAccount()
 	case "containers":
 		return nil
 	case "volumes":
@@ -46576,6 +46883,20 @@ func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) MqlComput
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"gcp.project.cloudRunService.job.executionTemplate.taskTemplate\" resource")
 	}
+}
+
+// ComputeServiceAccount computer autogenerated
+func (s *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) ComputeServiceAccount() error {
+	var err error
+	if _, ok := s.Cache.Load("serviceAccount"); ok {
+		return nil
+	}
+	vres, err := s.GetServiceAccount()
+	if _, ok := err.(resources.NotReadyError); ok {
+		return err
+	}
+	s.Cache.Store("serviceAccount", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
+	return nil
 }
 
 // GcpAccessApprovalSettings resource interface

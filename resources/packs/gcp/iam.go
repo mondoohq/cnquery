@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	admin "cloud.google.com/go/iam/admin/apiv1"
+	"go.mondoo.com/cnquery/resources"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	adminpb "google.golang.org/genproto/googleapis/iam/admin/v1"
@@ -35,6 +36,35 @@ func (g *mqlGcpProjectIamServiceServiceAccount) id() (string, error) {
 
 func (g *mqlGcpProjectIamServiceServiceAccountKey) id() (string, error) {
 	return g.Name()
+}
+
+func (g *mqlGcpProjectIamServiceServiceAccount) init(args *resources.Args) (*resources.Args, GcpProjectIamServiceServiceAccount, error) {
+	if len(*args) > 2 {
+		return args, nil, nil
+	}
+
+	obj, err := g.MotorRuntime.CreateResource("gcp.project.iamService", "projectId", (*args)["projectId"])
+	if err != nil {
+		return nil, nil, err
+	}
+	iamSvc := obj.(GcpProjectIamService)
+	sas, err := iamSvc.ServiceAccounts()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, s := range sas {
+		sa := s.(GcpProjectIamServiceServiceAccount)
+		email, err := sa.Email()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if email == (*args)["email"] {
+			return args, sa, nil
+		}
+	}
+	return nil, nil, &resources.ResourceNotFound{}
 }
 
 func (g *mqlGcpProjectIamService) GetServiceAccounts() ([]interface{}, error) {
