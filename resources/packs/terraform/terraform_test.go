@@ -15,11 +15,11 @@ import (
 
 var x = testutils.InitTester(testutils.LinuxMock(), os.Registry)
 
-func testTerraformHclQuery(t *testing.T, query string) []*llx.RawResult {
+func testTerraformHclQuery(t *testing.T, path string, query string) []*llx.RawResult {
 	p, err := provider.New(&providers.Config{
 		Backend: providers.ProviderType_TERRAFORM,
 		Options: map[string]string{
-			"path": "./testdata/terraform",
+			"path": path,
 		},
 	})
 	require.NoError(t, err)

@@ -562,7 +562,10 @@ func (s *mqlTerraformSettings) init(args *resources.Args) (*resources.Args, Terr
 	}
 
 	if len(blocks) != 1 {
-		return nil, nil, errors.New("no `terraform` settings block found")
+		// no terraform settings block found, this is ok for terraform and not an error
+		(*args)["block"] = nil
+		(*args)["requiredProviders"] = map[string]interface{}{}
+		return args, nil, nil
 	}
 
 	settingsBlock := blocks[0].(TerraformBlock)
