@@ -9,7 +9,7 @@ python {
   children() []python.package
 }
 
-python.package {
+python.package @defaults("name version") {
   init(path? string)
   id string
   name string
