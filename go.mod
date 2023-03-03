@@ -5,7 +5,7 @@ go 1.19
 require (
 	cloud.google.com/go/accessapproval v1.5.0
 	cloud.google.com/go/bigquery v1.44.0
-	cloud.google.com/go/compute v1.14.0
+	cloud.google.com/go/compute v1.15.1
 	cloud.google.com/go/container v1.7.0
 	cloud.google.com/go/functions v1.9.0
 	cloud.google.com/go/iam v0.8.0
@@ -181,8 +181,8 @@ require (
 	golang.org/x/text v0.7.0
 	golang.org/x/tools v0.6.0
 	google.golang.org/api v0.107.0
-	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
-	google.golang.org/grpc v1.52.0
+	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
+	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -203,7 +203,7 @@ require (
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
-	cloud.google.com/go v0.105.0 // indirect
+	cloud.google.com/go v0.107.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
