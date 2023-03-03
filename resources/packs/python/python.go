@@ -209,7 +209,7 @@ func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonP
 	return r, nil
 }
 
-func (k *mqlPython) GetChildren() ([]interface{}, error) {
+func (k *mqlPython) GetToplevel() ([]interface{}, error) {
 	allPyPkgDetails, err := k.getAllPackages()
 	if err != nil {
 		return nil, err
