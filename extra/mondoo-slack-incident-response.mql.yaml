@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-slack-incident-response
-    name: Mondoo Slack Incident Response
+    name: Slack Incident Response by Mondoo
     version: 1.0.0
     tags:
       mondoo.com/platform: slack-team,saas
@@ -9,7 +9,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo Slack Incident Response Pack query pack gathers configuration data about your Slack investigation during a security incident.
+        The Slack Incident Response query pack gathers configuration data about your Slack investigation during a security incident.
 
         ### Prerequisites
 
