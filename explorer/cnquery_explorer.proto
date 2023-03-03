@@ -161,6 +161,7 @@ enum Action {
   ACTIVATE = 1;
   DEACTIVATE = 2;
   MODIFY = 3;
+  IGNORE = 4;
 }
 
 // Mquery represents the MQL and metadata that form a query
@@ -204,13 +205,14 @@ message Impact {
     WORST = 2;
     AVERAGE = 3;
     DATA_ONLY = 4;
+    IGNORE = 5;
   }
 
-  // Value is between 0 to 100 (most impactful). -1 for unset
-  int32 value = 1;
+  // Value is between 0 to 100 (most impactful).
+  ImpactValue value = 1;
   // The scoring system to apply for evaluating multiple results
   ScoringSystem scoring = 2;
-  // The weight of this query. -1 for unset
+  // The weight of this query. Has to be > 0, otherwise counts as unset.
   int32 weight = 3;
 }
 
@@ -446,3 +448,6 @@ message SynchronizeAssetsResp {
   map<string, SynchronizeAssetsRespAssetDetail> details = 1;
 }
 
+message ImpactValue {
+  int32 value = 1;
+}
