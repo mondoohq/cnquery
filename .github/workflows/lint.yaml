@@ -1,10 +1,11 @@
-name: Lint Pack
+---
+name: Lint Packs
 
 on:
+  pull_request:
   push:
     branches:
       - main
-  pull_request:
 
 jobs:
   build:

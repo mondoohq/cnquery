@@ -26,7 +26,7 @@ packs:
       - asset.family.contains('network')
     queries:
       - uid: mondoo-ssl-tls-certificate-incident-response-domain-name
-        title: Retreive Domain Name
+        title: Retrieve Domain Name
         query: |
           tls.domainName
       - uid: mondoo-ssl-tls-certificate-incident-response-versions

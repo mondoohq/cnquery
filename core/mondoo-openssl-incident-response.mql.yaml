@@ -9,7 +9,7 @@ packs:
       - asset.family.contains("linux")
     queries:
       - uid: mondoo-openssl-platform
-        title: Retreive information about the Platform
+        title: Retrieve information about the Platform
         query: |
           asset {
             platform

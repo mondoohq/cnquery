@@ -42,7 +42,7 @@ packs:
 
         ### Run query pack
 
-        To run this query pack against a Slack worksapce:
+        To run this query pack against a Slack workspace:
 
         ```bash
         export SLACK_TOKEN=xoxp-TOKEN

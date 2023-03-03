@@ -1,3 +1,4 @@
+ad-hoc
 ^attache$
 benefitting
 occurences?
@@ -8,3 +9,5 @@ Sorce
 ^untill$
 ^untilling$
 ^wether.*
+\w*(?<!right-)click
+press

@@ -36,7 +36,7 @@ packs:
         title: Retrieve list of running services
         query: services.list { * }
       - uid: mondoo-macos-alf-extensions
-        title: Retrieves the exceptions for the Application Layer Firewall in OSX
+        title: Retrieves the exceptions for the Application Layer Firewall on macOS
         query: macos.alf.exceptions
       - uid: mondoo-macos-check-recommended-updates
         title: Check for any recommended updates 

@@ -27,16 +27,16 @@ packs:
       - asset.platform == "github-org"
     queries:
       - uid: mondoo-github-inventory-org-login
-        title: GitHib organization login
+        title: GitHub organization login
         query: github.organization.login
       - uid: mondoo-github-inventory-org-id
-        title: GitHib organization ID
+        title: GitHub organization ID
         query: github.organization.id
       - uid: mondoo-github-inventory-org-profile-photo
-        title: GitHib organization profile photo
+        title: GitHub organization profile photo
         query: github.organization.avatarUrl
       - uid: mondoo-github-inventory-org-email
-        title: GitHib organization email
+        title: GitHub organization email
         query: github.organization.email
       - uid: mondoo-github-inventory-org-desc
         title: GitHub organization description
@@ -93,16 +93,16 @@ packs:
       - asset.platform == "github-user"
     queries:
       - uid: mondoo-github-inventory-user-login
-        title: GitHib user login
+        title: GitHub user login
         query: github.user.login
       - uid: mondoo-github-inventory-user-id
-        title: GitHib user ID
+        title: GitHub user ID
         query: github.user.id
       - uid: mondoo-github-inventory-user-profile-photo
-        title: GitHib user profile photo
+        title: GitHub user profile photo
         query: github.user.avatarUrl
       - uid: mondoo-github-inventory-user-email
-        title: GitHib user email
+        title: GitHub user email
         query: github.user.email
       - uid: mondoo-github-inventory-user-bio
         title: GitHub user bio
@@ -159,19 +159,19 @@ packs:
       - asset.platform == "github-repo"
     queries:
       - uid: mondoo-github-inventory-repo-id
-        title: GitHib repository ID
+        title: GitHub repository ID
         query: github.repository.id
       - uid: mondoo-github-inventory-repo-description
-        title: GitHib repository description
+        title: GitHub repository description
         query: github.repository.description
       - uid: mondoo-github-inventory-repo-forks
-        title: Number GitHib repository forks
+        title: Number GitHub repository forks
         query: github.repository.forksCount
       - uid: mondoo-github-inventory-repo-stargazers
-        title: Number GitHib repository stargazers
+        title: Number GitHub repository stargazers
         query: github.repository.stargazersCount
       - uid: mondoo-github-inventory-repo-watchers
-        title: Number GitHib repository watchers
+        title: Number GitHub repository watchers
         query: github.repository.watchersCount
       - uid: mondoo-github-inventory-repo-license
         title: GitHub repository license 
