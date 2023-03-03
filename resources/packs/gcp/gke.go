@@ -195,7 +195,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 
 		nodePools := make([]interface{}, 0, len(c.NodePools))
 		for _, np := range c.NodePools {
-			mqlNodePool, err := createMqlNodePool(g.MotorRuntime, np, c.Id)
+			mqlNodePool, err := createMqlNodePool(g.MotorRuntime, np, c.Id, projectId)
 			if err != nil {
 				return nil, err
 			}
@@ -477,10 +477,27 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 	return res, nil
 }
 
-func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clusterId string) (resources.ResourceType, error) {
+func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) GetServiceAccount() (interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	email, err := g.ServiceAccountEmail()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
+		"projectId", projectId,
+		"email", email,
+	)
+}
+
+func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clusterId, projectId string) (resources.ResourceType, error) {
 	nodePoolId := fmt.Sprintf("%s/%s", clusterId, np.Name)
 
-	mqlPoolConfig, err := createMqlNodePoolConfig(runtime, np, nodePoolId)
+	mqlPoolConfig, err := createMqlNodePoolConfig(runtime, np, nodePoolId, projectId)
 	if err != nil {
 		return nil, err
 	}
@@ -520,7 +537,7 @@ func createMqlNodePool(runtime *resources.Runtime, np *containerpb.NodePool, clu
 	)
 }
 
-func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePool, nodePoolId string) (resources.ResourceType, error) {
+func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePool, nodePoolId, projectId string) (resources.ResourceType, error) {
 	cfg := np.Config
 	var err error
 	mqlAccelerators := make([]interface{}, 0, len(cfg.Accelerators))
@@ -644,10 +661,11 @@ func createMqlNodePoolConfig(runtime *resources.Runtime, np *containerpb.NodePoo
 
 	return runtime.CreateResource("gcp.project.gkeService.cluster.nodepool.config",
 		"id", fmt.Sprintf("%s/config", nodePoolId),
+		"projectId", projectId,
 		"machineType", cfg.MachineType,
 		"diskSizeGb", int64(cfg.DiskSizeGb),
 		"oauthScopes", core.StrSliceToInterface(cfg.OauthScopes),
-		"serviceAccount", cfg.ServiceAccount,
+		"serviceAccountEmail", cfg.ServiceAccount,
 		"metadata", core.StrMapToInterface(cfg.Metadata),
 		"imageType", cfg.ImageType,
 		"labels", core.StrMapToInterface(cfg.Labels),

@@ -278,13 +278,14 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 
 					mqlTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.service.revisionTemplate",
 						"id", templateId,
+						"projectId", projectId,
 						"name", s.Template.Revision,
 						"labels", core.StrMapToInterface(s.Template.Labels),
 						"annotations", core.StrMapToInterface(s.Template.Annotations),
 						"scaling", scalingCfg,
 						"vpcAccess", vpcCfg,
 						"timeout", core.MqlTime(llx.DurationToTime((s.Template.Timeout.Seconds))),
-						"serviceAccount", s.Template.ServiceAccount,
+						"serviceAccountEmail", s.Template.ServiceAccount,
 						"containers", mqlContainers,
 						"volumes", mqlVolumes(s.Template.Volumes),
 						"executionEnvironment", s.Template.ExecutionEnvironment.String(),
@@ -372,6 +373,40 @@ func (g *mqlGcpProjectCloudRunService) GetServices() ([]interface{}, error) {
 	return services, nil
 }
 
+func (g *mqlGcpProjectCloudRunServiceServiceRevisionTemplate) GetServiceAccount() (interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	email, err := g.ServiceAccountEmail()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
+		"projectId", projectId,
+		"email", email,
+	)
+}
+
+func (g *mqlGcpProjectCloudRunServiceJobExecutionTemplateTaskTemplate) GetServiceAccount() (interface{}, error) {
+	projectId, err := g.ProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	email, err := g.ServiceAccountEmail()
+	if err != nil {
+		return nil, err
+	}
+
+	return g.MotorRuntime.CreateResource("gcp.project.iamService.serviceAccount",
+		"projectId", projectId,
+		"email", email,
+	)
+}
+
 func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 	projectId, err := g.ProjectId()
 	if err != nil {
@@ -437,9 +472,10 @@ func (g *mqlGcpProjectCloudRunService) GetJobs() ([]interface{}, error) {
 
 						mqlTaskTemplate, err = g.MotorRuntime.CreateResource("gcp.project.cloudRunService.job.executionTemplate.taskTemplate",
 							"id", fmt.Sprintf("%s/template", templateId),
+							"projectId", projectId,
 							"vpcAccess", vpcAccess,
 							"timeout", core.MqlTime(llx.DurationToTime((j.Template.Template.Timeout.Seconds))),
-							"serviceAccount", j.Template.Template.ServiceAccount,
+							"serviceAccountEmail", j.Template.Template.ServiceAccount,
 							"containers", mqlContainers,
 							"volumes", mqlVolumes(j.Template.Template.Volumes),
 							"executionEnvironment", j.Template.Template.ExecutionEnvironment.String(),

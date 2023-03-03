@@ -1598,14 +1598,18 @@ private gcp.project.gkeService.cluster.nodepool.networkConfig.performanceConfig 
 private gcp.project.gkeService.cluster.nodepool.config @defaults("machineType diskSizeGb") {
   // Internal ID
   id string
+  // Project ID
+  projectId string
   // The name of a Google Compute Engine machine type
   machineType string
   // Size of the disk attached to each node, specified in GB
   diskSizeGb int
   // The set of Google API scopes to be made available on all of the node VMs under the "default" service account
   oauthScopes []string
-  // The Google Cloud Platform Service Account to be used by the node VMs
-  serviceAccount string
+  // Email of the Google Cloud Platform Service Account to be used by the node VMs
+  serviceAccountEmail string
+  // Google Cloud Platform Service Account to be used by the node VMs
+  serviceAccount() gcp.project.iamService.serviceAccount
   // The metadata key/value pairs assigned to instances in the cluster
   metadata map[string]string
   // The image type to use for this node
@@ -2306,6 +2310,8 @@ private gcp.project.dataprocService.cluster.config {
 private gcp.project.dataprocService.cluster.config.gceCluster {
   // Internal ID
   id string
+  // Project ID
+  projectId string
   // Confidential instance configuration
   confidentialInstance dict
   // Whether the cluster has only internal IP addresses
@@ -2320,8 +2326,10 @@ private gcp.project.dataprocService.cluster.config.gceCluster {
   privateIpv6GoogleAccess string
   // Reservation affinity for consuming zonal reservations
   reservationAffinity gcp.project.dataprocService.cluster.config.gceCluster.reservationAffinity
-  // Dataproc service account used by the Dataproc cluster VM instances
-  serviceAccount string
+  // Email of the service account used by the Dataproc cluster VM instances
+  serviceAccountEmail string
+  // Service account used by the Dataproc cluster VM instances
+  serviceAccount() gcp.project.iamService.serviceAccount
   // URIs of service account scopes to be included in Compute Engine instances
   serviceAccountScopes []string
   // Shielded instance config for clusters using Compute Engine Shielded VMs
@@ -2533,6 +2541,8 @@ private gcp.project.cloudRunService.service @defaults("name") {
 private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   // Internal ID
   id string
+  // Project ID
+  projectId string
   // Revision name
   name string
   // User-provided labels
@@ -2546,7 +2556,9 @@ private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   // Maximum allowed time for an instance to respond to a request
   timeout time
   // Email address of the IAM service account associated with the revision of the service
-  serviceAccount string
+  serviceAccountEmail string
+  // IAM service account associated with the revision of the service
+  serviceAccount() gcp.project.iamService.serviceAccount
   // Containers for this revision
   containers  []gcp.project.cloudRunService.container
   // List of volumes to make available to containers
@@ -2689,12 +2701,16 @@ private gcp.project.cloudRunService.job.executionTemplate {
 private gcp.project.cloudRunService.job.executionTemplate.taskTemplate {
   // Internal ID
   id string
+  // Project ID
+  projectId string
   // VPC access configuration
   vpcAccess dict
   // Maximum allowed time for an instance to respond to a request
   timeout time
   // Email address of the IAM service account associated with the revision of the service
-  serviceAccount string
+  serviceAccountEmail string
+  // IAM service account associated with the revision of the service
+  serviceAccount() gcp.project.iamService.serviceAccount
   // Containers for this revision
   containers  []gcp.project.cloudRunService.container
   // List of volumes to make available to containers
