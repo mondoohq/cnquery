@@ -305,6 +305,8 @@ func (m *Mquery) AddBase(base *Mquery) {
 	}
 	if m.Impact == nil {
 		m.Impact = base.Impact
+	} else {
+		m.Impact.Merge(base.Impact)
 	}
 	if m.Tags == nil {
 		m.Tags = base.Tags
