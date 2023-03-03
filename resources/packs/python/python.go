@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"net/textproto"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -30,7 +32,13 @@ var pythonDirectories = []pythonDirectory{
 		path: "/usr/local/lib/python*",
 	},
 	{
+		path: "/usr/local/lib64/python*",
+	},
+	{
 		path: "/usr/lib/python*",
+	},
+	{
+		path: "/usr/lib64/python*",
 	},
 	{
 		path: "/opt/homebrew/lib/python*",
@@ -191,8 +199,15 @@ func gatherPackages(afs *afero.Afero, pythonPackagePath string) (allResults []py
 		return
 	}
 	for _, dEntry := range fileList {
-		// handle the case where the directory entry is
-		// a .egg-type file with metadata directly available
+		// only process files/directories that might acctually contain
+		// the data we're looking for
+		if !strings.HasSuffix(dEntry.Name(), ".dist-info") &&
+			!strings.HasSuffix(dEntry.Name(), ".egg-info") {
+			continue
+		}
+
+		// There is the possibility that the .egg-info entry is a file
+		// (not a directory) that we can directly process.
 		packagePayload := dEntry.Name()
 
 		// requestedPackage just marks whether we found the empty REQUESTED file
@@ -267,7 +282,7 @@ func parseMIME(afs *afero.Afero, pythonMIMEFilepath string) (*pythonPackageDetai
 
 	textReader := textproto.NewReader(bufio.NewReader(f))
 	mimeData, err := textReader.ReadMIMEHeader()
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("error reading MIME data: %s", err)
 	}
 
