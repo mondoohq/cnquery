@@ -24,6 +24,7 @@ type SSMManagedInstances struct {
 	mqlDiscovery   *MqlDiscovery
 	providerConfig *providers.Config
 	account        string
+	PassInLabels   map[string]string
 }
 
 func (ssmi *SSMManagedInstances) Name() string {
@@ -106,7 +107,11 @@ func (ssmi *SSMManagedInstances) addConnectionInfoToSSMAsset(instance *asset.Ass
 		},
 	}}
 	asset.State = mapSmmManagedPingStateCode(ping)
-
+	if len(ssmi.PassInLabels) > 0 {
+		for k, v := range ssmi.PassInLabels {
+			asset.Labels[k] = v
+		}
+	}
 	return asset
 }
 

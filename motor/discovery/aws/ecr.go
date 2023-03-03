@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/motorid/containerid"
 	"go.mondoo.com/cnquery/motor/platform"
@@ -16,11 +15,11 @@ func NewEcrDiscovery(m *MqlDiscovery, cfg *providers.Config, account string) (*E
 }
 
 type EcrImages struct {
-	config         aws.Config
 	profile        string
 	mqlDiscovery   *MqlDiscovery
 	providerConfig *providers.Config
 	account        string
+	PassInLabels   map[string]string
 }
 
 func (ecri *EcrImages) Name() string {
@@ -34,7 +33,7 @@ func (ecri *EcrImages) List() ([]*asset.Asset, error) {
 	}
 	assetsWithConnecion := []*asset.Asset{}
 	for i := range imageAssets {
-		assetsWithConnecion = append(assetsWithConnecion, addConnectionInfoToEcrAsset(imageAssets[i], ecri.profile))
+		assetsWithConnecion = append(assetsWithConnecion, ecri.addConnectionInfoToEcrAsset(imageAssets[i], ecri.profile))
 	}
 	return assetsWithConnecion, nil
 }
@@ -43,7 +42,7 @@ func MondooImageRegistryID(id string) string {
 	return "//platformid.api.mondoo.app/runtime/docker/registry/" + id
 }
 
-func addConnectionInfoToEcrAsset(image *asset.Asset, profile string) *asset.Asset {
+func (ecri *EcrImages) addConnectionInfoToEcrAsset(image *asset.Asset, profile string) *asset.Asset {
 	a := image
 	digest := a.Labels[DigestLabel]
 	repoUrl := a.Labels[RepoUrlLabel]
@@ -79,5 +78,11 @@ func addConnectionInfoToEcrAsset(image *asset.Asset, profile string) *asset.Asse
 	// store repo digest
 	repoDigests := []string{repoUrl + "@" + digest}
 	a.Labels[fmt.Sprintf("ecr.%s.amazonaws.com/repo-digests", region)] = strings.Join(repoDigests, ",")
+
+	if len(ecri.PassInLabels) > 0 {
+		for k, v := range ecri.PassInLabels {
+			a.Labels[k] = v
+		}
+	}
 	return a
 }
