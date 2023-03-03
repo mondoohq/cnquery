@@ -36,7 +36,7 @@ func (p *mqlPythonPackage) init(args *resources.Args) (*resources.Args, PythonPa
 			return nil, nil, fmt.Errorf("error parsing python package data: %s", err)
 		}
 
-		obj, err := pythonPackageDetailsToResource(p.MotorRuntime, *ppd)
+		obj, err := pythonPackageDetailsToResource(p.MotorRuntime, *ppd, []interface{}{})
 		if err != nil {
 			return nil, nil, fmt.Errorf("error translating python metadata into internal resource: %s", err)
 		}

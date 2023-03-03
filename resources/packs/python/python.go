@@ -174,22 +174,7 @@ func pythonPackageDetailsWithDependenciesToResource(motorRuntime *resources.Runt
 	}
 
 	// finally create the resource
-	f, err := motorRuntime.CreateResource("file", "path", newPyPkgDetails.file)
-	if err != nil {
-		log.Error().Err(err).Msg("error while creating file resource for python package resource")
-		return nil, err
-	}
-
-	r, err := motorRuntime.CreateResource("python.package",
-		"id", newPyPkgDetails.file,
-		"name", newPyPkgDetails.name,
-		"version", newPyPkgDetails.version,
-		"author", newPyPkgDetails.author,
-		"summary", newPyPkgDetails.summary,
-		"license", newPyPkgDetails.license,
-		"file", f.(core.File),
-		"dependencies", dependencies,
-	)
+	r, err := pythonPackageDetailsToResource(motorRuntime, newPyPkgDetails, dependencies)
 	if err != nil {
 		log.Error().Err(err).Str("resource", newPyPkgDetails.file).Msg("error while creating MQL resource")
 		return nil, err
@@ -200,7 +185,7 @@ func pythonPackageDetailsWithDependenciesToResource(motorRuntime *resources.Runt
 	return r, nil
 }
 
-func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonPackageDetails) (resources.ResourceType, error) {
+func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonPackageDetails, dependencies []interface{}) (resources.ResourceType, error) {
 	f, err := motorRuntime.CreateResource("file", "path", ppd.file)
 	if err != nil {
 		log.Error().Err(err).Msg("error while creating file resource for python package resource")
@@ -215,7 +200,7 @@ func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonP
 		"summary", ppd.summary,
 		"license", ppd.license,
 		"file", f.(core.File),
-		"dependencies", nil,
+		"dependencies", dependencies,
 	)
 	if err != nil {
 		log.Error().AnErr("err", err).Msg("error while creating MQL resource")
@@ -225,23 +210,29 @@ func pythonPackageDetailsToResource(motorRuntime *resources.Runtime, ppd pythonP
 }
 
 func (k *mqlPython) GetChildren() ([]interface{}, error) {
-	allResults, err := k.getAllPackages()
+	allPyPkgDetails, err := k.getAllPackages()
 	if err != nil {
 		return nil, err
 	}
 
+	// this is the "global" map so that the recursive function calls can keep track of
+	// resources already created
+	pythonPackageResourceMap := map[string]resources.ResourceType{}
+
 	resp := []interface{}{}
 
-	for _, result := range allResults {
-		if !result.isLeaf {
+	for _, pyPkgDetails := range allPyPkgDetails {
+		if !pyPkgDetails.isLeaf {
 			continue
 		}
 
-		r, err := pythonPackageDetailsToResource(k.MotorRuntime, result)
+		res, err := pythonPackageDetailsWithDependenciesToResource(k.MotorRuntime, pyPkgDetails, allPyPkgDetails, pythonPackageResourceMap)
 		if err != nil {
+			log.Error().Err(err).Msg("error while creating resource(s) for python package")
+			// we will keep trying to make resources even if a single one failed
 			continue
 		}
-		resp = append(resp, r)
+		resp = append(resp, res)
 	}
 
 	return resp, nil
