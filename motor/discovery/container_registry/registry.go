@@ -136,7 +136,7 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 		return nil, handleUnauthorizedError(err, repo.Name())
 	}
 
-	foundDigests := map[string]struct{}{}
+	foundAssets := map[string]*asset.Asset{}
 	for i := range tags {
 		repoWithTag := repo.Name() + ":" + tags[i]
 
@@ -149,12 +149,18 @@ func (a *DockerRegistryImages) ListRepository(repoName string) ([]*asset.Asset, 
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := foundDigests[a.PlatformIds[0]]; ok {
-			// skip duplicate digests
+		if foundAsset, ok := foundAssets[a.PlatformIds[0]]; ok {
+			// only add tags to the first asset
+			foundAsset.Labels["docker.io/tags"] = foundAsset.Labels["docker.io/tags"] + "," + a.Labels["docker.io/tags"]
+			log.Debug().Str("tags", foundAsset.Labels["docker.io/tags"]).Str("image", foundAsset.Name).Msg("found additional tags for image")
 			continue
 		}
-		foundDigests[a.PlatformIds[0]] = struct{}{}
-		assets = append(assets, a)
+		foundAssets[a.PlatformIds[0]] = a
+	}
+
+	// flatten map
+	for k := range foundAssets {
+		assets = append(assets, foundAssets[k])
 	}
 	return assets, nil
 }
@@ -186,7 +192,7 @@ func (a *DockerRegistryImages) toAsset(ref name.Reference, creds []*vault.Creden
 	}
 	imgDigest := desc.Digest.String()
 	repoName := ref.Context().Name()
-	imgTag := ref.Context().Tag(ref.Identifier()).Name()
+	imgTag := ref.Context().Tag(ref.Identifier()).TagStr()
 	name := repoName + "@" + containerid.ShortContainerImageID(imgDigest)
 	imageUrl := repoName + "@" + imgDigest
 	asset := &asset.Asset{
