@@ -4,7 +4,7 @@ import "../core/core.lr"
 // Python package details found on operating system image
 python {
   init(path? string)
-  // Path to a specific site-packages location to exclusively scan through (emtpy means search through default locations)
+  // Path to a specific site-packages location to exclusively scan through (empty means search through default locations)
   path string
 
   // Packages returns a list of all discovered packages
