@@ -74,6 +74,49 @@ func (a *mqlAzureSubscriptionNetworkService) GetInterfaces() ([]interface{}, err
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkService) GetPublicIpAddresses() ([]interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := network.NewPublicIPAddressesClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListAllPager(&network.PublicIPAddressesClientListAllOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, ip := range page.Value {
+			if ip != nil {
+				mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.networkService.ipAddress",
+					"id", core.ToString(ip.ID),
+					"name", core.ToString(ip.Name),
+					"location", core.ToString(ip.Location),
+					"tags", azureTagsToInterface(ip.Tags),
+					"ipAddress", core.ToString(ip.Properties.IPAddress),
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlAzure)
+			}
+		}
+	}
+	return res, nil
+}
+
 func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resources.ResourceType, error) {
 	properties, err := core.JsonToDict(iface.Properties)
 	if err != nil {
@@ -256,6 +299,10 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) id() (string, error) {
 
 func (a *mqlAzureSubscriptionNetworkServiceInterface) GetVm() (interface{}, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceIpAddress) id() (string, error) {
+	return a.Id()
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) init(args *resources.Args) (*resources.Args, AzureSubscriptionNetworkServiceSecurityGroup, error) {

@@ -322,6 +322,8 @@ private azure.subscription.computeService.vm @defaults("id name location ") {
   osDisk() azure.subscription.computeService.disk
   // VM compute data disk
   dataDisks() []azure.subscription.computeService.disk
+  // VM public IP addresses
+  publicIpAddresses() []azure.subscription.networkService.ipAddress
 }
 
 // Azure Disk Resource
@@ -358,6 +360,8 @@ private azure.subscription.networkService {
   securityGroups() []azure.subscription.networkService.securityGroup
   // List of network watchers
   watchers() []azure.subscription.networkService.watcher
+  // List of public IP addresses
+  publicIpAddresses() []azure.subscription.networkService.ipAddress
 }
 
 // Azure Network Interface
@@ -378,6 +382,20 @@ private azure.subscription.networkService.interface @defaults("id name location"
   properties dict
   // Network interface compute vm
   vm() azure.subscription.computeService.vm
+}
+
+// Azure Network IP address
+private azure.subscription.networkService.ipAddress @defaults("id name location") {
+  // IP address ID
+  id string
+  // IP address name
+  name string
+  // IP address name
+  location string
+  // IP address tags
+  tags map[string]string
+  // IP address type
+  ipAddress string
 }
 
 // Azure Network Security Group
