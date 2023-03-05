@@ -26,7 +26,7 @@ type BundleMap struct {
 	OwnerMrn string                `json:"owner_mrn,omitempty"`
 	Packs    map[string]*QueryPack `json:"packs,omitempty"`
 	Queries  map[string]*Mquery    `json:"queries,omitempty"`
-	Props    map[string]*Mquery    `json:"props,omitempty"`
+	Props    map[string]*Property  `json:"props,omitempty"`
 }
 
 // NewBundleMap creates a new empty initialized map
@@ -36,7 +36,7 @@ func NewBundleMap(ownerMrn string) *BundleMap {
 		OwnerMrn: ownerMrn,
 		Packs:    make(map[string]*QueryPack),
 		Queries:  make(map[string]*Mquery),
-		Props:    make(map[string]*Mquery),
+		Props:    make(map[string]*Property),
 	}
 }
 

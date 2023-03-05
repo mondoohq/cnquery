@@ -84,10 +84,10 @@ func (s *LocalServices) setBundleFromMap(ctx context.Context, bundle *BundleMap)
 	}
 
 	for i := range bundle.Props {
-		query := bundle.Props[i]
-		logCtx.Debug().Str("mrn", query.Mrn).Msg("store prop")
+		prop := bundle.Props[i]
+		logCtx.Debug().Str("mrn", prop.Mrn).Msg("store prop")
 
-		if err := s.setQuery(ctx, query.Mrn, query); err != nil {
+		if err := s.setProp(ctx, prop.Mrn, prop); err != nil {
 			return err
 		}
 	}
@@ -111,10 +111,23 @@ func (s *LocalServices) setQuery(ctx context.Context, mrn string, query *Mquery)
 	}
 
 	if query.Title == "" {
-		query.Title = query.Query
+		query.Title = query.Mql
 	}
 
 	return s.DataLake.SetQuery(ctx, mrn, query)
+}
+
+func (s *LocalServices) setProp(ctx context.Context, mrn string, prop *Property) error {
+	if prop == nil {
+		return errors.New("cannot set prop '" + mrn + "' as it is not defined")
+	}
+
+	if prop.Title == "" {
+		prop.Title = prop.Mql // TODO: is this correct
+	}
+
+	// TODO: unclear what should happen next
+	return s.DataLake.SetProp(ctx, mrn, prop)
 }
 
 // GetQueryPack for a given MRN
