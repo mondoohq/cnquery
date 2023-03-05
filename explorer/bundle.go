@@ -17,7 +17,7 @@ import (
 
 const (
 	MRN_RESOURCE_QUERY     = "queries"
-	MRN_RESOURCE_QUERYPACK = "querypack"
+	MRN_RESOURCE_QUERYPACK = "querypacks"
 	MRN_RESOURCE_ASSET     = "assets"
 )
 
