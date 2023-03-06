@@ -1013,6 +1013,7 @@ resources:
       name: {}
       osDisk: {}
       properties: {}
+      publicIpAddresses: {}
       tags: {}
       type: {}
     is_private: true
@@ -1560,6 +1561,7 @@ resources:
   azure.subscription.networkService:
     fields:
       interfaces: {}
+      publicIpAddresses: {}
       securityGroups: {}
       subscriptionId: {}
       watchers: {}
@@ -1578,6 +1580,18 @@ resources:
       tags: {}
       type: {}
       vm: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.ipAddress:
+    fields:
+      id: {}
+      ipAddress: {}
+      location: {}
+      name: {}
+      tags: {}
     is_private: true
     min_mondoo_version: latest
     platform:

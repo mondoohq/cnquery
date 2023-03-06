@@ -9,6 +9,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -117,6 +118,96 @@ func (a *mqlAzureSubscriptionComputeService) GetDisks() ([]interface{}, error) {
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionComputeServiceVm) GetPublicIpAddresses() ([]interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	props, err := a.Properties()
+	if err != nil {
+		return nil, err
+	}
+
+	propsDict := (props).(map[string]interface{})
+	networkInterface, ok := propsDict["networkProfile"]
+	if !ok {
+		return nil, errors.New("cannot find network profile on vm, not retrieving ip addresses")
+	}
+	var networkInterfaces compute.NetworkProfile
+
+	data, err := json.Marshal(networkInterface)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(data), &networkInterfaces)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+	nicClient, err := network.NewInterfacesClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	ipClient, err := network.NewPublicIPAddressesClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, iface := range networkInterfaces.NetworkInterfaces {
+		resource, err := azure.ParseResourceID(*iface.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		name, err := resource.Component("networkInterfaces")
+		if err != nil {
+			return nil, err
+		}
+		networkInterface, err := nicClient.Get(ctx, resource.ResourceGroup, name, &network.InterfacesClientGetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		for _, config := range networkInterface.Interface.Properties.IPConfigurations {
+			ip := config.Properties.PublicIPAddress
+			if ip != nil {
+				publicIPID := *ip.ID
+				publicIpResource, err := azure.ParseResourceID(publicIPID)
+				if err != nil {
+					return nil, errors.New("invalid network information for resource " + publicIPID)
+				}
+
+				ipAddrName, err := publicIpResource.Component("publicIPAddresses")
+				if err != nil {
+					return nil, errors.New("invalid network information for resource " + publicIPID)
+				}
+				ipAddress, err := ipClient.Get(ctx, publicIpResource.ResourceGroup, ipAddrName, &network.PublicIPAddressesClientGetOptions{})
+				if err != nil {
+					return nil, err
+				}
+				mqlIpAddress, err := a.MotorRuntime.CreateResource("azure.subscription.networkService.ipAddress",
+					"id", core.ToString(ipAddress.ID),
+					"name", core.ToString(ipAddress.Name),
+					"location", core.ToString(ipAddress.Location),
+					"tags", azureTagsToInterface(ipAddress.Tags),
+					"ipAddress", core.ToString(ipAddress.Properties.IPAddress),
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlIpAddress)
+			}
+		}
+	}
+
+	return res, nil
+}
+
 func diskToMql(runtime *resources.Runtime, disk compute.Disk) (resources.ResourceType, error) {
 	properties, err := core.JsonToDict(disk.Properties)
 	if err != nil {
@@ -176,7 +267,6 @@ func (a *mqlAzureSubscriptionComputeService) GetVms() ([]interface{}, error) {
 		return nil, err
 	}
 	pager := vmClient.NewListAllPager(&compute.VirtualMachinesClientListAllOptions{})
-
 	res := []interface{}{}
 	for pager.More() {
 		vms, err := pager.NextPage(ctx)
