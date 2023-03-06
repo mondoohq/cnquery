@@ -127,7 +127,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			if err != nil {
 				return nil, err
 			}
-			id, _ := provider.Identifier()
+			id, _ := p.Identifier()
 			subAsset := &asset.Asset{
 				PlatformIds: []string{id},
 				Name:        name,
@@ -163,10 +163,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 					a.RelatedAssets = append(a.RelatedAssets, sub)
 				}
 
-				// if there's a root available, link the asset to it
-				if root != nil {
-					a.RelatedAssets = append(a.RelatedAssets, root)
-				}
 				resolved = append(resolved, a)
 			}
 		}
@@ -197,11 +193,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 				// if there's a sub available, link the asset to it
 				if sub := subsAssets[*s.SubscriptionID]; sub != nil {
 					a.RelatedAssets = append(a.RelatedAssets, sub)
-				}
-
-				// if there's a root available, link the asset to it
-				if root != nil {
-					a.RelatedAssets = append(a.RelatedAssets, root)
 				}
 
 				resolved = append(resolved, a)
