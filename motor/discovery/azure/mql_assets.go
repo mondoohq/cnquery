@@ -74,14 +74,13 @@ func GatherAssets(ctx context.Context, tc *providers.Config, credsResolver vault
 	if err != nil {
 		return nil, err
 	}
-	// TODO: make this work by having the ip addresses available via mql
-	// if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-	// 	instances, err := computeInstances(m, provider.SubscriptionID(), pCfg)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	assets = append(assets, instances...)
-	// }
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
+		instances, err := computeInstances(m, provider.SubscriptionID(), pCfg, sfn)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, instances...)
+	}
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoverySqlServers) {
 		servers, err := computeSqlServers(m, provider.SubscriptionID(), pCfg)
 		if err != nil {
