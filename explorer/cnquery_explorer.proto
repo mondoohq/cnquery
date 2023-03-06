@@ -158,9 +158,9 @@ message Property {
 
 enum Action {
   UNSPECIFIED = 0;
-  ACTIVATE = 1;
+  MODIFY = 1;
   DEACTIVATE = 2;
-  MODIFY = 3;
+  ACTIVATE = 3;
   IGNORE = 4;
 }
 
