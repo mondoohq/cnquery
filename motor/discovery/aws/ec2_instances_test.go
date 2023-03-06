@@ -50,15 +50,17 @@ func TestWhereFilter(t *testing.T) {
 		Tags: map[string]string{"Name": "test"},
 	}
 	require.Equal(t, `tags["Name"] == "test"`, whereFilter(filters))
+
 	filters = Ec2InstancesFilters{
 		Tags: map[string]string{"Name": "test", "another": "test2"},
 	}
-	require.Equal(t, `tags["Name"] == "test" || tags["another"] == "test2"`, whereFilter(filters))
+	// go access map keys randomly so both are possible outputs here when building the filters
+	expected := []string{`tags["Name"] == "test" || tags["another"] == "test2"`, `tags["another"] == "test2" || tags["Name"] == "test"`}
+	require.Contains(t, expected, whereFilter(filters))
 
 	filters = Ec2InstancesFilters{
 		Regions: []string{"us-east-2"},
 		Tags:    map[string]string{"Name": "test"},
 	}
-
 	require.Equal(t, `region == "us-east-2" && tags["Name"] == "test"`, whereFilter(filters))
 }
