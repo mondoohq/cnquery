@@ -1,4 +1,4 @@
-package msgraphclient
+package msgraphconv
 
 import (
 	"github.com/cockroachdb/errors"

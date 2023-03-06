@@ -31,7 +31,7 @@ func NewAssignedPlan(p models.AssignedPlanable) AssignedPlan {
 		AssignedDateTime: p.GetAssignedDateTime(),
 		CapabilityStatus: core.ToString(p.GetCapabilityStatus()),
 		Service:          core.ToString(p.GetService()),
-		ServicePlanId:    core.ToString(p.GetServicePlanId()),
+		ServicePlanId:    p.GetServicePlanId().String(),
 	}
 }
 
@@ -218,6 +218,11 @@ func NewAuthorizationPolicy(p models.AuthorizationPolicyable) *AuthorizationPoli
 	if p == nil {
 		return nil
 	}
+
+	var roleId string
+	if p.GetGuestUserRoleId() != nil {
+		roleId = p.GetGuestUserRoleId().String()
+	}
 	return &AuthorizationPolicy{
 		AllowedToSignUpEmailBasedSubscriptions:    p.GetAllowedToSignUpEmailBasedSubscriptions(),
 		AllowedToUseSSPR:                          p.GetAllowedToUseSSPR(),
@@ -225,7 +230,7 @@ func NewAuthorizationPolicy(p models.AuthorizationPolicyable) *AuthorizationPoli
 		AllowInvitesFrom:                          NewAllowInvitesFrom(p.GetAllowInvitesFrom()),
 		BlockMsolPowerShell:                       p.GetBlockMsolPowerShell(),
 		DefaultUserRolePermissions:                NewDefaultUserRolePermissions(p.GetDefaultUserRolePermissions()),
-		GuestUserRoleId:                           p.GetGuestUserRoleId(),
+		GuestUserRoleId:                           &roleId,
 	}
 }
 

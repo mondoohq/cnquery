@@ -7,6 +7,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
+	msgraphclient "github.com/microsoftgraph/msgraph-sdk-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-sdk-go/devicemanagement"
 	"github.com/microsoftgraph/msgraph-sdk-go/domains"
@@ -20,8 +21,9 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
 	"github.com/microsoftgraph/msgraph-sdk-go/users"
 	microsoft "go.mondoo.com/cnquery/motor/providers/microsoft"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
-	"go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphconv"
+	msgraphadapter "go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphclient"
+	msgraphconv "go.mondoo.com/cnquery/motor/providers/microsoft/msgraph/msgraphconv"
+
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -48,7 +50,7 @@ func (m *mqlMicrosoft) GetSettings() ([]interface{}, error) {
 	ctx := context.Background()
 	settings, err := graphClient.GroupSettings().Get(ctx, &groupsettings.GroupSettingsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 	return core.JsonToDictSlice(msgraphconv.NewSettings(settings.GetValue()))
 }
@@ -72,7 +74,7 @@ func (m *mqlMicrosoft) GetOrganizations() ([]interface{}, error) {
 	ctx := context.Background()
 	resp, err := graphClient.Organization().Get(ctx, &organization.OrganizationRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -125,7 +127,7 @@ func (m *mqlMicrosoft) GetGroups() ([]interface{}, error) {
 	ctx := context.Background()
 	resp, err := graphClient.Groups().Get(ctx, &groups.GroupsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -177,7 +179,7 @@ func (m *mqlMicrosoft) GetUsers() ([]interface{}, error) {
 		Select: selectFields,
 	}})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -241,7 +243,7 @@ func (m *mqlMicrosoft) GetServiceprincipals() ([]interface{}, error) {
 	ctx := context.Background()
 	resp, err := graphClient.ServicePrincipals().Get(ctx, &serviceprincipals.ServicePrincipalsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -282,7 +284,7 @@ func (m *mqlMicrosoft) GetDomains() ([]interface{}, error) {
 	ctx := context.Background()
 	resp, err := graphClient.Domains().Get(ctx, &domains.DomainsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -338,9 +340,9 @@ func (m *mqlMicrosoftDomain) GetServiceConfigurationRecords() ([]interface{}, er
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.DomainsById(id).ServiceConfigurationRecords().Get(ctx, &domains.DomainsItemServiceConfigurationRecordsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.DomainsById(id).ServiceConfigurationRecords().Get(ctx, &domains.ItemServiceConfigurationRecordsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -440,7 +442,7 @@ func (m *mqlMicrosoft) GetApplications() ([]interface{}, error) {
 	ctx := context.Background()
 	resp, err := graphClient.Applications().Get(ctx, &applications.ApplicationsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -488,9 +490,9 @@ func (m *mqlMicrosoftUser) GetSettings() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	userSettings, err := graphClient.UsersById(id).Settings().Get(ctx, &users.UsersItemSettingsRequestBuilderGetRequestConfiguration{})
+	userSettings, err := graphClient.UsersById(id).Settings().Get(ctx, &users.ItemSettingsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	return core.JsonToDict(msgraphconv.NewUserSettings(userSettings))
@@ -565,9 +567,9 @@ func (m *mqlMicrosoftSecurity) GetLatestSecureScores() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecuritySecureScoresRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecureScoresRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	scores := resp.GetValue()
@@ -603,9 +605,9 @@ func (m *mqlMicrosoftSecurity) GetSecureScores() ([]interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecuritySecureScoresRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Security().SecureScores().Get(ctx, &security.SecureScoresRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -646,9 +648,9 @@ func (m *mqlMicrosoftPolicies) GetAuthorizationPolicy() (interface{}, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.Policies().AuthorizationPolicy().Get(ctx, &policies.PoliciesAuthorizationPolicyRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Policies().AuthorizationPolicy().Get(ctx, &policies.AuthorizationPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	return core.JsonToDict(msgraphconv.NewAuthorizationPolicy(resp))
@@ -671,9 +673,9 @@ func (m *mqlMicrosoftPolicies) GetIdentitySecurityDefaultsEnforcementPolicy() (i
 	}
 
 	ctx := context.Background()
-	policy, err := graphClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(ctx, &policies.PoliciesIdentitySecurityDefaultsEnforcementPolicyRequestBuilderGetRequestConfiguration{})
+	policy, err := graphClient.Policies().IdentitySecurityDefaultsEnforcementPolicy().Get(ctx, &policies.IdentitySecurityDefaultsEnforcementPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	return core.JsonToDict(msgraphconv.NewIdentitySecurityDefaultsEnforcementPolicy(policy))
@@ -697,9 +699,9 @@ func (m *mqlMicrosoftPolicies) GetAdminConsentRequestPolicy() (interface{}, erro
 	}
 
 	ctx := context.Background()
-	policy, err := graphClient.Policies().AdminConsentRequestPolicy().Get(ctx, &policies.PoliciesAdminConsentRequestPolicyRequestBuilderGetRequestConfiguration{})
+	policy, err := graphClient.Policies().AdminConsentRequestPolicy().Get(ctx, &policies.AdminConsentRequestPolicyRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 	return core.JsonToDict(msgraphconv.NewAdminConsentRequestPolicy(policy))
 }
@@ -722,9 +724,9 @@ func (m *mqlMicrosoftPolicies) GetPermissionGrantPolicies() (interface{}, error)
 		return nil, err
 	}
 	ctx := context.Background()
-	resp, err := graphClient.Policies().PermissionGrantPolicies().Get(ctx, &policies.PoliciesPermissionGrantPoliciesRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.Policies().PermissionGrantPolicies().Get(ctx, &policies.PermissionGrantPoliciesRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 	return core.JsonToDictSlice(msgraphconv.NewPermissionGrantPolicies(resp.GetValue()))
 }
@@ -750,9 +752,9 @@ func (m *mqlMicrosoftRolemanagement) GetRoleDefinitions() (interface{}, error) {
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.RoleManagementDirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.RoleManagement().Directory().RoleDefinitions().Get(ctx, &rolemanagement.DirectoryRoleDefinitionsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -808,15 +810,15 @@ func (m *mqlMicrosoftRolemanagementRoledefinition) GetAssignments() ([]interface
 	filter := "roleDefinitionId eq '" + roleDefinitionID + "'"
 
 	ctx := context.Background()
-	requestConfig := &rolemanagement.RoleManagementDirectoryRoleAssignmentsRequestBuilderGetRequestConfiguration{
-		QueryParameters: &rolemanagement.RoleManagementDirectoryRoleAssignmentsRequestBuilderGetQueryParameters{
+	requestConfig := &rolemanagement.DirectoryRoleAssignmentsRequestBuilderGetRequestConfiguration{
+		QueryParameters: &rolemanagement.DirectoryRoleAssignmentsRequestBuilderGetQueryParameters{
 			Filter: &filter,
 			Expand: []string{"principal"},
 		},
 	}
 	resp, err := graphClient.RoleManagement().Directory().RoleAssignments().Get(ctx, requestConfig)
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	roleAssignments := resp.GetValue()
@@ -865,9 +867,9 @@ func (m *mqlMicrosoftDevicemanagement) GetDeviceConfigurations() ([]interface{},
 	}
 
 	ctx := context.Background()
-	resp, err := graphClient.DeviceManagement().DeviceConfigurations().Get(ctx, &devicemanagement.DeviceManagementDeviceConfigurationsRequestBuilderGetRequestConfiguration{})
+	resp, err := graphClient.DeviceManagement().DeviceConfigurations().Get(ctx, &devicemanagement.DeviceConfigurationsRequestBuilderGetRequestConfiguration{})
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	res := []interface{}{}
@@ -1047,14 +1049,14 @@ func (m *mqlMicrosoftDevicemanagement) GetDeviceCompliancePolicies() ([]interfac
 	}
 
 	ctx := context.Background()
-	requestConfig := &devicemanagement.DeviceManagementDeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
-		QueryParameters: &devicemanagement.DeviceManagementDeviceCompliancePoliciesRequestBuilderGetQueryParameters{
+	requestConfig := &devicemanagement.DeviceCompliancePoliciesRequestBuilderGetRequestConfiguration{
+		QueryParameters: &devicemanagement.DeviceCompliancePoliciesRequestBuilderGetQueryParameters{
 			Expand: []string{"assignments"},
 		},
 	}
 	resp, err := graphClient.DeviceManagement().DeviceCompliancePolicies().Get(ctx, requestConfig)
 	if err != nil {
-		return nil, msgraphclient.TransformError(err)
+		return nil, msgraphconv.TransformError(err)
 	}
 
 	compliancePolicies := resp.GetValue()
@@ -1130,9 +1132,9 @@ func graphClient(t *microsoft.Provider) (*msgraphclient.GraphServiceClient, erro
 	}
 
 	providerFunc := func() (authentication.AuthenticationProvider, error) {
-		return a.NewAzureIdentityAuthenticationProviderWithScopes(auth, msgraphclient.DefaultMSGraphScopes)
+		return a.NewAzureIdentityAuthenticationProviderWithScopes(auth, msgraphadapter.DefaultMSGraphScopes)
 	}
-	adapter, err := msgraphclient.NewGraphRequestAdapterWithFn(providerFunc)
+	adapter, err := msgraphadapter.NewGraphRequestAdapterWithFn(providerFunc)
 	if err != nil {
 		return nil, err
 	}
