@@ -1013,7 +1013,6 @@ resources:
       name: {}
       osDisk: {}
       properties: {}
-      publicIpAddress: {}
       publicIpAddresses: {}
       tags: {}
       type: {}
