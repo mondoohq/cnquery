@@ -36,3 +36,52 @@ func TestTargetParser(t *testing.T) {
 		assert.Equal(t, tests[i].target, res, tests[i].value)
 	}
 }
+
+func TestParseIPv6(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			input:    "//192.168.123.22",
+			expected: "//192.168.123.22",
+		},
+		{
+			input:    "ssh://user@192.168.123.22:22",
+			expected: "ssh://user@192.168.123.22:22",
+		},
+		{
+			input:    "//user@192.168.123.22:22",
+			expected: "//user@192.168.123.22:22",
+		},
+		{
+			input:    "ssh://user@[fe80::a3c4:928f:d918:22]:22",
+			expected: "ssh://user@[fe80::a3c4:928f:d918:22]:22",
+		},
+		{
+			input:    "//user@[fe80::a3c4:928f:d918:22]:22",
+			expected: "//user@[fe80::a3c4:928f:d918:22]:22",
+		},
+		{
+			input:    "//user@fe80::a3c4:d918:22",
+			expected: "//user@[fe80::a3c4:d918:22]",
+		},
+		{
+			input:    "//user@fe80::a3c4:d918:22:22", // no abiliy to understand user might have meant port 22!
+			expected: "//user@[fe80::a3c4:d918:22:22]",
+		},
+		{
+			input:    "//fe80::a3c4:d918:22",
+			expected: "//[fe80::a3c4:d918:22]",
+		},
+		{
+			input:    "//[fe80::a3c4:d918:22]:22",
+			expected: "//[fe80::a3c4:d918:22]:22",
+		},
+	}
+
+	for _, test := range tests {
+		res := addIPv6Brackets(test.input)
+		assert.Equal(t, test.expected, res, "unexpected parsing result during ipv6 handling")
+	}
+}

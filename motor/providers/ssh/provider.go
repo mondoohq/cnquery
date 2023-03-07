@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -26,6 +27,16 @@ var (
 )
 
 func New(pCfg *providers.Config) (*Provider, error) {
+	host := pCfg.GetHost()
+	// ipv6 addresses w/o the surrounding [] will eventually error
+	// so check whether we have an ipv6 address by parsing it (the
+	// parsing will fail if the string DOES have the []s) and adding
+	// the []s
+	ip := net.ParseIP(host)
+	if ip != nil && ip.To16() != nil {
+		pCfg.Host = fmt.Sprintf("[%s]", host)
+	}
+
 	pCfg = ReadSSHConfig(pCfg)
 
 	// ensure all required configs are set
@@ -142,6 +153,10 @@ func (p *Provider) Connect() error {
 	conn, _, err := establishClientConnection(cc, hostkeyCallback)
 	if err != nil {
 		log.Debug().Err(err).Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
+		fmt.Printf("HOST: %+v\n", cc.Host)
+		if strings.ContainsAny(cc.Host, "[]") {
+			log.Info().Str("host", cc.Host).Int32("port", cc.Port).Msg("ensure proper []s when combining IPv6 with port numbers")
+		}
 		return err
 	}
 	p.SSHClient = conn
