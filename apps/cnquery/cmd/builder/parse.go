@@ -1,8 +1,10 @@
 package builder
 
 import (
+	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -22,6 +24,32 @@ type target struct {
 	Port     int32
 }
 
+// match [leading_protocol:]//[user@]EVERYTHING_ELSE
+var ipv6Regexp = regexp.MustCompile(`(.*//)(.*@)?(.*)`)
+
+func addIPv6Brackets(uri string) string {
+	if strings.ContainsAny(uri, "[]") {
+		// already has surrounding []s
+		return uri
+	}
+
+	matched := ipv6Regexp.FindStringSubmatch(uri)
+
+	if matched == nil {
+		return uri
+	}
+
+	host := matched[3]
+
+	// if there is just one : (or less) then we're not dealing with ipv6
+	if strings.Count(host, ":") <= 1 {
+		return uri
+	}
+
+	// at this point we assume we're dealing with ipv6 w/o []s
+	return fmt.Sprintf("%s%s[%s]", matched[1], matched[2], host)
+}
+
 // parseTarget parses the specified target, which may be specified as either:
 // - [user@]hostname or
 // - a URI of the form ssh://[user@]hostname[:port]
@@ -30,6 +58,8 @@ func parseTarget(uri string) (target, error) {
 	if !strings.Contains(uri, "://") {
 		uri = "//" + uri
 	}
+
+	uri = addIPv6Brackets(uri)
 
 	u, err := url.Parse(uri)
 	if err != nil {
