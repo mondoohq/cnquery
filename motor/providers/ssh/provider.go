@@ -153,6 +153,10 @@ func (p *Provider) Connect() error {
 	conn, _, err := establishClientConnection(cc, hostkeyCallback)
 	if err != nil {
 		log.Debug().Err(err).Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
+		fmt.Printf("HOST: %+v\n", cc.Host)
+		if strings.ContainsAny(cc.Host, "[]") {
+			log.Info().Str("host", cc.Host).Int32("port", cc.Port).Msg("ensure proper []s when combining IPv6 with port numbers")
+		}
 		return err
 	}
 	p.SSHClient = conn
