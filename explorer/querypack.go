@@ -132,15 +132,30 @@ func ChecksumQueries(queries []*Mquery) (checksums.Fast, checksums.Fast) {
 
 // ComputeFilters into mql
 func (p *QueryPack) ComputeFilters(ctx context.Context, ownerMRN string) ([]*Mquery, error) {
-	if p.Filters == nil {
-		return nil, errors.New("cannot compute filters for a querypack, unless it was compiled first")
+	numFilters := 0
+	if p.Filters != nil {
+		numFilters += len(p.Filters.Items)
+	}
+	for i := range p.Groups {
+		if p.Groups[i].Filters == nil {
+			return nil, errors.New("cannot compute filters for a querypack, unless it was compiled first")
+		}
+		numFilters += len(p.Groups[i].Filters.Items)
 	}
 
-	res := make([]*Mquery, len(p.Filters.Items))
+	res := make([]*Mquery, numFilters)
 	idx := 0
-	for _, v := range p.Filters.Items {
-		res[idx] = v
-		idx++
+	if p.Filters != nil {
+		for _, v := range p.Filters.Items {
+			res[idx] = v
+			idx++
+		}
+	}
+	for i := range p.Groups {
+		for _, v := range p.Groups[i].Filters.Items {
+			res[idx] = v
+			idx++
+		}
 	}
 
 	sort.Slice(res, func(i, j int) bool {

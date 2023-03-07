@@ -492,15 +492,29 @@ func (p *Bundle) EnsureUIDs() {
 	}
 }
 
+// Filters retrieves the aggregated filters for all querypacks in this bundle.
 func (p *Bundle) Filters() []*Mquery {
 	uniq := map[string]*Mquery{}
 	for i := range p.Packs {
 		pack := p.Packs[i]
-		if pack.Filters == nil {
-			continue
+
+		// TODO: Currently we don't process the difference between local pack filters
+		// and their group filters correctly. These need aggregation.
+
+		if pack.Filters != nil {
+			for k, v := range pack.Filters.Items {
+				uniq[k] = v
+			}
 		}
-		for k, v := range pack.Filters.Items {
-			uniq[k] = v
+
+		for j := range pack.Groups {
+			group := pack.Groups[j]
+			if group.Filters == nil {
+				continue
+			}
+			for k, v := range group.Filters.Items {
+				uniq[k] = v
+			}
 		}
 	}
 
