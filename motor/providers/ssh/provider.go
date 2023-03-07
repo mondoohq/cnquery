@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -26,6 +27,16 @@ var (
 )
 
 func New(pCfg *providers.Config) (*Provider, error) {
+	host := pCfg.GetHost()
+	// ipv6 addresses w/o the surrounding [] will eventually error
+	// so check whether we have an ipv6 address by parsing it (the
+	// parsing will fail if the string DOES have the []s) and adding
+	// the []s
+	ip := net.ParseIP(host)
+	if ip != nil && ip.To16() != nil {
+		pCfg.Host = fmt.Sprintf("[%s]", host)
+	}
+
 	pCfg = ReadSSHConfig(pCfg)
 
 	// ensure all required configs are set
