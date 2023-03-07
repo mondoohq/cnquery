@@ -214,6 +214,8 @@ message Impact {
   ScoringSystem scoring = 2;
   // The weight of this query. Has to be > 0, otherwise counts as unset.
   int32 weight = 3;
+  // Action is copied into the impact to correctly reconstruct the v7 ScoringSpec
+  Action action = 4;
 }
 
 message QueryPackDocs {

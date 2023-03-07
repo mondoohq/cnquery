@@ -21,6 +21,9 @@ func (v *Impact) AddBase(base *Impact) {
 	if v.Weight < 1 {
 		v.Weight = base.Weight
 	}
+	if v.Action == Action_UNSPECIFIED {
+		v.Action = base.Action
+	}
 }
 
 func (v *Impact) Checksum() uint64 {
@@ -30,7 +33,8 @@ func (v *Impact) Checksum() uint64 {
 	}
 
 	res = res.AddUint(uint64(v.Scoring)).
-		AddUint(uint64(v.Weight))
+		AddUint(uint64(v.Weight)).
+		AddUint(uint64(v.Action))
 
 	if v.Value != nil {
 		res = res.AddUint(uint64(v.Value.Value))
