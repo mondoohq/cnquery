@@ -1,0 +1,43 @@
+
+import "../core/core.lr"
+
+// Python package details found on operating system image
+python {
+  init(path? string)
+  // Path to a specific site-packages location to exclusively scan through (empty means search through default locations)
+  path string
+
+  // Packages returns a list of all discovered packages
+  packages() []python.package
+
+  // Toplevel returns a list of all packages which were specifically installed (ie. not auto-installed as a dependency)
+  toplevel() []python.package
+}
+
+python.package @defaults("name version") {
+  init(path? string)
+
+  // ID is the python.package unique identifier
+  id string
+
+  // Name of the package
+  name string
+
+  // File containing the package metadata
+  file core.file
+
+  // Version of the package
+  version string
+
+  // License of the package
+  license string
+
+  // Author of the package
+  author string
+
+  // Short package description
+  summary string
+
+  // List of packages depended on
+  dependencies []python.package
+}

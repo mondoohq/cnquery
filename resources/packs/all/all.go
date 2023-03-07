@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/ms365"
 	"go.mondoo.com/cnquery/resources/packs/okta"
 	"go.mondoo.com/cnquery/resources/packs/os"
+	"go.mondoo.com/cnquery/resources/packs/python"
 	"go.mondoo.com/cnquery/resources/packs/slack"
 	"go.mondoo.com/cnquery/resources/packs/terraform"
 	"go.mondoo.com/cnquery/resources/packs/vcd"
@@ -47,4 +48,5 @@ func init() {
 	Registry.Add(vcd.Registry)
 	Registry.Add(arista.Registry)
 	Registry.Add(ipmi.Registry)
+	Registry.Add(python.Registry)
 }
