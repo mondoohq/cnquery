@@ -30,7 +30,7 @@ func TestResource_Python(t *testing.T) {
 	})
 
 	t.Run("parse child packages", func(t *testing.T) {
-		res := x.TestQuery(t, "python.children")
+		res := x.TestQuery(t, "python.toplevel")
 		assert.NotEmpty(t, res)
 		require.Empty(t, res[0].Result().Error)
 		values, ok := res[0].Data.Value.([]interface{})
