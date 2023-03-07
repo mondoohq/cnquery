@@ -34,7 +34,7 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 	fieldPath, fieldinfos, ok := c.findField(resource, id)
 	if !ok {
 		addFieldSuggestions(publicFieldsInfo(c, resource), id, c.Result)
-		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name)
+		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name + "resource")
 	}
 
 	lastRef := ref

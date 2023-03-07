@@ -1757,7 +1757,7 @@ func TestSuggestions(t *testing.T) {
 			// resource with partial field call
 			"sshd.config.para",
 			[]string{"params"},
-			errors.New("cannot find field 'para' in sshd.config"),
+			errors.New("cannot find field 'para' in sshd.config resource"),
 			nil,
 		},
 		{
@@ -1785,14 +1785,14 @@ func TestSuggestions(t *testing.T) {
 			// embedded with asset context on
 			"docker.containers[0].hostnam",
 			[]string{"hostname"},
-			errors.New("cannot find field 'hostnam' in docker.container"),
+			errors.New("cannot find field 'hostnam' in docker.container resource"),
 			cnquery.Features{byte(cnquery.MQLAssetContext)},
 		},
 		{
 			// embedded with asset context off
 			"docker.containers[0].hostnam",
 			[]string{},
-			errors.New("cannot find field 'hostnam' in docker.container"),
+			errors.New("cannot find field 'hostnam' in docker.container resource"),
 			nil,
 		},
 	}
