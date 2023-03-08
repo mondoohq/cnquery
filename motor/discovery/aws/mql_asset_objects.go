@@ -495,8 +495,9 @@ func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) ([]*as
 		RuntimeId         string
 		Status            string
 		ClusterName       string
+		ContainerName     string
 	}
-	containers, err := GetList[data](m, "return aws.ecs.containers { arn taskDefinitionArn name publicIp image region runtimeId status platformFamily platformVersion }")
+	containers, err := GetList[data](m, "return aws.ecs.containers { arn taskDefinitionArn name publicIp image region runtimeId status platformFamily platformVersion containerName }")
 	if err != nil {
 		return nil, err
 	}
@@ -511,6 +512,7 @@ func ecsContainers(m *MqlDiscovery, account string, tc *providers.Config) ([]*as
 			RegionLabel:            c.Region,
 			ArnLabel:               c.Arn,
 			ClusterNameLabel:       c.ClusterName,
+			ContainerName:          c.ContainerName,
 		}
 
 		assets = append(assets, MqlObjectToAsset(account,

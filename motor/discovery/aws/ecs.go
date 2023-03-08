@@ -134,7 +134,7 @@ func (ecs *ECSContainers) addConnectionInfoToECSContainerAsset(asset *asset.Asse
 			Host:    publicIp,
 			Options: map[string]string{
 				"region":      region,
-				ContainerName: asset.Name,
+				ContainerName: asset.Labels[ContainerName],
 				TaskId:        taskId,
 			},
 		}}
