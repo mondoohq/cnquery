@@ -65,7 +65,7 @@ func (o *mqlOkta) GetTrustedOrigins() ([]interface{}, error) {
 }
 
 func newMqlOktaTrustedOrigin(runtime *resources.Runtime, entry *okta.TrustedOrigin) (interface{}, error) {
-	scopes, err := core.JsonToDict(entry.Scopes)
+	scopes, err := core.JsonToDictSlice(entry.Scopes)
 	if err != nil {
 		return nil, err
 	}
