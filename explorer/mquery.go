@@ -318,8 +318,8 @@ func (m *Mquery) AddBase(base *Mquery) {
 	if m.Props == nil {
 		m.Props = base.Props
 	}
-	if m.Compose == nil {
-		m.Compose = base.Compose
+	if m.Variants == nil {
+		m.Variants = base.Variants
 	}
 }
 
