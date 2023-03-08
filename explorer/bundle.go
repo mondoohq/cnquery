@@ -298,15 +298,15 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 
 		query.Filters.Compile(ownerMrn)
 
-		// ensure MRNs for compositions
-		for i := range query.Compose {
-			comp := query.Compose[i]
-			uid := comp.Uid
-			if err = comp.RefreshMRN(ownerMrn); err != nil {
+		// ensure MRNs for variants
+		for i := range query.Variants {
+			variant := query.Variants[i]
+			uid := variant.Uid
+			if err = variant.RefreshMRN(ownerMrn); err != nil {
 				return nil, err
 			}
 			if uid != "" {
-				uid2mrn[uid] = comp.Mrn
+				uid2mrn[uid] = variant.Mrn
 			}
 		}
 

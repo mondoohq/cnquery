@@ -190,7 +190,7 @@ message Mquery {
   map<string,string> tags = 34;
   Filters filters = 37;
   repeated Property props = 38;
-  repeated Mquery compose = 39;
+  repeated Mquery variants = 39;
   // Action is used for all query overrides (eg: in packs, policies, APIs etc)
   Action action = 41;
 }
