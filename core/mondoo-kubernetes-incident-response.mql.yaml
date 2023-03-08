@@ -3,7 +3,7 @@ packs:
     name: Kubernetes Cluster Incident Response Pack by Mondoo
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: security
     filters:
       - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
@@ -33,7 +33,7 @@ packs:
     name: Mondoo Kubernetes Pods Incident Response
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: security
     filters:
       - asset.platform == "k8s-pod"
@@ -103,7 +103,7 @@ packs:
     name: Mondoo Kubernetes CronJobs Incident Response
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: security
     filters:
       - asset.platform == "k8s-cronjob"

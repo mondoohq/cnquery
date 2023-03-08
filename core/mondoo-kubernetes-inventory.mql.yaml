@@ -3,7 +3,7 @@ packs:
     name: Kubernetes Cluster Inventory Pack by Mondoo
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     docs:
       desc: |
@@ -38,7 +38,7 @@ packs:
     name: Mondoo Kubernetes Pods Inventory
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-pod"
@@ -51,7 +51,7 @@ packs:
     name: Mondoo Kubernetes Deployments Inventory
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-deployment"
@@ -64,7 +64,7 @@ packs:
     name: Mondoo Kubernetes CronJobs Inventory
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-cronjob"
@@ -77,7 +77,7 @@ packs:
     name: Mondoo Kubernetes Jobs Inventory
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-job"
@@ -90,7 +90,7 @@ packs:
     name: Mondoo Kubernetes DaemonSets Inventory
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-daemonset"
@@ -103,7 +103,7 @@ packs:
     name: Mondoo Kubernetes StatefulSets Inventory
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-statefulset"
@@ -116,7 +116,7 @@ packs:
     name: Mondoo Kubernetes ReplicaSets Inventory
     version: 1.0.0
     tags:
-      mondoo.com/platform: kubernetes
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
     filters:
       - asset.platform == "k8s-replicaset"
