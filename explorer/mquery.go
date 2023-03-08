@@ -1,6 +1,7 @@
 package explorer
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 	"strings"
@@ -78,10 +79,32 @@ func (m *Mquery) RefreshMRN(ownerMRN string) error {
 	return nil
 }
 
-// RefreshChecksum of a query without re-compiling anything. Note: this will
-// use whatever type and codeID we have in the query and just compute a checksum
-// from the rest.
-func (m *Mquery) RefreshChecksum() error {
+// RefreshMRN computes a MRN from the UID or validates the existing MRN.
+// Both of these need to fit the ownerMRN. It also removes the UID.
+func (m *ObjectRef) RefreshMRN(ownerMRN string) error {
+	nu, err := RefreshMRN(ownerMRN, m.Mrn, MRN_RESOURCE_QUERY, m.Uid)
+	if err != nil {
+		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", m.Uid).Msg("failed to refresh mrn")
+		return errors.Wrap(err, "failed to refresh mrn for query reference "+m.Uid)
+	}
+
+	m.Mrn = nu
+	m.Uid = ""
+	return nil
+}
+
+// RefreshChecksum of a query without re-compiling anything. Properties cannot
+// be nil. Make sure everything has been compiled beforehand.
+//
+// Note: this will use whatever type and codeID we have in the query and
+// just compute a checksum from the rest.
+//
+// queries is an optional lookup that is necessary for composed queries,
+// since their internal checksum is not stored in this query.
+func (m *Mquery) RefreshChecksum(
+	ctx context.Context,
+	getQuery func(ctx context.Context, mrn string) (*Mquery, error),
+) error {
 	c := checksums.New.
 		Add(m.Mql).
 		Add(m.CodeId).
@@ -92,9 +115,26 @@ func (m *Mquery) RefreshChecksum() error {
 		AddUint(m.Impact.Checksum())
 
 	for i := range m.Props {
-		// we checked this above, so it has to exist
 		prop := m.Props[i]
+		if prop.Checksum == "" {
+			return errors.New("referenced property '" + prop.Mrn + "' checksum is empty")
+		}
 		c = c.Add(prop.Checksum)
+	}
+
+	for i := range m.Variants {
+		ref := m.Variants[i]
+		if q, err := getQuery(context.Background(), ref.Mrn); err == nil {
+			if err := q.RefreshChecksum(ctx, getQuery); err != nil {
+				return err
+			}
+			if q.Checksum == "" {
+				return errors.New("referenced query '" + ref.Mrn + "'checksum is empty")
+			}
+			c = c.Add(q.Checksum)
+		} else {
+			return errors.New("cannot find dependent composed query '" + ref.Mrn + "'")
+		}
 	}
 
 	// TODO: filters don't support properties yet
@@ -148,11 +188,25 @@ func (m *Mquery) RefreshChecksum() error {
 }
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (m *Mquery) RefreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
-	return m.refreshChecksumAndType(lookup)
+func (m *Mquery) RefreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef) (*llx.CodeBundle, error) {
+	return m.refreshChecksumAndType(queries, props)
 }
 
-func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.CodeBundle, error) {
+type QueryMap map[string]*Mquery
+
+func (m QueryMap) GetQuery(ctx context.Context, mrn string) (*Mquery, error) {
+	if m == nil {
+		return nil, errors.New("query not found: " + mrn)
+	}
+
+	res, ok := m[mrn]
+	if !ok {
+		return nil, errors.New("query not found: " + mrn)
+	}
+	return res, nil
+}
+
+func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[string]PropertyRef) (*llx.CodeBundle, error) {
 	localProps := map[string]*llx.Primitive{}
 	for i := range m.Props {
 		prop := m.Props[i]
@@ -161,7 +215,7 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 			return nil, errors.New("missing MRN (or UID) for property in query " + m.Mrn)
 		}
 
-		v, ok := lookup[prop.Mrn]
+		v, ok := props[prop.Mrn]
 		if !ok {
 			return nil, errors.New("cannot find property " + prop.Mrn + " in query " + m.Mrn)
 		}
@@ -173,6 +227,14 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 		prop.Checksum = v.Checksum
 		prop.CodeId = v.CodeId
 		prop.Type = v.Type
+	}
+
+	// If this is a variant, we won't compile anything, since there is no MQL snippets
+	if len(m.Variants) != 0 {
+		if m.Mql != "" {
+			log.Warn().Str("msn", m.Mrn).Msg("a composed query is trying to define an mql snippet, which will be ignored")
+		}
+		return nil, m.RefreshChecksum(context.Background(), QueryMap(queries).GetQuery)
 	}
 
 	bundle, err := m.Compile(localProps)
@@ -201,14 +263,17 @@ func (m *Mquery) refreshChecksumAndType(lookup map[string]PropertyRef) (*llx.Cod
 		m.Type = string(types.Any)
 	}
 
-	return bundle, m.RefreshChecksum()
+	return bundle, m.RefreshChecksum(context.Background(), QueryMap(queries).GetQuery)
 }
 
 // RefreshAsFilter filters treats this query as an asset filter and sets its Mrn, Title, and Checksum
 func (m *Mquery) RefreshAsFilter(mrn string) (*llx.CodeBundle, error) {
-	bundle, err := m.refreshChecksumAndType(nil)
+	bundle, err := m.refreshChecksumAndType(nil, nil)
 	if err != nil {
 		return bundle, err
+	}
+	if bundle == nil {
+		return nil, errors.New("filters require MQL snippets (no compiled code generated)")
 	}
 
 	if mrn != "" {
@@ -337,7 +402,7 @@ func (r *Remediation) UnmarshalJSON(data []byte) error {
 
 func ChecksumFilters(queries []*Mquery) (string, error) {
 	for i := range queries {
-		if _, err := queries[i].refreshChecksumAndType(nil); err != nil {
+		if _, err := queries[i].refreshChecksumAndType(nil, nil); err != nil {
 			return "", errors.New("failed to compile query: " + err.Error())
 		}
 	}
