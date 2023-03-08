@@ -1185,8 +1185,68 @@ private aws.rds.dbinstance @defaults("arn") {
 
 // Amazon ElastiCache
 aws.elasticache {
-  // List of clusters
+    // Deprecated. Use `cacheClusters` instead.
   clusters() []dict
+  // List of clusters
+  cacheClusters() []aws.elasticache.cluster
+}
+
+// Amazon ElastiCache Cluster
+private aws.elasticache.cluster @defaults("arn") {
+  // ARN for the cluster
+  arn string
+  // Denotes whether or not the cluster has at rest encryption enabled
+  atRestEncryptionEnabled bool
+  // Denotes whether Redis authentication tokens, or passwords, enable Redis to require a password before allowing clients to run commands
+  authTokenEnabled bool
+  // Date and time auth token was last modified
+  authTokenLastModifiedDate time 
+  // Denotes whether cluster is configured to auto-upgrade to the next minor version (Redis 6.0 or later)
+  autoMinorVersionUpgrade bool
+  // The date and time when the cluster was created.
+  cacheClusterCreateTime time 
+  // The user-supplied identifier of the cluster. This identifier is a unique key that identifies a cluster. 
+  cacheClusterId string 
+  // The current state of the cluster, one of the following values: available , creating , deleted , deleting , incompatible-network , modifying , rebooting cluster nodes , restore-failed , or snapshotting
+  cacheClusterStatus string
+  // The name of the compute and memory capacity node type for the cluster.
+  cacheNodeType string
+  // A list of cache nodes that are members of the cluster.
+  cacheNodes []string
+  // A list of cache security group elements, composed of name and status sub-elements.
+  cacheSecurityGroups []string
+  // The name of the cache subnet group associated with the cluster.
+  cacheSubnetGroupName string
+  // The URL of the web page where you can download the latest ElastiCache client library.
+  clientDownloadLandingPage string 
+  // The node type for the nodes in the cluster
+  nodeType string
+  // The name of the cache engine (memcached or redis ) to be used for this cluster.
+  engine string
+  // The version of the cache engine that is used in this cluster.
+  engineVersion string 
+  // The network type associated with the cluster, either ipv4 or ipv6
+  ipDiscovery string
+  // The log delivery configurations being modified
+  logDeliveryConfigurations []dict
+  // The supported network connection type for the cluster. Must be either ipv4 | ipv6 | dual_stack.
+  networkType string
+  // Describes a notification topic and its status.
+  notificationConfiguration string
+  // The number of cache nodes in the cluster.
+  numCacheNodes int 
+  // The name of the Availability Zone in which the cluster is located or "Multiple" if the cache nodes are located in different Availability Zones.
+  preferredAvailabilityZone string
+  // Region where the cluster exists
+  region string
+  // A list of VPC Security Groups associated with the cluster.
+  securityGroups []aws.ec2.securitygroup
+  // The number of days for which ElastiCache retains automatic cluster snapshots before deleting them.
+  snapshotRetentionLimit int 
+  // A flag that enables in-transit encryption when set to true
+  transitEncryptionEnabled bool
+  // A setting that allows you to migrate your clients to use in-transit encryption, with no downtime.
+  transitEncryptionMode string
 }
 
 // Amazon Redshift
