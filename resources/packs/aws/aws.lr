@@ -589,7 +589,7 @@ private aws.ecs.task {
 
 // Amazon ECS Container 
 private aws.ecs.container {
-  // Name of the ECS Container
+  // Name of the ECS Container + IP for unique identification
   name string
   // ARN of the ECS Container
   arn string
@@ -617,6 +617,8 @@ private aws.ecs.container {
   taskArn string
   // Runtime id for the container
   runtimeId string
+  // Name of the ECS Container
+  containerName string
 }
 
 // Amazon EMR

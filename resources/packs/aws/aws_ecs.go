@@ -424,6 +424,7 @@ func (e *mqlAwsEcsTask) init(args *resources.Args) (*resources.Args, AwsEcsTask,
 			"command", cmds,
 			"taskArn", core.ToString(t.TaskArn),
 			"runtimeId", core.ToString(c.RuntimeId),
+			"containerName", core.ToString(c.Name),
 		)
 		if err != nil {
 			return args, nil, err
