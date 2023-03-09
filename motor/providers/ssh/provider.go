@@ -33,7 +33,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	// parsing will fail if the string DOES have the []s) and adding
 	// the []s
 	ip := net.ParseIP(host)
-	if ip != nil && ip.To16() != nil {
+	if ip != nil && ip.To4() == nil {
 		pCfg.Host = fmt.Sprintf("[%s]", host)
 	}
 
@@ -153,7 +153,6 @@ func (p *Provider) Connect() error {
 	conn, _, err := establishClientConnection(cc, hostkeyCallback)
 	if err != nil {
 		log.Debug().Err(err).Str("provider", "ssh").Str("host", cc.Host).Int32("port", cc.Port).Bool("insecure", cc.Insecure).Msg("could not establish ssh session")
-		fmt.Printf("HOST: %+v\n", cc.Host)
 		if strings.ContainsAny(cc.Host, "[]") {
 			log.Info().Str("host", cc.Host).Int32("port", cc.Port).Msg("ensure proper []s when combining IPv6 with port numbers")
 		}
