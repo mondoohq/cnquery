@@ -136,7 +136,6 @@ func (o *mqlOktaUser) GetRoles() ([]interface{}, error) {
 				"lastUpdated", r.LastUpdated,
 				"label", r.Label,
 				"status", r.Status,
-				"description", r.Description,
 				"type", r.Type)
 			if err != nil {
 				return err

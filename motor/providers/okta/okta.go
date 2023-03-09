@@ -56,6 +56,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	p := &Provider{
 		organization: org,
 		client:       client,
+		token:        token,
 	}
 
 	return p, nil
@@ -64,6 +65,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 type Provider struct {
 	organization string
 	client       *okta.Client
+	token        string
 }
 
 func (t *Provider) Close() {}
@@ -101,4 +103,8 @@ func (p *Provider) OrganizationID() string {
 
 func (p *Provider) Client() *okta.Client {
 	return p.client
+}
+
+func (p *Provider) Token() string {
+	return p.token
 }

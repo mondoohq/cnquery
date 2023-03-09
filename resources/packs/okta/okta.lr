@@ -91,13 +91,19 @@ private okta.user {
 
 // Okta role    
 private okta.role {
+  // The identifier of the role
   id string
+  // The assignment type of the role
   assignmentType string
+  // Timestamp when the role was created
   created time
-  description string
+  // The label of the role
   label string
+  // Timestamp when the role was last updated
   lastUpdated time
+  // The status of the role
   status string
+  // The type of the role
   type string
 }
 
