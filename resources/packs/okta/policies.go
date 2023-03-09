@@ -69,11 +69,6 @@ func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interfac
 	for i := range respList {
 		entry := respList[i]
 		if entry.IsPolicyInstance() {
-			if pass, ok := entry.(*okta.PasswordPolicy); ok {
-				z := pass.Settings
-				if z != nil {
-				}
-			}
 			p := entry.(*okta.Policy)
 			err = appendEntry(p)
 			if err != nil {

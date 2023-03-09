@@ -106,7 +106,6 @@ resources:
     fields:
       assignmentType: {}
       created: {}
-      description: {}
       id: {}
       label: {}
       lastUpdated: {}
