@@ -99,14 +99,18 @@ func (t *mqlAwsCloudtrail) getTrails(provider *aws_provider.Provider) []*jobpool
 
 			svc := provider.Cloudtrail(regionVal)
 			ctx := context.Background()
+			res := []interface{}{}
 
 			// no pagination required
 			trailsResp, err := svc.DescribeTrails(ctx, &cloudtrail.DescribeTrailsInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, errors.Wrap(err, "could not gather aws cloudtrail trails")
 			}
 
-			res := []interface{}{}
 			for i := range trailsResp.TrailList {
 				trail := trailsResp.TrailList[i]
 

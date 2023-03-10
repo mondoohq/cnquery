@@ -55,6 +55,10 @@ func (d *mqlAwsDms) getReplicationInstances(provider *aws_provider.Provider) []*
 			for {
 				replicationInstances, err := svc.DescribeReplicationInstances(ctx, &databasemigrationservice.DescribeReplicationInstancesInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return tasks, nil
+					}
 					return nil, err
 				}
 				replicationInstancesAggregated = append(replicationInstancesAggregated, replicationInstances.ReplicationInstances...)

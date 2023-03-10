@@ -59,6 +59,10 @@ func (a *mqlAwsAccessAnalyzer) getAnalyzers(provider *aws_provider.Provider) []*
 			for nextToken != nil {
 				analyzers, err := svc.ListAnalyzers(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					log.Error().Err(err).Str("region", regionVal).Msg("error listing analyzers")
 					return nil, err
 				}

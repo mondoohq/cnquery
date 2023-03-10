@@ -58,6 +58,10 @@ func (e *mqlAwsElasticache) getClusters(provider *aws_provider.Provider) []*jobp
 			for {
 				clusters, err := svc.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				if len(clusters.CacheClusters) == 0 {

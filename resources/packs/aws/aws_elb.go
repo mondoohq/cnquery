@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
@@ -64,6 +65,10 @@ func (e *mqlAwsElb) getClassicLoadBalancers(provider *aws_provider.Provider) []*
 			for {
 				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancing.DescribeLoadBalancersInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancerDescriptions {
@@ -138,6 +143,10 @@ func (e *mqlAwsElb) getLoadBalancers(provider *aws_provider.Provider) []*jobpool
 			for {
 				lbs, err := svc.DescribeLoadBalancers(ctx, &elasticloadbalancingv2.DescribeLoadBalancersInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, lb := range lbs.LoadBalancers {

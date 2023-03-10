@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -59,6 +60,10 @@ func (e *mqlAwsSecretsmanager) getSecrets(provider *aws_provider.Provider) []*jo
 			for nextToken != nil {
 				secrets, err := svc.ListSecrets(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, secret := range secrets.SecretList {

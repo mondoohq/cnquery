@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
@@ -107,6 +108,10 @@ func (e *mqlAwsEcr) getPrivateRepositories(provider *aws.Provider) []*jobpool.Jo
 
 			repoResp, err := svc.DescribeRepositories(ctx, &ecr.DescribeRepositoriesInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 			for i := range repoResp.Repositories {
@@ -159,6 +164,10 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 		svc := at.EcrPublic(region)
 		res, err := svc.DescribeImages(ctx, &ecrpublic.DescribeImagesInput{RepositoryName: &name})
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+				return nil, nil
+			}
 			return nil, err
 		}
 
@@ -187,6 +196,10 @@ func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 		svc := at.Ecr(region)
 		res, err := svc.DescribeImages(ctx, &ecr.DescribeImagesInput{RepositoryName: &name})
 		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+				return nil, nil
+			}
 			return nil, err
 		}
 		for i := range res.ImageDetails {

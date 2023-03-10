@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/smithy-go/transport/http"
+	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
@@ -54,6 +55,10 @@ func (e *mqlAwsEs) getDomains(provider *aws_provider.Provider) []*jobpool.Job {
 
 			domains, err := svc.ListDomainNames(ctx, &elasticsearchservice.ListDomainNamesInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 

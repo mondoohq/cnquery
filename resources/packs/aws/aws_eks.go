@@ -53,6 +53,10 @@ func (e *mqlAwsEks) getClusters(provider *aws_provider.Provider) []*jobpool.Job 
 
 			describeClusterRes, err := svc.ListClusters(ctx, &eks.ListClustersInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 

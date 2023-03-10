@@ -78,6 +78,10 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(provider *aws_provider.Provide
 			for nextToken != nil {
 				resp, err := svc.DescribeScalableTargets(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, errors.Wrap(err, "could not gather application autoscaling scalable targets")
 				}
 

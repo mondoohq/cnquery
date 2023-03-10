@@ -59,10 +59,15 @@ func (d *mqlAwsDynamodb) getBackups(provider *aws_provider.Provider) []*jobpool.
 
 			svc := provider.Dynamodb(regionVal)
 			ctx := context.Background()
+			res := []interface{}{}
 
 			// no pagination required
 			listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 			}
 			backupSummary, err := core.JsonToDictSlice(listBackupsResp.BackupSummaries)
@@ -181,10 +186,15 @@ func (d *mqlAwsDynamodb) getLimits(provider *aws_provider.Provider) []*jobpool.J
 
 			svc := provider.Dynamodb(regionVal)
 			ctx := context.Background()
+			res := []interface{}{}
 
 			// no pagination required
 			limitsResp, err := svc.DescribeLimits(ctx, &dynamodb.DescribeLimitsInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 			}
 
@@ -276,13 +286,17 @@ func (d *mqlAwsDynamodb) getTables(provider *aws_provider.Provider) []*jobpool.J
 
 			svc := provider.Dynamodb(regionVal)
 			ctx := context.Background()
+			res := []interface{}{}
 
 			// no pagination required
 			listTablesResp, err := svc.ListTables(ctx, &dynamodb.ListTablesInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, errors.Wrap(err, "could not gather aws dynamodb tables")
 			}
-			res := []interface{}{}
 			for _, tableName := range listTablesResp.TableNames {
 				// call describe table to get real info/details about the table
 				table, err := svc.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: &tableName})

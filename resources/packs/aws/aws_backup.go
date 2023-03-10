@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -61,6 +62,10 @@ func (a *mqlAwsBackup) getVaults(provider *aws_provider.Provider) []*jobpool.Job
 
 			vaults, err := svc.ListBackupVaults(ctx, &backup.ListBackupVaultsInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 			for _, v := range vaults.BackupVaultList {

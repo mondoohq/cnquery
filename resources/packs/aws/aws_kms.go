@@ -55,6 +55,10 @@ func (k *mqlAwsKms) getKeys(provider *aws_provider.Provider) []*jobpool.Job {
 			for {
 				keyList, err := svc.ListKeys(ctx, &kms.ListKeysInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 
