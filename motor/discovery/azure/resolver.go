@@ -6,7 +6,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
@@ -85,12 +84,15 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		return nil, err
 	}
 
+	// Aggregates the subscription info and the provider config for it
 	type SubConfig struct {
 		Cfg *providers.Config
 		Sub armsubscriptions.Subscription
 	}
+
 	subsConfig := map[string]SubConfig{}
 	subsAssets := map[string]*asset.Asset{}
+
 	// we always look up subscriptions to be able to fetch their subid and tenantid to make the authentication work
 	// note these are not being added as assets here, that is done only if the right targets are set down below
 	for _, sub := range subs {
@@ -105,6 +107,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 		subsConfig[*sub.SubscriptionID] = SubConfig{Cfg: cfg, Sub: sub}
 	}
+
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions) {
 		for _, sub := range subsConfig {
 			name := root.Name
@@ -140,18 +143,15 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 				},
 			}
 			subsAssets[*sub.Sub.SubscriptionID] = subAsset
-			// if there's a root, link the sub to it
-			if root != nil {
-				subAsset.RelatedAssets = append(subAsset.RelatedAssets, root)
-			}
 			resolved = append(resolved, subAsset)
 		}
 	}
+
 	// resources as assets
-	// TODO: add instances here once the ip address is available viq mql
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto,
-		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
-		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups) {
+		DiscoveryInstances, DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers,
+		DiscoveryMariaDbServers, DiscoveryStorageAccounts, DiscoveryStorageContainers,
+		DiscoveryKeyVaults, DiscoverySecurityGroups) {
 		for id, tc := range subsConfig {
 			assetList, err := GatherAssets(ctx, tc.Cfg, credsResolver, sfn)
 			if err != nil {
@@ -160,38 +160,6 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 			for _, a := range assetList {
 				// if there's a sub available, link the asset to it
 				if sub := subsAssets[id]; sub != nil {
-					a.RelatedAssets = append(a.RelatedAssets, sub)
-				}
-
-				resolved = append(resolved, a)
-			}
-		}
-	}
-	// get all compute instances
-	// TODO: remove this once instances are available through GatherAssets
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
-		for _, s := range subs {
-			r := NewCompute(azureClient, *s.SubscriptionID)
-			ctx := context.Background()
-			assetList, err := r.ListInstances(ctx)
-			if err != nil {
-				return nil, errors.Wrap(err, "could not fetch azure compute instances")
-			}
-			log.Debug().Int("instances", len(assetList)).Msg("completed instance search")
-
-			for i := range assetList {
-				a := assetList[i]
-
-				log.Debug().Str("name", a.Name).Msg("resolved azure compute instance")
-				// find the secret reference for the asset
-				common.EnrichAssetWithSecrets(a, sfn)
-
-				for i := range a.Connections {
-					a.Connections[i].Insecure = tc.Insecure
-				}
-
-				// if there's a sub available, link the asset to it
-				if sub := subsAssets[*s.SubscriptionID]; sub != nil {
 					a.RelatedAssets = append(a.RelatedAssets, sub)
 				}
 

@@ -3,6 +3,7 @@ package azure
 import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 )
@@ -48,16 +49,19 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	return azureObjectPlatformInfo{}, errors.Newf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)
 }
 
-func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config) ([]*asset.Asset, error) {
+func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
 	assets := []*asset.Asset{}
 	type instance struct {
-		Id         string
-		Name       string
-		Tags       map[string]string
-		Location   string
-		Properties map[string]interface{}
+		Id                string
+		Name              string
+		Tags              map[string]string
+		Location          string
+		Properties        map[string]interface{}
+		PublicIpAddresses []struct {
+			IpAddress string
+		}
 	}
-	vms, err := GetList[instance](m, "return azure.subscription.compute.vms {id name tags location properties}")
+	vms, err := GetList[instance](m, "return azure.subscription.compute.vms {id name tags location properties publicIpAddresses{ipAddress}}")
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +85,7 @@ func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config
 		}
 		vm.Tags["azure.mondoo.com/resourcegroup"] = res.ResourceGroup
 
-		assets = append(assets, MqlObjectToAsset(
+		asset := MqlObjectToAsset(
 			mqlObject{
 				name:   vm.Name,
 				labels: vm.Tags,
@@ -92,7 +96,19 @@ func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config
 					service:      "compute",
 					objectType:   "vm",
 				},
-			}, tc))
+			}, tc)
+		for _, ip := range vm.PublicIpAddresses {
+			asset.Connections = append(asset.Connections, &providers.Config{
+				Backend:  providers.ProviderType_SSH,
+				Host:     ip.IpAddress,
+				Insecure: tc.Insecure,
+			})
+		}
+		asset.PlatformIds = append(asset.PlatformIds, MondooAzureInstanceID(vm.Id))
+		asset.Platform.Runtime = providers.RUNTIME_AZ_COMPUTE
+		asset.Platform.Kind = providers.Kind_KIND_VIRTUAL_MACHINE
+		common.EnrichAssetWithSecrets(asset, sfn)
+		assets = append(assets, asset)
 	}
 	return assets, nil
 }
