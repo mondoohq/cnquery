@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/ms365report"
 	"go.mondoo.com/cnquery/motor/vault"
@@ -73,29 +72,6 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	var cred *vault.Credential
 	if len(pCfg.Credentials) != 0 {
 		cred = pCfg.Credentials[0]
-	}
-
-	// deprecated options for backward compatibility with older inventory files
-	if tenantId == "" {
-		tid, ok := pCfg.Options["tenantId"]
-		if ok {
-			log.Warn().Str("tenantId", tid).Msg("tenantId is deprecated, use tenant-id instead")
-		}
-		tenantId = tid
-	}
-	if clientId == "" {
-		cid, ok := pCfg.Options["clientId"]
-		if ok {
-			log.Warn().Str("clientId", cid).Msg("clientId is deprecated, use client-id instead")
-		}
-		clientId = cid
-	}
-	if subscriptionId == "" {
-		sid, ok := pCfg.Options["subscriptionId"]
-		if ok {
-			log.Warn().Str("subscriptionId", sid).Msg("subscriptionId is deprecated, use subscription-id instead")
-		}
-		subscriptionId = sid
 	}
 
 	if assetType == ms365 && len(tenantId) == 0 {
