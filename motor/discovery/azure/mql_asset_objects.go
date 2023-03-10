@@ -8,12 +8,27 @@ import (
 	azure "go.mondoo.com/cnquery/motor/providers/microsoft/azure"
 )
 
+type instance struct {
+	Id                string
+	Name              string
+	Tags              map[string]string
+	Location          string
+	Properties        map[string]interface{}
+	PublicIpAddresses []struct {
+		IpAddress string
+	}
+}
+
 func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	switch azureObject.service {
 	case "compute":
 		if azureObject.objectType == "vm" {
 			return azureObjectPlatformInfo{title: "Azure Compute VM", platform: "azure-compute-vm"}, nil
 		}
+		if azureObject.objectType == "vm-api" {
+			return azureObjectPlatformInfo{title: "Azure Compute VM API ", platform: "azure-compute-vm-api"}, nil
+		}
+
 	case "sql":
 		if azureObject.objectType == "server" {
 			return azureObjectPlatformInfo{title: "Azure SQL Server", platform: "azure-sql-server"}, nil
@@ -49,54 +64,55 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 	return azureObjectPlatformInfo{}, errors.Newf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)
 }
 
-func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
-	assets := []*asset.Asset{}
-	type instance struct {
-		Id                string
-		Name              string
-		Tags              map[string]string
-		Location          string
-		Properties        map[string]interface{}
-		PublicIpAddresses []struct {
-			IpAddress string
+func fetchInstances(m *MqlDiscovery) ([]instance, error) {
+	return GetList[instance](m, "return azure.subscription.compute.vms {id name tags location properties publicIpAddresses{ipAddress}}")
+}
+
+func convertInstance(vm instance, subscription string, tc *providers.Config, objectType string) (*asset.Asset, error) {
+	osProfile, ok := vm.Properties["osProfile"]
+	if ok {
+		if osProfileDict, ok := osProfile.(map[string]interface{}); ok {
+			vm.Tags["azure.mondoo.com/computername"] = osProfileDict["computerName"].(string)
 		}
 	}
-	vms, err := GetList[instance](m, "return azure.subscription.compute.vms {id name tags location properties publicIpAddresses{ipAddress}}")
+	vmId, ok := vm.Properties["vmId"]
+	if ok {
+		if casted, ok := vmId.(string); ok {
+			vm.Tags["mondoo.com/instance"] = casted
+		}
+	}
+
+	res, err := azure.ParseResourceID(vm.Id)
 	if err != nil {
 		return nil, err
 	}
-	for _, vm := range vms {
-		osProfile, ok := vm.Properties["osProfile"]
-		if ok {
-			if osProfileDict, ok := osProfile.(map[string]interface{}); ok {
-				vm.Tags["azure.mondoo.com/computername"] = osProfileDict["computerName"].(string)
-			}
-		}
-		vmId, ok := vm.Properties["vmId"]
-		if ok {
-			if casted, ok := vmId.(string); ok {
-				vm.Tags["mondoo.com/instance"] = casted
-			}
-		}
+	vm.Tags["azure.mondoo.com/resourcegroup"] = res.ResourceGroup
 
-		res, err := azure.ParseResourceID(vm.Id)
+	return MqlObjectToAsset(
+		mqlObject{
+			name:   vm.Name,
+			labels: vm.Tags,
+			azureObject: azureObject{
+				id:           vm.Id,
+				region:       vm.Location,
+				subscription: subscription,
+				service:      "compute",
+				objectType:   objectType,
+			},
+		}, tc), nil
+}
+
+func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+	instances, err := fetchInstances(m)
+	if err != nil {
+		return nil, err
+	}
+	for _, vm := range instances {
+		asset, err := convertInstance(vm, subscription, tc, "vm")
 		if err != nil {
 			return nil, err
 		}
-		vm.Tags["azure.mondoo.com/resourcegroup"] = res.ResourceGroup
-
-		asset := MqlObjectToAsset(
-			mqlObject{
-				name:   vm.Name,
-				labels: vm.Tags,
-				azureObject: azureObject{
-					id:           vm.Id,
-					region:       vm.Location,
-					subscription: subscription,
-					service:      "compute",
-					objectType:   "vm",
-				},
-			}, tc)
 		for _, ip := range vm.PublicIpAddresses {
 			asset.Connections = append(asset.Connections, &providers.Config{
 				Backend:  providers.ProviderType_SSH,
@@ -104,10 +120,27 @@ func computeInstances(m *MqlDiscovery, subscription string, tc *providers.Config
 				Insecure: tc.Insecure,
 			})
 		}
-		asset.PlatformIds = append(asset.PlatformIds, MondooAzureInstanceID(vm.Id))
+		// override platform info here, we want to discover this as a proper VM (and not an API representation)
+		asset.PlatformIds = []string{MondooAzureInstanceID(vm.Id)}
 		asset.Platform.Runtime = providers.RUNTIME_AZ_COMPUTE
 		asset.Platform.Kind = providers.Kind_KIND_VIRTUAL_MACHINE
 		common.EnrichAssetWithSecrets(asset, sfn)
+		assets = append(assets, asset)
+	}
+	return assets, nil
+}
+
+func computeInstancesApi(m *MqlDiscovery, subscription string, tc *providers.Config) ([]*asset.Asset, error) {
+	assets := []*asset.Asset{}
+	instances, err := fetchInstances(m)
+	if err != nil {
+		return nil, err
+	}
+	for _, vm := range instances {
+		asset, err := convertInstance(vm, subscription, tc, "vm-api")
+		if err != nil {
+			return nil, err
+		}
 		assets = append(assets, asset)
 	}
 	return assets, nil

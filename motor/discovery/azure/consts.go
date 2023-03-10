@@ -2,8 +2,10 @@ package azure
 
 const (
 	// Discovery flags
-	DiscoverySubscriptions     = "subscriptions"
-	DiscoveryInstances         = "instances"
+	DiscoverySubscriptions = "subscriptions"
+	DiscoveryInstances     = "instances"
+	// TODO: this probably needs some more work on the linking to its OS counterpart side
+	DiscoveryInstancesApi      = "instances-api"
 	DiscoverySqlServers        = "sql-servers"
 	DiscoveryPostgresServers   = "postgres-servers"
 	DiscoveryMySqlServers      = "mysql-servers"

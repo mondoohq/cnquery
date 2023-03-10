@@ -15,6 +15,12 @@ import (
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
+var ResourceDiscoveryTargets = []string{
+	DiscoveryInstances, DiscoverySqlServers, DiscoveryPostgresServers,
+	DiscoveryMySqlServers, DiscoveryMariaDbServers, DiscoveryStorageAccounts,
+	DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups, DiscoveryInstancesApi,
+}
+
 type Resolver struct{}
 
 func (r *Resolver) Name() string {
@@ -23,9 +29,10 @@ func (r *Resolver) Name() string {
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
 	return []string{
-		common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions, DiscoveryInstances,
-		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
-		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups,
+		common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions,
+		DiscoveryInstances, DiscoverySqlServers, DiscoveryPostgresServers,
+		DiscoveryMySqlServers, DiscoveryMariaDbServers, DiscoveryStorageAccounts,
+		DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups, DiscoveryInstancesApi,
 	}
 }
 
@@ -148,10 +155,9 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	}
 
 	// resources as assets
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto,
-		DiscoveryInstances, DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers,
-		DiscoveryMariaDbServers, DiscoveryStorageAccounts, DiscoveryStorageContainers,
-		DiscoveryKeyVaults, DiscoverySecurityGroups) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances, DiscoveryInstancesApi,
+		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
+		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups) {
 		for id, tc := range subsConfig {
 			assetList, err := GatherAssets(ctx, tc.Cfg, credsResolver, sfn)
 			if err != nil {
