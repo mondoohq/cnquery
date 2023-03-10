@@ -1,7 +1,7 @@
 packs:
   - uid: mondoo-kubernetes-cluster-inventory
     name: Kubernetes Cluster Inventory Pack by Mondoo
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -30,13 +30,17 @@ packs:
         title: Gather Kubernetes Cluster Namespaces
         query: |
           k8s.namespaces{ * }
-      - uid: k8s-cluster-info
+      - uid: k8s-cluster-nodes
         title: Gather Cluster Nodes
         query: |
           k8s.nodes { * }
+      - uid: k8s-cluster-clusterroles
+        title: Gather Cluster RBAC ClusterRoles
+        query: |
+          k8s.clusterroles { * }      
   - uid: mondoo-kubernetes-pods-inventory
     name: Mondoo Kubernetes Pods Inventory
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -47,9 +51,13 @@ packs:
         title: Gather Pod Information
         query: |
           k8s.pod { * }
+      - uid: k8s-pod-container
+        title: Gather Container Information
+        query: |
+          k8s.pod.containers { * }
   - uid: mondoo-kubernetes-deployments-inventory
     name: Mondoo Kubernetes Deployments Inventory
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -60,9 +68,13 @@ packs:
         title: Gather Deployment Information
         query: |
           k8s.deployment { * }
+      - uid: k8s-deployment-container
+        title: Gather Container Information
+        query: |
+          k8s.deployment.containers { * }
   - uid: mondoo-kubernetes-cronjobs-inventory
     name: Mondoo Kubernetes CronJobs Inventory
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -73,9 +85,13 @@ packs:
         title: Gather CronJob Information
         query: |
           k8s.cronjob { * }
+      - uid: k8s-cronjob-container
+        title: Gather Container Information
+        query: |
+          k8s.cronjob.containers { * }
   - uid: mondoo-kubernetes-jobs-inventory
     name: Mondoo Kubernetes Jobs Inventory
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -86,9 +102,13 @@ packs:
         title: Gather Job Information
         query: |
           k8s.job { * }
+      - uid: k8s-job-container
+        title: Gather Container Information
+        query: |
+          k8s.job.containers { * }
   - uid: mondoo-kubernetes-daemonsets-inventory
     name: Mondoo Kubernetes DaemonSets Inventory
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -99,9 +119,13 @@ packs:
         title: Gather DaemonSet Information
         query: |
           k8s.daemonset { * }
+      - uid: k8s-daemonset-container
+        title: Gather Container Information
+        query: |
+          k8s.daemonset.containers { * }
   - uid: mondoo-kubernetes-statefulsets-inventory
     name: Mondoo Kubernetes StatefulSets Inventory
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -112,9 +136,13 @@ packs:
         title: Gather StatefulSet Information
         query: |
           k8s.statefulset { * }
+      - uid: k8s-statefulset-container
+        title: Gather Container Information
+        query: |
+          k8s.statefulset.containers { * }
   - uid: mondoo-kubernetes-replicasets-inventory
     name: Mondoo Kubernetes ReplicaSets Inventory
-    version: 1.0.0
+    version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -125,5 +153,9 @@ packs:
         title: Gather ReplicaSet Information
         query: |
           k8s.replicaset { * }
+      - uid: k8s-replicaset-container
+        title: Gather Container Information
+        query: |
+          k8s.replicaset.containers { * }
 
 
