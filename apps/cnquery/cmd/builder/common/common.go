@@ -409,8 +409,6 @@ func ScanGcpCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn
 		Args:  cobra.ExactArgs(0),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
-			viper.BindPFlag("project", cmd.Flags().Lookup("project"))
-			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
 			viper.BindPFlag("project-id", cmd.Flags().Lookup("project-id"))
 			viper.BindPFlag("organization-id", cmd.Flags().Lookup("organization-id"))
 			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
@@ -418,14 +416,12 @@ func ScanGcpCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn
 		Run: runFn,
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().String("project", "", "specify the GCP project to scan")
-	cmd.Flags().MarkHidden("project")
-	cmd.Flags().MarkDeprecated("project", "--project is deprecated in favor of --project-id")
 	cmd.Flags().String("project-id", "", "specify the GCP project ID to scan")
-	cmd.Flags().String("organization", "", "specify the GCP organization to scan")
-	cmd.Flags().MarkHidden("organization")
-	cmd.Flags().MarkDeprecated("organization", "--organization is deprecated in favor of --organization-id")
+	cmd.Flags().MarkHidden("project-id")
+	cmd.Flags().MarkDeprecated("project-id", "--project-id is deprecated in favor of scan gcp project")
 	cmd.Flags().String("organization-id", "", "specify the GCP organization ID to scan")
+	cmd.Flags().MarkHidden("organization-id")
+	cmd.Flags().MarkDeprecated("organization-id", "--organization-id is deprecated in favor of scan gcp org")
 	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
 	return cmd
 }

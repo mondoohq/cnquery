@@ -434,27 +434,10 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 		switch assetType {
 		case DefaultAssetType:
-			// deprecated, remove in v8
-			if project, err := cmd.Flags().GetString("project"); err != nil {
-				log.Fatal().Err(err).Msg("cannot parse --project value")
-			} else if project != "" {
-				log.Warn().Msg("--project flag is deprecated, use `scan gcp project` instead")
-				connection.Options["project-id"] = project
-			}
-
-			// deprecated, remove in v8
-			if organization, err := cmd.Flags().GetString("organization"); err != nil {
-				log.Fatal().Err(err).Msg("cannot parse --organization value")
-			} else if organization != "" {
-				log.Warn().Msg("--organization flag is deprecated, use `scan gcp org` instead")
-				connection.Options["organization-id"] = organization
-			}
-
 			// deprecated, remove in v9
 			if project, err := cmd.Flags().GetString("project-id"); err != nil {
 				log.Fatal().Err(err).Msg("cannot parse --project value")
 			} else if project != "" {
-				log.Warn().Msg("--project-id flag is deprecated, use `scan gcp project` instead")
 				connection.Options["project-id"] = project
 			}
 
@@ -462,7 +445,6 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			if organization, err := cmd.Flags().GetString("organization-id"); err != nil {
 				log.Fatal().Err(err).Msg("cannot parse --organization value")
 			} else if organization != "" {
-				log.Warn().Msg("--organization-id flag is deprecated, use `scan gcp org` instead")
 				connection.Options["organization-id"] = organization
 			}
 		case GcpOrganizationAssetType:

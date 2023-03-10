@@ -25,11 +25,7 @@ func (r *GcpOrgResolver) AvailableDiscoveryTargets() []string {
 
 func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
-
-	// FIXME: DEPRECATED, update in v8.0 vv
-	// The option "organization" has been deprecated in favor of organization-id
-	if tc == nil || (tc.Options["organization"] == "" && tc.Options["organization-id"] == "") {
-		// ^^
+	if tc == nil || tc.Options["organization-id"] == "" {
 		return resolved, nil
 	}
 
