@@ -68,6 +68,10 @@ func (r *mqlAwsRedshift) getClusters(provider *aws_provider.Provider) []*jobpool
 			for {
 				clusters, err := svc.DescribeClusters(ctx, &redshift.DescribeClustersInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, cluster := range clusters.Clusters {

@@ -100,6 +100,10 @@ func (s *mqlAwsEc2) getNetworkACLs(provider *aws_provider.Provider) []*jobpool.J
 			for nextToken != nil {
 				networkAcls, err := svc.DescribeNetworkAcls(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				nextToken = networkAcls.NextToken
@@ -247,6 +251,10 @@ func (s *mqlAwsEc2) getSecurityGroups(provider *aws_provider.Provider) []*jobpoo
 			for nextToken != nil {
 				securityGroups, err := svc.DescribeSecurityGroups(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				nextToken = securityGroups.NextToken
@@ -371,6 +379,10 @@ func (s *mqlAwsEc2) getKeypairs(provider *aws_provider.Provider) []*jobpool.Job 
 			params := &ec2.DescribeKeyPairsInput{}
 			keyPairs, err := svc.DescribeKeyPairs(ctx, params)
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 
@@ -509,9 +521,14 @@ func (s *mqlAwsEc2) getEbsEncryptionPerRegion(provider *aws_provider.Provider) [
 
 			svc := provider.Ec2(regionVal)
 			ctx := context.Background()
+			res := []interface{}{}
 
 			ebsEncryptionRes, err := svc.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 			structVal := ebsEncryption{
@@ -610,6 +627,10 @@ func (s *mqlAwsEc2) getInstances(provider *aws_provider.Provider) []*jobpool.Job
 			filterName := "metadata-options.http-tokens"
 			imdsv2Instances, err := s.getImdsv2Instances(ctx, svc, filterName)
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 			res, err = s.gatherInstanceInfo(imdsv2Instances, 2, regionVal)
@@ -619,6 +640,10 @@ func (s *mqlAwsEc2) getInstances(provider *aws_provider.Provider) []*jobpool.Job
 
 			imdsv1Instances, err := s.getImdsv1Instances(ctx, svc, filterName)
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 			imdsv1Res, err := s.gatherInstanceInfo(imdsv1Instances, 1, regionVal)
@@ -1039,6 +1064,10 @@ func (s *mqlAwsEc2) getVolumes(provider *aws_provider.Provider) []*jobpool.Job {
 			for nextToken != nil {
 				volumes, err := svc.DescribeVolumes(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, vol := range volumes.Volumes {
@@ -1278,6 +1307,10 @@ func (s *mqlAwsEc2) getVpnConnections(provider *aws_provider.Provider) []*jobpoo
 
 			vpnConnections, err := svc.DescribeVpnConnections(ctx, &ec2.DescribeVpnConnectionsInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 			for _, vpnConn := range vpnConnections.VpnConnections {
@@ -1352,6 +1385,10 @@ func (s *mqlAwsEc2) getSnapshots(provider *aws_provider.Provider) []*jobpool.Job
 			for nextToken != nil {
 				snapshots, err := svc.DescribeSnapshots(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, snapshot := range snapshots.Snapshots {
@@ -1447,6 +1484,10 @@ func (s *mqlAwsEc2) getInternetGateways(provider *aws_provider.Provider) []*jobp
 			for nextToken != nil {
 				internetGws, err := svc.DescribeInternetGateways(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, gateway := range internetGws.InternetGateways {

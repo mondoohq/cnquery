@@ -123,6 +123,10 @@ func (ecs *mqlAwsEcs) getECSClusters(provider *aws_provider.Provider) []*jobpool
 			for nextToken != nil {
 				resp, err := svc.ListClusters(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, errors.Wrap(err, "could not gather ecs cluster information")
 				}
 				nextToken = resp.NextToken

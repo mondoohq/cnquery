@@ -53,6 +53,10 @@ func (c *mqlAwsConfig) getRecorders(provider *aws_provider.Provider) []*jobpool.
 			params := &configservice.DescribeConfigurationRecordersInput{}
 			configRecorders, err := svc.DescribeConfigurationRecorders(ctx, params)
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				return nil, err
 			}
 			recorderStatusMap, err := c.describeConfigRecorderStatus(svc, regionVal)

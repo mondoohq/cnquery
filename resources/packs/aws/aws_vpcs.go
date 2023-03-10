@@ -75,6 +75,10 @@ func (s *mqlAws) getVpcs(provider *aws_provider.Provider) []*jobpool.Job {
 			for nextToken != nil {
 				vpcs, err := svc.DescribeVpcs(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				nextToken = vpcs.NextToken

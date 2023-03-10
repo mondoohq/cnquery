@@ -2,8 +2,10 @@ package aws
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/smithy-go/transport/http"
 	"go.mondoo.com/cnquery/motor/providers"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources/packs/aws/info"
@@ -51,4 +53,14 @@ func GetRegionFromArn(arnVal string) (string, error) {
 		return "", err
 	}
 	return parsedArn.Region, nil
+}
+
+func Is400AccessDeniedError(err error) bool {
+	var respErr *http.ResponseError
+	if errors.As(err, &respErr) {
+		if respErr.HTTPStatusCode() == 400 && strings.Contains(respErr.Error(), "AccessDeniedException") {
+			return true
+		}
+	}
+	return false
 }

@@ -67,6 +67,10 @@ func (a *mqlAwsApigateway) getRestApis(provider *aws_provider.Provider) []*jobpo
 			for {
 				restApisResp, err := svc.GetRestApis(ctx, &apigateway.GetRestApisInput{Position: position})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, errors.Wrap(err, "could not gather AWS API Gateway REST APIs")
 				}
 

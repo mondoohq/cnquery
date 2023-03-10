@@ -68,6 +68,10 @@ func (t *mqlAwsCloudwatch) getMetrics(provider *aws_provider.Provider) []*jobpoo
 			for nextToken != nil {
 				metrics, err := svc.ListMetrics(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, metric := range metrics.Metrics {
@@ -535,6 +539,10 @@ func (t *mqlAwsCloudwatch) getAlarms(provider *aws_provider.Provider) []*jobpool
 
 				alarms, err := svc.DescribeAlarms(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 
@@ -685,6 +693,10 @@ func (t *mqlAwsCloudwatch) getLogGroups(provider *aws_provider.Provider) []*jobp
 			for nextToken != nil {
 				logGroups, err := svc.DescribeLogGroups(ctx, params)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, errors.Wrap(err, "could not gather aws cloudwatch log groups")
 				}
 				nextToken = logGroups.NextToken

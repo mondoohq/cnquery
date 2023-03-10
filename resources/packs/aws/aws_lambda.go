@@ -60,6 +60,10 @@ func (l *mqlAwsLambda) getFunctions(provider *aws_provider.Provider) []*jobpool.
 			for {
 				functionsResp, err := svc.ListFunctions(ctx, &lambda.ListFunctionsInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, errors.Wrap(err, "could not gather aws lambda functions")
 				}
 				for _, function := range functionsResp.Functions {

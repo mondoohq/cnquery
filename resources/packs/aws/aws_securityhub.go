@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -52,6 +53,10 @@ func (s *mqlAwsSecurityhub) getHubs(provider *aws_provider.Provider) []*jobpool.
 			res := []interface{}{}
 			secHub, err := svc.DescribeHub(ctx, &securityhub.DescribeHubInput{})
 			if err != nil {
+				if Is400AccessDeniedError(err) {
+					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+					return res, nil
+				}
 				var notFoundErr *types.InvalidAccessException
 				if errors.As(err, &notFoundErr) {
 					return nil, nil

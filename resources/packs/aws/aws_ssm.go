@@ -69,6 +69,10 @@ func (s *mqlAwsSsm) getInstances(provider *aws_provider.Provider) []*jobpool.Job
 			for nextToken != nil {
 				isssmresp, err := ssmsvc.DescribeInstanceInformation(ctx, input)
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, errors.Wrap(err, "could not gather ssm information")
 				}
 				nextToken = isssmresp.NextToken

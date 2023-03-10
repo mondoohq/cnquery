@@ -67,6 +67,10 @@ func (d *mqlAwsRds) getDbInstances(provider *aws_provider.Provider) []*jobpool.J
 			for {
 				dbInstances, err := svc.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 				for _, dbInstance := range dbInstances.DBInstances {
@@ -221,6 +225,10 @@ func (d *mqlAwsRds) getDbClusters(provider *aws_provider.Provider) []*jobpool.Jo
 			for {
 				dbClusters, err := svc.DescribeDBClusters(ctx, &rds.DescribeDBClustersInput{Marker: marker})
 				if err != nil {
+					if Is400AccessDeniedError(err) {
+						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
+						return res, nil
+					}
 					return nil, err
 				}
 
