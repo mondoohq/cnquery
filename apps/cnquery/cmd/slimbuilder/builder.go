@@ -135,4 +135,12 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	baseCmd.AddCommand(gcpCmd)
 	baseCmd.AddCommand(vsphereCmd)
 	baseCmd.AddCommand(githubCmd)
+	baseCmd.AddCommand(common.GitlabProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.Ms365ProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.HostProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.AristaProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.ScanOktaCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.ScanGoogleWorkspaceCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.ScanSlackCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.ScanVcdCmd(commonCmdFlags, preRun, runFn, docs))
 }

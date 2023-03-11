@@ -596,3 +596,150 @@ func GithubProviderUserCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, 
 	cmd.Flags().String("token", "", "GitHub personal access token")
 	return cmd
 }
+
+func GitlabProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "gitlab",
+		Short: docs.GetShort("gitlab"),
+		Long:  docs.GetLong("gitlab"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+			viper.BindPFlag("group", cmd.Flags().Lookup("group"))
+			preRun(cmd, args)
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("group", "", "a GitLab group to scan")
+	cmd.MarkFlagRequired("group")
+	cmd.Flags().String("token", "", "GitLab personal access token")
+	return cmd
+}
+
+func Ms365ProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "ms365",
+		Aliases: []string{"microsoft365"},
+		Short:   docs.GetShort("ms365"),
+		Long:    docs.GetLong("ms365"),
+		Args:    cobra.ExactArgs(0),
+		PreRun:  preRun,
+		Run:     runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("tenant-id", "", "directory (tenant) ID of the service principal")
+	cmd.Flags().String("client-id", "", "application (client) ID of the service principal")
+	cmd.Flags().String("client-secret", "", "secret for application")
+	cmd.Flags().String("certificate-path", "", "path to certificate that's used for certificate-based authentication in PKCS 12 format (pfx)")
+	cmd.Flags().String("certificate-secret", "", "passphrase for certificate file")
+	cmd.Flags().String("datareport", "", "set the MS365 datareport for the scan")
+	return cmd
+}
+
+func HostProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:    "host HOST",
+		Short:  docs.GetShort("host"),
+		Long:   docs.GetLong("host"),
+		Args:   cobra.ExactArgs(1),
+		PreRun: preRun,
+		Run:    runFn,
+	}
+	commonCmdFlags(cmd)
+	return cmd
+}
+
+func AristaProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:    "arista user@host",
+		Short:  docs.GetShort("arista"),
+		Long:   docs.GetLong("arista"),
+		Args:   cobra.ExactArgs(1),
+		PreRun: preRun,
+		Run:    runFn,
+	}
+	commonCmdFlags(cmd)
+	return cmd
+}
+
+func ScanOktaCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "okta",
+		Short: docs.GetShort("okta"),
+		Long:  docs.GetLong("okta"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
+			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+			preRun(cmd, args)
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("organization", "", "specify the Okta organization to scan")
+	cmd.Flags().String("token", "", "Okta access token")
+	return cmd
+}
+
+func ScanGoogleWorkspaceCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "google-workspace",
+		Aliases: []string{"googleworkspace"},
+		Short:   docs.GetShort("googleworkspace"),
+		Long:    docs.GetLong("googleworkspace"),
+		Args:    cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("customer-id", cmd.Flags().Lookup("customer-id"))
+			viper.BindPFlag("impersonated-user-email", cmd.Flags().Lookup("impersonated-user-email"))
+			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
+
+			preRun(cmd, args)
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("customer-id", "", "Specify the Google Workspace customer id to scan")
+	cmd.Flags().String("impersonated-user-email", "", "The impersonated user's email with access to the Admin APIs")
+	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+
+	return cmd
+}
+
+func ScanSlackCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "slack",
+		Short: docs.GetShort("slack"),
+		Long:  docs.GetLong("slack"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
+			preRun(cmd, args)
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("token", "", "Slack API token")
+	return cmd
+}
+
+func ScanVcdCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "vcd",
+		Short: docs.GetShort("vcd"),
+		Long:  docs.GetLong("vcd"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("user", cmd.Flags().Lookup("user"))
+			viper.BindPFlag("host", cmd.Flags().Lookup("host"))
+			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
+			preRun(cmd, args)
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("user", "", "vCloud Director user")
+	cmd.Flags().String("host", "", "vCloud Director Host")
+	cmd.Flags().String("organization", "", "vCloud Director Organization (optional)")
+	return cmd
+}

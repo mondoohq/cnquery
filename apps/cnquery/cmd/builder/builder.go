@@ -448,164 +448,66 @@ func githubProviderUserCmd(commonCmdFlags common.CommonFlagsFn, preRun common.Co
 }
 
 func gitlabProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "gitlab",
-		Short: docs.GetShort("gitlab"),
-		Long:  docs.GetLong("gitlab"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			viper.BindPFlag("group", cmd.Flags().Lookup("group"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GITLAB, DefaultAssetType) // TODO: does not indicate individual assets
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GITLAB, DefaultAssetType) // TODO: does not indicate individual assets
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("group", "", "a GitLab group to scan")
-	cmd.MarkFlagRequired("group")
-	cmd.Flags().String("token", "", "GitLab personal access token")
+	cmd := common.GitlabProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func ms365ProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "ms365",
-		Aliases: []string{"microsoft365"},
-		Short:   docs.GetShort("ms365"),
-		Long:    docs.GetLong("ms365"),
-		Args:    cobra.ExactArgs(0),
-		PreRun:  preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_MS365, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_MS365, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("tenant-id", "", "directory (tenant) ID of the service principal")
-	cmd.Flags().String("client-id", "", "application (client) ID of the service principal")
-	cmd.Flags().String("client-secret", "", "secret for application")
-	cmd.Flags().String("certificate-path", "", "path to certificate that's used for certificate-based authentication in PKCS 12 format (pfx)")
-	cmd.Flags().String("certificate-secret", "", "passphrase for certificate file")
-	cmd.Flags().String("datareport", "", "set the MS365 datareport for the scan")
+	cmd := common.Ms365ProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func hostProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "host HOST",
-		Short:  docs.GetShort("host"),
-		Long:   docs.GetLong("host"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_HOST, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_HOST, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.HostProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func aristaProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "arista user@host",
-		Short:  docs.GetShort("arista"),
-		Long:   docs.GetLong("arista"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_ARISTAEOS, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_ARISTAEOS, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AristaProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func scanOktaCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "okta",
-		Short: docs.GetShort("okta"),
-		Long:  docs.GetLong("okta"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_OKTA, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_OKTA, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("organization", "", "specify the Okta organization to scan")
-	cmd.Flags().String("token", "", "Okta access token")
+	cmd := common.ScanOktaCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func scanGoogleWorkspaceCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "google-workspace",
-		Aliases: []string{"googleworkspace"},
-		Short:   docs.GetShort("googleworkspace"),
-		Long:    docs.GetLong("googleworkspace"),
-		Args:    cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("customer-id", cmd.Flags().Lookup("customer-id"))
-			viper.BindPFlag("impersonated-user-email", cmd.Flags().Lookup("impersonated-user-email"))
-			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
-
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GOOGLE_WORKSPACE, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GOOGLE_WORKSPACE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("customer-id", "", "Specify the Google Workspace customer id to scan")
-	cmd.Flags().String("impersonated-user-email", "", "The impersonated user's email with access to the Admin APIs")
-	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+	cmd := common.ScanGoogleWorkspaceCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 
 	return cmd
 }
 
 func scanSlackCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "slack",
-		Short: docs.GetShort("slack"),
-		Long:  docs.GetLong("slack"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_SLACK, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_SLACK, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "Slack API token")
+	cmd := common.ScanSlackCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func scanVcdCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "vcd",
-		Short: docs.GetShort("vcd"),
-		Long:  docs.GetLong("vcd"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("user", cmd.Flags().Lookup("user"))
-			viper.BindPFlag("host", cmd.Flags().Lookup("host"))
-			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_VCD, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_VCD, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("user", "", "vCloud Director user")
-	cmd.Flags().String("host", "", "vCloud Director Host")
-	cmd.Flags().String("organization", "", "vCloud Director Organization (optional)")
+	cmd := common.ScanVcdCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
