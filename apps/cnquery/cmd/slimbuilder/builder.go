@@ -61,12 +61,40 @@ type CommandOpts struct {
 }
 
 func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn common.RunFn, docs common.CommandsDocs) {
+	containerCmd := common.ContainerProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	containerImageCmd := common.ContainerImageProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	containerCmd.AddCommand(containerImageCmd)
+	containerRegistryCmd := common.ContainerRegistryProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	containerCmd.AddCommand(containerRegistryCmd)
+
+	dockerCmd := common.DockerProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	dockerImageCmd := common.DockerImageProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	dockerCmd.AddCommand(dockerImageCmd)
+	dockerContainerCmd := common.DockerContainerProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	dockerCmd.AddCommand(dockerContainerCmd)
+
+	// aws subcommand
+	awsCmd := common.AwsProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsEc2 := common.AwsEc2ProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsCmd.AddCommand(awsEc2)
+
+	awsEc2Connect := common.AwsEc2ConnectProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsEc2.AddCommand(awsEc2Connect)
+
+	awsEc2EbsCmd := common.AwsEc2EbsProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsEc2EbsVolumeCmd := common.AwsEc2EbsVolumeProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsEc2EbsCmd.AddCommand(awsEc2EbsVolumeCmd)
+	awsEc2EbsSnapshotCmd := common.AwsEc2EbsSnapshotProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsEc2EbsCmd.AddCommand(awsEc2EbsSnapshotCmd)
+	awsEc2.AddCommand(awsEc2EbsCmd)
+
+	awsEc2Ssm := common.AwsEc2SsmProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsEc2.AddCommand(awsEc2Ssm)
+
 	// subcommands
-	baseCmd.AddCommand(azureProviderCmd(commonCmdFlags, preRun, runFn, docs))
-}
-
-func azureProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn common.RunFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := common.AzureProviderCmd(commonCmdFlags, preRun, runFn, docs)
-
-	return cmd
+	baseCmd.AddCommand(containerCmd)
+	baseCmd.AddCommand(dockerCmd)
+	baseCmd.AddCommand(common.KubernetesProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(awsCmd)
+	baseCmd.AddCommand(common.AzureProviderCmd(commonCmdFlags, preRun, runFn, docs))
 }

@@ -100,9 +100,9 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	dockerCmd.AddCommand(dockerContainerCmd)
 
 	// aws subcommand
-	amsCmd := awsProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsCmd := awsProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	awsEc2 := awsEc2ProviderCmd(commonCmdFlags, preRun, runFn, docs)
-	amsCmd.AddCommand(awsEc2)
+	awsCmd.AddCommand(awsEc2)
 
 	awsEc2Connect := awsEc2ConnectProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	awsEc2.AddCommand(awsEc2Connect)
@@ -156,7 +156,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	baseCmd.AddCommand(containerCmd)
 	baseCmd.AddCommand(dockerCmd)
 	baseCmd.AddCommand(kubernetesProviderCmd(commonCmdFlags, preRun, runFn, docs))
-	baseCmd.AddCommand(amsCmd)
+	baseCmd.AddCommand(awsCmd)
 	baseCmd.AddCommand(azureProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(gcpCmd)
 	baseCmd.AddCommand(vsphereCmd)
