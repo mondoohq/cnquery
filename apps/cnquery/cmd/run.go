@@ -7,68 +7,20 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
+	builder2 "go.mondoo.com/cnquery/apps/cnquery/cmd/builder2"
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder2/common"
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder2/functions"
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
-	"go.mondoo.com/cnquery/motor/discovery/common"
+	discovery_common "go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/shared"
 	"go.mondoo.com/cnquery/shared/proto"
 )
 
 func init() {
-	rootCmd.AddCommand(execCmd)
-}
-
-var execCmd = builder.NewProviderCommand(builder.CommandOpts{
-	Use:   "run",
-	Short: "Run an MQL query.",
-	Long:  `Run an MQL query on the CLI and displays its results.`,
-	CommonFlags: func(cmd *cobra.Command) {
-		cmd.Flags().Bool("parse", false, "Parse the query and return the logical structure.")
-		cmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST).")
-		cmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure.")
-		cmd.Flags().String("query", "", "MQL query to execute.")
-		cmd.Flags().MarkHidden("query")
-		cmd.Flags().StringP("command", "c", "", "MQL query to execute.")
-
-		cmd.Flags().StringP("password", "p", "", "Connection password, such as for SSH/WinRM.")
-		cmd.Flags().Bool("ask-pass", false, "Prompt for connection password.")
-		cmd.Flags().StringP("identity-file", "i", "", "Select a file from which to read the identity (private key) for public key authentication.")
-		cmd.Flags().Bool("insecure", false, "Disable TLS/SSL checks or SSH hostkey config.")
-		cmd.Flags().Bool("sudo", false, "Elevate privileges with sudo.")
-		cmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
-		cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure or GCP.)")
-		cmd.Flags().Bool("host-machines", false, "Also scan host machines like ESXi server.")
-
-		cmd.Flags().Bool("record", false, "Record provider calls. This only works for operating system providers.)")
-		cmd.Flags().MarkHidden("record")
-
-		cmd.Flags().String("record-file", "", "File path for the recorded provider calls. This only works for operating system providers.)")
-		cmd.Flags().MarkHidden("record-file")
-
-		cmd.Flags().String("path", "", "Path to a local file or directory for the connection to use.")
-		cmd.Flags().StringToString("option", nil, "Additional connection options. You can pass multiple options using `--option key=value`.")
-		cmd.Flags().String("discover", common.DiscoveryAuto, "Enable the discovery of nested assets. Supported: 'all|auto|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
-		cmd.Flags().StringToString("discover-filter", nil, "Additional filter for asset discovery.")
-	},
-	CommonPreRun: func(cmd *cobra.Command, args []string) {
-		// for all assets
-		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
-		viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
-
-		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
-
-		viper.BindPFlag("vault.name", cmd.Flags().Lookup("vault"))
-		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
-		viper.BindPFlag("query", cmd.Flags().Lookup("query"))
-		viper.BindPFlag("command", cmd.Flags().Lookup("command"))
-
-		viper.BindPFlag("record", cmd.Flags().Lookup("record"))
-		viper.BindPFlag("record-file", cmd.Flags().Lookup("record-file"))
-	},
-	Run: func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) {
+	callbackFn := func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType common.AssetType) {
 		conf, err := GetCobraRunConfig(cmd, args, provider, assetType)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to prepare config")
@@ -80,12 +32,66 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to run query")
 		}
-	},
-})
+	}
+
+	fnMap := functions.NewFunctionMap(callbackFn)
+
+	execCmd := builder2.NewProviderCommand(builder2.CommandOpts{
+		Use:   "run",
+		Short: "Run an MQL query.",
+		Long:  `Run an MQL query on the CLI and displays its results.`,
+		CommonFlags: func(cmd *cobra.Command) {
+			cmd.Flags().Bool("parse", false, "Parse the query and return the logical structure.")
+			cmd.Flags().Bool("ast", false, "Parse the query and return the abstract syntax tree (AST).")
+			cmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure.")
+			cmd.Flags().String("query", "", "MQL query to execute.")
+			cmd.Flags().MarkHidden("query")
+			cmd.Flags().StringP("command", "c", "", "MQL query to execute.")
+
+			cmd.Flags().StringP("password", "p", "", "Connection password, such as for SSH/WinRM.")
+			cmd.Flags().Bool("ask-pass", false, "Prompt for connection password.")
+			cmd.Flags().StringP("identity-file", "i", "", "Select a file from which to read the identity (private key) for public key authentication.")
+			cmd.Flags().Bool("insecure", false, "Disable TLS/SSL checks or SSH hostkey config.")
+			cmd.Flags().Bool("sudo", false, "Elevate privileges with sudo.")
+			cmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
+			cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure or GCP.)")
+			cmd.Flags().Bool("host-machines", false, "Also scan host machines like ESXi server.")
+
+			cmd.Flags().Bool("record", false, "Record provider calls. This only works for operating system providers.)")
+			cmd.Flags().MarkHidden("record")
+
+			cmd.Flags().String("record-file", "", "File path for the recorded provider calls. This only works for operating system providers.)")
+			cmd.Flags().MarkHidden("record-file")
+
+			cmd.Flags().String("path", "", "Path to a local file or directory for the connection to use.")
+			cmd.Flags().StringToString("option", nil, "Additional connection options. You can pass multiple options using `--option key=value`.")
+			cmd.Flags().String("discover", discovery_common.DiscoveryAuto, "Enable the discovery of nested assets. Supported: 'all|auto|instances|host-instances|host-machines|container|container-images|pods|cronjobs|statefulsets|deployments|jobs|replicasets|daemonsets'")
+			cmd.Flags().StringToString("discover-filter", nil, "Additional filter for asset discovery.")
+		},
+		CommonPreRun: func(cmd *cobra.Command, args []string) {
+			// for all assets
+			viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
+			viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
+
+			viper.BindPFlag("output", cmd.Flags().Lookup("output"))
+
+			viper.BindPFlag("vault.name", cmd.Flags().Lookup("vault"))
+			viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
+			viper.BindPFlag("query", cmd.Flags().Lookup("query"))
+			viper.BindPFlag("command", cmd.Flags().Lookup("command"))
+
+			viper.BindPFlag("record", cmd.Flags().Lookup("record"))
+			viper.BindPFlag("record-file", cmd.Flags().Lookup("record-file"))
+		},
+		SubcommandFnMap: fnMap,
+	})
+
+	rootCmd.AddCommand(execCmd)
+}
 
 // GetCobraRunConfig parses cobra and viper flags targeted at a "run" call
 // and translates them into a config for the runner.
-func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) (*proto.RunQueryConfig, error) {
+func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType common.AssetType) (*proto.RunQueryConfig, error) {
 	conf := proto.RunQueryConfig{
 		Features: config.Features,
 	}
@@ -133,7 +139,7 @@ func GetCobraRunConfig(cmd *cobra.Command, args []string, provider providers.Pro
 	conf.DoRecord = viper.GetBool("record")
 
 	// determine the scan config from pipe or args
-	flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
+	flagAsset := builder2.ParseTargetAsset(cmd, args, provider, assetType)
 	conf.Inventory, err = inventoryloader.ParseOrUse(flagAsset, viper.GetBool("insecure"))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load configuration")
