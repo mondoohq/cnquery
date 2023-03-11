@@ -2,13 +2,11 @@ package builder
 
 import (
 	"os"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder/common"
-	discovery_common "go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -296,251 +294,119 @@ func winrmProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonP
 }
 
 func containerProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "container ID",
-		Short:  docs.GetShort("container"),
-		Long:   docs.GetLong("container"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.ContainerProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func containerImageProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "image ID",
-		Short:  docs.GetShort("container-image"),
-		Long:   docs.GetLong("container-image"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.ContainerImageProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func containerRegistryProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Aliases: []string{"cr"},
-		Use:     "registry TARGET",
-		Short:   docs.GetShort("container-registry"),
-		Long:    docs.GetLong("container-registry"),
-		Args:    cobra.ExactArgs(1),
-		PreRun:  preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_CONTAINER_REGISTRY, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_CONTAINER_REGISTRY, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.ContainerRegistryProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func dockerProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "docker ID",
-		Short:  docs.GetShort("docker"),
-		Long:   docs.GetLong("docker"),
-		Args:   cobra.MaximumNArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			discover, err := cmd.Flags().GetString("discover")
-			if err != nil {
-				log.Error().Err(err).Msg("failed to retrieve discover flag")
-				return
-			}
-
-			// If no target is provided and the discovery flag is empty or auto, then error out since there is nothing to scan.
-			if len(args) == 0 && (len(discover) == 0 || strings.Contains(discover, discovery_common.DiscoveryAuto)) {
-				log.Error().Msg("either a target or a discovery flag different from \"auto\" must be provided for docker scans")
-				return
-			}
-
-			runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.DockerProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func dockerContainerProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "container ID",
-		Short:  docs.GetShort("docker-container"),
-		Long:   docs.GetLong("docker-container"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_CONTAINER, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_CONTAINER, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.DockerContainerProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func dockerImageProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "image ID",
-		Short:  docs.GetShort("docker-image"),
-		Long:   docs.GetLong("docker-image"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.DockerImageProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func kubernetesProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "k8s (optional MANIFEST path)",
-		Aliases: []string{"kubernetes"},
-		Short:   docs.GetShort("kubernetes"),
-		Long:    docs.GetLong("kubernetes"),
-		Args:    cobra.MaximumNArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			// FIXME: DEPRECATED, remove in v8.0 vv
-			viper.BindPFlag("namespace", cmd.Flags().Lookup("namespace"))
-			// ^^
-			viper.BindPFlag("namespaces-exclude", cmd.Flags().Lookup("namespaces-exclude"))
-			viper.BindPFlag("namespaces", cmd.Flags().Lookup("namespaces"))
-			viper.BindPFlag("context", cmd.Flags().Lookup("context"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				cmd.Flags().Set("path", args[0])
-			}
-			runFn(cmd, args, providers.ProviderType_K8S, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_K8S, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	// FIXME: DEPRECATED, remove in v8.0
-	cmd.Flags().String("namespace", "", "filter kubernetes objects by namespace")
-	cmd.Flags().MarkHidden("namespace")
-	// ^^
 
-	cmd.Flags().String("context", "", "target a Kubernetes context")
-	cmd.Flags().String("namespaces-exclude", "", "filter out Kubernetes objects in the matching namespaces")
-	cmd.Flags().String("namespaces", "", "only include Kubernetes object in the matching namespaces")
+	cmd := common.KubernetesProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func awsProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "aws",
-		Short: docs.GetShort("aws"),
-		Long:  docs.GetLong("aws"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			viper.BindPFlag("project", cmd.Flags().Lookup("project"))
-			viper.BindPFlag("region", cmd.Flags().Lookup("region"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("profile", "", "pick a named AWS profile to use")
-	cmd.Flags().String("region", "", "the AWS region to scan")
+
+	cmd := common.AwsProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func awsEc2ProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "ec2 SUBCOMMAND",
-		Short: docs.GetShort("aws-ec2"),
-		Long:  docs.GetLong("aws-ec2"),
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
-			os.Exit(0)
-		},
-	}
-	commonCmdFlags(cmd)
+	cmd := common.AwsEc2ProviderCmd(commonCmdFlags, preRun, nil, docs)
 	return cmd
 }
 
 func awsEc2ConnectProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "instance-connect user@host",
-		Short:  docs.GetShort("aws-ec2-connect"),
-		Long:   docs.GetLong("aws-ec2-connect"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_SSH, Ec2InstanceConnectAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_SSH, Ec2InstanceConnectAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.AwsEc2ConnectProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func awsEc2EbsProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "ebs INSTANCEID",
-		Short:  docs.GetShort("aws-ec2-ebs-instance"),
-		Long:   docs.GetLong("aws-ec2-ebs-instance"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsInstanceAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsInstanceAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AwsEc2EbsProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func awsEc2EbsVolumeProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "volume VOLUMEID",
-		Short:  docs.GetShort("aws-ec2-ebs-volume"),
-		Long:   docs.GetLong("aws-ec2-ebs-volume"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsVolumeAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsVolumeAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.AwsEc2EbsVolumeProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func awsEc2EbsSnapshotProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "snapshot SNAPSHOTID",
-		Short:  docs.GetShort("aws-ec2-ebs-snapshot"),
-		Long:   docs.GetLong("aws-ec2-ebs-snapshot"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsSnapshotAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsSnapshotAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AwsEc2EbsSnapshotProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
 func awsEc2SsmProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "ssm user@host",
-		Short:  docs.GetShort("aws-ec2-ssm"),
-		Long:   docs.GetLong("aws-ec2-ssm"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_SSM_RUN_COMMAND, DefaultAssetType)
-		},
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_SSM_RUN_COMMAND, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AwsEc2SsmProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 

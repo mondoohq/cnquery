@@ -9,27 +9,6 @@ import (
 	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder/common"
 )
 
-type AssetType int64
-
-const (
-	UnknownAssetType AssetType = iota
-	DefaultAssetType
-	TerraformHclAssetType
-	TerraformStateAssetType
-	TerraformPlanAssetType
-	Ec2InstanceConnectAssetType
-	Ec2ebsInstanceAssetType
-	Ec2ebsVolumeAssetType
-	Ec2ebsSnapshotAssetType
-	GcpOrganizationAssetType
-	GcpProjectAssetType
-	GcpFolderAssetType
-	GcrContainerRegistryAssetType
-	GithubOrganizationAssetType
-	GithubRepositoryAssetType
-	GithubUserAssetType
-)
-
 func NewSlimProviderCommand(opts CommandOpts) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     opts.Use,
