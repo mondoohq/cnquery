@@ -26,9 +26,8 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 			return azureObjectPlatformInfo{title: "Azure Compute VM", platform: "azure-compute-vm"}, nil
 		}
 		if azureObject.objectType == "vm-api" {
-			return azureObjectPlatformInfo{title: "Azure Compute VM API ", platform: "azure-compute-vm-api"}, nil
+			return azureObjectPlatformInfo{title: "Azure Compute VM", platform: "azure-compute-vm-api"}, nil
 		}
-
 	case "sql":
 		if azureObject.objectType == "server" {
 			return azureObjectPlatformInfo{title: "Azure SQL Server", platform: "azure-sql-server"}, nil
