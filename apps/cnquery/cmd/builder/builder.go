@@ -87,6 +87,9 @@ type CommandOpts struct {
 }
 
 func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) {
+	// REMEMBER: when adding new commands, to also add entries in the slimbuilder package so that
+	// the mondoo wrapper can also pick up the new subcommands
+
 	containerCmd := containerProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	containerImageCmd := containerImageProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	containerCmd.AddCommand(containerImageCmd)

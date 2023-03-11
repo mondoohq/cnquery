@@ -258,9 +258,6 @@ func KubernetesProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, 
 		Args:    cobra.MaximumNArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
-			// FIXME: DEPRECATED, remove in v8.0 vv
-			viper.BindPFlag("namespace", cmd.Flags().Lookup("namespace"))
-			// ^^
 			viper.BindPFlag("namespaces-exclude", cmd.Flags().Lookup("namespaces-exclude"))
 			viper.BindPFlag("namespaces", cmd.Flags().Lookup("namespaces"))
 			viper.BindPFlag("context", cmd.Flags().Lookup("context"))
@@ -273,10 +270,6 @@ func KubernetesProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, 
 		},
 	}
 	commonCmdFlags(cmd)
-	// FIXME: DEPRECATED, remove in v8.0
-	cmd.Flags().String("namespace", "", "filter kubernetes objects by namespace")
-	cmd.Flags().MarkHidden("namespace")
-	// ^^
 
 	cmd.Flags().String("context", "", "target a Kubernetes context")
 	cmd.Flags().String("namespaces-exclude", "", "filter out Kubernetes objects in the matching namespaces")

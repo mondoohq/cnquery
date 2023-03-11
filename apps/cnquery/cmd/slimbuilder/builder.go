@@ -1,5 +1,7 @@
 package builder
 
+// FIXME: DEPRECATED, remove in v9.0 vv
+// Yes...the entire file
 import (
 	"os"
 
@@ -144,3 +146,5 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	baseCmd.AddCommand(common.ScanSlackCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(common.ScanVcdCmd(commonCmdFlags, preRun, runFn, docs))
 }
+
+// ^^
