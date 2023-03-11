@@ -91,10 +91,48 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	awsEc2Ssm := common.AwsEc2SsmProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	awsEc2.AddCommand(awsEc2Ssm)
 
+	// gcp subcommand
+	gcpCmd := common.ScanGcpCmd(commonCmdFlags, preRun, runFn, docs)
+	gcpGcrCmd := common.ScanGcpGcrCmd(commonCmdFlags, preRun, runFn, docs)
+	gcpCmd.AddCommand(gcpGcrCmd)
+	gcpCmd.AddCommand(common.ScanGcpOrgCmd(commonCmdFlags, preRun, runFn, docs))
+	gcpCmd.AddCommand(common.ScanGcpProjectCmd(commonCmdFlags, preRun, runFn, docs))
+	gcpCmd.AddCommand(common.ScanGcpFolderCmd(commonCmdFlags, preRun, runFn, docs))
+
+	// vsphere subcommand
+	vsphereCmd := common.VsphereProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	vsphereVmCmd := common.VsphereVmProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	vsphereCmd.AddCommand(vsphereVmCmd)
+
+	// github subcommand
+	githubCmd := common.ScanGithubCmd(commonCmdFlags, preRun, runFn, docs)
+	githubOrgCmd := common.GithubProviderOrganizationCmd(commonCmdFlags, preRun, runFn, docs)
+	githubCmd.AddCommand(githubOrgCmd)
+	githubRepositoryCmd := common.GithubProviderRepositoryCmd(commonCmdFlags, preRun, runFn, docs)
+	githubCmd.AddCommand(githubRepositoryCmd)
+	githubUserCmd := common.GithubProviderUserCmd(commonCmdFlags, preRun, runFn, docs)
+	githubCmd.AddCommand(githubUserCmd)
+
+	// terraform subcommand
+	terraformCmd := common.TerraformProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	terraformPlanCmd := common.TerraformProviderPlanCmd(commonCmdFlags, preRun, runFn, docs)
+	terraformCmd.AddCommand(terraformPlanCmd)
+	terraformStateCmd := common.TerraformProviderStateCmd(commonCmdFlags, preRun, runFn, docs)
+	terraformCmd.AddCommand(terraformStateCmd)
+
 	// subcommands
+	baseCmd.AddCommand(common.LocalProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.MockProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.VagrantCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(terraformCmd)
+	baseCmd.AddCommand(common.SshProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(common.WinrmProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(containerCmd)
 	baseCmd.AddCommand(dockerCmd)
 	baseCmd.AddCommand(common.KubernetesProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(awsCmd)
 	baseCmd.AddCommand(common.AzureProviderCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(gcpCmd)
+	baseCmd.AddCommand(vsphereCmd)
+	baseCmd.AddCommand(githubCmd)
 }
