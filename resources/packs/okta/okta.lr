@@ -60,7 +60,7 @@ okta.policies {
   mfaEnroll() []okta.policy
   // Sign on policies
   signOn() []okta.policy
-  // OAuth authorizaton policies
+  // OAuth authorization policies
   oauthAuthorizationPolicy() []okta.policy
   // IDP discovery policies
   idpDiscovery() []okta.policy
