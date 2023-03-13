@@ -86,6 +86,25 @@ private okta.user {
   statusChanged time
   // Target status of an in-progress asynchronous status transition
   transitioningToStatus string
+  roles() []okta.role
+}
+
+// Okta role    
+private okta.role {
+  // The identifier of the role
+  id string
+  // The assignment type of the role
+  assignmentType string
+  // Timestamp when the role was created
+  created time
+  // The label of the role
+  label string
+  // Timestamp when the role was last updated
+  lastUpdated time
+  // The status of the role
+  status string
+  // The type of the role
+  type string
 }
 
 // Okta Group

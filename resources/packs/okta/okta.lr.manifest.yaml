@@ -102,6 +102,17 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+  okta.role:
+    fields:
+      assignmentType: {}
+      created: {}
+      id: {}
+      label: {}
+      lastUpdated: {}
+      status: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
   okta.trustedOrigin:
     fields:
       created: {}
@@ -125,6 +136,7 @@ resources:
       lastUpdated: {}
       passwordChanged: {}
       profile: {}
+      roles: {}
       status: {}
       statusChanged: {}
       transitioningToStatus: {}

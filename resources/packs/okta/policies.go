@@ -2,6 +2,11 @@ package okta
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -161,6 +166,15 @@ func (o mqlOktaPolicy) GetRules() ([]interface{}, error) {
 		return nil, err
 	}
 
+	policyType, err := o.Type()
+	if err != nil {
+		return nil, err
+	}
+
+	if policyType == ACCESS_POLICY {
+		return getAccessPolicyRules(ctx, o.MotorRuntime, policyId, op.OrganizationID(), op.Token())
+	}
+
 	rules, resp, err := client.Policy.ListPolicyRules(ctx, policyId)
 	if err != nil {
 		return nil, err
@@ -201,6 +215,48 @@ func (o mqlOktaPolicy) GetRules() ([]interface{}, error) {
 	return list, nil
 }
 
+func getAccessPolicyRules(ctx context.Context, runtime *resources.Runtime, policyId, host, token string) ([]interface{}, error) {
+	rules, err := fetchAccessPolicyRules(ctx, policyId, host, token)
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+	for _, entry := range rules {
+		actions, err := core.JsonToDict(entry.Actions)
+		if err != nil {
+			return nil, err
+		}
+
+		conditions, err := core.JsonToDict(entry.Conditions)
+		if err != nil {
+			return nil, err
+		}
+
+		system := false
+		if entry.System != nil {
+			system = *entry.System
+		}
+
+		mqlRule, err := runtime.CreateResource("okta.policyRule",
+			"id", entry.Id,
+			"name", entry.Name,
+			"priority", entry.Priority,
+			"status", entry.Status,
+			"system", system,
+			"type", entry.Type,
+			"actions", actions,
+			"conditions", conditions,
+			"created", entry.Created,
+			"lastUpdated", entry.LastUpdated,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRule)
+	}
+	return res, nil
+}
+
 func newMqlOktaPolicyRule(runtime *resources.Runtime, entry *okta.PolicyRule) (interface{}, error) {
 	actions, err := core.JsonToDict(entry.Actions)
 	if err != nil {
@@ -237,4 +293,35 @@ func (o *mqlOktaPolicyRule) id() (string, error) {
 		return "", err
 	}
 	return "okta.policyRule/" + id, nil
+}
+
+// see https://github.com/okta/okta-sdk-golang/issues/286 for context. okta's sdk doesnt letch you fetch
+// type-specific rules which differ between the different policies. as such, we fetch those manually until the sdk allows us to
+func fetchAccessPolicyRules(ctx context.Context, policyid, host, token string) ([]okta.AccessPolicyRule, error) {
+	urlPath := fmt.Sprintf("https://%s/api/v1/policies/%s/rules?limit=50", host, policyid)
+	client := http.Client{}
+	req, err := http.NewRequest("GET", urlPath, nil)
+	if err != nil {
+		return []okta.AccessPolicyRule{}, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("SSWS %s", token))
+	resp, err := client.Do(req)
+	if err != nil {
+		return []okta.AccessPolicyRule{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return []okta.AccessPolicyRule{}, errors.New("failed to fetch access policy rules from " + urlPath + ": " + resp.Status)
+	}
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []okta.AccessPolicyRule{}, err
+	}
+	result := []okta.AccessPolicyRule{}
+	err = json.Unmarshal(raw, &result)
+	return result, err
 }

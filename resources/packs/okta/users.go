@@ -101,3 +101,63 @@ func (o *mqlOktaUser) id() (string, error) {
 	}
 	return "okta.user/" + id, nil
 }
+
+func (o *mqlOktaRole) id() (string, error) {
+	id, err := o.Id()
+	if err != nil {
+		return "", err
+	}
+	return "okta.role/" + id, nil
+}
+
+func (o *mqlOktaUser) GetRoles() ([]interface{}, error) {
+	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client := op.Client()
+	id, err := o.Id()
+	if err != nil {
+		return nil, err
+	}
+	roles, resp, err := client.User.ListAssignedRolesForUser(ctx, id, query.NewQueryParams(query.WithLimit(queryLimit)))
+	if err != nil {
+		return nil, err
+	}
+	res := []interface{}{}
+
+	appendEntry := func(datalist []*okta.Role) error {
+		for _, r := range datalist {
+			mqlOktaRole, err := o.MotorRuntime.CreateResource("okta.role",
+				"id", r.Id,
+				"assignmentType", r.AssignmentType,
+				"created", r.Created,
+				"lastUpdated", r.LastUpdated,
+				"label", r.Label,
+				"status", r.Status,
+				"type", r.Type)
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlOktaRole)
+		}
+		return nil
+	}
+	err = appendEntry(roles)
+	if err != nil {
+		return nil, err
+	}
+	for resp != nil && resp.HasNextPage() {
+		var userRoles []*okta.Role
+		resp, err = resp.Next(ctx, &userRoles)
+		if err != nil {
+			return nil, err
+		}
+		err = appendEntry(userRoles)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
