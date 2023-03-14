@@ -63,9 +63,14 @@ func (o *mqlOkta) GetUsers() ([]interface{}, error) {
 }
 
 func newMqlOktaUser(runtime *resources.Runtime, user *okta.User) (interface{}, error) {
+	// FUTURE: change this to actually fetch the whole type and put it in the dict
 	userType, err := core.JsonToDict(user.Type)
 	if err != nil {
 		return nil, err
+	}
+	var userTypeId string
+	if user.Type != nil {
+		userTypeId = user.Type.Id
 	}
 	credentials, err := core.JsonToDict(user.Credentials)
 	if err != nil {
@@ -81,6 +86,7 @@ func newMqlOktaUser(runtime *resources.Runtime, user *okta.User) (interface{}, e
 	return runtime.CreateResource("okta.user",
 		"id", user.Id,
 		"type", userType,
+		"typeId", userTypeId,
 		"credentials", credentials,
 		"activated", user.Activated,
 		"created", user.Created,

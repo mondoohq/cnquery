@@ -74,7 +74,9 @@ okta.policies {
 private okta.user {
   // Unique key for user
   id string
-  // The type of user
+  // The user's type identifier
+  typeId string
+  // The user's type object
   type dict
   // The user credentials
   credentials dict
