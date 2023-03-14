@@ -96,7 +96,7 @@ private okta.user {
   statusChanged time
   // Target status of an in-progress asynchronous status transition
   transitioningToStatus string
-  // The roles that the user has
+  // The roles assigned to the user
   roles() []okta.role
 }
 
