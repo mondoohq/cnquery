@@ -61,6 +61,7 @@ func k8sResourceToMql(r *resources.Runtime, kind string, fn resourceConvertFn) (
 		return nil, err
 	}
 
+	// TODO: check if we are running in a namespace scope and retrieve the ns from the provider
 	result, err := kt.Resources(kind, "", "")
 	if err != nil {
 		return nil, err

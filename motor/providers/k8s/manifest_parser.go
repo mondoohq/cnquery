@@ -47,6 +47,20 @@ func (t *manifestParser) Nodes() ([]v1.Node, error) {
 	return []v1.Node{}, nil
 }
 
+func (t *manifestParser) Namespace(name string) (*v1.Namespace, error) {
+	nss, err := t.Namespaces()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range nss {
+		if nss[i].Name == name {
+			return &nss[i], nil
+		}
+	}
+	return nil, fmt.Errorf("namespace %s not found", name)
+}
+
 // Namespaces iterates over all file-based manifests and extracts all namespaces used
 func (t *manifestParser) Namespaces() ([]v1.Namespace, error) {
 	namespaceMap := map[string]struct{}{}

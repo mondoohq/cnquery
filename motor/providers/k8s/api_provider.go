@@ -284,6 +284,17 @@ func (t *apiProvider) Nodes() ([]v1.Node, error) {
 	return list.Items, err
 }
 
+func (t *apiProvider) Namespace(name string) (*v1.Namespace, error) {
+	ctx := context.Background()
+	ns, err := t.clientset.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	// needed because of https://github.com/kubernetes/client-go/issues/861
+	ns.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("Namespace"))
+	return ns, err
+}
+
 func (t *apiProvider) Namespaces() ([]v1.Namespace, error) {
 	ctx := context.Background()
 	list, err := t.clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})

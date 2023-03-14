@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s"
 	v1 "k8s.io/api/core/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -132,7 +133,18 @@ func ListWorkloads[T runtime.Object](
 	} else {
 		namespaces, err := p.Namespaces()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not list kubernetes namespaces")
+			// If we don't have rights to list the cluster namespaces, attempt getting them 1 by 1
+			if k8sErrors.IsForbidden(err) && len(nsFilter.include) > 0 {
+				for _, ns := range nsFilter.include {
+					n, err := p.Namespace(ns)
+					if err != nil {
+						return nil, err
+					}
+					namespaces = append(namespaces, *n)
+				}
+			} else {
+				return nil, errors.Wrap(err, "could not list kubernetes namespaces")
+			}
 		}
 
 		for i := range namespaces {
