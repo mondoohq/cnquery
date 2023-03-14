@@ -2,12 +2,11 @@ package builder
 
 import (
 	"os"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/motor/discovery/common"
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder/common"
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
@@ -33,9 +32,7 @@ const (
 )
 
 type (
-	commonFlagsFn  func(cmd *cobra.Command)
-	commonPreRunFn func(cmd *cobra.Command, args []string)
-	runFn          func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType AssetType)
+	runFn func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType AssetType)
 )
 
 func NewProviderCommand(opts CommandOpts) *cobra.Command {
@@ -82,14 +79,17 @@ type CommandOpts struct {
 	Short             string
 	Long              string
 	Run               runFn
-	CommonFlags       commonFlagsFn
-	CommonPreRun      commonPreRunFn
-	Docs              CommandsDocs
+	CommonFlags       common.CommonFlagsFn
+	CommonPreRun      common.CommonPreRunFn
+	Docs              common.CommandsDocs
 	PreRun            func(cmd *cobra.Command, args []string)
 	ValidArgsFunction func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective)
 }
 
-func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) {
+func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) {
+	// REMEMBER: when adding new commands, to also add entries in the slimbuilder package so that
+	// the mondoo wrapper can also pick up the new subcommands
+
 	containerCmd := containerProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	containerImageCmd := containerImageProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	containerCmd.AddCommand(containerImageCmd)
@@ -103,9 +103,9 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	dockerCmd.AddCommand(dockerContainerCmd)
 
 	// aws subcommand
-	amsCmd := awsProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	awsCmd := awsProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	awsEc2 := awsEc2ProviderCmd(commonCmdFlags, preRun, runFn, docs)
-	amsCmd.AddCommand(awsEc2)
+	awsCmd.AddCommand(awsEc2)
 
 	awsEc2Connect := awsEc2ConnectProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	awsEc2.AddCommand(awsEc2Connect)
@@ -159,7 +159,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	baseCmd.AddCommand(containerCmd)
 	baseCmd.AddCommand(dockerCmd)
 	baseCmd.AddCommand(kubernetesProviderCmd(commonCmdFlags, preRun, runFn, docs))
-	baseCmd.AddCommand(amsCmd)
+	baseCmd.AddCommand(awsCmd)
 	baseCmd.AddCommand(azureProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(gcpCmd)
 	baseCmd.AddCommand(vsphereCmd)
@@ -174,797 +174,343 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags commonFlagsFn, preRun commo
 	baseCmd.AddCommand(scanVcdCmd(commonCmdFlags, preRun, runFn, docs))
 }
 
-type CommandsDocs struct {
-	Entries map[string]CommandDocsEntry
-}
-
-type CommandDocsEntry struct {
-	Short string
-	Long  string
-}
-
-func (c CommandsDocs) GetShort(id string) string {
-	e, ok := c.Entries[id]
-	if ok {
-		return e.Short
+func localProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_LOCAL_OS, DefaultAssetType)
 	}
-	return ""
-}
-
-func (c CommandsDocs) GetLong(id string) string {
-	e, ok := c.Entries[id]
-	if ok {
-		return e.Long
-	}
-	return ""
-}
-
-func localProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "local",
-		Short:  docs.GetShort("local"),
-		Long:   docs.GetLong("local"),
-		Args:   cobra.ExactArgs(0),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_LOCAL_OS, DefaultAssetType)
-		},
-	}
-	commonCmdFlags(cmd)
+	cmd := common.LocalProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func mockProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "mock PATH",
-		Short:  docs.GetShort("mock"),
-		Long:   docs.GetLong("mock"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Flags().Set("path", args[0])
-			runFn(cmd, args, providers.ProviderType_MOCK, DefaultAssetType)
-		},
+func mockProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_MOCK, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.MockProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func vagrantCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "vagrant HOST",
-		Short:  docs.GetShort("vagrant"),
-		Long:   docs.GetLong("vagrant"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_VAGRANT, DefaultAssetType)
-		},
+func vagrantCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_VAGRANT, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.VagrantCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func terraformProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "terraform PATH",
-		Short:  docs.GetShort("terraform"),
-		Long:   docs.GetLong("terraform"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Flags().Set("path", args[0])
-			runFn(cmd, args, providers.ProviderType_TERRAFORM, TerraformHclAssetType)
-		},
+func terraformProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_TERRAFORM, TerraformHclAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.TerraformProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func terraformProviderStateCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "state PATH",
-		Short:  "Scan a Terraform state file (json)",
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Flags().Set("path", args[0])
-			runFn(cmd, args, providers.ProviderType_TERRAFORM, TerraformStateAssetType)
-		},
+func terraformProviderStateCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_TERRAFORM, TerraformStateAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.TerraformProviderStateCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func terraformProviderPlanCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "plan PATH",
-		Short:  "Scan a Terraform plan file (json)",
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Flags().Set("path", args[0])
-			runFn(cmd, args, providers.ProviderType_TERRAFORM, TerraformPlanAssetType)
-		},
+func terraformProviderPlanCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_TERRAFORM, TerraformPlanAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.TerraformProviderPlanCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func sshProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "ssh user@host",
-		Short:  docs.GetShort("ssh"),
-		Long:   docs.GetLong("ssh"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_SSH, DefaultAssetType)
-		},
+func sshProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_SSH, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.SshProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func winrmProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "winrm user@host",
-		Short:  docs.GetShort("winrm"),
-		Long:   docs.GetLong("winrm"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_WINRM, DefaultAssetType)
-		},
+func winrmProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_WINRM, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.WinrmProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func containerProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "container ID",
-		Short:  docs.GetShort("container"),
-		Long:   docs.GetLong("container"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
-		},
+func containerProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.ContainerProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func containerImageProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "image ID",
-		Short:  docs.GetShort("container-image"),
-		Long:   docs.GetLong("container-image"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
-		},
+func containerImageProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.ContainerImageProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func containerRegistryProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Aliases: []string{"cr"},
-		Use:     "registry TARGET",
-		Short:   docs.GetShort("container-registry"),
-		Long:    docs.GetLong("container-registry"),
-		Args:    cobra.ExactArgs(1),
-		PreRun:  preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_CONTAINER_REGISTRY, DefaultAssetType)
-		},
+func containerRegistryProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_CONTAINER_REGISTRY, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.ContainerRegistryProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func dockerProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "docker ID",
-		Short:  docs.GetShort("docker"),
-		Long:   docs.GetLong("docker"),
-		Args:   cobra.MaximumNArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			discover, err := cmd.Flags().GetString("discover")
-			if err != nil {
-				log.Error().Err(err).Msg("failed to retrieve discover flag")
-				return
-			}
-
-			// If no target is provided and the discovery flag is empty or auto, then error out since there is nothing to scan.
-			if len(args) == 0 && (len(discover) == 0 || strings.Contains(discover, common.DiscoveryAuto)) {
-				log.Error().Msg("either a target or a discovery flag different from \"auto\" must be provided for docker scans")
-				return
-			}
-
-			runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
-		},
+func dockerProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.DockerProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func dockerContainerProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "container ID",
-		Short:  docs.GetShort("docker-container"),
-		Long:   docs.GetLong("docker-container"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_CONTAINER, DefaultAssetType)
-		},
+func dockerContainerProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_CONTAINER, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.DockerContainerProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func dockerImageProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "image ID",
-		Short:  docs.GetShort("docker-image"),
-		Long:   docs.GetLong("docker-image"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
-		},
+func dockerImageProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_DOCKER_ENGINE_IMAGE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.DockerImageProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func kubernetesProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "k8s (optional MANIFEST path)",
-		Aliases: []string{"kubernetes"},
-		Short:   docs.GetShort("kubernetes"),
-		Long:    docs.GetLong("kubernetes"),
-		Args:    cobra.MaximumNArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			// FIXME: DEPRECATED, remove in v8.0 vv
-			viper.BindPFlag("namespace", cmd.Flags().Lookup("namespace"))
-			// ^^
-			viper.BindPFlag("namespaces-exclude", cmd.Flags().Lookup("namespaces-exclude"))
-			viper.BindPFlag("namespaces", cmd.Flags().Lookup("namespaces"))
-			viper.BindPFlag("context", cmd.Flags().Lookup("context"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				cmd.Flags().Set("path", args[0])
-			}
-			runFn(cmd, args, providers.ProviderType_K8S, DefaultAssetType)
-		},
+func kubernetesProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_K8S, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	// FIXME: DEPRECATED, remove in v8.0
-	cmd.Flags().String("namespace", "", "filter kubernetes objects by namespace")
-	cmd.Flags().MarkHidden("namespace")
-	// ^^
 
-	cmd.Flags().String("context", "", "target a Kubernetes context")
-	cmd.Flags().String("namespaces-exclude", "", "filter out Kubernetes objects in the matching namespaces")
-	cmd.Flags().String("namespaces", "", "only include Kubernetes object in the matching namespaces")
+	cmd := common.KubernetesProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func awsProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "aws",
-		Short: docs.GetShort("aws"),
-		Long:  docs.GetLong("aws"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			viper.BindPFlag("project", cmd.Flags().Lookup("project"))
-			viper.BindPFlag("region", cmd.Flags().Lookup("region"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS, DefaultAssetType)
-		},
+func awsProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("profile", "", "pick a named AWS profile to use")
-	cmd.Flags().String("region", "", "the AWS region to scan")
+
+	cmd := common.AwsProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func awsEc2ProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "ec2 SUBCOMMAND",
-		Short: docs.GetShort("aws-ec2"),
-		Long:  docs.GetLong("aws-ec2"),
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
-			os.Exit(0)
-		},
-	}
-	commonCmdFlags(cmd)
+func awsEc2ProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	cmd := common.AwsEc2ProviderCmd(commonCmdFlags, preRun, nil, docs)
 	return cmd
 }
 
-func awsEc2ConnectProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "instance-connect user@host",
-		Short:  docs.GetShort("aws-ec2-connect"),
-		Long:   docs.GetLong("aws-ec2-connect"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_SSH, Ec2InstanceConnectAssetType)
-		},
+func awsEc2ConnectProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_SSH, Ec2InstanceConnectAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.AwsEc2ConnectProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func awsEc2EbsProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "ebs INSTANCEID",
-		Short:  docs.GetShort("aws-ec2-ebs-instance"),
-		Long:   docs.GetLong("aws-ec2-ebs-instance"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsInstanceAssetType)
-		},
+func awsEc2EbsProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsInstanceAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AwsEc2EbsProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func awsEc2EbsVolumeProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "volume VOLUMEID",
-		Short:  docs.GetShort("aws-ec2-ebs-volume"),
-		Long:   docs.GetLong("aws-ec2-ebs-volume"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsVolumeAssetType)
-		},
+func awsEc2EbsVolumeProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsVolumeAssetType)
 	}
-	commonCmdFlags(cmd)
+
+	cmd := common.AwsEc2EbsVolumeProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func awsEc2EbsSnapshotProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "snapshot SNAPSHOTID",
-		Short:  docs.GetShort("aws-ec2-ebs-snapshot"),
-		Long:   docs.GetLong("aws-ec2-ebs-snapshot"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsSnapshotAssetType)
-		},
+func awsEc2EbsSnapshotProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_EC2_EBS, Ec2ebsSnapshotAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AwsEc2EbsSnapshotProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func awsEc2SsmProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "ssm user@host",
-		Short:  docs.GetShort("aws-ec2-ssm"),
-		Long:   docs.GetLong("aws-ec2-ssm"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AWS_SSM_RUN_COMMAND, DefaultAssetType)
-		},
+func awsEc2SsmProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AWS_SSM_RUN_COMMAND, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AwsEc2SsmProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func azureProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "azure",
-		Short: docs.GetShort("azure"),
-		Long:  docs.GetLong("azure"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			viper.BindPFlag("subscription", cmd.Flags().Lookup("subscription"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_AZURE, DefaultAssetType)
-		},
+func azureProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_AZURE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("tenant-id", "", "Directory (tenant) ID of the service principal")
-	cmd.Flags().String("client-id", "", "Application (client) ID of the service principal")
-	cmd.Flags().String("client-secret", "", "Secret for application")
-	cmd.Flags().String("certificate-path", "", "Path (in PKCS #12/PFX or PEM format) to the authentication certificate")
-	cmd.Flags().String("certificate-secret", "", "Passphrase for the authentication certificate file")
-	cmd.Flags().String("subscription", "", "ID of the Azure subscription to scan")
-	cmd.Flags().String("subscriptions", "", "Comma-separated list of Azure subscriptions to include")
-	cmd.Flags().String("subscriptions-exclude", "", "Comma-separated list of Azure subscriptions to exclude")
+	cmd := common.AzureProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 
 	return cmd
 }
 
-func scanGcpCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "gcp",
-		Short: docs.GetShort("gcp"),
-		Long:  docs.GetLong("gcp"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			viper.BindPFlag("project", cmd.Flags().Lookup("project"))
-			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
-			viper.BindPFlag("project-id", cmd.Flags().Lookup("project-id"))
-			viper.BindPFlag("organization-id", cmd.Flags().Lookup("organization-id"))
-			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GCP, DefaultAssetType)
-		},
+func scanGcpCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GCP, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("project", "", "specify the GCP project to scan")
-	cmd.Flags().MarkHidden("project")
-	cmd.Flags().MarkDeprecated("project", "--project is deprecated in favor of --project-id")
-	cmd.Flags().String("project-id", "", "specify the GCP project ID to scan")
-	cmd.Flags().String("organization", "", "specify the GCP organization to scan")
-	cmd.Flags().MarkHidden("organization")
-	cmd.Flags().MarkDeprecated("organization", "--organization is deprecated in favor of --organization-id")
-	cmd.Flags().String("organization-id", "", "specify the GCP organization ID to scan")
-	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+	cmd := common.ScanGcpCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanGcpOrgCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "org ORGANIZATION-ID",
-		Aliases: []string{"organization"},
-		Short:   docs.GetShort("gcp-org"),
-		Long:    docs.GetLong("gcp-org"),
-		Args:    cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GCP, GcpOrganizationAssetType)
-		},
+func scanGcpOrgCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GCP, GcpOrganizationAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+	cmd := common.ScanGcpOrgCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanGcpProjectCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "project PROJECT-ID",
-		Short: docs.GetShort("gcp-project"),
-		Long:  docs.GetLong("gcp-project"),
-		Args:  cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GCP, GcpProjectAssetType)
-		},
+func scanGcpProjectCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GCP, GcpProjectAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+
+	cmd := common.ScanGcpProjectCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanGcpFolderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "folder FOLDER-ID",
-		Short: docs.GetShort("gcp-folder"),
-		Long:  docs.GetLong("gcp-folder"),
-		Args:  cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			preRun(cmd, args)
-			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GCP, GcpFolderAssetType)
-		},
+func scanGcpFolderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GCP, GcpFolderAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+	cmd := common.ScanGcpFolderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanGcpGcrCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "gcr PROJECT",
-		Short: docs.GetShort("gcp-gcr"),
-		Long:  docs.GetLong("gcp-gcr"),
-		Args:  cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("repository", cmd.Flags().Lookup("repository"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_CONTAINER_REGISTRY, GcrContainerRegistryAssetType)
-		},
+func scanGcpGcrCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_CONTAINER_REGISTRY, GcrContainerRegistryAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("repository", "", "specify the GCR repository to scan")
+	cmd := common.ScanGcpGcrCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func vsphereProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "vsphere user@host",
-		Short:  docs.GetShort("vsphere"),
-		Long:   docs.GetLong("vsphere"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_VSPHERE, DefaultAssetType)
-		},
+func vsphereProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_VSPHERE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.VsphereProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func vsphereVmProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "vm user@host",
-		Short:  docs.GetShort("vsphere-vm"),
-		Long:   docs.GetLong("vsphere-vm"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_VSPHERE_VM, DefaultAssetType)
-		},
+func vsphereVmProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_VSPHERE_VM, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.VsphereVmProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanGithubCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "github SUBCOMMAND",
-		Short: docs.GetShort("github"),
-		Long:  docs.GetLong("github"),
-		Args:  cobra.ExactArgs(0),
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
-			os.Exit(0)
-		},
-	}
+func scanGithubCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	cmd := common.ScanGithubCmd(commonCmdFlags, preRun, nil, docs)
 	return cmd
 }
 
-func githubProviderOrganizationCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "org",
-		Short: docs.GetShort("github-org"),
-		Long:  docs.GetLong("github-org"),
-		Args:  cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GITHUB, GithubOrganizationAssetType)
-		},
+func githubProviderOrganizationCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GITHUB, GithubOrganizationAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "GitHub personal access tokens")
+	cmd := common.GithubProviderOrganizationCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func githubProviderRepositoryCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "repo",
-		Short: docs.GetShort("github-repo"),
-		Long:  docs.GetLong("github-repo"),
-		Args:  cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GITHUB, GithubRepositoryAssetType)
-		},
+func githubProviderRepositoryCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GITHUB, GithubRepositoryAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "GitHub personal access token")
+	cmd := common.GithubProviderRepositoryCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func githubProviderUserCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "user",
-		Short: docs.GetShort("github-user"),
-		Long:  docs.GetLong("github-user"),
-		Args:  cobra.ExactArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GITHUB, GithubUserAssetType)
-		},
+func githubProviderUserCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GITHUB, GithubUserAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "GitHub personal access token")
+	cmd := common.GithubProviderUserCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func gitlabProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "gitlab",
-		Short: docs.GetShort("gitlab"),
-		Long:  docs.GetLong("gitlab"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			viper.BindPFlag("group", cmd.Flags().Lookup("group"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GITLAB, DefaultAssetType) // TODO: does not indicate individual assets
-		},
+func gitlabProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GITLAB, DefaultAssetType) // TODO: does not indicate individual assets
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("group", "", "a GitLab group to scan")
-	cmd.MarkFlagRequired("group")
-	cmd.Flags().String("token", "", "GitLab personal access token")
+	cmd := common.GitlabProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func ms365ProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "ms365",
-		Aliases: []string{"microsoft365"},
-		Short:   docs.GetShort("ms365"),
-		Long:    docs.GetLong("ms365"),
-		Args:    cobra.ExactArgs(0),
-		PreRun:  preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_MS365, DefaultAssetType)
-		},
+func ms365ProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_MS365, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("tenant-id", "", "directory (tenant) ID of the service principal")
-	cmd.Flags().String("client-id", "", "application (client) ID of the service principal")
-	cmd.Flags().String("client-secret", "", "secret for application")
-	cmd.Flags().String("certificate-path", "", "path to certificate that's used for certificate-based authentication in PKCS 12 format (pfx)")
-	cmd.Flags().String("certificate-secret", "", "passphrase for certificate file")
-	cmd.Flags().String("datareport", "", "set the MS365 datareport for the scan")
+	cmd := common.Ms365ProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func hostProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "host HOST",
-		Short:  docs.GetShort("host"),
-		Long:   docs.GetLong("host"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_HOST, DefaultAssetType)
-		},
+func hostProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_HOST, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.HostProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func aristaProviderCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:    "arista user@host",
-		Short:  docs.GetShort("arista"),
-		Long:   docs.GetLong("arista"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_ARISTAEOS, DefaultAssetType)
-		},
+func aristaProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_ARISTAEOS, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
+	cmd := common.AristaProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanOktaCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "okta",
-		Short: docs.GetShort("okta"),
-		Long:  docs.GetLong("okta"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_OKTA, DefaultAssetType)
-		},
+func scanOktaCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_OKTA, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("organization", "", "specify the Okta organization to scan")
-	cmd.Flags().String("token", "", "Okta access token")
+	cmd := common.ScanOktaCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanGoogleWorkspaceCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "google-workspace",
-		Aliases: []string{"googleworkspace"},
-		Short:   docs.GetShort("googleworkspace"),
-		Long:    docs.GetLong("googleworkspace"),
-		Args:    cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("customer-id", cmd.Flags().Lookup("customer-id"))
-			viper.BindPFlag("impersonated-user-email", cmd.Flags().Lookup("impersonated-user-email"))
-			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
-
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_GOOGLE_WORKSPACE, DefaultAssetType)
-		},
+func scanGoogleWorkspaceCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GOOGLE_WORKSPACE, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("customer-id", "", "Specify the Google Workspace customer id to scan")
-	cmd.Flags().String("impersonated-user-email", "", "The impersonated user's email with access to the Admin APIs")
-	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+	cmd := common.ScanGoogleWorkspaceCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 
 	return cmd
 }
 
-func scanSlackCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "slack",
-		Short: docs.GetShort("slack"),
-		Long:  docs.GetLong("slack"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("token", cmd.Flags().Lookup("token"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_SLACK, DefaultAssetType)
-		},
+func scanSlackCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_SLACK, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("token", "", "Slack API token")
+	cmd := common.ScanSlackCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 
-func scanVcdCmd(commonCmdFlags commonFlagsFn, preRun commonPreRunFn, runFn runFn, docs CommandsDocs) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "vcd",
-		Short: docs.GetShort("vcd"),
-		Long:  docs.GetLong("vcd"),
-		Args:  cobra.ExactArgs(0),
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlag("user", cmd.Flags().Lookup("user"))
-			viper.BindPFlag("host", cmd.Flags().Lookup("host"))
-			viper.BindPFlag("organization", cmd.Flags().Lookup("organization"))
-			preRun(cmd, args)
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			runFn(cmd, args, providers.ProviderType_VCD, DefaultAssetType)
-		},
+func scanVcdCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_VCD, DefaultAssetType)
 	}
-	commonCmdFlags(cmd)
-	cmd.Flags().String("user", "", "vCloud Director user")
-	cmd.Flags().String("host", "", "vCloud Director Host")
-	cmd.Flags().String("organization", "", "vCloud Director Organization (optional)")
+	cmd := common.ScanVcdCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
