@@ -2,6 +2,7 @@ package explorer
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 	"strconv"
 
@@ -136,6 +137,24 @@ func (s *Filters) RegisterChild(child *Filters) {
 	for k, v := range child.Items {
 		s.Items[k] = v
 	}
+}
+
+func (s *Filters) RegisterQuery(query *Mquery, lookupQueries map[string]*Mquery) error {
+	if query == nil {
+		return nil
+	}
+
+	s.RegisterChild(query.Filters)
+
+	for i := range query.Variants {
+		mrn := query.Variants[i].Mrn
+		if variant, ok := lookupQueries[mrn]; ok {
+			s.RegisterQuery(variant, lookupQueries)
+		} else {
+			return errors.New("cannot find query variant " + mrn)
+		}
+	}
+	return nil
 }
 
 // Checks if the given queries (via CodeIDs) are supported by this set of

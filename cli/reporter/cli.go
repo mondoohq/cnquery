@@ -94,6 +94,9 @@ func (r *cliReporter) printQueryData() {
 	}
 
 	queriesMap := map[string]*explorer.Mquery{}
+	for mrn, q := range r.bundle.Queries {
+		queriesMap[mrn] = q
+	}
 	for _, p := range r.bundle.Packs {
 		for i := range p.Queries {
 			query := p.Queries[i]

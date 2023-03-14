@@ -91,7 +91,8 @@ message QueryPack {
   repeated QueryGroup groups = 11;
 
   repeated Property props = 35;
-  Filters filters = 47;
+  Filters computed_filters = 47; // auto-generated
+  Filters filters = 48;
   
   string license = 21;
   QueryPackDocs docs = 22;
@@ -190,7 +191,7 @@ message Mquery {
   map<string,string> tags = 34;
   Filters filters = 37;
   repeated Property props = 38;
-  repeated Mquery variants = 39;
+  repeated ObjectRef variants = 39;
   // Action is used for all query overrides (eg: in packs, policies, APIs etc)
   Action action = 41;
 }

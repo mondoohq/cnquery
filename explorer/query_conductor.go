@@ -120,6 +120,8 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 		return nil, err
 	}
 
+	bundleMap := bundle.ToMap()
+
 	filtersChecksum, err := MatchFilters(req.EntityMrn, req.AssetFilters, bundle.Packs)
 	if err != nil {
 		return nil, err
@@ -146,13 +148,7 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 		props.Add(bundle.Props...)
 
 		for i := range pack.Queries {
-			query := pack.Queries[i]
-
-			if !query.Filters.Supports(supportedFilters) {
-				continue
-			}
-
-			err := s.addQueryToJob(ctx, query, &job, props)
+			err := s.addQueryToJob(ctx, pack.Queries[i], &job, props, supportedFilters, bundleMap)
 			if err != nil {
 				return nil, err
 			}
@@ -166,13 +162,7 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 			}
 
 			for i := range group.Queries {
-				query := group.Queries[i]
-
-				if !query.Filters.Supports(supportedFilters) {
-					continue
-				}
-
-				err := s.addQueryToJob(ctx, query, &job, props)
+				err := s.addQueryToJob(ctx, group.Queries[i], &job, props, supportedFilters, bundleMap)
 				if err != nil {
 					return nil, err
 				}
@@ -193,7 +183,11 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 	return res, err
 }
 
-func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *ExecutionJob, propsCache PropsCache) error {
+func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *ExecutionJob, propsCache PropsCache, supportedFilters map[string]struct{}, bundle *BundleMap) error {
+	if !query.Filters.Supports(supportedFilters) {
+		return nil
+	}
+
 	var props map[string]*llx.Primitive
 	var propRefs map[string]string
 	if len(query.Props) != 0 {
@@ -234,7 +228,18 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 		}
 	}
 
-	bundle, err := query.Compile(props)
+	if len(query.Variants) != 0 {
+		for i := range query.Variants {
+			ref := query.Variants[i].Mrn
+			err := s.addQueryToJob(ctx, bundle.Queries[ref], job, propsCache, supportedFilters, bundle)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	codeBundle, err := query.Compile(props)
 	if err != nil {
 		return err
 	}
@@ -242,7 +247,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 	equery := &ExecutionQuery{
 		Query:      query.Mql,
 		Checksum:   query.Checksum,
-		Code:       bundle,
+		Code:       codeBundle,
 		Properties: propRefs,
 	}
 

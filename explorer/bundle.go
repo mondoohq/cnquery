@@ -206,21 +206,217 @@ func (p *Bundle) AddBundle(other *Bundle) error {
 	return nil
 }
 
+// Compile a bundle
+// Does a few things:
+// 1. turns it into a map for easier access
+// 2. compile all queries and validates them
+// 3. validation of all contents
+// 4. generate MRNs for all packs, queries, and updates referencing local fields
+// 5. snapshot all queries into the packs
+// 6. make queries public that are only embedded
+func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
+	ownerMrn := p.OwnerMrn
+	if ownerMrn == "" {
+		// this only happens for local bundles where queries have no mrn yet
+		ownerMrn = "//local.cnquery.io/run/local-execution"
+	}
+
+	cache := &bundleCache{
+		ownerMrn:    ownerMrn,
+		bundle:      p,
+		uid2mrn:     map[string]string{},
+		lookupProp:  map[string]PropertyRef{},
+		lookupQuery: map[string]*Mquery{},
+	}
+
+	if err := cache.compileQueries(p.Queries, nil); err != nil {
+		return nil, err
+	}
+
+	// index packs + update MRNs and checksums, link properties via MRNs
+	for i := range p.Packs {
+		pack := p.Packs[i]
+
+		// !this is very important to prevent user overrides! vv
+		pack.InvalidateAllChecksums()
+		pack.ComputedFilters = &Filters{
+			Items: map[string]*Mquery{},
+		}
+
+		err := pack.RefreshMRN(ownerMrn)
+		if err != nil {
+			return nil, errors.New("failed to refresh query pack " + pack.Mrn + ": " + err.Error())
+		}
+
+		if err = pack.Filters.Compile(ownerMrn); err != nil {
+			return nil, errors.Wrap(err, "failed to compile querypack filters")
+		}
+
+		if err := cache.compileQueries(pack.Queries, pack); err != nil {
+			return nil, err
+		}
+
+		for i := range pack.Groups {
+			group := pack.Groups[i]
+
+			// When filters are initially added they haven't been compiled
+			if err = group.Filters.Compile(ownerMrn); err != nil {
+				return nil, errors.Wrap(err, "failed to compile querypack filters")
+			}
+			pack.ComputedFilters.RegisterChild(group.Filters)
+
+			if err := cache.compileQueries(group.Queries, pack); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return p.ToMap(), cache.error()
+}
+
+type bundleCache struct {
+	ownerMrn    string
+	lookupQuery map[string]*Mquery
+	lookupProp  map[string]PropertyRef
+	uid2mrn     map[string]string
+	bundle      *Bundle
+	errors      []error
+}
+
 type PropertyRef struct {
 	*Property
 	Name string
 }
 
-func (p *Bundle) compileProp(prop *Property, ownerMrn string, lookupProp map[string]PropertyRef, uid2mrn map[string]string) error {
+func (c *bundleCache) hasErrors() bool {
+	return len(c.errors) != 0
+}
+
+func (c *bundleCache) error() error {
+	if len(c.errors) == 0 {
+		return nil
+	}
+
+	var msg strings.Builder
+	for i := range c.errors {
+		msg.WriteString(c.errors[i].Error())
+		msg.WriteString("\n")
+	}
+	return errors.New(msg.String())
+}
+
+func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
+	for i := range queries {
+		c.precompileQuery(queries[i], pack)
+	}
+
+	// After the first pass we may have errors. We try to collect as many errors
+	// as we can before returning, so more problems can be fixed at once.
+	// We have to return at this point, because these errors will prevent us from
+	// compiling the queries.
+	if c.hasErrors() {
+		return c.error()
+	}
+
+	for i := range queries {
+		c.compileQuery(queries[i])
+	}
+
+	// The second pass on errors is done after we have compiled as much as possible.
+	// Since shared queries may be used in other places, any errors here will prevent
+	// us from compiling further.
+	return c.error()
+}
+
+// precompileQuery indexes the query, turns UIDs into MRNs, compiles properties
+// and filters, and pre-processes variants. Also makes sure the query isn't nil.
+func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
+	if query == nil {
+		c.errors = append(c.errors, errors.New("received null query"))
+		return
+	}
+
+	// remove leading and trailing whitespace of docs, refs and tags
+	query.Sanitize()
+
+	// ensure the correct mrn is set
+	uid := query.Uid
+	if err := query.RefreshMRN(c.ownerMrn); err != nil {
+		c.errors = append(c.errors, errors.New("failed to refresh MRN for query "+query.Uid))
+		return
+	}
+	if uid != "" {
+		c.uid2mrn[uid] = query.Mrn
+	}
+
+	// the pack is only nil if we are dealing with shared queries
+	if pack == nil {
+		c.lookupQuery[query.Mrn] = query
+	} else if existing, ok := c.lookupQuery[query.Mrn]; ok {
+		query.AddBase(existing)
+	} else {
+		// Any other query that is in a pack, that does not exist globally,
+		// we share out to be available in the bundle.
+		c.bundle.Queries = append(c.bundle.Queries, query)
+		c.lookupQuery[query.Mrn] = query
+	}
+
+	// ensure MRNs for properties
+	for i := range query.Props {
+		if err := c.compileProp(query.Props[i]); err != nil {
+			c.errors = append(c.errors, errors.New("failed to compile properties for query "+query.Mrn))
+			return
+		}
+	}
+
+	// filters have no dependencies, so we can compile them early
+	if err := query.Filters.Compile(c.ownerMrn); err != nil {
+		c.errors = append(c.errors, errors.New("failed to compile filters for query "+query.Mrn))
+		return
+	}
+
+	// filters will need to be aggregated into the pack's filters
+	if pack != nil {
+		if err := pack.ComputedFilters.RegisterQuery(query, c.lookupQuery); err != nil {
+			c.errors = append(c.errors, errors.New("failed to register filters for query "+query.Mrn))
+			return
+		}
+	}
+
+	// ensure MRNs for variants
+	for i := range query.Variants {
+		variant := query.Variants[i]
+		uid := variant.Uid
+		if err := variant.RefreshMRN(c.ownerMrn); err != nil {
+			c.errors = append(c.errors, errors.New("failed to refresh MRN for variant in query "+query.Uid))
+			return
+		}
+		if uid != "" {
+			c.uid2mrn[uid] = variant.Mrn
+		}
+	}
+}
+
+// Note: you only want to run this, after you are sure that all connected
+// dependencies have been processed. Properties must be compiled. Connected
+// queries may not be ready yet, but we have to have precompiled them.
+func (c *bundleCache) compileQuery(query *Mquery) {
+	_, err := query.RefreshChecksumAndType(c.lookupQuery, c.lookupProp)
+	if err != nil {
+		c.errors = append(c.errors, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
+	}
+}
+
+func (c *bundleCache) compileProp(prop *Property) error {
 	var name string
 
 	if prop.Mrn == "" {
 		uid := prop.Uid
-		if err := prop.RefreshMRN(ownerMrn); err != nil {
+		if err := prop.RefreshMRN(c.ownerMrn); err != nil {
 			return err
 		}
 		if uid != "" {
-			uid2mrn[uid] = prop.Mrn
+			c.uid2mrn[uid] = prop.Mrn
 		}
 
 		// TODO: uid's can be namespaced, extract the name
@@ -238,192 +434,12 @@ func (p *Bundle) compileProp(prop *Property, ownerMrn string, lookupProp map[str
 		return err
 	}
 
-	lookupProp[prop.Mrn] = PropertyRef{
+	c.lookupProp[prop.Mrn] = PropertyRef{
 		Property: prop,
 		Name:     name,
 	}
 
 	return nil
-}
-
-// Compile a bundle
-// Does a few things:
-// 1. turns it into a map for easier access
-// 2. compile all queries and validates them
-// 3. validation of all contents
-// 4. generate MRNs for all packs, queries, and updates referencing local fields
-// 5. snapshot all queries into the packs
-// 6. make queries public that are only embedded
-func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
-	ownerMrn := p.OwnerMrn
-	if ownerMrn == "" {
-		// this only happens for local bundles where queries have no mrn yet
-		ownerMrn = "//local.cnquery.io/run/local-execution"
-	}
-
-	var warnings []error
-	var err error
-
-	// helpful indices
-	uid2mrn := map[string]string{}
-	lookupProp := map[string]PropertyRef{}
-	lookupQuery := map[string]*Mquery{}
-
-	// Index queries + update MRNs and checksums
-	for i := range p.Queries {
-		query := p.Queries[i]
-		if query == nil {
-			return nil, errors.New("received null query")
-		}
-
-		// remove leading and trailing whitespace of docs, refs and tags
-		query.Sanitize()
-
-		// ensure the correct mrn is set
-		uid := query.Uid
-		if err = query.RefreshMRN(ownerMrn); err != nil {
-			return nil, err
-		}
-		if uid != "" {
-			uid2mrn[uid] = query.Mrn
-		}
-		lookupQuery[query.Mrn] = query
-
-		// ensure MRNs for properties
-		for i := range query.Props {
-			if err = p.compileProp(query.Props[i], ownerMrn, lookupProp, uid2mrn); err != nil {
-				return nil, err
-			}
-		}
-
-		query.Filters.Compile(ownerMrn)
-
-		// ensure MRNs for variants
-		for i := range query.Variants {
-			variant := query.Variants[i]
-			uid := variant.Uid
-			if err = variant.RefreshMRN(ownerMrn); err != nil {
-				return nil, err
-			}
-			if uid != "" {
-				uid2mrn[uid] = variant.Mrn
-			}
-		}
-
-		// recalculate the checksums
-		_, err := query.RefreshChecksumAndType(lookupProp)
-		if err != nil {
-			log.Error().Err(err).Msg("could not compile the query")
-			warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
-		}
-	}
-
-	// Index packs + update MRNs and checksums, link properties via MRNs
-	for i := range p.Packs {
-		querypack := p.Packs[i]
-		if querypack.Filters == nil {
-			querypack.Filters = &Filters{
-				Items: map[string]*Mquery{},
-			}
-		}
-
-		// !this is very important to prevent user overrides! vv
-		querypack.InvalidateAllChecksums()
-
-		err := querypack.RefreshMRN(ownerMrn)
-		if err != nil {
-			return nil, errors.New("failed to refresh query pack " + querypack.Mrn + ": " + err.Error())
-		}
-
-		// Filters: prep a data structure in case it doesn't exist yet and add
-		// any filters that child groups may carry with them.
-		if querypack.Filters == nil || querypack.Filters.Items == nil {
-			querypack.Filters = &Filters{Items: map[string]*Mquery{}}
-		}
-		querypack.Filters.Compile(ownerMrn)
-
-		for i := range querypack.Groups {
-			group := querypack.Groups[i]
-
-			// When filters are initially added they haven't been compiled
-			group.Filters.Compile(ownerMrn)
-			querypack.Filters.RegisterChild(group.Filters)
-
-			warns, err := p.compileQueries(group.Queries, ownerMrn, querypack, lookupQuery, lookupProp, uid2mrn)
-			if err != nil {
-				return nil, err
-			}
-			warnings = append(warnings, warns...)
-		}
-
-		warns, err := p.compileQueries(querypack.Queries, ownerMrn, querypack, lookupQuery, lookupProp, uid2mrn)
-		if err != nil {
-			return nil, err
-		}
-		warnings = append(warnings, warns...)
-	}
-
-	res := p.ToMap()
-
-	if len(warnings) != 0 {
-		var msg strings.Builder
-		for i := range warnings {
-			msg.WriteString(warnings[i].Error())
-			msg.WriteString("\n")
-		}
-		return res, errors.New(msg.String())
-	}
-
-	return res, nil
-}
-
-func (p *Bundle) compileQueries(queries []*Mquery, ownerMrn string, pack *QueryPack, lookupQuery map[string]*Mquery, lookupProp map[string]PropertyRef, uid2mrn map[string]string) ([]error, error) {
-	var warnings []error
-
-	for i := range queries {
-		query := queries[i]
-
-		// remove leading and trailing whitespace of docs, refs and tags
-		query.Sanitize()
-
-		// ensure the correct mrn is set
-		if err := query.RefreshMRN(ownerMrn); err != nil {
-			return warnings, err
-		}
-
-		existing, ok := lookupQuery[query.Mrn]
-		if ok {
-			query.AddBase(existing)
-			query.Filters.Compile(ownerMrn)
-			pack.Filters.RegisterChild(query.Filters)
-			query.RefreshChecksumAndType(lookupProp)
-			continue
-		}
-
-		// ensure MRNs for properties
-		for i := range query.Props {
-			if err := p.compileProp(query.Props[i], ownerMrn, lookupProp, uid2mrn); err != nil {
-				return warnings, err
-			}
-		}
-
-		query.Filters.Compile(ownerMrn)
-		pack.Filters.RegisterChild(query.Filters)
-
-		// recalculate the checksums
-		_, err := query.RefreshChecksumAndType(lookupProp)
-		if err != nil {
-			log.Error().Err(err).Msg("could not compile the query")
-			warnings = append(warnings, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
-		}
-
-		lookupQuery[query.Mrn] = query
-
-		// we may have embed-only queries, that we externalize and make available
-		p.Queries = append(p.Queries, query)
-	}
-
-	return warnings, nil
 }
 
 // FilterQueryPacks only keeps the given UIDs or MRNs and removes every other one.
@@ -496,23 +512,12 @@ func (p *Bundle) EnsureUIDs() {
 func (p *Bundle) Filters() []*Mquery {
 	uniq := map[string]*Mquery{}
 	for i := range p.Packs {
-		pack := p.Packs[i]
-
 		// TODO: Currently we don't process the difference between local pack filters
 		// and their group filters correctly. These need aggregation.
 
-		if pack.Filters != nil {
-			for k, v := range pack.Filters.Items {
-				uniq[k] = v
-			}
-		}
-
-		for j := range pack.Groups {
-			group := pack.Groups[j]
-			if group.Filters == nil {
-				continue
-			}
-			for k, v := range group.Filters.Items {
+		pack := p.Packs[i]
+		if pack.ComputedFilters != nil {
+			for k, v := range pack.ComputedFilters.Items {
 				uniq[k] = v
 			}
 		}

@@ -183,7 +183,42 @@ func (db *Db) GetBundle(ctx context.Context, mrn string) (*explorer.Bundle, erro
 		return nil, errors.New("failed to find asset " + mrn)
 	}
 
-	return x.(wrapAsset).Bundle, nil
+	res := x.(wrapAsset).Bundle
+
+	// FIXME: we have to compensate for missing query variants in this function
+	// right now, because they don't get uploaded as full bundles right now.
+	// Overhaul this by uploading proper bundles, that include query variants.
+	// vv
+	skipMrn := map[string]struct{}{}
+	for i := range res.Packs {
+		pack := res.Packs[i]
+		for j := range pack.Groups {
+			group := pack.Groups[j]
+			for k := range group.Queries {
+				query := group.Queries[k]
+				if len(query.Variants) == 0 {
+					continue
+				}
+
+				// 🍝 darn spaghetti ... see above fixme
+				for l := range query.Variants {
+					mrn := query.Variants[l].Mrn
+					if _, ok := skipMrn[mrn]; ok {
+						continue
+					}
+
+					skipMrn[mrn] = struct{}{}
+					q, _ := db.GetQuery(ctx, query.Variants[l].Mrn)
+					if q != nil {
+						res.Queries = append(res.Queries, q)
+					}
+				}
+			}
+		}
+	}
+	// ^^
+
+	return res, nil
 }
 
 // MutateBundle runs the given mutation on a bundle, typically an asset.
