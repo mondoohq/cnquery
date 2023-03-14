@@ -29,7 +29,7 @@ func ListCronJobs(
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	return ListWorkloads(p, connection, clusterIdentifier, nsFilter, resFilter, od, "cronjob", p.CronJob, p.CronJobs)
+	return ListNamespacedObj(p, connection, clusterIdentifier, nsFilter, resFilter, od, "cronjob", p.CronJob, p.CronJobs)
 }
 
 func ListDaemonSets(
@@ -40,7 +40,7 @@ func ListDaemonSets(
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	return ListWorkloads(p, connection, clusterIdentifier, nsFilter, resFilter, od, "daemonset", p.DaemonSet, p.DaemonSets)
+	return ListNamespacedObj(p, connection, clusterIdentifier, nsFilter, resFilter, od, "daemonset", p.DaemonSet, p.DaemonSets)
 }
 
 // ListDeployments lits all deployments in the cluster.
@@ -52,7 +52,7 @@ func ListDeployments(
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	return ListWorkloads(p, connection, clusterIdentifier, nsFilter, resFilter, od, "deployment", p.Deployment, p.Deployments)
+	return ListNamespacedObj(p, connection, clusterIdentifier, nsFilter, resFilter, od, "deployment", p.Deployment, p.Deployments)
 }
 
 // ListJobs list all jobs in the cluster.
@@ -64,7 +64,7 @@ func ListJobs(
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	return ListWorkloads(p, connection, clusterIdentifier, nsFilter, resFilter, od, "job", p.Job, p.Jobs)
+	return ListNamespacedObj(p, connection, clusterIdentifier, nsFilter, resFilter, od, "job", p.Job, p.Jobs)
 }
 
 // ListPods list all pods in the cluster.
@@ -76,7 +76,7 @@ func ListPods(
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	return ListWorkloads(p, connection, clusterIdentifier, nsFilter, resFilter, od, "pod", p.Pod, p.Pods)
+	return ListNamespacedObj(p, connection, clusterIdentifier, nsFilter, resFilter, od, "pod", p.Pod, p.Pods)
 }
 
 // ListReplicaSets list all replicaSets in the cluster.
@@ -88,7 +88,7 @@ func ListReplicaSets(
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	return ListWorkloads(p, connection, clusterIdentifier, nsFilter, resFilter, od, "replicaset", p.ReplicaSet, p.ReplicaSets)
+	return ListNamespacedObj(p, connection, clusterIdentifier, nsFilter, resFilter, od, "replicaset", p.ReplicaSet, p.ReplicaSets)
 }
 
 // ListStatefulSets list all statefulsets in the cluster.
@@ -100,10 +100,10 @@ func ListStatefulSets(
 	resFilter map[string][]K8sResourceIdentifier,
 	od *k8s.PlatformIdOwnershipDirectory,
 ) ([]*asset.Asset, error) {
-	return ListWorkloads(p, connection, clusterIdentifier, nsFilter, resFilter, od, "statefulset", p.StatefulSet, p.StatefulSets)
+	return ListNamespacedObj(p, connection, clusterIdentifier, nsFilter, resFilter, od, "statefulset", p.StatefulSet, p.StatefulSets)
 }
 
-func ListWorkloads[T runtime.Object](
+func ListNamespacedObj[T runtime.Object](
 	p k8s.KubernetesProvider,
 	connection *providers.Config,
 	clusterIdentifier string,

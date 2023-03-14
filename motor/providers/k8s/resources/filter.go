@@ -28,9 +28,10 @@ func filterResource(resources []runtime.Object, kind string, name string, namesp
 				if len(namespace) > 0 && o.GetNamespace() != namespace {
 					continue
 				}
-				if len(name) > 0 && o.GetName() == name {
-					filtered = append(filtered, res)
+				if len(name) > 0 && o.GetName() != name {
+					continue
 				}
+				filtered = append(filtered, res)
 			} else if len(name) == 0 {
 				filtered = append(filtered, res)
 			}

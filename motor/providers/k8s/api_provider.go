@@ -143,7 +143,7 @@ func (t *apiProvider) ID() (string, error) {
 	return uid, nil
 }
 
-func (t *apiProvider) PlatformIdentifier() (string, error) {
+func (t *apiProvider) Identifier() (string, error) {
 	if t.selectedResourceID != "" {
 		return t.selectedResourceID, nil
 	}
@@ -159,10 +159,6 @@ func (t *apiProvider) PlatformIdentifier() (string, error) {
 	}
 
 	return id, nil
-}
-
-func (t *apiProvider) Identifier() (string, error) {
-	return t.PlatformIdentifier()
 }
 
 func (t *apiProvider) Name() (string, error) {
@@ -201,9 +197,9 @@ func (t *apiProvider) SupportedResourceTypes() (*resources.ApiResourceIndex, err
 
 func (t *apiProvider) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
 	ctx := context.Background()
-	ns := t.namespace
+	// ns := t.namespace
 	allNs := false
-	if len(ns) == 0 {
+	if len(namespace) == 0 {
 		allNs = true
 	}
 
@@ -220,7 +216,7 @@ func (t *apiProvider) Resources(kind string, name string, namespace string) (*Re
 	}
 
 	log.Debug().Msgf("fetch all %s resources", kind)
-	objs, err := t.d.GetKindResources(ctx, *resType, ns, allNs)
+	objs, err := t.d.GetKindResources(ctx, *resType, namespace, allNs)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +232,7 @@ func (t *apiProvider) Resources(kind string, name string, namespace string) (*Re
 		Kind:         kind,
 		ResourceType: resType,
 		Resources:    objs,
-		Namespace:    ns,
+		Namespace:    namespace,
 		AllNs:        allNs,
 	}, err
 }

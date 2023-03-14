@@ -42,10 +42,6 @@ type KubernetesProvider interface {
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
 
-	// ID of the Cluster or Manifest file
-	ID() (string, error)
-	// MRN style platform identifier
-	PlatformIdentifier() (string, error)
 	Nodes() ([]v1.Node, error)
 	Namespace(name string) (*v1.Namespace, error)
 	Namespaces() ([]v1.Namespace, error)

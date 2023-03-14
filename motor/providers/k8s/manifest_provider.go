@@ -154,7 +154,7 @@ func (t *manifestProvider) ID() (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func (t *manifestProvider) PlatformIdentifier() (string, error) {
+func (t *manifestProvider) Identifier() (string, error) {
 	if t.selectedResourceID != "" {
 		return t.selectedResourceID, nil
 	}
@@ -165,10 +165,6 @@ func (t *manifestProvider) PlatformIdentifier() (string, error) {
 	}
 
 	return NewPlatformID(uid), nil
-}
-
-func (t *manifestProvider) Identifier() (string, error) {
-	return t.PlatformIdentifier()
 }
 
 func (t *manifestProvider) Name() (string, error) {
