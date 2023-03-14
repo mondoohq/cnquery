@@ -51,6 +51,10 @@ builds:
       - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
     hooks:
       post:
+        - cmd: ./scripts/windows-upx.sh "{{ .Path }}"
+          output: true
+          env:
+          - TARGET={{ .Target }}
         - ./scripts/sign-windows-executable.sh '{{ .Path }}'
 nfpms:
   -
