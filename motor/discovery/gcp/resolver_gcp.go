@@ -22,20 +22,14 @@ func (r *GcpResolver) AvailableDiscoveryTargets() []string {
 }
 
 func (r *GcpResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
-	// FIXME: DEPRECATED, update in v8.0 vv
-	// The option "organization" has been deprecated in favor of organization-id
-	if tc.Options != nil && (tc.Options["organization"] != "" || tc.Options["organization-id"] != "") {
-		// ^^
+	if tc.Options != nil && tc.Options["organization-id"] != "" {
 		// discover the full organization
 		return (&GcpOrgResolver{}).Resolve(ctx, tc, credsResolver, sfn, userIdDetectors...)
 	} else if tc.Options != nil && tc.Options["folder-id"] != "" {
 		return (&GcpFolderResolver{}).Resolve(ctx, tc, credsResolver, sfn, userIdDetectors...)
 	} else {
 		// when the user has not provided a project, check if we got a project or try to determine it
-		// FIXME: DEPRECATED, update in v8.0 vv
-		// The option "project" has been deprecated in favor of project-id
-		if tc.Options == nil || (tc.Options["project"] == "" && tc.Options["project-id"] == "") {
-			// ^^
+		if tc.Options == nil || tc.Options["project-id"] == "" {
 			// try to determine current project
 			projectid, err := gcp_provider.GetCurrentProject()
 			if err != nil || len(projectid) == 0 {
