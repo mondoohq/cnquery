@@ -28,12 +28,9 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{
-		common.DiscoveryAuto, common.DiscoveryAll, DiscoverySubscriptions,
-		DiscoveryInstances, DiscoverySqlServers, DiscoveryPostgresServers,
-		DiscoveryMySqlServers, DiscoveryMariaDbServers, DiscoveryStorageAccounts,
-		DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups, DiscoveryInstancesApi,
-	}
+	targets := []string{common.DiscoveryAll, common.DiscoveryAuto, DiscoverySubscriptions}
+	targets = append(targets, ResourceDiscoveryTargets...)
+	return targets
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
@@ -154,10 +151,10 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		}
 	}
 
+	resourceTargets := []string{common.DiscoveryAll}
+	resourceTargets = append(resourceTargets, ResourceDiscoveryTargets...)
 	// resources as assets
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances, DiscoveryInstancesApi,
-		DiscoverySqlServers, DiscoveryPostgresServers, DiscoveryMySqlServers, DiscoveryMariaDbServers,
-		DiscoveryStorageAccounts, DiscoveryStorageContainers, DiscoveryKeyVaults, DiscoverySecurityGroups) {
+	if tc.IncludesOneOfDiscoveryTarget(resourceTargets...) {
 		for id, tc := range subsConfig {
 			assetList, err := GatherAssets(ctx, tc.Cfg, credsResolver, sfn)
 			if err != nil {
