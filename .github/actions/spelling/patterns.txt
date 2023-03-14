@@ -44,8 +44,14 @@ https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0
 # registry key paths
 HKEY_[\w\\]*
 
+# Container digests
+\bsha256:\w*
+
+# mime types
+\bapplication\/\S*
+
 # skip mql uids
 uid:\s.*$
 
-# ARNs
-arn:aws\S*
+# ARN values
+\barn:\S*
