@@ -269,14 +269,6 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			connection.Options["path"] = filepath
 		}
 
-		// FIXME: DEPRECATED, remove in v8.0 vv
-		if namespace, err := cmd.Flags().GetString("namespace"); err != nil {
-			log.Fatal().Err(err).Msg("cannot parse --namespace values")
-		} else if namespace != "" {
-			connection.Options["namespace"] = namespace
-		}
-		// ^^
-
 		if excludeNamespaces, err := cmd.Flags().GetString("namespaces-exclude"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --namespaces-exclude values")
 		} else if excludeNamespaces != "" {
