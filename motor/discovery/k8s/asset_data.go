@@ -119,7 +119,7 @@ func createAssetFromObject(object runtime.Object, runtime string, connection *pr
 	newConnection.Options["object-kind"] = strings.ToLower(objectKind)
 
 	asset := &asset.Asset{
-		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
+		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName(), string(objMeta.GetUID()))},
 		Name:        name,
 		Platform:    platformData,
 		Connections: []*providers.Config{newConnection},

@@ -197,7 +197,6 @@ func (t *apiProvider) SupportedResourceTypes() (*resources.ApiResourceIndex, err
 
 func (t *apiProvider) Resources(kind string, name string, namespace string) (*ResourceResult, error) {
 	ctx := context.Background()
-	// ns := t.namespace
 	allNs := false
 	if len(namespace) == 0 {
 		allNs = true

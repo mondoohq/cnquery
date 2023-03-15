@@ -53,12 +53,12 @@ func (od *PlatformIdOwnershipDirectory) Add(obj runtime.Object) {
 		return
 	}
 
-	objPlatformId := NewPlatformWorkloadId(od.clusterIdentifier, strings.ToLower(objType.GetKind()), k8sMeta.GetNamespace(), k8sMeta.GetName())
+	objPlatformId := NewPlatformWorkloadId(od.clusterIdentifier, strings.ToLower(objType.GetKind()), k8sMeta.GetNamespace(), k8sMeta.GetName(), string(k8sMeta.GetUID()))
 	objMeta := NewKubernetesObjectInfo(od.clusterIdentifier, objType.GetKind(), k8sMeta.GetNamespace(), k8sMeta.GetName())
 
 	od.metadataMap[objPlatformId] = objMeta
 	for _, ownerRef := range k8sMeta.GetOwnerReferences() {
-		ownerPlatformId := NewPlatformWorkloadId(od.clusterIdentifier, strings.ToLower(ownerRef.Kind), k8sMeta.GetNamespace(), ownerRef.Name)
+		ownerPlatformId := NewPlatformWorkloadId(od.clusterIdentifier, strings.ToLower(ownerRef.Kind), k8sMeta.GetNamespace(), ownerRef.Name, "")
 		ownerMeta := NewKubernetesObjectInfo(od.clusterIdentifier, ownerRef.Kind, k8sMeta.GetNamespace(), ownerRef.Name)
 		od.metadataMap[ownerPlatformId] = ownerMeta
 

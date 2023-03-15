@@ -9,9 +9,9 @@ func NewPlatformID(uid string) string {
 	return "//platformid.api.mondoo.app/runtime/k8s/uid/" + uid
 }
 
-func NewPlatformWorkloadId(clusterIdentifier, workloadType, namespace, name string) string {
+func NewPlatformWorkloadId(clusterIdentifier, workloadType, namespace, name, uid string) string {
 	if workloadType == "namespace" {
-		return NewNamespacePlatformId(clusterIdentifier, name)
+		return NewNamespacePlatformId(clusterIdentifier, name, uid)
 	}
 
 	platformIdentifier := clusterIdentifier
@@ -25,10 +25,10 @@ func NewPlatformWorkloadId(clusterIdentifier, workloadType, namespace, name stri
 	return platformIdentifier
 }
 
-func NewNamespacePlatformId(clusterIdentifier, name string) string {
+func NewNamespacePlatformId(clusterIdentifier, name, uid string) string {
 	if clusterIdentifier == "" {
 		return fmt.Sprintf("//platformid.api.mondoo.app/runtime/k8s/namespace/%s", name)
 	}
 
-	return fmt.Sprintf("%s/namespace/%s", clusterIdentifier, name)
+	return fmt.Sprintf("%s/namespace/%s/uid/%s", clusterIdentifier, name, uid)
 }
