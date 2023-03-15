@@ -12954,8 +12954,6 @@ type AzureSubscriptionSqlServiceDatabase interface {
 	Type() (string, error)
 	Collation() (string, error)
 	CreationDate() (*time.Time, error)
-	ContainmentState() (int64, error)
-	CurrentServiceObjectiveId() (string, error)
 	DatabaseId() (string, error)
 	EarliestRestoreDate() (*time.Time, error)
 	CreateMode() (string, error)
@@ -12965,14 +12963,11 @@ type AzureSubscriptionSqlServiceDatabase interface {
 	RecoveryServicesRecoveryPointResourceId() (string, error)
 	Edition() (string, error)
 	MaxSizeBytes() (int64, error)
-	RequestedServiceObjectiveId() (string, error)
 	RequestedServiceObjectiveName() (string, error)
 	ServiceLevelObjective() (string, error)
 	Status() (string, error)
 	ElasticPoolName() (string, error)
 	DefaultSecondaryLocation() (string, error)
-	ServiceTierAdvisors() (interface{}, error)
-	RecommendedIndex() (interface{}, error)
 	FailoverGroupId() (string, error)
 	ReadScale() (string, error)
 	SampleName() (string, error)
@@ -13031,14 +13026,6 @@ func newAzureSubscriptionSqlServiceDatabase(runtime *resources.Runtime, args *re
 			if _, ok := val.(*time.Time); !ok {
 				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"creationDate\" argument has the wrong type (expected type \"*time.Time\")")
 			}
-		case "containmentState":
-			if _, ok := val.(int64); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"containmentState\" argument has the wrong type (expected type \"int64\")")
-			}
-		case "currentServiceObjectiveId":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"currentServiceObjectiveId\" argument has the wrong type (expected type \"string\")")
-			}
 		case "databaseId":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"databaseId\" argument has the wrong type (expected type \"string\")")
@@ -13075,10 +13062,6 @@ func newAzureSubscriptionSqlServiceDatabase(runtime *resources.Runtime, args *re
 			if _, ok := val.(int64); !ok {
 				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"maxSizeBytes\" argument has the wrong type (expected type \"int64\")")
 			}
-		case "requestedServiceObjectiveId":
-			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"requestedServiceObjectiveId\" argument has the wrong type (expected type \"string\")")
-			}
 		case "requestedServiceObjectiveName":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"requestedServiceObjectiveName\" argument has the wrong type (expected type \"string\")")
@@ -13098,14 +13081,6 @@ func newAzureSubscriptionSqlServiceDatabase(runtime *resources.Runtime, args *re
 		case "defaultSecondaryLocation":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"defaultSecondaryLocation\" argument has the wrong type (expected type \"string\")")
-			}
-		case "serviceTierAdvisors":
-			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"serviceTierAdvisors\" argument has the wrong type (expected type \"interface{}\")")
-			}
-		case "recommendedIndex":
-			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.database\", its \"recommendedIndex\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "failoverGroupId":
 			if _, ok := val.(string); !ok {
@@ -13261,10 +13236,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) Register(name string) error {
 		return nil
 	case "creationDate":
 		return nil
-	case "containmentState":
-		return nil
-	case "currentServiceObjectiveId":
-		return nil
 	case "databaseId":
 		return nil
 	case "earliestRestoreDate":
@@ -13283,8 +13254,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) Register(name string) error {
 		return nil
 	case "maxSizeBytes":
 		return nil
-	case "requestedServiceObjectiveId":
-		return nil
 	case "requestedServiceObjectiveName":
 		return nil
 	case "serviceLevelObjective":
@@ -13294,10 +13263,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) Register(name string) error {
 	case "elasticPoolName":
 		return nil
 	case "defaultSecondaryLocation":
-		return nil
-	case "serviceTierAdvisors":
-		return nil
-	case "recommendedIndex":
 		return nil
 	case "failoverGroupId":
 		return nil
@@ -13338,10 +13303,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) Field(name string) (interface{}
 		return s.Collation()
 	case "creationDate":
 		return s.CreationDate()
-	case "containmentState":
-		return s.ContainmentState()
-	case "currentServiceObjectiveId":
-		return s.CurrentServiceObjectiveId()
 	case "databaseId":
 		return s.DatabaseId()
 	case "earliestRestoreDate":
@@ -13360,8 +13321,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) Field(name string) (interface{}
 		return s.Edition()
 	case "maxSizeBytes":
 		return s.MaxSizeBytes()
-	case "requestedServiceObjectiveId":
-		return s.RequestedServiceObjectiveId()
 	case "requestedServiceObjectiveName":
 		return s.RequestedServiceObjectiveName()
 	case "serviceLevelObjective":
@@ -13372,10 +13331,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) Field(name string) (interface{}
 		return s.ElasticPoolName()
 	case "defaultSecondaryLocation":
 		return s.DefaultSecondaryLocation()
-	case "serviceTierAdvisors":
-		return s.ServiceTierAdvisors()
-	case "recommendedIndex":
-		return s.RecommendedIndex()
 	case "failoverGroupId":
 		return s.FailoverGroupId()
 	case "readScale":
@@ -13477,52 +13432,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) CreationDate() (*time.Time, err
 	tres, ok := res.Data.(*time.Time)
 	if !ok {
 		return nil, fmt.Errorf("\"azure.subscription.sqlService.database\" failed to cast field \"creationDate\" to the right type (*time.Time): %#v", res)
-	}
-	return tres, nil
-}
-
-// ContainmentState accessor autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) ContainmentState() (int64, error) {
-	res, ok := s.Cache.Load("containmentState")
-	if !ok || !res.Valid {
-		if err := s.ComputeContainmentState(); err != nil {
-			return 0, err
-		}
-		res, ok = s.Cache.Load("containmentState")
-		if !ok {
-			return 0, errors.New("\"azure.subscription.sqlService.database\" calculated \"containmentState\" but didn't find its value in cache.")
-		}
-		s.MotorRuntime.Trigger(s, "containmentState")
-	}
-	if res.Error != nil {
-		return 0, res.Error
-	}
-	tres, ok := res.Data.(int64)
-	if !ok {
-		return 0, fmt.Errorf("\"azure.subscription.sqlService.database\" failed to cast field \"containmentState\" to the right type (int64): %#v", res)
-	}
-	return tres, nil
-}
-
-// CurrentServiceObjectiveId accessor autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) CurrentServiceObjectiveId() (string, error) {
-	res, ok := s.Cache.Load("currentServiceObjectiveId")
-	if !ok || !res.Valid {
-		if err := s.ComputeCurrentServiceObjectiveId(); err != nil {
-			return "", err
-		}
-		res, ok = s.Cache.Load("currentServiceObjectiveId")
-		if !ok {
-			return "", errors.New("\"azure.subscription.sqlService.database\" calculated \"currentServiceObjectiveId\" but didn't find its value in cache.")
-		}
-		s.MotorRuntime.Trigger(s, "currentServiceObjectiveId")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.sqlService.database\" failed to cast field \"currentServiceObjectiveId\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
@@ -13671,29 +13580,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) MaxSizeBytes() (int64, error) {
 	return tres, nil
 }
 
-// RequestedServiceObjectiveId accessor autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) RequestedServiceObjectiveId() (string, error) {
-	res, ok := s.Cache.Load("requestedServiceObjectiveId")
-	if !ok || !res.Valid {
-		if err := s.ComputeRequestedServiceObjectiveId(); err != nil {
-			return "", err
-		}
-		res, ok = s.Cache.Load("requestedServiceObjectiveId")
-		if !ok {
-			return "", errors.New("\"azure.subscription.sqlService.database\" calculated \"requestedServiceObjectiveId\" but didn't find its value in cache.")
-		}
-		s.MotorRuntime.Trigger(s, "requestedServiceObjectiveId")
-	}
-	if res.Error != nil {
-		return "", res.Error
-	}
-	tres, ok := res.Data.(string)
-	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.sqlService.database\" failed to cast field \"requestedServiceObjectiveId\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
 // RequestedServiceObjectiveName accessor autogenerated
 func (s *mqlAzureSubscriptionSqlServiceDatabase) RequestedServiceObjectiveName() (string, error) {
 	res, ok := s.Cache.Load("requestedServiceObjectiveName")
@@ -13770,52 +13656,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) DefaultSecondaryLocation() (str
 	tres, ok := res.Data.(string)
 	if !ok {
 		return "", fmt.Errorf("\"azure.subscription.sqlService.database\" failed to cast field \"defaultSecondaryLocation\" to the right type (string): %#v", res)
-	}
-	return tres, nil
-}
-
-// ServiceTierAdvisors accessor autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) ServiceTierAdvisors() (interface{}, error) {
-	res, ok := s.Cache.Load("serviceTierAdvisors")
-	if !ok || !res.Valid {
-		if err := s.ComputeServiceTierAdvisors(); err != nil {
-			return nil, err
-		}
-		res, ok = s.Cache.Load("serviceTierAdvisors")
-		if !ok {
-			return nil, errors.New("\"azure.subscription.sqlService.database\" calculated \"serviceTierAdvisors\" but didn't find its value in cache.")
-		}
-		s.MotorRuntime.Trigger(s, "serviceTierAdvisors")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.(interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.sqlService.database\" failed to cast field \"serviceTierAdvisors\" to the right type (interface{}): %#v", res)
-	}
-	return tres, nil
-}
-
-// RecommendedIndex accessor autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) RecommendedIndex() (interface{}, error) {
-	res, ok := s.Cache.Load("recommendedIndex")
-	if !ok || !res.Valid {
-		if err := s.ComputeRecommendedIndex(); err != nil {
-			return nil, err
-		}
-		res, ok = s.Cache.Load("recommendedIndex")
-		if !ok {
-			return nil, errors.New("\"azure.subscription.sqlService.database\" calculated \"recommendedIndex\" but didn't find its value in cache.")
-		}
-		s.MotorRuntime.Trigger(s, "recommendedIndex")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.(interface{})
-	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.sqlService.database\" failed to cast field \"recommendedIndex\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
@@ -14036,10 +13876,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) MqlCompute(name string) error {
 		return nil
 	case "creationDate":
 		return nil
-	case "containmentState":
-		return s.ComputeContainmentState()
-	case "currentServiceObjectiveId":
-		return s.ComputeCurrentServiceObjectiveId()
 	case "databaseId":
 		return nil
 	case "earliestRestoreDate":
@@ -14058,8 +13894,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) MqlCompute(name string) error {
 		return nil
 	case "maxSizeBytes":
 		return nil
-	case "requestedServiceObjectiveId":
-		return s.ComputeRequestedServiceObjectiveId()
 	case "requestedServiceObjectiveName":
 		return nil
 	case "serviceLevelObjective":
@@ -14070,10 +13904,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) MqlCompute(name string) error {
 		return nil
 	case "defaultSecondaryLocation":
 		return nil
-	case "serviceTierAdvisors":
-		return s.ComputeServiceTierAdvisors()
-	case "recommendedIndex":
-		return s.ComputeRecommendedIndex()
 	case "failoverGroupId":
 		return nil
 	case "readScale":
@@ -14097,76 +13927,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabase) MqlCompute(name string) error {
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.sqlService.database\" resource")
 	}
-}
-
-// ComputeContainmentState computer autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) ComputeContainmentState() error {
-	var err error
-	if _, ok := s.Cache.Load("containmentState"); ok {
-		return nil
-	}
-	vres, err := s.GetContainmentState()
-	if _, ok := err.(resources.NotReadyError); ok {
-		return err
-	}
-	s.Cache.Store("containmentState", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
-	return nil
-}
-
-// ComputeCurrentServiceObjectiveId computer autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) ComputeCurrentServiceObjectiveId() error {
-	var err error
-	if _, ok := s.Cache.Load("currentServiceObjectiveId"); ok {
-		return nil
-	}
-	vres, err := s.GetCurrentServiceObjectiveId()
-	if _, ok := err.(resources.NotReadyError); ok {
-		return err
-	}
-	s.Cache.Store("currentServiceObjectiveId", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
-	return nil
-}
-
-// ComputeRequestedServiceObjectiveId computer autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) ComputeRequestedServiceObjectiveId() error {
-	var err error
-	if _, ok := s.Cache.Load("requestedServiceObjectiveId"); ok {
-		return nil
-	}
-	vres, err := s.GetRequestedServiceObjectiveId()
-	if _, ok := err.(resources.NotReadyError); ok {
-		return err
-	}
-	s.Cache.Store("requestedServiceObjectiveId", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
-	return nil
-}
-
-// ComputeServiceTierAdvisors computer autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) ComputeServiceTierAdvisors() error {
-	var err error
-	if _, ok := s.Cache.Load("serviceTierAdvisors"); ok {
-		return nil
-	}
-	vres, err := s.GetServiceTierAdvisors()
-	if _, ok := err.(resources.NotReadyError); ok {
-		return err
-	}
-	s.Cache.Store("serviceTierAdvisors", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
-	return nil
-}
-
-// ComputeRecommendedIndex computer autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabase) ComputeRecommendedIndex() error {
-	var err error
-	if _, ok := s.Cache.Load("recommendedIndex"); ok {
-		return nil
-	}
-	vres, err := s.GetRecommendedIndex()
-	if _, ok := err.(resources.NotReadyError); ok {
-		return err
-	}
-	s.Cache.Store("recommendedIndex", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
-	return nil
 }
 
 // ComputeTransparentDataEncryption computer autogenerated
@@ -14267,7 +14027,6 @@ type AzureSubscriptionSqlServiceDatabaseusage interface {
 	CurrentValue() (float64, error)
 	Limit() (float64, error)
 	Unit() (string, error)
-	NextResetTime() (*time.Time, error)
 }
 
 // mqlAzureSubscriptionSqlServiceDatabaseusage for the azure.subscription.sqlService.databaseusage resource
@@ -14323,10 +14082,6 @@ func newAzureSubscriptionSqlServiceDatabaseusage(runtime *resources.Runtime, arg
 		case "unit":
 			if _, ok := val.(string); !ok {
 				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.databaseusage\", its \"unit\" argument has the wrong type (expected type \"string\")")
-			}
-		case "nextResetTime":
-			if _, ok := val.(*time.Time); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.sqlService.databaseusage\", its \"nextResetTime\" argument has the wrong type (expected type \"*time.Time\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
@@ -14398,8 +14153,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabaseusage) Register(name string) erro
 		return nil
 	case "unit":
 		return nil
-	case "nextResetTime":
-		return nil
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.sqlService.databaseusage\" resource")
 	}
@@ -14423,8 +14176,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabaseusage) Field(name string) (interf
 		return s.Limit()
 	case "unit":
 		return s.Unit()
-	case "nextResetTime":
-		return s.NextResetTime()
 	default:
 		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.subscription.sqlService.databaseusage\" resource")
 	}
@@ -14542,29 +14293,6 @@ func (s *mqlAzureSubscriptionSqlServiceDatabaseusage) Unit() (string, error) {
 	return tres, nil
 }
 
-// NextResetTime accessor autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabaseusage) NextResetTime() (*time.Time, error) {
-	res, ok := s.Cache.Load("nextResetTime")
-	if !ok || !res.Valid {
-		if err := s.ComputeNextResetTime(); err != nil {
-			return nil, err
-		}
-		res, ok = s.Cache.Load("nextResetTime")
-		if !ok {
-			return nil, errors.New("\"azure.subscription.sqlService.databaseusage\" calculated \"nextResetTime\" but didn't find its value in cache.")
-		}
-		s.MotorRuntime.Trigger(s, "nextResetTime")
-	}
-	if res.Error != nil {
-		return nil, res.Error
-	}
-	tres, ok := res.Data.(*time.Time)
-	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.sqlService.databaseusage\" failed to cast field \"nextResetTime\" to the right type (*time.Time): %#v", res)
-	}
-	return tres, nil
-}
-
 // Compute accessor autogenerated
 func (s *mqlAzureSubscriptionSqlServiceDatabaseusage) MqlCompute(name string) error {
 	log.Trace().Str("field", name).Msg("[azure.subscription.sqlService.databaseusage].MqlCompute")
@@ -14583,25 +14311,9 @@ func (s *mqlAzureSubscriptionSqlServiceDatabaseusage) MqlCompute(name string) er
 		return nil
 	case "unit":
 		return nil
-	case "nextResetTime":
-		return s.ComputeNextResetTime()
 	default:
 		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.sqlService.databaseusage\" resource")
 	}
-}
-
-// ComputeNextResetTime computer autogenerated
-func (s *mqlAzureSubscriptionSqlServiceDatabaseusage) ComputeNextResetTime() error {
-	var err error
-	if _, ok := s.Cache.Load("nextResetTime"); ok {
-		return nil
-	}
-	vres, err := s.GetNextResetTime()
-	if _, ok := err.(resources.NotReadyError); ok {
-		return err
-	}
-	s.Cache.Store("nextResetTime", &resources.CacheEntry{Data: vres, Valid: true, Error: err, Timestamp: time.Now().Unix()})
-	return nil
 }
 
 // AzureSubscriptionPostgresqlService resource interface

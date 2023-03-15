@@ -800,10 +800,6 @@ private azure.subscription.sqlService.database @defaults("id name") {
   collation string
   // SQL database create date
   creationDate time
-  // Deprecated
-  containmentState() int
-  // Deprecated. Use `serviceLevelObjective` instead.
-  currentServiceObjectiveId() string
   // Database ID
   databaseId string
   // SQL database earliest restore date 
@@ -822,8 +818,6 @@ private azure.subscription.sqlService.database @defaults("id name") {
   edition string
   // SQL database max byte size
   maxSizeBytes int
-  // Deprecated. Use `requestedServiceObjectiveName` instead.
-  requestedServiceObjectiveId() string
   // SQL database requested objective name
   requestedServiceObjectiveName string
   // SQL database service level objective 
@@ -834,10 +828,6 @@ private azure.subscription.sqlService.database @defaults("id name") {
   elasticPoolName string
   // SQL database default secondary location
   defaultSecondaryLocation string
-  // Deprecated
-  serviceTierAdvisors() dict
-  // Deprecated. Use `advisor.recommendedActions` instead.
-  recommendedIndex() dict
   // SQL database failover group ID
   failoverGroupId string
   // SQL database read scale
@@ -876,8 +866,6 @@ private azure.subscription.sqlService.databaseusage @defaults("id name") {
   limit float
   // Database usage unit
   unit string
-  // Deprecated
-  nextResetTime() time
 }
 
 // Azure Database for PostgreSQL
