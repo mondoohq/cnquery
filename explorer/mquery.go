@@ -395,9 +395,20 @@ func (r *Remediation) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
+	if err := json.Unmarshal(data, &r.Items); err == nil {
+		return nil
+	}
+
 	// prevent recursive calls into UnmarshalJSON with a placeholder type
 	type tmp Remediation
 	return json.Unmarshal(data, (*tmp)(r))
+}
+
+func (r *Remediation) MarshalJSON() ([]byte, error) {
+	if r == nil {
+		return []byte{}, nil
+	}
+	return json.Marshal(r.Items)
 }
 
 func ChecksumFilters(queries []*Mquery) (string, error) {
