@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/ranger-rpc"
+	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"go.opentelemetry.io/otel"
@@ -220,7 +220,11 @@ func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) 
 		registryEndpoint = defaultRegistryUrl
 	}
 
-	client, err := NewQueryHubClient(registryEndpoint, ranger.DefaultHttpClient())
+	rangerClient, err := rangerclient.NewRangerClient()
+	if err != nil {
+		return nil, err
+	}
+	client, err := NewQueryHubClient(registryEndpoint, rangerClient)
 	if err != nil {
 		return nil, err
 	}

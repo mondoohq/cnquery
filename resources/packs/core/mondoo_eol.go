@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/cnquery/upstream/mvd"
-	"go.mondoo.com/ranger-rpc"
 )
 
 func (s *mqlMondooEol) id() (string, error) {
@@ -29,7 +29,11 @@ func (p *mqlMondooEol) GetDate() (*time.Time, error) {
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, ranger.DefaultHttpClient())
+	rangerClient, err := rangerclient.NewRangerClient()
+	if err != nil {
+		return nil, err
+	}
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, rangerClient)
 	if err != nil {
 		return nil, err
 	}

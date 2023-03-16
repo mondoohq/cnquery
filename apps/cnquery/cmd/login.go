@@ -12,6 +12,7 @@ import (
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
+	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/cnquery/upstream"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
@@ -91,7 +92,11 @@ func register(token string) {
 		plugins = append(plugins, defaultPlugins...)
 		plugins = append(plugins, statictoken.NewRangerPlugin(token))
 
-		client, err := upstream.NewAgentManagerClient(apiEndpoint, ranger.DefaultHttpClient(), plugins...)
+		rangerClient, err := rangerclient.NewRangerClient()
+		if err != nil {
+			log.Fatal().Err(err).Msg("error while creating Mondoo API client")
+		}
+		client, err := upstream.NewAgentManagerClient(apiEndpoint, rangerClient, plugins...)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not connect to mondoo platform")
 		}

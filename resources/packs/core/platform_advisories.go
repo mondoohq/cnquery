@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/cnquery/upstream/mvd"
 	"go.mondoo.com/cnquery/upstream/mvd/cvss"
 	"go.mondoo.com/ranger-rpc"
@@ -76,7 +77,11 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, ranger.DefaultHttpClient())
+	rangerClient, err := rangerclient.NewRangerClient()
+	if err != nil {
+		return nil, err
+	}
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, rangerClient)
 	if err != nil {
 		return nil, err
 	}
