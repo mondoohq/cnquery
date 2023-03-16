@@ -1,6 +1,7 @@
 package explorer
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"sort"
@@ -139,6 +140,8 @@ func (s *Filters) RegisterChild(child *Filters) {
 	}
 }
 
+var ErrQueryNotFound = errors.New("query not found")
+
 // RegisterQuery attempt to take a query (or nil) and register all its filters.
 // This includes any variants that the query might have as well. It will also
 // try to look up the base query, if requested.
@@ -147,15 +150,29 @@ func (s *Filters) RegisterQuery(query *Mquery, lookupQueries map[string]*Mquery)
 		return nil
 	}
 
+	return s.RegisterQueryLookupFunc(context.Background(), query, func(_ context.Context, mrn string) (*Mquery, error) {
+		q, ok := lookupQueries[mrn]
+		if !ok {
+			return nil, ErrQueryNotFound
+		}
+		return q, nil
+	})
+}
+
+func (s *Filters) RegisterQueryLookupFunc(ctx context.Context, query *Mquery, lookupQueryByMrn func(ctx context.Context, mrn string) (*Mquery, error)) error {
+	if query == nil {
+		return nil
+	}
+
 	s.RegisterChild(query.Filters)
 
 	for i := range query.Variants {
 		mrn := query.Variants[i].Mrn
-		if variant, ok := lookupQueries[mrn]; ok {
-			s.RegisterQuery(variant, lookupQueries)
-		} else {
-			return errors.New("cannot find query variant " + mrn)
+		variant, err := lookupQueryByMrn(ctx, mrn)
+		if err != nil {
+			return errors.Join(err, errors.New("cannot find query variant "+mrn))
 		}
+		s.RegisterQueryLookupFunc(ctx, variant, lookupQueryByMrn)
 	}
 	return nil
 }
