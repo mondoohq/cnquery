@@ -196,19 +196,19 @@ message Mquery {
   Action action = 41;
 }
 
+enum ScoringSystem {
+  SCORING_UNSPECIFIED = 0;
+  WEIGHTED = 1;
+  WORST = 2;
+  AVERAGE = 3;
+  DATA_ONLY = 4;
+  IGNORE_SCORE = 5;
+}
+
 // Impact explains how important certain queries are. They are especially useful
 // in weighted testing where results need to be prioritized. They can also
 // serve as a priority list for data that is collected.
 message Impact {
-  enum ScoringSystem {
-    SCORING_UNSPECIFIED = 0;
-    WEIGHTED = 1;
-    WORST = 2;
-    AVERAGE = 3;
-    DATA_ONLY = 4;
-    IGNORE = 5;
-  }
-
   // Value is between 0 to 100 (most impactful).
   ImpactValue value = 1;
   // The scoring system to apply for evaluating multiple results

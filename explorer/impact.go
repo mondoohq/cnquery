@@ -12,7 +12,7 @@ func (v *Impact) AddBase(base *Impact) {
 		return
 	}
 
-	if v.Scoring == Impact_SCORING_UNSPECIFIED {
+	if v.Scoring == ScoringSystem_SCORING_UNSPECIFIED {
 		v.Scoring = base.Scoring
 	}
 	if v.Value == nil {
