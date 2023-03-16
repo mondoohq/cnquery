@@ -1,9 +1,11 @@
 package explorer
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMqueryMerge(t *testing.T) {
@@ -57,4 +59,62 @@ func TestMqueryMerge(t *testing.T) {
 	a.Docs.Remediation.Items[0].Desc = "not this"
 	a.Docs.Remediation.Items[0].Desc = "not this either"
 	assert.Equal(t, cD, c.Docs.Remediation.Items[0].Desc)
+}
+
+func TestMquery_Remediation(t *testing.T) {
+	tests := []struct {
+		title string
+		data  string
+		out   *Remediation
+	}{
+		{
+			"parse default remediation, string-only",
+			"\"string-only remediation\"",
+			&Remediation{Items: []*TypedDoc{
+				{Id: "default", Desc: "string-only remediation"},
+			}},
+		},
+		{
+			"parse multiple remediation via array",
+			"[{\"id\": \"one\", \"desc\": \"two\"}, {\"id\": \"three\", \"desc\": \"four\"}]",
+			&Remediation{Items: []*TypedDoc{
+				{Id: "one", Desc: "two"},
+				{Id: "three", Desc: "four"},
+			}},
+		},
+		{
+			"parse internal structure, which uses items",
+			"{\"items\":[{\"id\": \"one\", \"desc\": \"two\"}, {\"id\": \"three\", \"desc\": \"four\"}]}",
+			&Remediation{Items: []*TypedDoc{
+				{Id: "one", Desc: "two"},
+				{Id: "three", Desc: "four"},
+			}},
+		},
+	}
+
+	for _, cur := range tests {
+		t.Run(cur.title, func(t *testing.T) {
+			var res Remediation
+			err := json.Unmarshal([]byte(cur.data), &res)
+			require.NoError(t, err)
+			assert.Equal(t, cur.out, &res)
+		})
+	}
+
+	t.Run("marshal remediation to json", func(t *testing.T) {
+		initial := &Remediation{
+			Items: []*TypedDoc{
+				{Id: "default", Desc: "one remediation"},
+			},
+		}
+
+		out, err := json.Marshal(initial)
+		require.NoError(t, err)
+		assert.Equal(t, "[{\"id\":\"default\",\"desc\":\"one remediation\"}]", string(out))
+
+		var back Remediation
+		err = json.Unmarshal(out, &back)
+		require.NoError(t, err)
+		assert.Equal(t, initial, &back)
+	})
 }

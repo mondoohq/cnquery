@@ -139,6 +139,9 @@ func (s *Filters) RegisterChild(child *Filters) {
 	}
 }
 
+// RegisterQuery attempt to take a query (or nil) and register all its filters.
+// This includes any variants that the query might have as well. It will also
+// try to look up the base query, if requested.
 func (s *Filters) RegisterQuery(query *Mquery, lookupQueries map[string]*Mquery) error {
 	if query == nil {
 		return nil
