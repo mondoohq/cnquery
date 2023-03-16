@@ -106,17 +106,17 @@ func TestMerging(t *testing.T) {
 		{
 			"inherit value",
 			&Impact{Value: &ImpactValue{Value: 20}},
-			&Impact{Weight: 10, Scoring: Impact_AVERAGE},
+			&Impact{Weight: 10, Scoring: ScoringSystem_AVERAGE},
 			&Impact{
 				Value:  &ImpactValue{Value: 20},
-				Weight: 10, Scoring: Impact_AVERAGE,
+				Weight: 10, Scoring: ScoringSystem_AVERAGE,
 			},
 		},
 		{
 			"inherit scoring (explicit)",
-			&Impact{Scoring: Impact_IGNORE},
-			&Impact{Scoring: Impact_SCORING_UNSPECIFIED, Value: &ImpactValue{Value: 78}},
-			&Impact{Scoring: Impact_IGNORE, Value: &ImpactValue{Value: 78}},
+			&Impact{Scoring: ScoringSystem_IGNORE_SCORE},
+			&Impact{Scoring: ScoringSystem_SCORING_UNSPECIFIED, Value: &ImpactValue{Value: 78}},
+			&Impact{Scoring: ScoringSystem_IGNORE_SCORE, Value: &ImpactValue{Value: 78}},
 		},
 	}
 
