@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/checksums"
+	"gopkg.in/yaml.v3"
 )
 
 func (v *Impact) AddBase(base *Impact) {
@@ -84,4 +85,65 @@ func (v *ImpactValue) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func (s *ScoringSystem) UnmarshalJSON(data []byte) error {
+	// check if we have a number
+	var code int32
+	err := json.Unmarshal(data, &code)
+	if err == nil {
+		*s = ScoringSystem(code)
+	} else {
+		var name string
+		_ = json.Unmarshal(data, &name)
+
+		switch name {
+		case "highest impact":
+			*s = ScoringSystem_WORST
+		case "weighted":
+			*s = ScoringSystem_WEIGHTED
+		case "average", "":
+			*s = ScoringSystem_AVERAGE
+		default:
+			return errors.New("unknown scoring system: " + string(data))
+		}
+	}
+	return nil
+}
+
+func (s *ScoringSystem) UnmarshalYAML(node *yaml.Node) error {
+	// check if we have a number
+	var code int32
+	err := node.Decode(&code)
+	if err == nil {
+		*s = ScoringSystem(code)
+	} else {
+		var name string
+		_ = node.Decode(&name)
+
+		switch name {
+		case "highest impact":
+			*s = ScoringSystem_WORST
+		case "weighted":
+			*s = ScoringSystem_WEIGHTED
+		case "average", "":
+			*s = ScoringSystem_AVERAGE
+		default:
+			return errors.New("unknown scoring system: " + string(name))
+		}
+	}
+	return nil
+}
+
+func (s *ScoringSystem) MarshalYAML() (interface{}, error) {
+	switch *s {
+	case ScoringSystem_WORST:
+		return "highest impact", nil
+	case ScoringSystem_WEIGHTED:
+		return "weighted", nil
+	case ScoringSystem_AVERAGE:
+		return "average", nil
+	default:
+		return *s, nil
+	}
 }
