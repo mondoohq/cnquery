@@ -54,6 +54,10 @@ func ParseLinuxPsResult(input io.Reader) ([]*ProcessEntry, error) {
 		line := scanner.Text()
 
 		m := LINUX_PS_REGEX.FindStringSubmatch(line)
+		if len(m) != 12 {
+			log.Warn().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
+			continue
+		}
 		if m[1] == "PID" {
 			// header
 			continue
@@ -96,7 +100,10 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		m := UNIX_PS_REGEX.FindStringSubmatch(line)
-
+		if len(m) != 11 {
+			log.Warn().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
+			continue
+		}
 		if m[1] == "PID" {
 			// header
 			continue
