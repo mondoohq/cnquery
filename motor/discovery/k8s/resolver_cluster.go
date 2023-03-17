@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
@@ -46,6 +47,11 @@ func (r *ClusterResolver) AvailableDiscoveryTargets() []string {
 func (r *ClusterResolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	features := cnquery.GetFeatures(ctx)
 	resolved := []*asset.Asset{}
+	nsFilter := NamespaceFilterOpts{}
+	excludeNamespaces := tc.Options["namespaces-exclude"]
+	if len(excludeNamespaces) > 0 {
+		nsFilter.exclude = strings.Split(excludeNamespaces, ",")
+	}
 
 	var k8sctlConfig *kubectl.KubectlConfig
 	localProvider, err := local.New()
@@ -134,7 +140,7 @@ func (r *ClusterResolver) Resolve(ctx context.Context, root *asset.Asset, tc *pr
 		}
 	}
 
-	additionalAssets, err := addSeparateAssets(tc, p, NamespaceFilterOpts{}, resourcesFilter, clusterIdentifier, ownershipDir, features)
+	additionalAssets, err := addSeparateAssets(tc, p, nsFilter, resourcesFilter, clusterIdentifier, ownershipDir, features)
 	if err != nil {
 		return nil, err
 	}

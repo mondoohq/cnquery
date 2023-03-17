@@ -2,6 +2,8 @@ package k8s
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/gobwas/glob"
@@ -67,6 +69,11 @@ func (r *NamespaceResolver) Resolve(ctx context.Context, root *asset.Asset, tc *
 	clusterNamespaces, err := p.Namespaces()
 	if err != nil {
 		if errors.IsForbidden(err) {
+			// If the user does not have permissions to list the cluster namespaces, we cannot do glob matching.
+			// We can only work with exact matching in that case
+			if containsGlob, _ := regexp.MatchString(`[\*\/\\\[\]\{\}\?]`, includeNamespaces); containsGlob {
+				return nil, fmt.Errorf("glob patterns are not allowed for k8s users with no list namespace permissions")
+			}
 			log.Warn().Msg("cannot list cluster namespaces, skipping check for non-existent namespaces...")
 		} else {
 			return nil, err
