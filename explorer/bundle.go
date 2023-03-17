@@ -263,7 +263,7 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 			if err = group.Filters.Compile(ownerMrn); err != nil {
 				return nil, errors.Wrap(err, "failed to compile querypack filters")
 			}
-			pack.ComputedFilters.RegisterChild(group.Filters)
+			pack.ComputedFilters.AddFilters(group.Filters)
 
 			if err := cache.compileQueries(group.Queries, pack); err != nil {
 				return nil, err
@@ -377,7 +377,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 
 	// filters will need to be aggregated into the pack's filters
 	if pack != nil {
-		if err := pack.ComputedFilters.RegisterQuery(query, c.lookupQuery); err != nil {
+		if err := pack.ComputedFilters.AddQueryFilters(query, c.lookupQuery); err != nil {
 			c.errors = append(c.errors, errors.New("failed to register filters for query "+query.Mrn))
 			return
 		}

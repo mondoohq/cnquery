@@ -3,10 +3,10 @@ package explorer
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"sort"
 	"strconv"
 
+	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/checksums"
 )
 
@@ -128,9 +128,9 @@ func (s *Filters) Compile(ownerMRN string) error {
 	return nil
 }
 
-// RegisterChild takes all filters in a given child and adds them to the parent.
+// AddFilters takes all given filters (or nil) and adds them to the parent.
 // Note: The parent must be non-empty and non-nil, or this method will panic.
-func (s *Filters) RegisterChild(child *Filters) {
+func (s *Filters) AddFilters(child *Filters) {
 	if child == nil {
 		return
 	}
@@ -142,15 +142,14 @@ func (s *Filters) RegisterChild(child *Filters) {
 
 var ErrQueryNotFound = errors.New("query not found")
 
-// RegisterQuery attempt to take a query (or nil) and register all its filters.
-// This includes any variants that the query might have as well. It will also
-// try to look up the base query, if requested.
-func (s *Filters) RegisterQuery(query *Mquery, lookupQueries map[string]*Mquery) error {
+// AddQueryFilters attempt to take a query (or nil) and register all its filters.
+// This includes any variants that the query might have as well.
+func (s *Filters) AddQueryFilters(query *Mquery, lookupQueries map[string]*Mquery) error {
 	if query == nil {
 		return nil
 	}
 
-	return s.RegisterQueryLookupFunc(context.Background(), query, func(_ context.Context, mrn string) (*Mquery, error) {
+	return s.AddQueryFiltersFn(context.Background(), query, func(_ context.Context, mrn string) (*Mquery, error) {
 		q, ok := lookupQueries[mrn]
 		if !ok {
 			return nil, ErrQueryNotFound
@@ -159,20 +158,22 @@ func (s *Filters) RegisterQuery(query *Mquery, lookupQueries map[string]*Mquery)
 	})
 }
 
-func (s *Filters) RegisterQueryLookupFunc(ctx context.Context, query *Mquery, lookupQueryByMrn func(ctx context.Context, mrn string) (*Mquery, error)) error {
+// AddQueryFiltersFn attempt to take a query (or nil) and register all its filters.
+// This includes any variants that the query might have as well.
+func (s *Filters) AddQueryFiltersFn(ctx context.Context, query *Mquery, lookupQuery func(ctx context.Context, mrn string) (*Mquery, error)) error {
 	if query == nil {
 		return nil
 	}
 
-	s.RegisterChild(query.Filters)
+	s.AddFilters(query.Filters)
 
 	for i := range query.Variants {
 		mrn := query.Variants[i].Mrn
-		variant, err := lookupQueryByMrn(ctx, mrn)
+		variant, err := lookupQuery(ctx, mrn)
 		if err != nil {
-			return errors.Join(err, errors.New("cannot find query variant "+mrn))
+			return errors.Wrap(err, "cannot find query variant "+mrn)
 		}
-		s.RegisterQueryLookupFunc(ctx, variant, lookupQueryByMrn)
+		s.AddQueryFiltersFn(ctx, variant, lookupQuery)
 	}
 	return nil
 }
