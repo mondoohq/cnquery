@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/checksums"
@@ -193,4 +194,24 @@ func (s *Filters) Supports(supported map[string]struct{}) bool {
 	}
 
 	return false
+}
+
+func (s *Filters) Summarize() string {
+	if s == nil || len(s.Items) == 0 {
+		return ""
+	}
+
+	filters := make([]string, len(s.Items))
+	i := 0
+	for _, filter := range s.Items {
+		if filter.Title != "" {
+			filters[i] = filter.Title
+		} else {
+			filters[i] = filter.Mql
+		}
+		i++
+	}
+
+	sort.Strings(filters)
+	return strings.Join(filters, ", ")
 }

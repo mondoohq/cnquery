@@ -343,7 +343,7 @@ func newAssetMatchError(mrn string, filters []*Mquery, supportedFilters map[stri
 	sort.Strings(filtersMql)
 	sort.Strings(supported)
 
-	msg := "asset does not support any of these query packs\nfilters supported:\n" + strings.Join(supported, ",\n") + "\n\nasset supports the following filters:\n" + strings.Join(filtersMql, ",\n")
+	msg := "asset is not supported.\nfilters supported:\n" + strings.Join(supported, ",\n") + "\n\nasset supports the following filters:\n" + strings.Join(filtersMql, ",\n")
 	return status.Error(codes.InvalidArgument, msg)
 }
 
