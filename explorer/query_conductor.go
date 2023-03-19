@@ -269,16 +269,16 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 }
 
 // MatchFilters will take the list of filters and only return the ones
-// that are supported by the bundle.
+// that are supported by the given querypacks.
 func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack) (string, error) {
 	supported := map[string]*Mquery{}
 	for i := range packs {
 		pack := packs[i]
-		if pack.Filters == nil {
+		if pack.ComputedFilters == nil {
 			continue
 		}
 
-		for k, v := range pack.Filters.Items {
+		for k, v := range pack.ComputedFilters.Items {
 			supported[k] = v
 		}
 	}
@@ -296,7 +296,7 @@ func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack) (stri
 	}
 
 	if len(matching) == 0 {
-		return "", newAssetMatchError(entityMrn, filters, supported)
+		return "", NewAssetMatchError(entityMrn, "querypacks", "no-matching-packs", filters, &Filters{Items: supported})
 	}
 
 	sum, err := ChecksumFilters(matching)
@@ -307,15 +307,15 @@ func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack) (stri
 	return sum, nil
 }
 
-func newAssetMatchError(mrn string, filters []*Mquery, supportedFilters map[string]*Mquery) error {
-	if len(filters) == 0 {
+func NewAssetMatchError(mrn string, objectType string, errorReason string, assetFilters []*Mquery, supported *Filters) error {
+	if len(assetFilters) == 0 {
 		// send a proto error with details, so that the agent can render it properly
-		msg := "asset does not match any of the activated query packs"
+		msg := "asset doesn't support any " + objectType
 		st := status.New(codes.InvalidArgument, msg)
 
 		std, err := st.WithDetails(&errdetails.ErrorInfo{
 			Domain: SERVICE_NAME,
-			Reason: "no-matching-packs",
+			Reason: errorReason,
 			Metadata: map[string]string{
 				"mrn":       mrn,
 				"errorCode": NotApplicable.String(),
@@ -328,22 +328,25 @@ func newAssetMatchError(mrn string, filters []*Mquery, supportedFilters map[stri
 		return std.Err()
 	}
 
-	supported := make([]string, len(supportedFilters))
-	i := 0
-	for _, v := range supportedFilters {
-		supported[i] = v.Mql
-		i++
+	supportedSummary := supported.Summarize()
+	var supportedPrefix string
+	if supportedSummary == "" {
+		supportedPrefix = objectType + " didn't provide any filters"
+	} else {
+		supportedPrefix = objectType + " support: "
 	}
 
-	filtersMql := make([]string, len(filters))
-	for i := range filters {
-		filtersMql[i] = strings.TrimSpace(filters[i].Mql)
+	filters := make([]string, len(assetFilters))
+	for i := range assetFilters {
+		filters[i] = strings.TrimSpace(assetFilters[i].Mql)
 	}
+	sort.Strings(filters)
+	foundSummary := strings.Join(filters, ", ")
+	foundPrefix := "asset supports: "
 
-	sort.Strings(filtersMql)
-	sort.Strings(supported)
-
-	msg := "asset is not supported.\nfilters supported:\n" + strings.Join(supported, ",\n") + "\n\nasset supports the following filters:\n" + strings.Join(filtersMql, ",\n")
+	msg := "asset isn't supported by any " + objectType + "\n" +
+		supportedPrefix + supportedSummary + "\n" +
+		foundPrefix + foundSummary + "\n"
 	return status.Error(codes.InvalidArgument, msg)
 }
 
