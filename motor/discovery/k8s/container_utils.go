@@ -56,10 +56,12 @@ func UniqueImagesForPod(pod v1.Pod, credsStore *credsStore) map[string]Container
 	imagesSet := make(map[string]ContainerImage)
 
 	pullSecrets := make([]v1.Secret, 0, len(pod.Spec.ImagePullSecrets))
-	for _, ps := range pod.Spec.ImagePullSecrets {
-		s, err := credsStore.Get(pod.Namespace, ps.Name) // TODO: figure out if we want to do anything with the error here
-		if err == nil {
-			pullSecrets = append(pullSecrets, *s)
+	if credsStore != nil {
+		for _, ps := range pod.Spec.ImagePullSecrets {
+			s, err := credsStore.Get(pod.Namespace, ps.Name) // TODO: figure out if we want to do anything with the error here
+			if err == nil {
+				pullSecrets = append(pullSecrets, *s)
+			}
 		}
 	}
 
