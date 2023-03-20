@@ -48,6 +48,7 @@ const (
 	byteResource
 	byteFunction
 	byteStringSlice
+	byteRange
 )
 
 // Empty type is one whose type information is not available at all
@@ -98,6 +99,11 @@ const (
 	// This types allows us to keep the compiler and execution simple, while
 	// handling the runtime distinction for dict.
 	StringSlice = Type(rune(byteStringSlice))
+
+	// Range represents a range of content. This can be a number of lines
+	// or lines and columns combined. We use a special type for a very
+	// efficient storage and transmission structure.
+	Range = Type(rune(byteRange))
 )
 
 // IsEmpty returns true if the type has no information
@@ -141,7 +147,7 @@ func (typ Type) IsResource() bool {
 	return typ[0] == byteResource
 }
 
-// Function for functions
+// Function for creating a function type signature
 func Function(required rune, args []Type) Type {
 	var sig string
 	for _, arg := range args {
@@ -228,6 +234,7 @@ var labels = map[byte]string{
 	byteScore:       "score",
 	byteBlock:       "block",
 	byteStringSlice: "stringslice",
+	byteRange:       "range",
 }
 
 var labelfun map[byte]func(Type) string
