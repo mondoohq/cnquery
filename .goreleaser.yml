@@ -36,6 +36,11 @@ builds:
     ldflags:
       # clang + macos does not support static: - -extldflags "-static"
       - -s -w -X go.mondoo.com/cnquery.Version={{.Version}} -X go.mondoo.com/cnquery.Build={{.ShortCommit}} -X go.mondoo.com/cnquery.Date={{.Date}}
+    hooks:
+      post:
+        - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv
+          env:
+            - QUILL_LOG_FILE=/tmp/quill-{{ .Target }}.log      
   - id: windows
     main: ./apps/cnquery/cnquery.go
     binary: cnquery
