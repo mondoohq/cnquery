@@ -1,6 +1,7 @@
 Acked
 activitylog
 aks
+applicationinsight
 Auths
 autoscaler
 backupconfiguration
