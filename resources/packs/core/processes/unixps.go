@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	LINUX_PS_REGEX = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
+	LINUX_PS_REGEX = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)?$`)
 	UNIX_PS_REGEX  = regexp.MustCompile(`^\s*([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ]+)\s+([^ ].*)$`)
 )
 
@@ -55,8 +55,7 @@ func ParseLinuxPsResult(input io.Reader) ([]*ProcessEntry, error) {
 
 		m := LINUX_PS_REGEX.FindStringSubmatch(line)
 		if len(m) != 12 {
-			log.Warn().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
-			continue
+			log.Fatal().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
 		}
 		if m[1] == "PID" {
 			// header
@@ -101,8 +100,7 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 		line := scanner.Text()
 		m := UNIX_PS_REGEX.FindStringSubmatch(line)
 		if len(m) != 11 {
-			log.Warn().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
-			continue
+			log.Fatal().Str("psoutput", line).Msg("unexpected result while trying to parse process output")
 		}
 		if m[1] == "PID" {
 			// header
@@ -120,7 +118,7 @@ func ParseUnixPsResult(input io.Reader) ([]*ProcessEntry, error) {
 			continue
 		}
 
-		// PID %CPU %MEM    VSZ   RSS TT       STAT  STARTED     TIME   UID COMMAND
+		// PID %CPU %MEM    VSZ   RSS TTY       STAT  TIME   UID COMMAND
 		p := &ProcessEntry{
 			Pid:     pid,
 			CPU:     m[2],

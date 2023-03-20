@@ -21,7 +21,7 @@ func TestLinuxPSProcessParser(t *testing.T) {
 
 	m, err := processes.ParseLinuxPsResult(c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(m), "detected the right amount of processes")
+	assert.Equal(t, 3, len(m), "detected the right amount of processes")
 
 	assert.Equal(t, "/bin/bash", m[0].Command, "process command detected")
 	assert.Equal(t, int64(1), m[0].Pid, "process pid detected")
@@ -30,6 +30,10 @@ func TestLinuxPSProcessParser(t *testing.T) {
 	assert.Equal(t, "ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command", m[1].Command, "process command detected")
 	assert.Equal(t, int64(46), m[1].Pid, "process pid detected")
 	assert.Equal(t, int64(0), m[1].Uid, "process uid detected")
+
+	assert.Equal(t, "", m[2].Command, "process command matched against empty COMMAND column")
+	assert.Equal(t, int64(3987), m[2].Pid, "process pid detected")
+	assert.Equal(t, int64(0), m[2].Uid, "process uid detected")
 }
 
 func TestOSxPSProcessParser(t *testing.T) {
