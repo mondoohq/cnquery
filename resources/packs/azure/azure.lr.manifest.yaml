@@ -1025,7 +1025,6 @@ resources:
   azure.subscription.cosmosdbService:
     fields:
       accounts: {}
-      servers: {}
       subscriptionId: {}
     is_private: true
     min_mondoo_version: latest
@@ -1042,14 +1041,6 @@ resources:
       tags: {}
       type: {}
     is_private: true
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
-  azure.subscription.cosmosdbService.server:
-    fields:
-      id: {}
-      name: {}
     min_mondoo_version: latest
     platform:
       name:

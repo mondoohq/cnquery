@@ -11,6 +11,7 @@ cdn
 certificatechains
 cmek
 CMKs
+cosmosdb
 cryptokey
 customresources
 datapath
