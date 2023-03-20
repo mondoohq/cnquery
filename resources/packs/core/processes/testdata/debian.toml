@@ -26,10 +26,12 @@ mode = 555
 [files."/proc/1"]
 mode = 555
 
+# PID 3987 is really a ps output where the COMMAND column is blank
 [commands."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
 stdout = """  PID %CPU %MEM    VSZ   RSS TT       STAT STIME     TIME   UID COMMAND
-1  0.0  0.1  12124  3232 pts/0    Ss   07:48 00:00:00     0 /bin/bash
-46  0.0  0.0  41836  1900 pts/0    R+   10:02 00:00:00     0 ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command
+    1 0.0  0.1  12124  3232  pts/0    Ss   07:48   00:00:00     0 /bin/bash
+   46 0.0  0.0  41836  1900  pts/0    R+   10:02   00:00:00     0 ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command
+ 3987 0.0  0.0 147712  6080  ?        Sl   Mar10   00:00:00     0 
 """
 
 [files."/proc/1/cmdline"]
