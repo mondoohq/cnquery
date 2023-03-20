@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	appinsights "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/applicationinsights/armapplicationinsights"
 	monitor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
+
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
@@ -93,6 +95,54 @@ func (a *mqlAzureSubscriptionMonitorService) GetLogProfiles() ([]interface{}, er
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionMonitorService) GetApplicationInsights() ([]interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := appinsights.NewComponentsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(&appinsights.ComponentsClientListOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			properties, err := core.JsonToDict(entry.Properties)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlAppInsight, err := a.MotorRuntime.CreateResource("azure.subscription.monitorService.applicationinsight",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"properties", properties,
+				"location", core.ToString(entry.Location),
+				"type", core.ToString(entry.Type),
+				"kind", core.ToString(entry.Kind),
+				"tags", azureTagsToInterface(entry.Tags),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAppInsight)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionMonitorService) GetDiagnosticSettings() ([]interface{}, error) {
 	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -110,6 +160,10 @@ func (a *mqlAzureSubscriptionMonitorServiceActivitylog) id() (string, error) {
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceActivitylogAlert) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceApplicationinsight) id() (string, error) {
 	return a.Id()
 }
 

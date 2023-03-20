@@ -1211,12 +1211,32 @@ private azure.subscription.monitorService {
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Activity log for the monitor
   activityLog() azure.subscription.monitorService.activitylog
+  // Application insights for the subscription
+  applicationInsights() []azure.subscription.monitorService.applicationinsight
 }
 
 // Azure Monitor Activity Log
 private azure.subscription.monitorService.activitylog {
   // List of activity log alerts
   alerts() []azure.subscription.monitorService.activitylog.alert
+}
+
+// Azure Monitor Application Insight
+private azure.subscription.monitorService.applicationinsight {
+  // Application insight ID
+  id string
+  // Application insight name
+  name string
+  // Application insight properties
+  properties dict
+  // Application insight tags
+  tags map[string]string
+  // Application insight location
+  location string
+  // Application insight kind
+  kind string
+  // Application insight type
+  type string
 }
 
 // Azure Monitor Activity Log Alert
