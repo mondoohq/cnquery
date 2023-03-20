@@ -362,6 +362,8 @@ private azure.subscription.networkService {
   watchers() []azure.subscription.networkService.watcher
   // List of public IP addresses
   publicIpAddresses() []azure.subscription.networkService.ipAddress
+  // List of Bastion hosts
+  bastionHosts() []azure.subscription.networkService.bastionHost
 }
 
 // Azure Network Interface
@@ -390,12 +392,33 @@ private azure.subscription.networkService.ipAddress @defaults("id name location"
   id string
   // IP address name
   name string
-  // IP address name
+  // IP address location
   location string
   // IP address tags
   tags map[string]string
-  // IP address type
+  // IP address
   ipAddress string
+  // IP address type
+  type string
+}
+
+
+// Azure Network Bastion host
+private azure.subscription.networkService.bastionHost @defaults("id name location") {
+  // Bastion Host ID
+  id string
+  // Bastion Host name
+  name string
+  // Bastion Host location
+  location string
+  // Bastion Host tags
+  tags map[string]string
+  // Bastion Host type
+  type string
+  // Bastion host properties
+  properties dict
+  // Bastion host SKU
+  sku dict
 }
 
 // Azure Network Security Group

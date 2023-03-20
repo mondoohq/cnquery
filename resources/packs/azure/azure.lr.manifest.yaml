@@ -1560,11 +1560,26 @@ resources:
       - azure
   azure.subscription.networkService:
     fields:
+      bastionHosts: {}
       interfaces: {}
       publicIpAddresses: {}
       securityGroups: {}
       subscriptionId: {}
       watchers: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.networkService.bastionHost:
+    fields:
+      id: {}
+      location: {}
+      name: {}
+      properties: {}
+      sku: {}
+      tags: {}
+      type: {}
     is_private: true
     min_mondoo_version: latest
     platform:
@@ -1592,6 +1607,7 @@ resources:
       location: {}
       name: {}
       tags: {}
+      type: {}
     is_private: true
     min_mondoo_version: latest
     platform:
