@@ -1344,7 +1344,7 @@ resources:
     platform:
       name:
       - azure
-  azure.subscription.monitorService.applicationinsight:
+  azure.subscription.monitorService.applicationInsight:
     fields:
       id: {}
       kind: {}
@@ -1354,6 +1354,19 @@ resources:
       tags: {}
       type: {}
     is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.monitorService.applicationinsight:
+    fields:
+      id: {}
+      kind: {}
+      location: {}
+      name: {}
+      properties: {}
+      tags: {}
+      type: {}
     min_mondoo_version: latest
     platform:
       name:

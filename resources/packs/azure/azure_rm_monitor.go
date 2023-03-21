@@ -125,7 +125,7 @@ func (a *mqlAzureSubscriptionMonitorService) GetApplicationInsights() ([]interfa
 				return nil, err
 			}
 
-			mqlAppInsight, err := a.MotorRuntime.CreateResource("azure.subscription.monitorService.applicationinsight",
+			mqlAppInsight, err := a.MotorRuntime.CreateResource("azure.subscription.monitorService.applicationInsight",
 				"id", core.ToString(entry.ID),
 				"name", core.ToString(entry.Name),
 				"properties", properties,
@@ -163,7 +163,7 @@ func (a *mqlAzureSubscriptionMonitorServiceActivitylogAlert) id() (string, error
 	return a.Id()
 }
 
-func (a *mqlAzureSubscriptionMonitorServiceApplicationinsight) id() (string, error) {
+func (a *mqlAzureSubscriptionMonitorServiceApplicationInsight) id() (string, error) {
 	return a.Id()
 }
 

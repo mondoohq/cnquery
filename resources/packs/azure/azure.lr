@@ -1212,7 +1212,7 @@ private azure.subscription.monitorService {
   // Activity log for the monitor
   activityLog() azure.subscription.monitorService.activitylog
   // Application insights for the subscription
-  applicationInsights() []azure.subscription.monitorService.applicationinsight
+  applicationInsights() []azure.subscription.monitorService.applicationInsight
 }
 
 // Azure Monitor Activity Log
@@ -1222,7 +1222,7 @@ private azure.subscription.monitorService.activitylog {
 }
 
 // Azure Monitor Application Insight
-private azure.subscription.monitorService.applicationinsight {
+private azure.subscription.monitorService.applicationInsight {
   // Application insight ID
   id string
   // Application insight name

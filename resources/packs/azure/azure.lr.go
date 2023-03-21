@@ -71,7 +71,7 @@ func Init(registry *resources.Registry) {
 	registry.AddFactory("azure.subscription.keyvaultService.secret", newAzureSubscriptionKeyvaultServiceSecret)
 	registry.AddFactory("azure.subscription.monitorService", newAzureSubscriptionMonitorService)
 	registry.AddFactory("azure.subscription.monitorService.activitylog", newAzureSubscriptionMonitorServiceActivitylog)
-	registry.AddFactory("azure.subscription.monitorService.applicationinsight", newAzureSubscriptionMonitorServiceApplicationinsight)
+	registry.AddFactory("azure.subscription.monitorService.applicationInsight", newAzureSubscriptionMonitorServiceApplicationInsight)
 	registry.AddFactory("azure.subscription.monitorService.activitylog.alert", newAzureSubscriptionMonitorServiceActivitylogAlert)
 	registry.AddFactory("azure.subscription.monitorService.logprofile", newAzureSubscriptionMonitorServiceLogprofile)
 	registry.AddFactory("azure.subscription.monitorService.diagnosticsetting", newAzureSubscriptionMonitorServiceDiagnosticsetting)
@@ -21024,8 +21024,8 @@ func (s *mqlAzureSubscriptionMonitorServiceActivitylog) ComputeAlerts() error {
 	return nil
 }
 
-// AzureSubscriptionMonitorServiceApplicationinsight resource interface
-type AzureSubscriptionMonitorServiceApplicationinsight interface {
+// AzureSubscriptionMonitorServiceApplicationInsight resource interface
+type AzureSubscriptionMonitorServiceApplicationInsight interface {
 	MqlResource() (*resources.Resource)
 	MqlCompute(string) error
 	Field(string) (interface{}, error)
@@ -21040,21 +21040,21 @@ type AzureSubscriptionMonitorServiceApplicationinsight interface {
 	Type() (string, error)
 }
 
-// mqlAzureSubscriptionMonitorServiceApplicationinsight for the azure.subscription.monitorService.applicationinsight resource
-type mqlAzureSubscriptionMonitorServiceApplicationinsight struct {
+// mqlAzureSubscriptionMonitorServiceApplicationInsight for the azure.subscription.monitorService.applicationInsight resource
+type mqlAzureSubscriptionMonitorServiceApplicationInsight struct {
 	*resources.Resource
 }
 
 // MqlResource to retrieve the underlying resource info
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) MqlResource() *resources.Resource {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) MqlResource() *resources.Resource {
 	return s.Resource
 }
 
-// create a new instance of the azure.subscription.monitorService.applicationinsight resource
-func newAzureSubscriptionMonitorServiceApplicationinsight(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
+// create a new instance of the azure.subscription.monitorService.applicationInsight resource
+func newAzureSubscriptionMonitorServiceApplicationInsight(runtime *resources.Runtime, args *resources.Args) (interface{}, error) {
 	// User hooks
 	var err error
-	res := mqlAzureSubscriptionMonitorServiceApplicationinsight{runtime.NewResource("azure.subscription.monitorService.applicationinsight")}
+	res := mqlAzureSubscriptionMonitorServiceApplicationInsight{runtime.NewResource("azure.subscription.monitorService.applicationInsight")}
 	// assign all named fields
 	var id string
 
@@ -21068,40 +21068,40 @@ func newAzureSubscriptionMonitorServiceApplicationinsight(runtime *resources.Run
 		switch name {
 		case "id":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"id\" argument has the wrong type (expected type \"string\")")
 			}
 		case "name":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"name\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"name\" argument has the wrong type (expected type \"string\")")
 			}
 		case "properties":
 			if _, ok := val.(interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"properties\" argument has the wrong type (expected type \"interface{}\")")
 			}
 		case "tags":
 			if _, ok := val.(map[string]interface{}); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"tags\" argument has the wrong type (expected type \"map[string]interface{}\")")
 			}
 		case "location":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"location\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"location\" argument has the wrong type (expected type \"string\")")
 			}
 		case "kind":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"kind\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"kind\" argument has the wrong type (expected type \"string\")")
 			}
 		case "type":
 			if _, ok := val.(string); !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"type\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"type\" argument has the wrong type (expected type \"string\")")
 			}
 		case "__id":
 			idVal, ok := val.(string)
 			if !ok {
-				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationinsight\", its \"__id\" argument has the wrong type (expected type \"string\")")
+				return nil, errors.New("Failed to initialize \"azure.subscription.monitorService.applicationInsight\", its \"__id\" argument has the wrong type (expected type \"string\")")
 			}
 			id = idVal
 		default:
-			return nil, errors.New("Initialized azure.subscription.monitorService.applicationinsight with unknown argument " + name)
+			return nil, errors.New("Initialized azure.subscription.monitorService.applicationInsight with unknown argument " + name)
 		}
 		res.Cache.Store(name, &resources.CacheEntry{Data: val, Valid: true, Timestamp: now})
 	}
@@ -21119,36 +21119,36 @@ func newAzureSubscriptionMonitorServiceApplicationinsight(runtime *resources.Run
 	return &res, nil
 }
 
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Validate() error {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Validate() error {
 	// required arguments
 	if _, ok := s.Cache.Load("id"); !ok {
-		return errors.New("Initialized \"azure.subscription.monitorService.applicationinsight\" resource without a \"id\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.monitorService.applicationInsight\" resource without a \"id\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("name"); !ok {
-		return errors.New("Initialized \"azure.subscription.monitorService.applicationinsight\" resource without a \"name\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.monitorService.applicationInsight\" resource without a \"name\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("properties"); !ok {
-		return errors.New("Initialized \"azure.subscription.monitorService.applicationinsight\" resource without a \"properties\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.monitorService.applicationInsight\" resource without a \"properties\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("tags"); !ok {
-		return errors.New("Initialized \"azure.subscription.monitorService.applicationinsight\" resource without a \"tags\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.monitorService.applicationInsight\" resource without a \"tags\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("location"); !ok {
-		return errors.New("Initialized \"azure.subscription.monitorService.applicationinsight\" resource without a \"location\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.monitorService.applicationInsight\" resource without a \"location\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("kind"); !ok {
-		return errors.New("Initialized \"azure.subscription.monitorService.applicationinsight\" resource without a \"kind\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.monitorService.applicationInsight\" resource without a \"kind\". This field is required.")
 	}
 	if _, ok := s.Cache.Load("type"); !ok {
-		return errors.New("Initialized \"azure.subscription.monitorService.applicationinsight\" resource without a \"type\". This field is required.")
+		return errors.New("Initialized \"azure.subscription.monitorService.applicationInsight\" resource without a \"type\". This field is required.")
 	}
 
 	return nil
 }
 
 // Register accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Register(name string) error {
-	log.Trace().Str("field", name).Msg("[azure.subscription.monitorService.applicationinsight].Register")
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Register(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.subscription.monitorService.applicationInsight].Register")
 	switch name {
 	case "id":
 		return nil
@@ -21165,13 +21165,13 @@ func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Register(name str
 	case "type":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.monitorService.applicationinsight\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.monitorService.applicationInsight\" resource")
 	}
 }
 
 // Field accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Field(name string) (interface{}, error) {
-	log.Trace().Str("field", name).Msg("[azure.subscription.monitorService.applicationinsight].Field")
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Field(name string) (interface{}, error) {
+	log.Trace().Str("field", name).Msg("[azure.subscription.monitorService.applicationInsight].Field")
 	switch name {
 	case "id":
 		return s.Id()
@@ -21188,125 +21188,125 @@ func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Field(name string
 	case "type":
 		return s.Type()
 	default:
-		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.subscription.monitorService.applicationinsight\" resource")
+		return nil, fmt.Errorf("Cannot find field '" + name + "' in \"azure.subscription.monitorService.applicationInsight\" resource")
 	}
 }
 
 // Id accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Id() (string, error) {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Id() (string, error) {
 	res, ok := s.Cache.Load("id")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.monitorService.applicationinsight\" failed: no value provided for static field \"id\"")
+		return "", errors.New("\"azure.subscription.monitorService.applicationInsight\" failed: no value provided for static field \"id\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationinsight\" failed to cast field \"id\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationInsight\" failed to cast field \"id\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Name accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Name() (string, error) {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Name() (string, error) {
 	res, ok := s.Cache.Load("name")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.monitorService.applicationinsight\" failed: no value provided for static field \"name\"")
+		return "", errors.New("\"azure.subscription.monitorService.applicationInsight\" failed: no value provided for static field \"name\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationinsight\" failed to cast field \"name\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationInsight\" failed to cast field \"name\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Properties accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Properties() (interface{}, error) {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Properties() (interface{}, error) {
 	res, ok := s.Cache.Load("properties")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.monitorService.applicationinsight\" failed: no value provided for static field \"properties\"")
+		return nil, errors.New("\"azure.subscription.monitorService.applicationInsight\" failed: no value provided for static field \"properties\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.monitorService.applicationinsight\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.monitorService.applicationInsight\" failed to cast field \"properties\" to the right type (interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Tags accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Tags() (map[string]interface{}, error) {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Tags() (map[string]interface{}, error) {
 	res, ok := s.Cache.Load("tags")
 	if !ok || !res.Valid {
-		return nil, errors.New("\"azure.subscription.monitorService.applicationinsight\" failed: no value provided for static field \"tags\"")
+		return nil, errors.New("\"azure.subscription.monitorService.applicationInsight\" failed: no value provided for static field \"tags\"")
 	}
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	tres, ok := res.Data.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("\"azure.subscription.monitorService.applicationinsight\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
+		return nil, fmt.Errorf("\"azure.subscription.monitorService.applicationInsight\" failed to cast field \"tags\" to the right type (map[string]interface{}): %#v", res)
 	}
 	return tres, nil
 }
 
 // Location accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Location() (string, error) {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Location() (string, error) {
 	res, ok := s.Cache.Load("location")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.monitorService.applicationinsight\" failed: no value provided for static field \"location\"")
+		return "", errors.New("\"azure.subscription.monitorService.applicationInsight\" failed: no value provided for static field \"location\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationinsight\" failed to cast field \"location\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationInsight\" failed to cast field \"location\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Kind accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Kind() (string, error) {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Kind() (string, error) {
 	res, ok := s.Cache.Load("kind")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.monitorService.applicationinsight\" failed: no value provided for static field \"kind\"")
+		return "", errors.New("\"azure.subscription.monitorService.applicationInsight\" failed: no value provided for static field \"kind\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationinsight\" failed to cast field \"kind\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationInsight\" failed to cast field \"kind\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Type accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) Type() (string, error) {
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) Type() (string, error) {
 	res, ok := s.Cache.Load("type")
 	if !ok || !res.Valid {
-		return "", errors.New("\"azure.subscription.monitorService.applicationinsight\" failed: no value provided for static field \"type\"")
+		return "", errors.New("\"azure.subscription.monitorService.applicationInsight\" failed: no value provided for static field \"type\"")
 	}
 	if res.Error != nil {
 		return "", res.Error
 	}
 	tres, ok := res.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationinsight\" failed to cast field \"type\" to the right type (string): %#v", res)
+		return "", fmt.Errorf("\"azure.subscription.monitorService.applicationInsight\" failed to cast field \"type\" to the right type (string): %#v", res)
 	}
 	return tres, nil
 }
 
 // Compute accessor autogenerated
-func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) MqlCompute(name string) error {
-	log.Trace().Str("field", name).Msg("[azure.subscription.monitorService.applicationinsight].MqlCompute")
+func (s *mqlAzureSubscriptionMonitorServiceApplicationInsight) MqlCompute(name string) error {
+	log.Trace().Str("field", name).Msg("[azure.subscription.monitorService.applicationInsight].MqlCompute")
 	switch name {
 	case "id":
 		return nil
@@ -21323,7 +21323,7 @@ func (s *mqlAzureSubscriptionMonitorServiceApplicationinsight) MqlCompute(name s
 	case "type":
 		return nil
 	default:
-		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.monitorService.applicationinsight\" resource")
+		return errors.New("Cannot find field '" + name + "' in \"azure.subscription.monitorService.applicationInsight\" resource")
 	}
 }
 
