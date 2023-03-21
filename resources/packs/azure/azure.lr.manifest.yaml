@@ -1358,19 +1358,6 @@ resources:
     platform:
       name:
       - azure
-  azure.subscription.monitorService.applicationinsight:
-    fields:
-      id: {}
-      kind: {}
-      location: {}
-      name: {}
-      properties: {}
-      tags: {}
-      type: {}
-    min_mondoo_version: latest
-    platform:
-      name:
-      - azure
   azure.subscription.monitorService.diagnosticsetting:
     fields:
       id: {}
