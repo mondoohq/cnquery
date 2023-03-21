@@ -88,7 +88,7 @@ func assetFromAdmissionReview(a admissionv1.AdmissionReview, runtime string, con
 	addMondooAssetLabels(assetLabels, objMeta, objType, clusterIdentifier)
 
 	asset := &asset.Asset{
-		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
+		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName(), string(objMeta.GetUID()))},
 		Name:        name,
 		Platform:    platformData,
 		Connections: []*providers.Config{connection},

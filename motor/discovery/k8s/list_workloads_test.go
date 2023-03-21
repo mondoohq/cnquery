@@ -139,7 +139,8 @@ func TestListCronJobs(t *testing.T) {
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
 		parent.Namespace,
-		parent.Name)},
+		parent.Name,
+		"")},
 		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 
 	var assetNames []string
@@ -373,7 +374,8 @@ func TestListDaemonsets(t *testing.T) {
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
 		parent.Namespace,
-		parent.Name)},
+		parent.Name,
+		"")},
 		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 
 	var assetNames []string
@@ -580,7 +582,8 @@ func TestListDeployments(t *testing.T) {
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
 		parent.Namespace,
-		parent.Name)},
+		parent.Name,
+		"")},
 		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 
 	var assetNames []string
@@ -798,7 +801,8 @@ func TestListJobs(t *testing.T) {
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
 		parent.Namespace,
-		parent.Name)},
+		parent.Name,
+		"")},
 		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 
 	var assetNames []string
@@ -1006,7 +1010,8 @@ func TestListPods(t *testing.T) {
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
 		parent.Namespace,
-		parent.Name)},
+		parent.Name,
+		"")},
 		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 	var assetNames []string
 	for _, a := range assets {
@@ -1207,7 +1212,8 @@ func TestListReplicaSets(t *testing.T) {
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
 		parent.Namespace,
-		parent.Name)},
+		parent.Name,
+		"")},
 		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 
 	var assetNames []string
@@ -1431,7 +1437,8 @@ func TestListStatefulSets(t *testing.T) {
 	require.Equal(t, []string{k8s.NewPlatformWorkloadId(clusterIdentifier,
 		strings.ToLower(parent.Kind),
 		parent.Namespace,
-		parent.Name)},
+		parent.Name,
+		"")},
 		ownershipDir.OwnedBy(expectedAssetPlatformIds[0]))
 
 	var assetNames []string

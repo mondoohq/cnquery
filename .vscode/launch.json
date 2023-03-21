@@ -123,6 +123,23 @@
         "--discover",
         "compute-images"
       ],
+    },
+    {
+      "name": "k8s ns scan",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        "run",
+        "k8s",
+        "--namespaces",
+        "default",
+        "-c",
+        "k8s.pods",
+        "--log-level",
+        "debug"
+      ],
     }
   ]
 }

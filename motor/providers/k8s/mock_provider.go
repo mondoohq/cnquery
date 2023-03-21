@@ -292,6 +292,21 @@ func (mr *MockKubernetesProviderMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockKubernetesProvider)(nil).Name))
 }
 
+// Namespace mocks base method.
+func (m *MockKubernetesProvider) Namespace(name string) (*v12.Namespace, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Namespace", name)
+	ret0, _ := ret[0].(*v12.Namespace)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Namespace indicates an expected call of Namespace.
+func (mr *MockKubernetesProviderMockRecorder) Namespace(name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Namespace", reflect.TypeOf((*MockKubernetesProvider)(nil).Namespace), name)
+}
+
 // Namespaces mocks base method.
 func (m *MockKubernetesProvider) Namespaces() ([]v12.Namespace, error) {
 	m.ctrl.T.Helper()

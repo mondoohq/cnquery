@@ -63,6 +63,10 @@ func createPlatformData(objectKind, runtime string) (*platform.Platform, error) 
 		platformData.Family = append(platformData.Family, "k8s-ingress")
 		platformData.Name = "k8s-ingress"
 		platformData.Title = "Kubernetes Ingress"
+	case "Namespace":
+		platformData.Family = append(platformData.Family, "k8s-namespace")
+		platformData.Name = "k8s-namespace"
+		platformData.Title = "Kubernetes Namespace"
 	default:
 		return nil, fmt.Errorf("could not determine object kind %s", objectKind)
 	}
@@ -115,7 +119,7 @@ func createAssetFromObject(object runtime.Object, runtime string, connection *pr
 	newConnection.Options["object-kind"] = strings.ToLower(objectKind)
 
 	asset := &asset.Asset{
-		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName())},
+		PlatformIds: []string{k8s.NewPlatformWorkloadId(clusterIdentifier, strings.ToLower(objectKind), objMeta.GetNamespace(), objMeta.GetName(), string(objMeta.GetUID()))},
 		Name:        name,
 		Platform:    platformData,
 		Connections: []*providers.Config{newConnection},

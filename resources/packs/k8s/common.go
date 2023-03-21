@@ -61,7 +61,14 @@ func k8sResourceToMql(r *resources.Runtime, kind string, fn resourceConvertFn) (
 		return nil, err
 	}
 
-	result, err := kt.Resources(kind, "", "")
+	ns := ""
+	platformId, err := kt.Identifier()
+	if err == nil && strings.HasPrefix(platformId, "//platformid.api.mondoo.app/runtime/k8s/namespace/") {
+		ns = strings.Split(strings.TrimPrefix(platformId, "//platformid.api.mondoo.app/runtime/k8s/namespace/"), "/")[0]
+	}
+
+	// TODO: check if we are running in a namespace scope and retrieve the ns from the provider
+	result, err := kt.Resources(kind, "", ns)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +115,7 @@ func getPlatformIdentifierElements(transport providers.Instance) (string, string
 		return "", "", err
 	}
 
-	identifier, err := kt.PlatformIdentifier()
+	identifier, err := kt.Identifier()
 	if err != nil {
 		return "", "", err
 	}

@@ -42,11 +42,8 @@ type KubernetesProvider interface {
 	ServerVersion() *version.Info
 	SupportedResourceTypes() (*resources.ApiResourceIndex, error)
 
-	// ID of the Cluster or Manifest file
-	ID() (string, error)
-	// MRN style platform identifier
-	PlatformIdentifier() (string, error)
 	Nodes() ([]v1.Node, error)
+	Namespace(name string) (*v1.Namespace, error)
 	Namespaces() ([]v1.Namespace, error)
 	Pod(namespace, name string) (*v1.Pod, error)
 	Pods(namespace v1.Namespace) ([]*v1.Pod, error)
@@ -149,6 +146,10 @@ func getPlatformInfo(objectKind string, runtime string) *platform.Platform {
 	case "ingress":
 		platformData.Name = "k8s-ingress"
 		platformData.Title = "Kubernetes Ingress"
+		return platformData
+	case "namespace":
+		platformData.Name = "k8s-namespace"
+		platformData.Title = "Kubernetes Namespace"
 		return platformData
 	}
 

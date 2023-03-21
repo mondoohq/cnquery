@@ -117,7 +117,7 @@ func (t *admissionProvider) ID() (string, error) {
 	return string(reviews[0].Request.UID), nil
 }
 
-func (t *admissionProvider) PlatformIdentifier() (string, error) {
+func (t *admissionProvider) Identifier() (string, error) {
 	if t.selectedResourceID != "" {
 		return t.selectedResourceID, nil
 	}
@@ -128,10 +128,6 @@ func (t *admissionProvider) PlatformIdentifier() (string, error) {
 	}
 
 	return NewPlatformID(uid), nil
-}
-
-func (t *admissionProvider) Identifier() (string, error) {
-	return t.PlatformIdentifier()
 }
 
 func (t *admissionProvider) Name() (string, error) {
