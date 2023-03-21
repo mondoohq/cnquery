@@ -1311,6 +1311,7 @@ resources:
   azure.subscription.monitorService:
     fields:
       activityLog: {}
+      applicationInsights: {}
       diagnosticSettings: {}
       logProfiles: {}
       subscriptionId: {}
@@ -1336,6 +1337,20 @@ resources:
       location: {}
       name: {}
       scopes: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.monitorService.applicationInsight:
+    fields:
+      id: {}
+      kind: {}
+      location: {}
+      name: {}
+      properties: {}
       tags: {}
       type: {}
     is_private: true

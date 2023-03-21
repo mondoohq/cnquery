@@ -104,6 +104,8 @@ github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets v0.11.0 h1:82w8tzLcOwDP
 github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets v0.11.0/go.mod h1:S78i9yTr4o/nXlH76bKjGUye9Z2wSxO5Tz7GoDr4vfI=
 github.com/Azure/azure-sdk-for-go/sdk/keyvault/internal v0.7.1 h1:FbH3BbSb4bvGluTesZZ+ttN/MDsnMmQP36OSnDuSXqw=
 github.com/Azure/azure-sdk-for-go/sdk/keyvault/internal v0.7.1/go.mod h1:9V2j0jn9jDEkCkv8w/bKTNppX/d0FVA1ud77xCIP4KA=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/applicationinsights/armapplicationinsights v1.0.0 h1:BpGGvzarSyE7kQF1x1hptUcGmNzZEE3yYI+uqBSNRxk=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/applicationinsights/armapplicationinsights v1.0.0/go.mod h1:1ijUM40peD7YK5MFEJja2wjjp4eimFNWv0NXoY3nsZM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice v1.0.0 h1:kRX8I0dWAcpW6Vq0m90CgV+qw4O1vXodgwrhoPr1RWs=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice v1.0.0/go.mod h1:avvc5/7qR4taCvAhOM7KFXuEHhAU0Wek9YX7sh9H3EM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2 v2.0.0 h1:WJd2y/3vp3sgG1u1KfDaEyGiM9oC11cBa9rbmsSv5rQ=
