@@ -117,6 +117,59 @@ func (a *mqlAzureSubscriptionNetworkService) GetPublicIpAddresses() ([]interface
 	return res, nil
 }
 
+func (a *mqlAzureSubscriptionNetworkService) GetBastionHosts() ([]interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := network.NewBastionHostsClient(at.SubscriptionID(), token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListPager(&network.BastionHostsClientListOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, host := range page.Value {
+			if host != nil {
+				properties, err := core.JsonToDict(host.Properties)
+				if err != nil {
+					return nil, err
+				}
+				sku, err := core.JsonToDict(host.SKU)
+				if err != nil {
+					return nil, err
+				}
+				mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.networkService.bastionHost",
+					"id", core.ToString(host.ID),
+					"name", core.ToString(host.Name),
+					"location", core.ToString(host.Location),
+					"tags", azureTagsToInterface(host.Tags),
+					"properties", properties,
+					"sku", sku,
+					"type", core.ToString(host.Type),
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlAzure)
+			}
+		}
+	}
+	return res, nil
+}
+
 func azureIfaceToMql(runtime *resources.Runtime, iface network.Interface) (resources.ResourceType, error) {
 	properties, err := core.JsonToDict(iface.Properties)
 	if err != nil {
@@ -350,6 +403,10 @@ func (a *mqlAzureSubscriptionNetworkServiceSecurityGroup) id() (string, error) {
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceSecurityrule) id() (string, error) {
+	return a.Id()
+}
+
+func (a *mqlAzureSubscriptionNetworkServiceBastionHost) id() (string, error) {
 	return a.Id()
 }
 
