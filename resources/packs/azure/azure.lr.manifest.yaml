@@ -2060,6 +2060,7 @@ resources:
       tags: {}
       threatDetectionPolicy: {}
       type: {}
+      virtualNetworkRules: {}
       vulnerabilityAssessmentSettings: {}
     is_private: true
     min_mondoo_version: latest
@@ -2091,6 +2092,18 @@ resources:
       storageContainerPath: {}
       storageContainerSasKey: {}
       type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.sqlService.virtualNetworkRule:
+    fields:
+      id: {}
+      name: {}
+      properties: {}
+      type: {}
+      virtualNetworkSubnetId: {}
     is_private: true
     min_mondoo_version: latest
     platform:
