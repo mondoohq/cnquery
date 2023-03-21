@@ -770,6 +770,7 @@ resources:
       authorizationSource: {}
       cloudDefender: {}
       compute: {}
+      cosmosDb: {}
       id: {}
       keyVault: {}
       managedByTenants: {}
@@ -1014,6 +1015,29 @@ resources:
       osDisk: {}
       properties: {}
       publicIpAddresses: {}
+      tags: {}
+      type: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.cosmosdbService:
+    fields:
+      accounts: {}
+      subscriptionId: {}
+    is_private: true
+    min_mondoo_version: latest
+    platform:
+      name:
+      - azure
+  azure.subscription.cosmosdbService.account:
+    fields:
+      id: {}
+      kind: {}
+      location: {}
+      name: {}
+      properties: {}
       tags: {}
       type: {}
     is_private: true

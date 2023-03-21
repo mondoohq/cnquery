@@ -150,6 +150,10 @@ func (a *mqlAzureSubscription) GetMariaDb() (interface{}, error) {
 	return a.MotorRuntime.CreateResource("azure.subscription.mariadbService")
 }
 
+func (a *mqlAzureSubscription) GetCosmosDb() (interface{}, error) {
+	return a.MotorRuntime.CreateResource("azure.subscription.cosmosdbService")
+}
+
 func (a *mqlAzureSubscription) GetKeyVault() (interface{}, error) {
 	return a.MotorRuntime.CreateResource("azure.subscription.keyvaultService")
 }

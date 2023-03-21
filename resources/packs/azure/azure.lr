@@ -230,6 +230,8 @@ azure.subscription @defaults ("name") {
   postgreSql() azure.subscription.postgresqlService
   // Get MariaDB resources inside the subscription
   mariaDb() azure.subscription.mariadbService
+  // Get Cosmos DB resources inside the subscription
+  cosmosDb() azure.subscription.cosmosdbService
   // Get key vault resources inside the subscription
   keyVault() azure.subscription.keyvaultService
   // Get authorization resources inside the subscription
@@ -1046,6 +1048,32 @@ private azure.subscription.mariadbService.database  @defaults("id name") {
   charset string
   // MariaDB database collation
   collation string
+}
+
+// Azure Cosmos DB
+private azure.subscription.cosmosdbService {
+  // The subscription identifier
+  subscriptionId string
+  // List of Cosmos DB accounts
+  accounts() []azure.subscription.cosmosdbService.account
+}
+
+// Azure Cosmos DB Account
+private azure.subscription.cosmosdbService.account @defaults("name location") {
+  // Cosmos DB Account ID
+  id string
+  // Cosmos DB Account name
+  name string
+  // Cosmos DB Account properties
+  properties dict
+  // Cosmos DB Account location
+  location string
+  // Cosmos DB Account tags
+  tags map[string]string
+  // Cosmos DB Account type
+  type string
+  // CosmosDB Account kind
+  kind string
 }
 
 // Azure SQL Configuration

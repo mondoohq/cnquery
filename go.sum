@@ -114,6 +114,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0 
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0/go.mod h1:gM3K25LQlsET3QR+4V74zxCsFAy0r6xMNN9n80SZn+4=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2 v2.3.0 h1:CnbZujgaLD2TDpp3mm1/naVAvPjvg5nnaG3YyxwsJdM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v2 v2.3.0/go.mod h1:ne/R0Tm3u/2avpRZFZTS+DldZ3C/5bNN6P4kkl24fRs=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos v1.0.0 h1:Fv8iibGn1eSw0lt2V3cTsuokBEnOP+M//n8OiMcCgTM=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos v1.0.0/go.mod h1:Qpe/qN9d5IQ7WPtTXMRCd6+BWTnhi3sxXVys6oJ5Vho=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/internal v1.0.0 h1:lMW1lD/17LUA5z1XTURo7LcVG2ICBPlyMHjIUrcFZNQ=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault v1.0.0 h1:Jc2KcpCDMu7wJfkrzn7fs/53QMDXH78GuqnH4HOd7zs=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault v1.0.0/go.mod h1:PFVgFsclKzPqYRT/BiwpfUN22cab0C7FlgXR3iWpwMo=
