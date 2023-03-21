@@ -1072,7 +1072,7 @@ private azure.subscription.cosmosdbService.account @defaults("name location") {
   tags map[string]string
   // Cosmos DB Account type
   type string
-  // CosmosDB Account kind
+  // Cosmos DB Account kind
   kind string
 }
 
