@@ -141,5 +141,6 @@ resources:
       statusChanged: {}
       transitioningToStatus: {}
       type: {}
+      typeId: {}
     is_private: true
     min_mondoo_version: latest

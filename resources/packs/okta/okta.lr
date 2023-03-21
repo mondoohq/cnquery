@@ -54,21 +54,33 @@ okta.organization {
 
 // Okta Policy
 okta.policies {
-    password() []okta.policy
-    mfaEnroll() []okta.policy
-    signOn() []okta.policy
-    oauthAuthorizationPolicy() []okta.policy
-    idpDiscovery() []okta.policy
-    accessPolicy() []okta.policy
-    profileEnrollment() []okta.policy
+  // Password policies
+  password() []okta.policy
+  // MFA policies
+  mfaEnroll() []okta.policy
+  // Sign on policies
+  signOn() []okta.policy
+  // OAuth authorization policies
+  oauthAuthorizationPolicy() []okta.policy
+  // IDP discovery policies
+  idpDiscovery() []okta.policy
+  // Access policies
+  accessPolicy() []okta.policy
+  // Profile enforcement policies
+  profileEnrollment() []okta.policy
 }
 
 // Okta User
 private okta.user {
   // Unique key for user
   id string
+  // The user's type identifier
+  typeId string
+  // The user's type object
   type dict
+  // The user credentials
   credentials dict
+  // Timestamp when the user was activated
   activated time
   // Timestamp when user was created
   created time
@@ -86,10 +98,11 @@ private okta.user {
   statusChanged time
   // Target status of an in-progress asynchronous status transition
   transitioningToStatus string
+  // The roles assigned to the user
   roles() []okta.role
 }
 
-// Okta role    
+// Okta Role
 private okta.role {
   // The identifier of the role
   id string
