@@ -84,6 +84,10 @@ func (a *mqlAzureSubscriptionSqlServiceFirewallrule) id() (string, error) {
 	return a.Id()
 }
 
+func (a *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) id() (string, error) {
+	return a.Id()
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServerAdministrator) id() (string, error) {
 	return a.Id()
 }
@@ -358,6 +362,68 @@ func (a *mqlAzureSubscriptionSqlServiceServer) GetFirewallRules() ([]interface{}
 				return nil, err
 			}
 			res = append(res, mqlAzureConfiguration)
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServer) GetVirtualNetworkRules() ([]interface{}, error) {
+	at, err := azureTransport(a.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	// id is a azure resource id
+	id, err := a.Id()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceID, err := azure.ParseResourceID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	token, err := at.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := sql.NewVirtualNetworkRulesClient(resourceID.SubscriptionID, token, &arm.ClientOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListByServerPager(resourceID.ResourceGroup, server, &sql.VirtualNetworkRulesClientListByServerOptions{})
+	res := []interface{}{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			properties, err := core.JsonToDict(entry)
+			if err != nil {
+				return nil, err
+			}
+
+			mqlAzure, err := a.MotorRuntime.CreateResource("azure.subscription.sqlService.virtualNetworkRule",
+				"id", core.ToString(entry.ID),
+				"name", core.ToString(entry.Name),
+				"type", core.ToString(entry.Type),
+				"properties", properties,
+				"virtualNetworkSubnetId", core.ToString(entry.Properties.VirtualNetworkSubnetID),
+			)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAzure)
 		}
 	}
 	return res, nil

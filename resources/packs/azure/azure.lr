@@ -769,6 +769,7 @@ private azure.subscription.sqlService.server @defaults("name location") {
   threatDetectionPolicy() dict
   // SQL server vulnerability assessment settings
   vulnerabilityAssessmentSettings() azure.subscription.sqlService.server.vulnerabilityassessmentsettings
+  virtualNetworkRules() []azure.subscription.sqlService.virtualNetworkRule
 }
 
 // Azure SQL Server Vulnerability Assessment Settings
@@ -1081,6 +1082,20 @@ private azure.subscription.sqlService.firewallrule  @defaults("id name") {
   startIpAddress string
   // SQL firewall rule end IP address
   endIpAddress string
+}
+
+// Azure SQL Virtual Network Rule
+private azure.subscription.sqlService.virtualNetworkRule  @defaults("id name") {
+  // Virtual Network Rule ID
+  id string
+  // Virtual Network Rule name
+  name string
+  // Virtual Network Rule type
+  type string
+  // Virtual Network Rule properties
+  properties dict
+  // Virtual Network Rule Subnet ID
+  virtualNetworkSubnetId string
 }
 
 // Azure Key Vault
