@@ -291,10 +291,6 @@ func getSecurityContacts(ctx context.Context, subscriptionId, host, token string
 	return result, err
 }
 
-type SecurityContactsValue struct {
-	Contacts []security.Contact
-}
-
 func getPolicyAssignments(ctx context.Context, subscriptionId, host, token string) (PolicyAssignments, error) {
 	urlPath := "/subscriptions/{subscriptionId}/providers/Microsoft.Authorization/policyAssignments"
 	urlPath = strings.ReplaceAll(urlPath, "{subscriptionId}", url.PathEscape(subscriptionId))
