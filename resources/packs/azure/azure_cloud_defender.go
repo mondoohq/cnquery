@@ -274,7 +274,25 @@ func getSecurityContacts(ctx context.Context, subscriptionId, host, token string
 	}
 	result := []security.Contact{}
 	err = json.Unmarshal(raw, &result)
+	if err != nil {
+		// fallback, try to unmarshal to ContactList
+		contactList := &security.ContactList{}
+		err = json.Unmarshal(raw, contactList)
+		if err != nil {
+			return nil, err
+		}
+		for _, c := range contactList.Value {
+			if c != nil {
+				result = append(result, *c)
+			}
+		}
+	}
+
 	return result, err
+}
+
+type SecurityContactsValue struct {
+	Contacts []security.Contact
 }
 
 func getPolicyAssignments(ctx context.Context, subscriptionId, host, token string) (PolicyAssignments, error) {
