@@ -435,6 +435,14 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			}
 		}
 
+		var databaseEncryption map[string]interface{}
+		if c.DatabaseEncryption != nil {
+			databaseEncryption = map[string]interface{}{
+				"state":   c.DatabaseEncryption.State.String(),
+				"keyName": c.DatabaseEncryption.KeyName,
+			}
+		}
+
 		mqlCluster, err := g.MotorRuntime.CreateResource("gcp.project.gkeService.cluster",
 			"projectId", projectId,
 			"id", c.Id,
@@ -467,6 +475,7 @@ func (g *mqlGcpProjectGkeService) GetClusters() ([]interface{}, error) {
 			"masterAuth", masterAuth,
 			"masterAuthorizedNetworksConfig", masterAuthorizedNetworksCfg,
 			"privateClusterConfig", privateClusterCfg,
+			"databaseEncryption", databaseEncryption,
 		)
 		if err != nil {
 			return nil, err
