@@ -68,9 +68,13 @@ func (t *manifestParser) Namespaces() ([]v1.Namespace, error) {
 		res := t.objects[i]
 		o, err := meta.Accessor(res)
 		if err == nil {
+			ns := o.GetNamespace()
+			if ns == "" {
+				continue
+			}
 			// There are types of resources that do not have meta data. Instead of erroring
 			// skip them.
-			namespaceMap[o.GetNamespace()] = struct{}{}
+			namespaceMap[ns] = struct{}{}
 		}
 	}
 
