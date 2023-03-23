@@ -326,10 +326,20 @@ func (a *mqlPlatformCves) GetCvss() (interface{}, error) {
 		return nil, err
 	}
 
-	// TODO: we need to distingush between advisory, cve and exploit cvss
+	score := float32(0.0)
+	for i := range report.Advisories {
+		advisory := report.Advisories[i]
+		for j := range advisory.Cves {
+			cve := advisory.Cves[j]
+			if cve.WorstScore != nil && cve.WorstScore.Score > score {
+				score = cve.WorstScore.Score
+			}
+		}
+	}
+
 	obj, err := a.MotorRuntime.CreateResource("audit.cvss",
-		"score", float64(report.Stats.Score)/10,
-		"vector", "", // TODO: we need to extend the report to include the vector in the report
+		"score", float64(int(score*10))/10,
+		"vector", "",
 	)
 	if err != nil {
 		return nil, err
