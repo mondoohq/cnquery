@@ -58,6 +58,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 			Labels: map[string]string{
 				"azure.com/tenant": provider.TenantID(),
 			},
+			State: asset.State_STATE_ONLINE,
 		})
 	}
 
