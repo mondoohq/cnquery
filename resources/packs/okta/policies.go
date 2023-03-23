@@ -12,6 +12,7 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/resources/packs/okta/sdk"
 )
 
 // https://developer.okta.com/docs/reference/api/policy/#policy-object
@@ -39,7 +40,11 @@ func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interfac
 	ctx := context.Background()
 	client := op.Client()
 
-	respList, _, err := client.Policy.ListPolicies(
+	apiSupplement := &sdk.SkdExtension{
+		RequestExecutor: client.CloneRequestExecutor(),
+	}
+
+	respList, _, err := apiSupplement.ListPolicies(
 		ctx,
 		query.NewQueryParams(
 			query.WithLimit(queryLimit),
@@ -55,7 +60,7 @@ func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interfac
 	}
 
 	list := []interface{}{}
-	appendEntry := func(datalist ...*okta.Policy) error {
+	appendEntry := func(datalist ...*sdk.PolicyWrapper) error {
 		for i := range datalist {
 			r, err := newMqlOktaPolicy(runtime, datalist[i])
 			if err != nil {
@@ -67,14 +72,11 @@ func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interfac
 	}
 
 	for i := range respList {
-		entry := respList[i]
-		if entry.IsPolicyInstance() {
-			p := entry.(*okta.Policy)
-			err = appendEntry(p)
-			if err != nil {
-				return nil, err
-			}
+		err = appendEntry(respList[i])
+		if err != nil {
+			return nil, err
 		}
+
 	}
 
 	// TODO: pagination not working properly for that call, need to chat with Okta
@@ -120,7 +122,7 @@ func (o *mqlOktaPolicies) GetProfileEnrollment() ([]interface{}, error) {
 	return listPolicies(o.MotorRuntime, PROFILE_ENROLLMENT)
 }
 
-func newMqlOktaPolicy(runtime *resources.Runtime, entry *okta.Policy) (interface{}, error) {
+func newMqlOktaPolicy(runtime *resources.Runtime, entry *sdk.PolicyWrapper) (interface{}, error) {
 	conditions, err := core.JsonToDict(entry.Conditions)
 	if err != nil {
 		return nil, err
@@ -129,6 +131,11 @@ func newMqlOktaPolicy(runtime *resources.Runtime, entry *okta.Policy) (interface
 	system := false
 	if entry.System != nil {
 		system = *entry.System
+	}
+
+	settings, err := core.JsonToDict(entry.Settings)
+	if err != nil {
+		return nil, err
 	}
 
 	return runtime.CreateResource("okta.policy",
@@ -140,6 +147,7 @@ func newMqlOktaPolicy(runtime *resources.Runtime, entry *okta.Policy) (interface
 		"system", system,
 		"type", entry.Type,
 		"conditions", conditions,
+		"settings", settings,
 		"created", entry.Created,
 		"lastUpdated", entry.LastUpdated,
 	)
