@@ -63,6 +63,11 @@ func register(token string) {
 	apiEndpoint := viper.GetString("api_endpoint")
 	token = strings.TrimSpace(token)
 
+	rangerClient, err := rangerclient.NewRangerClient()
+	if err != nil {
+		log.Fatal().Err(err).Msg("error while creating Mondoo API client")
+	}
+
 	// we handle three cases here:
 	// 1. user has a token provided
 	// 2. user has no token provided, but has a service account file is already there
@@ -92,10 +97,6 @@ func register(token string) {
 		plugins = append(plugins, defaultPlugins...)
 		plugins = append(plugins, statictoken.NewRangerPlugin(token))
 
-		rangerClient, err := rangerclient.NewRangerClient()
-		if err != nil {
-			log.Fatal().Err(err).Msg("error while creating Mondoo API client")
-		}
 		client, err := upstream.NewAgentManagerClient(apiEndpoint, rangerClient, plugins...)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not connect to mondoo platform")
@@ -165,7 +166,7 @@ func register(token string) {
 			}
 			plugins = append(plugins, certAuth)
 
-			client, err := upstream.NewAgentManagerClient(apiEndpoint, ranger.DefaultHttpClient(), plugins...)
+			client, err := upstream.NewAgentManagerClient(apiEndpoint, rangerClient, plugins...)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not connect to Mondoo Platform")
 			}
@@ -213,7 +214,7 @@ func register(token string) {
 		log.Warn().Err(err).Msg("could not initialize certificate authentication")
 	}
 	plugins = append(plugins, certAuth)
-	client, err := upstream.NewAgentManagerClient(apiEndpoint, ranger.DefaultHttpClient(), plugins...)
+	client, err := upstream.NewAgentManagerClient(apiEndpoint, rangerClient, plugins...)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not connect to mondoo platform")
 	}
