@@ -1464,6 +1464,8 @@ private gcp.project.gkeService.cluster @defaults("name") {
   masterAuthorizedNetworksConfig dict
   // Private cluster configuration
   privateClusterConfig dict
+  // Etcd encryption configuration
+  databaseEncryption dict
 }
 
 // GKE Cluster Addons Config
