@@ -245,7 +245,12 @@ func (s *LocalServices) cacheUpstreamQueryPackBundle(ctx context.Context, mrn st
 		return nil, errors.New("failed to retrieve upstream query pack " + mrn + ": " + err.Error())
 	}
 
-	bundleMap := bundle.ToMap()
+	bundleMap, err := bundle.Compile(ctx)
+	if err != nil {
+		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to compile query pack bundle")
+		return nil, errors.New("failed to retrieve upstream query pack " + mrn + ": " + err.Error())
+	}
+
 	if err = s.setBundleFromMap(ctx, bundleMap); err != nil {
 		logCtx.Error().Err(err).Str("querypack", mrn).Msg("query.hub> failed to set query pack retrieved from upstream")
 		return nil, err
