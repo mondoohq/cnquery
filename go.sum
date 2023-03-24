@@ -1231,8 +1231,8 @@ github.com/sivchari/nosnakecase v1.7.0 h1:7QkpWIRMe8x25gckkFd2A5Pi6Ymo0qgr4JrhGt
 github.com/sivchari/nosnakecase v1.7.0/go.mod h1:CwDzrzPea40/GB6uynrNLiorAlgFRvRbFSgJx2Gs+QY=
 github.com/sivchari/tenv v1.7.1 h1:PSpuD4bu6fSmtWMxSGWcvqUUgIn7k3yOJhOIzVWn8Ak=
 github.com/sivchari/tenv v1.7.1/go.mod h1:64yStXKSOxDfX47NlhVwND4dHwfZDdbp2Lyl018Icvg=
-github.com/slack-go/slack v0.11.4 h1:ojSa7KlPm3PqY2AomX4VTxEsK5eci5JaxCjlzGV5zoM=
-github.com/slack-go/slack v0.11.4/go.mod h1:hlGi5oXA+Gt+yWTPP0plCdRKmjsDxecdHxYQdlMQKOw=
+github.com/slack-go/slack v0.12.1 h1:X97b9g2hnITDtNsNe5GkGx6O2/Sz/uC20ejRZN6QxOw=
+github.com/slack-go/slack v0.12.1/go.mod h1:hlGi5oXA+Gt+yWTPP0plCdRKmjsDxecdHxYQdlMQKOw=
 github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1:OnSkiWE9lh6wB0YB77sQom3nweQdgAjqCqsofrRNTgc=
 github.com/smartystreets/assertions v1.2.0 h1:42S6lae5dvLc7BrLu/0ugRtcFVjoJNMC/N3yZFZkDFs=
 github.com/smartystreets/assertions v1.2.0/go.mod h1:tcbTF8ujkAEcZ8TElKY+i30BzYlVhC/LOxJk7iOWnoo=
