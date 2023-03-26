@@ -15,6 +15,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/os/events"
 	"go.mondoo.com/cnquery/resources"
@@ -353,4 +354,32 @@ func (l *mqlFilePermissions) id() (string, error) {
 
 func (l *mqlFilePermissions) GetString() (string, error) {
 	return l.Id, nil
+}
+
+func (l *mqlFileContext) id() (string, error) {
+	f, err := l.File()
+	if err != nil {
+		return "", err
+	}
+
+	path, err := f.Path()
+	if err != nil {
+		return "", err
+	}
+
+	rangex, err := l.Range()
+	if err != nil {
+		return "", err
+	}
+
+	return path + string(rangex), nil
+}
+
+func (l *mqlFileContext) GetContent(file File, rangex []byte) (string, error) {
+	raw, err := file.Content()
+	if err != nil {
+		return "", err
+	}
+
+	return llx.RangeData(rangex).GetContents(raw, llx.RangeConfig{}), nil
 }

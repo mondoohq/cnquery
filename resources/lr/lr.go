@@ -66,6 +66,7 @@ type Resource struct {
 	IsPrivate bool           `@"private"?`
 	ID        string         `@Ident { @'.' @Ident }`
 	Defaults  string         ` ( '@' "defaults" '(' @String ')' )? `
+	Context   string         ` ( '@' "context" '(' @String ')' )? `
 	ListType  *SimplListType `[ '{' [ @@ ]`
 	Body      *ResourceDef   `@@ '}' ]`
 	title     string
@@ -276,6 +277,7 @@ func Parse(input string) (*LR, error) {
 			if f.Embeddable == nil {
 				continue
 			}
+
 			var name string
 			if f.Embeddable.Alias != nil {
 				name = *f.Embeddable.Alias

@@ -98,7 +98,7 @@ private pam.conf.serviceEntry @defaults("service module") {
 sshd {}
 
 // SSH server configuration
-sshd.config {
+sshd.config @defaults("file.path") @context("params ciphers macs kexs hostkeys") {
   init(path? string)
   // File of this SSH server configuration
   file() core.file
