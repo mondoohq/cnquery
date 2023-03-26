@@ -83,7 +83,7 @@ packs:
           }
       - uid: mondoo-linux-installed-packages
         title: Retrieve list about installed packages
-        query: packages.list { * }
+        query: packages { * }
       - uid: mondoo-linux-running-services
         title: Retrieve list of running services
         query: services.where( running == true ) { * }

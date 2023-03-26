@@ -16,7 +16,7 @@ packs:
         query: os.uptime
       - uid: mondoo-windows-installed-packages
         title: Retrieve list about installed packages
-        query: packages.list { * }
+        query: packages { * }
       - uid: mondoo-windows-running-services
         title: Retrieve list of running services
-        query: services.list { * }
+        query: services { * }
