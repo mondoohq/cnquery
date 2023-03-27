@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/resources"
@@ -85,7 +86,10 @@ func (p *mqlPlatformEol) init(args *resources.Args) (*resources.Args, PlatformEo
 
 	// get new advisory report
 	// start scanner client
-	rangerClient, err := rangerclient.NewRangerClient()
+
+	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+		Proxy: proxy.GetAPIProxy(),
+	})
 	if err != nil {
 		return nil, nil, err
 	}

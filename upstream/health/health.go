@@ -20,13 +20,15 @@ type Status struct {
 	Warnings []string `json:"warnings,omitempty"`
 }
 
-func CheckApiHealth(endpoint string) (Status, error) {
+func CheckApiHealth(endpoint, proxy string) (Status, error) {
 	status := Status{}
 	status.API.Endpoint = endpoint
 
 	sendTime := time.Now()
 
-	rangerClient, err := rangerclient.NewRangerClient()
+	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+		Proxy: proxy,
+	})
 	if err != nil {
 		return status, err
 	}

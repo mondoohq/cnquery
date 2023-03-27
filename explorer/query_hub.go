@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/ranger-rpc/codes"
@@ -220,7 +221,9 @@ func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) 
 		registryEndpoint = defaultRegistryUrl
 	}
 
-	rangerClient, err := rangerclient.NewRangerClient()
+	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+		Proxy: proxy.GetAPIProxy(),
+	})
 	if err != nil {
 		return nil, err
 	}

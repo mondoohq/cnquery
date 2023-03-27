@@ -3,6 +3,7 @@ package explorer
 import (
 	"net/http"
 
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/sync/semaphore"
@@ -42,7 +43,9 @@ func NewLocalServices(datalake DataLake, uuid string) *LocalServices {
 
 // NewRemoteServices initializes a services struct with a remote endpoint
 func NewRemoteServices(addr string, auth []ranger.ClientPlugin) (*Services, error) {
-	rangerClient, err := rangerclient.NewRangerClient()
+	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+		Proxy: proxy.GetAPIProxy(),
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/cnquery/upstream/mvd"
@@ -29,7 +30,9 @@ func (p *mqlMondooEol) GetDate() (*time.Time, error) {
 
 	// get new advisory report
 	// start scanner client
-	rangerClient, err := rangerclient.NewRangerClient()
+	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+		Proxy: proxy.GetAPIProxy(),
+	})
 	if err != nil {
 		return nil, err
 	}

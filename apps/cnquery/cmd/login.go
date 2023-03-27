@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/shared/rangerclient"
@@ -63,7 +64,9 @@ func register(token string) {
 	apiEndpoint := viper.GetString("api_endpoint")
 	token = strings.TrimSpace(token)
 
-	rangerClient, err := rangerclient.NewRangerClient()
+	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+		Proxy: proxy.GetAPIProxy(),
+	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while creating Mondoo API client")
 	}
@@ -146,7 +149,6 @@ func register(token string) {
 		if optsErr != nil {
 			log.Fatal().Msg("could not load configuration, please use --token or --config with the appropriate values")
 		}
-
 		// print the used config to the user
 		config.DisplayUsedConfig()
 

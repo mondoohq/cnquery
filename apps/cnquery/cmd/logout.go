@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/shared/rangerclient"
@@ -64,7 +65,9 @@ the credentials cannot be used in the future.
 		}
 		plugins = append(plugins, certAuth)
 
-		rangerClient, err := rangerclient.NewRangerClient()
+		rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+			Proxy: proxy.GetAPIProxy(),
+		})
 		if err != nil {
 			log.Fatal().Err(err).Msg("error while creating Mondoo API client")
 		}

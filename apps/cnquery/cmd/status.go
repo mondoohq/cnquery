@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
+	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
@@ -66,7 +67,9 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 			log.Fatal().Err(err).Send()
 		}
 
-		rangerClient, err := rangerclient.NewRangerClient()
+		rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
+			Proxy: proxy.GetAPIProxy(),
+		})
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to set up Mondoo API client")
 		}
@@ -79,7 +82,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		}
 
 		// check server health and clock skew
-		upstreamStatus, err := health.CheckApiHealth(opts.UpstreamApiEndpoint())
+		upstreamStatus, err := health.CheckApiHealth(opts.UpstreamApiEndpoint(), proxy.GetAPIProxy())
 		if err != nil {
 			log.Error().Err(err).Msg("could not check upstream health")
 		}
