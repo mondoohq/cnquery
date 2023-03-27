@@ -624,9 +624,9 @@ func ec2Instances(m *MqlDiscovery, account string, tc *providers.Config, whereFi
 		Image      map[string]interface{}
 		PublicIp   string
 	}
-	query := "return aws.ec2.instances { arn instanceId tags region state publicIp image { name } }"
+	query := "return aws.ec2.instances { arn instanceId tags region state publicIp image { name id } }"
 	if len(whereFilter) > 0 {
-		query = fmt.Sprintf("return aws.ec2.instances.where(%s) { arn instanceId tags region state publicIp image { name } }", whereFilter)
+		query = fmt.Sprintf("return aws.ec2.instances.where(%s) { arn instanceId tags region state publicIp image { name id } }", whereFilter)
 	}
 	instances, err := GetList[data](m, query)
 	if err != nil {
@@ -643,6 +643,7 @@ func ec2Instances(m *MqlDiscovery, account string, tc *providers.Config, whereFi
 		inst.Tags[StateLabel] = inst.State
 		if inst.Image != nil {
 			inst.Tags[ImageNameLabel] = inst.Image["name"].(string)
+			inst.Tags[ImageIdLabel] = inst.Image["id"].(string)
 		}
 
 		assets = append(assets, MqlObjectToAsset(account,
