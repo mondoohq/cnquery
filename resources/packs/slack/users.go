@@ -182,6 +182,11 @@ func newMqlSlackUser(runtime *resources.Runtime, user slack.User) (interface{}, 
 		}
 	}
 
+	twoFactoryType := ""
+	if user.TwoFactorType != nil {
+		twoFactoryType = *user.TwoFactorType
+	}
+
 	return runtime.CreateResource("slack.user",
 		"id", user.ID,
 		"teamId", user.TeamID,
@@ -202,6 +207,7 @@ func newMqlSlackUser(runtime *resources.Runtime, user slack.User) (interface{}, 
 		"isAppUser", user.IsAppUser,
 		"isInvitedUser", user.IsInvitedUser,
 		"has2FA", user.Has2FA,
+		"twoFactorType", twoFactoryType,
 		"hasFiles", user.HasFiles,
 		"presence", user.Presence,
 		"locale", user.Locale,

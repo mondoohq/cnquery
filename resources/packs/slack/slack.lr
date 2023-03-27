@@ -74,6 +74,8 @@ slack.user @defaults("id") {
   isInvitedUser bool
   // Indicates whether two-factor authentication is enabled for this user
   has2FA bool
+  // Indicates the type of two-factor authentication in use
+  twoFactorType string
   // Indicates whether the user own files
   hasFiles bool
   // Presence of the user

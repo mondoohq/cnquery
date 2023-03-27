@@ -82,6 +82,7 @@ resources:
       timeZone: {}
       timeZoneLabel: {}
       timeZoneOffset: {}
+      twoFactorType: {}
     min_mondoo_version: latest
   slack.userGroup:
     fields:

@@ -2,6 +2,8 @@ module go.mondoo.com/cnquery
 
 go 1.19
 
+replace github.com/slack-go/slack v0.12.1 => github.com/imilchev/slack v0.0.0-20230324120548-5380d7dd00a5
+
 require (
 	cloud.google.com/go/accessapproval v1.5.0
 	cloud.google.com/go/bigquery v1.44.0
