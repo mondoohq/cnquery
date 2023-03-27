@@ -8,11 +8,10 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/shared/rangerclient"
+	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/cnquery/upstream/mvd"
 	"go.mondoo.com/cnquery/upstream/mvd/cvss"
 	"go.mondoo.com/ranger-rpc"
@@ -78,13 +77,11 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 
 	// get new advisory report
 	// start scanner client
-	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
-		Proxy: proxy.GetAPIProxy(),
-	})
+	httpClient, err := httpclient.NewClient()
 	if err != nil {
 		return nil, err
 	}
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, rangerClient)
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, httpClient)
 	if err != nil {
 		return nil, err
 	}

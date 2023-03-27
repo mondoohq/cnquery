@@ -5,9 +5,8 @@ import (
 	"errors"
 	"os"
 
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/shared/rangerclient"
+	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"go.opentelemetry.io/otel"
@@ -221,13 +220,11 @@ func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) 
 		registryEndpoint = defaultRegistryUrl
 	}
 
-	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
-		Proxy: proxy.GetAPIProxy(),
-	})
+	httpClient, err := httpclient.NewClient()
 	if err != nil {
 		return nil, err
 	}
-	client, err := NewQueryHubClient(registryEndpoint, rangerClient)
+	client, err := NewQueryHubClient(registryEndpoint, httpClient)
 	if err != nil {
 		return nil, err
 	}

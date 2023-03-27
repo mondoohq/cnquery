@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"go.mondoo.com/cnquery/shared/rangerclient"
+	"go.mondoo.com/cnquery/upstream/httpclient"
 )
 
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. health.proto
@@ -26,14 +26,12 @@ func CheckApiHealth(endpoint, proxy string) (Status, error) {
 
 	sendTime := time.Now()
 
-	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
-		Proxy: proxy,
-	})
+	httpClient, err := httpclient.NewClient()
 	if err != nil {
 		return status, err
 	}
 
-	healthClient, err := NewHealthClient(endpoint, rangerClient)
+	healthClient, err := NewHealthClient(endpoint, httpClient)
 	if err != nil {
 		return status, err
 	}

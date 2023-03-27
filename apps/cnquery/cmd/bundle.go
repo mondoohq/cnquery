@@ -11,12 +11,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/cnquery/stringx"
 	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/cnquery/upstream/httpclient"
 )
 
 func init() {
@@ -185,13 +184,11 @@ var queryPackUploadCmd = &cobra.Command{
 			log.Error().Err(err).Msg("could not initialize client authentication")
 			os.Exit(ConfigurationErrorCode)
 		}
-		rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
-			Proxy: proxy.GetAPIProxy(),
-		})
+		httpClient, err := httpclient.NewClient()
 		if err != nil {
 			log.Fatal().Err(err).Msg("error while creating Mondoo API client")
 		}
-		queryHubServices, err := explorer.NewQueryHubClient(opts.UpstreamApiEndpoint(), rangerClient, certAuth)
+		queryHubServices, err := explorer.NewQueryHubClient(opts.UpstreamApiEndpoint(), httpClient, certAuth)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not connect to query hub")
 		}

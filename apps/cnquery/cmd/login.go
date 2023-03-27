@@ -10,11 +10,10 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
-	"go.mondoo.com/cnquery/shared/rangerclient"
 	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
 )
@@ -64,9 +63,7 @@ func register(token string) {
 	apiEndpoint := viper.GetString("api_endpoint")
 	token = strings.TrimSpace(token)
 
-	rangerClient, err := rangerclient.NewRangerClient(&rangerclient.RangerClientOpts{
-		Proxy: proxy.GetAPIProxy(),
-	})
+	httpClient, err := httpclient.NewClient()
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while creating Mondoo API client")
 	}
@@ -100,7 +97,7 @@ func register(token string) {
 		plugins = append(plugins, defaultPlugins...)
 		plugins = append(plugins, statictoken.NewRangerPlugin(token))
 
-		client, err := upstream.NewAgentManagerClient(apiEndpoint, rangerClient, plugins...)
+		client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not connect to mondoo platform")
 		}
@@ -168,7 +165,7 @@ func register(token string) {
 			}
 			plugins = append(plugins, certAuth)
 
-			client, err := upstream.NewAgentManagerClient(apiEndpoint, rangerClient, plugins...)
+			client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not connect to Mondoo Platform")
 			}
@@ -216,7 +213,7 @@ func register(token string) {
 		log.Warn().Err(err).Msg("could not initialize certificate authentication")
 	}
 	plugins = append(plugins, certAuth)
-	client, err := upstream.NewAgentManagerClient(apiEndpoint, rangerClient, plugins...)
+	client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not connect to mondoo platform")
 	}
