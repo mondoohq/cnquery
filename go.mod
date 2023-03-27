@@ -169,8 +169,7 @@ require (
 	github.com/vmware/govmomi v0.29.0
 	github.com/xanzy/go-gitlab v0.74.0
 	github.com/zclconf/go-cty v1.10.0
-	// use ranger-rpc joel/byo-proxy branch for now
-	go.mondoo.com/ranger-rpc v0.0.0-20230316222251-d7b69b75dae2
+	go.mondoo.com/ranger-rpc v0.0.0-20230326140211-135247b908c5
 	go.opentelemetry.io/otel v1.14.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/net v0.7.0
