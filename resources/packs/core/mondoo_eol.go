@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
@@ -29,11 +28,7 @@ func (p *mqlMondooEol) GetDate() (*time.Time, error) {
 
 	// get new advisory report
 	// start scanner client
-	httpClient, err := httpclient.NewClient()
-	if err != nil {
-		return nil, err
-	}
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, httpClient)
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
 	if err != nil {
 		return nil, err
 	}

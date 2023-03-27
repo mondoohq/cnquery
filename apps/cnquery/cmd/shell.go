@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -308,6 +309,13 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 			Incognito: true,
 		}
 	}
+
+	httpClient, err := httpclient.NewClient()
+	if err != nil {
+		log.Error().Err(err).Msg("error while setting up httpclient")
+		os.Exit(ConfigurationErrorCode)
+	}
+	conf.UpstreamConfig.HttpClient = httpClient
 
 	return &conf, nil
 }

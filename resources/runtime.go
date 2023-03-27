@@ -3,6 +3,7 @@ package resources
 import (
 	"errors"
 	fmt "fmt"
+	"net/http"
 	"sync"
 
 	"go.mondoo.com/ranger-rpc"
@@ -69,6 +70,7 @@ type UpstreamConfig struct {
 	ApiEndpoint string
 	Plugins     []ranger.ClientPlugin
 	Incognito   bool
+	HttpClient  *http.Client
 }
 
 // Runtime of all initialized resources

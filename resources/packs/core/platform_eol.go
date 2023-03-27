@@ -9,7 +9,6 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
@@ -86,11 +85,7 @@ func (p *mqlPlatformEol) init(args *resources.Args) (*resources.Args, PlatformEo
 	// get new advisory report
 	// start scanner client
 
-	httpClient, err := httpclient.NewClient()
-	if err != nil {
-		return nil, nil, err
-	}
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, httpClient)
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
 	if err != nil {
 		return nil, nil, err
 	}

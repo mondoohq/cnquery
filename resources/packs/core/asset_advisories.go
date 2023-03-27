@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
@@ -39,11 +38,7 @@ func (a *mqlAsset) GetVulnerabilityReport() (interface{}, error) {
 
 	// get new advisory report
 	// start scanner client
-	httpClient, err := httpclient.NewClient()
-	if err != nil {
-		return nil, err
-	}
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, httpClient)
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
 	if err != nil {
 		return nil, err
 	}
