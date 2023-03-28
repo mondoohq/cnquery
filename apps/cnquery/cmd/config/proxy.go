@@ -35,7 +35,11 @@ func (c *CommonCliConfig) GetAPIProxy() (*url.URL, error) {
 	}
 
 	// fallback to proxy from config file
-	return url.Parse(c.APIProxy)
+	if c.APIProxy != "" {
+		return url.Parse(c.APIProxy)
+	}
+
+	return nil, nil
 }
 
 func (c *CommonCliConfig) GetHttpClient() (*http.Client, error) {
