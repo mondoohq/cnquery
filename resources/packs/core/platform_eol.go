@@ -10,7 +10,6 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/upstream/mvd"
-	"go.mondoo.com/ranger-rpc"
 )
 
 func (s *mqlPlatformEol) id() (string, error) {
@@ -85,7 +84,8 @@ func (p *mqlPlatformEol) init(args *resources.Args) (*resources.Args, PlatformEo
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, ranger.DefaultHttpClient())
+
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -5,8 +5,9 @@ import (
 	"errors"
 	"os"
 
-	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/ranger-rpc"
+
+	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"go.opentelemetry.io/otel"
@@ -212,6 +213,7 @@ func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) 
 	}
 
 	if s.Upstream != nil {
+		// since upstream is initialized with http client, it uses proxy config
 		return s.Upstream.DefaultPacks(ctx, req)
 	}
 
@@ -220,6 +222,8 @@ func (s *LocalServices) DefaultPacks(ctx context.Context, req *DefaultPacksReq) 
 		registryEndpoint = defaultRegistryUrl
 	}
 
+	// Note, this does not use the proxy config override from the mondoo.yml since we only get here when
+	// it is used without upstream config
 	client, err := NewQueryHubClient(registryEndpoint, ranger.DefaultHttpClient())
 	if err != nil {
 		return nil, err

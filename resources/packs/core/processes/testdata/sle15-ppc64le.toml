@@ -1,0 +1,96 @@
+[commands."uname -r"]
+stdout = "5.3.18-57-default"
+
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "ppc64le"
+
+[files."/etc/os-release"]
+content = """
+NAME="SLES"
+VERSION="15-SP3"
+VERSION_ID="15.3"
+PRETTY_NAME="SUSE Linux Enterprise Server 15 SP3"
+ID="sles"
+ID_LIKE="suse"
+ANSI_COLOR="0;32"
+CPE_NAME="cpe:/o:suse:sles:15:sp3"
+DOCUMENTATION_URL="https://documentation.suse.com/"
+"""
+
+[files."/proc"]
+mode = 555
+
+[files."/proc/1"]
+mode = 555
+
+[commands."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
+stdout = """  PID %CPU %MEM    VSZ   RSS TT       STAT STIME   TIME      UID COMMAND
+    1  0.0  0.1  31360 20800 ?        Ss   Mar10   00:00:00    0 /usr/lib/systemd/systemd  --switched-root --system --deserialize 29
+ 3693  0.0  0.5 624192 97280 ?        SLl  Mar10   00:00:00    0 /opt/rsct/bin/rmcd  -a IBM.LPCommands -r -S 1500
+ 3987  0.0  0.0 147712  6080 ?        Sl   Mar10   00:00:00    0 
+ 4176  0.0  0.0      0     0 ?        I<   Mar10   00:00:00    0 [kworker/u65:1]
+"""
+
+[files."/proc/1/cmdline"]
+content = """/usr/lib/systemd/systemd--switched-root--system--deserialize29"""
+
+[files."/proc/1/status"]
+content = """Name:   systemd
+Umask:  0000
+State:  S (sleeping)
+Tgid:   1
+Ngid:   0
+Pid:    1
+PPid:   0
+TracerPid:      0
+Uid:    0       0       0       0
+Gid:    0       0       0       0
+FDSize: 128
+Groups:  
+NStgid: 1
+NSpid:  1
+NSpgid: 1
+NSsid:  1
+VmPeak:    94400 kB
+VmSize:    29312 kB
+VmLck:         0 kB
+VmPin:         0 kB
+VmHWM:     19712 kB
+VmRSS:     19712 kB
+RssAnon:            7232 kB
+RssFile:           12480 kB
+RssShmem:              0 kB
+VmData:     4544 kB
+VmStk:       192 kB
+VmExe:      1792 kB
+VmLib:     19776 kB
+VmPTE:        24 kB
+VmSwap:        0 kB
+HugetlbPages:          0 kB
+CoreDumping:    0
+THP_enabled:    1
+Threads:        1
+SigQ:   0/14832
+SigPnd: 0000000000000000
+ShdPnd: 0000000000000000
+SigBlk: 7be3c0fe28014a03
+SigIgn: 0000000000001000
+SigCgt: 00000001800004ec
+CapInh: 0000000000000000
+CapPrm: 000000ffffffffff
+CapEff: 000000ffffffffff
+CapBnd: 000000ffffffffff
+CapAmb: 0000000000000000
+NoNewPrivs:     0
+Seccomp:        0
+Speculation_Store_Bypass:       unknown
+Cpus_allowed:   3
+Cpus_allowed_list:      0-1
+Mems_allowed:   00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001
+Mems_allowed_list:      0
+voluntary_ctxt_switches:        1107
+nonvoluntary_ctxt_switches:     861
+"""

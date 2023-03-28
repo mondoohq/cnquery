@@ -76,7 +76,7 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, ranger.DefaultHttpClient())
+	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
 	if err != nil {
 		return nil, err
 	}

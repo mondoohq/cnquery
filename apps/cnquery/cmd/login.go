@@ -62,6 +62,13 @@ func register(token string) {
 	apiEndpoint := viper.GetString("api_endpoint")
 	token = strings.TrimSpace(token)
 
+	// NOTE: login is special because we do not have a config yet
+	proxy, err := cnquery_config.GetAPIProxy()
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not parse proxy URL")
+	}
+	httpClient := ranger.NewHttpClient(ranger.WithProxy(proxy))
+
 	// we handle three cases here:
 	// 1. user has a token provided
 	// 2. user has no token provided, but has a service account file is already there
@@ -91,7 +98,7 @@ func register(token string) {
 		plugins = append(plugins, defaultPlugins...)
 		plugins = append(plugins, statictoken.NewRangerPlugin(token))
 
-		client, err := upstream.NewAgentManagerClient(apiEndpoint, ranger.DefaultHttpClient(), plugins...)
+		client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not connect to mondoo platform")
 		}
@@ -140,9 +147,13 @@ func register(token string) {
 		if optsErr != nil {
 			log.Fatal().Msg("could not load configuration, please use --token or --config with the appropriate values")
 		}
-
 		// print the used config to the user
 		config.DisplayUsedConfig()
+
+		httpClient, err = opts.GetHttpClient()
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not create http client")
+		}
 
 		if opts.AgentMrn != "" {
 			// already authenticated
@@ -160,7 +171,7 @@ func register(token string) {
 			}
 			plugins = append(plugins, certAuth)
 
-			client, err := upstream.NewAgentManagerClient(apiEndpoint, ranger.DefaultHttpClient(), plugins...)
+			client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 			if err != nil {
 				log.Fatal().Err(err).Msg("could not connect to Mondoo Platform")
 			}
@@ -208,7 +219,7 @@ func register(token string) {
 		log.Warn().Err(err).Msg("could not initialize certificate authentication")
 	}
 	plugins = append(plugins, certAuth)
-	client, err := upstream.NewAgentManagerClient(apiEndpoint, ranger.DefaultHttpClient(), plugins...)
+	client, err := upstream.NewAgentManagerClient(apiEndpoint, httpClient, plugins...)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not connect to mondoo platform")
 	}

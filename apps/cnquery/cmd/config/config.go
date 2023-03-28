@@ -48,6 +48,9 @@ type CommonCliConfig struct {
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
 
+	// API Proxy for communicating with Mondoo API
+	APIProxy string `json:"api_proxy,omitempty" mapstructure:"api_proxy"`
+
 	// labels that will be applied to all assets
 	Labels map[string]string `json:"labels,omitempty" mapstructure:"labels"`
 }

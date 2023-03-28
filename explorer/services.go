@@ -40,17 +40,19 @@ func NewLocalServices(datalake DataLake, uuid string) *LocalServices {
 }
 
 // NewRemoteServices initializes a services struct with a remote endpoint
-func NewRemoteServices(addr string, auth []ranger.ClientPlugin) (*Services, error) {
-	client := ranger.DefaultHttpClient()
+func NewRemoteServices(addr string, auth []ranger.ClientPlugin, httpClient *http.Client) (*Services, error) {
+	if httpClient == nil {
+		httpClient = ranger.DefaultHttpClient()
+	}
 	// restrict parallel upstream connections to two connections
-	client.Transport = NewMaxParallelConnTransport(client.Transport, 2)
+	httpClient.Transport = NewMaxParallelConnTransport(httpClient.Transport, 2)
 
-	queryHub, err := NewQueryHubClient(addr, client, auth...)
+	queryHub, err := NewQueryHubClient(addr, httpClient, auth...)
 	if err != nil {
 		return nil, err
 	}
 
-	queryConductor, err := NewQueryConductorClient(addr, client, auth...)
+	queryConductor, err := NewQueryConductorClient(addr, httpClient, auth...)
 	if err != nil {
 		return nil, err
 	}

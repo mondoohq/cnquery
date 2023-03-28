@@ -2,9 +2,8 @@ package health
 
 import (
 	"context"
+	"net/http"
 	"time"
-
-	"go.mondoo.com/ranger-rpc"
 )
 
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. health.proto
@@ -20,12 +19,12 @@ type Status struct {
 	Warnings []string `json:"warnings,omitempty"`
 }
 
-func CheckApiHealth(endpoint string) (Status, error) {
+func CheckApiHealth(httpClient *http.Client, endpoint string) (Status, error) {
 	status := Status{}
 	status.API.Endpoint = endpoint
 
 	sendTime := time.Now()
-	healthClient, err := NewHealthClient(endpoint, ranger.DefaultHttpClient())
+	healthClient, err := NewHealthClient(endpoint, httpClient)
 	if err != nil {
 		return status, err
 	}

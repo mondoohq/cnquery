@@ -15,6 +15,7 @@ func TestConfigParsing(t *testing.T) {
 	data := `
 agent_mrn: //agents.api.mondoo.app/spaces/musing-saha-952142/agents/1zDY7auR20SgrFfiGUT5qZWx6mE
 api_endpoint: https://us.api.mondoo.com
+api_proxy: http://192.168.4.4:3128
 certificate: |
   -----BEGIN CERTIFICATE-----
   MIICV .. fis=
@@ -37,4 +38,5 @@ space_mrn: //captain.api.mondoo.app/spaces/musing-saha-952142
 	assert.Equal(t, "//agents.api.mondoo.app/spaces/musing-saha-952142/serviceaccounts/1zDY7cJ7bA84JxxNBWDxBdui2xE", cfg.ServiceAccountMrn)
 	assert.Equal(t, "-----BEGIN PRIVATE KEY-----\nMIG2AgE....C0Dvs=\n-----END PRIVATE KEY-----\n", cfg.PrivateKey)
 	assert.Equal(t, "-----BEGIN CERTIFICATE-----\nMIICV .. fis=\n-----END CERTIFICATE-----\n", cfg.Certificate)
+	assert.Equal(t, "http://192.168.4.4:3128", cfg.APIProxy)
 }

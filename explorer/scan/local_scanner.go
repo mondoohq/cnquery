@@ -3,6 +3,7 @@ package scan
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	sync "sync"
@@ -40,15 +41,20 @@ type LocalScanner struct {
 	apiEndpoint string
 	spaceMrn    string
 	plugins     []ranger.ClientPlugin
+	httpClient  *http.Client
 }
 
 type ScannerOption func(*LocalScanner)
 
-func WithUpstream(apiEndpoint string, spaceMrn string, plugins []ranger.ClientPlugin) func(s *LocalScanner) {
+func WithUpstream(apiEndpoint string, spaceMrn string, plugins []ranger.ClientPlugin, httpClient *http.Client) func(s *LocalScanner) {
+	if httpClient == nil {
+		httpClient = ranger.DefaultHttpClient()
+	}
 	return func(s *LocalScanner) {
 		s.apiEndpoint = apiEndpoint
 		s.plugins = plugins
 		s.spaceMrn = spaceMrn
+		s.httpClient = httpClient
 	}
 }
 
@@ -144,7 +150,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	// sync assets
 	if upstreamConfig.ApiEndpoint != "" && !upstreamConfig.Incognito {
 		log.Info().Msg("synchronize assets")
-		upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins)
+		upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins, s.httpClient)
 		if err != nil {
 			return nil, false, err
 		}
@@ -329,7 +335,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 	runtimeErr := inmemory.WithDb(func(db *inmemory.Db, services *explorer.LocalServices) error {
 		if job.UpstreamConfig.ApiEndpoint != "" && !job.UpstreamConfig.Incognito {
 			log.Debug().Msg("using API endpoint " + s.apiEndpoint)
-			upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins)
+			upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins, s.httpClient)
 			if err != nil {
 				return err
 			}
