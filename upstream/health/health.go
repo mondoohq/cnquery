@@ -2,9 +2,8 @@ package health
 
 import (
 	"context"
+	"net/http"
 	"time"
-
-	"go.mondoo.com/cnquery/upstream/httpclient"
 )
 
 //go:generate protoc --proto_path=. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. health.proto
@@ -20,17 +19,11 @@ type Status struct {
 	Warnings []string `json:"warnings,omitempty"`
 }
 
-func CheckApiHealth(endpoint, proxy string) (Status, error) {
+func CheckApiHealth(httpClient *http.Client, endpoint string) (Status, error) {
 	status := Status{}
 	status.API.Endpoint = endpoint
 
 	sendTime := time.Now()
-
-	httpClient, err := httpclient.NewClient()
-	if err != nil {
-		return status, err
-	}
-
 	healthClient, err := NewHealthClient(endpoint, httpClient)
 	if err != nil {
 		return status, err

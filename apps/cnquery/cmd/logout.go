@@ -11,7 +11,6 @@ import (
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/cnquery/upstream/httpclient"
 	"sigs.k8s.io/yaml"
 )
 
@@ -64,7 +63,7 @@ the credentials cannot be used in the future.
 		}
 		plugins = append(plugins, certAuth)
 
-		httpClient, err := httpclient.NewClient()
+		httpClient, err := opts.GetHttpClient()
 		if err != nil {
 			log.Fatal().Err(err).Msg("error while creating Mondoo API client")
 		}

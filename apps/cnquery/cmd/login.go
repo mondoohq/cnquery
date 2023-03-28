@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"
 )
@@ -63,10 +62,12 @@ func register(token string) {
 	apiEndpoint := viper.GetString("api_endpoint")
 	token = strings.TrimSpace(token)
 
-	httpClient, err := httpclient.NewClient()
+	// NOTE: login is special because we do not have a config yet
+	proxy, err := cnquery_config.GetAPIProxy()
 	if err != nil {
-		log.Fatal().Err(err).Msg("error while creating Mondoo API client")
+		log.Fatal().Err(err).Msg("could not parse proxy URL")
 	}
+	httpClient := ranger.NewHttpClient(ranger.WithProxy(proxy))
 
 	// we handle three cases here:
 	// 1. user has a token provided
@@ -148,6 +149,11 @@ func register(token string) {
 		}
 		// print the used config to the user
 		config.DisplayUsedConfig()
+
+		httpClient, err = opts.GetHttpClient()
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not create http client")
+		}
 
 		if opts.AgentMrn != "" {
 			// already authenticated

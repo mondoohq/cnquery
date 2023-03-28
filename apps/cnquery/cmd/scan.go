@@ -30,7 +30,6 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -441,6 +440,11 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	if !conf.IsIncognito {
 		serviceAccount = opts.GetServiceCredential()
 		if serviceAccount != nil {
+			httpClient, err := opts.GetHttpClient()
+			if err != nil {
+				log.Error().Err(err).Msg("error while setting up httpclient")
+				os.Exit(ConfigurationErrorCode)
+			}
 			certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
 			if err != nil {
 				log.Error().Err(err).Msg("could not initialize client authentication")
@@ -453,11 +457,6 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 				log.Warn().Err(err).Msg("could not gather client information")
 			}
 			plugins = append(plugins, defaultRangerPlugins(sysInfo, opts.GetFeatures())...)
-			httpClient, err := httpclient.NewClient()
-			if err != nil {
-				log.Error().Err(err).Msg("error while setting up httpclient")
-				os.Exit(ConfigurationErrorCode)
-			}
 			log.Info().Msg("using service account credentials")
 			conf.UpstreamConfig = &resources.UpstreamConfig{
 				SpaceMrn:    opts.GetParentMrn(),
@@ -515,7 +514,7 @@ func (c *scanConfig) loadBundles() error {
 func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 	opts := []scan.ScannerOption{}
 	if config.UpstreamConfig != nil {
-		opts = append(opts, scan.WithUpstream(config.UpstreamConfig.ApiEndpoint, config.UpstreamConfig.SpaceMrn, config.UpstreamConfig.Plugins))
+		opts = append(opts, scan.WithUpstream(config.UpstreamConfig.ApiEndpoint, config.UpstreamConfig.SpaceMrn, config.UpstreamConfig.Plugins, config.UpstreamConfig.HttpClient))
 	}
 
 	scanner := scan.NewLocalScanner(opts...)

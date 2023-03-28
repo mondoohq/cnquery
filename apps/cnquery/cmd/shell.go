@@ -17,7 +17,6 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/cnquery/upstream/httpclient"
 	"go.mondoo.com/ranger-rpc"
 )
 
@@ -310,10 +309,14 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 		}
 	}
 
-	httpClient, err := httpclient.NewClient()
+	// set up the http client to include proxy config
+	httpClient, err := opts.GetHttpClient()
 	if err != nil {
 		log.Error().Err(err).Msg("error while setting up httpclient")
 		os.Exit(ConfigurationErrorCode)
+	}
+	if conf.UpstreamConfig == nil {
+		conf.UpstreamConfig = &resources.UpstreamConfig{}
 	}
 	conf.UpstreamConfig.HttpClient = httpClient
 

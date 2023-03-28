@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/proxy"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
@@ -72,7 +71,6 @@ func init() {
 	viper.BindEnv("features")
 
 	config.Init(rootCmd)
-	proxy.ProxyInit()
 }
 
 func initLogger(cmd *cobra.Command) {
