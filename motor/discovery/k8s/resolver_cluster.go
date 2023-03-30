@@ -73,7 +73,7 @@ func (r *ClusterResolver) Resolve(ctx context.Context, root *asset.Asset, tc *pr
 	}
 
 	if tc.IncludesDiscoveryTarget(common.DiscoveryAuto) {
-		log.Info().Msg("discovery option auto is used. This will detect the assets: cluster, jobs, cronjobs, pods, statefulsets, deployments, replicasets, daemonsets")
+		log.Info().Msg("discovery option auto is used. This will detect the assets: cluster, cronjobs, daemonsets, deployments, ingresses, jobs, pods, replicasets, statefulsets")
 	}
 
 	clusterIdentifier, err := p.Identifier()
