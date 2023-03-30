@@ -141,7 +141,7 @@ func addSeparateAssets(
 	}
 
 	// discover ingresses
-	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryIngresses) {
+	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryIngresses) {
 		log.Debug().Msg("search for ingresses")
 		connection := tc.Clone()
 		ingresses, err := ListIngresses(p, connection, clusterIdentifier, nsFilter, resourcesFilter, od)
