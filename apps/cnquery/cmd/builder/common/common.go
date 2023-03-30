@@ -182,6 +182,24 @@ func ContainerImageProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRun
 	return cmd
 }
 
+func ContainerTarProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:    "tar path",
+		Short:  docs.GetShort("container-tar"),
+		Long:   docs.GetLong("container-tar"),
+		Args:   cobra.ExactArgs(1),
+		PreRun: preRun,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				cmd.Flags().Set("path", args[0])
+			}
+			runFn(cmd, args)
+		},
+	}
+	commonCmdFlags(cmd)
+	return cmd
+}
+
 func ContainerRegistryProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
 		Aliases: []string{"cr"},

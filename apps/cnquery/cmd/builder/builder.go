@@ -95,6 +95,8 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	containerCmd.AddCommand(containerImageCmd)
 	containerRegistryCmd := containerRegistryProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	containerCmd.AddCommand(containerRegistryCmd)
+	containerTarCmd := containerTarProviderCmd(commonCmdFlags, preRun, runFn, docs)
+	containerCmd.AddCommand(containerTarCmd)
 
 	dockerCmd := dockerProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	dockerImageCmd := dockerImageProviderCmd(commonCmdFlags, preRun, runFn, docs)
@@ -252,6 +254,15 @@ func containerImageProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun commo
 	}
 
 	cmd := common.ContainerImageProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
+	return cmd
+}
+
+func containerTarProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_TAR, DefaultAssetType)
+	}
+
+	cmd := common.ContainerTarProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 

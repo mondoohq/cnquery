@@ -34,7 +34,7 @@ func TestTarCommand(t *testing.T) {
 	p, err := tar.New(&providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
-			"file": alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -58,7 +58,7 @@ func TestPlatformIdentifier(t *testing.T) {
 	m, err := resolver.NewMotorConnection(context.Background(), &providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
-			"file": alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	}, nil)
 	require.NoError(t, err)
@@ -74,7 +74,7 @@ func TestTarSymlinkFile(t *testing.T) {
 	p, err := tar.New(&providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
-			"file": alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -106,7 +106,7 @@ func TestTarRelativeSymlinkFileCentos(t *testing.T) {
 	p, err := tar.New(&providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
-			"file": centosContainerPath,
+			tar.OPTION_FILE: centosContainerPath,
 		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -137,7 +137,7 @@ func TestTarFile(t *testing.T) {
 	p, err := tar.New(&providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
-			"file": alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
@@ -167,7 +167,7 @@ func TestFilePermissions(t *testing.T) {
 	p, err := tar.New(&providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
-			"file": alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	})
 	require.NoError(t, err)
@@ -224,7 +224,7 @@ func TestTarFileFind(t *testing.T) {
 	p, err := tar.New(&providers.Config{
 		Backend: providers.ProviderType_TAR,
 		Options: map[string]string{
-			"file": alpineContainerPath,
+			tar.OPTION_FILE: alpineContainerPath,
 		},
 	})
 	assert.Equal(t, nil, err, "should create tar without error")
