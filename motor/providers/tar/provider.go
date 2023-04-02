@@ -18,7 +18,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
 )
 
-const OPTION_FILE = "file"
+const OPTION_FILE = "path"
 
 var (
 	_ providers.Instance           = (*Provider)(nil)
@@ -60,7 +60,7 @@ func NewWithReader(rc io.ReadCloser, close func()) (*Provider, error) {
 
 func NewWithClose(pCfg *providers.Config, closeFn func()) (*Provider, error) {
 	if pCfg == nil || len(pCfg.Options[OPTION_FILE]) == 0 {
-		return nil, errors.New("endpoint cannot be empty")
+		return nil, errors.New("tar provider requires a valid tar file")
 	}
 
 	filename := pCfg.Options[OPTION_FILE]

@@ -232,6 +232,14 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_DOCKER_ENGINE_IMAGE:
 		connection.Backend = providerType
 		connection.Host = args[0]
+	case providers.ProviderType_TAR:
+		connection.Backend = providerType
+		if filepath != "" {
+			if _, err := os.Stat(filepath); os.IsNotExist(err) {
+				log.Fatal().Str("file", filepath).Msg("Could not find the container tar file. Please specify the correct path.")
+			}
+			connection.Options["path"] = filepath
+		}
 	case providers.ProviderType_CONTAINER_REGISTRY:
 		switch assetType {
 		case GcrContainerRegistryAssetType:
