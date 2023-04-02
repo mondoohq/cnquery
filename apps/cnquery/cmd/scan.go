@@ -98,10 +98,10 @@ You can also explicitly request the scan of an image or a container registry:
 				Short: "Scan a container image.",
 			},
 			"container-tar": {
-				Short: "Scan a container image from a tar file.",
-				Long: `Scan OCI container image. This supports more parameters for different registries:
+				Short: "Scan an OCI container image from a tar file.",
+				Long: `Scan an OCI container image by providing a path to the tar file: 
 
-    cnquery scan container tar /path/to/file.tar
+    cnquery scan container tar /path/to/image.tar
 `,
 			},
 			"container-registry": {
