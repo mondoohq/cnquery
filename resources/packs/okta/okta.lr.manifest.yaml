@@ -4,6 +4,7 @@ resources:
       applications: {}
       domains: {}
       groups: {}
+      networks: {}
       trustedOrigins: {}
       users: {}
     min_mondoo_version: latest
@@ -41,6 +42,23 @@ resources:
       lastUpdated: {}
       profile: {}
       type: {}
+    is_private: true
+    min_mondoo_version: latest
+  okta.network:
+    fields:
+      asns: {}
+      created: {}
+      gateways: {}
+      id: {}
+      lastUpdated: {}
+      locations: {}
+      name: {}
+      proxies: {}
+      proxyType: {}
+      status: {}
+      system: {}
+      type: {}
+      usage: {}
     is_private: true
     min_mondoo_version: latest
   okta.organization:
