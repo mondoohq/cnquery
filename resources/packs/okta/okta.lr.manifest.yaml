@@ -77,11 +77,13 @@ resources:
       optOutCommunicationEmails: {}
       phoneNumber: {}
       postalCode: {}
+      securityNotificationEmails: {}
       state: {}
       status: {}
       subdomain: {}
       supportPhoneNumber: {}
       technicalContact: {}
+      threatInsightSettings: {}
       website: {}
     min_mondoo_version: latest
   okta.policies:
@@ -133,6 +135,15 @@ resources:
       lastUpdated: {}
       status: {}
       type: {}
+    is_private: true
+    min_mondoo_version: latest
+  okta.threatsConfiguration:
+    fields:
+      action: {}
+      created: {}
+      excludeZones: {}
+      id: {}
+      lastUpdated: {}
     is_private: true
     min_mondoo_version: latest
   okta.trustedOrigin:

@@ -9,11 +9,6 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
 )
 
-// ApiExtension handles cases where Okta's SDK doesn't support a particular API
-type ApiExtension struct {
-	RequestExecutor *okta.RequestExecutor
-}
-
 // Policy wrapper over okta.Policy until okta sdk is complete
 type PolicyWrapper struct {
 	// reuse existing struct from okta sdk

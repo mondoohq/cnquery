@@ -3,6 +3,12 @@ package okta
 import (
 	"context"
 
+	"go.mondoo.com/ranger-rpc"
+
+	"go.mondoo.com/cnquery/resources/packs/core"
+
+	"go.mondoo.com/cnquery/resources/packs/okta/sdk"
+
 	"go.mondoo.com/cnquery/resources"
 )
 
@@ -121,4 +127,73 @@ func (o *mqlOktaOrganization) GetTechnicalContact() (interface{}, error) {
 	}
 
 	return newMqlOktaUser(o.MotorRuntime, usr)
+}
+
+func (o *mqlOktaOrganization) GetSecurityNotificationEmails() (interface{}, error) {
+	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client := op.Client()
+	apiSupplement := &sdk.ApiExtension{
+		RequestExecutor: client.CloneRequestExecutor(),
+	}
+
+	emails, err := apiSupplement.GetSecurityNotificationEmails(
+		ctx,
+		op.OrganizationID(),
+		op.Token(),
+		ranger.DefaultHttpClient(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return core.JsonToDict(emails)
+}
+
+// GetThreatInsightSettings returns the Threat Insight settings for the organization
+func (o *mqlOktaOrganization) GetThreatInsightSettings() (interface{}, error) {
+	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client := op.Client()
+	config, _, err := client.ThreatInsightConfiguration.GetCurrentConfiguration(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	excludesZones := []interface{}{}
+	for i := range config.ExcludeZones {
+		zone, _, err := client.NetworkZone.GetNetworkZone(ctx, config.ExcludeZones[i])
+		if err != nil {
+			return nil, err
+		}
+		mqlZone, err := newMqlOktaNetworkZone(o.MotorRuntime, zone)
+		if err != nil {
+			return nil, err
+		}
+		excludesZones = append(excludesZones, mqlZone)
+	}
+
+	return o.MotorRuntime.CreateResource("okta.threatsConfiguration",
+		"action", config.Action,
+		"excludeZones", excludesZones,
+		"created", config.Created,
+		"lastUpdated", config.LastUpdated,
+	)
+}
+
+func (o *mqlOktaThreatsConfiguration) id() (string, error) {
+	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return "", err
+	}
+
+	return "okta.threatsConfiguration/" + op.OrganizationID(), nil
 }
