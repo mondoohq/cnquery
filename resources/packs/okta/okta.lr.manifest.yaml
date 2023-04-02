@@ -47,6 +47,7 @@ resources:
     fields:
       address1: {}
       address2: {}
+      billingContact: {}
       city: {}
       companyName: {}
       country: {}
@@ -55,12 +56,14 @@ resources:
       expiresAt: {}
       id: {}
       lastUpdated: {}
+      optOutCommunicationEmails: {}
       phoneNumber: {}
       postalCode: {}
       state: {}
       status: {}
       subdomain: {}
       supportPhoneNumber: {}
+      technicalContact: {}
       website: {}
     min_mondoo_version: latest
   okta.policies:

@@ -23,6 +23,7 @@ func (o *mqlOktaOrganization) init(args *resources.Args) (*resources.Args, OktaO
 	if err != nil {
 		return nil, nil, err
 	}
+
 	ctx := context.Background()
 	client := op.Client()
 	settings, _, err := client.OrgSetting.GetOrgSettings(ctx)
@@ -49,4 +50,75 @@ func (o *mqlOktaOrganization) init(args *resources.Args) (*resources.Args, OktaO
 	(*args)["expiresAt"] = settings.ExpiresAt
 
 	return args, nil, nil
+}
+
+func (o *mqlOktaOrganization) GetOptOutCommunicationEmails() (bool, error) {
+	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return false, err
+	}
+
+	ctx := context.Background()
+	client := op.Client()
+	settings, _, err := client.OrgSetting.GetOktaCommunicationSettings(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if settings.OptOutEmailUsers == nil {
+		return *settings.OptOutEmailUsers, nil
+	}
+
+	return false, nil
+}
+
+func (o *mqlOktaOrganization) GetBillingContact() (interface{}, error) {
+	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client := op.Client()
+	contactUser, _, err := client.OrgSetting.GetOrgContactUser(ctx, "BILLING")
+	if err != nil {
+		return nil, err
+	}
+	uid := contactUser.UserId
+
+	usr, _, err := client.User.GetUser(
+		ctx,
+		uid,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return newMqlOktaUser(o.MotorRuntime, usr)
+}
+
+func (o *mqlOktaOrganization) GetTechnicalContact() (interface{}, error) {
+	op, err := oktaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	client := op.Client()
+	contactUser, _, err := client.OrgSetting.GetOrgContactUser(ctx, "TECHNICAL")
+	if err != nil {
+		return nil, err
+	}
+
+	uid := contactUser.UserId
+
+	usr, _, err := client.User.GetUser(
+		ctx,
+		uid,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return newMqlOktaUser(o.MotorRuntime, usr)
 }

@@ -15,7 +15,7 @@ okta {
 }
 
 // Okta Organization
-okta.organization {
+okta.organization @defaults("companyName") {
   // ID of organization
   id string
   // Name of the company
@@ -50,6 +50,12 @@ okta.organization {
   lastUpdated time
   // Expiration of organization
   expiresAt time
+  // Indicates whether the org's users receive Okta Communication emails
+  optOutCommunicationEmails() bool
+  // Billing contact of organization
+  billingContact() okta.user
+  // Technical contact of organization
+  technicalContact() okta.user
 }
 
 // Okta Policy
@@ -71,7 +77,7 @@ okta.policies {
 }
 
 // Okta User
-private okta.user {
+private okta.user @defaults("id profile['email']" ){
   // Unique key for user
   id string
   // The user's type identifier
