@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
@@ -44,13 +45,22 @@ func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interfac
 		RequestExecutor: client.CloneRequestExecutor(),
 	}
 
-	respList, _, err := apiSupplement.ListPolicies(
+	respList, resp, err := apiSupplement.ListPolicies(
 		ctx,
 		query.NewQueryParams(
 			query.WithLimit(queryLimit),
 			query.WithType(string(policyType)),
 		),
 	)
+	// handle case where no policy exists
+	if err != nil && resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+	// handle special case where the policy type does not exist
+	if err != nil && resp.StatusCode == http.StatusBadRequest && strings.Contains(strings.ToLower(err.Error()), "invalid policy type") {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
