@@ -12,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/types"
+	"google.golang.org/protobuf/proto"
 )
 
 // RefreshMRN computes a MRN from the UID or validates the existing MRN.
@@ -107,12 +108,14 @@ func (p *Property) Merge(base *Property) {
 }
 
 type PropsCache struct {
-	cache map[string]*Property
+	cache        map[string]*Property
+	uidOnlyProps map[string]*Property
 }
 
 func NewPropsCache() PropsCache {
 	return PropsCache{
-		cache: map[string]*Property{},
+		cache:        map[string]*Property{},
+		uidOnlyProps: map[string]*Property{},
 	}
 }
 
@@ -120,13 +123,13 @@ func NewPropsCache() PropsCache {
 func (c PropsCache) Add(props ...*Property) {
 	for i := range props {
 		base := props[i]
-		if base.Uid != "" {
-			if existingProp, ok := c.cache[base.Uid]; ok {
-				existingProp.Merge(base)
-			} else {
-				c.cache[base.Uid] = base
-			}
+		if base.Uid != "" && base.Mrn == "" {
+			// keep track of properties that were specified by uid only.
+			// we will merge them in later if we find a matching mrn
+			c.uidOnlyProps[base.Uid] = base
+			continue
 		}
+		// All properties at this point should have a mrn
 		if base.Mrn != "" {
 			if existingProp, ok := c.cache[base.Mrn]; ok {
 				existingProp.Merge(base)
@@ -140,20 +143,23 @@ func (c PropsCache) Add(props ...*Property) {
 // try to Get the mrn, will also return uid-based
 // properties if they exist first
 func (c PropsCache) Get(ctx context.Context, propMrn string) (*Property, string, error) {
-	name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
-	if err != nil {
-		return nil, "", errors.New("failed to get property name")
-	}
-
-	if res, ok := c.cache[name]; ok {
-		return res, name, nil
-	}
-
 	if res, ok := c.cache[propMrn]; ok {
-		return res, name, nil
+		name, err := mrn.GetResource(propMrn, MRN_RESOURCE_QUERY)
+		if err != nil {
+			return nil, "", errors.New("failed to get property name")
+		}
+		if uidProp, ok := c.uidOnlyProps[name]; ok {
+			// We have a property that was specified by uid only. We need to merge it in
+			// to get the full property.
+			p := proto.Clone(uidProp).(*Property)
+			p.Merge(res)
+			return p, name, nil
+		} else {
+			// Everything was specified by mrn
+			return res, name, nil
+		}
 	}
 
 	// We currently don't grab properties from upstream. This requires further investigation.
-
 	return nil, "", errors.New("property " + propMrn + " not found")
 }
