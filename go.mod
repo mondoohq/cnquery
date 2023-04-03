@@ -139,7 +139,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/masterzen/winrm v0.0.0-20220513085036-69f69afcd9e9
 	github.com/mattn/go-isatty v0.0.17
-	github.com/microsoft/kiota-abstractions-go v0.17.2
+	github.com/microsoft/kiota-abstractions-go v0.19.0
 	github.com/microsoft/kiota-authentication-azure-go v0.6.0
 	github.com/microsoftgraph/msgraph-sdk-go v0.56.0
 	github.com/miekg/dns v1.1.50
@@ -258,7 +258,7 @@ require (
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/charmbracelet/harmonica v0.2.0 // indirect
 	github.com/chavacava/garif v0.0.0-20230227094218-b8c73b2037b8 // indirect
-	github.com/cjlapao/common-go v0.0.38 // indirect
+	github.com/cjlapao/common-go v0.0.39 // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
