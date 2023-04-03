@@ -12,10 +12,12 @@ okta {
   applications() []okta.application
   // Okta trusted origins
   trustedOrigins() []okta.trustedOrigin
+  // Okta networks
+  networks() []okta.network
 }
 
 // Okta Organization
-okta.organization {
+okta.organization @defaults("companyName") {
   // ID of organization
   id string
   // Name of the company
@@ -50,6 +52,16 @@ okta.organization {
   lastUpdated time
   // Expiration of organization
   expiresAt time
+  // Indicates whether the org's users receive Okta Communication emails
+  optOutCommunicationEmails() bool
+  // Billing contact of organization
+  billingContact() okta.user
+  // Technical contact of organization
+  technicalContact() okta.user
+  // Security notification emails
+  securityNotificationEmails() dict
+  // Threat Insight Settings
+  threatInsightSettings() okta.threatsConfiguration
 }
 
 // Okta Policy
@@ -71,7 +83,7 @@ okta.policies {
 }
 
 // Okta User
-private okta.user {
+private okta.user @defaults("id profile['email']" ){
   // Unique key for user
   id string
   // The user's type identifier
@@ -103,7 +115,7 @@ private okta.user {
 }
 
 // Okta Role
-private okta.role {
+private okta.role @defaults("id status") {
   // The identifier of the role
   id string
   // The assignment type of the role
@@ -121,7 +133,7 @@ private okta.role {
 }
 
 // Okta Group
-private okta.group {
+private okta.group @defaults("id") {
   // Unique key for Group
   id string
   // Determines how a Group's Profile and memberships are managed
@@ -137,7 +149,7 @@ private okta.group {
 }
 
 // Okta Application
-private okta.application {
+private okta.application @defaults("name") {
   // Unique key for app
   id string
   // Unique key for app definition
@@ -167,7 +179,7 @@ private okta.application {
 }
 
 // Okta Domain
-private okta.domain {
+private okta.domain @defaults("domain") {
   // Domain ID
   id string
   // Domain name
@@ -181,7 +193,7 @@ private okta.domain {
 }
 
 // Okta Policy
-private okta.policy {
+private okta.policy @defaults("name") {
   // Identifier of the Policy
   id string
   // Name of the Policy
@@ -209,7 +221,7 @@ private okta.policy {
 }
 
 // Okta Policy Rule
-private okta.policyRule {
+private okta.policyRule @defaults("name") {
   // Identifier of the Rule
   id string
   // Name of the Rule
@@ -233,7 +245,7 @@ private okta.policyRule {
 }
 
 // Okta Trusted Origin
-private okta.trustedOrigin {
+private okta.trustedOrigin @defaults("name") {
   // Unique identifier for the Trusted Origin
   id string
   // Name for the Trusted Origin
@@ -252,4 +264,46 @@ private okta.trustedOrigin {
   scopes []dict
   // Status of the Trusted Origin
   status string
+}
+
+// Okta Network Zone
+private okta.network @defaults("name type") {
+  // Unique identifier for the Network Zone
+  id string
+  // Name for the Network Zone
+  name string
+  // Type of the Network Zone
+  type string
+  // Timestamp when the Network Zone was created
+  created time
+  // Timestamp when the Network Zone was last updated
+  lastUpdated time
+  // Status of the Network Zone
+  status string
+  // Indicates whether the Network Zone is system-defined
+  system bool
+  // ISP ASNs for the Network Zone
+  asns []string
+  // Usage of Zone: POLICY or BLOCKLIST
+  usage string
+  // IP type
+  proxyType string
+  // IP addresses that are allowed to forward a request from gateway
+  proxies []dict
+  // Locations for the Network Zone
+  locations []dict
+  // IP addresses of this Zone
+  gateways []dict
+}
+
+// Okta ThreatInsight Settings
+private okta.threatsConfiguration @defaults("action") {
+  // Action
+  action string
+  // Exempt Zones
+  excludeZones []okta.network
+  // Timestamp when the Network Zone was created
+  created time
+  // Timestamp when the Network Zone was last updated
+  lastUpdated time
 }

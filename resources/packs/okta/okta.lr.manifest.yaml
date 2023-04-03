@@ -4,6 +4,7 @@ resources:
       applications: {}
       domains: {}
       groups: {}
+      networks: {}
       trustedOrigins: {}
       users: {}
     min_mondoo_version: latest
@@ -43,10 +44,28 @@ resources:
       type: {}
     is_private: true
     min_mondoo_version: latest
+  okta.network:
+    fields:
+      asns: {}
+      created: {}
+      gateways: {}
+      id: {}
+      lastUpdated: {}
+      locations: {}
+      name: {}
+      proxies: {}
+      proxyType: {}
+      status: {}
+      system: {}
+      type: {}
+      usage: {}
+    is_private: true
+    min_mondoo_version: latest
   okta.organization:
     fields:
       address1: {}
       address2: {}
+      billingContact: {}
       city: {}
       companyName: {}
       country: {}
@@ -55,12 +74,16 @@ resources:
       expiresAt: {}
       id: {}
       lastUpdated: {}
+      optOutCommunicationEmails: {}
       phoneNumber: {}
       postalCode: {}
+      securityNotificationEmails: {}
       state: {}
       status: {}
       subdomain: {}
       supportPhoneNumber: {}
+      technicalContact: {}
+      threatInsightSettings: {}
       website: {}
     min_mondoo_version: latest
   okta.policies:
@@ -112,6 +135,15 @@ resources:
       lastUpdated: {}
       status: {}
       type: {}
+    is_private: true
+    min_mondoo_version: latest
+  okta.threatsConfiguration:
+    fields:
+      action: {}
+      created: {}
+      excludeZones: {}
+      id: {}
+      lastUpdated: {}
     is_private: true
     min_mondoo_version: latest
   okta.trustedOrigin:
