@@ -9,8 +9,8 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
 )
 
-// SkdExtension handles cases where Okta's SDK doesn't support a particular API
-type SkdExtension struct {
+// ApiExtension handles cases where Okta's SDK doesn't support a particular API
+type ApiExtension struct {
 	RequestExecutor *okta.RequestExecutor
 }
 
@@ -32,11 +32,7 @@ func (a *PolicyWrapper) MarshalJSON() ([]byte, error) {
 
 	var settingsJSON []byte
 	if a.Settings != nil {
-		type Alias PolicySettings
-		type local struct {
-			*Alias
-		}
-		result := local{Alias: (*Alias)(a.Settings)}
+		result := *a.Settings
 		settingsJSON, err = json.Marshal(&result)
 		if err != nil {
 			return nil, err
@@ -132,7 +128,7 @@ type Enroll struct {
 }
 
 // Retrieve all policies with the specified type
-func (m *SkdExtension) ListPolicies(ctx context.Context, qp *query.Params) ([]*PolicyWrapper, *okta.Response, error) {
+func (m *ApiExtension) ListPolicies(ctx context.Context, qp *query.Params) ([]*PolicyWrapper, *okta.Response, error) {
 	url := fmt.Sprintf("/api/v1/policies")
 	if qp != nil {
 		url = url + qp.String()

@@ -47,4 +47,9 @@ func TestPoliciesParsing(t *testing.T) {
 	err := decoder.Decode(&policies)
 	require.NoError(t, err)
 	assert.NotNil(t, policies[0].Settings.Password)
+
+	jData, err := json.Marshal(policies)
+	require.NoError(t, err)
+	assert.NotNil(t, jData)
+	assert.Contains(t, string(jData), "\"autoUnlockMinutes\":30,")
 }

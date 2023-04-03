@@ -41,7 +41,7 @@ func listPolicies(runtime *resources.Runtime, policyType PolicyType) ([]interfac
 	ctx := context.Background()
 	client := op.Client()
 
-	apiSupplement := &sdk.SkdExtension{
+	apiSupplement := &sdk.ApiExtension{
 		RequestExecutor: client.CloneRequestExecutor(),
 	}
 
