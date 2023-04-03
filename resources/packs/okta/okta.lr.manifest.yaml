@@ -83,6 +83,7 @@ resources:
       name: {}
       priority: {}
       rules: {}
+      settings: {}
       status: {}
       system: {}
       type: {}

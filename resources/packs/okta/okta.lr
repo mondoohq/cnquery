@@ -198,6 +198,8 @@ private okta.policy {
   type string
   // Conditions for Policy
   conditions dict
+  // Settings for the Policy
+  settings dict
   // Timestamp when the Policy was created
   created time
   // Timestamp when the Policy was last modified

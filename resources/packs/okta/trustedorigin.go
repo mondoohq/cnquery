@@ -3,11 +3,10 @@ package okta
 import (
 	"context"
 
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
-
 	"github.com/okta/okta-sdk-golang/v2/okta"
 	"github.com/okta/okta-sdk-golang/v2/okta/query"
+	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
 func (o *mqlOkta) GetTrustedOrigins() ([]interface{}, error) {
