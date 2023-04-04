@@ -6,7 +6,7 @@ replace github.com/slack-go/slack v0.12.1 => github.com/imilchev/slack v0.0.0-20
 
 require (
 	cloud.google.com/go/accessapproval v1.6.0
-	cloud.google.com/go/bigquery v1.49.0
+	cloud.google.com/go/bigquery v1.48.0
 	cloud.google.com/go/compute v1.19.0
 	cloud.google.com/go/container v1.14.0
 	cloud.google.com/go/functions v1.12.0
@@ -224,7 +224,7 @@ require (
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
-	github.com/apache/arrow/go/v11 v11.0.0 // indirect
+	github.com/apache/arrow/go/v10 v10.0.1 // indirect
 	github.com/apache/thrift v0.16.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195 // indirect
