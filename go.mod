@@ -6,7 +6,7 @@ replace github.com/slack-go/slack v0.12.1 => github.com/imilchev/slack v0.0.0-20
 
 require (
 	cloud.google.com/go/accessapproval v1.6.0
-	cloud.google.com/go/bigquery v1.49.0
+	cloud.google.com/go/bigquery v1.48.0
 	cloud.google.com/go/compute v1.19.0
 	cloud.google.com/go/container v1.14.0
 	cloud.google.com/go/functions v1.12.0
