@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-windows-incident-response
-    name: Windows Incident Response by Mondoo
+    name: Windows Incident Response Pack by Mondoo
     version: 1.0.0
     tags:
       mondoo.com/platform: windows,host

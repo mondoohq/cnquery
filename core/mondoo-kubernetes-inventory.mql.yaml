@@ -39,7 +39,7 @@ packs:
         query: |
           k8s.clusterroles { * }      
   - uid: mondoo-kubernetes-pods-inventory
-    name: Mondoo Kubernetes Pods Inventory
+    name: Kubernetes Pods Inventory Pack by Mondoo
     version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
@@ -56,7 +56,7 @@ packs:
         query: |
           k8s.pod.containers { * }
   - uid: mondoo-kubernetes-deployments-inventory
-    name: Mondoo Kubernetes Deployments Inventory
+    name: Kubernetes Deployments Inventory Pack by Mondoo
     version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
@@ -73,7 +73,7 @@ packs:
         query: |
           k8s.deployment.containers { * }
   - uid: mondoo-kubernetes-cronjobs-inventory
-    name: Mondoo Kubernetes CronJobs Inventory
+    name: Kubernetes CronJobs Inventory Pack by Mondoo
     version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
@@ -90,7 +90,7 @@ packs:
         query: |
           k8s.cronjob.containers { * }
   - uid: mondoo-kubernetes-jobs-inventory
-    name: Mondoo Kubernetes Jobs Inventory
+    name: Kubernetes Jobs Inventory Pack by Mondoo
     version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
@@ -107,7 +107,7 @@ packs:
         query: |
           k8s.job.containers { * }
   - uid: mondoo-kubernetes-daemonsets-inventory
-    name: Mondoo Kubernetes DaemonSets Inventory
+    name: Kubernetes DaemonSets Inventory Pack by Mondoo
     version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
@@ -124,7 +124,7 @@ packs:
         query: |
           k8s.daemonset.containers { * }
   - uid: mondoo-kubernetes-statefulsets-inventory
-    name: Mondoo Kubernetes StatefulSets Inventory
+    name: Kubernetes StatefulSets Inventory Pack by Mondoo
     version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
@@ -141,7 +141,7 @@ packs:
         query: |
           k8s.statefulset.containers { * }
   - uid: mondoo-kubernetes-replicasets-inventory
-    name: Mondoo Kubernetes ReplicaSets Inventory
+    name: Kubernetes ReplicaSets Inventory Pack by Mondoo
     version: 1.1.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released

@@ -30,7 +30,7 @@ packs:
             roleRef
           }
   - uid: mondoo-kubernetes-pods-incident-response
-    name: Mondoo Kubernetes Pods Incident Response
+    name: Kubernetes Pods Incident Response Pack by Mondoo
     version: 1.0.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
@@ -100,7 +100,7 @@ packs:
             podSpec["nodeName"]
           }
   - uid: mondoo-kubernetes-cronjobs-incident-response
-    name: Mondoo Kubernetes CronJobs Incident Response
+    name: Kubernetes CronJobs Incident Response Pack by Mondoo
     version: 1.0.0
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
