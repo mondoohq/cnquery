@@ -1,7 +1,10 @@
 packs:
   - uid: mondoo-windows-asset-inventory
-    name: Windows Asset Inventory Pack by Mondoo
+    name: Windows Asset Inventory Pack
     version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: windows,host
       mondoo.com/category: best-practices

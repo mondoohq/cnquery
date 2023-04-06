@@ -1,7 +1,10 @@
 packs:
   - uid: mondoo-linux-incident-response
-    name: Linux Incident Response Pack by Mondoo
+    name: Linux Incident Response Pack
     version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: linux,host
       mondoo.com/category: security

@@ -1,7 +1,10 @@
 packs:
   - uid: mondoo-incident-response-github-org
-    name: GitHub Organization Incident Response Pack by Mondoo
+    name: GitHub Organization Incident Response Pack
     version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: github,saas
       mondoo.com/category: security

@@ -1,7 +1,10 @@
 packs:
   - uid: mondoo-kubernetes-cluster-inventory
-    name: Kubernetes Cluster Inventory Pack by Mondoo
+    name: Kubernetes Cluster Inventory Pack
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -39,8 +42,11 @@ packs:
         query: |
           k8s.clusterroles { * }      
   - uid: mondoo-kubernetes-pods-inventory
-    name: Kubernetes Pods Inventory Pack by Mondoo
+    name: Kubernetes Pods Inventory Pack
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -58,6 +64,9 @@ packs:
   - uid: mondoo-kubernetes-deployments-inventory
     name: Kubernetes Deployments Inventory Pack by Mondoo
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -73,8 +82,11 @@ packs:
         query: |
           k8s.deployment.containers { * }
   - uid: mondoo-kubernetes-cronjobs-inventory
-    name: Kubernetes CronJobs Inventory Pack by Mondoo
+    name: Kubernetes CronJobs Inventory Pack
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -92,6 +104,9 @@ packs:
   - uid: mondoo-kubernetes-jobs-inventory
     name: Kubernetes Jobs Inventory Pack by Mondoo
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -107,8 +122,11 @@ packs:
         query: |
           k8s.job.containers { * }
   - uid: mondoo-kubernetes-daemonsets-inventory
-    name: Kubernetes DaemonSets Inventory Pack by Mondoo
+    name: Kubernetes DaemonSets Inventory Pack
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -126,6 +144,9 @@ packs:
   - uid: mondoo-kubernetes-statefulsets-inventory
     name: Kubernetes StatefulSets Inventory Pack by Mondoo
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices
@@ -141,8 +162,11 @@ packs:
         query: |
           k8s.statefulset.containers { * }
   - uid: mondoo-kubernetes-replicasets-inventory
-    name: Kubernetes ReplicaSets Inventory Pack by Mondoo
+    name: Kubernetes ReplicaSets Inventory Pack
     version: 1.1.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: best-practices

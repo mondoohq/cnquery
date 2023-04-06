@@ -1,7 +1,10 @@
 packs:
   - uid: mondoo-asset-inventory-gcp
-    name: GCP Asset Inventory Pack by Mondoo
+    name: GCP Asset Inventory Pack
     version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: gcp,gcp-project,cloud
       mondoo.com/category: best-practices

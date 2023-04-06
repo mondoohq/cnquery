@@ -1,7 +1,10 @@
 packs:
   - uid: mondoo-kubernetes-cluster-incident-response
-    name: Kubernetes Cluster Incident Response Pack by Mondoo
+    name: Kubernetes Cluster Incident Response Pack
     version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: security
@@ -32,6 +35,9 @@ packs:
   - uid: mondoo-kubernetes-pods-incident-response
     name: Kubernetes Pods Incident Response Pack by Mondoo
     version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: security
@@ -100,8 +106,11 @@ packs:
             podSpec["nodeName"]
           }
   - uid: mondoo-kubernetes-cronjobs-incident-response
-    name: Kubernetes CronJobs Incident Response Pack by Mondoo
+    name: Kubernetes CronJobs Incident Response Pack
     version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: security

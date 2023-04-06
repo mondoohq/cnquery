@@ -1,6 +1,6 @@
 packs:
   - uid: mondoo-vmware-incident-response
-    name: VMware vCenter Incident Response Pack by Mondoo
+    name: VMware vCenter Incident Response Pack
     version: "1.0.0"
     authors:
       - name: Mondoo, Inc
