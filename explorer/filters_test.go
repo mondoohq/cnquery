@@ -1,6 +1,7 @@
 package explorer
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,4 +41,18 @@ func TestSummarize(t *testing.T) {
 
 		assert.Equal(t, "asset.name, filter 2", f.Summarize())
 	})
+}
+
+func TestBundleAssetFilter(t *testing.T) {
+	// load the raw bundle
+	bundle, err := BundleFromPaths("../examples/os.mql.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(bundle.Packs))
+	assert.Equal(t, "asset.family.contains(\"unix\")", bundle.Packs[0].Filters.Items["0"].Mql)
+	assert.Equal(t, (*Filters)(nil), bundle.Packs[0].ComputedFilters)
+
+	// check that the computed asset filters are set
+	pbm, err := bundle.Compile(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, "asset.family.contains(\"unix\")", pbm.Packs["//local.cnquery.io/run/local-execution/querypacks/linux-mixed-queries"].ComputedFilters.Summarize())
 }

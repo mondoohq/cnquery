@@ -251,6 +251,7 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 		if err = pack.Filters.Compile(ownerMrn); err != nil {
 			return nil, errors.Wrap(err, "failed to compile querypack filters")
 		}
+		pack.ComputedFilters.AddFilters(pack.Filters)
 
 		if err := cache.compileQueries(pack.Queries, pack); err != nil {
 			return nil, err
