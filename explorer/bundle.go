@@ -109,9 +109,6 @@ func aggregateFilesToBundle(paths []string) (*Bundle, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "could not load file: "+path)
 		}
-
-		bundle.EnsureUIDs()
-
 		combineBundles(mergedBundle, bundle)
 	}
 
@@ -143,6 +140,7 @@ func bundleFromSingleFile(path string) (*Bundle, error) {
 func BundleFromYAML(data []byte) (*Bundle, error) {
 	var res Bundle
 	err := yaml.Unmarshal(data, &res)
+	res.EnsureUIDs()
 	return &res, err
 }
 
