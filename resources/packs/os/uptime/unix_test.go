@@ -147,6 +147,18 @@ func TestMacOSUptime(t *testing.T) {
 		LoadFifteenMinutes: float64(3.72),
 	}, duration)
 	assert.Equal(t, "38m0s", time.Duration(duration.Duration).String())
+
+	data = "13:16  up 8 days, 13 mins, 6 users, load averages: 2.56 2.68 2.91"
+	duration, err = uptime.ParseUnixUptime(data)
+	assert.Nil(t, err)
+	assert.Equal(t, &uptime.UnixUptimeResult{
+		Duration:           691980000000000,
+		Users:              6,
+		LoadOneMinute:      float64(2.56),
+		LoadFiveMinutes:    float64(2.68),
+		LoadFifteenMinutes: float64(2.91),
+	}, duration)
+	assert.Equal(t, "192h13m0s", time.Duration(duration.Duration).String())
 }
 
 func TestFreebsdUptime(t *testing.T) {
