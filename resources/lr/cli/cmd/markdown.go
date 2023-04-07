@@ -22,6 +22,7 @@ import (
 
 func init() {
 	markdownCmd.Flags().String("pack-name", "", "name of the resource pack")
+	markdownCmd.Flags().String("description", "", "description of the resource pack")
 	markdownCmd.Flags().String("docs-file", "", "optional docs yaml to enrich the resource information")
 	markdownCmd.Flags().StringP("output", "o", ".build", "optional docs yaml to enrich the resource information")
 	rootCmd.AddCommand(markdownCmd)
@@ -32,7 +33,7 @@ title: {{ .PackName }} Resource Pack - MQL Resources
 id: {{ .ID }}.pack
 sidebar_label: {{ .PackName }} Resource Pack
 displayed_sidebar: MQL
-description: Learn about all of the available MQL resources and how you can use them to query your infrastructure and to create policies to keep your business secure and compliant.
+description: {{ .Description }}
 ---
 `
 
@@ -105,7 +106,12 @@ var markdownCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not create directory: " + outputDir)
 		}
-		err = os.WriteFile(filepath.Join(outputDir, "README.md"), []byte(r.renderToc(packName, res.Resources, schema)), 0o600)
+		description, _ := cmd.Flags().GetString("description")
+		err = os.MkdirAll(outputDir, 0o755)
+		if err != nil {
+			log.Fatal().Err(err).Msg("could not create directory: " + outputDir)
+		}
+		err = os.WriteFile(filepath.Join(outputDir, "README.md"), []byte(r.renderToc(packName, description, res.Resources, schema)), 0o600)
 		if err != nil {
 			log.Fatal().Err(err).Msg("could not write file")
 		}
@@ -141,7 +147,7 @@ func toID(s string) string {
 	return strings.Trim(s, ".")
 }
 
-func (l *lrSchemaRenderer) renderToc(packName string, resources []*lr.Resource, schema *resources.Schema) string {
+func (l *lrSchemaRenderer) renderToc(packName string, description string, resources []*lr.Resource, schema *resources.Schema) string {
 	builder := &strings.Builder{}
 
 	// render front matter
@@ -149,11 +155,13 @@ func (l *lrSchemaRenderer) renderToc(packName string, resources []*lr.Resource, 
 	var buf bytes.Buffer
 	writer := bufio.NewWriter(&buf)
 	err := tpl.Execute(writer, struct {
-		PackName string
-		ID       string
+		PackName    string
+		Description string
+		ID          string
 	}{
-		PackName: packName,
-		ID:       toID(packName),
+		PackName:    packName,
+		Description: description,
+		ID:          toID(packName),
 	})
 	if err != nil {
 		panic(err)
@@ -279,8 +287,10 @@ func (l *lrSchemaRenderer) renderResourcePage(resource *lr.Resource, schema *res
 
 		for k := range basicFields {
 			field := basicFields[k]
-			rows = append(rows, []string{field.ID, renderLrType(field.Type, l.resourceHrefMap),
-				strings.Join(sanitizeComments(comments[k]), ", ")})
+			rows = append(rows, []string{
+				field.ID, renderLrType(field.Type, l.resourceHrefMap),
+				strings.Join(sanitizeComments(comments[k]), ", "),
+			})
 		}
 
 		table := tablewriter.NewWriter(builder)
