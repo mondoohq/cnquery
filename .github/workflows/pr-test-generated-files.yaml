@@ -17,12 +17,15 @@ jobs:
   generated-files:
     runs-on: self-hosted
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Install Go
         uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Checkout code
-        uses: actions/checkout@v3
+          cache: false
+
       # We do not permit sudo on self-hosted runners
       - name: "Ensure GCC is installed"
         run: |
@@ -31,8 +34,9 @@ jobs:
           else 
             echo "Install GCC on the runner."; 
           fi
+
+      # Note we do not use apt install -y protobuf-compiler` since it is too old
       - name: Check generated files
-        # Note we do not use apt install -y protobuf-compiler` since it is too old
         run: |
           PB_REL="https://github.com/protocolbuffers/protobuf/releases"
           curl -LO $PB_REL/download/v${PROTO_VERSION}/protoc-${PROTO_VERSION}-linux-x86_64.zip
