@@ -12,7 +12,7 @@ packs:
       - asset.family.contains("linux")
     queries:
       - uid: mondoo-openssl-platform
-        title: Retrieve information about the Platform
+        title: Retrieve platform details
         query: |
           asset {
             platform
@@ -20,10 +20,10 @@ packs:
             arch
           }
       - uid: mondoo-openssl-installed-version
-        title: Retrieve list about installed ssl libraries
+        title: Retrieve installed ssl libraries
         query: packages.where(name == /ssl/)
       - uid: mondoo-openssl-listening-ports
-        title: Retrieve list of listening ports from running systems
+        title: Retrieve listening ports from running systems
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             ports.listening { 

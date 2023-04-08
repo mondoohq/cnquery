@@ -12,7 +12,7 @@ packs:
       desc: |
         ### Overview
 
-        The GitHub Organization Inventory Pack by Mondoo query pack gathers configuration data about GitHub organization.
+        The GitHub Organization Inventory Pack by Mondoo query pack retrieves configuration data about GitHub organizations.
 
         ### Prerequisites
 
@@ -81,7 +81,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo GitHub User Inventory query pack gathers configuration data about GitHub user.
+        The Mondoo GitHub User Inventory query pack retrieves configuration data about GitHub users.
 
         ### Prerequisites
 
@@ -150,7 +150,7 @@ packs:
       desc: |
         ### Overview
 
-        The Mondoo GitHub Repository Inventory query pack gathers configuration data about GitHub repository.
+        The Mondoo GitHub Repository Inventory query pack retrieves configuration data about GitHub repositories.
 
         ### Prerequisites
 

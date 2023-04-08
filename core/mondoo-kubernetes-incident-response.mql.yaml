@@ -12,11 +12,11 @@ packs:
       - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
     queries:
       - uid: k8s-cluster-version
-        title: Gather Kubernetes Cluster Version
+        title: Retrieve Kubernetes Cluster Version
         query: |
           k8s.serverVersion
       - uid: role-bindings-with-cluster-admin-permissions
-        title: Gather Role Bindings with cluster-admin Permissions
+        title: Retrieve role bindings with cluster-admin permissions
         query: |
           k8s.rolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
             name
@@ -25,7 +25,7 @@ packs:
             roleRef
           }
       - uid: clusterrole-bindings-with-cluster-admin-permissions
-        title: Gather ClusterRole Bindings with cluster-admin Permissions
+        title: Retrieve ClusterRoleBindings with cluster-admin permissions
         query: |
           k8s.clusterrolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
             name
@@ -45,7 +45,7 @@ packs:
       - asset.platform == "k8s-pod"
     queries:
       - uid: k8s-pod-security-context
-        title: Gather Pods Security Context
+        title: Retrieve Pods' Security Context
         query: |
           k8s.pod {
             ephemeralContainers {
@@ -59,7 +59,7 @@ packs:
             }
           }
       - uid: k8s-pod-container
-        title: Gather Container Image Information
+        title: Retrieve container image information
         tags:
           mondoo.com/platform: kubernetes
           mondoo.com/category: security
@@ -118,7 +118,7 @@ packs:
       - asset.platform == "k8s-cronjob"
     queries:
       - uid: k8s-cronjobs
-        title: Gather CronJobs
+        title: Retrieve CronJobs
         query: |
           k8s.cronjob { 
             name

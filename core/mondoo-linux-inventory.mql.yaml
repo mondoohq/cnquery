@@ -10,10 +10,10 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Linux Inventory Pack by Mondoo is designed to gather data about Linux hosts for asset inventory. 
+        The Linux Inventory Pack by Mondoo is designed to retrieve data about Linux hosts for asset inventory. 
 
         ## Local scan
-        To run this pack locally on a linux host:
+        To run this pack locally on a Linux host:
 
         ```bash
         cnquery scan local -f mondoo-linux-inventory.mql.yaml
@@ -29,51 +29,51 @@ packs:
         ## Join the community!
         Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
         
-        If you have any suggestions on how to improve this query pack, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
     filters:
       - asset.family.contains("linux")
     queries:
       - uid: mondoo-linux-asset-info
-        title: Gather asset information
+        title: Retrieve asset information
         query: asset { kind title platform name arch runtime }
       - uid: mondoo-linux-hostname
-        title: Gather the hostname
+        title: Retrieve the hostname
         query: os.hostname
       - uid: mondoo-linux-platform
-        title: Gather the platform
+        title: Retrieve the platform
         query: platform.name
       - uid: mondoo-linux-users 
-        title: Gather regular users with shell access 
+        title: Retrieve regular users with shell access 
         query: users.where( shell != "/sbin/nologin" && uid >= 1000 ) { * }
       - uid: mondoo-linux-groups-wheel
-        title: Gather members of the wheel group
+        title: Retrieve members of the wheel group
         query: groups.where( name == "wheel") { members }
       - uid: mondoo-linux-installed-kernel
-        title: Retrieve information about installed Linux kernels
+        title: Retrieve installed Linux kernels
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.installed
           }
       - uid: mondoo-linux-kernel-info
-        title: Retrieve information about the running Linux kernel
+        title: Retrieve the running Linux kernel
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.info
           }
       - uid: mondoo-linux-kernel-modules
-        title: Retrieve information about Linux kernel modules
+        title: Retrieve Linux kernel modules
         query: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
-        title: Retrieve information about running processes
+        title: Retrieve running processes
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             processes { pid  command }
           }
       - uid: mondoo-linux-mounts
-        title: Retrieves list of mounted devices
+        title: Retrieve  mounted devices
         query: mount.list { * } 
       - uid: mondoo-linux-listening-ports
-        title: Retrieves list of all listening ports
+        title: Retrieve all listening ports
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             ports.listening { * }
@@ -85,10 +85,10 @@ packs:
             os.uptime
           }
       - uid: mondoo-linux-installed-packages
-        title: Retrieve list about installed packages
+        title: Retrieve installed packages
         query: packages { * }
       - uid: mondoo-linux-running-services
-        title: Retrieve list of running services
+        title: Retrieve running services
         query: services.where( running == true ) { * }
       - uid: mondoo-linux-interface-configuration
         title: Retrieve interface configuration of the system

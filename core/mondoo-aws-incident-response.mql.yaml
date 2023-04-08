@@ -12,7 +12,7 @@ packs:
       desc: |
         ### Overview
 
-        The AWS Incident Response Pack by Mondoo query pack gathers data about AWS services and resources for investigation during a security incident.
+        The AWS Incident Response Pack by Mondoo query pack retrieves data about AWS services and resources for investigation during a security incident.
 
         ### Run query pack
 
@@ -25,20 +25,20 @@ packs:
       - asset.platform == "aws"
     queries:
       - uid: mondoo-incident-response-aws-account-id
-        title: Gather AWS account ID
+        title: Retrieve AWS account ID
         query: |
           aws.account.id
       - uid: mondoo-incident-response-aws-enabled-regions
-        title: Gather all regions enabled in the AWS account 
+        title: Retrieve all regions enabled in the AWS account 
         docs: 
           desc: |
-            This query gathers a list of all AWS regions enabled in the account
+            This query retrieves all AWS regions enabled in the account
         query: aws { regions }
       - uid: mondoo-incident-response-aws-user-info
-        title: Gather data for users with console access
+        title: Retrieve data for users with console access
         docs:
           desc: |
-            This query gathers data for users with console access. The following fields are gathered:
+            This query retrieves data for users with console access. The following fields are retrieved:
 
             ```
             properties['user'] 
@@ -55,10 +55,10 @@ packs:
               mfaActive 
             }
       - uid: mondoo-incident-response-aws-iam-users-multiple-keys
-        title: Gather data for IAM users with API access
+        title: Retrieve data for IAM users with API access
         docs:
           desc: |
-            This query gathers all of the IAM users that have API access along with the following fields:
+            This query retrieves all of the IAM users that have API access along with the following fields:
 
             ```
             properties['user']
@@ -85,10 +85,10 @@ packs:
               accessKey2LastRotated
             }
       - uid: mondoo-incident-response-aws-iam-administrator-access
-        title: Gather data on IAM Users, Groups, and Roles where AdministratorAccess policy is attached
+        title: Retrieve data on IAM users, groups, and roles to which the AdministratorAccess policy is attached
         docs:
           desc: |
-            This query gathers all IAM Users, Groups, and Roles that have the `AdministratorAccess` role attached.
+            This query retrieves all IAM users, groups, and roles with the `AdministratorAccess` role attached.
         query: |
           aws.iam.attachedPolicies.
             where( arn == "arn:aws:iam::aws:policy/AdministratorAccess" ) { 
@@ -97,10 +97,10 @@ packs:
               attachedRoles 
             }
       - uid: mondoo-incident-response-aws-iam-full-access
-        title: Gather data on IAM Users, Groups, and Roles where any 'FullAccess' policy is attached
+        title: Retrieve data on IAM users, groups, and roles to which any 'FullAccess' policy is attached
         docs:
           desc: |
-            This query gathers all IAM Users, Groups, and Roles that have any one of the AWS FullAccess roles attached.
+            This query retrieves all IAM users, croups, and roles that have any one of the AWS FullAccess roles attached.
         query: |
           aws.iam.policies.
             where( name == /FullAccess/i && attachmentCount != 0) { 
@@ -113,10 +113,10 @@ packs:
             }
 
       - uid: mondoo-incident-response-aws-ec2-instances-public-ip
-        title: Gather EC2 instances that have a public IP address
+        title: Retrieve EC2 instances that have a public IP address
         docs:
           desc: |
-            This query gathers all EC2 instances that have a publicIp address attached along with the following fields:
+            This query retrieves all EC2 instances that have a public IP address attached along with the following fields:
 
             ```
             arn 
@@ -153,10 +153,10 @@ packs:
               tags
             }
       - uid: mondoo-incident-response-aws-ec2-instances-without-tags
-        title: Gather EC2 instances that do not have tags configured
+        title: Retrieve EC2 instances that do not have tags configured
         docs: 
           desc: |
-            This query gathers all EC2 instances that do not have tags configured, along with the following fields:
+            This query retrieves all EC2 instances that do not have tags configured, along with the following fields:
 
             ```mql
             instanceId 
@@ -177,10 +177,10 @@ packs:
               state
             }
       - uid: mondoo-incident-response-aws-s3-buckets-public
-        title: Gather all S3 buckets that are public
+        title: Retrieve all S3 buckets that are public
         docs:
           desc: |
-            This query gathers all S3 buckets that are configured with public access, and returns the following fields:
+            This query retrieves all S3 buckets that are configured with public access and returns the following fields:
 
             ```mql
             arn
@@ -202,5 +202,3 @@ packs:
               tags
               policy {*}
             }
-
-          

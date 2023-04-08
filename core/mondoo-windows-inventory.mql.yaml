@@ -10,7 +10,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Windows Asset Inventory Pack by Mondoo is designed to gather data about Windows hosts for asset inventory. 
+        The Windows Asset Inventory Pack by Mondoo is designed to retrieve data about Windows hosts for asset inventory. 
 
         ## Local scan
         To run this pack locally on a Windows host:
@@ -29,29 +29,28 @@ packs:
         ## Join the community!
         Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
         
-        If you have any suggestions on how to improve this query pack, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
     filters:
       - asset.platform.contains("windows")
     queries:
       - uid: mondoo-windows-asset-info
-        title: Gather asset information
+        title: Retrieve asset information
         query: asset { kind title platform name arch runtime }
       - uid: mondoo-windows-hostname
-        title: Gather the hostname
+        title: Retrieve the hostname
         query: os.hostname
       - uid: mondoo-windows-users 
-        title: Gather regular users 
+        title: Retrieve regular users 
         query: users { * }
       - uid: mondoo-windows-packages
-        title: Gather Windows packages 
+        title: Retrieve Windows packages 
         query: packages {*}
       - uid: mondoo-windows-running-services
-        title: Gather data on running services
+        title: Retrieve data on running services
         query: services.where( running == true ) { * }
       - uid: mondoo-windows-ports-listening
-        title: Gather data on listening ports 
+        title: Retrieve data on listening ports 
         query: ports.listening
       - uid: mondoo-windows-interface-configuration
         title: Retrieve interface configuration of the system
         query: command('wmic nicconfig get macaddress,ipaddress,IPSubnet').stdout
-      

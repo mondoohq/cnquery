@@ -12,31 +12,31 @@ packs:
       - asset.family.contains("linux")
     queries:
       - uid: mondoo-linux-installed-kernel
-        title: Retrieve information about installed Linux kernels
+        title: Retrieve installed Linux kernels
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.installed
           }
       - uid: mondoo-linux-kernel-info
-        title: Retrieve information about the running Linux kernel
+        title: Retrieve the running Linux kernel
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.info
           }
       - uid: mondoo-linux-kernel-modules
-        title: Retrieve information about Linux kernel modules
+        title: Retrieve Linux kernel modules
         query: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
-        title: Retrieve information about running processes
+        title: Retrieve running processes
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             processes { pid  command }
           }
       - uid: mondoo-linux-mounts
-        title: Retrieves list of mounted devices
+        title: Retrieve mounted devices
         query: mount.list { * } 
       - uid: mondoo-linux-listening-ports
-        title: Retrieves list of all listening ports
+        title: Retrieve all listening ports
         query: |
           if ( mondoo.capabilities.contains('run-command') ) {
             ports.listening { * }
@@ -48,8 +48,8 @@ packs:
             os.uptime
           }
       - uid: mondoo-linux-installed-packages
-        title: Retrieve list about installed packages
+        title: Retrieve installed packages
         query: packages { * }
       - uid: mondoo-linux-running-services
-        title: Retrieve list of running services
+        title: Retrieve running services
         query: services { * }

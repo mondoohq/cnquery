@@ -12,7 +12,7 @@ packs:
       desc: |
         ### Overview
 
-        The Slack Incident Response query pack gathers configuration data about your Slack investigation during a security incident.
+        The Slack Incident Response query pack retrieves configuration data about your Slack configuration during a security incident.
 
         ### Prerequisites
 

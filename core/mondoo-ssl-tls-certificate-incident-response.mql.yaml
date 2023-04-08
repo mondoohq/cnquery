@@ -12,7 +12,7 @@ packs:
       desc: |
         ### Overview
 
-        The SSL/TLS Certificate Incident Response Pack by Mondoo query pack gathers information about SSL/TLS certificates of a domain for investigation during a security incident.
+        The SSL/TLS Certificate Incident Response Pack by Mondoo query pack retrieves information about SSL/TLS certificates of a domain for investigation during a security incident.
 
         ### Prerequisites
 
@@ -33,22 +33,22 @@ packs:
         query: |
           tls.domainName
       - uid: mondoo-ssl-tls-certificate-incident-response-versions
-        title: Retrieve list of supported SSL and TLS versions
+        title: Retrieve supported SSL and TLS versions
         query: |
           tls.versions
       - uid: mondoo-ssl-tls-certificate-incident-response-ciphers
-        title: Retrieve list of supported SSl/TLS ciphers
+        title: Retrieve supported SSl/TLS ciphers
         query: |
           tls.ciphers
       - uid: mondoo-ssl-tls-certificate-incident-response-signing-algo
-        title: Retrieve information about signature algorithm of all certificates in the certificate chain
+        title: Retrieve the signature algorithm of all certificates in the certificate chain
         query: |
           tls.certificates {
             signingAlgorithm
             subject.commonName
           }
       - uid: mondoo-ssl-tls-certificate-incident-response-is-revoked
-        title: Retrieve information about revoked, verified and CA status of all certificates in the certificate chain
+        title: Retrieve revoked, verified, and CA status of all certificates in the certificate chain
         query: |
           tls.certificates {
             subject.commonName

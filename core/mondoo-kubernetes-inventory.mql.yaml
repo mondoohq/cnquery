@@ -10,7 +10,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Kubernetes Cluster Inventory Pack by Mondoo pack is designed to gather data about a Kubernetes Cluster for asset inventory. 
+        The Kubernetes Cluster Inventory Pack by Mondoo pack is designed to retrieve data about a Kubernetes Cluster for asset inventory. 
 
         To run this pack for a Kubernetes Cluster:
 
@@ -21,24 +21,24 @@ packs:
         ## Join the community!
         Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
         
-        If you have any suggestions on how to improve this query pack, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
+        If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
     filters:
       - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
     queries:
       - uid: k8s-cluster-version
-        title: Gather Kubernetes Cluster Version
+        title: Retrieve Kubernetes cluster version
         query: |
           k8s.serverVersion
       - uid: k8s-cluster-namespaces
-        title: Gather Kubernetes Cluster Namespaces
+        title: Retrieve Kubernetes cluster namespaces
         query: |
           k8s.namespaces{ * }
       - uid: k8s-cluster-nodes
-        title: Gather Cluster Nodes
+        title: Retrieve cluster modes
         query: |
           k8s.nodes { * }
       - uid: k8s-cluster-clusterroles
-        title: Gather Cluster RBAC ClusterRoles
+        title: Retrieve cluster RBAC ClusterRoles
         query: |
           k8s.clusterroles { * }      
   - uid: mondoo-kubernetes-pods-inventory
@@ -54,11 +54,11 @@ packs:
       - asset.platform == "k8s-pod"
     queries:
       - uid: k8s-pod
-        title: Gather Pod Information
+        title: Retrieve Pod information
         query: |
           k8s.pod { * }
       - uid: k8s-pod-container
-        title: Gather Container Information
+        title: Retrieve container information
         query: |
           k8s.pod.containers { * }
   - uid: mondoo-kubernetes-deployments-inventory
@@ -74,11 +74,11 @@ packs:
       - asset.platform == "k8s-deployment"
     queries:
       - uid: k8s-deployment
-        title: Gather Deployment Information
+        title: Retrieve deployment information
         query: |
           k8s.deployment { * }
       - uid: k8s-deployment-container
-        title: Gather Container Information
+        title: Retrieve container information
         query: |
           k8s.deployment.containers { * }
   - uid: mondoo-kubernetes-cronjobs-inventory
@@ -94,11 +94,11 @@ packs:
       - asset.platform == "k8s-cronjob"
     queries:
       - uid: k8s-cronjob
-        title: Gather CronJob Information
+        title: Retrieve CronJob information
         query: |
           k8s.cronjob { * }
       - uid: k8s-cronjob-container
-        title: Gather Container Information
+        title: Retrieve container information
         query: |
           k8s.cronjob.containers { * }
   - uid: mondoo-kubernetes-jobs-inventory
@@ -114,11 +114,11 @@ packs:
       - asset.platform == "k8s-job"
     queries:
       - uid: k8s-job
-        title: Gather Job Information
+        title: Retrieve Job information
         query: |
           k8s.job { * }
       - uid: k8s-job-container
-        title: Gather Container Information
+        title: Retrieve container information
         query: |
           k8s.job.containers { * }
   - uid: mondoo-kubernetes-daemonsets-inventory
@@ -134,11 +134,11 @@ packs:
       - asset.platform == "k8s-daemonset"
     queries:
       - uid: k8s-daemonset
-        title: Gather DaemonSet Information
+        title: Retrieve DaemonSet information
         query: |
           k8s.daemonset { * }
       - uid: k8s-daemonset-container
-        title: Gather Container Information
+        title: Retrieve container information
         query: |
           k8s.daemonset.containers { * }
   - uid: mondoo-kubernetes-statefulsets-inventory
@@ -154,11 +154,11 @@ packs:
       - asset.platform == "k8s-statefulset"
     queries:
       - uid: k8s-statefulset
-        title: Gather StatefulSet Information
+        title: Retrieve StatefulSet information
         query: |
           k8s.statefulset { * }
       - uid: k8s-statefulset-container
-        title: Gather Container Information
+        title: Retrieve Container information
         query: |
           k8s.statefulset.containers { * }
   - uid: mondoo-kubernetes-replicasets-inventory
@@ -174,12 +174,10 @@ packs:
       - asset.platform == "k8s-replicaset"
     queries:
       - uid: k8s-replicaset
-        title: Gather ReplicaSet Information
+        title: Retrieve ReplicaSet information
         query: |
           k8s.replicaset { * }
       - uid: k8s-replicaset-container
-        title: Gather Container Information
+        title: Retrieve container information
         query: |
           k8s.replicaset.containers { * }
-
-

@@ -12,7 +12,7 @@ packs:
       desc: |
         ## Overview
 
-        VMware vCenter Incident Response Pack by Mondoo is designed to gather data about vCenter and its ESXi hosts.
+        VMware vCenter Incident Response Pack by Mondoo is designed to retrieve data about vCenter and its ESXi hosts.
 
         ### Run query pack
 
@@ -26,18 +26,18 @@ packs:
 
         Our goal is to build policies that are simple to deploy, accurate, and actionable. 
         
-        If you have any suggestions on how to improve this policy, or if you need support, [join the community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
+        If you have any suggestions for improving this policy, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions.
     filters:
       - asset.platform == "vmware-esxi"
     queries:
       - uid: mondoo-vmware-incident-response-kernel-modules
-        title: Retrieve list of kernel modules
+        title: Retrieve kernel modules
         query: vsphere.host.kernelModules { * }
       - uid: mondoo-vmware-incident-response-installed-packages
-        title: Retrieve list of installed packages
+        title: Retrieve installed packages
         query: vsphere.host.packages { * } 
       - uid: mondoo-vmware-incident-response-running-services
-        title: Retrieve list of running services
+        title: Retrieve running services
         query: vsphere.host.services.where (running) { * }
         refs:
           - title: VMSA-2021-0002

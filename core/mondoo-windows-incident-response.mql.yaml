@@ -12,7 +12,7 @@ packs:
       - asset.platform == "windows"
     queries:
       - uid: mondoo-windows-installed-hotfixes
-        title: Retrieve information about installed hotfixes
+        title: Retrieve installed hotfixes
         query: windows.hotfixes { hotfixId installedOn }
       - uid: mondoo-windows-uptime
         title: Retrieve operating system uptime
@@ -21,5 +21,5 @@ packs:
         title: Retrieve list about installed packages
         query: packages { * }
       - uid: mondoo-windows-running-services
-        title: Retrieve list of running services
+        title: Retrieve running services
         query: services { * }
