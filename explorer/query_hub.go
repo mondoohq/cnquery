@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path"
+
+	"go.mondoo.com/cnquery/mrn"
 
 	"go.mondoo.com/ranger-rpc"
 
@@ -13,9 +16,22 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-const defaultRegistryUrl = "https://registry.api.mondoo.com"
+const (
+	defaultRegistryUrl     = "https://registry.api.mondoo.com"
+	RegistryServiceName    = "registry.mondoo.com"
+	CollectionIDNamespace  = "namespace"
+	CollectionIDQueryPacks = "querypacks"
+)
 
 var tracer = otel.Tracer("go.mondoo.com/cnquery/explorer")
+
+func NewQueryPackMrn(namespace string, uid string) string {
+	m := &mrn.MRN{
+		ServiceName:          RegistryServiceName,
+		RelativeResourceName: path.Join(CollectionIDNamespace, namespace, CollectionIDQueryPacks, uid),
+	}
+	return m.String()
+}
 
 // ValidateBundle and check queries, relationships, MRNs, and versions
 func (s *LocalServices) ValidateBundle(ctx context.Context, bundle *Bundle) (*Empty, error) {
