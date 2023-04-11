@@ -127,6 +127,27 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 	return reports, nil
 }
 
+// preprocessPolicyFilters expends short registry mrns into full mrns
+func preprocessQueryPackFilters(filters []string) []string {
+	res := make([]string, len(filters))
+	for i := range filters {
+		f := filters[i]
+		if strings.HasPrefix(f, "//") {
+			res[i] = f
+			continue
+		}
+
+		// expand short registry mrns
+		m := strings.Split(f, "/")
+		if len(m) == 2 {
+			res[i] = explorer.NewQueryPackMrn(m[0], m[1])
+		} else {
+			res[i] = f
+		}
+	}
+	return res
+}
+
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 	im, err := inventory.New(inventory.WithInventory(job.Inventory))
@@ -246,7 +267,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				Asset:            asset,
 				Bundle:           job.Bundle,
 				Props:            job.Props,
-				QueryPackFilters: job.QueryPackFilters,
+				QueryPackFilters: preprocessQueryPackFilters(job.QueryPackFilters),
 				Ctx:              ctx,
 				CredsResolver:    im.GetCredsResolver(),
 				Reporter:         reporter,
