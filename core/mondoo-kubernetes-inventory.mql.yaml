@@ -62,7 +62,7 @@ packs:
         query: |
           k8s.pod.containers { * }
   - uid: mondoo-kubernetes-deployments-inventory
-    name: Kubernetes Deployments Inventory Pack by Mondoo
+    name: Kubernetes Deployments Inventory Pack
     version: 1.1.0
     authors:
       - name: Mondoo, Inc
@@ -102,7 +102,7 @@ packs:
         query: |
           k8s.cronjob.containers { * }
   - uid: mondoo-kubernetes-jobs-inventory
-    name: Kubernetes Jobs Inventory Pack by Mondoo
+    name: Kubernetes Jobs Inventory Pack
     version: 1.1.0
     authors:
       - name: Mondoo, Inc
@@ -142,7 +142,7 @@ packs:
         query: |
           k8s.daemonset.containers { * }
   - uid: mondoo-kubernetes-statefulsets-inventory
-    name: Kubernetes StatefulSets Inventory Pack by Mondoo
+    name: Kubernetes StatefulSets Inventory Pack
     version: 1.1.0
     authors:
       - name: Mondoo, Inc

@@ -33,7 +33,7 @@ packs:
             roleRef
           }
   - uid: mondoo-kubernetes-pods-incident-response
-    name: Kubernetes Pods Incident Response Pack by Mondoo
+    name: Kubernetes Pods Incident Response Pack
     version: 1.0.0
     authors:
       - name: Mondoo, Inc

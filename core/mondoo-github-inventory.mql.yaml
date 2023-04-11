@@ -138,7 +138,7 @@ packs:
         title: GitHub user updated
         query: github.user.updatedAt
   - uid: mondoo-github-inventory-repo
-    name: GitHub Repository Inventory Pack by Mondoo
+    name: GitHub Repository Inventory Pack
     version: 1.0.0
     authors:
       - name: Mondoo, Inc
