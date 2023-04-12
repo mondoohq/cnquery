@@ -24,9 +24,6 @@ message Function {
   // FIXME: this is a suggestion to allow function calls to be bound
   // to non-local references; Remove this comment or remove the feature
   uint64 binding = 4;
-  // DEPRECATED: remove in v7.0 vv
-  int32 deprecated_v5_binding = 2;
-  // --------------------------------------------------------------------------
 }
 
 message Chunk {

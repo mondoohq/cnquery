@@ -173,21 +173,6 @@ func (mr *MockKubernetesProviderMockRecorder) Deployments(namespace interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deployments", reflect.TypeOf((*MockKubernetesProvider)(nil).Deployments), namespace)
 }
 
-// ID mocks base method.
-func (m *MockKubernetesProvider) ID() (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ID")
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ID indicates an expected call of ID.
-func (mr *MockKubernetesProviderMockRecorder) ID() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ID", reflect.TypeOf((*MockKubernetesProvider)(nil).ID))
-}
-
 // Identifier mocks base method.
 func (m *MockKubernetesProvider) Identifier() (string, error) {
 	m.ctrl.T.Helper()
@@ -349,21 +334,6 @@ func (m *MockKubernetesProvider) PlatformIdDetectors() []providers.PlatformIdDet
 func (mr *MockKubernetesProviderMockRecorder) PlatformIdDetectors() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlatformIdDetectors", reflect.TypeOf((*MockKubernetesProvider)(nil).PlatformIdDetectors))
-}
-
-// PlatformIdentifier mocks base method.
-func (m *MockKubernetesProvider) PlatformIdentifier() (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PlatformIdentifier")
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// PlatformIdentifier indicates an expected call of PlatformIdentifier.
-func (mr *MockKubernetesProviderMockRecorder) PlatformIdentifier() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PlatformIdentifier", reflect.TypeOf((*MockKubernetesProvider)(nil).PlatformIdentifier))
 }
 
 // PlatformInfo mocks base method.

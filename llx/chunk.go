@@ -33,14 +33,6 @@ func (c *Chunk) ChecksumV1(code *CodeV1) string {
 func (f *Function) checksumV1(code *CodeV1) []byte {
 	res := []byte(f.Type)
 
-	if f.DeprecatedV5Binding != 0 {
-		ref := code.Checksums[f.DeprecatedV5Binding]
-		if ref == "" {
-			panic("cannot compute checksum for chunk, it doesn't seem to reference a function on the stack")
-		}
-		res = append(res, ref...)
-	}
-
 	for i := range f.Args {
 		cs := f.Args[i].checksumV1(code)
 		res = append(res, cs...)
