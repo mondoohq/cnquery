@@ -17,7 +17,7 @@ func GetAPIProxy() (*url.URL, error) {
 		return url.Parse(proxy)
 	}
 
-	proxy = viper.GetString("api-proxy")
+	proxy = viper.GetString("api_proxy")
 	if proxy != "" {
 		return url.Parse(proxy)
 	}
