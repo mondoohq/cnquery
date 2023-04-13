@@ -1,0 +1,27 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[files."/etc/redhat-release"]
+content = "EuroLinux release 7.9 (Minsk)"
+
+[files."/etc/os-release"]
+content = """
+NAME="EuroLinux"
+VERSION="7.9 (Minsk)"
+ID="eurolinux"
+ID_LIKE="rhel scientific centos fedora"
+VERSION_ID="7.9"
+PRETTY_NAME="EuroLinux 7.9 (Minsk)"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:eurolinux:eurolinux:7.9:GA"
+HOME_URL="http://www.euro-linux.com/"
+BUG_REPORT_URL="mailto:euro@euro-linux.com"
+
+REDHAT_BUGZILLA_PRODUCT="EuroLinux 7"
+REDHAT_BUGZILLA_PRODUCT_VERSION=7.9
+REDHAT_SUPPORT_PRODUCT="EuroLinux"
+REDHAT_SUPPORT_PRODUCT_VERSION="7.9"
+"""
