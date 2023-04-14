@@ -253,6 +253,45 @@ func TestRockyLinux9OSDetector(t *testing.T) {
 	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
 }
 
+func TestEuroLinux7OSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-eurolinux-7.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "eurolinux", di.Name, "os name should be identified")
+	assert.Equal(t, "EuroLinux 7.9 (Minsk)", di.Title, "os title should be identified")
+	assert.Equal(t, "7.9", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func TestEuroLinux8OSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-eurolinux-8.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "eurolinux", di.Name, "os name should be identified")
+	assert.Equal(t, "EuroLinux 8.7 (Brussels)", di.Title, "os title should be identified")
+	assert.Equal(t, "8.7", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
+func TestEuroLinux9OSDetector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-eurolinux-9.toml")
+	assert.Nil(t, err, "was able to create the transport")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "eurolinux", di.Name, "os name should be identified")
+	assert.Equal(t, "EuroLinux 9.1 (Stockholm)", di.Title, "os title should be identified")
+	assert.Equal(t, "9.1", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"redhat", "linux", "unix", "os"}, di.Family)
+}
+
 func TestUbuntu1204Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1204.toml")
 	assert.Nil(t, err, "was able to create the transport")

@@ -243,7 +243,18 @@ var rhel = &PlatformResolver{
 	},
 }
 
-// The centos platform resolver finds CentOS and CentOS-like platforms alike alma and rocky
+var eurolinux = &PlatformResolver{
+	Name:     "eurolinux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *platform.Platform, p os.OperatingSystemProvider) (bool, error) {
+		if pf.Name == "eurolinux" {
+			return true, nil
+		}
+		return false, nil
+	},
+}
+
+// The centos platform resolver finds CentOS and CentOS-like platforms like alma and rocky
 var centos = &PlatformResolver{
 	Name:     "centos",
 	IsFamily: false,
@@ -787,7 +798,7 @@ var redhatFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
 	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific},
+	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux},
 	Detect: func(r *PlatformResolver, pf *platform.Platform, p os.OperatingSystemProvider) (bool, error) {
 		f, err := p.FS().Open("/etc/redhat-release")
 		if err != nil {
