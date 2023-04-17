@@ -49,7 +49,11 @@ func mergeFlagsIntoConfig(kubeletConfig map[string]interface{}, flags map[string
 		nodeLabels := map[string]string{}
 		for _, label := range strings.Split(flags["node-labels"].(string), ",") {
 			labelSplit := strings.Split(label, "=")
-			nodeLabels[labelSplit[0]] = labelSplit[1]
+			labelVal := ""
+			if len(labelSplit) > 1 {
+				labelVal = labelSplit[1]
+			}
+			nodeLabels[labelSplit[0]] = labelVal
 		}
 		data, err := core.JsonToDict(nodeLabels)
 		if err != nil {
