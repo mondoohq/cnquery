@@ -16,14 +16,16 @@ type Provider struct {
 
 func New(conf *providers.Config) (*Provider, error) {
 	family := []string{"network"}
+	s := providers.ProviderID_HOST
 	if _, ok := conf.Options["tls"]; ok {
 		family = append(family, "tls")
+		s = providers.ProviderID_TLS
 	}
 
 	return &Provider{
 		FQDN:    conf.Host,
 		Port:    conf.Port,
-		Scheme:  conf.Options["scheme"],
+		Scheme:  s,
 		Family:  family,
 		Options: conf.Options,
 	}, nil
