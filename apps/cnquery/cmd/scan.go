@@ -231,6 +231,11 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 
     $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
     $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
+
+This example connects to Microsoft 365 using the PEM formatted certificate:
+
+    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pem} --certificate-secret {certificate secret}
+    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pem} --ask-pass
 `,
 			},
 			"host": {
