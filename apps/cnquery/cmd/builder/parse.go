@@ -566,12 +566,16 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 		// ^^
 
-		if tenantId, err := cmd.Flags().GetString("tenant-id"); err == nil {
-			connection.Options["tenant-id"] = tenantId
+		tenantId, err := cmd.Flags().GetString("tenant-id")
+		if err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --tenant-id value")
 		}
-		if clientID, err := cmd.Flags().GetString("client-id"); err == nil {
-			connection.Options["client-id"] = clientID
+		clientId, err := cmd.Flags().GetString("client-id")
+		if err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --client-id value")
 		}
+		connection.Options["client-id"] = clientId
+		connection.Options["tenant-id"] = tenantId
 
 		if clientSecret, err := cmd.Flags().GetString("client-secret"); err != nil {
 			log.Fatal().Err(err).Msg("cannot parse --client-secret value")
