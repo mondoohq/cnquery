@@ -179,6 +179,11 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver vault.Re
 			// copy over managedBy from root
 			assetObj.ManagedBy = root.GetManagedBy()
 
+			// if the user set the asset name via flag, --asset-name,
+			// that value should override the discovered one
+			if root.Name != "" {
+				assetObj.Name = root.Name
+			}
 			resolved = append(resolved, assetObj)
 		}
 	}
