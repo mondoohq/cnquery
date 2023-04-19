@@ -196,6 +196,7 @@ func (a *mqlAzureSubscriptionComputeServiceVm) GetPublicIpAddresses() ([]interfa
 					"location", core.ToString(ipAddress.Location),
 					"tags", azureTagsToInterface(ipAddress.Tags),
 					"ipAddress", core.ToString(ipAddress.Properties.IPAddress),
+					"type", core.ToString(ipAddress.Type),
 				)
 				if err != nil {
 					return nil, err
