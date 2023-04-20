@@ -229,24 +229,11 @@ func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[st
 		prop.Type = v.Type
 	}
 
-	// If this is a variant, we will build a code id from the variants
+	// If this is a variant, we won't compile anything, since there is no MQL snippets
 	if len(m.Variants) != 0 {
 		if m.Mql != "" {
 			log.Warn().Str("msn", m.Mrn).Msg("a composed query is trying to define an mql snippet, which will be ignored")
 		}
-		c := checksums.New
-		for _, vref := range m.Variants {
-			v := queries[vref.Mrn]
-			if v == nil {
-				return nil, errors.New("cannot find composed query " + vref.Mrn + " in query " + m.Mrn)
-			}
-			_, err := v.refreshChecksumAndType(queries, props)
-			if err != nil {
-				return nil, err
-			}
-			c = c.Add(v.CodeId)
-		}
-		m.CodeId = c.String()
 		return nil, m.RefreshChecksum(context.Background(), QueryMap(queries).GetQuery)
 	}
 
