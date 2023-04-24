@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
+	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
@@ -94,6 +95,11 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 
 	reports, _, err := s.distributeJob(job, dctx, upstreamConfig)
 	if err != nil {
+		if code := status.Code(err); code == codes.Unauthenticated {
+			return nil, errors.Wrapf(err,
+				"The Mondoo Platform credentials provided at %s didn't successfully authenticate with Mondoo Platform. Please re-authenticate with Mondoo Platform. To learn how, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration.",
+				viper.ConfigFileUsed())
+		}
 		return nil, err
 	}
 
