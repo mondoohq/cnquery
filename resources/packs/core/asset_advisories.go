@@ -14,8 +14,8 @@ import (
 func (a *mqlAsset) GetVulnerabilityReport() (interface{}, error) {
 	r := a.MotorRuntime
 	mcc := r.UpstreamConfig
-	if mcc == nil {
-		return nil, errors.New("mondoo upstream configuration is missing")
+	if mcc == nil || mcc.ApiEndpoint == "" {
+		return nil, errors.New(MissingUpstreamErr)
 	}
 
 	// get asset information

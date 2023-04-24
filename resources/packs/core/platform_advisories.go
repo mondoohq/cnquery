@@ -52,8 +52,8 @@ func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugi
 func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 	r := p.MotorRuntime
 	mcc := r.UpstreamConfig
-	if mcc == nil {
-		return nil, errors.New("mondoo upstream configuration is missing")
+	if mcc == nil || mcc.ApiEndpoint == "" {
+		return nil, errors.New(MissingUpstreamErr)
 	}
 
 	// get platform information

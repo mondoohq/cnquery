@@ -78,8 +78,8 @@ func (p *mqlPlatformEol) init(args *resources.Args) (*resources.Args, PlatformEo
 
 	r := p.MotorRuntime
 	mcc := r.UpstreamConfig
-	if mcc == nil {
-		return nil, nil, errors.New("mondoo upstream configuration is missing")
+	if mcc == nil || mcc.ApiEndpoint == "" {
+		return nil, nil, errors.New(MissingUpstreamErr)
 	}
 
 	// get new advisory report
