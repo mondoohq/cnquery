@@ -640,7 +640,7 @@ func Ms365ProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn
 	cmd.Flags().String("client-id", "", "application (client) ID of the service principal")
 	cmd.MarkFlagRequired("client-id")
 	cmd.Flags().String("client-secret", "", "secret for application")
-	cmd.Flags().String("certificate-path", "", "path to certificate that's used for certificate-based authentication in PKCS 12 format (pfx)")
+	cmd.Flags().String("certificate-path", "", "Path (in PKCS #12/PFX or PEM format) to the authentication certificate")
 	cmd.Flags().String("certificate-secret", "", "passphrase for certificate file")
 	cmd.Flags().String("datareport", "", "set the MS365 datareport for the scan")
 	return cmd
