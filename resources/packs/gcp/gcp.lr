@@ -1159,7 +1159,7 @@ private gcp.project.sqlService.instance.settings.passwordValidationPolicy @defau
 }
 
 // GCP BigQuery Resources
-private gcp.project.bigqueryService {
+private gcp.project.bigqueryService @defaults("projectId") {
   // Project ID
   projectId string
   // List of BigQuery datasets
@@ -1199,7 +1199,7 @@ private gcp.project.bigqueryService.dataset @defaults("id name") {
 }
 
 // GCP BigQuery dataset access entry
-private gcp.project.bigqueryService.dataset.accessEntry {
+private gcp.project.bigqueryService.dataset.accessEntry @defaults("role entity entityType") {
   // Internal ID
   id string
   // Dataset ID
