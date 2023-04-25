@@ -22,8 +22,8 @@ func (p *mqlMondooEol) GetDate() (*time.Time, error) {
 
 	r := p.MotorRuntime
 	mcc := r.UpstreamConfig
-	if mcc == nil {
-		return nil, errors.New("mondoo upstream configuration is missing")
+	if mcc == nil || mcc.ApiEndpoint == "" {
+		return nil, errors.New(MissingUpstreamErr)
 	}
 
 	// get new advisory report
