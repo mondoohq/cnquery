@@ -32,10 +32,35 @@ func TestManifestResolver(t *testing.T) {
 	}, nil, nil)
 	require.NoError(t, err)
 	assert.Equal(t, 4, len(assetList))
+	assert.Equal(t, assetList[0].Platform.Name, "k8s-manifest")
 	assert.Equal(t, assetList[1].Platform.Name, "k8s-pod")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 	assert.Equal(t, assetList[3].Platform.Runtime, "docker-registry")
+}
+
+func TestManifestResolver_NoNamespace(t *testing.T) {
+	resolver := &Resolver{}
+	manifestFile := "../../providers/k8s/resources/testdata/deployment-nons.yaml"
+
+	ctx := resources.SetDiscoveryCache(context.Background(), resources.NewDiscoveryCache())
+
+	assetList, err := resolver.Resolve(ctx, &asset.Asset{}, &providers.Config{
+		PlatformId: "//platform/k8s/uid/123/namespace/default/deployment/name/mondoo",
+		Backend:    providers.ProviderType_K8S,
+		Options: map[string]string{
+			"path": manifestFile,
+		},
+		Discover: &providers.Discovery{
+			Targets: []string{"all"},
+		},
+	}, nil, nil)
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(assetList))
+	assert.Equal(t, assetList[0].Platform.Name, "k8s-manifest")
+	assert.Equal(t, assetList[1].Platform.Name, "k8s-deployment")
+	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
+	assert.Contains(t, assetList[1].Platform.Family, "k8s")
 }
 
 func TestAdmissionReviewResolver(t *testing.T) {
@@ -57,6 +82,7 @@ func TestAdmissionReviewResolver(t *testing.T) {
 	}, nil, nil)
 	require.NoError(t, err)
 	assert.Equal(t, 4, len(assetList))
+	assert.Equal(t, assetList[0].Platform.Name, "kubernetes")
 	assert.Equal(t, assetList[1].Platform.Name, "k8s-pod")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s-workload")
 	assert.Contains(t, assetList[1].Platform.Family, "k8s")
