@@ -13,7 +13,6 @@ const (
 	RUNTIME_DOCKER_CONTAINER     = "docker-container"
 	RUNTIME_DOCKER_IMAGE         = "docker-image"
 	RUNTIME_DOCKER_REGISTRY      = "docker-registry"
-	RUNTIME_KUBERNETES           = "k8s"
 	RUNTIME_KUBERNETES_CLUSTER   = "k8s-cluster"
 	RUNTIME_KUBERNETES_MANIFEST  = "k8s-manifest"
 	RUNTIME_KUBERNETES_ADMISSION = "k8s-admission"
