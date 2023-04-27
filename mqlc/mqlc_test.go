@@ -711,7 +711,7 @@ func TestCompiler_If(t *testing.T) {
 func TestCompiler_Switch(t *testing.T) {
 	compileT(t, "switch ( 1 ) { case _ > 0: true; default: false }", func(res *llx.CodeBundle) {
 		assertFunction(t, "switch", &llx.Function{
-			Type:    string(types.Unset),
+			Type:    string(types.Bool),
 			Binding: 0,
 			Args: []*llx.Primitive{
 				llx.IntPrimitive(1),
@@ -734,6 +734,15 @@ func TestCompiler_Switch(t *testing.T) {
 		assert.Equal(t, []uint64{(1 << 32) | 3}, res.CodeV2.Entrypoints())
 		assert.Empty(t, res.CodeV2.Datapoints())
 	})
+	t.Run("test types fall back to any", func(t *testing.T) {
+		compileT(t, "switch ( 1 ) { case _ > 0: true; case _ < 0: 'test'; default: false }", func(res *llx.CodeBundle) {
+			assert.Equal(t, types.Any, res.CodeV2.Blocks[0].Chunks[3].Type())
+		})
+		compileT(t, "switch ( 1 ) { case _ > 0: true; default: 'test' }", func(res *llx.CodeBundle) {
+			assert.Equal(t, types.Any, res.CodeV2.Blocks[0].Chunks[2].Type())
+		})
+	})
+
 }
 
 // //    =======================
