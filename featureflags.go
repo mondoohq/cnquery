@@ -65,14 +65,22 @@ const (
 	// start: v7.0
 	// end:   v8.0
 	MQLAssetContext
+
+	// ErrorsAsFailures feature flag
+	// desc:  Errors are treated as failures
+	//        See https://www.notion.so/mondoo/Errors-and-Scoring-5dc554348aad4118a1dbf35123368329
+	// start: v8.x
+	// end:   v9.0
+	ErrorsAsFailures
 )
 
 // FeaturesValue is a map from feature name to feature flag
 var FeaturesValue = map[string]Feature{
-	MassQueries.String():     MassQueries,
-	PiperCode.String():       PiperCode,
-	BoolAssertions.String():  BoolAssertions,
-	MQLAssetContext.String(): MQLAssetContext,
+	MassQueries.String():      MassQueries,
+	PiperCode.String():        PiperCode,
+	BoolAssertions.String():   BoolAssertions,
+	MQLAssetContext.String():  MQLAssetContext,
+	ErrorsAsFailures.String(): ErrorsAsFailures,
 }
 
 // DefaultFeatures are a set of default flags that are active
