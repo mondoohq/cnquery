@@ -167,7 +167,7 @@ func ListNamespacedObj[T runtime.Object](
 		}
 	}
 
-	assets := []*asset.Asset{}
+	assetsIdx := map[string]*asset.Asset{}
 	for i := range workloads {
 		od.Add(workloads[i])
 
@@ -180,7 +180,15 @@ func ListNamespacedObj[T runtime.Object](
 		obj, _ := meta.Accessor(workloads[i])
 		log.Debug().Str("name", obj.GetName()).Str("connection", asset.Connections[0].Host).Msgf("resolved %s", workloadType)
 
-		assets = append(assets, asset)
+		assetsIdx[asset.PlatformIds[0]] = asset
+	}
+
+	// Return a unique list of assets. Manifests can contain a namespaces that is an empty string. When we try to list k8s
+	// resources for the empty namespace, that actually means list all resources. Therefore we can have duplicate entries in the list.
+	// Here we just return only the unique assets to make sure the code works correctly with both manifests and k8s API.
+	assets := make([]*asset.Asset, 0, len(assetsIdx))
+	for k := range assetsIdx {
+		assets = append(assets, assetsIdx[k])
 	}
 
 	return assets, nil

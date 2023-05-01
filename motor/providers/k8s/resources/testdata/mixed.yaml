@@ -1,0 +1,350 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app: cronjob
+    mondoo_cr: mondoo-client
+    scan: k8s
+  name: cronjob
+  namespace: default
+spec:
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mondoo-k8s-scan
+        mondoo_cr: mondoo-client
+        scan: k8s
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: mondoo-k8s-scan
+            mondoo_cr: mondoo-client
+            scan: k8s
+        spec:
+          automountServiceAccountToken: false
+          containers:
+          - args:
+            - k8s-scan
+            - --scan-api-url
+            - http://mondoo-client-scan-api.mondoo-operator.svc:8080
+            - --token-file-path
+            - /etc/scanapi/token
+            command:
+            - /mondoo-operator
+            env:
+            - name: FEATURE_DISCOVER_PODS
+              value: "1"
+            image: ghcr.io/mondoohq/mondoo-operator:sha256-09b166ea2ad4d9276f80680eaf9fcf9c453365aa.sig
+            imagePullPolicy: IfNotPresent
+            name: mondoo-k8s-scan
+            resources:
+              limits:
+                cpu: 100m
+                memory: 100Mi
+              requests:
+                cpu: 50m
+                memory: 20Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+            - mountPath: /etc/scanapi
+              name: token
+              readOnly: true
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+          volumes:
+          - name: token
+            secret:
+              defaultMode: 292
+              secretName: mondoo-client-scan-api-token
+  schedule: 6 * * * *
+  successfulJobsHistoryLimit: 1
+  suspend: false
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemonset
+  namespace: custom
+spec:
+  selector:
+    matchLabels:
+      name: mondoo-daemonset
+  template:
+    metadata:
+      labels:
+        name: mondoo-daemonset
+    spec:
+      tolerations:
+        # this toleration is to have the daemonset runnable on master nodes
+        # remove it if your masters can't run pods
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      containers:
+        - name: mondoo-agent
+          image: docker.io/mondoo/client:latest
+          command: ["mondoo", "serve", "--config", "/etc/opt/mondoo/mondoo.yml"]
+          volumeMounts:
+            - name: root
+              mountPath: /mnt/host/
+              readOnly: true
+            - name: config
+              mountPath: /etc/opt/mondoo/
+              readOnly: true
+          env:
+            - name: DEBUG
+              value: "false"
+            - name: MONDOO_PROCFS
+              value: "on"
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: root
+          hostPath:
+            path: "/"
+        - name: config
+          configMap:
+            name: mondoo-daemonset-config
+            items:
+              - key: config
+                path: mondoo.yml
+              - key: inventory
+                path: inventory.yml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  labels:
+    app: centos
+  name: deployment
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: centos
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: centos
+    spec:
+      containers:
+      - image: docker.io/library/centos:6.6
+        imagePullPolicy: IfNotPresent
+        name: centos
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.nexus.info
+    http:
+      paths:
+      - backend:
+          resource:
+            apiGroup: k8s.example.io
+            kind: MyKind
+            name: my-resource
+        path: /
+        pathType: Prefix
+  - host: alt.nexus.info
+    http:
+      paths:
+      - backend:
+          service:
+            name: some-service
+            port:
+              name: a-service-name
+        path: /
+        pathType: Prefix
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: mondoo-k8s-scan
+    mondoo_cr: mondoo-client
+    scan: k8s
+  name: job
+  namespace: default
+spec:
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mondoo-k8s-scan
+        mondoo_cr: mondoo-client
+        scan: k8s
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - k8s-scan
+        - --scan-api-url
+        - http://mondoo-client-scan-api.mondoo-operator.svc:8080
+        - --token-file-path
+        - /etc/scanapi/token
+        command:
+        - /mondoo-operator
+        env:
+        - name: FEATURE_DISCOVER_PODS
+          value: "1"
+        image: ghcr.io/mondoohq/mondoo-operator:sha256-09b166ea2ad4d9276f80680eaf9fcf9c453365aa.sig
+        imagePullPolicy: IfNotPresent
+        name: mondoo-k8s-scan
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 50m
+            memory: 20Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/scanapi
+          name: token
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: token
+        secret:
+          defaultMode: 292
+          secretName: mondoo-client-scan-api-token
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+  namespace: default
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.21.6
+      ports:
+        - containerPort: 8080
+      imagePullPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+        privileged: false
+        readOnlyRootFilesystem: true
+      resources:
+        limits:
+          cpu: 100m
+          memory: 200Mi
+        requests:
+          cpu: 100m
+          memory: 200Mi
+      readinessProbe:
+        tcpSocket:
+          port: 8080
+        initialDelaySeconds: 5
+        periodSeconds: 10
+      livenessProbe:
+        tcpSocket:
+          port: 8080
+        initialDelaySeconds: 15
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: replicaset
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      name: mondoo-replicaset
+  template:
+    metadata:
+      labels:
+        name: mondoo-replicaset
+    spec:
+      containers:
+        - name: mondoo-agent
+          image: docker.io/mondoo/client:latest
+          command: ["mondoo", "serve", "--config", "/etc/opt/mondoo/mondoo.yml"]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: statefulset
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      name: mondoo-statefulset
+  template:
+    metadata:
+      labels:
+        name: mondoo-statefulset
+    spec:
+      tolerations:
+      containers:
+        - name: nginx
+          image: k8s.gcr.io/nginx-slim:0.8
+          ports:
+          - containerPort: 80
+            name: web
+          volumeMounts:
+          - name: www
+            mountPath: /usr/share/nginx/html
+      terminationGracePeriodSeconds: 30
+      volumeClaimTemplates:
+      - metadata:
+          name: www
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: "my-storage-class"
+          resources:
+            requests:
+              storage: 1Gi
+---
+apiVersion: v1
+data:
+  token: dGVzdHNlY3JldAo=
+kind: Secret
+metadata:
+  name: secret
+  namespace: default
+type: Opaque
