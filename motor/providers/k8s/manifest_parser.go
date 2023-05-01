@@ -81,6 +81,9 @@ func (t *manifestParser) Namespaces() ([]v1.Namespace, error) {
 	// going forward we may need a bit more information
 	for k := range namespaceMap {
 		nss = append(nss, v1.Namespace{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "Namespace",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: k,
 			},
@@ -99,6 +102,9 @@ func (t *manifestParser) Pod(namespace string, name string) (*v1.Pod, error) {
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple pods found")
 	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("pod %s not found", name)
+	}
 	foundPod, ok := result.Resources[0].(*v1.Pod)
 	if !ok {
 		return nil, errors.New("could not convert k8s resource to pod")
@@ -111,7 +117,7 @@ func (t *manifestParser) Pod(namespace string, name string) (*v1.Pod, error) {
 }
 
 func (t *manifestParser) Pods(namespace v1.Namespace) ([]*v1.Pod, error) {
-	result, err := t.Resources("pods.v1.", "", namespace.GetNamespace())
+	result, err := t.Resources("pods.v1.", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -132,13 +138,16 @@ func (t *manifestParser) Pods(namespace v1.Namespace) ([]*v1.Pod, error) {
 }
 
 func (t *manifestParser) Deployment(namespace string, name string) (*appsv1.Deployment, error) {
-	result, err := t.Resources("deployments.appsv1.", name, namespace)
+	result, err := t.Resources("deployments.v1.apps", name, namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple deployments found")
+	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("deployment %s not found", name)
 	}
 	foundDeployment, ok := result.Resources[0].(*appsv1.Deployment)
 	if !ok {
@@ -152,7 +161,7 @@ func (t *manifestParser) Deployment(namespace string, name string) (*appsv1.Depl
 }
 
 func (t *manifestParser) Deployments(namespace v1.Namespace) ([]*appsv1.Deployment, error) {
-	result, err := t.Resources("deployments.v1.apps", "", namespace.GetNamespace())
+	result, err := t.Resources("deployments.v1.apps", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -256,6 +265,9 @@ func (t *manifestParser) CronJob(namespace string, name string) (*batchv1.CronJo
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple cronjobs found")
 	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("cronjob %s not found", name)
+	}
 	foundCronJob, ok := result.Resources[0].(*batchv1.CronJob)
 	if !ok {
 		return nil, errors.New("could not convert k8s resource to cronjob")
@@ -268,7 +280,7 @@ func (t *manifestParser) CronJob(namespace string, name string) (*batchv1.CronJo
 }
 
 func (t *manifestParser) CronJobs(namespace v1.Namespace) ([]*batchv1.CronJob, error) {
-	result, err := t.Resources("cronjobs.v1.batch", "", namespace.GetNamespace())
+	result, err := t.Resources("cronjobs.v1.batch", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -297,6 +309,9 @@ func (t *manifestParser) StatefulSet(namespace string, name string) (*appsv1.Sta
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple statefulsets found")
 	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("statefulset %s not found", name)
+	}
 	foundStatefulSet, ok := result.Resources[0].(*appsv1.StatefulSet)
 	if !ok {
 		return nil, errors.New("could not convert k8s resource to statefulset")
@@ -309,7 +324,7 @@ func (t *manifestParser) StatefulSet(namespace string, name string) (*appsv1.Sta
 }
 
 func (t *manifestParser) StatefulSets(namespace v1.Namespace) ([]*appsv1.StatefulSet, error) {
-	result, err := t.Resources("statefulsets.v1.apps", "", namespace.GetNamespace())
+	result, err := t.Resources("statefulsets.v1.apps", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -338,6 +353,9 @@ func (t *manifestParser) Job(namespace string, name string) (*batchv1.Job, error
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple jobs found")
 	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("job %s not found", name)
+	}
 	foundJob, ok := result.Resources[0].(*batchv1.Job)
 	if !ok {
 		return nil, errors.New("could not convert k8s resource to job")
@@ -350,7 +368,7 @@ func (t *manifestParser) Job(namespace string, name string) (*batchv1.Job, error
 }
 
 func (t *manifestParser) Jobs(namespace v1.Namespace) ([]*batchv1.Job, error) {
-	result, err := t.Resources("jobs.v1.batch", "", namespace.GetNamespace())
+	result, err := t.Resources("jobs.v1.batch", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -379,6 +397,9 @@ func (t *manifestParser) ReplicaSet(namespace string, name string) (*appsv1.Repl
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple replicasets found")
 	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("replicaset %s not found", name)
+	}
 	foundReplicaSet, ok := result.Resources[0].(*appsv1.ReplicaSet)
 	if !ok {
 		return nil, errors.New("could not convert k8s resource to replicaset")
@@ -391,7 +412,7 @@ func (t *manifestParser) ReplicaSet(namespace string, name string) (*appsv1.Repl
 }
 
 func (t *manifestParser) ReplicaSets(namespace v1.Namespace) ([]*appsv1.ReplicaSet, error) {
-	result, err := t.Resources("replicasets.v1.apps", "", namespace.GetNamespace())
+	result, err := t.Resources("replicasets.v1.apps", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -412,13 +433,16 @@ func (t *manifestParser) ReplicaSets(namespace v1.Namespace) ([]*appsv1.ReplicaS
 }
 
 func (t *manifestParser) DaemonSet(namespace string, name string) (*appsv1.DaemonSet, error) {
-	result, err := t.Resources("daemonsets.appsv1.", name, namespace)
+	result, err := t.Resources("daemonsets.v1.apps", name, namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple daemonsets found")
+	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("daemonset %s not found", name)
 	}
 	foundDaemonSet, ok := result.Resources[0].(*appsv1.DaemonSet)
 	if !ok {
@@ -434,7 +458,7 @@ func (t *manifestParser) DaemonSet(namespace string, name string) (*appsv1.Daemo
 func (t *manifestParser) DaemonSets(namespace v1.Namespace) ([]*appsv1.DaemonSet, error) {
 	// iterate over all resources and extract the daemonsets
 
-	result, err := t.Resources("daemonsets.v1.apps", "", namespace.GetNamespace())
+	result, err := t.Resources("daemonsets.v1.apps", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -463,6 +487,9 @@ func (t *manifestParser) Ingress(namespace, name string) (*networkingv1.Ingress,
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple ingresses found")
 	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("ingress %s not found", name)
+	}
 	foundIngress, ok := result.Resources[0].(*networkingv1.Ingress)
 	if !ok {
 		return nil, errors.New("could not convert k8s resource to ingress")
@@ -475,7 +502,7 @@ func (t *manifestParser) Ingress(namespace, name string) (*networkingv1.Ingress,
 }
 
 func (t *manifestParser) Ingresses(namespace v1.Namespace) ([]*networkingv1.Ingress, error) {
-	result, err := t.Resources("ingresses.v1.networking.k8s.io", "", namespace.GetNamespace())
+	result, err := t.Resources("ingresses.v1.networking.k8s.io", "", namespace.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -503,6 +530,9 @@ func (t *manifestParser) Secret(namespace, name string) (*v1.Secret, error) {
 
 	if len(result.Resources) > 1 {
 		return nil, errors.New("multiple secrets found")
+	}
+	if len(result.Resources) == 0 {
+		return nil, fmt.Errorf("secret %s not found", name)
 	}
 	foundSecret, ok := result.Resources[0].(*v1.Secret)
 	if !ok {
