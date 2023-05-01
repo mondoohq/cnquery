@@ -2,8 +2,6 @@ module go.mondoo.com/cnquery
 
 go 1.19
 
-replace github.com/slack-go/slack v0.12.1 => github.com/imilchev/slack v0.0.0-20230324120548-5380d7dd00a5
-
 require (
 	cloud.google.com/go/accessapproval v1.5.0
 	cloud.google.com/go/bigquery v1.44.0
@@ -159,7 +157,7 @@ require (
 	github.com/segmentio/fasthash v1.0.3
 	github.com/segmentio/ksuid v1.0.4
 	github.com/sethvargo/go-password v0.2.0
-	github.com/slack-go/slack v0.12.1
+	github.com/slack-go/slack v0.12.2
 	github.com/spf13/afero v1.9.4
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
