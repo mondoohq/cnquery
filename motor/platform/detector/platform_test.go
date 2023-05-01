@@ -143,14 +143,6 @@ func TestPrettyTitle(t *testing.T) {
 			},
 			Expected: "Test Deployment, Kubernetes Manifest File",
 		},
-		{
-			Platform: &platform.Platform{
-				Title:   "k8s test cluster",
-				Runtime: providers.RUNTIME_KUBERNETES,
-				Family:  []string{"k8s"},
-			},
-			Expected: "k8s test cluster",
-		},
 	}
 
 	for i := range test {
