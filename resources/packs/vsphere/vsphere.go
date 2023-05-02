@@ -1125,7 +1125,18 @@ func (v *mqlVsphereVswitchStandard) GetUplinks() ([]interface{}, error) {
 		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
 
+	// if no properties are set, we have no uplinks for dvs
+	if properties == nil {
+		return nil, nil
+	}
+
 	uplinksRaw := properties["Uplinks"]
+
+	// no uplinks for dvs
+	if properties == nil {
+		return nil, nil
+	}
+
 	uplinkNames, ok := uplinksRaw.([]interface{})
 	if !ok {
 		return nil, errors.New("unexpected type for vsphere switch uplinks " + reflect.ValueOf(uplinksRaw).Type().Name())
@@ -1184,7 +1195,18 @@ func (v *mqlVsphereVswitchDvs) GetUplinks() ([]interface{}, error) {
 		return nil, errors.New("unexpected properties structure for vsphere switch")
 	}
 
+	// if no properties are set, we have no uplinks for dvs
+	if properties == nil {
+		return nil, nil
+	}
+
 	uplinksRaw := properties["Uplinks"]
+
+	// no uplinks for dvs
+	if properties == nil {
+		return nil, nil
+	}
+
 	uplinkNames, ok := uplinksRaw.([]interface{})
 	if !ok {
 		return nil, errors.New("unexpected type for vsphere switch uplinks " + reflect.ValueOf(uplinksRaw).Type().Name())
