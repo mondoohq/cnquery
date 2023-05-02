@@ -1,6 +1,8 @@
 package microsoft
 
 import (
+	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/cockroachdb/errors"
@@ -25,17 +27,16 @@ func (p *Provider) GetTokenCredential() (azcore.TokenCredential, error) {
 		case vault.CredentialType_pkcs12:
 			certs, privateKey, err := azidentity.ParseCertificates(p.cred.Secret, []byte(p.cred.Password))
 			if err != nil {
-				return nil, errors.Wrap(err, "could not parse certificate")
+				return nil, errors.Wrap(err, fmt.Sprintf("could not parse provided certificate at %s", p.cred.PrivateKeyPath))
 			}
-
 			credential, err = azidentity.NewClientCertificateCredential(p.tenantID, p.clientID, certs, privateKey, &azidentity.ClientCertificateCredentialOptions{})
 			if err != nil {
-				return nil, errors.Wrap(err, "error creating credentials")
+				return nil, errors.Wrap(err, "error creating credentials from a certificate")
 			}
 		case vault.CredentialType_password:
 			credential, err = azidentity.NewClientSecretCredential(p.tenantID, p.clientID, string(p.cred.Secret), &azidentity.ClientSecretCredentialOptions{})
 			if err != nil {
-				return nil, errors.Wrap(err, "error creating credentials")
+				return nil, errors.Wrap(err, "error creating credentials from a secret")
 			}
 		default:
 			return nil, errors.New("invalid secret configuration for microsoft transport: " + p.cred.Type.String())

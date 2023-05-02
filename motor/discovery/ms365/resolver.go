@@ -43,6 +43,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, cc *providers
 		return nil, err
 	}
 
+	// try getting a token, this wil err out if the pem/pfx file are wrong or if the password
+	// is wrong. allows for returning an err early
+	_, err = provider.GetTokenCredential()
+	if err != nil {
+		return nil, err
+	}
 	// detect platform info for the asset
 	pf, err := m.Platform()
 	if err != nil {
