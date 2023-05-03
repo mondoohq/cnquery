@@ -51,9 +51,9 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 		id, err := mdsvc.Identify()
 		if err != nil {
 			log.Debug().Err(err).
-				Str("transport", provider.Kind().String()).
+				Str("provider", provider.Kind().String()).
 				Strs("platform", pf.GetFamily()).
-				Msg("failed to get azure platform id")
+				Msg("failed to get Azure platform id")
 			return "", "", nil
 		}
 		return id.InstanceID, "", []string{id.AccountID}

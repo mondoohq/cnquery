@@ -62,9 +62,9 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, 
 				return id.InstanceID, id.InstanceName, []string{id.AccountID}
 			}
 			log.Debug().Err(err).
-				Str("transport", provider.Kind().String()).
+				Str("provider", provider.Kind().String()).
 				Strs("platform", p.GetFamily()).
-				Msg("failed to get aws platform id")
+				Msg("failed to get AWS platform id")
 			// try ecs
 			mdsvcEcs, err := awsecsid.Resolve(provider, p)
 			if err != nil {
@@ -76,9 +76,9 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, 
 				return idEcs.PlatformIds[0], idEcs.Name, []string{idEcs.AccountPlatformID}
 			} else {
 				log.Debug().Err(err).
-					Str("transport", provider.Kind().String()).
+					Str("provider", provider.Kind().String()).
 					Strs("platform", p.GetFamily()).
-					Msg("failed to get aws platform id")
+					Msg("failed to get AWS platform id")
 			}
 		}
 	}

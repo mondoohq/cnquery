@@ -41,7 +41,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 
 	p, ok := m.Provider.(*github_provider.Provider)
 	if !ok {
-		return nil, errors.New("could not initialize github transport")
+		return nil, errors.New("could not initialize github provider")
 	}
 
 	identifier, err := p.Identifier()

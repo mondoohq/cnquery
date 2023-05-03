@@ -191,7 +191,7 @@ func (p *mqlServices) GetList() ([]interface{}, error) {
 	osm, err := services.ResolveManager(p.MotorRuntime.Motor)
 	if osm == nil || err != nil {
 		// there are valid cases where this error is happening, eg. you run a service query in
-		// asset filters for non-supported transports
+		// asset filters for non-supported providers
 		log.Debug().Err(err).Msg("mql[services]> could not retrieve services list")
 		return nil, errors.New("cannot find service manager")
 	}

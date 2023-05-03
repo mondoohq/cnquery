@@ -972,7 +972,7 @@ func (v *mqlEsxiCommand) init(args *resources.Args) (*resources.Args, EsxiComman
 	t := v.MotorRuntime.Motor.Provider
 	vt, ok := t.(*provider.Provider)
 	if !ok {
-		return nil, nil, errors.New("esxi resource is only supported on vsphere transport")
+		return nil, nil, errors.New("ESXi resource is only supported on vSphere provider")
 	}
 
 	if len(*args) > 2 {
@@ -988,7 +988,7 @@ func (v *mqlEsxiCommand) init(args *resources.Args) (*resources.Args, EsxiComman
 	// check if the connection was initialized with a specific host
 	identifier, err := vt.Identifier()
 	if err != nil || !provider.IsVsphereResourceID(identifier) {
-		return nil, nil, errors.New("could not determine inventoryPath from transport connection")
+		return nil, nil, errors.New("could not determine inventoryPath from provider connection")
 	}
 
 	h, err := v.hostSystem(vt, identifier)
@@ -1012,7 +1012,7 @@ func (v *mqlEsxiCommand) hostSystem(vt *provider.Provider, identifier string) (*
 	}
 
 	if moid.Type != "HostSystem" {
-		return nil, errors.New("esxi resource is not supported for vsphere type " + moid.Type)
+		return nil, errors.New("ESXi resource is not supported for vsphere type " + moid.Type)
 	}
 
 	h, err = cl.HostByMoid(moid)
@@ -1066,7 +1066,7 @@ func (v *mqlVsphereVswitchStandard) id() (string, error) {
 func (v *mqlVsphereVswitchStandard) esxiClient() (*resourceclient.Esxi, error) {
 	c, ok := v.MqlResource().Cache.Load("_host_inventory_path")
 	if !ok {
-		return nil, errors.New("cannot get esxi host inventory path")
+		return nil, errors.New("cannot get ESXi host inventory path")
 	}
 	inventoryPath := c.Data.(string)
 	return esxiClient(v.MotorRuntime.Motor.Provider, inventoryPath)

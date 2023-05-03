@@ -36,7 +36,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	// we leverage the vpshere transport to establish a connection
+	// we leverage the vsphere provider to establish a connection
 	m, err := resolver.NewMotorConnection(ctx, pCfg, credsResolver)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 
 	trans, ok := m.Provider.(*vsphere.Provider)
 	if !ok {
-		return nil, errors.New("could not initialize vsphere transport")
+		return nil, errors.New("could not initialize vsphere provider")
 	}
 
 	// detect platform info for the asset
@@ -90,7 +90,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			return nil, err
 		}
 
-		// add transport config for each host
+		// add provider config for each host
 		for i := range hosts {
 			host := hosts[i]
 			ht := pCfg.Clone()
@@ -102,7 +102,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			if err == nil {
 				host.Platform = pf
 			} else {
-				log.Error().Err(err).Msg("could not determine platform information for esxi host")
+				log.Error().Err(err).Msg("could not determine platform information for ESXi host")
 			}
 
 			resolved = append(resolved, host)
@@ -116,7 +116,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			return nil, err
 		}
 
-		// add transport config for each vm
+		// add provider config for each vm
 		for i := range vms {
 			vm := vms[i]
 
@@ -124,7 +124,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 			if err == nil {
 				vm.Platform = pf
 			} else {
-				log.Error().Err(err).Msg("could not determine platform information for esxi vm")
+				log.Error().Err(err).Msg("could not determine platform information for ESXi vm")
 			}
 
 			// find the secret reference for the asset

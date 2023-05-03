@@ -19,7 +19,7 @@ func (p *mqlDocker) id() (string, error) {
 func (p *mqlDocker) GetImages() ([]interface{}, error) {
 	_, ok := p.MotorRuntime.Motor.Provider.(*local.Provider)
 	if !ok {
-		return nil, errors.New("docker is not support for this transport")
+		return nil, errors.New("docker is not support for this provider")
 	}
 
 	cl, err := dockerClient()
@@ -64,7 +64,7 @@ func (p *mqlDocker) GetImages() ([]interface{}, error) {
 func (p *mqlDocker) GetContainers() ([]interface{}, error) {
 	_, ok := p.MotorRuntime.Motor.Provider.(*local.Provider)
 	if !ok {
-		return nil, errors.New("docker is not support for this transport")
+		return nil, errors.New("docker is not support for this provider")
 	}
 
 	cl, err := dockerClient()

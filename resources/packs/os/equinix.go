@@ -33,7 +33,7 @@ func (g *mqlEquinixMetalProject) init(args *resources.Args) (*resources.Args, Eq
 		return args, nil, nil
 	}
 
-	// fetch the default project from the transport
+	// fetch the default project from the provider
 	et, err := equinixProvider(g.MotorRuntime.Motor.Provider)
 	if err != nil {
 		return nil, nil, err
@@ -41,7 +41,7 @@ func (g *mqlEquinixMetalProject) init(args *resources.Args) (*resources.Args, Eq
 
 	p := et.Project()
 	if p == nil {
-		return nil, nil, errors.New("could not retrieve project information from transport")
+		return nil, nil, errors.New("could not retrieve project information from provider")
 	}
 
 	pm, _ := core.JsonToDict(p.PaymentMethod)
