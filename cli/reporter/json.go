@@ -47,11 +47,15 @@ func ReportCollectionToJSON(data *explorer.ReportCollection, out shared.OutputHe
 	}
 
 	queryMrnIdx := map[string]string{}
-	for i := range data.Bundle.Packs {
-		pack := data.Bundle.Packs[i]
-		for j := range pack.Queries {
-			query := pack.Queries[j]
-			queryMrnIdx[query.CodeId] = query.Mrn
+
+	// this case can happen when all assets error out, eg. no query pack is available that matches
+	if data.Bundle != nil {
+		for i := range data.Bundle.Packs {
+			pack := data.Bundle.Packs[i]
+			for j := range pack.Queries {
+				query := pack.Queries[j]
+				queryMrnIdx[query.CodeId] = query.Mrn
+			}
 		}
 	}
 
