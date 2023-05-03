@@ -16,7 +16,7 @@ import (
 type VMGuestResolver struct{}
 
 func (k *VMGuestResolver) Name() string {
-	return "VmWare vSphere VM Guest Resolver"
+	return "VMware vSphere VM Guest Resolver"
 }
 
 func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
@@ -26,7 +26,7 @@ func (r *VMGuestResolver) AvailableDiscoveryTargets() []string {
 func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	// we leverage the vpshere transport to establish a connection
+	// we leverage the vpshere provider to establish a connection
 	m, err := resolver.NewMotorConnection(ctx, pCfg, credsResolver)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *
 
 	trans, ok := m.Provider.(*vmwareguestapi.Provider)
 	if !ok {
-		return nil, errors.New("could not initialize vsphere guest transport")
+		return nil, errors.New("could not initialize vsphere guest provider")
 	}
 
 	client := trans.Client()
@@ -47,7 +47,7 @@ func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *
 		return nil, err
 	}
 
-	// add transport config for each vm
+	// add provider config for each vm
 	for i := range vms {
 		vm := vms[i]
 		resolved = append(resolved, vm)
@@ -75,7 +75,7 @@ func (k *VMGuestResolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *
 
 		return []*asset.Asset{a}, nil
 	} else {
-		return nil, errors.New("could not resolve vSphere vm")
+		return nil, errors.New("could not resolve vSphere VM")
 	}
 }
 

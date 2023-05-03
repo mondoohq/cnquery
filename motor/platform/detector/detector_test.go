@@ -21,7 +21,7 @@ func newDetector(filepath string) (*detector.Detector, error) {
 
 func TestRhel6OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel-6.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -34,7 +34,7 @@ func TestRhel6OSDetector(t *testing.T) {
 
 func TestRhel7OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel-7.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -47,7 +47,7 @@ func TestRhel7OSDetector(t *testing.T) {
 
 func TestRhel7SLESOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel-7-sles.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -60,7 +60,7 @@ func TestRhel7SLESOSDetector(t *testing.T) {
 
 func TestRhel8OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel-8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -73,7 +73,7 @@ func TestRhel8OSDetector(t *testing.T) {
 
 func TestRhel9OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rhel-9.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -86,7 +86,7 @@ func TestRhel9OSDetector(t *testing.T) {
 
 func TestFedora29OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-fedora29.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -99,7 +99,7 @@ func TestFedora29OSDetector(t *testing.T) {
 
 func TestFedoraCoreOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-coreos-fedora.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -112,7 +112,7 @@ func TestFedoraCoreOSDetector(t *testing.T) {
 
 func TestCoreOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-coreos.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -125,7 +125,7 @@ func TestCoreOSDetector(t *testing.T) {
 
 func TestCentos5Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos-5.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -138,7 +138,7 @@ func TestCentos5Detector(t *testing.T) {
 
 func TestCentos6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos-6.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -151,7 +151,7 @@ func TestCentos6Detector(t *testing.T) {
 
 func TestCentos7OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos-7.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -164,7 +164,7 @@ func TestCentos7OSDetector(t *testing.T) {
 
 func TestCentos8OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos-8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -177,7 +177,7 @@ func TestCentos8OSDetector(t *testing.T) {
 
 func TestCentos8StreamOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos-8-stream.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -190,7 +190,7 @@ func TestCentos8StreamOSDetector(t *testing.T) {
 
 func TestCentos9StreamOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-centos-9-stream.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -203,7 +203,7 @@ func TestCentos9StreamOSDetector(t *testing.T) {
 
 func TestAlmaLinux8OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-almalinux-8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -216,7 +216,7 @@ func TestAlmaLinux8OSDetector(t *testing.T) {
 
 func TestAlmaLinux9OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-almalinux-9.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -229,7 +229,7 @@ func TestAlmaLinux9OSDetector(t *testing.T) {
 
 func TestRockyLinux8OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rocky-linux-8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -242,7 +242,7 @@ func TestRockyLinux8OSDetector(t *testing.T) {
 
 func TestRockyLinux9OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-rocky-linux-9.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -255,7 +255,7 @@ func TestRockyLinux9OSDetector(t *testing.T) {
 
 func TestEuroLinux7OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-eurolinux-7.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -268,7 +268,7 @@ func TestEuroLinux7OSDetector(t *testing.T) {
 
 func TestEuroLinux8OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-eurolinux-8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -281,7 +281,7 @@ func TestEuroLinux8OSDetector(t *testing.T) {
 
 func TestEuroLinux9OSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-eurolinux-9.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -294,7 +294,7 @@ func TestEuroLinux9OSDetector(t *testing.T) {
 
 func TestUbuntu1204Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1204.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -307,7 +307,7 @@ func TestUbuntu1204Detector(t *testing.T) {
 
 func TestUbuntu1404Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1404.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -320,7 +320,7 @@ func TestUbuntu1404Detector(t *testing.T) {
 
 func TestUbuntu1604Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1604.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -333,7 +333,7 @@ func TestUbuntu1604Detector(t *testing.T) {
 
 func TestUbuntu1804Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu1804.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -346,7 +346,7 @@ func TestUbuntu1804Detector(t *testing.T) {
 
 func TestUbuntu2004Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu2004.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -359,7 +359,7 @@ func TestUbuntu2004Detector(t *testing.T) {
 
 func TestUbuntu2204Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubuntu2204.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -371,7 +371,7 @@ func TestUbuntu2204Detector(t *testing.T) {
 
 func TestPoposDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-popos.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -384,7 +384,7 @@ func TestPoposDetector(t *testing.T) {
 
 func TestWindriver7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windriver7.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -397,7 +397,7 @@ func TestWindriver7Detector(t *testing.T) {
 
 func TestOpenWrtDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-openwrt.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -410,7 +410,7 @@ func TestOpenWrtDetector(t *testing.T) {
 
 func TestDebian7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian7.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -423,7 +423,7 @@ func TestDebian7Detector(t *testing.T) {
 
 func TestDebian8Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -436,7 +436,7 @@ func TestDebian8Detector(t *testing.T) {
 
 func TestDebian9Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian9.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -449,7 +449,7 @@ func TestDebian9Detector(t *testing.T) {
 
 func TestDebian10Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-debian10.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -462,7 +462,7 @@ func TestDebian10Detector(t *testing.T) {
 
 func TestRaspian10Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-raspbian.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -475,7 +475,7 @@ func TestRaspian10Detector(t *testing.T) {
 
 func TestKaliRollingDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-kalirolling.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -488,7 +488,7 @@ func TestKaliRollingDetector(t *testing.T) {
 
 func TestOpenSuse13Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-13.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -501,7 +501,7 @@ func TestOpenSuse13Detector(t *testing.T) {
 
 func TestOpenSuseLeap42Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-leap-42.3.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -514,7 +514,7 @@ func TestOpenSuseLeap42Detector(t *testing.T) {
 
 func TestOpenSuseLeap15Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-leap-15.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -527,7 +527,7 @@ func TestOpenSuseLeap15Detector(t *testing.T) {
 
 func TestOpenSuseTumbleweedDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-opensuse-tumbleweed.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -540,7 +540,7 @@ func TestOpenSuseTumbleweedDetector(t *testing.T) {
 
 func TestSuse12Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-sles-12.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -553,7 +553,7 @@ func TestSuse12Detector(t *testing.T) {
 
 func TestSuse125Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-sles-12.5.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -566,7 +566,7 @@ func TestSuse125Detector(t *testing.T) {
 
 func TestSuse15Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-sles-15.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -579,7 +579,7 @@ func TestSuse15Detector(t *testing.T) {
 
 func TestSuse5MicroDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-micro-5.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -592,7 +592,7 @@ func TestSuse5MicroDetector(t *testing.T) {
 
 func TestAmazon1LinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-amazonlinux-2017.09.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -605,7 +605,7 @@ func TestAmazon1LinuxDetector(t *testing.T) {
 
 func TestAmazon2LinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-amzn-2.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -618,7 +618,7 @@ func TestAmazon2LinuxDetector(t *testing.T) {
 
 func TestAmazon2022LinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-amzn-2022.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -631,7 +631,7 @@ func TestAmazon2022LinuxDetector(t *testing.T) {
 
 func TestScientificLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-scientific.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -644,7 +644,7 @@ func TestScientificLinuxDetector(t *testing.T) {
 
 func TestArchLinuxVmDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-arch-vm.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -656,7 +656,7 @@ func TestArchLinuxVmDetector(t *testing.T) {
 
 func TestArchLinuxContainerDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-arch-container.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -668,7 +668,7 @@ func TestArchLinuxContainerDetector(t *testing.T) {
 
 func TestManjaroLinuxContainerDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-manjaro.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -680,7 +680,7 @@ func TestManjaroLinuxContainerDetector(t *testing.T) {
 
 func TestOracleLinux6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-oracle6.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -693,7 +693,7 @@ func TestOracleLinux6Detector(t *testing.T) {
 
 func TestOracleLinux7Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-oracle7.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -706,7 +706,7 @@ func TestOracleLinux7Detector(t *testing.T) {
 
 func TestOracleLinux8Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-oracle8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -719,7 +719,7 @@ func TestOracleLinux8Detector(t *testing.T) {
 
 func TestGentooLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-gentoo.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -732,7 +732,7 @@ func TestGentooLinuxDetector(t *testing.T) {
 
 func TestAlpineLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-alpine.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -745,7 +745,7 @@ func TestAlpineLinuxDetector(t *testing.T) {
 
 func TestAlpineEdgeLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-alpine-edge.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -759,7 +759,7 @@ func TestAlpineEdgeLinuxDetector(t *testing.T) {
 
 func TestBusyboxLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-busybox.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -772,7 +772,7 @@ func TestBusyboxLinuxDetector(t *testing.T) {
 
 func TestPlcNextLinuxDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-plcnext.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -786,7 +786,7 @@ func TestPlcNextLinuxDetector(t *testing.T) {
 
 func TestWindows2016Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windows2016.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -799,7 +799,7 @@ func TestWindows2016Detector(t *testing.T) {
 
 func TestWindows2019Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-windows2019.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -813,7 +813,7 @@ func TestWindows2019Detector(t *testing.T) {
 
 func TestPhoton1Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-photon1.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -826,7 +826,7 @@ func TestPhoton1Detector(t *testing.T) {
 
 func TestPhoton2Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-photon2.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -839,7 +839,7 @@ func TestPhoton2Detector(t *testing.T) {
 
 func TestPhoton3Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-photon3.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -852,7 +852,7 @@ func TestPhoton3Detector(t *testing.T) {
 
 func TestMacOSsDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-macos.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -865,7 +865,7 @@ func TestMacOSsDetector(t *testing.T) {
 
 func TestBuildrootDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-buildroot.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -878,7 +878,7 @@ func TestBuildrootDetector(t *testing.T) {
 
 func TestSolaris11Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-solaris11.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -891,7 +891,7 @@ func TestSolaris11Detector(t *testing.T) {
 
 func TestNetbsd8Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-netbsd8.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -904,7 +904,7 @@ func TestNetbsd8Detector(t *testing.T) {
 
 func TestFreebsd12Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-freebsd12.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -917,7 +917,7 @@ func TestFreebsd12Detector(t *testing.T) {
 
 func TestOpenBsd6Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-openbsd6.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -930,7 +930,7 @@ func TestOpenBsd6Detector(t *testing.T) {
 
 func TestDragonFlyBsd5Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-dragonflybsd5.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -943,7 +943,7 @@ func TestDragonFlyBsd5Detector(t *testing.T) {
 
 func TestMint20Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-mint20.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -956,7 +956,7 @@ func TestMint20Detector(t *testing.T) {
 
 func TestGoogleCOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-google-cos.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 
@@ -970,7 +970,7 @@ func TestGoogleCOSDetector(t *testing.T) {
 
 func TestUbiOSDetector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-ubios.toml")
-	assert.Nil(t, err, "was able to create the transport")
+	assert.Nil(t, err, "was able to create the provider")
 	di, err := detector.Platform()
 	require.NoError(t, err)
 

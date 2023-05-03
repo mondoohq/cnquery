@@ -118,7 +118,7 @@ func extractPlatformAndKindFromPlatformId(id string) (string, providers.Kind) {
 }
 
 func GatherPlatformInfo(provider providers.Instance, pf *platform.Platform, idDetector providers.PlatformIdDetector) (*PlatformInfo, error) {
-	// helper for recoding transport to extract the original transport
+	// helper for recoding provider to extract the original provider
 	recT, ok := provider.(*mock.MockRecordProvider)
 	if ok {
 		provider = recT.Watched()

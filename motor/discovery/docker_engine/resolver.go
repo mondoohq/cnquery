@@ -33,7 +33,7 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	if pCfg == nil {
-		return nil, errors.New("no transport configuration found")
+		return nil, errors.New("no provider configuration found")
 	}
 
 	// check if we have a tar as input
