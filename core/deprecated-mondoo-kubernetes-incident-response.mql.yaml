@@ -1,0 +1,141 @@
+packs:
+  - uid: mondoo-kubernetes-cluster-incident-response
+    name: Kubernetes Cluster Incident Response Pack
+    version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
+      mondoo.com/category: security
+      mondoo.com/state: deprecated
+    filters:
+      - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
+    queries:
+      - uid: k8s-cluster-version
+        title: Retrieve Kubernetes Cluster Version
+        query: |
+          k8s.serverVersion
+      - uid: role-bindings-with-cluster-admin-permissions
+        title: Retrieve role bindings with cluster-admin permissions
+        query: |
+          k8s.rolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
+            name
+            namespace
+            subjects
+            roleRef
+          }
+      - uid: clusterrole-bindings-with-cluster-admin-permissions
+        title: Retrieve ClusterRoleBindings with cluster-admin permissions
+        query: |
+          k8s.clusterrolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
+            name
+            subjects
+            roleRef
+          }
+  - uid: mondoo-kubernetes-pods-incident-response
+    name: Kubernetes Pods Incident Response Pack
+    version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
+      mondoo.com/category: security
+      mondoo.com/state: deprecated
+    filters:
+      - asset.platform == "k8s-pod"
+    queries:
+      - uid: k8s-pod-security-context
+        title: Retrieve Pods' Security Context
+        query: |
+          k8s.pod {
+            ephemeralContainers {
+              securityContext
+            }
+            initContainers {
+              securityContext
+            }
+            containers {
+              securityContext
+            }
+          }
+      - uid: k8s-pod-container
+        title: Retrieve container image information
+        tags:
+          mondoo.com/platform: kubernetes
+          mondoo.com/category: security
+        query: |
+          k8s.pod { 
+            name
+            namespace
+            initContainers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
+            containers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
+            ephemeralContainers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
+            podSpec["nodeName"]
+          }
+  - uid: mondoo-kubernetes-cronjobs-incident-response
+    name: Kubernetes CronJobs Incident Response Pack
+    version: 1.0.0
+    authors:
+      - name: Mondoo, Inc
+        email: hello@mondoo.com
+    tags:
+      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
+      mondoo.com/category: security
+      mondoo.com/state: deprecated
+    filters:
+      - asset.platform == "k8s-cronjob"
+    queries:
+      - uid: k8s-cronjobs
+        title: Retrieve CronJobs
+        query: |
+          k8s.cronjob { 
+            name
+            namespace
+            containers { 
+              image 
+              containerImage { 
+                name
+                identifier
+                identifierType
+                repository {
+                  name
+                  registry
+                }
+              }
+            }
+          }

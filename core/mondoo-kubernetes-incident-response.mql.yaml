@@ -1,6 +1,6 @@
 packs:
-  - uid: mondoo-kubernetes-cluster-incident-response
-    name: Kubernetes Cluster Incident Response Pack
+  - uid: mondoo-kubernetes-incident-response
+    name: Kubernetes Incident Response Pack
     version: 1.0.0
     authors:
       - name: Mondoo, Inc
@@ -8,131 +8,367 @@ packs:
     tags:
       mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
       mondoo.com/category: security
-    filters:
-      - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
-    queries:
-      - uid: k8s-cluster-version
-        title: Retrieve Kubernetes Cluster Version
-        query: |
-          k8s.serverVersion
-      - uid: role-bindings-with-cluster-admin-permissions
-        title: Retrieve role bindings with cluster-admin permissions
-        query: |
-          k8s.rolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
-            name
-            namespace
-            subjects
-            roleRef
-          }
-      - uid: clusterrole-bindings-with-cluster-admin-permissions
-        title: Retrieve ClusterRoleBindings with cluster-admin permissions
-        query: |
-          k8s.clusterrolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
-            name
-            subjects
-            roleRef
-          }
-  - uid: mondoo-kubernetes-pods-incident-response
-    name: Kubernetes Pods Incident Response Pack
-    version: 1.0.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: security
-    filters:
-      - asset.platform == "k8s-pod"
-    queries:
-      - uid: k8s-pod-security-context
-        title: Retrieve Pods' Security Context
-        query: |
-          k8s.pod {
-            ephemeralContainers {
-              securityContext
-            }
-            initContainers {
-              securityContext
-            }
-            containers {
-              securityContext
-            }
-          }
-      - uid: k8s-pod-container
-        title: Retrieve container image information
-        tags:
-          mondoo.com/platform: kubernetes
-          mondoo.com/category: security
-        query: |
-          k8s.pod { 
-            name
-            namespace
-            initContainers { 
-              image 
-              containerImage { 
+    groups:
+      - title: Cluster Incident Response
+        filters:
+          - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
+        queries:
+          - uid: k8s-cluster-version
+            title: Retrieve Kubernetes Cluster Version
+            query: |
+              k8s.serverVersion
+          - uid: role-bindings-with-cluster-admin-permissions
+            title: Retrieve role bindings with cluster-admin permissions
+            query: |
+              k8s.rolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
                 name
-                identifier
-                identifierType
-                repository {
-                  name
-                  registry
+                namespace
+                subjects
+                roleRef
+              }
+          - uid: clusterrole-bindings-with-cluster-admin-permissions
+            title: Retrieve ClusterRoleBindings with cluster-admin permissions
+            query: |
+              k8s.clusterrolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
+                name
+                subjects
+                roleRef
+              }
+      - title: Pods Incident Response
+        filters:
+          - asset.platform == "k8s-pod"
+        queries:
+          - uid: k8s-pod-security-context
+            title: Retrieve Pod Security Context
+            query: |
+              k8s.pod {
+                ephemeralContainers {
+                  securityContext
+                }
+                initContainers {
+                  securityContext
+                }
+                containers {
+                  securityContext
                 }
               }
-            }
-            containers { 
-              image 
-              containerImage { 
+          - uid: k8s-pod-container
+            title: Retrieve container image information
+            query: |
+              k8s.pod { 
                 name
-                identifier
-                identifierType
-                repository {
-                  name
-                  registry
+                namespace
+                initContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                containers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                ephemeralContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                podSpec["nodeName"]
+              }
+      - title: Deployments Incident Response
+        filters:
+          - asset.platform == "k8s-deployment"
+        queries:
+          - uid: k8s-deployment-security-context
+            title: Retrieve Deployment Security Context
+            query: |
+              k8s.deployment {
+                initContainers {
+                  securityContext
+                }
+                containers {
+                  securityContext
                 }
               }
-            }
-            ephemeralContainers { 
-              image 
-              containerImage { 
+          - uid: k8s-deployment-container
+            title: Retrieve container image information
+            query: |
+              k8s.deployment { 
                 name
-                identifier
-                identifierType
-                repository {
-                  name
-                  registry
+                namespace
+                initContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                containers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
                 }
               }
-            }
-            podSpec["nodeName"]
-          }
-  - uid: mondoo-kubernetes-cronjobs-incident-response
-    name: Kubernetes CronJobs Incident Response Pack
-    version: 1.0.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: security
-    filters:
-      - asset.platform == "k8s-cronjob"
-    queries:
-      - uid: k8s-cronjobs
-        title: Retrieve CronJobs
-        query: |
-          k8s.cronjob { 
-            name
-            namespace
-            containers { 
-              image 
-              containerImage { 
-                name
-                identifier
-                identifierType
-                repository {
-                  name
-                  registry
+      - title: CronJobs Incident Response
+        filters:
+          - asset.platform == "k8s-cronjob"
+        queries:
+          - uid: k8s-cronjob-security-context
+            title: Retrieve CronJob Security Context
+            query: |
+              k8s.cronjob {
+                initContainers {
+                  securityContext
+                }
+                containers {
+                  securityContext
                 }
               }
-            }
-          }
+          - uid: k8s-cronjob-container
+            title: Retrieve container image information
+            query: |
+              k8s.cronjob { 
+                name
+                namespace
+                initContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                containers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+              }
+      - title: Jobs Incident Response
+        filters:
+          - asset.platform == "k8s-job"
+        queries:
+          - uid: k8s-job-security-context
+            title: Retrieve Job Security Context
+            query: |
+              k8s.job {
+                initContainers {
+                  securityContext
+                }
+                containers {
+                  securityContext
+                }
+              }
+          - uid: k8s-job-container
+            title: Retrieve container image information
+            query: |
+              k8s.job { 
+                name
+                namespace
+                initContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                containers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+              }
+      - title: DaemonSets Incident Response
+        filters:
+          - asset.platform == "k8s-daemonset"
+        queries:
+          - uid: k8s-daemonset-security-context
+            title: Retrieve DaemonSet Security Context
+            query: |
+              k8s.daemonset {
+                initContainers {
+                  securityContext
+                }
+                containers {
+                  securityContext
+                }
+              }
+          - uid: k8s-daemonset-container
+            title: Retrieve container image information
+            query: |
+              k8s.daemonset { 
+                name
+                namespace
+                initContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                containers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+              }
+      - title: StatefulSets Incident Response
+        filters:
+          - asset.platform == "k8s-statefulset"
+        queries:
+          - uid: k8s-statefulset-security-context
+            title: Retrieve StatefulSet Security Context
+            query: |
+              k8s.statefulset {
+                initContainers {
+                  securityContext
+                }
+                containers {
+                  securityContext
+                }
+              }
+          - uid: k8s-statefulset-container
+            title: Retrieve container image information
+            query: |
+              k8s.statefulset { 
+                name
+                namespace
+                initContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                containers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+              }
+      - title: ReplicaSets Incident Response
+        filters:
+          - asset.platform == "k8s-replicaset"
+        queries:
+          - uid: k8s-replicaset-security-context
+            title: Retrieve ReplicaSet Security Context
+            query: |
+              k8s.replicaset {
+                initContainers {
+                  securityContext
+                }
+                containers {
+                  securityContext
+                }
+              }
+          - uid: k8s-replicaset-container
+            title: Retrieve container image information
+            query: |
+              k8s.replicaset { 
+                name
+                namespace
+                initContainers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+                containers { 
+                  image 
+                  containerImage { 
+                    name
+                    identifier
+                    identifierType
+                    repository {
+                      name
+                      registry
+                    }
+                  }
+                }
+              }
