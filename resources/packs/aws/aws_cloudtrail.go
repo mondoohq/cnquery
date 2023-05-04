@@ -3,7 +3,6 @@ package aws
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/cockroachdb/errors"
@@ -89,7 +88,6 @@ func (p *mqlAwsCloudtrailTrail) init(args *resources.Args) (*resources.Args, Aws
 
 func (t *mqlAwsCloudtrail) getTrails(provider *aws_provider.Provider) []*jobpool.Job {
 	tasks := make([]*jobpool.Job, 0)
-	acc := provider.Info().Account
 	regions, err := provider.GetRegions()
 	if err != nil {
 		return []*jobpool.Job{{Err: err}}
@@ -121,14 +119,8 @@ func (t *mqlAwsCloudtrail) getTrails(provider *aws_provider.Provider) []*jobpool
 				if regionVal != core.ToString(trail.HomeRegion) {
 					continue
 				}
-				// we skip trails that are not coming from the account that is being scanned
-				// such trails are organization trails, created from another (master) acc in the org
-				trailArn := core.ToString(trail.TrailARN)
-				if !strings.Contains(trailArn, acc) {
-					continue
-				}
 				args := []interface{}{
-					"arn", trailArn,
+					"arn", core.ToString(trail.TrailARN),
 					"name", core.ToString(trail.Name),
 					"isMultiRegionTrail", core.ToBool(trail.IsMultiRegionTrail),
 					"isOrganizationTrail", core.ToBool(trail.IsOrganizationTrail),
@@ -157,21 +149,27 @@ func (t *mqlAwsCloudtrail) getTrails(provider *aws_provider.Provider) []*jobpool
 					mqlKeyResource, err := t.MotorRuntime.CreateResource("aws.kms.key",
 						"arn", core.ToString(trail.KmsKeyId),
 					)
+					// means the key does not exist or we have no access to it
+					// dont err out, just assign nil
 					if err != nil {
-						return nil, err
+						args = append(args, "kmsKey", nil)
+					} else {
+						mqlKey := mqlKeyResource.(AwsKmsKey)
+						args = append(args, "kmsKey", mqlKey)
 					}
-					mqlKey := mqlKeyResource.(AwsKmsKey)
-					args = append(args, "kmsKey", mqlKey)
 				}
 				if trail.CloudWatchLogsLogGroupArn != nil {
 					mqlLoggroup, err := t.MotorRuntime.CreateResource("aws.cloudwatch.loggroup",
 						"arn", core.ToString(trail.CloudWatchLogsLogGroupArn),
 					)
+					// means the log group does not exist or we have no access to it
+					// dont err out, just assign nil
 					if err != nil {
-						return nil, err
+						args = append(args, "logGroup", nil)
+					} else {
+						mqlLog := mqlLoggroup.(AwsCloudwatchLoggroup)
+						args = append(args, "logGroup", mqlLog)
 					}
-					mqlLog := mqlLoggroup.(AwsCloudwatchLoggroup)
-					args = append(args, "logGroup", mqlLog)
 				}
 
 				mqlAwsCloudtrailTrail, err := t.MotorRuntime.CreateResource("aws.cloudtrail.trail", args...)
