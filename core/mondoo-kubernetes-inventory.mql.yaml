@@ -1,7 +1,7 @@
 packs:
-  - uid: mondoo-kubernetes-cluster-inventory
-    name: Kubernetes Cluster Inventory Pack
-    version: 1.1.0
+  - uid: mondoo-kubernetes-inventory
+    name: Kubernetes Inventory Pack
+    version: 1.0.0
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
@@ -10,7 +10,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The Kubernetes Cluster Inventory Pack by Mondoo pack is designed to retrieve data about a Kubernetes Cluster for asset inventory. 
+        The Kubernetes Inventory Pack by Mondoo pack is designed to retrieve data about a Kubernetes Cluster for asset inventory. 
 
         To run this pack for a Kubernetes Cluster:
 
@@ -22,162 +22,117 @@ packs:
         Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
         
         If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
-    filters:
-      - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
-    queries:
-      - uid: k8s-cluster-version
-        title: Retrieve Kubernetes cluster version
-        query: |
-          k8s.serverVersion
-      - uid: k8s-cluster-namespaces
-        title: Retrieve Kubernetes cluster namespaces
-        query: |
-          k8s.namespaces{ * }
-      - uid: k8s-cluster-nodes
-        title: Retrieve cluster modes
-        query: |
-          k8s.nodes { * }
-      - uid: k8s-cluster-clusterroles
-        title: Retrieve cluster RBAC ClusterRoles
-        query: |
-          k8s.clusterroles { * }      
-  - uid: mondoo-kubernetes-pods-inventory
-    name: Kubernetes Pods Inventory Pack
-    version: 1.1.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: best-practices
-    filters:
-      - asset.platform == "k8s-pod"
-    queries:
-      - uid: k8s-pod
-        title: Retrieve Pod information
-        query: |
-          k8s.pod { * }
-      - uid: k8s-pod-container
-        title: Retrieve container information
-        query: |
-          k8s.pod.containers { * }
-  - uid: mondoo-kubernetes-deployments-inventory
-    name: Kubernetes Deployments Inventory Pack
-    version: 1.1.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: best-practices
-    filters:
-      - asset.platform == "k8s-deployment"
-    queries:
-      - uid: k8s-deployment
-        title: Retrieve deployment information
-        query: |
-          k8s.deployment { * }
-      - uid: k8s-deployment-container
-        title: Retrieve container information
-        query: |
-          k8s.deployment.containers { * }
-  - uid: mondoo-kubernetes-cronjobs-inventory
-    name: Kubernetes CronJobs Inventory Pack
-    version: 1.1.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: best-practices
-    filters:
-      - asset.platform == "k8s-cronjob"
-    queries:
-      - uid: k8s-cronjob
-        title: Retrieve CronJob information
-        query: |
-          k8s.cronjob { * }
-      - uid: k8s-cronjob-container
-        title: Retrieve container information
-        query: |
-          k8s.cronjob.containers { * }
-  - uid: mondoo-kubernetes-jobs-inventory
-    name: Kubernetes Jobs Inventory Pack
-    version: 1.1.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: best-practices
-    filters:
-      - asset.platform == "k8s-job"
-    queries:
-      - uid: k8s-job
-        title: Retrieve Job information
-        query: |
-          k8s.job { * }
-      - uid: k8s-job-container
-        title: Retrieve container information
-        query: |
-          k8s.job.containers { * }
-  - uid: mondoo-kubernetes-daemonsets-inventory
-    name: Kubernetes DaemonSets Inventory Pack
-    version: 1.1.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: best-practices
-    filters:
-      - asset.platform == "k8s-daemonset"
-    queries:
-      - uid: k8s-daemonset
-        title: Retrieve DaemonSet information
-        query: |
-          k8s.daemonset { * }
-      - uid: k8s-daemonset-container
-        title: Retrieve container information
-        query: |
-          k8s.daemonset.containers { * }
-  - uid: mondoo-kubernetes-statefulsets-inventory
-    name: Kubernetes StatefulSets Inventory Pack
-    version: 1.1.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: best-practices
-    filters:
-      - asset.platform == "k8s-statefulset"
-    queries:
-      - uid: k8s-statefulset
-        title: Retrieve StatefulSet information
-        query: |
-          k8s.statefulset { * }
-      - uid: k8s-statefulset-container
-        title: Retrieve Container information
-        query: |
-          k8s.statefulset.containers { * }
-  - uid: mondoo-kubernetes-replicasets-inventory
-    name: Kubernetes ReplicaSets Inventory Pack
-    version: 1.1.0
-    authors:
-      - name: Mondoo, Inc
-        email: hello@mondoo.com
-    tags:
-      mondoo.com/platform: kubernetes,k8s # remove k8s when v9 is released
-      mondoo.com/category: best-practices
-    filters:
-      - asset.platform == "k8s-replicaset"
-    queries:
-      - uid: k8s-replicaset
-        title: Retrieve ReplicaSet information
-        query: |
-          k8s.replicaset { * }
-      - uid: k8s-replicaset-container
-        title: Retrieve container information
-        query: |
-          k8s.replicaset.containers { * }
+    groups:
+      - title: Cluster inventory
+        filters:
+          - asset.platform == "kubernetes" || asset.platform == "k8s-cluster"
+        queries:
+          - uid: k8s-cluster-version
+            title: Retrieve Kubernetes cluster version
+            query: |
+              k8s.serverVersion
+          - uid: k8s-cluster-namespaces
+            title: Retrieve Kubernetes cluster namespaces
+            query: |
+              k8s.namespaces{ * }
+          - uid: k8s-cluster-nodes
+            title: Retrieve cluster modes
+            query: |
+              k8s.nodes { * }
+          - uid: k8s-cluster-clusterroles
+            title: Retrieve cluster RBAC ClusterRoles
+            query: |
+              k8s.clusterroles { * }     
+      - title: Pods inventory
+        filters:
+          - asset.platform == "k8s-pod"
+        queries:
+          - uid: k8s-pod
+            title: Retrieve Pod information
+            query: |
+              k8s.pod { * }
+          - uid: k8s-pod-container
+            title: Retrieve container information
+            query: |
+              k8s.pod.containers { * } 
+      - title: Deployments inventory
+        filters:
+          - asset.platform == "k8s-deployment"
+        queries:
+          - uid: k8s-deployment
+            title: Retrieve deployment information
+            query: |
+              k8s.deployment { * }
+          - uid: k8s-deployment-container
+            title: Retrieve container information
+            query: |
+              k8s.deployment.containers { * }
+      - title: CronJobs inventory
+        filters:
+          - asset.platform == "k8s-cronjob"
+        queries:
+          - uid: k8s-cronjob
+            title: Retrieve CronJob information
+            query: |
+              k8s.cronjob { * }
+          - uid: k8s-cronjob-container
+            title: Retrieve container information
+            query: |
+              k8s.cronjob.containers { * }
+      - title: Jobs inventory
+        filters:
+          - asset.platform == "k8s-job"
+        queries:
+          - uid: k8s-job
+            title: Retrieve Job information
+            query: |
+              k8s.job { * }
+          - uid: k8s-job-container
+            title: Retrieve container information
+            query: |
+              k8s.job.containers { * }
+      - title: DaemonSets inventory
+        filters:
+          - asset.platform == "k8s-daemonset"
+        queries:
+          - uid: k8s-daemonset
+            title: Retrieve DaemonSet information
+            query: |
+              k8s.daemonset { * }
+          - uid: k8s-daemonset-container
+            title: Retrieve container information
+            query: |
+              k8s.daemonset.containers { * }
+      - title: StatefulSets inventory
+        filters:
+          - asset.platform == "k8s-statefulset"
+        queries:
+          - uid: k8s-statefulset
+            title: Retrieve StatefulSet information
+            query: |
+              k8s.statefulset { * }
+          - uid: k8s-statefulset-container
+            title: Retrieve Container information
+            query: |
+              k8s.statefulset.containers { * }
+      - title: ReplicaSets inventory
+        filters:
+          - asset.platform == "k8s-replicaset"
+        queries:
+          - uid: k8s-replicaset
+            title: Retrieve ReplicaSet information
+            query: |
+              k8s.replicaset { * }
+          - uid: k8s-replicaset-container
+            title: Retrieve container information
+            query: |
+              k8s.replicaset.containers { * }
+      - title: Ingresses inventory
+        filters:
+          - asset.platform == "k8s-ingress"
+        queries:
+          - uid: k8s-ingress
+            title: Retrieve Ingress information
+            query: |
+              k8s.ingress { * }
+    
