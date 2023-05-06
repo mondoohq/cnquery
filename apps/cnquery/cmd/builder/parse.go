@@ -454,7 +454,19 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		case GcpFolderAssetType:
 			connection.Options["folder-id"] = args[0]
 		}
-
+	case providers.ProviderType_OCI:
+		connection.Backend = providerType
+		//if profile, err := cmd.Flags().GetString("profile"); err != nil {
+		//	log.Fatal().Err(err).Msg("cannot parse --profile value")
+		//} else if profile != "" {
+		//	connection.Options["profile"] = profile
+		//}
+		//
+		//if region, err := cmd.Flags().GetString("region"); err != nil {
+		//	log.Fatal().Err(err).Msg("cannot parse --region values")
+		//} else if region != "" {
+		//	connection.Options["region"] = region
+		//}
 	case providers.ProviderType_VSPHERE:
 		connection.Backend = providerType
 		target, err := parseTarget(args[0])

@@ -1,0 +1,153 @@
+option go_package = "go.mondoo.com/cnquery/resources/packs/oci"
+
+// Oracle Cloud Infrastructure Tenant
+oci {
+  regions() []oci.region
+  compartments() []oci.compartment
+}
+
+// OCI region
+private oci.region @defaults("id name") {
+  // Region's key
+  id string
+  // Region name
+  name string
+  // Indicates if the region is the home region
+  isHomeRegion bool
+  // Region subscription status
+  status string
+}
+
+// OCI compartment
+private oci.compartment @defaults("name") {
+  // Compartment ID
+  id string
+  // Compartment name
+  name string
+  // Description of the compartment
+  description string
+  // Time when the compartment was created
+  created time
+  // Compartment state
+  lifecycleState string
+}
+
+oci.identity {
+  users() []oci.identity.user
+  groups() []oci.identity.group
+}
+
+// OCI identity user
+private oci.identity.user @defaults("name") {
+  // User ID
+  id string
+  // Tenancy containing the user
+  compartmentID string
+  // Name of the user
+  name string
+  // Description of the user
+  description string
+  // Time when the user was created
+  created time
+  // Instance state
+  lifecycleState string
+  // Indicates if MFA has been activated
+  mfaActivated bool
+  // User email address
+  email string
+  // Indicates if email was verified
+  emailVerified bool
+  // Properties indicating how the user is allowed to authenticate
+  capabilities map[string]bool
+  // most recently login
+  lastLogin time
+  // previous login
+  previousLogin time
+  // API keys
+  apiKeys() []oci.identity.apiKey
+  // Customer secret keys
+  customerSecretKeys() []oci.identity.customerSecretKey
+  // Auth tokens
+  authTokens() []oci.identity.authToken
+  // User Groups
+  groups() []oci.identity.group
+}
+
+// OCI ApiKey A PEM-format RSA credential
+private oci.identity.apiKey @defaults("fingerprint") {
+  // Key ID
+  id string
+  // Key value
+  value string
+  // Key fingerprint
+  fingerprint string
+  // Time when the key was created
+  created time
+  // Key state
+  lifecycleState string
+}
+
+// OCI CustomerSecretKey for OCI Object Storage Service
+private oci.identity.customerSecretKey @defaults("name") {
+  // Key ID
+  id string
+  // Key name
+  name string
+  // Time when the key was created
+  created time
+  // Key state
+  lifecycleState string
+}
+
+// OCI token string
+private oci.identity.authToken @defaults("description") {
+  // Token ID
+  id string
+  // Token description
+  description string
+  // Time when the token was created
+  created time
+  // Time when the token will expire
+  expires time
+  // Key state
+  lifecycleState string
+}
+
+// OCI collection of users
+private oci.identity.group @defaults("name") {
+  // User ID
+  id string
+  // Tenancy containing the user
+  compartmentID string
+  // Name of the user
+  name string
+  // Description of the user
+  description string
+  // Time when the user was created
+  created time
+  // Instance state
+  lifecycleState string
+}
+
+oci.compute {
+  instances() []oci.compute.instance
+  images() []oci.compute.image
+}
+
+// OCI compute instance
+private oci.compute.instance {
+  // Instance ID
+  id string
+  // Instance name
+  name string
+  // Region
+  region oci.region
+  // Time when the instance was created
+  created time
+  // Instance state
+  lifecycleState string
+}
+
+private oci.compute.image {
+
+}

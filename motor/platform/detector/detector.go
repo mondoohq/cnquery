@@ -17,6 +17,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/motor/providers/oci"
 	"go.mondoo.com/cnquery/motor/providers/okta"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/slack"
@@ -129,6 +130,8 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	case *slack.Provider:
 		return pt.PlatformInfo()
 	case *vcd.Provider:
+		return pt.PlatformInfo()
+	case *oci.Provider:
 		return pt.PlatformInfo()
 	case os.OperatingSystemProvider:
 		var resolved bool
