@@ -156,3 +156,10 @@ resources:
       status: {}
     is_private: true
     min_mondoo_version: latest
+  oci.tenancy:
+    fields:
+      description: {}
+      id: {}
+      name: {}
+      retentionPeriod: {}
+    min_mondoo_version: latest

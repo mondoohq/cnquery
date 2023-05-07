@@ -5,6 +5,11 @@ import (
 	"errors"
 	"time"
 
+	"go.mondoo.com/cnquery/llx"
+
+	"github.com/oracle/oci-go-sdk/v65/audit"
+	"go.mondoo.com/cnquery/resources"
+
 	"go.mondoo.com/cnquery/motor/providers"
 	oci_provider "go.mondoo.com/cnquery/motor/providers/oci"
 	"go.mondoo.com/cnquery/resources/packs/core"
@@ -115,4 +120,62 @@ func (o *mqlOciCompartment) id() (string, error) {
 		return "", err
 	}
 	return "oci.compartment/" + id, nil
+}
+
+func (o *mqlOciTenancy) id() (string, error) {
+	return "oci.tenancy", nil
+}
+
+func (o *mqlOciTenancy) init(args *resources.Args) (*resources.Args, OciTenancy, error) {
+	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, nil, err
+	}
+	tenancy, err := provider.Tenant(context.Background())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["id"] = core.ToString(tenancy.Id)
+	(*args)["name"] = core.ToString(tenancy.Name)
+	(*args)["description"] = core.ToString(tenancy.Description)
+
+	return args, nil, nil
+}
+
+func (o *mqlOciTenancy) GetRetentionPeriod() (*time.Time, error) {
+	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	tenancy, err := provider.Tenant(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if tenancy.HomeRegionKey == nil {
+		return nil, errors.New("no home region set")
+	}
+
+	client, err := provider.AuditClient(*tenancy.HomeRegionKey)
+	if err != nil {
+		return nil, err
+	}
+	response, err := client.GetConfiguration(ctx, audit.GetConfigurationRequest{
+		CompartmentId: tenancy.Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// retention period is in days
+	if response.Configuration.RetentionPeriodDays == nil {
+		return nil, nil
+	}
+
+	days := time.Duration(*response.Configuration.RetentionPeriodDays) * 24 * time.Hour
+	ts := core.MqlTime(llx.DurationToTime(int64(days.Seconds())))
+	return ts, nil
 }

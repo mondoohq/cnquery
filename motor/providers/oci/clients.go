@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
+	"github.com/oracle/oci-go-sdk/v65/audit"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/oracle/oci-go-sdk/v65/identity"
@@ -104,28 +105,37 @@ func (p *Provider) GetRegions(ctx context.Context) ([]identity.RegionSubscriptio
 }
 
 func (p *Provider) ComputeClient(region string) (*core.ComputeClient, error) {
-	coreComputeClient, err := core.NewComputeClientWithConfigurationProvider(p.config)
+	client, err := core.NewComputeClientWithConfigurationProvider(p.config)
 	if err != nil {
 		return nil, err
 	}
-	coreComputeClient.SetRegion(region)
-	return &coreComputeClient, nil
+	client.SetRegion(region)
+	return &client, nil
 }
 
 func (p *Provider) IdentityClientWithRegion(region string) (*identity.IdentityClient, error) {
-	identityClient, err := identity.NewIdentityClientWithConfigurationProvider(p.config)
+	client, err := identity.NewIdentityClientWithConfigurationProvider(p.config)
 	if err != nil {
 		return nil, err
 	}
-	identityClient.SetRegion(region)
-	return &identityClient, nil
+	client.SetRegion(region)
+	return &client, nil
 }
 
 func (p *Provider) NetworkClient(region string) (*core.VirtualNetworkClient, error) {
-	networkClient, err := core.NewVirtualNetworkClientWithConfigurationProvider(p.config)
+	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(p.config)
 	if err != nil {
 		return nil, err
 	}
-	networkClient.SetRegion(region)
-	return &networkClient, nil
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (p *Provider) AuditClient(region string) (*audit.AuditClient, error) {
+	client, err := audit.NewAuditClientWithConfigurationProvider(p.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
 }

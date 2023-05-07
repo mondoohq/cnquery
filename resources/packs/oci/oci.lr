@@ -6,6 +6,18 @@ oci {
   compartments() []oci.compartment
 }
 
+// OCI Tenancy
+oci.tenancy @defaults("name") {
+  // Compartment ID
+  id string
+  // Compartment name
+  name string
+  // Description of the compartment
+  description string
+  // Retention period setting
+  retentionPeriod() time
+}
+
 // OCI region
 private oci.region @defaults("id name") {
   // Region's key
