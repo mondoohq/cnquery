@@ -35,6 +35,7 @@ private oci.compartment @defaults("name") {
 oci.identity {
   users() []oci.identity.user
   groups() []oci.identity.group
+  policies() []oci.identity.policy
 }
 
 // OCI identity user
@@ -127,6 +128,24 @@ private oci.identity.group @defaults("name") {
   created time
   // Instance state
   lifecycleState string
+}
+
+// Policy specifies the type of access a group has to the resources in a compartment
+private oci.identity.policy @defaults("name description") {
+  // User ID
+  id string
+  // Tenancy containing the policy
+  compartmentID string
+  // Name of the policy
+  name string
+  // Description of the policy
+  description string
+  // Time when the policy was created
+  created time
+  // Instance state
+  lifecycleState string
+  // Policy statements
+  statements []string
 }
 
 oci.compute {

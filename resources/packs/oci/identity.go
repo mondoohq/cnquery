@@ -487,3 +487,112 @@ func (o *mqlOciIdentityGroup) id() (string, error) {
 	}
 	return "oci.identity.group/" + id, nil
 }
+
+func (o *mqlOciIdentity) GetPolicies() ([]interface{}, error) {
+	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(o.getPolicies(provider), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (s *mqlOciIdentity) getPoliciesForRegion(ctx context.Context, identityClient *identity.IdentityClient, compartmentID string) ([]identity.Policy, error) {
+	policies := []identity.Policy{}
+	var page *string
+	for {
+		request := identity.ListPoliciesRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
+		}
+
+		response, err := identityClient.ListPolicies(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+
+		policies = append(policies, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+
+		page = response.OpcNextPage
+	}
+
+	return policies, nil
+}
+
+func (s *mqlOciIdentity) getPolicies(provider *oci_provider.Provider) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := provider.GetRegions(ctx)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci with region %s", regionVal)
+
+			svc, err := provider.IdentityClientWithRegion(*regionVal.RegionKey)
+			if err != nil {
+				return nil, err
+			}
+
+			var res []interface{}
+			policies, err := s.getPoliciesForRegion(ctx, svc, provider.TenantID())
+			if err != nil {
+				return nil, err
+			}
+
+			for i := range policies {
+				policy := policies[i]
+
+				var created *time.Time
+				if policy.TimeCreated != nil {
+					created = &policy.TimeCreated.Time
+				}
+
+				mqlInstance, err := s.MotorRuntime.CreateResource("oci.identity.policy",
+					"id", corePack.ToString(policy.Id),
+					"name", corePack.ToString(policy.Name),
+					"description", corePack.ToString(policy.Description),
+					"created", created,
+					"lifecycleState", string(policy.LifecycleState),
+					"compartmentID", corePack.ToString(policy.CompartmentId),
+					"statements", corePack.StrSliceToInterface(policy.Statements),
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlInstance)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
+}
+
+func (o *mqlOciIdentityPolicy) id() (string, error) {
+	id, err := o.Id()
+	if err != nil {
+		return "", err
+	}
+	return "oci.identity.policy/" + id, nil
+}
