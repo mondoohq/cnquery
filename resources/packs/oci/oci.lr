@@ -237,3 +237,35 @@ private oci.network.securityList @defaults("name") {
   ingressSecurityRules []dict
 }
 
+// OCI object storage
+oci.objectStorage {
+  namespace() string
+  // Buckets
+  buckets() []oci.objectStorage.bucket
+}
+
+// OCI object storage bucket
+private oci.objectStorage.bucket {
+  // Bucket namespace
+  namespace string
+  // Bucket name
+  name string
+  // Tenancy containing the bucket
+  compartmentID string
+  // Time when the vcn was created
+  created time
+  // Region
+  region oci.region
+  // Type of public access enabled
+  publicAccessType() string
+  // Storage tier type
+  storageTier() string
+  // auto tiering status
+  autoTiering() string
+  // Bucket versioning
+  versioning() string
+  // Indicates if events are emitted for object state changes
+  objectEventsEnabled() bool
+  // Indicates if bucket is a replication source
+  replicationEnabled() bool
+}

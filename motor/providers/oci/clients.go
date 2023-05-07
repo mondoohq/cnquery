@@ -8,6 +8,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
 	"github.com/oracle/oci-go-sdk/v65/identity"
+	"github.com/oracle/oci-go-sdk/v65/objectstorage"
 )
 
 func (p *Provider) IdentityClient() (identity.IdentityClient, error) {
@@ -133,6 +134,15 @@ func (p *Provider) NetworkClient(region string) (*core.VirtualNetworkClient, err
 
 func (p *Provider) AuditClient(region string) (*audit.AuditClient, error) {
 	client, err := audit.NewAuditClientWithConfigurationProvider(p.config)
+	if err != nil {
+		return nil, err
+	}
+	client.SetRegion(region)
+	return &client, nil
+}
+
+func (p *Provider) ObjectStorageClient(region string) (*objectstorage.ObjectStorageClient, error) {
+	client, err := objectstorage.NewObjectStorageClientWithConfigurationProvider(p.config)
 	if err != nil {
 		return nil, err
 	}

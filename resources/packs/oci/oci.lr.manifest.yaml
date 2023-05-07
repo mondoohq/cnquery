@@ -148,6 +148,26 @@ resources:
       securityLists: {}
     is_private: true
     min_mondoo_version: latest
+  oci.objectStorage:
+    fields:
+      buckets: {}
+      namespace: {}
+    min_mondoo_version: latest
+  oci.objectStorage.bucket:
+    fields:
+      autoTiering: {}
+      compartmentID: {}
+      created: {}
+      name: {}
+      namespace: {}
+      objectEventsEnabled: {}
+      publicAccessType: {}
+      region: {}
+      replicationEnabled: {}
+      storageTier: {}
+      versioning: {}
+    is_private: true
+    min_mondoo_version: latest
   oci.region:
     fields:
       id: {}
