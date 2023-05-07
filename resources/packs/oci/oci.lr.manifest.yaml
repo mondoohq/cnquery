@@ -122,10 +122,31 @@ resources:
     min_mondoo_version: latest
   oci.network:
     fields:
+      securityLists: {}
       vcns: {}
     min_mondoo_version: latest
+  oci.network.securityList:
+    fields:
+      compartmentID: {}
+      created: {}
+      egressSecurityRules: {}
+      id: {}
+      ingressSecurityRules: {}
+      lifecycleState: {}
+      name: {}
+    is_private: true
+    min_mondoo_version: latest
   oci.network.vcn:
-    fields: {}
+    fields:
+      cidrBlock: {}
+      cidrBlocks: {}
+      compartmentID: {}
+      created: {}
+      id: {}
+      lifecycleState: {}
+      name: {}
+      securityLists: {}
+    is_private: true
     min_mondoo_version: latest
   oci.region:
     fields:

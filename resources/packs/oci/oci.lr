@@ -154,7 +154,7 @@ oci.compute {
 }
 
 // OCI compute instance
-private oci.compute.instance {
+private oci.compute.instance @defaults("name") {
   // Instance ID
   id string
   // Instance name
@@ -168,7 +168,7 @@ private oci.compute.instance {
 }
 
 // OCI compute image
-private oci.compute.image {
+private oci.compute.image @defaults("name") {
   // Image ID
   id string
   // Image name
@@ -180,3 +180,48 @@ private oci.compute.image {
   // Image state
   lifecycleState string
 }
+
+// OCI Networking
+oci.network {
+  // Virtual Cloud Networks
+  vcns() []oci.network.vcn
+  // VCN Security List
+  securityLists() []oci.network.securityList
+}
+
+// OCI virtual cloud network (VCN)
+private oci.network.vcn @defaults("name") {
+  // Vcn ID
+  id string
+  // Tenancy containing the vcn
+  compartmentID string
+  // Vcn name
+  name string
+  // Time when the vcn was created
+  created time
+  // Vcn state
+  lifecycleState string
+  // deprecated: first CIDR IP address from cidrBlocks
+  cidrBlock string
+  // List of IPv4 CIDR blocks
+  cidrBlocks []string
+}
+
+// OCI VCN SecurityList virtual firewall rules
+private oci.network.securityList @defaults("name") {
+  // SecurityList ID
+  id string
+  // Tenancy containing the vcn
+  compartmentID string
+  // Vcn name
+  name string
+  // Time when the vcn was created
+  created time
+  // Vcn state
+  lifecycleState string
+  // Rules for allowing egress IP packets
+  egressSecurityRules []dict
+  // Rules for allowing ingress IP packets
+  ingressSecurityRules []dict
+}
+

@@ -120,3 +120,12 @@ func (p *Provider) IdentityClientWithRegion(region string) (*identity.IdentityCl
 	identityClient.SetRegion(region)
 	return &identityClient, nil
 }
+
+func (p *Provider) NetworkClient(region string) (*core.VirtualNetworkClient, error) {
+	networkClient, err := core.NewVirtualNetworkClientWithConfigurationProvider(p.config)
+	if err != nil {
+		return nil, err
+	}
+	networkClient.SetRegion(region)
+	return &networkClient, nil
+}
