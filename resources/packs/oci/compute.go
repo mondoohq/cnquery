@@ -2,7 +2,6 @@ package oci
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -83,7 +82,7 @@ func (o *mqlOciCompute) getComputeInstances(provider *oci_provider.Provider) []*
 			}
 
 			var res []interface{}
-			instances, err := o.getComputeInstancesForRegion(ctx, svc, "ocid1.tenancy.oc1..aaaaaaaabnjfuyr73mmvv6ep7heu57576mtqbhju5ni275c6rrfqiu6q6joq")
+			instances, err := o.getComputeInstancesForRegion(ctx, svc, provider.TenantID())
 			if err != nil {
 				return nil, err
 			}
@@ -125,7 +124,102 @@ func (o *mqlOciComputeInstance) id() (string, error) {
 }
 
 func (o *mqlOciCompute) GetImages() ([]interface{}, error) {
-	return nil, errors.New("not implemented")
+	provider, err := ociProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []interface{}{}
+	poolOfJobs := jobpool.CreatePool(o.getComputeInstances(provider), 5)
+	poolOfJobs.Run()
+
+	// check for errors
+	if poolOfJobs.HasErrors() {
+		return nil, poolOfJobs.GetErrors()
+	}
+	// get all the results
+	for i := range poolOfJobs.Jobs {
+		res = append(res, poolOfJobs.Jobs[i].Result.([]interface{})...)
+	}
+
+	return res, nil
+}
+
+func (o *mqlOciCompute) getComputeImagesForRegion(ctx context.Context, computeClient *core.ComputeClient, compartmentID string) ([]core.Image, error) {
+	images := []core.Image{}
+	var page *string
+	for {
+		request := core.ListImagesRequest{
+			CompartmentId: common.String(compartmentID),
+			Page:          page,
+		}
+
+		response, err := computeClient.ListImages(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+
+		images = append(images, response.Items...)
+
+		if response.OpcNextPage == nil {
+			break
+		}
+
+		page = response.OpcNextPage
+	}
+
+	return images, nil
+}
+
+func (o *mqlOciCompute) getComputeImage(provider *oci_provider.Provider) []*jobpool.Job {
+	ctx := context.Background()
+	tasks := make([]*jobpool.Job, 0)
+	regions, err := provider.GetRegions(ctx)
+	if err != nil {
+		return []*jobpool.Job{{Err: err}} // return the error
+	}
+	for _, region := range regions {
+		regionVal := region
+		f := func() (jobpool.JobResult, error) {
+			log.Debug().Msgf("calling oci with region %s", regionVal)
+
+			svc, err := provider.ComputeClient(*regionVal.RegionKey)
+			if err != nil {
+				return nil, err
+			}
+
+			var res []interface{}
+			images, err := o.getComputeInstancesForRegion(ctx, svc, provider.TenantID())
+			if err != nil {
+				return nil, err
+			}
+
+			for i := range images {
+				image := images[i]
+
+				var created *time.Time
+				if image.TimeCreated != nil {
+					created = &image.TimeCreated.Time
+				}
+
+				mqlInstance, err := o.MotorRuntime.CreateResource("oci.compute.image",
+					"id", corePack.ToString(image.Id),
+					"name", corePack.ToString(image.DisplayName),
+					"region", region,
+					"created", created,
+					"lifecycleState", string(image.LifecycleState),
+				)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, mqlInstance)
+			}
+
+			return jobpool.JobResult(res), nil
+		}
+		tasks = append(tasks, jobpool.NewJob(f))
+	}
+	return tasks
 }
 
 func (o *mqlOciComputeImage) id() (string, error) {

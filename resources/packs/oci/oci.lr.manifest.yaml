@@ -19,7 +19,12 @@ resources:
       instances: {}
     min_mondoo_version: latest
   oci.compute.image:
-    fields: {}
+    fields:
+      created: {}
+      id: {}
+      lifecycleState: {}
+      name: {}
+      region: {}
     is_private: true
     min_mondoo_version: latest
   oci.compute.instance:
@@ -114,6 +119,13 @@ resources:
       name: {}
       previousLogin: {}
     is_private: true
+    min_mondoo_version: latest
+  oci.network:
+    fields:
+      vcns: {}
+    min_mondoo_version: latest
+  oci.network.vcn:
+    fields: {}
     min_mondoo_version: latest
   oci.region:
     fields:

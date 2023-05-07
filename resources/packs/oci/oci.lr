@@ -167,6 +167,16 @@ private oci.compute.instance {
   lifecycleState string
 }
 
+// OCI compute image
 private oci.compute.image {
-
+  // Image ID
+  id string
+  // Image name
+  name string
+  // Region
+  region oci.region
+  // Time when the image was created
+  created time
+  // Image state
+  lifecycleState string
 }
