@@ -11,6 +11,7 @@ resources:
       id: {}
       lifecycleState: {}
       name: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.compute:
@@ -25,6 +26,7 @@ resources:
       lifecycleState: {}
       name: {}
       region: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.compute.instance:
@@ -34,6 +36,7 @@ resources:
       lifecycleState: {}
       name: {}
       region: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.identity:
@@ -48,6 +51,7 @@ resources:
       fingerprint: {}
       id: {}
       lifecycleState: {}
+      state: {}
       value: {}
     is_private: true
     min_mondoo_version: latest
@@ -66,6 +70,7 @@ resources:
       expires: {}
       id: {}
       lifecycleState: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.identity.customerSecretKey:
@@ -76,6 +81,7 @@ resources:
       id: {}
       lifecycleState: {}
       name: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.identity.group:
@@ -86,6 +92,7 @@ resources:
       id: {}
       lifecycleState: {}
       name: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.identity.policy:
@@ -96,6 +103,7 @@ resources:
       id: {}
       lifecycleState: {}
       name: {}
+      state: {}
       statements: {}
     is_private: true
     min_mondoo_version: latest
@@ -118,6 +126,7 @@ resources:
       mfaActivated: {}
       name: {}
       previousLogin: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.network:
@@ -134,6 +143,7 @@ resources:
       ingressSecurityRules: {}
       lifecycleState: {}
       name: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.network.vcn:
@@ -146,6 +156,7 @@ resources:
       lifecycleState: {}
       name: {}
       securityLists: {}
+      state: {}
     is_private: true
     min_mondoo_version: latest
   oci.objectStorage:

@@ -2,7 +2,9 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/oci"
 
 // Oracle Cloud Infrastructure Tenant
 oci {
+  // Regions
   regions() []oci.region
+  // Compartments
   compartments() []oci.compartment
 }
 
@@ -41,12 +43,16 @@ private oci.compartment @defaults("name") {
   // Time when the compartment was created
   created time
   // Compartment state
-  lifecycleState string
+  state string
 }
 
+// OCI Identity
 oci.identity {
+  // Users
   users() []oci.identity.user
+  // Groups
   groups() []oci.identity.group
+  // Policies
   policies() []oci.identity.policy
 }
 
@@ -63,7 +69,7 @@ private oci.identity.user @defaults("name") {
   // Time when the user was created
   created time
   // Instance state
-  lifecycleState string
+  state string
   // Indicates if MFA has been activated
   mfaActivated bool
   // User email address
@@ -97,7 +103,7 @@ private oci.identity.apiKey @defaults("fingerprint") {
   // Time when the key was created
   created time
   // Key state
-  lifecycleState string
+  state string
 }
 
 // OCI CustomerSecretKey for OCI Object Storage Service
@@ -109,7 +115,7 @@ private oci.identity.customerSecretKey @defaults("name") {
   // Time when the key was created
   created time
   // Key state
-  lifecycleState string
+  state string
 }
 
 // OCI token string
@@ -123,7 +129,7 @@ private oci.identity.authToken @defaults("description") {
   // Time when the token will expire
   expires time
   // Key state
-  lifecycleState string
+  state string
 }
 
 // OCI collection of users
@@ -139,7 +145,7 @@ private oci.identity.group @defaults("name") {
   // Time when the user was created
   created time
   // Instance state
-  lifecycleState string
+  state string
 }
 
 // Policy specifies the type of access a group has to the resources in a compartment
@@ -155,13 +161,16 @@ private oci.identity.policy @defaults("name description") {
   // Time when the policy was created
   created time
   // Instance state
-  lifecycleState string
+  state string
   // Policy statements
   statements []string
 }
 
+// OCI compute
 oci.compute {
+  // Instances
   instances() []oci.compute.instance
+  // Images
   images() []oci.compute.image
 }
 
@@ -176,7 +185,7 @@ private oci.compute.instance @defaults("name") {
   // Time when the instance was created
   created time
   // Instance state
-  lifecycleState string
+  state string
 }
 
 // OCI compute image
@@ -190,7 +199,7 @@ private oci.compute.image @defaults("name") {
   // Time when the image was created
   created time
   // Image state
-  lifecycleState string
+  state string
 }
 
 // OCI Networking
@@ -212,7 +221,7 @@ private oci.network.vcn @defaults("name") {
   // Time when the vcn was created
   created time
   // Vcn state
-  lifecycleState string
+  state string
   // deprecated: first CIDR IP address from cidrBlocks
   cidrBlock string
   // List of IPv4 CIDR blocks
@@ -230,7 +239,7 @@ private oci.network.securityList @defaults("name") {
   // Time when the vcn was created
   created time
   // Vcn state
-  lifecycleState string
+  state string
   // Rules for allowing egress IP packets
   egressSecurityRules []dict
   // Rules for allowing ingress IP packets
@@ -239,6 +248,7 @@ private oci.network.securityList @defaults("name") {
 
 // OCI object storage
 oci.objectStorage {
+  // Namespace
   namespace() string
   // Buckets
   buckets() []oci.objectStorage.bucket

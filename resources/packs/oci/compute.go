@@ -100,7 +100,7 @@ func (o *mqlOciCompute) getComputeInstances(provider *oci_provider.Provider) []*
 					"name", corePack.ToString(instance.DisplayName),
 					"region", region,
 					"created", created,
-					"lifecycleState", string(instance.LifecycleState),
+					"state", string(instance.LifecycleState),
 				)
 				if err != nil {
 					return nil, err
@@ -207,7 +207,7 @@ func (o *mqlOciCompute) getComputeImage(provider *oci_provider.Provider) []*jobp
 					"name", corePack.ToString(image.DisplayName),
 					"region", region,
 					"created", created,
-					"lifecycleState", string(image.LifecycleState),
+					"state", string(image.LifecycleState),
 				)
 				if err != nil {
 					return nil, err

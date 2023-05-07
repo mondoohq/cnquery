@@ -120,7 +120,7 @@ func (s *mqlOciIdentity) getUsers(provider *oci_provider.Provider) []*jobpool.Jo
 					"name", corePack.ToString(user.Name),
 					"description", corePack.ToString(user.Description),
 					"created", created,
-					"lifecycleState", string(user.LifecycleState),
+					"state", string(user.LifecycleState),
 					"mfaActivated", corePack.ToBool(user.IsMfaActivated),
 					"compartmentID", corePack.ToString(user.CompartmentId),
 					"email", corePack.ToString(user.Email),
@@ -185,7 +185,7 @@ func (o *mqlOciIdentityUser) GetApiKeys() ([]interface{}, error) {
 			"value", corePack.ToString(apikey.KeyValue),
 			"fingerprint", corePack.ToString(apikey.Fingerprint),
 			"created", created,
-			"lifecycleState", string(apikey.LifecycleState),
+			"state", string(apikey.LifecycleState),
 		)
 		if err != nil {
 			return nil, err
@@ -238,7 +238,7 @@ func (o *mqlOciIdentityUser) GetCustomerSecretKeys() ([]interface{}, error) {
 			"id", corePack.ToString(secretKey.Id),
 			"name", corePack.ToString(secretKey.DisplayName),
 			"created", created,
-			"lifecycleState", string(secretKey.LifecycleState),
+			"state", string(secretKey.LifecycleState),
 		)
 		if err != nil {
 			return nil, err
@@ -296,7 +296,7 @@ func (o *mqlOciIdentityUser) GetAuthTokens() ([]interface{}, error) {
 			"description", corePack.ToString(authToken.Description),
 			"created", created,
 			"expires", expires,
-			"lifecycleState", string(authToken.LifecycleState),
+			"state", string(authToken.LifecycleState),
 		)
 		if err != nil {
 			return nil, err
@@ -464,7 +464,7 @@ func (s *mqlOciIdentity) getGroups(provider *oci_provider.Provider) []*jobpool.J
 					"name", corePack.ToString(grp.Name),
 					"description", corePack.ToString(grp.Description),
 					"created", created,
-					"lifecycleState", string(grp.LifecycleState),
+					"state", string(grp.LifecycleState),
 					"compartmentID", corePack.ToString(grp.CompartmentId),
 				)
 				if err != nil {
@@ -572,7 +572,7 @@ func (s *mqlOciIdentity) getPolicies(provider *oci_provider.Provider) []*jobpool
 					"name", corePack.ToString(policy.Name),
 					"description", corePack.ToString(policy.Description),
 					"created", created,
-					"lifecycleState", string(policy.LifecycleState),
+					"state", string(policy.LifecycleState),
 					"compartmentID", corePack.ToString(policy.CompartmentId),
 					"statements", corePack.StrSliceToInterface(policy.Statements),
 				)

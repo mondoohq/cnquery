@@ -103,7 +103,7 @@ func (o *mqlOci) GetCompartments() ([]interface{}, error) {
 			"name", core.ToString(compartment.Name),
 			"description", core.ToString(compartment.Description),
 			"created", created,
-			"lifecycleState", string(compartment.LifecycleState),
+			"state", string(compartment.LifecycleState),
 		)
 		if err != nil {
 			return nil, err
