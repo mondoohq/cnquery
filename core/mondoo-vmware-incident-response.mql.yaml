@@ -37,8 +37,8 @@ packs:
         title: Retrieve installed packages
         query: vsphere.host.packages { * } 
       - uid: mondoo-vmware-incident-response-running-services
-        title: Retrieve running services
-        query: vsphere.host.services.where (running) { * }
+        title: Retrieve all services
+        query: vsphere.host.services { * }
         refs:
           - title: VMSA-2021-0002
             url: https://www.vmware.com/security/advisories/VMSA-2021-0002.html
