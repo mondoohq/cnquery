@@ -1075,8 +1075,6 @@ private aws.dynamodb.globaltable @defaults("arn") {
   name string
   // List of replica settings for the table
   replicaSettings() []dict
-  // Tags for the table
-  tags map[string]string
 }
 
 // Amazon DynamoDB Table
@@ -1096,7 +1094,7 @@ private aws.dynamodb.table @defaults("arn") {
   // Continuous backups and point in time recovery settings for the table
   continuousBackups() dict
   // Tags for the table
-  tags map[string]string
+  tags() map[string]string
 }
 
 // Amazon Relational Database Service (RDS)
