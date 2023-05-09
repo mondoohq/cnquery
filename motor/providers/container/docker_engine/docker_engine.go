@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
 )
 
@@ -97,7 +97,7 @@ func (p *Provider) PlatformName() string {
 	return p.Metadata.Name
 }
 
-func (p *Provider) RunCommand(command string) (*os.Command, error) {
+func (p *Provider) RunCommand(command string) (*os_provider.Command, error) {
 	log.Debug().Str("command", command).Msg("docker> run command")
 	c := &Command{dockerClient: p.dockerClient, Container: p.container}
 	res, err := c.Exec(command)
@@ -117,20 +117,26 @@ func (p *Provider) FS() afero.Fs {
 	return p.Fs
 }
 
-func (p *Provider) FileInfo(path string) (os.FileInfoDetails, error) {
+func (p *Provider) FileInfo(path string) (os_provider.FileInfoDetails, error) {
 	fs := p.FS()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return os.FileInfoDetails{}, err
+		return os_provider.FileInfoDetails{}, err
 	}
+
+	mode := stat.Mode()
 
 	uid := int64(-1)
 	gid := int64(-1)
-	mode := stat.Mode()
 
-	return os.FileInfoDetails{
-		Mode: os.FileModeDetails{mode},
+	if stat, ok := stat.Sys().(*os_provider.FileInfo); ok {
+		uid = stat.Uid
+		gid = stat.Gid
+	}
+
+	return os_provider.FileInfoDetails{
+		Mode: os_provider.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,

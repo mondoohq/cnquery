@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,16 +13,17 @@ import (
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/spf13/afero"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
 )
 
-func FileOpen(dockerClient *client.Client, path string, container string, transport *Provider) (afero.File, error) {
+func FileOpen(dockerClient *client.Client, path string, container string, provider *Provider, catFs *cat.Fs) (afero.File, error) {
 	f := &File{
 		path:         path,
 		dockerClient: dockerClient,
 		container:    container,
-		transport:    transport,
+		provider:     provider,
+		catFs:        catFs,
 	}
 	err := f.Open()
 	return f, err
@@ -33,8 +33,9 @@ type File struct {
 	path         string
 	container    string
 	dockerClient *client.Client
-	transport    *Provider
+	provider     *Provider
 	reader       *bytes.Reader
+	catFs        *cat.Fs
 }
 
 func (f *File) Open() error {
@@ -60,18 +61,7 @@ func (f *File) Name() string {
 }
 
 func (f *File) Stat() (os.FileInfo, error) {
-	r, dstat, err := f.getFileDockerReader(f.path)
-	if err != nil {
-		return nil, err
-	}
-	r.Close()
-
-	return &os_provider.FileInfo{
-		FMode:    dstat.Mode,
-		FSize:    dstat.Size,
-		FName:    dstat.Name,
-		FModTime: dstat.Mtime,
-	}, nil
+	return f.catFs.Stat(f.path)
 }
 
 func (f *File) Sync() error {
@@ -95,12 +85,12 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 }
 
 func (f *File) Readdirnames(n int) ([]string, error) {
-	c, err := f.transport.RunCommand(fmt.Sprintf("find %s -maxdepth 1 -type d", f.path))
+	c, err := f.provider.RunCommand(fmt.Sprintf("find %s -maxdepth 1 -type d", f.path))
 	if err != nil {
 		return []string{}, err
 	}
 
-	content, err := ioutil.ReadAll(c.Stdout)
+	content, err := io.ReadAll(c.Stdout)
 	if err != nil {
 		return []string{}, err
 	}
@@ -174,11 +164,11 @@ func (f *File) Tar() (io.ReadCloser, error) {
 
 // returns all directories and files under /proc
 func (f *File) procls() []string {
-	c, err := f.transport.RunCommand("find /proc")
+	c, err := f.provider.RunCommand("find /proc")
 	if err != nil {
 		return []string{}
 	}
-	content, err := ioutil.ReadAll(c.Stdout)
+	content, err := io.ReadAll(c.Stdout)
 	if err != nil {
 		return []string{}
 	}

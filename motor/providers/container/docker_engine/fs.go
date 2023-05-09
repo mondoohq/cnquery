@@ -50,7 +50,7 @@ func isDockerClientSupported(path string) bool {
 
 func (fs *FS) Open(name string) (afero.File, error) {
 	if isDockerClientSupported(name) {
-		return FileOpen(fs.dockerClient, name, fs.Container, fs.Provider)
+		return FileOpen(fs.dockerClient, name, fs.Container, fs.Provider, fs.catFS)
 	} else {
 		return fs.catFS.Open(name)
 	}
@@ -73,11 +73,7 @@ func (fs *FS) Rename(oldname, newname string) error {
 }
 
 func (fs *FS) Stat(name string) (os.FileInfo, error) {
-	f, err := fs.Open(name)
-	if err != nil {
-		return nil, err
-	}
-	return f.Stat()
+	return fs.catFS.Stat(name)
 }
 
 func (fs *FS) Chmod(name string, mode os.FileMode) error {

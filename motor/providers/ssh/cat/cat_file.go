@@ -3,7 +3,7 @@ package cat
 import (
 	"bytes"
 	"encoding/base64"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 
@@ -34,7 +34,7 @@ func (f *File) readContent() (*bytes.Buffer, error) {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (f *File) Readdirnames(n int) (names []string, err error) {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}

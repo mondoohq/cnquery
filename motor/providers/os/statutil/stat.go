@@ -1,8 +1,8 @@
 package statutil
 
 import (
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -46,7 +46,7 @@ func New(cmdRunner CommandRunner) *statHelper {
 type statHelper struct {
 	commandRunner CommandRunner
 	detected      bool
-	isunix        bool
+	isUnix        bool
 }
 
 var bsdunix = map[string]bool{
@@ -66,7 +66,7 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 			return nil, err
 		}
 
-		data, err := ioutil.ReadAll(cmd.Stdout)
+		data, err := io.ReadAll(cmd.Stdout)
 		if err != nil {
 			return nil, err
 		}
@@ -74,14 +74,14 @@ func (s *statHelper) Stat(name string) (os.FileInfo, error) {
 		// only switch to unix if we properly detected it, otherwise fallback to linux
 		val := strings.ToLower(strings.TrimSpace(string(data)))
 
-		isunix, ok := bsdunix[val]
-		if ok && isunix {
-			s.isunix = true
+		isUnix, ok := bsdunix[val]
+		if ok && isUnix {
+			s.isUnix = true
 		}
 		s.detected = true
 	}
 
-	if s.isunix {
+	if s.isUnix {
 		return s.unix(name)
 	}
 	return s.linux(name)
@@ -126,7 +126,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 		return nil, errors.New("could not parse file stat: " + path)
 	}
 
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 		log.Debug().Err(err).Send()
 	}
 
-	data, err := ioutil.ReadAll(cmd.Stdout)
+	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return nil, err
 	}
