@@ -313,6 +313,7 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
 		viper.BindPFlag("querypacks", cmd.Flags().Lookup("querypack"))
 		viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
+		viper.BindPFlag("record", cmd.Flags().Lookup("record"))
 
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 		// the logic is that noPager takes precedence over pager if both are sent
