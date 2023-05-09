@@ -139,12 +139,34 @@ func (d *mqlAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 	svc := provider.Dynamodb(region)
 	ctx := context.Background()
 
-	// no pagination required
 	listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{TableName: &tableName})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
 	}
 	return core.JsonToDictSlice(listBackupsResp.BackupSummaries)
+}
+
+func (d *mqlAwsDynamodbTable) GetTags() (map[string]interface{}, error) {
+	tableArn, err := d.Arn()
+	if err != nil {
+		return nil, err
+	}
+	region, err := d.Region()
+	if err != nil {
+		return nil, err
+	}
+	provider, err := awsProvider(d.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	svc := provider.Dynamodb(region)
+	ctx := context.Background()
+	tags, err := svc.ListTagsOfResource(ctx, &dynamodb.ListTagsOfResourceInput{ResourceArn: &tableArn})
+	if err != nil {
+		return nil, err
+	}
+
+	return dynamoDBTagsToMap(tags.Tags), nil
 }
 
 func (d *mqlAwsDynamodb) GetLimits() ([]interface{}, error) {
@@ -311,17 +333,13 @@ func (d *mqlAwsDynamodb) getTables(provider *aws_provider.Provider) []*jobpool.J
 				if err != nil {
 					return nil, err
 				}
-				tags, err := svc.ListTagsOfResource(ctx, &dynamodb.ListTagsOfResourceInput{ResourceArn: table.Table.TableArn})
-				if err != nil {
-					return nil, err
-				}
+
 				mqlTable, err := d.MotorRuntime.CreateResource("aws.dynamodb.table",
 					"arn", fmt.Sprintf(dynamoTableArnPattern, regionVal, account.ID, tableName),
 					"name", tableName,
 					"region", regionVal,
 					"sseDescription", sseDict,
 					"provisionedThroughput", throughputDict,
-					"tags", dynamoDBTagsToMap(tags.Tags),
 				)
 				if err != nil {
 					return nil, err
