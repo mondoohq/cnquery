@@ -22,6 +22,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/microsoft"
 	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/motor/providers/network"
+	"go.mondoo.com/cnquery/motor/providers/oci"
 	"go.mondoo.com/cnquery/motor/providers/okta"
 	"go.mondoo.com/cnquery/motor/providers/slack"
 	"go.mondoo.com/cnquery/motor/providers/ssh"
@@ -161,6 +162,17 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credsResolver
 		}
 
 		m, err = motor.New(p, motor.WithRecoding(resolvedConfig.Record))
+		if err != nil {
+			return nil, err
+		}
+	case providers.ProviderType_OCI:
+		log.Debug().Msg("connection> load oci provider")
+		p, err := oci.New(resolvedConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}

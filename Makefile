@@ -123,6 +123,9 @@ lr/build:
 	./lr go resources/packs/python/python.lr
 	./lr docs yaml resources/packs/python/python.lr --docs-file resources/packs/python/python.lr.manifest.yaml
 	./lr docs json resources/packs/python/python.lr.manifest.yaml
+	./lr go resources/packs/oci/oci.lr
+	./lr docs yaml resources/packs/oci/oci.lr --docs-file resources/packs/oci/oci.lr.manifest.yaml
+	./lr docs json resources/packs/oci/oci.lr.manifest.yaml
 
 lr/release:
 	go generate .
@@ -231,6 +234,11 @@ lr/docs/markdown: lr/build
 		--description "The IPMI resource pack lets you use MQL to query and assess the security of your IPMI devices." \
 		--docs-file resources/packs/ipmi/ipmi.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/ipmi-pack
+	./lr markdown resources/packs/oci/oci.lr \
+		--pack-name "Oracle Cloud Infrastructure (OCI)" \
+		--description "The Oracle Cloud Infrastructure (OCI) resource pack lets you use MQL to query and assess the security of your OCI cloud services." \
+		--docs-file resources/packs/oci/oci.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/oci-pack
 
 .PHONY: resources
 resources: | lr resources/generate resources/test

@@ -513,6 +513,25 @@ func ScanGcpGcrCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn Ru
 	return cmd
 }
 
+func OciProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "oci",
+		Short: docs.GetShort("oci"),
+		Long:  docs.GetLong("oci"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+			// viper.BindPFlag("project", cmd.Flags().Lookup("project"))
+			// viper.BindPFlag("region", cmd.Flags().Lookup("region"))
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	// cmd.Flags().String("profile", "", "pick a named AWS profile to use")
+	// cmd.Flags().String("region", "", "the AWS region to scan")
+	return cmd
+}
+
 func VsphereProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "vsphere user@host",

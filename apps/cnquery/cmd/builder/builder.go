@@ -130,6 +130,9 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	gcpCmd.AddCommand(scanGcpProjectCmd(commonCmdFlags, preRun, runFn, docs))
 	gcpCmd.AddCommand(scanGcpFolderCmd(commonCmdFlags, preRun, runFn, docs))
 
+	// oci subcommand
+	ociCmd := ociProviderCmd(commonCmdFlags, preRun, runFn, docs)
+
 	// vsphere subcommand
 	vsphereCmd := vsphereProviderCmd(commonCmdFlags, preRun, runFn, docs)
 	vsphereVmCmd := vsphereVmProviderCmd(commonCmdFlags, preRun, runFn, docs)
@@ -164,6 +167,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	baseCmd.AddCommand(awsCmd)
 	baseCmd.AddCommand(azureProviderCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(gcpCmd)
+	baseCmd.AddCommand(ociCmd)
 	baseCmd.AddCommand(vsphereCmd)
 	baseCmd.AddCommand(githubCmd)
 	baseCmd.AddCommand(gitlabProviderCmd(commonCmdFlags, preRun, runFn, docs))
@@ -413,6 +417,15 @@ func scanGcpGcrCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreR
 		runFn(cmd, args, providers.ProviderType_CONTAINER_REGISTRY, GcrContainerRegistryAssetType)
 	}
 	cmd := common.ScanGcpGcrCmd(commonCmdFlags, preRun, wrapRunFn, docs)
+	return cmd
+}
+
+func ociProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_OCI, DefaultAssetType)
+	}
+
+	cmd := common.OciProviderCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 

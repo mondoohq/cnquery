@@ -149,6 +149,7 @@ require (
 	github.com/okta/okta-sdk-golang/v2 v2.17.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0-rc2
+	github.com/oracle/oci-go-sdk/v65 v65.37.0
 	github.com/packethost/packngo v0.25.0
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
@@ -458,6 +459,7 @@ require (
 	github.com/sivchari/tenv v1.7.1 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/sonatard/noctx v0.0.2 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

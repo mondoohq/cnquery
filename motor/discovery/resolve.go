@@ -14,6 +14,8 @@ import (
 	"context"
 	"strings"
 
+	"go.mondoo.com/cnquery/motor/discovery/oci"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -92,6 +94,7 @@ func init() {
 		providers.ProviderID_GOOGLE_WORKSPACE:   &googleworkspace.Resolver{},
 		providers.ProviderID_SLACK:              &slack.Resolver{},
 		providers.ProviderID_VCD:                &vcd.Resolver{},
+		providers.ProviderID_OCI:                &oci.Resolver{},
 	}
 }
 
@@ -127,7 +130,7 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver vault.Re
 		r, ok := resolver[resolverId]
 		if !ok {
 			assetFallbackName(root, pCfg)
-			return nil, errors.New("unsupported backend: " + resolverId)
+			return nil, errors.New("cannot discover backend: " + resolverId)
 		}
 		log.Debug().Str("resolver-id", resolverId).Str("resolver", r.Name()).Msg("run resolver")
 

@@ -29,4 +29,5 @@ const (
 	RUNTIME_TERRAFORM            = "terraform"
 	RUNTIME_OKTA                 = "okta"
 	RUNTIME_SLACK                = "slack"
+	RUNTIME_OCI                  = "oci"
 )

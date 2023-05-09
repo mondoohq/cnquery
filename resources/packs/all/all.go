@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/ipmi"
 	"go.mondoo.com/cnquery/resources/packs/k8s"
 	"go.mondoo.com/cnquery/resources/packs/ms365"
+	"go.mondoo.com/cnquery/resources/packs/oci"
 	"go.mondoo.com/cnquery/resources/packs/okta"
 	"go.mondoo.com/cnquery/resources/packs/os"
 	"go.mondoo.com/cnquery/resources/packs/python"
@@ -49,4 +50,5 @@ func init() {
 	Registry.Add(arista.Registry)
 	Registry.Add(ipmi.Registry)
 	Registry.Add(python.Registry)
+	Registry.Add(oci.Registry)
 }
