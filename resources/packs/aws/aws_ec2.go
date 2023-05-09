@@ -726,6 +726,7 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 			}
 
 			args := []interface{}{
+				"platform", core.ToString(instance.PlatformDetails),
 				"arn", fmt.Sprintf(ec2InstanceArnPattern, regionVal, account.ID, core.ToString(instance.InstanceId)),
 				"instanceId", core.ToString(instance.InstanceId),
 				"region", regionVal,
