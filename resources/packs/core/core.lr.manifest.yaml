@@ -195,18 +195,6 @@ resources:
     snippets:
     - query: groups.where(name == 'wheel').list { members.all( name != 'username') }
       title: Ensure the user is not part of group
-  ipmi:
-    fields:
-      deviceID: {}
-      guid: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
-  ipmi.chassis:
-    fields:
-      status: {}
-      systemBootOptions: {}
-    maturity: experimental
-    min_mondoo_version: 5.15.0
   kernel:
     fields:
       info: {}
