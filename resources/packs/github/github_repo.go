@@ -109,12 +109,27 @@ func (g *mqlGithubRepository) init(args *resources.Args) (*resources.Args, Githu
 	}
 
 	// userLogin := user.GetLogin()
-	org, err := gt.Organization()
+	var org *github.Organization
+	var user *github.User
+	org, err = gt.Organization()
 	if err != nil {
-		return nil, nil, err
+		if strings.Contains(err.Error(), "404") {
+			log.Debug().Msg("could not find organization, trying to get user")
+			user, err = gt.User()
+			if err != nil {
+				return nil, nil, err
+			}
+		} else {
+			return nil, nil, err
+		}
 	}
 
-	owner := org.GetLogin()
+	owner := ""
+	if org != nil {
+		owner = org.GetLogin()
+	} else if user != nil {
+		owner = user.GetLogin()
+	}
 	reponame := ""
 	if x, ok := (*args)["name"]; ok {
 		reponame = x.(string)
