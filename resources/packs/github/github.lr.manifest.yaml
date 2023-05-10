@@ -39,6 +39,8 @@ resources:
       organizationName: {}
       owner: {}
       protected: {}
+      isProtected:
+        min_mondoo_version: 8.10.0
       protectionRules: {}
       repoName: {}
     is_private: true

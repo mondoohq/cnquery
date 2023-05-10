@@ -393,7 +393,10 @@ func (g *mqlGithubRepository) GetBranches() ([]interface{}, error) {
 
 		mqlBranch, err := g.MotorRuntime.CreateResource("github.branch",
 			"name", branch.GetName(),
+			// FIXME: DEPRECATED, remove in v10.0 vv
 			"protected", branch.GetProtected(),
+			// ^^ deprecated
+			"isProtected", branch.GetProtected(),
 			"headCommit", mqlCommit,
 			"repoName", repoName,
 			"owner", owner,
