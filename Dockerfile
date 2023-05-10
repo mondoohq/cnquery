@@ -1,4 +1,4 @@
-FROM alpine:3.17 AS root
+FROM alpine:3.18 AS root
 RUN apk update &&\
     apk add ca-certificates wget tar &&\
     rm -rf /var/cache/apk/*
