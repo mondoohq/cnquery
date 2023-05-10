@@ -1583,7 +1583,7 @@ private aws.ec2.instance @defaults("arn state") {
   // List of security groups (ids) associated with the instance
   securityGroups []aws.ec2.securitygroup
   // Platform details 
-  platform string
+  platformDetails string
   // Public dns name for the instance
   publicDnsName string
   // The status of the specified instance
