@@ -3,9 +3,11 @@ resources:
     fields:
       deviceID: {}
       guid: {}
-    min_mondoo_version: latest
+    maturity: experimental
+    min_mondoo_version: 5.15.0
   ipmi.chassis:
     fields:
       status: {}
       systemBootOptions: {}
-    min_mondoo_version: latest
+    maturity: experimental
+    min_mondoo_version: 5.15.0

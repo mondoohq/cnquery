@@ -11,10 +11,22 @@ resources:
       systemConfig: {}
       users: {}
       version: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
+    snippets:
+    - query: arista.eos.version
+      title: Arista EOS Version
+    - query: arista.eos.version['version'] == /18\./
+      title: Verify that Arista EOS Version is 18.x
+    - query: arista.eos.interfaces { name mtu bandwidth status }
+      title: Display EOS interfaces
+    - query: arista.eos.interfaces.where ( status['linkStatus'] == "connected") {  name
+        mtu bandwidth status}
+      title: Display all connected EOS interfaces
+    - query: arista.eos.hostname
+      title: EOS Hostname
   arista.eos.interface:
     fields:
       bandwidth: {}
@@ -34,7 +46,7 @@ resources:
       name: {}
       physicalAddress: {}
       status: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
@@ -43,14 +55,14 @@ resources:
       address: {}
       mtu: {}
       name: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
   arista.eos.ntpSetting:
     fields:
       status: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
@@ -59,14 +71,14 @@ resources:
       default: {}
       name: {}
       rules: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
   arista.eos.runningConfig:
     fields:
       content: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
@@ -74,7 +86,7 @@ resources:
     fields:
       content: {}
       name: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
@@ -82,7 +94,7 @@ resources:
     fields:
       enabled: {}
       notifications: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
@@ -103,14 +115,20 @@ resources:
       priority: {}
       role: {}
       state: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
+    snippets:
+    - query: |
+        arista.eos.stp.mstInstances {
+         protocol == "mstp"
+        }
+      title: Verify the Spanning-Tree Version
   arista.eos.stp:
     fields:
       mstInstances: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
@@ -123,7 +141,7 @@ resources:
       protocol: {}
       regionalRootBridge: {}
       rootBridge: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
@@ -136,7 +154,7 @@ resources:
       role: {}
       secret: {}
       sshkey: {}
-    min_mondoo_version: latest
+    min_mondoo_version: 5.15.0
     platform:
       name:
       - arista-eos
