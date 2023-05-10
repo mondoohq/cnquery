@@ -20,7 +20,7 @@ oci.tenancy @defaults("name") {
   retentionPeriod() time
 }
 
-// OCI region
+// OCI Region
 private oci.region @defaults("id name") {
   // Region's key
   id string
@@ -32,7 +32,7 @@ private oci.region @defaults("id name") {
   status string
 }
 
-// OCI compartment
+// OCI Compartment
 private oci.compartment @defaults("name") {
   // Compartment ID
   id string
@@ -56,7 +56,7 @@ oci.identity {
   policies() []oci.identity.policy
 }
 
-// OCI identity user
+// OCI Identity User
 private oci.identity.user @defaults("name") {
   // User ID
   id string
@@ -92,7 +92,7 @@ private oci.identity.user @defaults("name") {
   groups() []oci.identity.group
 }
 
-// OCI ApiKey A PEM-format RSA credential
+// OCI API Key a PEM-format RSA credential
 private oci.identity.apiKey @defaults("fingerprint") {
   // Key ID
   id string
@@ -174,7 +174,7 @@ oci.compute {
   images() []oci.compute.image
 }
 
-// OCI compute instance
+// OCI Compute Instance
 private oci.compute.instance @defaults("name") {
   // Instance ID
   id string
@@ -188,7 +188,7 @@ private oci.compute.instance @defaults("name") {
   state string
 }
 
-// OCI compute image
+// OCI Compute Image
 private oci.compute.image @defaults("name") {
   // Image ID
   id string
@@ -210,7 +210,7 @@ oci.network {
   securityLists() []oci.network.securityList
 }
 
-// OCI virtual cloud network (VCN)
+// OCI Virtual Cloud Network (VCN)
 private oci.network.vcn @defaults("name") {
   // Vcn ID
   id string
@@ -246,7 +246,7 @@ private oci.network.securityList @defaults("name") {
   ingressSecurityRules []dict
 }
 
-// OCI object storage
+// OCI Object Storage
 oci.objectStorage {
   // Namespace
   namespace() string
@@ -254,7 +254,7 @@ oci.objectStorage {
   buckets() []oci.objectStorage.bucket
 }
 
-// OCI object storage bucket
+// OCI Object Storage Bucket
 private oci.objectStorage.bucket {
   // Bucket namespace
   namespace string

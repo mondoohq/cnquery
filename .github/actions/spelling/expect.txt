@@ -49,6 +49,7 @@ sshkeys
 toplevel
 tpu
 vcn
+vcns
 vdcs
 vmknics
 Vtpm
