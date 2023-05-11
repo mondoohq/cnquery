@@ -137,6 +137,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 			SpaceMrn:    opts.GetParentMrn(),
 			ApiEndpoint: opts.UpstreamApiEndpoint(),
 			Plugins:     []ranger.ClientPlugin{certAuth},
+			HttpClient:  ranger.DefaultHttpClient(),
 		}
 	}
 
