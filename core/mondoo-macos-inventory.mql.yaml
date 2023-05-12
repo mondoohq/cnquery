@@ -35,25 +35,22 @@ packs:
     queries:
       - uid: mondoo-asset-info
         title: Retrieve asset information
-        query: asset { kind title platform name arch runtime }
+        mql: asset { kind title platform name arch runtime }
       - uid: mondoo-hostname
         title: Retrieve the hostname
-        query: os.hostname
+        mql: os.hostname
       - uid: mondoo-macos-users 
         title: Retrieve regular users 
-        query: users.where( name != /^_/ && shell != "/usr/bin/false" ) { * }
-      - uid: mondoo-macos-systemsetup
-        title: Retrieve macOS system setup 
-        query: macos.systemsetup {*}
+        mql: users.where( name != /^_/ && shell != "/usr/bin/false" )
       - uid: mondoo-macos-packages
         title: Retrieve macOS packages 
-        query: packages {*}
+        mql: packages
       - uid: mondoo-macos-running-services
         title: Retrieve data on running services
-        query: services.where( running == true ) { * }
+        mql: services.where( running == true )
       - uid: mondoo-macos-ports-listening
         title: Retrieve data on listening ports 
-        query: ports.listening 
+        mql: ports.listening 
       - uid: mondoo-macos-interface-configuration
         title: Retrieve interface configuration of the system
-        query: command("ifconfig").stdout
+        mql: command("ifconfig").stdout
