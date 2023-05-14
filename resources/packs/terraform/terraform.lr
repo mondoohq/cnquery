@@ -158,6 +158,14 @@ terraform.plan {
   resourceChanges() []terraform.plan.resourceChange
 }
 
+// Terraform plan configuration
+terraform.plan.configuration {
+  // Provider configuration
+  providerConfig() []dict
+  // Root module resource configuration
+  resources() []dict
+}
+
 // Terraform Plan Resource Change
 terraform.plan.resourceChange {
   // Resource address
