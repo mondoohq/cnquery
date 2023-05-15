@@ -144,3 +144,74 @@ func (t *mqlTerraformPlanProposedChange) id() (string, error) {
 	}
 	return "terraform.plan.resourceChange/address/" + id, nil
 }
+
+func (t *mqlTerraformPlanConfiguration) id() (string, error) {
+	return "terraform.plan.configuration", nil
+}
+
+type PlanConfiguration struct {
+	ProviderConfig map[string]json.RawMessage `json:"provider_config"`
+	RootModule     struct {
+		Resources []json.RawMessage `json:"resources"`
+	} `json:"root_module"`
+}
+
+func (t *mqlTerraformPlanConfiguration) GetProviderConfig() ([]interface{}, error) {
+	provider, err := terraformProvider(t.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	plan, err := provider.Plan()
+	if err != nil {
+		return nil, err
+	}
+
+	if plan.Configuration == nil {
+		return nil, nil
+	}
+
+	pc := PlanConfiguration{}
+	err = json.Unmarshal(plan.Configuration, &pc)
+
+	res := []interface{}{}
+	for i := range pc.ProviderConfig {
+		config := pc.ProviderConfig[i]
+		var entry interface{}
+		if err := json.Unmarshal([]byte(config), &entry); err != nil {
+			return nil, err
+		}
+		res = append(res, entry)
+	}
+	return res, nil
+}
+
+func (t *mqlTerraformPlanConfiguration) GetResources() ([]interface{}, error) {
+	provider, err := terraformProvider(t.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	plan, err := provider.Plan()
+	if err != nil {
+		return nil, err
+	}
+
+	if plan.Configuration == nil {
+		return nil, nil
+	}
+
+	pc := PlanConfiguration{}
+	err = json.Unmarshal(plan.Configuration, &pc)
+
+	res := []interface{}{}
+	for i := range pc.RootModule.Resources {
+		config := pc.RootModule.Resources[i]
+		var entry interface{}
+		if err := json.Unmarshal([]byte(config), &entry); err != nil {
+			return nil, err
+		}
+		res = append(res, entry)
+	}
+	return res, nil
+}
