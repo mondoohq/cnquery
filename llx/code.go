@@ -399,7 +399,20 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 
 		if !truthy {
 			listRef := chunk.Function.Binding
-			list, ok := lookup(code.Checksums[listRef])
+			for i := range code.Blocks {
+				if code.Blocks[i].Entrypoints[0] != ref {
+					continue
+				}
+				for j := len(code.Blocks[i].Datapoints) - 1; j >= 0; j-- {
+					if code.Blocks[i].Datapoints[j] == listRef {
+						continue
+					}
+					// this should be the default values
+					listRef = code.Blocks[i].Datapoints[j]
+				}
+			}
+			listChecksum := code.Checksums[listRef]
+			list, ok := lookup(listChecksum)
 			if !ok {
 				res.Error = "cannot find value for assessment (" + res.Operation + ")"
 				return &res

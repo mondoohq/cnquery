@@ -1668,7 +1668,16 @@ func (c *compiler) postCompile() {
 			}
 
 			chunk, typ, ref := c.expandListResource(chunk, ref)
-			c.expandResourceFields(chunk, typ, ref)
+			switch chunk.Id {
+			case "$one", "$all", "$none", "$any":
+				ref = chunk.Function.Binding
+				chunk := code.Chunk(chunk.Function.Binding)
+				typ = types.Type(chunk.Function.Type)
+				c.expandResourceFields(chunk, typ, ref)
+				block.Datapoints = append(block.Datapoints, block.TailRef(ref))
+			default:
+				c.expandResourceFields(chunk, typ, ref)
+			}
 		}
 	}
 }
@@ -1831,6 +1840,8 @@ func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 		return res[i] < res[j]
 	})
 	c.block.Datapoints = append(c.block.Datapoints, res...)
+	// removing the list datapoint here, results in an error later on:
+	// "cannot find values for assessment (all)"
 }
 
 // CompileParsed AST into an executable structure
