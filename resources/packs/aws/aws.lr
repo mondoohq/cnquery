@@ -334,7 +334,7 @@ private aws.sns.topic @defaults("arn") {
   // Attributes for the SNS topic, including KMS ID if any
   attributes() dict
   // Tags for the topic
-  tags map[string]string
+  tags() map[string]string
 }
 
 // AWS Simple Notification Service (SNS) Subscription
