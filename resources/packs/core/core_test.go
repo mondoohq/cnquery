@@ -1004,35 +1004,35 @@ func TestListResource_Assertions(t *testing.T) {
 		},
 		{
 			"users.all(uid >= 0)",
-			1, true,
+			0, true,
 		},
 		{
 			"users.where(uid < 100).all(uid >= 0)",
-			1, true,
+			0, true,
 		},
 		{
 			"users.any(uid < 100)",
-			1, true,
+			0, true,
 		},
 		{
 			"users.where(uid < 100).any(uid < 50)",
-			1, true,
+			0, true,
 		},
 		{
 			"users.one(uid == 0)",
-			1, true,
+			0, true,
 		},
 		{
 			"users.where(uid < 100).one(uid == 0)",
-			1, true,
+			0, true,
 		},
 		{
 			"users.none(uid == 99999)",
-			1, true,
+			0, true,
 		},
 		{
 			"users.where(uid < 100).none(uid == 1000)",
-			1, true,
+			0, true,
 		},
 	})
 }
