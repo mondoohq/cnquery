@@ -404,11 +404,16 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 					continue
 				}
 				for j := len(code.Blocks[i].Datapoints) - 1; j >= 0; j-- {
+					// skip the resource ids datapoint
 					if code.Blocks[i].Datapoints[j] == listRef {
 						continue
 					}
-					// this should be the default values
-					listRef = code.Blocks[i].Datapoints[j]
+					chunk := code.Chunk(code.Blocks[i].Datapoints[j])
+					// this contains the default values
+					if chunk.Function.Binding == listRef {
+						listRef = code.Blocks[i].Datapoints[j]
+						break
+					}
 				}
 			}
 			listChecksum := code.Checksums[listRef]

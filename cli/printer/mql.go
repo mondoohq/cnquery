@@ -51,7 +51,7 @@ func (print *Printer) Assessment(bundle *llx.CodeBundle, assessment *llx.Assessm
 		indent = "  "
 	}
 
-	// ident all sub-results
+	// indent all sub-results
 	for i := range assessment.Results {
 		cur := print.assessment(bundle, assessment.Results[i], indent)
 		res.WriteString(indent)
@@ -187,10 +187,23 @@ func (print *Printer) array(typ types.Type, data []interface{}, codeID string, b
 	var res strings.Builder
 	res.WriteString("[\n")
 
+	code := bundle.CodeV2
+	ep := code.Blocks[0].Entrypoints[0]
+	chunk := code.Chunk(ep)
+	listType := ""
+	switch chunk.Id {
+	case "$one", "$all", "$none", "$any":
+		ref := chunk.Function.Binding
+		listChunk := code.Chunk(ref)
+		listType = types.Type(listChunk.Type()).Child().Label()
+		listType += " "
+	}
+
 	for i := range data {
 		res.WriteString(fmt.Sprintf(
-			indent+"  %d: %s\n",
+			indent+"  %d: %s%s\n",
 			i,
+			listType,
 			print.Data(typ.Child(), data[i], codeID, bundle, indent+"  "),
 		))
 	}
