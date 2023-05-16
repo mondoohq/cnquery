@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
@@ -437,6 +438,15 @@ func (i *mqlAwsEc2Keypair) init(args *resources.Args) (*resources.Args, AwsEc2Ke
 	ctx := context.Background()
 	kps, err := svc.DescribeKeyPairs(ctx, &ec2.DescribeKeyPairsInput{KeyNames: []string{n}})
 	if err != nil {
+		// it is quite common for instances to get created with a keypair and then that keypair be deleted
+		var ae smithy.APIError
+		if errors.As(err, &ae) {
+			if ae.ErrorCode() == "InvalidKeyPair.NotFound" {
+				log.Warn().Msgf("key %s does not exist in %s region", n, r)
+				return args, nil, nil
+			}
+		}
+		log.Error().Err(err).Msg("cannot fetch keypair")
 		return nil, nil, err
 	}
 
@@ -756,9 +766,7 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 					"region", regionVal,
 					"name", core.ToString(instance.KeyName),
 				)
-				if err != nil {
-					log.Error().Err(err).Msg(fmt.Sprintf("unable to retrieve ec2 instance keypair with name %s in region %s", core.ToString(instance.KeyName), regionVal))
-				} else {
+				if err == nil {
 					mqlKp := mqlKeyPair.(AwsEc2Keypair)
 					args = append(args, "keypair", mqlKp)
 				}
