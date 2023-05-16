@@ -163,10 +163,12 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 
 	assetErrors := im.Resolve(ctx)
 	if len(assetErrors) > 0 {
+		// err := errors.New("failed to resolve multiple assets")
 		for a := range assetErrors {
 			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
+			err = errors.Wrap(assetErrors[a], "failed to resolve asset")
 		}
-		return nil, false, errors.New("failed to resolve multiple assets")
+		return nil, false, err
 	}
 
 	assetList := im.GetAssets()
