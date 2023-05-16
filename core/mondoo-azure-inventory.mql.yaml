@@ -1,7 +1,7 @@
 packs:
   - uid: mondoo-asset-inventory-azure
     name: Azure Asset Inventory Pack
-    version: 1.0.0
+    version: 1.0.1
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
@@ -86,19 +86,19 @@ packs:
         docs:
           desc: |
             This query retrieves data for all postgresql servers
-        query: azure.subscription.postgresql.servers {*}
+        query: azure.subscription.postgreSql.servers {*}
       - uid: mondoo-asset-inventory-azure-postgresql-firewallrules                                                                                                                                                        
         title: Retrieve data for all firewall rules in Azure postgresql servers                                                                                                                                                         
         docs:
           desc: |
             This query retrieves data for all firewall rules in postgresql servers
-        query: azure.subscription.postgresql.servers { firewallRules }
+        query: azure.subscription.postgreSql.servers { firewallRules }
       - uid: mondoo-asset-inventory-azure-mysql                                                                                                                                                        
         title: Retrieve data for all Azure MySQL servers                                                                                                                                                         
         docs:
           desc: |
             This query retrieves data for all sql servers
-        query: azure.subscription.mysql.servers {*}
+        query: azure.subscription.mySql.servers {*}
       - uid: mondoo-asset-inventory-azure-mariaDb
         title: Retrieve data for all Azure mariaDb servers
         docs:
