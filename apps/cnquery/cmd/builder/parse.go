@@ -271,7 +271,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		connection.Backend = providerType
 
 		if filepath != "" {
-			if _, err := os.Stat(filepath); os.IsNotExist(err) {
+			if _, err := os.Stat(filepath); filepath != "-" && os.IsNotExist(err) {
 				log.Fatal().Str("file", filepath).Msg("Could not find the Kubernetes manifest file. Please specify the correct path.")
 			}
 			connection.Options["path"] = filepath
