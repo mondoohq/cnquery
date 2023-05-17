@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/spf13/viper"
 	"os"
 
 	"github.com/cockroachdb/errors"
@@ -150,7 +151,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 		// when we close the shell, we need to close the backend and store the recording
 		onCloseHandler := func() {
-			storeRecording(m)
+			m.StoreRecording(viper.GetString("record-file"))
 		}
 
 		shellOptions := []shell.ShellOption{}

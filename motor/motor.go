@@ -1,7 +1,9 @@
 package motor
 
 import (
+	"os"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -10,7 +12,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/events"
 )
 
@@ -77,7 +79,7 @@ func (m *Motor) Watcher() providers.Watcher {
 	m.l.Lock()
 	defer m.l.Unlock()
 
-	osProvider, isOSprovider := m.Provider.(os.OperatingSystemProvider)
+	osProvider, isOSprovider := m.Provider.(os_provider.OperatingSystemProvider)
 	if !isOSprovider {
 		return nil
 	}
@@ -97,7 +99,7 @@ func (m *Motor) ActivateRecorder() {
 		return
 	}
 
-	osProvider, isOSprovider := m.Provider.(os.OperatingSystemProvider)
+	osProvider, isOSprovider := m.Provider.(os_provider.OperatingSystemProvider)
 	if !isOSprovider {
 		return
 	}
@@ -127,6 +129,20 @@ func (m *Motor) Recording() []byte {
 			return nil
 		}
 		return data
+	}
+	return nil
+}
+
+// StoreRecording stores tracked commands and files into the recording file
+// If no filename is provided, it generates a filename
+func (m *Motor) StoreRecording(filename string) error {
+	if m.IsRecording() {
+		if filename == "" {
+			filename = "recording-" + time.Now().Format("20060102150405") + ".toml"
+		}
+		log.Info().Str("filename", filename).Msg("store recording")
+		data := m.Recording()
+		return os.WriteFile(filename, data, 0o700)
 	}
 	return nil
 }

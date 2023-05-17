@@ -2,15 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"regexp"
-	"strings"
-	"time"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
@@ -19,10 +12,13 @@ import (
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/scope"
+	"net/http"
+	"os"
+	"regexp"
+	"strings"
 )
 
 const (
@@ -87,19 +83,6 @@ func initLogger(cmd *cobra.Command) {
 		level = "debug"
 	}
 	logger.Set(level)
-}
-
-// storeRecording stores tracked commands and files into the recording file
-func storeRecording(m *motor.Motor) {
-	if m.IsRecording() {
-		filename := viper.GetString("record-file")
-		if filename == "" {
-			filename = "recording-" + time.Now().Format("20060102150405") + ".toml"
-		}
-		log.Info().Str("filename", filename).Msg("store recordings")
-		data := m.Recording()
-		os.WriteFile(filename, data, 0o700)
-	}
 }
 
 func filterAssetByPlatformID(assetList []*asset.Asset, selectionID string) (*asset.Asset, error) {
