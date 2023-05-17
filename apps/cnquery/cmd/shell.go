@@ -43,7 +43,6 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 		cmd.Flags().Bool("host-machines", false, "Also scan host machines like ESXi server.")
 		cmd.Flags().Bool("record", false, "Record all backend calls.")
 		cmd.Flags().MarkHidden("record")
-
 		cmd.Flags().String("record-file", "", "File path for the recorded provider calls. This only works for operating system providers.)")
 		cmd.Flags().MarkHidden("record-file")
 
@@ -60,8 +59,6 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 		viper.BindPFlag("sudo.active", cmd.Flags().Lookup("sudo"))
 
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
-		viper.BindPFlag("record", cmd.Flags().Lookup("record"))
-
 		viper.BindPFlag("vault.name", cmd.Flags().Lookup("vault"))
 		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
 
