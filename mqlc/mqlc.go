@@ -1840,10 +1840,10 @@ func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 		return res[i] < res[j]
 	})
 	c.block.Datapoints = append(c.block.Datapoints, res...)
-	// In the case of .all(...) queries, we have two datapoints for the list:
+	// E.g. in the case of .all(...)/.none(...)/... queries, we have two datapoints bound to the list of resources:
 	// - one with the resource ids
 	// - one with the default values
-	// We only want to keep the default values.
+	// We only want to keep the datapoint for the default values.
 	updatedDatapoints := make([]uint64, 0, len(c.block.Datapoints))
 	for _, ref := range c.block.Datapoints {
 		chunk := code.Chunk(ref)
