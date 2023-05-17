@@ -1668,7 +1668,16 @@ func (c *compiler) postCompile() {
 			}
 
 			chunk, typ, ref := c.expandListResource(chunk, ref)
-			c.expandResourceFields(chunk, typ, ref)
+			switch chunk.Id {
+			case "$one", "$all", "$none", "$any":
+				ref = chunk.Function.Binding
+				chunk := code.Chunk(chunk.Function.Binding)
+				typ = types.Type(chunk.Function.Type)
+				c.expandResourceFields(chunk, typ, ref)
+				block.Datapoints = append(block.Datapoints, block.TailRef(ref))
+			default:
+				c.expandResourceFields(chunk, typ, ref)
+			}
 		}
 	}
 }
@@ -1831,6 +1840,29 @@ func (c *compiler) updateEntrypoints(collectRefDatapoints bool) {
 		return res[i] < res[j]
 	})
 	c.block.Datapoints = append(c.block.Datapoints, res...)
+	// E.g. in the case of .all(...)/.none(...)/... queries, we have two datapoints bound to the list of resources:
+	// - one with the resource ids
+	// - one with the default values
+	// We only want to keep the datapoint for the default values.
+	updatedDatapoints := make([]uint64, 0, len(c.block.Datapoints))
+	for _, ref := range c.block.Datapoints {
+		chunk := code.Chunk(ref)
+		if chunk.Function != nil {
+			found := false
+			for i := range c.block.Datapoints {
+				if c.block.Datapoints[i] == chunk.Function.Binding {
+					found = true
+					break
+				}
+			}
+			if found {
+				updatedDatapoints = append(updatedDatapoints, ref)
+			}
+		}
+	}
+	if len(updatedDatapoints) > 0 {
+		c.block.Datapoints = updatedDatapoints
+	}
 }
 
 // CompileParsed AST into an executable structure
