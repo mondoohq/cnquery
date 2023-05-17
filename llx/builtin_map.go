@@ -757,6 +757,53 @@ func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	return nil, 0, nil
 }
 
+func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	args := chunk.Function.Args
+	// TODO: all this needs to go into the compile phase
+	if len(args) < 1 {
+		return nil, 0, errors.New("Called `difference` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	if len(args) > 1 {
+		return nil, 0, errors.New("called `difference` with " + strconv.Itoa(len(args)) + " arguments, only 1 supported.")
+	}
+	// ^^ TODO
+
+	argRef := args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	org, ok := bind.Value.([]interface{})
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("cannot compute difference of lists, argument is not a list")}, 0, nil
+	}
+
+	filters := arg.Value.([]interface{})
+
+	var res []interface{}
+	var skip bool
+	for i := range org {
+		skip = false
+		for j := range filters {
+			if org[i] == filters[j] {
+				skip = true
+				break
+			}
+		}
+
+		if !skip {
+			res = append(res, org[i])
+		}
+	}
+
+	return &RawData{Type: bind.Type, Value: res}, 0, nil
+}
+
 func anyContainsString(an interface{}, s string) bool {
 	if an == nil {
 		return false
@@ -1161,6 +1208,8 @@ func opDictCmpStringarray(left *RawData, right *RawData) bool {
 	switch left.Value.(type) {
 	case string:
 		return cmpArrayOne(right, left, opStringCmpString)
+	case []interface{}:
+		return cmpArrays(left, right, opDictCmpString)
 	default:
 		return false
 	}

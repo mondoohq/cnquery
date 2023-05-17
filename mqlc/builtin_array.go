@@ -222,7 +222,7 @@ func compileArrayContainsOnly(c *compiler, typ types.Type, ref uint64, id string
 
 	f := call.Function[0]
 	if f.Value == nil || f.Value.Operand == nil {
-		return types.Nil, errors.New("function " + id + " needs one argument")
+		return types.Nil, errors.New("function " + id + " needs one argument (array)")
 	}
 
 	val, err := c.compileOperand(f.Value.Operand)
