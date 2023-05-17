@@ -142,6 +142,67 @@ func compileDictContains(c *compiler, typ types.Type, ref uint64, id string, cal
 	return types.Bool, nil
 }
 
+func compileDictContainsOnly(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	if call == nil || len(call.Function) != 1 {
+		return types.Nil, errors.New("function " + id + " needs one argument (dict)")
+	}
+
+	f := call.Function[0]
+	if f.Value == nil || f.Value.Operand == nil {
+		return types.Nil, errors.New("function " + id + " needs one argument (dict)")
+	}
+
+	val, err := c.compileOperand(f.Value.Operand)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	valType, err := c.dereferenceType(val)
+	if err != nil {
+		return types.Nil, err
+	}
+
+	chunkId := "==" + string(typ)
+	if valType != typ {
+		chunkId = "==" + string(valType)
+		_, err := llx.BuiltinFunctionV2(typ, chunkId)
+		if err != nil {
+			return types.Nil, errors.New("called '" + id + "' with wrong type; either provide a type " + typ.Label() + " value or write it as an expression (e.g. \"_ == 123\")")
+		}
+	}
+
+	// .difference
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   "difference",
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+			Args: []*llx.Primitive{
+				val,
+			},
+		},
+	})
+
+	// == []
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   chunkId,
+		Function: &llx.Function{
+			Type:    string(types.Bool),
+			Binding: c.tailRef(),
+			Args: []*llx.Primitive{
+				llx.ArrayPrimitive([]*llx.Primitive{}, typ.Child()),
+			},
+		},
+	})
+
+	checksum := c.Result.CodeV2.Checksums[c.tailRef()]
+	c.Result.Labels.Labels[checksum] = "[].containsOnly()"
+
+	return types.Bool, nil
+}
+
 func compileDictAll(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	_, err := compileDictWhere(c, typ, ref, "$whereNot", call)
 	if err != nil {
