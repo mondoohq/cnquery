@@ -558,7 +558,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
 }
 
 // Azure Storage Account Data Protection
-private azure.subscription.storageService.account.dataProtection {
+private azure.subscription.storageService.account.dataProtection @defaults("blobSoftDeletionEnabled blobRetentionDays") {
   // ID of the storage account
   storageAccountId string
   // Whether soft deletion of blobs is enabled
@@ -572,7 +572,7 @@ private azure.subscription.storageService.account.dataProtection {
 }
 
 // Azure Storage Account Blob Service Properties
-private azure.subscription.storageService.account.blobService.properties {
+private azure.subscription.storageService.account.blobService.properties @defaults("id hourMetrics minuteMetrics") {
   // ID of the service
   id string
   // Hourly metrics properties
@@ -584,7 +584,7 @@ private azure.subscription.storageService.account.blobService.properties {
 }
 
 // Azure Storage Account Queue Service Properties
-private azure.subscription.storageService.account.queueService.properties {
+private azure.subscription.storageService.account.queueService.properties @defaults("id hourMetrics minuteMetrics") {
   // ID of the service
   id string
   // Hourly metrics properties
@@ -596,7 +596,7 @@ private azure.subscription.storageService.account.queueService.properties {
 }
 
 // Azure Storage Account Table Service Properties
-private azure.subscription.storageService.account.tableService.properties {
+private azure.subscription.storageService.account.tableService.properties @defaults("id hourMetrics minuteMetrics") {
   // ID of the service
   id string
   // Hourly metrics properties
@@ -608,7 +608,7 @@ private azure.subscription.storageService.account.tableService.properties {
 }
 
 // Azure Storage Account Service Properties Metrics 
-private azure.subscription.storageService.account.service.properties.metrics {
+private azure.subscription.storageService.account.service.properties.metrics @defaults("id includeAPIs enabled") {
   // ID of the metrics
   id string
   // Whether metrics generate summary statistics for called API operations
@@ -622,7 +622,7 @@ private azure.subscription.storageService.account.service.properties.metrics {
 }
 
 // Azure Storage Account Service Properties Retention Policy
-private azure.subscription.storageService.account.service.properties.retentionPolicy {
+private azure.subscription.storageService.account.service.properties.retentionPolicy @defaults("id retentionDays enabled") {
   // ID of the retention policy
   id string
   // Number of days that metrics or logging data is retained
@@ -632,7 +632,7 @@ private azure.subscription.storageService.account.service.properties.retentionPo
 }
 
 // Azure Storage Account Service Properties Logging
-private azure.subscription.storageService.account.service.properties.logging {
+private azure.subscription.storageService.account.service.properties.logging @defaults("id delete read write") {
   // ID of the logging configuration
   id string
   // Whether delete requests are being logged
@@ -1259,13 +1259,13 @@ private azure.subscription.monitorService {
 }
 
 // Azure Monitor Activity Log
-private azure.subscription.monitorService.activitylog {
+private azure.subscription.monitorService.activitylog @defaults("alerts") {
   // List of activity log alerts
   alerts() []azure.subscription.monitorService.activitylog.alert
 }
 
 // Azure Monitor Application Insight
-private azure.subscription.monitorService.applicationInsight {
+private azure.subscription.monitorService.applicationInsight @defaults("name")  {
   // Application insight ID
   id string
   // Application insight name
@@ -1283,7 +1283,7 @@ private azure.subscription.monitorService.applicationInsight {
 }
 
 // Azure Monitor Activity Log Alert
-private azure.subscription.monitorService.activitylog.alert {
+private azure.subscription.monitorService.activitylog.alert @defaults("name type") {
   // ID of the activity log alert
   id string
   // Type of the activity log alert
@@ -1337,7 +1337,7 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
 }
 
 // Azure Microsoft Cloud Defender
-private azure.subscription.cloudDefenderService {
+private azure.subscription.cloudDefenderService @defaults("defenderForServers defenderForContainers"){
   // The subscription identifier
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
