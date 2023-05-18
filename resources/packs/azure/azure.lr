@@ -572,7 +572,7 @@ private azure.subscription.storageService.account.dataProtection @defaults("blob
 }
 
 // Azure Storage Account Blob Service Properties
-private azure.subscription.storageService.account.blobService.properties @defaults("id hourMetrics minuteMetrics") {
+private azure.subscription.storageService.account.blobService.properties @defaults("id") {
   // ID of the service
   id string
   // Hourly metrics properties
