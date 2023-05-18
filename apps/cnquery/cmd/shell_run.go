@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/mattn/go-isatty"
-
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/shell"
@@ -89,7 +89,7 @@ func StartShell(conf *ShellConfig) error {
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
 		// store tracked commands and files
-		storeRecording(m)
+		m.StoreRecording(viper.GetString("record-file"))
 	}
 
 	shellOptions := []shell.ShellOption{}
