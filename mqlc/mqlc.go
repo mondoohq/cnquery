@@ -1684,16 +1684,59 @@ func (c *compiler) postCompile() {
 			chunk, typ, ref := c.expandListResource(chunk, ref)
 			switch chunk.Id {
 			case "$one", "$all", "$none", "$any":
+				// default fields
 				ref = chunk.Function.Binding
-				chunk := code.Chunk(chunk.Function.Binding)
+				chunk := code.Chunk(ref)
 				typ = types.Type(chunk.Function.Type)
+				// TODO: can this fail? Do we have a resource w/o default fields?
 				c.expandResourceFields(chunk, typ, ref)
 				block.Datapoints = append(block.Datapoints, block.TailRef(ref))
+
+				// data field
+				c.addValueFieldChunks()
 			default:
 				c.expandResourceFields(chunk, typ, ref)
 			}
 		}
 	}
+}
+
+// addValueFieldChunks takes the value fields of the assessment and adds them to the
+// block forthe default fields
+// This way, the actual data of the assessment automatically shows up in the output
+// of the assessment that failed the assessment
+func (c *compiler) addValueFieldChunks() {
+	assessmentBlock := c.Result.CodeV2.Blocks[1]
+	defaultFieldsBlock := c.Result.CodeV2.Blocks[len(c.Result.CodeV2.Blocks)-1]
+	// TODO: double check
+	defaultFieldsRef := defaultFieldsBlock.Chunks[1].Function.Binding
+
+	chunksToAdd := []*llx.Chunk{}
+	// We can skip the first Chunk, as it is only the resource binding
+	for i := 1; i < len(assessmentBlock.Chunks)-1; i++ {
+		chunk := assessmentBlock.Chunks[i]
+		newChunk := &llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   chunk.Id,
+			Function: &llx.Function{
+				Binding: chunk.Function.Binding,
+				Type:    chunk.Function.Type,
+				Args:    chunk.Function.Args,
+			},
+		}
+		chunksToAdd = append(chunksToAdd, newChunk)
+	}
+	chunkRef := defaultFieldsRef
+	for i := range chunksToAdd {
+		newChunk := chunksToAdd[i]
+		newChunk.Function.Binding = chunkRef
+
+		defaultFieldsBlock.AddChunk(c.Result.CodeV2, chunkRef, newChunk)
+		chunkRef = defaultFieldsBlock.TailRef(chunkRef)
+	}
+	// Only add last chunk as entrypoint, to not get data multiple times
+	// e.g. for dict["key"] we would otherwise get the entry and the whole dict
+	defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, chunkRef)
 }
 
 func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk, types.Type, uint64) {
