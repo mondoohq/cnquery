@@ -56,21 +56,21 @@ packs:
     queries:
       - uid: mondoo-slack-incident-response-team-domain
         title: Retrieve Slack Team Domain
-        query: |
+        mql: |
           slack.team.domain
       - uid: mondoo-slack-incident-response-team-id
         title: Retrieve Slack Team ID
-        query: |
+        mql: |
           slack.team.id
       - uid: mondoo-slack-incident-response-mfa-status
         title: Retrieve Slack Team MFA status 
         docs:
           desc: |
             This query retrieves the status of whether MFA is configured for all users. 
-        query: |
+        mql: |
           slack.users { id name profile["email"] isBot teamId has2FA }
       - uid: mondoo-slack-incident-response-owners
         title: Retrieve Slack Team Owners
-        query: |
+        mql: |
           slack.users.owners.length
           slack.users.owners { id name profile["email"] isBot teamId has2FA }

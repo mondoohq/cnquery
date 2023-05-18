@@ -20,196 +20,196 @@ packs:
         docs:
           desc: |
             This query retrieves the Azure subscription id
-        query: azure.subscription.id
+        mql: azure.subscription.id
       - uid: mondoo-asset-inventory-azure-networks
         title: Retrieve data on all securityGroups
         docs:
           desc: |
             This query retrieves all of the configuration data for Azure securityGroups
-        query: azure.subscription.network.securityGroups { * }
+        mql: azure.subscription.network.securityGroups
       - uid: mondoo-asset-inventory-azure-roleDefinitions
         title: Retrieve data for all Azure roleDefinitions
         docs:
           desc: |
             This query retrieves data for all Role definitions in the subscription
-        query: azure.subscription.authorizationService.roleDefinitions {*} 
+        mql: azure.subscription.authorizationService.roleDefinitions {*} 
       - uid: mondoo-asset-inventory-azure-cloudDefender
         title: Retrieve data for all Azure CloudDefender
         docs:
           desc: |
             This query retrieves data for cloudDefender
-        query: azure.subscription.cloudDefender {*}
+        mql: azure.subscription.cloudDefender {*}
       - uid: mondoo-asset-inventory-azure-storageAccounts
         title: Retrieve data for all Azure storage accounts
         docs:
           desc: |
             This query retrieves data for all storage accounts
-        query: azure.subscription.storage.accounts {*}
+        mql: azure.subscription.storage.accounts {*}
       - uid: mondoo-asset-inventory-azure-storageAccounts-containers
         title: Retrieve data for all containers in Azure storage accounts
         docs:
           desc: |
             This query retrieves data for all containers in storage accounts
-        query: azure.subscription.storage.accounts { containers {*} }
+        mql: azure.subscription.storage.accounts { containers {*} }
       - uid: mondoo-asset-inventory-azure-storageAccounts-blobs
         title: Retrieve data for all blobs in Azure storage accounts
         docs:
           desc: |
             This query retrieves data for all blobs in storage accounts
-        query: azure.subscription.storage.accounts { blobProperties {*} }
+        mql: azure.subscription.storage.accounts { blobProperties {*} }
       - uid: mondoo-asset-inventory-azure-storageAccounts-tables
         title: Retrieve data for all tables in Azure storage accounts
         docs:
           desc: |
             This query retrieves data for all tables in storage accounts
-        query: azure.subscription.storage.accounts { tableProperties {*} }
+        mql: azure.subscription.storage.accounts { tableProperties {*} }
       - uid: mondoo-asset-inventory-azure-sqlServers
         title: Retrieve data for all Azure sql servers
         docs:
           desc: |
             This query retrieves data for all sql servers
-        query: azure.subscription.sql.servers {*}
+        mql: azure.subscription.sql.servers {*}
       - uid: mondoo-asset-inventory-azure-sqlServers-firewallrules
         title: Retrieve data for all firewall rules in Azure sql servers
         docs:
           desc: |
             This query retrieves data for all firewall rules in sql servers
-        query: azure.subscription.sql.servers { firewallRules }
+        mql: azure.subscription.sql.servers { firewallRules }
       - uid: mondoo-asset-inventory-azure-sqlServers-databases
         title: Retrieve data for all databases in Azure sql servers
         docs:
           desc: |
             This query retrieves data for all databases in sql servers
-        query: azure.subscription.sql.servers { databases }
+        mql: azure.subscription.sql.servers { databases }
       - uid: mondoo-asset-inventory-azure-postgresql                                                                                                                                                         
         title: Retrieve data for all Azure postgresql servers                                                                                                                                                         
         docs:
           desc: |
             This query retrieves data for all postgresql servers
-        query: azure.subscription.postgreSql.servers {*}
+        mql: azure.subscription.postgreSql.servers {*}
       - uid: mondoo-asset-inventory-azure-postgresql-firewallrules                                                                                                                                                        
         title: Retrieve data for all firewall rules in Azure postgresql servers                                                                                                                                                         
         docs:
           desc: |
             This query retrieves data for all firewall rules in postgresql servers
-        query: azure.subscription.postgreSql.servers { firewallRules }
+        mql: azure.subscription.postgreSql.servers { firewallRules }
       - uid: mondoo-asset-inventory-azure-mysql                                                                                                                                                        
         title: Retrieve data for all Azure MySQL servers                                                                                                                                                         
         docs:
           desc: |
             This query retrieves data for all sql servers
-        query: azure.subscription.mySql.servers {*}
+        mql: azure.subscription.mySql.servers {*}
       - uid: mondoo-asset-inventory-azure-mariaDb
         title: Retrieve data for all Azure mariaDb servers
         docs:
           desc: |
             This query retrieves data for all mariaDb servers
-        query: azure.subscription.mariaDb.servers {*}
+        mql: azure.subscription.mariaDb.servers {*}
       - uid: mondoo-asset-inventory-azure-diagnosticSettings                                                                                                                                                       
         title: Retrieve data for all Azure diagnostic Settings                                                                                                                                                         
         docs:
           desc: |
             This query retrieves data for all diagnostic Settings
-        query: azure.subscription.monitor.diagnosticSettings {*}
+        mql: azure.subscription.monitor.diagnosticSettings {*}
       - uid: mondoo-asset-inventory-azure-keyVaults
         title: Retrieve data for all Azure Key Vaults
         docs:
           desc: |
             This query retrieves data for all Key Vaults
-        query: azure.subscription.keyVault.vaults {*}
+        mql: azure.subscription.keyVault.vaults {*}
       - uid: mondoo-asset-inventory-azure-keyVaults-keys
         title: Retrieve data for all Azure Key Vaults keys
         docs:
           desc: |
             This query retrieves data for all keys in Key Vaults
-        query: azure.subscription.keyVault.vaults { keys }
+        mql: azure.subscription.keyVault.vaults { keys }
       - uid: mondoo-asset-inventory-azure-keyVaults-secrets
         title: Retrieve data for all Azure Key Vaults secrets
         docs:
           desc: |
             This query retrieves data for all secrets in Key Vaults
-        query: azure.subscription.keyVault.vaults { secrets }
+        mql: azure.subscription.keyVault.vaults { secrets }
       - uid: mondoo-asset-inventory-azure-keyVaults-certificates
         title: Retrieve data for all Azure Key Vaults certificates
         docs:
           desc: |
             This query retrieves data for all certificates in Key Vaults
-        query: azure.subscription.keyVault.vaults { certificates }
+        mql: azure.subscription.keyVault.vaults { certificates }
       - uid: mondoo-asset-inventory-azure-activitylogs
         title: Retrieve data for all Azure activity logs
         docs:
           desc: |
             This query retrieves data for all activity logs
-        query: azure.subscription.monitor.activityLog {*}
+        mql: azure.subscription.monitor.activityLog {*}
       - uid: mondoo-asset-inventory-azure-networkSecurityGroups
         title: Retrieve data for all Azure network security groups
         docs:
           desc: |
             This query retrieves data for all network security groups
-        query: azure.subscription.network.securityGroups {*}
+        mql: azure.subscription.network.securityGroups {*}
       - uid: mondoo-asset-inventory-azure-virtualmachines
         title: Retrieve data for all Azure virtual machines
         docs:
           desc: |
             This query retrieves data for all virtual machines
-        query: azure.subscription.compute.vms {*}
+        mql: azure.subscription.compute.vms {*}
       - uid: mondoo-asset-inventory-azure-virtualmachines-managedDisk
         title: Retrieve data for all Azure virtual machines with managed disks
         docs:
           desc: |
             This query retrieves data for all virtual machines with managed disks
-        query: azure.subscription.compute.vms.where( properties["storageProfile"]["osDisk"]["managedDisk"].length > 0 )
+        mql: azure.subscription.compute.vms.where( properties["storageProfile"]["osDisk"]["managedDisk"].length > 0 )
       - uid: mondoo-asset-inventory-azure-webapp
         title: Retrieve data for all Azure web apps
         docs:
           desc: |
             This query retrieves data for all web apps
-        query: azure.subscription.web.apps {*}
+        mql: azure.subscription.web.apps {*}
       - uid: mondoo-asset-inventory-azure-cosmoDb
         title: Retrieve data for all Azure cosmoDb accounts
         docs:
           desc: |
             This query retrieves data for all cosmoDb accounts
-        query: azure.subscription.cosmosDb.accounts {*}
+        mql: azure.subscription.cosmosDb.accounts {*}
       - uid: mondoo-asset-inventory-azure-applicationInsight
         title: Retrieve data for all Azure applicationInsight
         docs:
           desc: |
             This query retrieves data for all ApplicationInsight
-        query: azure.subscription.monitor.applicationInsights {*}
+        mql: azure.subscription.monitor.applicationInsights {*}
       - uid: mondoo-asset-inventory-azure-networkWatcher
         title: Retrieve data for all Azure network watchers
         docs:
           desc: |
             This query retrieves data for all ApplicationInsight
-        query: azure.subscription.network.watchers {*}
+        mql: azure.subscription.network.watchers {*}
       - uid: mondoo-asset-inventory-azure-bastionHosts
         title: Retrieve data for all Azure bastionHosts
         docs:
           desc: |
             This query retrieves data for all bastionHosts
-        query: azure.subscription.network.bastionHosts {*}
+        mql: azure.subscription.network.bastionHosts {*}
       - uid: mondoo-asset-inventory-azure-compute-disks
         title: Retrieve data for all compute disks under the subscription
         docs:
           desc: |
             This query retrieves data for all compute disks available in the subscription
-        query: azure.subscription.compute.disks {*}
+        mql: azure.subscription.compute.disks {*}
       - uid: mondoo-asset-inventory-azure-network-interfaces
         title: Retrieve data for all network interfaces
         docs:
           desc: |
             This query retrieves data for all network interfaces
-        query: azure.subscription.network.interfaces {*}
+        mql: azure.subscription.network.interfaces {*}
       - uid: mondoo-asset-inventory-azure-resourcegroups
         title: Retrieve data for all resource groups inside the subscription
         docs:
           desc: |
             This query retrieves data for all resource groups inside the subscription
-        query: azure.subscription.resourceGroups {*}
+        mql: azure.subscription.resourceGroups {*}
       - uid: mondoo-asset-inventory-azure-resources
         title: Retrieve data for all resources inside the subscription
         docs:
           desc: |
             This query retrieves data for all resources inside the subscription
-        query: azure.subscription.resources {*}
+        mql: azure.subscription.resources {*}

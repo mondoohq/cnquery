@@ -13,43 +13,43 @@ packs:
     queries:
       - uid: mondoo-linux-installed-kernel
         title: Retrieve installed Linux kernels
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.installed
           }
       - uid: mondoo-linux-kernel-info
         title: Retrieve the running Linux kernel
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.info
           }
       - uid: mondoo-linux-kernel-modules
         title: Retrieve Linux kernel modules
-        query: kernel.modules { name loaded }
+        mql: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
         title: Retrieve running processes
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             processes { pid  command }
           }
       - uid: mondoo-linux-mounts
         title: Retrieve mounted devices
-        query: mount.list { * } 
+        mql: mount.list { * } 
       - uid: mondoo-linux-listening-ports
         title: Retrieve all listening ports
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             ports.listening { * }
           }
       - uid: mondoo-linux-uptime
         title: Retrieve operating system uptime
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             os.uptime
           }
       - uid: mondoo-linux-installed-packages
         title: Retrieve installed packages
-        query: packages { * }
+        mql: packages { * }
       - uid: mondoo-linux-running-services
         title: Retrieve running services
-        query: services { * }
+        mql: services { * }

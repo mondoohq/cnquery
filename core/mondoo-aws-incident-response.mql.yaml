@@ -26,14 +26,14 @@ packs:
     queries:
       - uid: mondoo-incident-response-aws-account-id
         title: Retrieve AWS account ID
-        query: |
+        mql: |
           aws.account.id
       - uid: mondoo-incident-response-aws-enabled-regions
         title: Retrieve all regions enabled in the AWS account 
         docs: 
           desc: |
             This query retrieves all AWS regions enabled in the account
-        query: aws { regions }
+        mql: aws { regions }
       - uid: mondoo-incident-response-aws-user-info
         title: Retrieve data for users with console access
         docs:
@@ -46,7 +46,7 @@ packs:
             passwordLastChanged 
             mfaActive
             ```
-        query: |
+        mql: |
           aws.iam.credentialReport.
             where( passwordEnabled == true ) { 
               properties['user'] 
@@ -71,7 +71,7 @@ packs:
             accessKey2LastUsedService
             accessKey2LastRotated            
             ```
-        query: |
+        mql: |
           aws.iam.credentialReport.
             where( accessKey1Active || accessKey2Active ) { 
               properties['user']
@@ -89,7 +89,7 @@ packs:
         docs:
           desc: |
             This query retrieves all IAM users, groups, and roles with the `AdministratorAccess` role attached.
-        query: |
+        mql: |
           aws.iam.attachedPolicies.
             where( arn == "arn:aws:iam::aws:policy/AdministratorAccess" ) { 
               attachedUsers 
@@ -101,7 +101,7 @@ packs:
         docs:
           desc: |
             This query retrieves all IAM users, croups, and roles that have any one of the AWS FullAccess roles attached.
-        query: |
+        mql: |
           aws.iam.policies.
             where( name == /FullAccess/i && attachmentCount != 0) { 
               name
@@ -134,7 +134,7 @@ packs:
             }
             tags
             ```
-        query: |
+        mql: |
           aws.ec2.instances.
             where( publicIp != '' ) { 
               arn 
@@ -166,7 +166,7 @@ packs:
             image.id
             state 
             ```
-        query: |
+        mql: |
           aws.ec2.instances.
             where( tags.length == 0 ) { 
               instanceId 
@@ -191,7 +191,7 @@ packs:
             tags
             policy {*} 
             ```
-        query: |
+        mql: |
           aws.s3.buckets.
             where( public == true ) {
               arn

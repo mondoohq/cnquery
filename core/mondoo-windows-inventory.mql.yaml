@@ -35,22 +35,22 @@ packs:
     queries:
       - uid: mondoo-windows-asset-info
         title: Retrieve asset information
-        query: asset { kind title platform name arch runtime }
+        mql: asset { kind title platform name arch runtime }
       - uid: mondoo-windows-hostname
         title: Retrieve the hostname
-        query: os.hostname
+        mql: os.hostname
       - uid: mondoo-windows-users 
         title: Retrieve regular users 
-        query: users { * }
+        mql: users
       - uid: mondoo-windows-packages
         title: Retrieve Windows packages 
-        query: packages {*}
+        mql: packages
       - uid: mondoo-windows-running-services
         title: Retrieve data on running services
-        query: services.where( running == true ) { * }
+        mql: services.where( running == true )
       - uid: mondoo-windows-ports-listening
         title: Retrieve data on listening ports 
-        query: ports.listening
+        mql: ports.listening
       - uid: mondoo-windows-interface-configuration
         title: Retrieve interface configuration of the system
-        query: command('wmic nicconfig get macaddress,ipaddress,IPSubnet').stdout
+        mql: command('wmic nicconfig get macaddress,ipaddress,IPSubnet').stdout

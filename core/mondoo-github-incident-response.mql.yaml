@@ -31,29 +31,29 @@ packs:
     queries:
       - uid: mondoo-incident-response-github-org-name
         title: Retrieve GitHub Organization Name
-        query: |
+        mql: |
           github.organization.name
       - uid: mondoo-incident-response-github-org-login
         title: Retrieve GitHub Organization Login
-        query: |
+        mql: |
           github.organization.login
       - uid: mondoo-incident-response-github-org-description
         title: Retrieve GitHub Organization description
-        query: |
+        mql: |
           github.organization.description
       - uid: mondoo-incident-response-github-org-mfa-status
         title: Retrieve GitHub Organization MFA status 
         docs:
           desc: |
             This query retrieves whether MFA is required for users of the organization.
-        query: |
+        mql: |
           github.organization.twoFactorRequirementEnabled  
       - uid: mondoo-incident-response-github-org-owners
         title: Retrieve GitHub Organization Owners
         docs:
           desc: |
             This query retrieves all GitHub organization owners. 
-        query: |
+        mql: |
           github.organization.owners.length
           github.organization { owners { name email login } }
       - uid: mondoo-incident-response-github-org-members
@@ -61,7 +61,7 @@ packs:
         docs:
           desc: |
             This query retrieves all of the members of the GitHub organization. 
-        query: |
+        mql: |
           github.organization.members.length
           github.organization { 
             members { 
@@ -77,7 +77,7 @@ packs:
         docs:
           desc: |
             This query retrieves all GitHub organization teams. 
-        query: |
+        mql: |
           github.organization { 
             teams { 
               slug 
@@ -96,7 +96,7 @@ packs:
         docs: 
           desc: |
             This query retrieves all of the public repositories within the GitHub organization. The query returns the repo's name and whether the default branch is [protected](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches) using protection rules.
-        query: |
+        mql: |
           github.organization.repositories.
             where( private == false ) { 
               name 
@@ -110,7 +110,7 @@ packs:
         docs: 
           desc: |
             This query retrieves the packages published to GHCR.io.
-        query: |
+        mql: |
           github.organization { 
             packages { 
               name 

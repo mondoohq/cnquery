@@ -15,11 +15,11 @@ packs:
         queries:
           - uid: k8s-cluster-version
             title: Retrieve Kubernetes Cluster Version
-            query: |
+            mql: |
               k8s.serverVersion
           - uid: role-bindings-with-cluster-admin-permissions
             title: Retrieve role bindings with cluster-admin permissions
-            query: |
+            mql: |
               k8s.rolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
                 name
                 namespace
@@ -28,7 +28,7 @@ packs:
               }
           - uid: clusterrole-bindings-with-cluster-admin-permissions
             title: Retrieve ClusterRoleBindings with cluster-admin permissions
-            query: |
+            mql: |
               k8s.clusterrolebindings.where(roleRef["kind"] == "ClusterRole" && roleRef["name"] == "cluster-admin") {
                 name
                 subjects
@@ -40,7 +40,7 @@ packs:
         queries:
           - uid: k8s-pod-security-context
             title: Retrieve Pod Security Context
-            query: |
+            mql: |
               k8s.pod {
                 ephemeralContainers {
                   securityContext
@@ -54,7 +54,7 @@ packs:
               }
           - uid: k8s-pod-container
             title: Retrieve container image information
-            query: |
+            mql: |
               k8s.pod { 
                 name
                 namespace
@@ -102,7 +102,7 @@ packs:
         queries:
           - uid: k8s-deployment-security-context
             title: Retrieve Deployment Security Context
-            query: |
+            mql: |
               k8s.deployment {
                 initContainers {
                   securityContext
@@ -113,7 +113,7 @@ packs:
               }
           - uid: k8s-deployment-container
             title: Retrieve container image information
-            query: |
+            mql: |
               k8s.deployment { 
                 name
                 namespace
@@ -148,7 +148,7 @@ packs:
         queries:
           - uid: k8s-cronjob-security-context
             title: Retrieve CronJob Security Context
-            query: |
+            mql: |
               k8s.cronjob {
                 initContainers {
                   securityContext
@@ -159,7 +159,7 @@ packs:
               }
           - uid: k8s-cronjob-container
             title: Retrieve container image information
-            query: |
+            mql: |
               k8s.cronjob { 
                 name
                 namespace
@@ -194,7 +194,7 @@ packs:
         queries:
           - uid: k8s-job-security-context
             title: Retrieve Job Security Context
-            query: |
+            mql: |
               k8s.job {
                 initContainers {
                   securityContext
@@ -205,7 +205,7 @@ packs:
               }
           - uid: k8s-job-container
             title: Retrieve container image information
-            query: |
+            mql: |
               k8s.job { 
                 name
                 namespace
@@ -240,7 +240,7 @@ packs:
         queries:
           - uid: k8s-daemonset-security-context
             title: Retrieve DaemonSet Security Context
-            query: |
+            mql: |
               k8s.daemonset {
                 initContainers {
                   securityContext
@@ -251,7 +251,7 @@ packs:
               }
           - uid: k8s-daemonset-container
             title: Retrieve container image information
-            query: |
+            mql: |
               k8s.daemonset { 
                 name
                 namespace
@@ -286,7 +286,7 @@ packs:
         queries:
           - uid: k8s-statefulset-security-context
             title: Retrieve StatefulSet Security Context
-            query: |
+            mql: |
               k8s.statefulset {
                 initContainers {
                   securityContext
@@ -297,7 +297,7 @@ packs:
               }
           - uid: k8s-statefulset-container
             title: Retrieve container image information
-            query: |
+            mql: |
               k8s.statefulset { 
                 name
                 namespace
@@ -332,7 +332,7 @@ packs:
         queries:
           - uid: k8s-replicaset-security-context
             title: Retrieve ReplicaSet Security Context
-            query: |
+            mql: |
               k8s.replicaset {
                 initContainers {
                   securityContext
@@ -343,7 +343,7 @@ packs:
               }
           - uid: k8s-replicaset-container
             title: Retrieve container image information
-            query: |
+            mql: |
               k8s.replicaset { 
                 name
                 namespace

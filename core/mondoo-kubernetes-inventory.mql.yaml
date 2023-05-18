@@ -29,43 +29,43 @@ packs:
         queries:
           - uid: k8s-cluster-version
             title: Retrieve Kubernetes cluster version
-            query: |
+            mql: |
               k8s.serverVersion
           - uid: k8s-cluster-namespaces
             title: Retrieve Kubernetes cluster namespaces
-            query: |
-              k8s.namespaces{ * }
+            mql: |
+              k8s.namespaces
           - uid: k8s-cluster-nodes
             title: Retrieve cluster modes
-            query: |
-              k8s.nodes { * }
+            mql: |
+              k8s.nodes
           - uid: k8s-cluster-clusterroles
             title: Retrieve cluster RBAC ClusterRoles
-            query: |
-              k8s.clusterroles { * }     
+            mql: |
+              k8s.clusterroles  
       - title: Pods inventory
         filters:
           - asset.platform == "k8s-pod"
         queries:
           - uid: k8s-pod
             title: Retrieve Pod information
-            query: |
-              k8s.pod { * }
+            mql: |
+              k8s.pod
           - uid: k8s-pod-container
             title: Retrieve container information
-            query: |
-              k8s.pod.containers { * } 
+            mql: |
+              k8s.pod.containers
       - title: Deployments inventory
         filters:
           - asset.platform == "k8s-deployment"
         queries:
           - uid: k8s-deployment
             title: Retrieve deployment information
-            query: |
-              k8s.deployment { * }
+            mql: |
+              k8s.deployments
           - uid: k8s-deployment-container
             title: Retrieve container information
-            query: |
+            mql: |
               k8s.deployment.containers { * }
       - title: CronJobs inventory
         filters:
@@ -73,11 +73,11 @@ packs:
         queries:
           - uid: k8s-cronjob
             title: Retrieve CronJob information
-            query: |
+            mql: |
               k8s.cronjob { * }
           - uid: k8s-cronjob-container
             title: Retrieve container information
-            query: |
+            mql: |
               k8s.cronjob.containers { * }
       - title: Jobs inventory
         filters:
@@ -85,11 +85,11 @@ packs:
         queries:
           - uid: k8s-job
             title: Retrieve Job information
-            query: |
+            mql: |
               k8s.job { * }
           - uid: k8s-job-container
             title: Retrieve container information
-            query: |
+            mql: |
               k8s.job.containers { * }
       - title: DaemonSets inventory
         filters:
@@ -97,11 +97,11 @@ packs:
         queries:
           - uid: k8s-daemonset
             title: Retrieve DaemonSet information
-            query: |
+            mql: |
               k8s.daemonset { * }
           - uid: k8s-daemonset-container
             title: Retrieve container information
-            query: |
+            mql: |
               k8s.daemonset.containers { * }
       - title: StatefulSets inventory
         filters:
@@ -109,11 +109,11 @@ packs:
         queries:
           - uid: k8s-statefulset
             title: Retrieve StatefulSet information
-            query: |
+            mql: |
               k8s.statefulset { * }
           - uid: k8s-statefulset-container
             title: Retrieve Container information
-            query: |
+            mql: |
               k8s.statefulset.containers { * }
       - title: ReplicaSets inventory
         filters:
@@ -121,11 +121,11 @@ packs:
         queries:
           - uid: k8s-replicaset
             title: Retrieve ReplicaSet information
-            query: |
+            mql: |
               k8s.replicaset { * }
           - uid: k8s-replicaset-container
             title: Retrieve container information
-            query: |
+            mql: |
               k8s.replicaset.containers { * }
       - title: Ingresses inventory
         filters:
@@ -133,6 +133,6 @@ packs:
         queries:
           - uid: k8s-ingress
             title: Retrieve Ingress information
-            query: |
+            mql: |
               k8s.ingress { * }
     

@@ -34,7 +34,7 @@ packs:
     queries:
       - uid: mondoo-okta-incident-response-users
         title: Retrieve Users
-        query: okta.users { * }
+        mql: okta.users
       - uid: mondoo-okta-incident-response-team-id
         title: Retrieve installed applications
-        query: okta.applications  { * }
+        mql: okta.applications

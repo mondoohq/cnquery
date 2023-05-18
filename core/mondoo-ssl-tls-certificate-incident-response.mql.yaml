@@ -30,26 +30,26 @@ packs:
     queries:
       - uid: mondoo-ssl-tls-certificate-incident-response-domain-name
         title: Retrieve Domain Name
-        query: |
+        mql: |
           tls.domainName
       - uid: mondoo-ssl-tls-certificate-incident-response-versions
         title: Retrieve supported SSL and TLS versions
-        query: |
+        mql: |
           tls.versions
       - uid: mondoo-ssl-tls-certificate-incident-response-ciphers
         title: Retrieve supported SSl/TLS ciphers
-        query: |
+        mql: |
           tls.ciphers
       - uid: mondoo-ssl-tls-certificate-incident-response-signing-algo
         title: Retrieve the signature algorithm of all certificates in the certificate chain
-        query: |
+        mql: |
           tls.certificates {
             signingAlgorithm
             subject.commonName
           }
       - uid: mondoo-ssl-tls-certificate-incident-response-is-revoked
         title: Retrieve revoked, verified, and CA status of all certificates in the certificate chain
-        query: |
+        mql: |
           tls.certificates {
             subject.commonName
             isCA
@@ -58,7 +58,7 @@ packs:
           }
       - uid: mondoo-ssl-tls-certificate-incident-response-when-expire
         title: Retrieve the expiration dates for all certificates in the certificate chain
-        query: |
+        mql: |
           tls.certificates {
             subject.commonName
             expiresIn

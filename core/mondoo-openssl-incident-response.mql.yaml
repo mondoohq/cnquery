@@ -13,7 +13,7 @@ packs:
     queries:
       - uid: mondoo-openssl-platform
         title: Retrieve platform details
-        query: |
+        mql: |
           asset {
             platform
             version
@@ -21,10 +21,10 @@ packs:
           }
       - uid: mondoo-openssl-installed-version
         title: Retrieve installed ssl libraries
-        query: packages.where(name == /ssl/)
+        mql: packages.where(name == /ssl/)
       - uid: mondoo-openssl-listening-ports
         title: Retrieve listening ports from running systems
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             ports.listening { 
               protocol

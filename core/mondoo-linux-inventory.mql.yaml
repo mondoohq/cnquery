@@ -35,64 +35,64 @@ packs:
     queries:
       - uid: mondoo-linux-asset-info
         title: Retrieve asset information
-        query: asset { kind title platform name arch runtime }
+        mql: asset { kind title platform name arch runtime }
       - uid: mondoo-linux-hostname
         title: Retrieve the hostname
-        query: os.hostname
+        mql: os.hostname
       - uid: mondoo-linux-platform
         title: Retrieve the platform
-        query: platform.name
+        mql: platform.name
       - uid: mondoo-linux-users 
         title: Retrieve regular users with shell access 
-        query: users.where( shell != "/sbin/nologin" && uid >= 1000 ) { * }
+        mql: users.where( shell != "/sbin/nologin" && uid >= 1000 )
       - uid: mondoo-linux-groups-wheel
         title: Retrieve members of the wheel group
-        query: groups.where( name == "wheel") { members }
+        mql: groups.where( name == "wheel") { members }
       - uid: mondoo-linux-installed-kernel
         title: Retrieve installed Linux kernels
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.installed
           }
       - uid: mondoo-linux-kernel-info
         title: Retrieve the running Linux kernel
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             kernel.info
           }
       - uid: mondoo-linux-kernel-modules
         title: Retrieve Linux kernel modules
-        query: kernel.modules { name loaded }
+        mql: kernel.modules { name loaded }
       - uid: mondoo-linux-processes
         title: Retrieve running processes
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             processes { pid  command }
           }
       - uid: mondoo-linux-mounts
         title: Retrieve  mounted devices
-        query: mount.list { * } 
+        mql: mount.list
       - uid: mondoo-linux-listening-ports
         title: Retrieve all listening ports
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
-            ports.listening { * }
+            ports.listening
           }
       - uid: mondoo-linux-uptime
         title: Retrieve operating system uptime
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             os.uptime
           }
       - uid: mondoo-linux-installed-packages
         title: Retrieve installed packages
-        query: packages { * }
+        mql: packages
       - uid: mondoo-linux-running-services
         title: Retrieve running services
-        query: services.where( running == true ) { * }
+        mql: services.where( running == true )
       - uid: mondoo-linux-interface-configuration
         title: Retrieve interface configuration of the system
-        query: |
+        mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             parse.json(content: command('ip -j a').stdout).params
           }

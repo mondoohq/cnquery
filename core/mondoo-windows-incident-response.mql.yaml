@@ -13,13 +13,13 @@ packs:
     queries:
       - uid: mondoo-windows-installed-hotfixes
         title: Retrieve installed hotfixes
-        query: windows.hotfixes { hotfixId installedOn }
+        mql: windows.hotfixes { hotfixId installedOn }
       - uid: mondoo-windows-uptime
         title: Retrieve operating system uptime
-        query: os.uptime
+        mql: os.uptime
       - uid: mondoo-windows-installed-packages
         title: Retrieve list about installed packages
-        query: packages { * }
+        mql: packages
       - uid: mondoo-windows-running-services
         title: Retrieve running services
-        query: services { * }
+        mql: services

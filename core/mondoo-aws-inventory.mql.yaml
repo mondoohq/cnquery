@@ -16,169 +16,80 @@ packs:
     queries:
       - uid: mondoo-asset-inventory-aws-account-id
         title: Retrieve AWS account ID
-        query: |
+        mql: |
           aws.account.id
       - uid: mondoo-asset-inventory-aws-enabled-regions
         title: Retrieve all regions enabled in the AWS account 
         docs: 
           desc: |
             This query retrieves all AWS regions enabled in the account
-        query: aws { regions }
+        mql: aws { regions }
       - uid: mondoo-asset-inventory-aws-vpcs
         title: Retrieve data on all VPCs
         docs: 
           desc: |
             This query retrieves all of the configuration data for AWS VPCs
-        query: aws { vpcs {*} }
+        mql: aws.vpcs
       - uid: mondoo-asset-inventory-aws-iam-users
         title: Retrieve data for all IAM users
         docs:
           desc: |
             This query retrieves data for all IAM users
-        query: |
-          aws.iam { users {*} }
+        mql: aws.iam.users
       - uid: mondoo-asset-inventory-aws-iam-groups
         title: Retrieve data for IAM groups
         docs:
           desc: |
             This query retrieves all of the IAM groups.
-        query: |
-          aws.iam { groups {*} }
+        mql: aws.iam.groups
       - uid: mondoo-asset-inventory-aws-iam-roles
         title: Retrieve data on all IAM Roles.
         docs:
           desc: |
             This query retrieves all IAM Roles
-        query: |
-          aws.iam { roles {*} }
+        mql: aws.iam.roles
       - uid: mondoo-asset-inventory-aws-iam-policies
         title: Retrieve data on all attached IAM Policies
         docs:
           desc: |
             This query retrieves all IAM policies attached to a user, group, or role.
-        query: |
-          aws.iam.policies.
-            where( attachmentCount > 0 ) { 
-              arn
-              name 
-              attachedGroups
-              attachedRoles
-              attachedUsers
-              scope
-            }
+        mql: aws.iam.policies.where( attachmentCount > 0 )
       - uid: mondoo-asset-inventory-aws-ec2-security-groups
         title: Retrieve data on all AWS EC2 Security Groups
         docs:
           desc: |
             This query retrieves all AWS EC2 Security Groups
-        query: |
-         aws.ec2.securityGroups {*}
+        mql: aws.ec2.securityGroups
       - uid: mondoo-asset-inventory-aws-ec2-volumes
         title: Retrieve data on all AWS EC2 volumes
         docs:
           desc: |
             This query retrieves all AWS EC2 volumes
-        query: |
-         aws.ec2.volumes {*}
+        mql: aws.ec2.volumes {*}
       - uid: mondoo-asset-inventory-aws-ec2-retrieve-all-data
-        title: Retrieve the configuration for all EC2 instances
-        query: |
-          aws.ec2.instances {
-            arn
-            instanceId
-            detailedMonitoring
-            region
-            publicIp
-            ssm
-            vpc
-            httpTokens
-            patchState
-            state
-            deviceMappings
-            securityGroups
-            publicDnsName
-            instanceStatus
-            stateReason
-            stateTransitionReason
-            ebsOptimized
-            instanceType
-            tags
-            image
-            launchTime
-            privateIp
-            privateDnsName
-            keypair
-          }
+        title: Retrieves all running EC2 instances
+        mql: aws.ec2.instances.where( state == "running" )
       - uid: mondoo-asset-inventory-aws-rds-dbclusters-all-data
         title: Retrieve the configuration for all RDS Database Clusters
-        query: |
-          aws.rds {
-            dbClusters {
-              arn
-              region
-              id
-              members {*}
-              tags
-            }
-          }
+        mql: aws.rds.dbClusters
       - uid: mondoo-asset-inventory-aws-rds-dbinstances-all-data
         title: Retrieve the configuration for all RDS Database Instances
-        query: |
-          aws.rds {
-            dbInstances {
-              arn
-              name
-              backupRetentionPeriod
-              storageEncrypted
-              region
-              publiclyAccessible
-              enabledCloudwatchLogsExports
-              deletionProtection
-              multiAZ
-              id
-              enhancedMonitoringResourceArn
-              tags
-              dbInstanceClass
-              dbInstanceIdentifier
-              engine
-              securityGroups {*}
-              status
-            }
-          }
+        mql: aws.rds.dbInstances
       - uid: mondoo-asset-inventory-aws-s3-retrieve-all-data
         title: Retrieve the configuration for all S3 buckets
-        query: |
-          aws.s3.buckets {
-            arn
-            name
-            policy
-            tags
-            acl
-            owner
-            public
-            cors
-            location
-            versioning
-            logging
-            staticWebsiteHosting
-            defaultLock
-            replication
-            encryption
-            publicAccessBlock
-            exists
-          }
+        mql: aws.s3.buckets
       - uid: mondoo-asset-inventory-aws-eks-clusterss
         title: Retrieve the configuration for all AWS EKS clusters
-        query: aws.eks { clusters {*} }
+        mql: aws.eks.clusters
       - uid: mondoo-asset-inventory-aws-lambda
         title: Retrieve the configuration for all AWS lambda functions
-        query: aws.lambda { functions {*} }
+        mql: aws.lambda.functions
       - uid: mondoo-asset-inventory-aws-access-analyzer
         title: Retrieve the configuration for all AWS Access Analyzers
-        query: aws.accessAnalyzer { analyzers {*} }
+        mql: aws.accessAnalyzer.analyzers
       - uid: mondoo-asset-inventory-aws-acm-certificates
         title: Retrieve the configuration for all AWS Certificate Manager certificates
-        query: aws.acm { certificates {*} }
+        mql: aws.acm.certificates
       - uid: mondoo-asset-inventory-aws-cloudtrail-trails
         title: Retrieve the configuration for all AWS CloudTrail trails
-        query: aws.cloudtrail { trails {*}}
+        mql: aws.cloudtrail.trails

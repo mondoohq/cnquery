@@ -32,13 +32,13 @@ packs:
     queries:
       - uid: mondoo-vmware-incident-response-kernel-modules
         title: Retrieve kernel modules
-        query: vsphere.host.kernelModules { * }
+        mql: vsphere.host.kernelModules
       - uid: mondoo-vmware-incident-response-installed-packages
         title: Retrieve installed packages
-        query: vsphere.host.packages { * } 
+        mql: vsphere.host.packages
       - uid: mondoo-vmware-incident-response-running-services
         title: Retrieve all services
-        query: vsphere.host.services { * }
+        mql: vsphere.host.services
         refs:
           - title: VMSA-2021-0002
             url: https://www.vmware.com/security/advisories/VMSA-2021-0002.html
@@ -48,10 +48,10 @@ packs:
         title: Retrieve host acceptance level
         docs:
           desc: The host acceptance level determines which VIBs can be installed to a host. 
-        query: vsphere.host.acceptanceLevel
+        mql: vsphere.host.acceptanceLevel
         refs:
           - title:
             url: https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.upgrade.doc/GUID-27BBBAB8-01EA-4238-8140-1C3C3EFC0AA6.html
       - uid: mondoo-vmware-incident-response-acceptanceLevel
         title: Retrieve list configured ntp server
-        query: vsphere.host.ntp.server
+        mql: vsphere.host.ntp.server

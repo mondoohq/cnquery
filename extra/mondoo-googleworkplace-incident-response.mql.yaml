@@ -60,22 +60,22 @@ packs:
     queries:
       - uid: mondoo-googleworkspace-incident-response-domain
         title: Retrieve Google Workspace Domains
-        query: googleworkspace.domains { domainName isPrimary verified }
+        mql: googleworkspace.domains { domainName isPrimary verified }
       - uid: mondoo-googleworkspace-incident-response-user-mfa-status
         title: Retrieve Google Workspace Users MFA status 
-        query: googleworkspace.users { primaryEmail isEnforcedIn2Sv }
+        mql: googleworkspace.users { primaryEmail isEnforcedIn2Sv }
       - uid: mondoo-googleworkspace-incident-response-super-admins
         title: Retrieve Google Workspace Super Admins
-        query: googleworkspace.report.users.where( security["isSuperAdmin"] == true) { userEmail  }
+        mql: googleworkspace.report.users.where( security["isSuperAdmin"] == true) { userEmail  }
       - uid: mondoo-googleworkspace-incident-response-super-admins-without-2FA-enrolled
         title: Retrieve Google Workspace Super Admins which are not enrolled in 2FA
-        query: googleworkspace.users.where(isEnrolledIn2Sv != true && isAdmin == true) {primaryEmail isEnrolledIn2Sv isAdmin}
+        mql: googleworkspace.users.where(isEnrolledIn2Sv != true && isAdmin == true) {primaryEmail isEnrolledIn2Sv isAdmin}
       - uid: mondoo-googleworkspace-incident-response-users-without-2FA-enrolled
         title: Retrieve Google Workspace User accounts which are not enrolled in 2FA
-        query: googleworkspace.users.where(isEnrolledIn2Sv != true) {primaryEmail isEnrolledIn2Sv isAdmin}
+        mql: googleworkspace.users.where(isEnrolledIn2Sv != true) {primaryEmail isEnrolledIn2Sv isAdmin}
       - uid: mondoo-googleworkspace-incident-response-super-admins-without-hardware-based-2fa
         title: Retrieve all Super Admin accounts which do not employ hardware based security keys
-        query: googleworkspace.report.users.where(security["isSuperAdmin"] == true && security["numSecurityKeys"] <= 0 ) {account['adminSetName'] security['numSecurityKeys']}
+        mql: googleworkspace.report.users.where(security["isSuperAdmin"] == true && security["numSecurityKeys"] <= 0 ) {account['adminSetName'] security['numSecurityKeys']}
       - uid: mondoo-googleworkspace-incident-response-config-drift-recovery-email
         title: Retrieve primary and recovery email accounts of all Google Workspace users
-        query: googleworkspace.users {primaryEmail recoveryEmail}
+        mql: googleworkspace.users {primaryEmail recoveryEmail}

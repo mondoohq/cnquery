@@ -13,34 +13,34 @@ packs:
     queries:
       - uid: mondoo-macos-incident-response-platform-info
         title: Retrieve platform information
-        query: platform { title release arch }
+        mql: platform { title release arch }
       - uid: mondoo-macos-incident-response-regular-users
         title: Retrieve regular users
-        query: users.where( name != /^_/ && shell != /\/usr\/bin\/false/ ) {*}
+        mql: users.where( name != /^_/ && shell != /\/usr\/bin\/false/ ) {*}
       - uid: mondoo-macos-kernel-info
         title: Retrieve the running macOS kernel
-        query: kernel.info["version"]
+        mql: kernel.info["version"]
       - uid: mondoo-macos-kernel-modules
         title: Retrieve macOS kernel modules
-        query: kernel.modules { name loaded }
+        mql: kernel.modules { name loaded }
       - uid: mondoo-macos-processes
         title: Retrieve running processes
-        query: processes.list { pid  command }
+        mql: processes.list { pid  command }
       - uid: mondoo-macos-mounts
         title: Retrieve mounted devices
-        query: mount.list { * } 
+        mql: mount.list
       - uid: mondoo-macos-uptime
         title: Retrieve operating system uptime
-        query: os.uptime
+        mql: os.uptime
       - uid: mondoo-macos-installed-packages
         title: Retrieve installed packages
-        query: packages.list { * }
+        mql: packages
       - uid: mondoo-macos-running-services
         title: Retrieve running services
-        query: services.list { * }
+        mql: services
       - uid: mondoo-macos-alf-extensions
         title: Retrieve exceptions from the Application Layer Firewall
-        query: macos.alf.exceptions
+        mql: macos.alf.exceptions
       - uid: mondoo-macos-check-recommended-updates
         title: Retrieve any recommended updates
-        query: parse.plist('/Library/Preferences/com.apple.SoftwareUpdate.plist').params['RecommendedUpdates']
+        mql: parse.plist('/Library/Preferences/com.apple.SoftwareUpdate.plist').params['RecommendedUpdates']
