@@ -596,7 +596,7 @@ private azure.subscription.storageService.account.queueService.properties @defau
 }
 
 // Azure Storage Account Table Service Properties
-private azure.subscription.storageService.account.tableService.properties @defaults("id hourMetrics minuteMetrics") {
+private azure.subscription.storageService.account.tableService.properties @defaults("id") {
   // ID of the service
   id string
   // Hourly metrics properties
