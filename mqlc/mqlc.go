@@ -1688,14 +1688,16 @@ func (c *compiler) postCompile() {
 				ref = chunk.Function.Binding
 				chunk := code.Chunk(ref)
 				typ = types.Type(chunk.Function.Type)
-				// TODO: can this fail? Do we have a resource w/o default fields?
-				c.expandResourceFields(chunk, typ, ref)
-				block.Datapoints = append(block.Datapoints, block.TailRef(ref))
+				err := c.expandResourceFields(chunk, typ, ref)
+				// when no defaults are definied or query isn't about a resource, no block was added
+				if err == nil {
+					block.Datapoints = append(block.Datapoints, block.TailRef(ref))
 
-				// data field
-				c.addValueFieldChunks()
+					c.addValueFieldChunks()
+				}
 			default:
-				c.expandResourceFields(chunk, typ, ref)
+				// ignore errrors here, log messages are already printed
+				_ = c.expandResourceFields(chunk, typ, ref)
 			}
 		}
 	}
@@ -1706,30 +1708,57 @@ func (c *compiler) postCompile() {
 // This way, the actual data of the assessment automatically shows up in the output
 // of the assessment that failed the assessment
 func (c *compiler) addValueFieldChunks() {
-	assessmentBlock := c.Result.CodeV2.Blocks[1]
+	var assessmentBlock *llx.Block
+OUTER:
+	for i := range c.Result.CodeV2.Blocks {
+		for j := range c.Result.CodeV2.Blocks[i].Chunks {
+			switch c.Result.CodeV2.Blocks[i].Chunks[j].Id {
+			case "$one", "$all", "$none", "$any":
+				assessmentBlock = c.Result.CodeV2.Blocks[i+1]
+				break OUTER
+			}
+		}
+	}
+
 	defaultFieldsBlock := c.Result.CodeV2.Blocks[len(c.Result.CodeV2.Blocks)-1]
-	// TODO: double check
 	defaultFieldsRef := defaultFieldsBlock.Chunks[1].Function.Binding
 
 	chunksToAdd := []*llx.Chunk{}
 	// We can skip the first Chunk, as it is only the resource binding
 	for i := 1; i < len(assessmentBlock.Chunks)-1; i++ {
 		chunk := assessmentBlock.Chunks[i]
+		chunkAlreadyPresent := false
+		for j := range defaultFieldsBlock.Chunks {
+			if chunk.Id == defaultFieldsBlock.Chunks[j].Id {
+				chunkAlreadyPresent = true
+				break
+			}
+		}
+		if chunkAlreadyPresent {
+			continue
+		}
 		newChunk := &llx.Chunk{
-			Call: llx.Chunk_FUNCTION,
+			Call: chunk.Call,
 			Id:   chunk.Id,
-			Function: &llx.Function{
+		}
+		if chunk.Function != nil {
+			newChunk.Function = &llx.Function{
 				Binding: chunk.Function.Binding,
 				Type:    chunk.Function.Type,
 				Args:    chunk.Function.Args,
-			},
+			}
 		}
 		chunksToAdd = append(chunksToAdd, newChunk)
+	}
+	if len(chunksToAdd) == 0 {
+		return
 	}
 	chunkRef := defaultFieldsRef
 	for i := range chunksToAdd {
 		newChunk := chunksToAdd[i]
-		newChunk.Function.Binding = chunkRef
+		if newChunk.Function != nil {
+			newChunk.Function.Binding = chunkRef
+		}
 
 		defaultFieldsBlock.AddChunk(c.Result.CodeV2, chunkRef, newChunk)
 		chunkRef = defaultFieldsBlock.TailRef(chunkRef)
@@ -1767,25 +1796,25 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk,
 	return newChunk, newType, newRef
 }
 
-func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) {
+func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) error {
 	resultType := types.Block
 	if typ.IsArray() {
 		resultType = types.Array(types.Block)
 		typ = typ.Child()
 	}
 	if !typ.IsResource() {
-		return
+		return fmt.Errorf("cannot expand fields for non-resource type %s", typ)
 	}
 
 	info := c.Schema.Resources[typ.ResourceName()]
 	if info == nil || info.Defaults == "" {
-		return
+		return fmt.Errorf("cannot expand fields for resource %s", typ.ResourceName())
 	}
 
 	ast, err := parser.Parse(info.Defaults)
 	if ast == nil || len(ast.Expressions) == 0 {
 		log.Error().Err(err).Msg("failed to parse defaults for " + info.Name)
-		return
+		return fmt.Errorf("failed to parse defaults for %s", info.Name)
 	}
 
 	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref)
@@ -1812,6 +1841,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 	ref = ep
 
 	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
+	return nil
 }
 
 func (c *compiler) updateLabels() {
