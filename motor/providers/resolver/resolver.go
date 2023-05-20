@@ -24,6 +24,7 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/motor/providers/oci"
 	"go.mondoo.com/cnquery/motor/providers/okta"
+	"go.mondoo.com/cnquery/motor/providers/opcua"
 	"go.mondoo.com/cnquery/motor/providers/slack"
 	"go.mondoo.com/cnquery/motor/providers/ssh"
 	"go.mondoo.com/cnquery/motor/providers/tar"
@@ -360,6 +361,15 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credsResolver
 		}
 	case providers.ProviderType_VCD:
 		p, err := vcd.New(resolvedConfig)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(p)
+		if err != nil {
+			return nil, err
+		}
+	case providers.ProviderType_OPCUA:
+		p, err := opcua.New(resolvedConfig)
 		if err != nil {
 			return nil, err
 		}

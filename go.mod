@@ -118,6 +118,7 @@ require (
 	github.com/google/go-containerregistry v0.12.1
 	github.com/google/go-github/v49 v49.1.0
 	github.com/google/uuid v1.3.0
+	github.com/gopcua/opcua v0.3.13
 	github.com/gosimple/slug v1.13.1
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-hclog v1.2.0
@@ -172,7 +173,7 @@ require (
 	github.com/zclconf/go-cty v1.10.0
 	go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f
 	go.opentelemetry.io/otel v1.14.0
-	golang.org/x/crypto v0.5.0
+	golang.org/x/crypto v0.7.0
 	golang.org/x/net v0.8.0
 	golang.org/x/oauth2 v0.5.0
 	golang.org/x/sync v0.1.0

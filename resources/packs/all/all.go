@@ -15,6 +15,7 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/ms365"
 	"go.mondoo.com/cnquery/resources/packs/oci"
 	"go.mondoo.com/cnquery/resources/packs/okta"
+	"go.mondoo.com/cnquery/resources/packs/opcua"
 	"go.mondoo.com/cnquery/resources/packs/os"
 	"go.mondoo.com/cnquery/resources/packs/python"
 	"go.mondoo.com/cnquery/resources/packs/slack"
@@ -51,4 +52,5 @@ func init() {
 	Registry.Add(ipmi.Registry)
 	Registry.Add(python.Registry)
 	Registry.Add(oci.Registry)
+	Registry.Add(opcua.Registry)
 }

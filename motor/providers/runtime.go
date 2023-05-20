@@ -30,4 +30,5 @@ const (
 	RUNTIME_OKTA                 = "okta"
 	RUNTIME_SLACK                = "slack"
 	RUNTIME_OCI                  = "oci"
+	RUNTIME_OPCUA                = "opc-ua"
 )
