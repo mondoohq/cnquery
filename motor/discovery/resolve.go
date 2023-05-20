@@ -14,8 +14,6 @@ import (
 	"context"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/discovery/oci"
-
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -36,7 +34,9 @@ import (
 	"go.mondoo.com/cnquery/motor/discovery/mock"
 	"go.mondoo.com/cnquery/motor/discovery/ms365"
 	"go.mondoo.com/cnquery/motor/discovery/network"
+	"go.mondoo.com/cnquery/motor/discovery/oci"
 	"go.mondoo.com/cnquery/motor/discovery/okta"
+	"go.mondoo.com/cnquery/motor/discovery/opcua"
 	"go.mondoo.com/cnquery/motor/discovery/os"
 	"go.mondoo.com/cnquery/motor/discovery/slack"
 	"go.mondoo.com/cnquery/motor/discovery/tar"
@@ -95,6 +95,7 @@ func init() {
 		providers.ProviderID_SLACK:              &slack.Resolver{},
 		providers.ProviderID_VCD:                &vcd.Resolver{},
 		providers.ProviderID_OCI:                &oci.Resolver{},
+		providers.ProviderID_OPCUA:              &opcua.Resolver{},
 	}
 }
 

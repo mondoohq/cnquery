@@ -745,6 +745,21 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_FS:
 		connection.Backend = providerType
 		connection.Options["path"] = filepath
+	case providers.ProviderType_OPCUA:
+		connection.Backend = providerType
+
+		cred := &vault.Credential{
+			Type:     vault.CredentialType_password,
+			Password: password,
+		}
+
+		if x, err := cmd.Flags().GetString("endpoint"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --host value")
+		} else if x != "" {
+			connection.Options["endpoint"] = x
+		}
+
+		connection.Credentials = append(connection.Credentials, cred)
 	}
 
 	parsedAsset.Connections = []*providers.Config{connection}

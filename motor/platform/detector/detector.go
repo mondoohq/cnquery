@@ -2,6 +2,7 @@ package detector
 
 import (
 	"errors"
+	"go.mondoo.com/cnquery/motor/providers/opcua"
 	"runtime"
 
 	"go.mondoo.com/cnquery/motor/platform"
@@ -132,6 +133,8 @@ func (d *Detector) Platform() (*platform.Platform, error) {
 	case *vcd.Provider:
 		return pt.PlatformInfo()
 	case *oci.Provider:
+		return pt.PlatformInfo()
+	case *opcua.Provider:
 		return pt.PlatformInfo()
 	case os.OperatingSystemProvider:
 		var resolved bool

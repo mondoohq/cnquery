@@ -179,6 +179,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	baseCmd.AddCommand(scanSlackCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanVcdCmd(commonCmdFlags, preRun, runFn, docs))
 	baseCmd.AddCommand(scanFilesystemCmd(commonCmdFlags, preRun, runFn, docs))
+	baseCmd.AddCommand(scanOpcUaCmd(commonCmdFlags, preRun, runFn, docs))
 }
 
 func localProviderCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
@@ -545,5 +546,13 @@ func scanFilesystemCmd(commonCmdFlags common.CommonFlagsFn, preRun common.Common
 		runFn(cmd, args, providers.ProviderType_FS, DefaultAssetType)
 	}
 	cmd := common.ScanFilesystemCmd(commonCmdFlags, preRun, wrapRunFn, docs)
+	return cmd
+}
+
+func scanOpcUaCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_OPCUA, DefaultAssetType)
+	}
+	cmd := common.ScanOpcUACmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
