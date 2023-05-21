@@ -622,7 +622,7 @@ private azure.subscription.storageService.account.service.properties.metrics @de
 }
 
 // Azure Storage Account Service Properties Retention Policy
-private azure.subscription.storageService.account.service.properties.retentionPolicy @defaults("id retentionDays enabled") {
+private azure.subscription.storageService.account.service.properties.retentionPolicy @defaults("id") {
   // ID of the retention policy
   id string
   // Number of days that metrics or logging data is retained
