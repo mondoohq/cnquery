@@ -239,6 +239,9 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 			"oci": {
 				Short: "Connect to Oracle Cloud Infrastructure (OCI) tenancy.",
 			},
+			"filesystem": {
+				Short: "Connect to a mounted file system target.",
+			},
 		},
 	},
 	Run: func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) {

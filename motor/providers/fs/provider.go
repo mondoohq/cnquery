@@ -14,16 +14,25 @@ var (
 	_ os.OperatingSystemProvider = (*Provider)(nil)
 )
 
-func NewWithClose(endpoint *providers.Config, closeFN func()) (*Provider, error) {
-	mountDir := endpoint.Host + endpoint.Path
-	log.Info().Str("mountdir", mountDir).Msg("load fs")
+func NewWithClose(cfg *providers.Config, closeFN func()) (*Provider, error) {
+	path, ok := cfg.Options["path"]
+	if !ok {
+		// fallback to host + path option
+		path = cfg.Host + cfg.Path
+	}
+
+	if path == "" {
+		return nil, errors.New("missing filesystem mount path, use 'path' option")
+	}
+
+	log.Debug().Str("path", path).Msg("load filesystem")
 
 	return &Provider{
-		MountedDir:   mountDir,
+		MountedDir:   path,
 		closeFN:      closeFN,
-		tcPlatformId: endpoint.PlatformId,
-		fs:           NewMountedFs(mountDir),
-		runtime:      endpoint.Runtime,
+		tcPlatformId: cfg.PlatformId,
+		fs:           NewMountedFs(path),
+		runtime:      cfg.Runtime,
 	}, nil
 }
 
