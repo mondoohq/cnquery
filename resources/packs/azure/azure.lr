@@ -632,7 +632,7 @@ private azure.subscription.storageService.account.service.properties.retentionPo
 }
 
 // Azure Storage Account Service Properties Logging
-private azure.subscription.storageService.account.service.properties.logging @defaults("id delete read write") {
+private azure.subscription.storageService.account.service.properties.logging @defaults("id") {
   // ID of the logging configuration
   id string
   // Whether delete requests are being logged
