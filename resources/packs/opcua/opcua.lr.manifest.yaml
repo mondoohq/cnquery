@@ -2,6 +2,7 @@ resources:
   opcua:
     fields:
       namespaces: {}
+      nodes: {}
       root: {}
     min_mondoo_version: latest
   opcua.namespace:
@@ -26,4 +27,12 @@ resources:
       properties: {}
       unit: {}
       writeable: {}
+    min_mondoo_version: latest
+  opcua.server:
+    fields:
+      buildInfo: {}
+      currentTime: {}
+      node: {}
+      startTime: {}
+      state: {}
     min_mondoo_version: latest
