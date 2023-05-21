@@ -1533,7 +1533,7 @@ private aws.ec2.snapshot @defaults("arn") {
 } 
 
 // Amazon EC2 Volume
-private aws.ec2.volume @defaults("arn") {
+private aws.ec2.volume @defaults("arn encrypted state") {
   // ARN for the EC2 volume
   arn string
   // ID of the EC2 volume
