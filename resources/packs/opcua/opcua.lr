@@ -2,29 +2,64 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/opcua"
 
 // OPC UA
 opcua {
-  namespaces() []string
+  // Namespaces
+  namespaces() []opcua.namespace
+  // Root node
 	root() opcua.node
+	// List of all nodes
+	nodes() []opcua.node
+}
+
+// Server Object
+opcua.server {
+	//
+	node opcua.node
+	//
+	buildInfo dict
+	//
+	currentTime time
+	//
+	startTime time
+	//
+	state string
 }
 
 // OPC UA Namespace
 opcua.namespace {
+	// Namespace ID
 	id int
+	// Namespace Name
 	name string
 }
 
 // OPC UA Node
 opcua.node @defaults("id name") {
+	//
 	id string
+	//
 	name string
+	//
+	namespace() opcua.namespace
+	//
 	class string
+	//
 	description string
+	//
 	writeable bool
+	//
 	dataType string
+	//
 	min string
+	//
 	max string
+	//
 	unit string
+	//
 	accessLevel string
+	//
 	properties() []opcua.node
+	//
 	components() []opcua.node
+	//
 	organizes() []opcua.node
 }
