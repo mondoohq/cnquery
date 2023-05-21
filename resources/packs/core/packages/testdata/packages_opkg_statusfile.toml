@@ -1,0 +1,97 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "4.9.125-linuxkit"
+
+[files."/etc/openwrt_release"]
+content = """
+DISTRIB_ID='OpenWrt'
+DISTRIB_RELEASE='SNAPSHOT'
+DISTRIB_REVISION='r22995-09d0643c18'
+DISTRIB_TARGET='x86/64'
+DISTRIB_ARCH='x86_64'
+DISTRIB_DESCRIPTION='OpenWrt SNAPSHOT r22995-09d0643c18'
+DISTRIB_TAINTS=''
+"""
+
+[files."/usr/lib/opkg/status"]
+content = """
+Package: libc
+Version: 1.2.4-4
+Depends: libgcc
+Status: install hold installed
+Essential: yes
+Architecture: x86_64
+Installed-Time: 1684617890
+Auto-Installed: yes
+
+Package: mkf2fs
+Version: 1.16.0-1
+Depends: libc, libf2fs6
+Conflicts: mkf2fs-selinux
+Status: install user installed
+Architecture: x86_64
+Installed-Time: 1684617890
+
+Package: opkg
+Version: 2022-02-24-d038e5b6-2
+Depends: libc, uclient-fetch, libpthread, libubox20220927
+Status: install user installed
+Essential: yes
+Architecture: x86_64
+Conffiles:
+ /etc/opkg.conf f38c19f696ea87c0b30eb5bfeb8657237f4625e1a749c58b99f01595edfb6446
+ /etc/opkg/customfeeds.conf 61d1f3aa62fe977614ed0c2f0ad3b2ee2f7b451bfb34812071d86d31a4d43d4a
+Installed-Time: 1684617890
+
+Package: libpthread
+Version: 1.2.4-4
+Depends: libgcc1
+Status: install hold installed
+Essential: yes
+Architecture: x86_64
+Installed-Time: 1684617890
+
+Package: ubus
+Version: 2022-06-15-9913aa61-1
+Depends: libc, libubus20220615, libblobmsg-json20220927, ubusd
+Status: install user installed
+Architecture: x86_64
+Installed-Time: 1684617890
+Auto-Installed: yes
+
+Package: libuci20130104
+ABIVersion: 20130104
+Version: 2023-03-05-04d0c46c-1
+Depends: libc, libubox20220927
+Provides: libuci
+Status: install user installed
+Architecture: x86_64
+Installed-Time: 1684617890
+Auto-Installed: yes
+
+Package: busybox
+Version: 1.36.0-1
+Depends: libc
+Conflicts: busybox-selinux
+Status: install user installed
+Essential: yes
+Architecture: x86_64
+Conffiles:
+ /etc/syslog.conf e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+Installed-Time: 1684617890
+
+Package: libubox20220927
+ABIVersion: 20220927
+Version: 2022-09-27-ea560134-1
+Depends: libc
+Provides: libubox
+Status: install user installed
+Architecture: x86_64
+Installed-Time: 1684617890
+Auto-Installed: yes
+"""
