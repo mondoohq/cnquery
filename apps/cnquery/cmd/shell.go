@@ -80,16 +80,16 @@ Provide the recording with mock data as an argument:
 `,
 			},
 			"vagrant": {
-				Short: "Scan a Vagrant host.",
+				Short: "Connect to a Vagrant host.",
 			},
 			"terraform": {
-				Short: "Scan Terraform HCL (files.tf and directories), plan files (json), and state files (json).",
+				Short: "Connect to Terraform HCL (files.tf and directories), plan files (json), and state files (json).",
 			},
 			"ssh": {
-				Short: "Scan an SSH target.",
+				Short: "Connect to an SSH target.",
 			},
 			"winrm": {
-				Short: "Scan a WinRM target.",
+				Short: "Connect to a WinRM target.",
 			},
 			"container": {
 				Short: "Connect to a container, image, or registry.",
@@ -241,6 +241,9 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 			},
 			"filesystem": {
 				Short: "Connect to a mounted file system target.",
+			},
+			"opcua": {
+				Short: "Connect to a OPC UA endpoint.",
 			},
 		},
 	},

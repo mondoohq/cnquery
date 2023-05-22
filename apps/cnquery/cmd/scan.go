@@ -250,6 +250,9 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 			"filesystem": {
 				Short: "Scan a mounted file system target.",
 			},
+			"opcua": {
+				Short: "Scan a OPC UA endpoint.",
+			},
 		},
 	},
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
