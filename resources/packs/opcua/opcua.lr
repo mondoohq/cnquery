@@ -5,61 +5,61 @@ opcua {
   // Namespaces
   namespaces() []opcua.namespace
   // Root node
-	root() opcua.node
-	// List of all nodes
-	nodes() []opcua.node
+  root() opcua.node
+  // List of all nodes
+  nodes() []opcua.node
 }
 
 // Server Object
 opcua.server {
-	//
-	node opcua.node
-	//
-	buildInfo dict
-	//
-	currentTime time
-	//
-	startTime time
-	//
-	state string
+  // Reference to node
+  node opcua.node
+  // Server build info
+  buildInfo dict
+  // Current time on server
+  currentTime time
+  // Time when the server started
+  startTime time
+  // Server state
+  state string
 }
 
 // OPC UA Namespace
 opcua.namespace {
-	// Namespace ID
-	id int
-	// Namespace Name
-	name string
+  // Namespace ID
+  id int
+  // Namespace Name
+  name string
 }
 
 // OPC UA Node
 opcua.node @defaults("id name") {
-	//
-	id string
-	//
-	name string
-	//
-	namespace() opcua.namespace
-	//
-	class string
-	//
-	description string
-	//
-	writeable bool
-	//
-	dataType string
-	//
-	min string
-	//
-	max string
-	//
-	unit string
-	//
-	accessLevel string
-	//
-	properties() []opcua.node
-	//
-	components() []opcua.node
-	//
-	organizes() []opcua.node
+  // Node id
+  id string
+  // Node browser name
+  name string
+  // Namespace
+  namespace() opcua.namespace
+  // Node class
+  class string
+  // Node description
+  description string
+  // Indicates if value is writable
+  writeable bool
+  // Data Type
+  dataType string
+  // Min value
+  min string
+  // Max value
+  max string
+  // Node unit
+  unit string
+  // Access Level
+  accessLevel string
+  // Properties
+  properties() []opcua.node
+  // Components
+  components() []opcua.node
+  // Organizes
+  organizes() []opcua.node
 }
