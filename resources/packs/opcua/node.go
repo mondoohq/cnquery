@@ -7,6 +7,7 @@ import (
 	"github.com/gopcua/opcua/errors"
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources"
 )
 
@@ -291,4 +292,48 @@ func (o *mqlOpcuaNode) GetOrganizes() ([]interface{}, error) {
 	}
 
 	return results, nil
+}
+
+func (o *mqlOpcuaNode) GetValue() (interface{}, error) {
+	res, ok := o.Cache.Load("_object")
+	if !ok {
+		return nil, errors.New("could not fetch properties")
+	}
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	nodeDef, ok := res.Data.(*nodeMeta)
+	if !ok {
+		return nil, fmt.Errorf("\"opcua\" failed to cast field \"node\" to the right type: %#v", res)
+	}
+
+	id := nodeDef.NodeID
+	if id == nil {
+		return nil, errors.New("could not gather node id")
+	}
+
+	if nodeDef.NodeClass != ua.NodeClassVariable {
+		return nil, nil
+	}
+
+	log.Info().Msg("get provider")
+	op, err := opcuaProvider(o.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+	client := op.Client()
+
+	log.Info().Msg("get node")
+	_, err = client.Node(id).Value()
+	if err != nil {
+		return nil, err
+	}
+
+	//else if v == nil {
+	//	return nil, nil
+	//}
+
+	return nil, nil
+	//return v.Value(), nil
 }

@@ -62,4 +62,6 @@ opcua.node @defaults("id name") {
 	components() []opcua.node
 	// Organizes
 	organizes() []opcua.node
+	// Value
+	value() dict
 }

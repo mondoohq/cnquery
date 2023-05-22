@@ -26,6 +26,7 @@ resources:
       organizes: {}
       properties: {}
       unit: {}
+      value: {}
       writeable: {}
     min_mondoo_version: latest
   opcua.server:
