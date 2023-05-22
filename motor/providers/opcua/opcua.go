@@ -49,7 +49,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		opcua.SecurityFromEndpoint(ep, ua.UserTokenTypeAnonymous),
 	}
 
-	c := opcua.NewClient(ep.EndpointURL, opts...)
+	c := opcua.NewClient(endpoint, opts...)
 	if err := c.Connect(ctx); err != nil {
 		return nil, err
 	}
