@@ -742,6 +742,9 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 
 		connection.Credentials = append(connection.Credentials, cred)
+	case providers.ProviderType_FS:
+		connection.Backend = providerType
+		connection.Options["path"] = filepath
 	}
 
 	parsedAsset.Connections = []*providers.Config{connection}

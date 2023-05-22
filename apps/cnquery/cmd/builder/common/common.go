@@ -771,3 +771,20 @@ func ScanVcdCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn
 	cmd.Flags().String("organization", "", "vCloud Director Organization (optional)")
 	return cmd
 }
+
+func ScanFilesystemCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "filesystem",
+		Aliases: []string{"fs"},
+		Short:   docs.GetShort("filesystem"),
+		Long:    docs.GetLong("filesystem"),
+		Args:    cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			cmd.Flags().Set("path", args[0])
+			preRun(cmd, args)
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	return cmd
+}

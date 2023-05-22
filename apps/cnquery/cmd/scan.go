@@ -247,6 +247,9 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 			"arista": {
 				Short: "Scan an Arista endpoint.",
 			},
+			"filesystem": {
+				Short: "Scan a mounted file system target.",
+			},
 		},
 	},
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
