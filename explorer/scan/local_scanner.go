@@ -93,7 +93,7 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 		Plugins:     s.plugins,
 	}
 
-	reports, _, err := s.distributeJob(job, dctx, upstreamConfig)
+	reports, _, _, err := s.distributeJob(job, dctx, upstreamConfig)
 	if err != nil {
 		if code := status.Code(err); code == codes.Unauthenticated {
 			return nil, errors.Wrapf(err,
@@ -125,7 +125,7 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 		Incognito: true,
 	}
 
-	reports, _, err := s.distributeJob(job, dctx, upstreamConfig)
+	reports, _, _, err := s.distributeJob(job, dctx, upstreamConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -154,24 +154,26 @@ func preprocessQueryPackFilters(filters []string) []string {
 	return res
 }
 
-func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
+func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, map[string]error, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 	im, err := inventory.New(inventory.WithInventory(job.Inventory))
 	if err != nil {
-		return nil, false, errors.Wrap(err, "could not load asset information")
+		return nil, false, nil, errors.Wrap(err, "could not load asset information")
 	}
 
 	assetErrors := im.Resolve(ctx)
+	returnedAssetErrors := make(map[string]error)
 	if len(assetErrors) > 0 {
 		for a := range assetErrors {
 			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
+			returnedAssetErrors[a.Name] = assetErrors[a]
 		}
-		return nil, false, errors.New("failed to resolve multiple assets")
+		return nil, false, returnedAssetErrors, errors.New("failed to resolve multiple assets")
 	}
 
 	assetList := im.GetAssets()
 	if len(assetList) == 0 {
-		return nil, false, errors.New("could not find an asset that we can connect to")
+		return nil, false, nil, errors.New("could not find an asset that we can connect to")
 	}
 
 	// sync assets
@@ -179,14 +181,14 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		log.Info().Msg("synchronize assets")
 		upstream, err := explorer.NewRemoteServices(s.apiEndpoint, s.plugins, s.httpClient)
 		if err != nil {
-			return nil, false, err
+			return nil, false, nil, err
 		}
 		resp, err := upstream.SynchronizeAssets(ctx, &explorer.SynchronizeAssetsReq{
 			SpaceMrn: s.spaceMrn,
 			List:     assetList,
 		})
 		if err != nil {
-			return nil, false, err
+			return nil, false, nil, err
 		}
 		log.Debug().Int("assets", len(resp.Details)).Msg("got assets details")
 		platformAssetMapping := make(map[string]*explorer.SynchronizeAssetsRespAssetDetail)
@@ -210,7 +212,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 				randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
 				x, err := mrn.NewMRN(randID)
 				if err != nil {
-					return nil, false, errors.Wrap(err, "failed to generate a random asset MRN")
+					return nil, false, nil, errors.Wrap(err, "failed to generate a random asset MRN")
 				}
 				cur.Mrn = x.String()
 			}
@@ -222,7 +224,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	// if a bundle was provided check that it matches the filter, bundles can also be downloaded
 	// later therefore we do not want to stop execution here
 	if job.Bundle != nil && job.Bundle.FilterQueryPacks(job.QueryPackFilters) {
-		return nil, false, errors.New("all available packs filtered out. nothing to do.")
+		return nil, false, nil, errors.New("all available packs filtered out. nothing to do.")
 	}
 
 	progressBarElements := map[string]string{}
@@ -231,7 +233,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		// this shouldn't happen, but might
 		// it normally indicates a bug in the provider
 		if presentAsset, present := progressBarElements[assetList[i].PlatformIds[0]]; present {
-			return nil, false, fmt.Errorf("asset %s and %s have the same platform id %s", presentAsset, assetList[i].Name, assetList[i].PlatformIds[0])
+			return nil, false, nil, fmt.Errorf("asset %s and %s have the same platform id %s", presentAsset, assetList[i].Name, assetList[i].PlatformIds[0])
 		}
 		progressBarElements[assetList[i].PlatformIds[0]] = assetList[i].Name
 		orderedKeys = append(orderedKeys, assetList[i].PlatformIds[0])
@@ -240,7 +242,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 	if isatty.IsTerminal(os.Stdout.Fd()) && !strings.EqualFold(logger.GetLevel(), "debug") && !strings.EqualFold(logger.GetLevel(), "trace") {
 		multiprogress, err = progress.NewMultiProgressBars(progressBarElements, orderedKeys)
 		if err != nil {
-			return nil, false, errors.Wrap(err, "failed to create progress bars")
+			return nil, false, nil, errors.Wrap(err, "failed to create progress bars")
 		}
 	} else {
 		// TODO: adjust naming
@@ -289,7 +291,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 		multiprogress.Open()
 	}()
 	scanGroup.Wait()
-	return reporter.Reports(), finished, nil
+	return reporter.Reports(), finished, nil, nil
 }
 
 func (s *LocalScanner) RunAssetJob(job *AssetJob) {
