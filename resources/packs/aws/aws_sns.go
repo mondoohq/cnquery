@@ -61,20 +61,9 @@ func (s *mqlAwsSnsTopic) init(args *resources.Args) (*resources.Args, AwsSnsTopi
 	if err != nil {
 		return nil, nil, nil
 	}
-	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
-	if err != nil {
-		return nil, nil, err
-	}
-	svc := provider.Sns(arn.Region)
-	ctx := context.Background()
 
-	tags, err := getSNSTags(ctx, svc, &arnVal)
-	if err != nil {
-		return nil, nil, err
-	}
 	(*args)["arn"] = arnVal
 	(*args)["region"] = arn.Region
-	(*args)["tags"] = tags
 	return args, nil, nil
 }
 
@@ -104,14 +93,9 @@ func (s *mqlAwsSns) getTopics(provider *aws_provider.Provider) []*jobpool.Job {
 					return nil, err
 				}
 				for _, topic := range topics.Topics {
-					tags, err := getSNSTags(ctx, svc, topic.TopicArn)
-					if err != nil {
-						return nil, err
-					}
 					mqlTopic, err := s.MotorRuntime.CreateResource("aws.sns.topic",
 						"arn", core.ToString(topic.TopicArn),
 						"region", regionVal,
-						"tags", tags,
 					)
 					if err != nil {
 						return nil, err
@@ -154,12 +138,32 @@ func (s *mqlAwsSnsTopic) GetAttributes() (interface{}, error) {
 	return core.JsonToDict(topicAttributes.Attributes)
 }
 
+func (s *mqlAwsSnsTopic) GetTags() (map[string]interface{}, error) {
+	arn, err := s.Arn()
+	if err != nil {
+		return nil, err
+	}
+	region, err := s.Region()
+	if err != nil {
+		return nil, err
+	}
+	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := provider.Sns(region)
+	ctx := context.Background()
+
+	return getSNSTags(ctx, svc, &arn)
+}
+
 func getSNSTags(ctx context.Context, svc *sns.Client, arn *string) (map[string]interface{}, error) {
 	resp, err := svc.ListTagsForResource(ctx, &sns.ListTagsForResourceInput{ResourceArn: arn})
 	var respErr *http.ResponseError
 	if err != nil {
 		if errors.As(err, &respErr) {
-			if respErr.HTTPStatusCode() == 404 {
+			if respErr.HTTPStatusCode() == 404 || respErr.HTTPStatusCode() == 400 { // some sns topics do not support tags..
 				return nil, nil
 			}
 		}
