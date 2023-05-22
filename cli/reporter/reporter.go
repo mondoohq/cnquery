@@ -1,12 +1,14 @@
 package reporter
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"sort"
 	"strings"
 
 	"go.mondoo.com/cnquery/logger"
+	"sigs.k8s.io/yaml"
 
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/theme/colors"
@@ -111,6 +113,20 @@ func (r *Reporter) Print(data *explorer.ReportCollection, out io.Writer) error {
 	case CSV:
 		w := shared.IOWriter{Writer: out}
 		return ReportCollectionToCSV(data, &w)
+	case YAML:
+		raw := bytes.Buffer{}
+		writer := shared.IOWriter{Writer: &raw}
+		err := ReportCollectionToJSON(data, &writer)
+		if err != nil {
+			return err
+		}
+
+		json, err := yaml.JSONToYAML(raw.Bytes())
+		if err != nil {
+			return err
+		}
+		_, err = out.Write(json)
+		return err
 	default:
 		return errors.New("unknown reporter type, don't recognize this Format")
 	}
