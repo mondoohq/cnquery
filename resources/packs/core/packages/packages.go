@@ -76,7 +76,20 @@ func ResolveSystemPkgManager(motor *motor.Motor) (OperatingSystemPkgManager, err
 		pm = &CosPkgManager{provider: osProvider}
 	case pf.Name == "freebsd":
 		pm = &FreeBSDPkgManager{provider: osProvider}
-	default:
+	case pf.IsFamily("linux"):
+		// no clear package manager for linux platform found
+		// most likely we land here if we have a yocto-based system
+		opkgPaths := []string{"/bin/opkg", "/usr/bin/opkg"}
+		for i := range opkgPaths {
+			_, err = osProvider.FS().Stat(opkgPaths[i])
+			if err == nil {
+				pm = &OpkgPkgManager{provider: osProvider}
+				break
+			}
+		}
+	}
+
+	if pm == nil {
 		return nil, errors.New("could not detect suitable package manager for platform: " + pf.Name)
 	}
 

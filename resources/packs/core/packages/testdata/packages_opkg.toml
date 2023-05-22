@@ -10,15 +10,15 @@ stdout = "4.9.125-linuxkit"
 [files."/etc/openwrt_release"]
 content = """
 DISTRIB_ID='OpenWrt'
-DISTRIB_RELEASE='Bleeding Edge'
-DISTRIB_REVISION='50072'
-DISTRIB_CODENAME='designated_driver'
+DISTRIB_RELEASE='SNAPSHOT'
+DISTRIB_REVISION='r22995-09d0643c18'
 DISTRIB_TARGET='x86/64'
-DISTRIB_DESCRIPTION='OpenWrt Designated Driver 50072'
+DISTRIB_ARCH='x86_64'
+DISTRIB_DESCRIPTION='OpenWrt SNAPSHOT r22995-09d0643c18'
 DISTRIB_TAINTS=''
 """
 
-[commands."opkg list"]
+[commands."opkg list-installed"]
 stdout = """
 base-files - 169-50072
 busybox - 1.24.2-1

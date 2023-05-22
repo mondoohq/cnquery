@@ -12,14 +12,14 @@ import (
 	"go.mondoo.com/cnquery/resources/packs/core/packages"
 )
 
-func TestOpkgParser(t *testing.T) {
+func TestOpkgListCommandParser(t *testing.T) {
 	pkgList := `base-files - 169-50072
 busybox - 1.24.2-1
 dnsmasq - 2.78-1
 dropbear - 2017.75-1
 firewall - 2016-11-29-1`
 
-	m := packages.ParseOpkgPackages(strings.NewReader(pkgList))
+	m := packages.ParseOpkgListPackagesCommand(strings.NewReader(pkgList))
 
 	assert.Equal(t, 5, len(m), "detected the right amount of packages")
 	var p packages.Package
@@ -43,6 +43,30 @@ firewall - 2016-11-29-1`
 		Format:  packages.OpkgPkgFormat,
 	}
 	assert.Contains(t, m, p, "pkg detected")
+}
+
+func TestOpkgStatusParser(t *testing.T) {
+	mock, err := mock.NewFromTomlFile("./testdata/packages_opkg_statusfile.toml")
+	require.NoError(t, err)
+	f, err := mock.FS().Open("/usr/lib/opkg/status")
+	require.NoError(t, err)
+	defer f.Close()
+
+	m, err := packages.ParseOpkgPackages(f)
+	require.NoError(t, err)
+	assert.Equal(t, 8, len(m), "detected the right amount of packages")
+
+	var p packages.Package
+	p = packages.Package{
+		Name:        "libuci20130104",
+		Version:     "2023-03-05-04d0c46c-1",
+		Arch:        "x86_64",
+		Status:      "install user installed",
+		Origin:      "",
+		Description: "",
+		Format:      "opkg",
+	}
+	assert.Contains(t, m, p, "libuci20130104 detected")
 }
 
 func TestOpkgManager(t *testing.T) {

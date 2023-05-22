@@ -4,25 +4,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/resources/packs/core/packages"
 )
 
 func TestDpkgParser(t *testing.T) {
 	mock, err := mock.NewFromTomlFile("./testdata/packages_dpkg.toml")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	f, err := mock.FS().Open("/var/lib/dpkg/status")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer f.Close()
 
 	m, err := packages.ParseDpkgPackages(f)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	assert.Equal(t, 10, len(m), "detected the right amount of packages")
 
 	var p packages.Package
@@ -64,19 +59,13 @@ security related events.`,
 
 func TestDpkgParserStatusD(t *testing.T) {
 	mock, err := mock.NewFromTomlFile("./testdata/packages_dpkg_statusd.toml")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	f, err := mock.FS().Open("/var/lib/dpkg/status.d/base")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer f.Close()
 
 	m, err := packages.ParseDpkgPackages(f)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	assert.Equal(t, 1, len(m), "detected the right amount of packages")
 
 	var p packages.Package
@@ -96,13 +85,9 @@ and the text of several common licenses in use on Debian systems.`,
 
 func TestDpkgUpdateParser(t *testing.T) {
 	mock, err := mock.NewFromTomlFile("./testdata/updates_dpkg.toml")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	c, err := mock.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	assert.Nil(t, err)
 
 	m, err := packages.ParseDpkgUpdates(c.Stdout)

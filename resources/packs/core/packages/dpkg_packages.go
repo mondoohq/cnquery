@@ -22,7 +22,7 @@ var (
 	DPKG_ORIGIN_REGEX = regexp.MustCompile(`^\s*([^\(]*)(?:\((.*)\))?\s*$`)
 )
 
-// parse the dpkg database content located in /var/lib/dpkg/status
+// ParseDpkgPackages parses the dpkg database content located in /var/lib/dpkg/status
 func ParseDpkgPackages(input io.Reader) ([]Package, error) {
 	const STATE_RESET = 0
 	const STATE_DESC = 1
