@@ -786,7 +786,6 @@ func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	filters, ok := arg.Value.([]interface{})
 	if !ok {
 		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
-		// filters = []interface{}{arg.Value}
 	}
 
 	var res []interface{}
