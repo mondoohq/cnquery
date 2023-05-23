@@ -398,11 +398,13 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 	case *hclsyntax.ObjectConsKeyExpr:
 		res := getCtyValue(t.Wrapped, ctx)
 		return res
+	case *hclsyntax.ParenthesesExpr:
+		v := getCtyValue(t.Expression, ctx)
+		return v
 	default:
 		log.Warn().Msgf("unknown type %T", t)
 		return nil
 	}
-	return nil
 }
 
 func (g *mqlTerraformBlock) GetBlocks() ([]interface{}, error) {
