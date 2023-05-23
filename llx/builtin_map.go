@@ -783,7 +783,10 @@ func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 		return &RawData{Type: bind.Type, Error: errors.New("cannot compute difference of lists, argument is not a list")}, 0, nil
 	}
 
-	filters := arg.Value.([]interface{})
+	filters, ok := arg.Value.([]interface{})
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("tried to call function with a non-array, please make sure the argument is an array")}, 0, nil
+	}
 
 	var res []interface{}
 	var skip bool
