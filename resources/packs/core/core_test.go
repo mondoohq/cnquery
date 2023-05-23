@@ -1114,6 +1114,14 @@ func TestDict_Methods_Contains(t *testing.T) {
 		// 	1, false,
 		// },
 		{
+			p + "params['string-array'].containsNone(['d','e'])",
+			1, true,
+		},
+		{
+			p + "params['string-array'].containsNone(['a', 'e'])",
+			1, false,
+		},
+		{
 			p + "params['string-array'].none('a')",
 			1, false,
 		},
