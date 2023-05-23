@@ -1688,16 +1688,14 @@ func (c *compiler) postCompile() {
 				ref = chunk.Function.Binding
 				chunk := code.Chunk(ref)
 				typ = types.Type(chunk.Function.Type)
-				err := c.expandResourceFields(chunk, typ, ref)
+				expanded := c.expandResourceFields(chunk, typ, ref)
 				// when no defaults are definied or query isn't about a resource, no block was added
-				if err == nil {
+				if expanded {
 					block.Datapoints = append(block.Datapoints, block.TailRef(ref))
-
-					c.addValueFieldChunks()
+					c.addValueFieldChunks(ref)
 				}
 			default:
-				// ignore errrors here, log messages are already printed
-				_ = c.expandResourceFields(chunk, typ, ref)
+				c.expandResourceFields(chunk, typ, ref)
 			}
 		}
 	}
@@ -1707,16 +1705,33 @@ func (c *compiler) postCompile() {
 // block forthe default fields
 // This way, the actual data of the assessment automatically shows up in the output
 // of the assessment that failed the assessment
-func (c *compiler) addValueFieldChunks() {
+func (c *compiler) addValueFieldChunks(ref uint64) {
 	var assessmentBlock *llx.Block
-OUTER:
-	for i := range c.Result.CodeV2.Blocks {
-		for j := range c.Result.CodeV2.Blocks[i].Chunks {
-			switch c.Result.CodeV2.Blocks[i].Chunks[j].Id {
-			case "$one", "$all", "$none", "$any":
-				assessmentBlock = c.Result.CodeV2.Blocks[i+1]
-				break OUTER
-			}
+	var whereChunk *llx.Chunk
+
+	// find chunk with where/whereNot function
+	for {
+		chunk := c.Result.CodeV2.Chunk(ref)
+		if chunk.Function == nil {
+			// this is a safe guard and shouldn't happen
+			log.Error().Msg("failed to find where function for assessment")
+			return
+		}
+		if chunk.Function.Args != nil {
+			whereChunk = chunk
+			break
+		}
+		ref = chunk.Function.Binding
+	}
+
+	// find the referenced blcok for the where function
+	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {
+		arg := whereChunk.Function.Args[i]
+		if types.Type(arg.Type).Underlying() == types.FunctionLike {
+			raw := arg.RawData()
+			blockRef := raw.Value.(uint64)
+			assessmentBlock = c.Result.CodeV2.Block(blockRef)
+			break
 		}
 	}
 
@@ -1724,6 +1739,8 @@ OUTER:
 	defaultFieldsRef := defaultFieldsBlock.Chunks[1].Function.Binding
 
 	chunksToAdd := []*llx.Chunk{}
+	// Check whether the chunk is already present in the default fields block
+	// This can happen, when the assessment checks one of the default fields
 	// We can skip the first Chunk, as it is only the resource binding
 	for i := 1; i < len(assessmentBlock.Chunks)-1; i++ {
 		chunk := assessmentBlock.Chunks[i]
@@ -1796,25 +1813,26 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk,
 	return newChunk, newType, newRef
 }
 
-func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) error {
+func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) bool {
+	expanded := false
 	resultType := types.Block
 	if typ.IsArray() {
 		resultType = types.Array(types.Block)
 		typ = typ.Child()
 	}
 	if !typ.IsResource() {
-		return fmt.Errorf("cannot expand fields for non-resource type %s", typ)
+		return expanded
 	}
 
 	info := c.Schema.Resources[typ.ResourceName()]
 	if info == nil || info.Defaults == "" {
-		return fmt.Errorf("cannot expand fields for resource %s", typ.ResourceName())
+		return expanded
 	}
 
 	ast, err := parser.Parse(info.Defaults)
 	if ast == nil || len(ast.Expressions) == 0 {
 		log.Error().Err(err).Msg("failed to parse defaults for " + info.Name)
-		return fmt.Errorf("failed to parse defaults for %s", info.Name)
+		return expanded
 	}
 
 	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref)
@@ -1841,7 +1859,8 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 	ref = ep
 
 	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
-	return nil
+	expanded = true
+	return expanded
 }
 
 func (c *compiler) updateLabels() {
