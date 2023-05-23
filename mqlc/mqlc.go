@@ -1744,6 +1744,10 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 	// We can skip the first Chunk, as it is only the resource binding
 	for i := 1; i < len(assessmentBlock.Chunks)-1; i++ {
 		chunk := assessmentBlock.Chunks[i]
+		// filter out nested function block and only add fields for outer most resource
+		if strings.HasPrefix(chunk.Id, "$where") {
+			break
+		}
 		chunkAlreadyPresent := false
 		for j := range defaultFieldsBlock.Chunks {
 			if chunk.Id == defaultFieldsBlock.Chunks[j].Id {
