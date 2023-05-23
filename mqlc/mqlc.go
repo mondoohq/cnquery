@@ -465,6 +465,7 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		}
 	}
 
+	var lastType types.Type = types.Unset
 	for i := 0; i < len(expressions); i += 2 {
 		err := c.compileSwitchCase(expressions[i], bind, chunk)
 		if err != nil {
@@ -497,6 +498,19 @@ func (c *compiler) compileSwitchBlock(expressions []*parser.Expression, chunk *l
 		// TODO(jaym): Discuss with dom: v1 seems to hardcore this as
 		// single valued
 		blockCompiler.block.SingleValue = true
+
+		// Check the types
+		lastChunk := blockCompiler.block.LastChunk()
+		if lastType == types.Unset {
+			lastType = lastChunk.Type()
+		} else {
+			// If the last type is not the same as the current type, then
+			// we set the type to any
+			if lastChunk.Type() != lastType {
+				lastType = types.Any
+			}
+			chunk.Function.Type = string(lastType)
+		}
 
 		depArgs := []*llx.Primitive{}
 		for _, v := range blockCompiler.blockDeps {
