@@ -163,7 +163,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.6-0.20201009195203-85dd5c8bc61c
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
 	github.com/vmware/go-vcloud-director/v2 v2.17.0
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
