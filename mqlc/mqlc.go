@@ -1737,12 +1737,16 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 
 	defaultFieldsBlock := c.Result.CodeV2.Blocks[len(c.Result.CodeV2.Blocks)-1]
 	defaultFieldsRef := defaultFieldsBlock.Chunks[1].Function.Binding
+	var resourceFieldsRef uint64
+	if assessmentBlock.Chunks[1].Function != nil {
+		resourceFieldsRef = assessmentBlock.Chunks[1].Function.Binding
+	}
 
 	chunksToAdd := []*llx.Chunk{}
 	// Check whether the chunk is already present in the default fields block
 	// This can happen, when the assessment checks one of the default fields
 	// We can skip the first Chunk, as it is only the resource binding
-	for i := 1; i < len(assessmentBlock.Chunks)-1; i++ {
+	for i := 1; i < len(assessmentBlock.Chunks); i++ {
 		chunk := assessmentBlock.Chunks[i]
 		// filter out nested function block and only add fields for outer most resource
 		if strings.HasPrefix(chunk.Id, "$where") {
@@ -1756,6 +1760,9 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			}
 		}
 		if chunkAlreadyPresent {
+			continue
+		}
+		if _, compareable := llx.ComparableLabel(chunk.Id); compareable {
 			continue
 		}
 		newChunk := &llx.Chunk{
@@ -1778,15 +1785,22 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 	for i := range chunksToAdd {
 		newChunk := chunksToAdd[i]
 		if newChunk.Function != nil {
-			newChunk.Function.Binding = chunkRef
+			// check whether the chunk originially bound to the resource, then bind it again to the resource and not the previous chunk
+			if newChunk.Function.Binding == resourceFieldsRef {
+				newChunk.Function.Binding = defaultFieldsRef
+			} else {
+				newChunk.Function.Binding = chunkRef
+			}
 		}
 
 		defaultFieldsBlock.AddChunk(c.Result.CodeV2, chunkRef, newChunk)
 		chunkRef = defaultFieldsBlock.TailRef(chunkRef)
+
+		// FIXME: it would be nice to only have the "leaf" chunks as entrypoints
+		// Now we get a lot of data that we don't necessarily need
+		// e.g. for dict["key"] we would get the entry and the whole dict
 		defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, chunkRef)
 	}
-	// Only add last chunk as entrypoint, to not get data multiple times
-	// e.g. for dict["key"] we would otherwise get the entry and the whole dict
 }
 
 func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk, types.Type, uint64) {
