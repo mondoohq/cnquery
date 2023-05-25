@@ -1706,7 +1706,6 @@ func (c *compiler) postCompile() {
 // This way, the actual data of the assessment automatically shows up in the output
 // of the assessment that failed the assessment
 func (c *compiler) addValueFieldChunks(ref uint64) {
-	var assessmentBlock *llx.Block
 	var whereChunk *llx.Chunk
 
 	// find chunk with where/whereNot function
@@ -1724,6 +1723,9 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 		ref = chunk.Function.Binding
 	}
 
+	// This block holds all the data and functions chunks used
+	// for the predicate(s) of the .all()/.none()/... fucntion
+	var assessmentBlock *llx.Block
 	// find the referenced block for the where function
 	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {
 		arg := whereChunk.Function.Args[i]
