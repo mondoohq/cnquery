@@ -485,8 +485,10 @@ func init() {
 			string("*" + types.Time):                 {f: dictTimesTimeV2, Label: "*"},
 			// fields
 			"[]":                              {f: dictGetIndexV2},
-			"length":                          {f: dictLengthV2},
+			"first":                           {f: dictGetFirstIndexV2},
+			"last":                            {f: dictGetLastIndexV2},
 			"{}":                              {f: dictBlockCallV2},
+			"length":                          {f: dictLengthV2},
 			"camelcase":                       {f: dictCamelcaseV2, Label: "camelcase"},
 			"downcase":                        {f: dictDowncaseV2, Label: "downcase"},
 			"upcase":                          {f: dictUpcaseV2, Label: "upcase"},

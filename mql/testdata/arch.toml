@@ -586,7 +586,7 @@ content="""
 
 [files."/dummy.array.json"]
 content="""
-[1,"hi",{"ll": 0}]
+[1,"hi",{"ll": 0},"z"]
 """
 
 [files."/dummy.true.json"]
