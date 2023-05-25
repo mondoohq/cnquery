@@ -252,6 +252,88 @@ func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 	}
 }
 
+func dictGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	switch x := bind.Value.(type) {
+	case []interface{}:
+		if len(x) == 0 {
+			return &RawData{Type: bind.Type}, 0, nil
+		}
+
+		return &RawData{
+			Value: x[0],
+			Type:  bind.Type,
+		}, 0, nil
+
+	case map[string]interface{}:
+		if len(x) == 0 {
+			return &RawData{Type: bind.Type}, 0, nil
+		}
+
+		var firstKey string
+		for k := range x {
+			firstKey = k
+			break
+		}
+		for k := range x {
+			if k < firstKey {
+				firstKey = k
+			}
+		}
+
+		return &RawData{
+			Value: x[firstKey],
+			Type:  bind.Type,
+		}, 0, nil
+	default:
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+}
+
+func dictGetLastIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+
+	switch x := bind.Value.(type) {
+	case []interface{}:
+		if len(x) == 0 {
+			return &RawData{Type: bind.Type}, 0, nil
+		}
+
+		return &RawData{
+			Value: x[len(x)-1],
+			Type:  bind.Type,
+		}, 0, nil
+
+	case map[string]interface{}:
+		if len(x) == 0 {
+			return &RawData{Type: bind.Type}, 0, nil
+		}
+
+		var lastKey string
+		for k := range x {
+			lastKey = k
+			break
+		}
+		for k := range x {
+			if lastKey < k {
+				lastKey = k
+			}
+		}
+
+		return &RawData{
+			Value: x[lastKey],
+			Type:  bind.Type,
+		}, 0, nil
+	default:
+		return &RawData{Type: bind.Type}, 0, nil
+	}
+}
+
 func dictLengthV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type}, 0, nil

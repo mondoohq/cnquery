@@ -1225,6 +1225,14 @@ func TestDict_Methods_Map(t *testing.T) {
 			"parse.date(" + p + "params['date'])",
 			0, &expectedTime,
 		},
+		{
+			p + "params.first",
+			0, float64(1),
+		},
+		{
+			p + "params.last",
+			0, true,
+		},
 	})
 
 	x.TestSimpleErrors(t, []testutils.SimpleTest{
@@ -1256,6 +1264,22 @@ func TestDict_Methods_Array(t *testing.T) {
 			p + "params[2]",
 			0,
 			map[string]interface{}{"ll": float64(0)},
+		},
+		{
+			p + "params.first",
+			0, float64(1),
+		},
+		{
+			p + "params.last",
+			0, "z",
+		},
+		{
+			p + "params.where(-1).first",
+			0, nil,
+		},
+		{
+			p + "params.where(-1).last",
+			0, nil,
 		},
 	})
 }
