@@ -194,6 +194,8 @@ message Mquery {
   repeated ObjectRef variants = 39;
   // Action is used for all query overrides (eg: in packs, policies, APIs etc)
   Action action = 41;
+  // ValidUntil is used to specify a date until which the IGNORE action is valid.
+  string valid_until = 42; // RFC3339
 }
 
 enum ScoringSystem {
