@@ -1702,7 +1702,7 @@ func (c *compiler) postCompile() {
 }
 
 // addValueFieldChunks takes the value fields of the assessment and adds them to the
-// block forthe default fields
+// block for the default fields
 // This way, the actual data of the assessment automatically shows up in the output
 // of the assessment that failed the assessment
 func (c *compiler) addValueFieldChunks(ref uint64) {
@@ -1724,7 +1724,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 		ref = chunk.Function.Binding
 	}
 
-	// find the referenced blcok for the where function
+	// find the referenced block for the where function
 	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {
 		arg := whereChunk.Function.Args[i]
 		if types.Type(arg.Type).Underlying() == types.FunctionLike {
@@ -1783,10 +1783,10 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 
 		defaultFieldsBlock.AddChunk(c.Result.CodeV2, chunkRef, newChunk)
 		chunkRef = defaultFieldsBlock.TailRef(chunkRef)
+		defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, chunkRef)
 	}
 	// Only add last chunk as entrypoint, to not get data multiple times
 	// e.g. for dict["key"] we would otherwise get the entry and the whole dict
-	defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, chunkRef)
 }
 
 func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk, types.Type, uint64) {
