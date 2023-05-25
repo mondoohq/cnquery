@@ -24,7 +24,7 @@ func arrayGetFirstIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uin
 	}
 
 	if len(arr) == 0 {
-		return nil, 0, errors.New("array index out of bound (trying to access first element on an empty array)")
+		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
 
 	return &RawData{
@@ -44,7 +44,7 @@ func arrayGetLastIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	}
 
 	if len(arr) == 0 {
-		return nil, 0, errors.New("array index out of bound (trying to access last element on an empty array)")
+		return &RawData{Type: bind.Type[1:]}, 0, nil
 	}
 
 	return &RawData{

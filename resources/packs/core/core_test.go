@@ -732,6 +732,14 @@ func TestArray_Access(t *testing.T) {
 			"[1,2,3].last",
 			0, int64(3),
 		},
+		{
+			"[].first",
+			0, nil,
+		},
+		{
+			"[].last",
+			0, nil,
+		},
 	})
 }
 
