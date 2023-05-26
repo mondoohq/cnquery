@@ -1709,6 +1709,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 	var whereChunk *llx.Chunk
 
 	// find chunk with where/whereNot function
+	// it holds the reference to the block with the predicate(s) for the assessment
 	for {
 		chunk := c.Result.CodeV2.Chunk(ref)
 		if chunk.Function == nil {
@@ -1723,9 +1724,10 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 		ref = chunk.Function.Binding
 	}
 
-	// This block holds all the data and functions chunks used
+	// This block holds all the data and function chunks used
 	// for the predicate(s) of the .all()/.none()/... fucntion
 	var assessmentBlock *llx.Block
+	var assessmentBlockRef uint64
 	// find the referenced block for the where function
 	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {
 		arg := whereChunk.Function.Args[i]
@@ -1733,21 +1735,22 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			raw := arg.RawData()
 			blockRef := raw.Value.(uint64)
 			assessmentBlock = c.Result.CodeV2.Block(blockRef)
+			assessmentBlockRef = blockRef
 			break
 		}
 	}
 
 	defaultFieldsBlock := c.Result.CodeV2.Blocks[len(c.Result.CodeV2.Blocks)-1]
-	defaultFieldsRef := defaultFieldsBlock.Chunks[1].Function.Binding
+	defaultFieldsRef := defaultFieldsBlock.HeadRef(c.Result.CodeV2.LastBlockRef())
 	var resourceFieldsRef uint64
 	if assessmentBlock.Chunks[1].Function != nil {
-		resourceFieldsRef = assessmentBlock.Chunks[1].Function.Binding
+		resourceFieldsRef = assessmentBlock.HeadRef(assessmentBlockRef)
 	}
 
 	chunksToAdd := []*llx.Chunk{}
 	// Check whether the chunk is already present in the default fields block
 	// This can happen, when the assessment checks one of the default fields
-	// We can skip the first Chunk, as it is only the resource binding
+	// We can skip the first Chunk, as it is the resource binding
 	for i := 1; i < len(assessmentBlock.Chunks); i++ {
 		chunk := assessmentBlock.Chunks[i]
 		// filter out nested function block and only add fields for outer most resource
@@ -1764,6 +1767,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 		if chunkAlreadyPresent {
 			continue
 		}
+		// We do not need the comparison chunks
 		if _, compareable := llx.ComparableLabel(chunk.Id); compareable {
 			continue
 		}
@@ -1781,6 +1785,8 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 		chunksToAdd = append(chunksToAdd, newChunk)
 	}
 	if len(chunksToAdd) == 0 {
+		// looks like all fields are already present, nothing to do
+		// this can happen, when the assessment checks one of the default fields
 		return
 	}
 	chunkRef := defaultFieldsRef
@@ -1800,7 +1806,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 
 		// FIXME: it would be nice to only have the "leaf" chunks as entrypoints
 		// Now we get a lot of data that we don't necessarily need
-		// e.g. for dict["key"] we would get the entry and the whole dict
+		// e.g. for dict["key"] we get the entry and the whole dict
 		defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, chunkRef)
 	}
 }

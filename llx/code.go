@@ -16,8 +16,14 @@ func absRef(blockRef uint64, relRef uint32) uint64 {
 	return (blockRef & 0xFFFFFFFF00000000) | uint64(relRef)
 }
 
+// TailRef returns the reference to the last chunk of the block
 func (b *Block) TailRef(blockRef uint64) uint64 {
 	return absRef(blockRef, b.ChunkIndex())
+}
+
+// HeadRef returns the reference to the first chunk of the block
+func (b *Block) HeadRef(blockRef uint64) uint64 {
+	return absRef(blockRef, 1)
 }
 
 func (b *Block) ReplaceEntrypoint(old uint64, nu uint64) {
@@ -96,6 +102,11 @@ func (l *CodeV2) Chunk(ref uint64) *Chunk {
 // Retrieve a block for the given ref
 func (l *CodeV2) Block(ref uint64) *Block {
 	return l.Blocks[uint32(ref>>32)-1]
+}
+
+// Retrieve the ref for the last block
+func (l *CodeV2) LastBlockRef() uint64 {
+	return uint64(len(l.Blocks) << 32)
 }
 
 // AddBlock adds a new block at the end of this code and returns its ref
