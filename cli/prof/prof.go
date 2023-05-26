@@ -29,7 +29,7 @@ import (
 // - `memprofilerate`: Sets runtime.MemProfileRate to the provided value
 //
 // Example:
-// MONDO_PROF='enable,listen=localhost:7474,memprofilerate=1'
+// MONDOO_PROF='enable,listen=localhost:7474,memprofilerate=1'
 func InitProfiler() {
 	if profVal := os.Getenv("MONDOO_PROF"); profVal != "" {
 		opts, err := parseProf(profVal)
