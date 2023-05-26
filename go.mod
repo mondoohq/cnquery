@@ -146,7 +146,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20221106050444-61f0cd9a192a
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.14.0
-	github.com/okta/okta-sdk-golang/v2 v2.17.0
+	github.com/okta/okta-sdk-golang/v2 v2.18.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0-rc2
 	github.com/oracle/oci-go-sdk/v65 v65.37.0
