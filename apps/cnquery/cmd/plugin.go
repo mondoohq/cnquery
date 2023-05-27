@@ -63,6 +63,10 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		log.Fatal().Err(optsErr).Msg("could not load configuration")
 	}
 
+	err := config.ValidateConfigPath()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Could not load user provided config")
+	}
 	config.DisplayUsedConfig()
 
 	ctx := discovery.InitCtx(context.Background())

@@ -96,3 +96,56 @@ func Test_inventoryPath(t *testing.T) {
 	assert.Equal(t, systemInventory, path)
 	assert.True(t, ok)
 }
+
+func Test_ValidateConfigPath(t *testing.T) {
+	type test struct {
+		testUserProvidedPath string
+		testMondooConfigPath string
+		loadedConfig         bool
+		shouldFail           bool
+	}
+	tests := []test{
+		{
+			testUserProvidedPath: "/does/not/exist",
+			testMondooConfigPath: "",
+			loadedConfig:         false,
+			shouldFail:           true,
+		},
+		{
+			testUserProvidedPath: "",
+			testMondooConfigPath: "/does/not/exist",
+			loadedConfig:         false,
+			shouldFail:           true,
+		},
+		{
+			testUserProvidedPath: "/does/not/exist",
+			testMondooConfigPath: "/does/not/exist",
+			loadedConfig:         false,
+			shouldFail:           true,
+		},
+		{
+			testUserProvidedPath: "",
+			testMondooConfigPath: "",
+			loadedConfig:         false,
+			shouldFail:           false,
+		},
+		{
+			testUserProvidedPath: "",
+			testMondooConfigPath: "",
+			loadedConfig:         true,
+			shouldFail:           false,
+		},
+	}
+
+	for _, tc := range tests {
+		LoadedConfig = tc.loadedConfig
+		UserProvidedPath = tc.testUserProvidedPath
+		t.Setenv("MONDOO_CONFIG_PATH", tc.testMondooConfigPath)
+		err := ValidateConfigPath()
+		if tc.shouldFail {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
+		}
+	}
+}

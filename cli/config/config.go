@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -36,7 +37,10 @@ var (
 	Features             cnquery.Features
 )
 
-const configSourceBase64 = "$MONDOO_CONFIG_BASE64"
+const (
+	configSourceBase64 = "MONDOO_CONFIG_BASE64"
+	configSourcePath   = "MONDOO_CONFIG_PATH"
+)
 
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
@@ -157,7 +161,7 @@ func initConfig() {
 
 	Path = strings.TrimSpace(UserProvidedPath)
 	// base 64 config env setting has always precedence
-	if len(os.Getenv("MONDOO_CONFIG_BASE64")) > 0 {
+	if len(os.Getenv(configSourceBase64)) > 0 {
 		Source = configSourceBase64
 		decodedData, err := base64.StdEncoding.DecodeString(os.Getenv("MONDOO_CONFIG_BASE64"))
 		if err != nil {
@@ -166,8 +170,8 @@ func initConfig() {
 		viper.ReadConfig(bytes.NewBuffer(decodedData))
 	} else if len(Path) == 0 && len(os.Getenv("MONDOO_CONFIG_PATH")) > 0 {
 		// fallback to env variable if provided, but only if --config is not used
-		Source = "$MONDOO_CONFIG_PATH"
-		Path = os.Getenv("MONDOO_CONFIG_PATH")
+		Source = configSourcePath
+		Path = os.Getenv(configSourcePath)
 	} else if len(Path) != 0 {
 		Source = "--config"
 	} else {
@@ -228,13 +232,31 @@ func initConfig() {
 
 func DisplayUsedConfig() {
 	// print config file
-	if !LoadedConfig && len(UserProvidedPath) > 0 {
-		log.Warn().Msg("could not load configuration file " + UserProvidedPath)
-	} else if LoadedConfig {
+	if LoadedConfig {
 		log.Info().Msg("loaded configuration from " + viper.ConfigFileUsed() + " using source " + Source)
 	} else if Source == configSourceBase64 {
 		log.Info().Msg("loaded configuration from environment using source " + Source)
 	} else {
 		log.Info().Msg("no Mondoo configuration file provided. using defaults")
 	}
+}
+
+func ValidateConfigPath() error {
+	configPath := os.Getenv(configSourcePath)
+	if !LoadedConfig && len(UserProvidedPath) > 0 {
+		_, err := os.Stat(UserProvidedPath)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Could not load config: %v - file does not exist", UserProvidedPath))
+		} else {
+			return errors.New(fmt.Sprintf("Could not load config: %v", UserProvidedPath))
+		}
+	} else if !LoadedConfig && len(configPath) > 0 {
+		_, err := os.Stat(configPath)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Could not load config: %v from $MONDOO_CONFIG_PATH - file does not exist", configPath))
+		} else {
+			return errors.New(fmt.Sprintf("Could not load config: %v from $MONDOO_CONFIG_PATH", configPath))
+		}
+	}
+	return nil
 }

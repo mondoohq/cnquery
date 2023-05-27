@@ -263,6 +263,10 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 		log.Fatal().Err(optsErr).Msg("could not load configuration")
 	}
 
+	err := config.ValidateConfigPath()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Could not load user provided config")
+	}
 	config.DisplayUsedConfig()
 
 	conf := ShellConfig{

@@ -39,7 +39,10 @@ the credentials cannot be used in the future.
 			log.Fatal().Msg("could not load configuration")
 		}
 
-		// print the used config to the user
+		err = config.ValidateConfigPath()
+		if err != nil {
+			log.Fatal().Err(err).Msg("Could not load user provided config")
+		}
 		config.DisplayUsedConfig()
 
 		// determine information about the client
