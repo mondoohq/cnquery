@@ -37,6 +37,7 @@ var (
 )
 
 const configSourceBase64 = "$MONDOO_CONFIG_BASE64"
+const configSourcePath = "$MONDOO_CONFIG_PATH"
 
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
@@ -166,7 +167,7 @@ func initConfig() {
 		viper.ReadConfig(bytes.NewBuffer(decodedData))
 	} else if len(Path) == 0 && len(os.Getenv("MONDOO_CONFIG_PATH")) > 0 {
 		// fallback to env variable if provided, but only if --config is not used
-		Source = "$MONDOO_CONFIG_PATH"
+		Source = configSourcePath
 		Path = os.Getenv("MONDOO_CONFIG_PATH")
 	} else if len(Path) != 0 {
 		Source = "--config"
@@ -232,6 +233,8 @@ func DisplayUsedConfig() {
 		log.Warn().Msg("could not load configuration file " + UserProvidedPath)
 	} else if LoadedConfig {
 		log.Info().Msg("loaded configuration from " + viper.ConfigFileUsed() + " using source " + Source)
+	} else if Source == configSourcePath {
+		log.Info().Msg("loaded configuration from environment using source " + Source)
 	} else if Source == configSourceBase64 {
 		log.Info().Msg("loaded configuration from environment using source " + Source)
 	} else {
