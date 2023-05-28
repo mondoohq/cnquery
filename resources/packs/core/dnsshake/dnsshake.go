@@ -199,6 +199,7 @@ func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, e
 
 	c := &dns.Client{}
 	m := &dns.Msg{}
+	m.SetEdns0(4096, false)
 	m.SetQuestion(dns.Fqdn(fqdn), dnsType)
 	m.RecursionDesired = true
 
