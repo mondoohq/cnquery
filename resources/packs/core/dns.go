@@ -29,6 +29,10 @@ func (d *mqlDomainName) init(args *resources.Args) (*resources.Args, DomainName,
 		(*args)["fqdn"] = fqdn
 	}
 
+	if fqdn == nil {
+		return nil, nil, errors.New("domainName resource requires fqdn argument")
+	}
+
 	dn, err := domain.Parse(fqdn.(string))
 	if err != nil {
 		return nil, nil, err
