@@ -150,7 +150,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0-rc2
 	github.com/oracle/oci-go-sdk/v65 v65.39.0
-	github.com/packethost/packngo v0.25.0
+	github.com/packethost/packngo v0.29.0
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
 	github.com/pkg/term v1.2.0-beta.2
