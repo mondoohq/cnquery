@@ -29,17 +29,19 @@ func (d *mqlDomainName) init(args *resources.Args) (*resources.Args, DomainName,
 		(*args)["fqdn"] = fqdn
 	}
 
-	if fqdn != nil {
-		dn, err := domain.Parse(fqdn.(string))
-		if err != nil {
-			return nil, nil, err
-		}
-
-		(*args)["effectiveTLDPlusOne"] = dn.EffectiveTLDPlusOne
-		(*args)["tld"] = dn.TLD
-		(*args)["tldIcannManaged"] = dn.IcannManagedTLD
-		(*args)["labels"] = StrSliceToInterface(dn.Labels)
+	if fqdn == nil {
+		return nil, nil, errors.New("domainName resource requires fqdn argument")
 	}
+
+	dn, err := domain.Parse(fqdn.(string))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	(*args)["effectiveTLDPlusOne"] = dn.EffectiveTLDPlusOne
+	(*args)["tld"] = dn.TLD
+	(*args)["tldIcannManaged"] = dn.IcannManagedTLD
+	(*args)["labels"] = StrSliceToInterface(dn.Labels)
 
 	return args, nil, nil
 }
