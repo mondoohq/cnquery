@@ -274,8 +274,9 @@ func (p *mqlOs) GetName() (string, error) {
 			return "", err
 		}
 		// if the file does not exist, the pretty hostname is just empty
+		// fallback to hostname
 		if !exists {
-			return "", nil
+			return hostname.Hostname(osProvider, pf)
 		}
 
 		err = p.MotorRuntime.WatchAndCompute(file, "content", p, "name")
