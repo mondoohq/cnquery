@@ -88,7 +88,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.42.0
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.27.7
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.78.0
