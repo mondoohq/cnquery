@@ -35,6 +35,7 @@ message ResourceInfo {
   bool private = 24;
   string min_mondoo_version = 25;
   string defaults = 26;
+  bool has_context = 27;
 }
 
 message Field {
@@ -48,4 +49,5 @@ message Field {
   string min_mondoo_version = 23;
   bool is_implicit_resource = 24;
   bool is_embedded = 25;
+  bool has_context = 28;
 }

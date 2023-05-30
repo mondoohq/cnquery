@@ -2,6 +2,7 @@ package lr
 
 import (
 	"errors"
+	"strings"
 
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/types"
@@ -103,6 +104,13 @@ func resourceFields(r *Resource, ast *LR) map[string]*resources.Field {
 		}
 	}
 
+	if r.Context != "" {
+		parts := strings.Split(r.Context, " ")
+		for _, part := range parts {
+			fields[part].HasContext = true
+		}
+	}
+
 	return fields
 }
 
@@ -114,14 +122,15 @@ func resourceSchema(r *Resource, ast *LR) (*resources.ResourceInfo, error) {
 	}
 
 	res := &resources.ResourceInfo{
-		Id:       r.ID,
-		Name:     r.ID,
-		Title:    r.title,
-		Desc:     r.desc,
-		Init:     init,
-		Private:  r.IsPrivate,
-		Fields:   fields,
-		Defaults: r.Defaults,
+		Id:         r.ID,
+		Name:       r.ID,
+		Title:      r.title,
+		Desc:       r.desc,
+		Init:       init,
+		Private:    r.IsPrivate,
+		Fields:     fields,
+		Defaults:   r.Defaults,
+		HasContext: r.Context != "",
 	}
 
 	if r.ListType != nil {

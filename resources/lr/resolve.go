@@ -23,7 +23,7 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 	res.imports = make(map[string]map[string]struct{})
 	res.packPaths = map[string]string{}
 	importMap := map[string]map[string]*Resource{
-		"": map[string]*Resource{},
+		"": {},
 	}
 	for _, r := range res.Resources {
 		importMap[""][r.ID] = r

@@ -89,6 +89,16 @@ file @defaults("path size permissions.string") {
   empty() bool
 }
 
+// File context info
+private file.context @defaults("file.path range") {
+  // file for which context is provided
+  file file
+  // range of this context
+  range range
+  // content in this file context
+  content(file, range) string
+}
+
 // Access permissions for a given file
 private file.permissions @defaults("string") {
   // Raw POSIX mode for the permissions

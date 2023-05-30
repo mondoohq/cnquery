@@ -395,7 +395,8 @@ func (b *goBuilder) goFieldComputer(r *Resource, f *BasicField) {
 	args := make([]string, len(f.Args.List))
 
 	for i, arg := range f.Args.List {
-		args[i] = "varg" + arg.goType(b)
+		goName := resource2goname(arg.Type, b)
+		args[i] = "varg" + goName
 		argGetters += fmt.Sprintf(`	varg%s, err := s.%s()
 	if err != nil {
 		if _, ok := err.(resources.NotReadyError); ok {
@@ -404,7 +405,7 @@ func (b *goBuilder) goFieldComputer(r *Resource, f *BasicField) {
 		s.Cache.Store("%s", &resources.CacheEntry{Valid: true, Error: err, Timestamp: time.Now().Unix()})
 		return nil
 	}
-`, arg.goType(b), arg.goType(b), f.ID)
+`, goName, goName, f.ID)
 	}
 
 	// for fields that only compute a default value, only do this once
@@ -555,6 +556,8 @@ func (t *SimpleType) typeItems(ast *LR) types.Type {
 		return types.Time
 	case "dict":
 		return types.Dict
+	case "range":
+		return types.Range
 	default:
 		return resourceType(t.Type, ast)
 	}
@@ -625,6 +628,8 @@ func (t *SimpleType) mondooTypeItems() string {
 		return "types.Time"
 	case "dict":
 		return "types.Dict"
+	case "range":
+		return "types.Range"
 	default:
 		return "types.Resource(\"" + t.Type + "\")"
 	}
@@ -667,6 +672,7 @@ var primitiveTypes = map[string]string{
 	"float":  "float64",
 	"time":   "*time.Time",
 	"dict":   "interface{}",
+	"range":  "[]byte",
 	"any":    "interface{}",
 }
 
@@ -694,6 +700,7 @@ var primitiveZeros = map[string]string{
 	"float":  "0.0",
 	"time":   "nil",
 	"dict":   "nil",
+	"range":  "nil",
 	"any":    "nil",
 }
 

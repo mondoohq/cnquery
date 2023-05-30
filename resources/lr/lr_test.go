@@ -236,6 +236,21 @@ func TestParse(t *testing.T) {
 			assert.Equal(t, fields, res.Resources[0].Body.Fields)
 		})
 	})
+
+	t.Run("file context", func(t *testing.T) {
+		parse(t, `
+	sth @context("file.context") {
+		field map[string]int
+	}`, func(res *LR) {
+			fields := []*Field{
+				{BasicField: &BasicField{ID: "field", Type: Type{MapType: &MapType{Key: SimpleType{"string"}, Value: Type{SimpleType: &SimpleType{"int"}}}}}},
+			}
+
+			assert.Equal(t, "sth", res.Resources[0].ID)
+			assert.Equal(t, "file.context", res.Resources[0].Context)
+			assert.Equal(t, fields, res.Resources[0].Body.Fields)
+		})
+	})
 }
 
 func TestParseLR(t *testing.T) {
