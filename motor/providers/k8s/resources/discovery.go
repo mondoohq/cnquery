@@ -2,11 +2,13 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/kofalt/go-memoize"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,6 +59,7 @@ func NewDiscovery(restConfig *rest.Config) (*Discovery, error) {
 		discoveryClient: cachedClient,
 		dynClient:       dynClient,
 		ServerVersion:   serverVersion,
+		memoizer:        memoize.NewMemoizer(30*time.Minute, time.Hour),
 	}, nil
 }
 
@@ -64,6 +67,7 @@ type Discovery struct {
 	dynClient       dynamic.Interface
 	discoveryClient discovery.CachedDiscoveryInterface
 	ServerVersion   *version.Info
+	memoizer        *memoize.Memoizer
 }
 
 func (d *Discovery) SupportedResourceTypes() (*ApiResourceIndex, error) {
@@ -111,36 +115,43 @@ func (d *Discovery) GetAllResources(ctx context.Context, resTypes *ApiResourceIn
 }
 
 func (d *Discovery) GetKindResources(ctx context.Context, apiRes ApiResource, ns string, allNs bool) ([]runtime.Object, error) {
-	var out []runtime.Object
+	res, err, _ := d.memoizer.Memoize(fmt.Sprintf("GetKindResources/%s/%s/%v", apiRes.FullApiName(), ns, allNs), func() (interface{}, error) {
+		var out []runtime.Object
 
-	var next string
-	for {
-		var intf dynamic.ResourceInterface
-		nintf := d.dynClient.Resource(apiRes.GroupVersionResource())
-		log.Debug().Msgf("query resources for %s (namespaced: %t)", apiRes.Resource.Name, apiRes.Resource.Namespaced)
-		if apiRes.Resource.Namespaced && !allNs {
-			intf = nintf.Namespace(ns)
-		} else {
-			intf = nintf
-		}
-		resp, err := intf.List(ctx, metav1.ListOptions{
-			Limit:    250,
-			Continue: next,
-		})
-		// this error will happen when users have no permission
-		if err != nil {
-			log.Debug().Err(err).Msgf("could not fetch resources for: %v", apiRes.GroupVersionResource())
-			break
-		}
+		var next string
+		for {
+			var intf dynamic.ResourceInterface
+			nintf := d.dynClient.Resource(apiRes.GroupVersionResource())
+			log.Debug().Msgf("query resources for %s (namespaced: %t)", apiRes.Resource.Name, apiRes.Resource.Namespaced)
+			if apiRes.Resource.Namespaced && !allNs {
+				intf = nintf.Namespace(ns)
+			} else {
+				intf = nintf
+			}
+			resp, err := intf.List(ctx, metav1.ListOptions{
+				Limit:    250,
+				Continue: next,
+			})
+			// this error will happen when users have no permission
+			if err != nil {
+				log.Debug().Err(err).Msgf("could not fetch resources for: %v", apiRes.GroupVersionResource())
+				break
+			}
 
-		out = append(out, UnstructuredListToObjectList(resp.Items)...)
+			out = append(out, UnstructuredListToObjectList(resp.Items)...)
 
-		next = resp.GetContinue()
-		if next == "" {
-			break
+			next = resp.GetContinue()
+			if next == "" {
+				break
+			}
 		}
+		return out, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return out, nil
+
+	return res.([]runtime.Object), nil
 }
 
 func contains(v []string, s string) bool {

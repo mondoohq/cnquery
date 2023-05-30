@@ -133,6 +133,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f
 	github.com/knqyf263/go-rpmdb v0.0.0-20221030135625-4082a22221ce
+	github.com/kofalt/go-memoize v0.0.0-20220914132407-0b5d6a304579
 	github.com/lithammer/fuzzysearch v1.1.5
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/masterzen/winrm v0.0.0-20220513085036-69f69afcd9e9
@@ -422,7 +423,7 @@ require (
 	github.com/nunnatsa/ginkgolinter v0.9.0 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/patrickmn/go-cache v0.0.0-20180815053127-5633e0862627 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/peterhellberg/link v1.1.0 // indirect
