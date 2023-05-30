@@ -126,6 +126,9 @@ lr/build:
 	./lr go resources/packs/oci/oci.lr
 	./lr docs yaml resources/packs/oci/oci.lr --docs-file resources/packs/oci/oci.lr.manifest.yaml
 	./lr docs json resources/packs/oci/oci.lr.manifest.yaml
+	./lr go resources/packs/opcua/opcua.lr
+	./lr docs yaml resources/packs/opcua/opcua.lr --docs-file resources/packs/opcua/opcua.lr.manifest.yaml
+	./lr docs json resources/packs/opcua/opcua.lr.manifest.yaml
 
 lr/release:
 	go generate .
@@ -239,6 +242,11 @@ lr/docs/markdown: lr/build
 		--description "The Oracle Cloud Infrastructure (OCI) resource pack lets you use MQL to query and assess the security of your OCI cloud services." \
 		--docs-file resources/packs/oci/oci.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/oci-pack
+	./lr markdown resources/packs/opcua/opcua.lr \
+		--pack-name "OPC UP" \
+		--description "The OPC-UA resource pack lets you use MQL to query and assess the security of your OPC-UA servers." \
+		--docs-file resources/packs/opcua/opcua.lr.manifest.yaml \
+		--output ../docs/docs/mql/resources/opcua-pack
 
 .PHONY: resources
 resources: | lr resources/generate resources/test

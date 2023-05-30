@@ -1,0 +1,38 @@
+resources:
+  opcua:
+    fields:
+      namespaces: {}
+      nodes: {}
+      root: {}
+    min_mondoo_version: latest
+  opcua.namespace:
+    fields:
+      id: {}
+      name: {}
+    min_mondoo_version: latest
+  opcua.node:
+    fields:
+      accessLevel: {}
+      class: {}
+      components: {}
+      dataType: {}
+      description: {}
+      id: {}
+      max: {}
+      min: {}
+      name: {}
+      namespace: {}
+      nodeid: {}
+      organizes: {}
+      properties: {}
+      unit: {}
+      writeable: {}
+    min_mondoo_version: latest
+  opcua.server:
+    fields:
+      buildInfo: {}
+      currentTime: {}
+      node: {}
+      startTime: {}
+      state: {}
+    min_mondoo_version: latest

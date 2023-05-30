@@ -788,3 +788,20 @@ func ScanFilesystemCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runF
 	commonCmdFlags(cmd)
 	return cmd
 }
+
+func ScanOpcUACmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "opcua",
+		Short: docs.GetShort("opcua"),
+		Long:  docs.GetLong("opcua"),
+		Args:  cobra.ExactArgs(0),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			viper.BindPFlag("endpoint", cmd.Flags().Lookup("endpoint"))
+			preRun(cmd, args)
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("endpoint", "", "OPC UA service endpoint")
+	return cmd
+}

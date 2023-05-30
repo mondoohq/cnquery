@@ -23,7 +23,9 @@ import (
 	ipmiInfo "go.mondoo.com/cnquery/resources/packs/ipmi/info"
 	k8sInfo "go.mondoo.com/cnquery/resources/packs/k8s/info"
 	ms365Info "go.mondoo.com/cnquery/resources/packs/ms365/info"
+	ociInfo "go.mondoo.com/cnquery/resources/packs/oci/info"
 	oktaInfo "go.mondoo.com/cnquery/resources/packs/okta/info"
+	opcuaInfo "go.mondoo.com/cnquery/resources/packs/opcua/info"
 	osInfo "go.mondoo.com/cnquery/resources/packs/os/info"
 	slackInfo "go.mondoo.com/cnquery/resources/packs/slack/info"
 	terraformInfo "go.mondoo.com/cnquery/resources/packs/terraform/info"
@@ -50,6 +52,8 @@ func init() {
 	Registry.Add(vcdInfo.Registry)
 	Registry.Add(aristaInfo.Registry)
 	Registry.Add(ipmiInfo.Registry)
+	Registry.Add(ociInfo.Registry)
+	Registry.Add(opcuaInfo.Registry)
 
 	ResourceDocs = mergeDocs(
 		coreInfo.ResourceDocs,
@@ -69,6 +73,8 @@ func init() {
 		vcdInfo.ResourceDocs,
 		aristaInfo.ResourceDocs,
 		ipmiInfo.ResourceDocs,
+		ociInfo.ResourceDocs,
+		opcuaInfo.ResourceDocs,
 	)
 }
 

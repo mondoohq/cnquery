@@ -40,6 +40,7 @@ enum ProviderType {
   SLACK = 31;
   VCD = 32;
   OCI = 33;
+  OPCUA = 34;
 }
 
 enum Kind {
