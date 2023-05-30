@@ -3,7 +3,6 @@ package llx
 import (
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.mondoo.com/cnquery/resources"
@@ -205,6 +204,28 @@ var timeFormats = map[string]string{
 	"rfc3339":  time.RFC3339,
 	"kitchen":  time.Kitchen,
 	"stamp":    time.Stamp,
+	"datetime": time.DateTime,
+	"date":     time.DateOnly,
+	"time":     time.TimeOnly,
+}
+
+// Note: the list of recognized timeFormats is mutually exclusive.
+// This means that for any given timestamp for one format it won't
+// parse with any of the other formats. Should this ever change,
+// the order in which formats are parsed will play a more important role.
+var defaultTimeFormatsOrder = []string{
+	time.RFC3339,
+	time.DateTime,
+	time.DateOnly,
+	time.TimeOnly,
+	time.RFC1123,
+	time.RFC1123Z,
+	time.ANSIC,
+	time.RFC822,
+	time.RFC822Z,
+	time.RFC850,
+	time.Kitchen,
+	time.Stamp,
 }
 
 func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
@@ -213,21 +234,31 @@ func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (
 		return nil, rref, err
 	}
 
-	format := time.RFC3339
+	var format string
 	if len(args) >= 2 {
 		format = args[1].(string)
+		if f, ok := timeFormats[format]; ok {
+			format = f
+		}
 	}
 
-	var timeParseFormat string
-	timeParseFormat, ok := timeFormats[strings.ToLower(format)]
-	if !ok {
-		timeParseFormat = format
+	if format != "" {
+		parsed, err := time.Parse(format, args[0].(string))
+		if err != nil {
+			return nil, 0, errors.New("failed to parse time: " + err.Error())
+		}
+		return TimeData(parsed), 0, nil
 	}
 
-	parsed, err := time.Parse(timeParseFormat, args[0].(string))
-	if err != nil {
-		return nil, 0, errors.New("failed to parse time: " + err.Error())
+	// Note: Yes, this approach is much slower than giving us a hint
+	// about which time format is used.
+	for _, format := range defaultTimeFormatsOrder {
+		parsed, err := time.Parse(format, args[0].(string))
+		if err != nil {
+			continue
+		}
+		return TimeData(parsed), 0, nil
 	}
 
-	return TimeData(parsed), 0, nil
+	return nil, 0, errors.New("failed to parse time")
 }

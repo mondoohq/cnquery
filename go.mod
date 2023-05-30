@@ -1,6 +1,6 @@
 module go.mondoo.com/cnquery
 
-go 1.19
+go 1.20
 
 require (
 	cloud.google.com/go/accessapproval v1.5.0

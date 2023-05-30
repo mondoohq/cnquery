@@ -600,25 +600,11 @@ func TestFuzzyTime(t *testing.T) {
 	})
 }
 
-func TestTime_Methods(t *testing.T) {
-	now := time.Now()
-	today, _ := time.ParseInLocation("2006-01-02", now.Format("2006-01-02"), now.Location())
-	tomorrow := today.Add(24 * time.Hour)
+func TestTimeParsing(t *testing.T) {
+	parserTimestamp := int64(1136214245)
 
 	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
 	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			"time.now > time.today",
-			2, true,
-		},
-		{
-			"time.today",
-			0, &today,
-		},
-		{
-			"time.tomorrow",
-			0, &tomorrow,
-		},
 		{
 			"parse.date('0000-01-01T02:03:04Z').seconds",
 			0, int64(4 + 3*60 + 2*60*60),
@@ -646,6 +632,81 @@ func TestTime_Methods(t *testing.T) {
 		{
 			"parse.date('0000-01-01T00:00:03Z') * 3",
 			0, duration(9),
+		},
+		// Testing all the default parsers
+		{
+			"parse.date('2006-01-02T15:04:05Z').unix",
+			0, parserTimestamp,
+		},
+		{
+			"parse.date('2006-01-02 15:04:05').unix",
+			0, parserTimestamp,
+		},
+		{
+			"parse.date('2006-01-02').unix",
+			0, parserTimestamp - (15*60*60 + 4*60 + 5),
+		},
+		{
+			"parse.date('15:04:05').unix",
+			0, duration(15*60*60 + 4*60 + 5).Unix(),
+		},
+		{
+			"parse.date('Mon, 02 Jan 2006 15:04:05 MST').unix",
+			0, parserTimestamp,
+		},
+		{
+			"parse.date('Mon Jan 2 15:04:05 2006').unix",
+			0, parserTimestamp,
+		},
+		{
+			"parse.date('02 Jan 06 15:04 MST').unix",
+			0, parserTimestamp - 5, // since it doesn't have seconds
+		},
+		{
+			"parse.date('Monday, 02-Jan-06 15:04:05 MST').unix",
+			0, parserTimestamp,
+		},
+		{
+			"parse.date('3:04PM').unix",
+			0, duration(15*60*60 + 4*60).Unix(),
+		},
+		{
+			"parse.date('Jan 2 15:04:05').unix",
+			0, duration(1*24*60*60 + 15*60*60 + 4*60 + 5).Unix(),
+		},
+	})
+
+	parserTimestampTZ := int64(1136239445)
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			"parse.date('Mon, 02 Jan 2006 15:04:05 -0700').unix",
+			0, parserTimestampTZ,
+		},
+		{
+			"parse.date('02 Jan 06 15:04 -0700').unix",
+			0, parserTimestampTZ - 5, // since it doesn't have seconds
+		},
+	})
+}
+
+func TestTime_Methods(t *testing.T) {
+	now := time.Now()
+	today, _ := time.ParseInLocation("2006-01-02", now.Format("2006-01-02"), now.Location())
+	tomorrow := today.Add(24 * time.Hour)
+
+	x := testutils.InitTester(testutils.LinuxMock(), core.Registry)
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			"time.now > time.today",
+			2, true,
+		},
+		{
+			"time.today",
+			0, &today,
+		},
+		{
+			"time.tomorrow",
+			0, &tomorrow,
 		},
 		{
 			"2*time.hour + 1*time.hour",

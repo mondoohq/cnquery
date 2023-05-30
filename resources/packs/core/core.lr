@@ -196,7 +196,7 @@ groups {
 // Parse provides common parsers (json, ini, certs, etc)
 parse {
   // Builtin functions:
-  // Date(value, format) time
+  // date(value, format) time
 }
 
 // Date and time functions
