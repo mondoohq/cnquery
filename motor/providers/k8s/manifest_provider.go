@@ -139,6 +139,12 @@ func (t *manifestProvider) ID() (string, error) {
 		}
 	}
 
+	h := sha256.New()
+	if t.manifestFile == "-" {
+		h.Write([]byte("stdin"))
+		return hex.EncodeToString(h.Sum(nil)), nil
+	}
+
 	_, err := os.Stat(t.manifestFile)
 	if err != nil {
 		return "", errors.Wrap(err, "could not determine platform identifier for "+t.manifestFile)
@@ -149,7 +155,6 @@ func (t *manifestProvider) ID() (string, error) {
 		return "", errors.Wrap(err, "could not determine platform identifier for "+t.manifestFile)
 	}
 
-	h := sha256.New()
 	h.Write([]byte(absPath))
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
