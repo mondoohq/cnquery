@@ -158,7 +158,7 @@ private vcd.vm @defaults("name") {
   isBusy bool
   // Indicates if this VM is deployed
   isDeployed bool
-  // Indicates  if this VM is in a published catalog
+  // Indicates if this VM is in a published catalog
   isPublished bool
   // Catalog name
   catalogName string
