@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -87,13 +88,17 @@ func (d *mqlDns) GetParams() (interface{}, error) {
 
 // GetRecords returns successful dns records
 func (d *mqlDns) GetRecords(params interface{}) ([]interface{}, error) {
+	// NOTE: mql does not cache the results of GetRecords since it has an input argument
+	// Iterations over map keys are not deterministic and therefore we need to sort the keys
+
 	paramsM, ok := params.(map[string]interface{})
 	if !ok {
 		return []interface{}{}, nil
 	}
 
 	// convert responses to dns types
-	dnsEntries := []interface{}{}
+	keys := []string{}
+	resultMap := make(map[string]interface{})
 	for k := range paramsM {
 		r := paramsM[k].(map[string]interface{})
 
@@ -113,6 +118,16 @@ func (d *mqlDns) GetRecords(params interface{}) ([]interface{}, error) {
 			return nil, err
 		}
 
+		id := mqlDnsRecord.MqlResource().Id
+		keys = append(keys, id)
+		resultMap[id] = mqlDnsRecord
+	}
+
+	// sort keys
+	sort.Strings(keys)
+	dnsEntries := []interface{}{}
+	for i := range keys {
+		mqlDnsRecord := resultMap[keys[i]]
 		dnsEntries = append(dnsEntries, mqlDnsRecord.(DnsRecord))
 	}
 
