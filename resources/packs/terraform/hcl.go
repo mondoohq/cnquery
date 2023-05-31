@@ -391,7 +391,7 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 		for _, o := range t.Items {
 			key := getCtyValue(o.KeyExpr, ctx)
 			value := getCtyValue(o.ValueExpr, ctx)
-			keyString := key.(string)
+			keyString := GetKeyString(key)
 			result[keyString] = value
 		}
 		return result
@@ -404,6 +404,21 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) interface{} {
 	default:
 		log.Warn().Msgf("unknown type %T", t)
 		return nil
+	}
+}
+
+func GetKeyString(key interface{}) string {
+	switch v := key.(type) {
+	case []string:
+		return strings.Join(v, ",")
+	case []interface{}:
+		s := ""
+		for i := range v {
+			s = s + v[i].(string)
+		}
+		return s
+	default:
+		return key.(string)
 	}
 }
 
