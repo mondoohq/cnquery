@@ -93,29 +93,35 @@ func (r *ClusterResolver) Resolve(ctx context.Context, root *asset.Asset, tc *pr
 	ownershipDir := k8s.NewEmptyPlatformIdOwnershipDirectory(clusterIdentifier)
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, common.DiscoveryAuto, DiscoveryClusters) &&
 		len(resourcesFilter) == 0 {
+		var clusterName string
 		// the name is still a bit unreliable
 		// see https://github.com/kubernetes/kubernetes/issues/44954
-		clusterName := ""
-
-		if tc.Options[k8s.OPTION_MANIFEST] != "" || tc.Options[k8s.OPTION_ADMISSION] != "" {
-			clusterName, _ = p.Name()
+		if len(tc.Options["context"]) > 0 {
+			clusterName = tc.Options["context"]
+			log.Info().Str("cluster-name", clusterName).Msg("use cluster name from --context")
 		} else {
-			// try to parse context from kubectl config
-			if clusterName == "" && k8sctlConfig != nil && len(k8sctlConfig.CurrentContext) > 0 {
-				clusterName = k8sctlConfig.CurrentClusterName()
-				log.Info().Str("cluster-name", clusterName).Msg("use cluster name from kube config")
-			}
+			clusterName = ""
 
-			// fallback to first node name if we could not gather the name from kubeconfig
-			if clusterName == "" {
-				name, err := p.Name()
-				if err == nil {
-					clusterName = name
-					log.Info().Str("cluster-name", clusterName).Msg("use cluster name from node name")
+			if tc.Options[k8s.OPTION_MANIFEST] != "" || tc.Options[k8s.OPTION_ADMISSION] != "" {
+				clusterName, _ = p.Name()
+			} else {
+				// try to parse context from kubectl config
+				if clusterName == "" && k8sctlConfig != nil && len(k8sctlConfig.CurrentContext) > 0 {
+					clusterName = k8sctlConfig.CurrentClusterName()
+					log.Info().Str("cluster-name", clusterName).Msg("use cluster name from kube config")
 				}
-			}
 
-			clusterName = "K8s Cluster " + clusterName
+				// fallback to first node name if we could not gather the name from kubeconfig
+				if clusterName == "" {
+					name, err := p.Name()
+					if err == nil {
+						clusterName = name
+						log.Info().Str("cluster-name", clusterName).Msg("use cluster name from node name")
+					}
+				}
+
+				clusterName = "K8s Cluster " + clusterName
+			}
 		}
 
 		clusterAsset = &asset.Asset{

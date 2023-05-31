@@ -288,6 +288,13 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		} else if includeNamespaces != "" {
 			connection.Options["namespaces"] = includeNamespaces
 		}
+
+		if targetContext, err := cmd.Flags().GetString("context"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --context values")
+		} else if targetContext != "" {
+			connection.Options["context"] = targetContext
+		}
+
 	case providers.ProviderType_AWS:
 		connection.Backend = providerType
 		if profile, err := cmd.Flags().GetString("profile"); err != nil {
@@ -301,6 +308,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		} else if region != "" {
 			connection.Options["region"] = region
 		}
+
 	case providers.ProviderType_AWS_EC2_EBS:
 		noSetup := "false"
 		if connection.Options[awsec2ebs.NoSetup] != "" {
