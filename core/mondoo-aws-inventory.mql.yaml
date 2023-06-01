@@ -65,7 +65,7 @@ packs:
         docs:
           desc: |
             This query retrieves all AWS EC2 volumes
-        mql: aws.ec2.volumes {*}
+        mql: aws.ec2.volumes
       - uid: mondoo-asset-inventory-aws-ec2-retrieve-all-data
         title: Retrieves all running EC2 instances
         mql: aws.ec2.instances.where( state == "running" )

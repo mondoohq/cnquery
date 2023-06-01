@@ -16,7 +16,7 @@ packs:
         mql: platform { title release arch }
       - uid: mondoo-macos-incident-response-regular-users
         title: Retrieve regular users
-        mql: users.where( name != /^_/ && shell != /\/usr\/bin\/false/ ) {*}
+        mql: users.where( name != /^_/ && shell != /\/usr\/bin\/false/ )
       - uid: mondoo-macos-kernel-info
         title: Retrieve the running macOS kernel
         mql: kernel.info["version"]

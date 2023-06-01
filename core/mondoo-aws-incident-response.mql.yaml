@@ -130,7 +130,7 @@ packs:
             securityGroups { 
               name
               description
-              ipPermissions {*}
+              ipPermissions
             }
             tags
             ```
@@ -148,7 +148,7 @@ packs:
               securityGroups { 
                 name
                 description
-                ipPermissions {*}
+                ipPermissions
               }
               tags
             }
@@ -189,7 +189,7 @@ packs:
             publicAccessBlock
             encryption
             tags
-            policy {*} 
+            policy
             ```
         mql: |
           aws.s3.buckets.
@@ -200,5 +200,5 @@ packs:
               publicAccessBlock
               encryption
               tags
-              policy {*}
+              policy
             }
