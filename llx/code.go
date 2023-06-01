@@ -104,7 +104,7 @@ func (l *CodeV2) Block(ref uint64) *Block {
 	return l.Blocks[uint32(ref>>32)-1]
 }
 
-// Retrieve the ref for the last block
+// LastBlockRef retrieves the ref for the last block in the code
 func (l *CodeV2) LastBlockRef() uint64 {
 	return uint64(len(l.Blocks) << 32)
 }

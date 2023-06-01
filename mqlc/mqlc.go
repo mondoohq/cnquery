@@ -1717,7 +1717,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			log.Error().Msg("failed to find where function for assessment")
 			return
 		}
-		if chunk.Function.Args != nil {
+		if strings.HasPrefix(chunk.Id, "$where") {
 			whereChunk = chunk
 			break
 		}
@@ -1840,25 +1840,24 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk,
 }
 
 func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) bool {
-	expanded := false
 	resultType := types.Block
 	if typ.IsArray() {
 		resultType = types.Array(types.Block)
 		typ = typ.Child()
 	}
 	if !typ.IsResource() {
-		return expanded
+		return false
 	}
 
 	info := c.Schema.Resources[typ.ResourceName()]
 	if info == nil || info.Defaults == "" {
-		return expanded
+		return false
 	}
 
 	ast, err := parser.Parse(info.Defaults)
 	if ast == nil || len(ast.Expressions) == 0 {
 		log.Error().Err(err).Msg("failed to parse defaults for " + info.Name)
-		return expanded
+		return false
 	}
 
 	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref)
@@ -1885,8 +1884,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 	ref = ep
 
 	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
-	expanded = true
-	return expanded
+	return true
 }
 
 func (c *compiler) updateLabels() {
