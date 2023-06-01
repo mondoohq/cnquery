@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func newApiProvider(namespace string, objectKind string, selectedResourceID string, dCache *resources.DiscoveryCache) (KubernetesProvider, error) {
+func newApiProvider(context string, namespace string, objectKind string, selectedResourceID string, dCache *resources.DiscoveryCache) (KubernetesProvider, error) {
 	// check if the user .kube/config file exists
 	// NOTE: BuildConfigFromFlags falls back to cluster loading when .kube/config string is empty
 	// therefore we want to only change the kubeconfig string when the file really exists
@@ -47,7 +47,7 @@ func newApiProvider(namespace string, objectKind string, selectedResourceID stri
 		}
 	}
 
-	config, err := buildConfigFromFlags("", kubeconfig)
+	config, err := buildConfigFromFlags("", kubeconfig, context)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func newApiProvider(namespace string, objectKind string, selectedResourceID stri
 
 // buildConfigFromFlags we rebuild clientcmd.BuildConfigFromFlags to make sure we do not log warnings for every
 // scan.
-func buildConfigFromFlags(masterUrl, kubeconfigPath string) (*restclient.Config, error) {
+func buildConfigFromFlags(masterUrl, kubeconfigPath string, context string) (*restclient.Config, error) {
 	if kubeconfigPath == "" && masterUrl == "" {
 		kubeconfig, err := restclient.InClusterConfig()
 		if err == nil {
@@ -90,7 +90,7 @@ func buildConfigFromFlags(masterUrl, kubeconfigPath string) (*restclient.Config,
 	}
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
-		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}}).ClientConfig()
+		&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: masterUrl}, CurrentContext: context}).ClientConfig()
 }
 
 type apiProvider struct {

@@ -23,6 +23,7 @@ const (
 	OPTION_NAMESPACE   = "namespace"
 	OPTION_ADMISSION   = "k8s-admission-review"
 	OPTION_OBJECT_KIND = "object-kind"
+	OPTION_CONTEXT     = "context"
 )
 
 var (
@@ -103,7 +104,7 @@ func New(ctx context.Context, tc *providers.Config) (KubernetesProvider, error) 
 		return nil, fmt.Errorf("context does not have an initialized discovery cache")
 	}
 
-	return newApiProvider(tc.Options[OPTION_NAMESPACE], tc.Options[OPTION_OBJECT_KIND], tc.PlatformId, dCache)
+	return newApiProvider(tc.Options[OPTION_CONTEXT], tc.Options[OPTION_NAMESPACE], tc.Options[OPTION_OBJECT_KIND], tc.PlatformId, dCache)
 }
 
 func getPlatformInfo(objectKind string, runtime string) *platform.Platform {
