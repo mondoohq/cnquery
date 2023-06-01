@@ -417,7 +417,14 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 			// We need to find this datapoint and use it as the listRef.
 		OUTER:
 			for i := range code.Blocks {
-				if code.Blocks[i].Entrypoints[0] != ref {
+				refIsEntrypoint := false
+				for j := range code.Blocks[i].Entrypoints {
+					if code.Blocks[i].Entrypoints[j] == ref {
+						refIsEntrypoint = true
+						break
+					}
+				}
+				if !refIsEntrypoint {
 					continue
 				}
 				for j := len(code.Blocks[i].Datapoints) - 1; j >= 0; j-- {

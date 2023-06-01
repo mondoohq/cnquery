@@ -1717,7 +1717,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			log.Error().Msg("failed to find where function for assessment")
 			return
 		}
-		if strings.HasPrefix(chunk.Id, "$where") {
+		if chunk.Id == "$whereNot" || chunk.Id == "where" {
 			whereChunk = chunk
 			break
 		}
@@ -1754,7 +1754,7 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 	for i := 1; i < len(assessmentBlock.Chunks); i++ {
 		chunk := assessmentBlock.Chunks[i]
 		// filter out nested function block and only add fields for outer most resource
-		if strings.HasPrefix(chunk.Id, "$where") {
+		if chunk.Id == "$whereNot" || chunk.Id == "where" {
 			break
 		}
 		chunkAlreadyPresent := false
