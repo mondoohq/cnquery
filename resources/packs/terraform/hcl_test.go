@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/resources/packs/terraform"
 )
 
 const (
@@ -69,4 +70,10 @@ func TestModuleWithoutResources_Terraform(t *testing.T) {
 		assert.Empty(t, res[0].Result().Error)
 		assert.Equal(t, nil, res[0].Data.Value)
 	})
+}
+
+func TestKeyString(t *testing.T) {
+	require.Equal(t, "keytest", terraform.GetKeyString("keytest"))
+	require.Equal(t, "key,thing", terraform.GetKeyString([]string{"key", "thing"}))
+	require.Equal(t, "keything", terraform.GetKeyString([]interface{}{"key", "thing"}))
 }
