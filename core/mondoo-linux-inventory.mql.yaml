@@ -1,7 +1,7 @@
 packs:
   - uid: mondoo-linux-inventory
     name: Linux Inventory Pack
-    version: 1.0.0
+    version: 1.1.0
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
@@ -95,4 +95,10 @@ packs:
         mql: |
           if ( mondoo.capabilities.contains('run-command') ) {
             parse.json(content: command('ip -j a').stdout).params
+          }
+      - uid: mondoo-sshd-interface-configuration
+        title: Retrieve sshd configuration of the system
+        mql: |
+          if ( package('openssh-server').installed || package('openssh').installed ) {
+            sshd.config.params
           }
