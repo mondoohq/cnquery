@@ -62,7 +62,7 @@ func (k *mqlRegistrykey) GetProperties() (map[string]interface{}, error) {
 		return nil, err
 	}
 	if exitcode != 0 {
-		return nil, errors.New("could to retrieve registry key")
+		return nil, errors.New("could not retrieve registry key")
 	}
 
 	stdout, err := cmd.Stdout()
@@ -101,7 +101,7 @@ func (k *mqlRegistrykey) GetChildren() ([]interface{}, error) {
 		return nil, err
 	}
 	if exitcode != 0 {
-		return nil, errors.New("could to retrieve registry key")
+		return nil, errors.New("could not retrieve registry key")
 	}
 
 	stdout, err := cmd.Stdout()
