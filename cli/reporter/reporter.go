@@ -57,8 +57,8 @@ func AllFormats() string {
 type Reporter struct {
 	// Pager set to true will use a pager for the output. Only relevant for all
 	// non-json/yaml/junit/csv reports (for now)
-	UsePager    bool
-	Pager       string
+	//UsePager    bool
+	//Pager       string
 	Format      Format
 	Printer     *printer.Printer
 	Colors      *colors.Theme

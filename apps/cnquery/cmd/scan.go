@@ -568,8 +568,8 @@ func printReports(report *explorer.ReportCollection, conf *scanConfig, cmd *cobr
 		log.Fatal().Msg(err.Error())
 	}
 
-	r.UsePager, _ = cmd.Flags().GetBool("pager")
-	r.Pager, _ = cmd.Flags().GetString("pager")
+	//r.UsePager, _ = cmd.Flags().GetBool("pager")
+	//r.Pager, _ = cmd.Flags().GetString("pager")
 	r.IsIncognito = conf.IsIncognito
 
 	if err = r.Print(report, os.Stdout); err != nil {
