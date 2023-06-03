@@ -1,18 +1,14 @@
 # cnquery
 
-```
-  ___ _ __   __ _ _   _  ___ _ __ _   _
- / __| '_ \ / _` | | | |/ _ \ '__| | | |
-| (__| | | | (_| | |_| |  __/ |  | |_| |
- \___|_| |_|\__, |\__,_|\___|_|   \__, |
-  mondoo™      |_|                |___/
-```
+![cnquery light-mode logo](docs/images/cnquery-light.svg#gh-light-mode-only)
+![cnquery dark-mode logo](docs/images/cnquery-dark.svg#gh-dark-mode-only)
+
 
 **Open source, cloud-native asset inventory and discovery**
 
 cnquery is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
-![cnquery run example](docs/gif/cnquery-run.gif)
+![cnquery run example](docs/images/cnquery-run.gif)
 
 Here are a few more examples:
 
@@ -123,7 +119,7 @@ cnquery scan -f examples/example-os.mql.yaml
 
 Like all other commands, you can specify different providers like `k8s`, `aws`, `docker`, and many more. Run `--help` to see the full list of supported providers.
 
-![](docs/gif/cnquery-scan.gif)
+![](docs/images/cnquery-scan.gif)
 
 These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
 
