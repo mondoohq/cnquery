@@ -459,7 +459,7 @@ shadow.entry {
 }
 
 // Windows registry key
-registrykey {
+registrykey @defaults("path") {
   init(path string)
   // Registry key path
   path string
@@ -471,7 +471,7 @@ registrykey {
 }
 
 // Windows registry key property
-registrykey.property {
+registrykey.property @defaults("path name") {
   init(path string, name string)
   path string
   name string
