@@ -21,12 +21,12 @@ func init() {
 	// bundle init
 	packBundlesCmd.AddCommand(queryPackInitCmd)
 
-	// bundle validate
-	packBundlesCmd.AddCommand(queryPackValidateCmd)
+	// bundle lint
+	packBundlesCmd.AddCommand(queryPackLintCmd)
 
-	// bundle add
-	queryPackUploadCmd.Flags().String("pack-version", "", "Override the version of each pack in the bundle")
-	packBundlesCmd.AddCommand(queryPackUploadCmd)
+	// publish
+	queryPackPublishCmd.Flags().String("pack-version", "", "Override the version of each pack in the bundle")
+	packBundlesCmd.AddCommand(queryPackPublishCmd)
 
 	rootCmd.AddCommand(packBundlesCmd)
 }
@@ -105,10 +105,11 @@ func validate(queryPackBundle *explorer.Bundle) []string {
 	return errors
 }
 
-var queryPackValidateCmd = &cobra.Command{
-	Use:   "validate [path]",
-	Short: "Validate a query pack.",
-	Args:  cobra.ExactArgs(1),
+var queryPackLintCmd = &cobra.Command{
+	Use:     "lint [path]",
+	Aliases: []string{"validate"},
+	Short:   "Lint a query pack.",
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info().Str("file", args[0]).Msg("validate query pack")
 		queryPackBundle, err := explorer.BundleFromPaths(args[0])
@@ -129,10 +130,11 @@ var queryPackValidateCmd = &cobra.Command{
 	},
 }
 
-var queryPackUploadCmd = &cobra.Command{
-	Use:   "upload [path]",
-	Short: "Add a user-owned pack to Mondoo Query Hub.",
-	Args:  cobra.ExactArgs(1),
+var queryPackPublishCmd = &cobra.Command{
+	Use:     "publish [path]",
+	Aliases: []string{"upload"},
+	Short:   "Add a user-owned query pack to Mondoo Query Hub.",
+	Args:    cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))
 	},
