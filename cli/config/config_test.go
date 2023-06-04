@@ -97,7 +97,7 @@ func Test_inventoryPath(t *testing.T) {
 	assert.True(t, ok)
 }
 
-func Test_ValidateConfigPath(t *testing.T) {
+func Test_ValidateUserProvidedConfigPath(t *testing.T) {
 	type test struct {
 		testUserProvidedPath string
 		testMondooConfigPath string
@@ -141,7 +141,7 @@ func Test_ValidateConfigPath(t *testing.T) {
 		LoadedConfig = tc.loadedConfig
 		UserProvidedPath = tc.testUserProvidedPath
 		t.Setenv("MONDOO_CONFIG_PATH", tc.testMondooConfigPath)
-		err := ValidateConfigPath()
+		err := ValidateUserProvidedConfigPath()
 		if tc.shouldFail {
 			assert.Error(t, err)
 		} else {

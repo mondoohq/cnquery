@@ -241,7 +241,7 @@ func DisplayUsedConfig() {
 	}
 }
 
-func ValidateConfigPath() error {
+func ValidateUserProvidedConfigPath() error {
 	configPath := os.Getenv(configSourcePath)
 	if !LoadedConfig && len(UserProvidedPath) > 0 {
 		_, err := os.Stat(UserProvidedPath)

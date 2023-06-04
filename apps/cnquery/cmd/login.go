@@ -147,7 +147,7 @@ func register(token string) {
 		if optsErr != nil {
 			log.Fatal().Msg("could not load configuration, please use --token or --config with the appropriate values")
 		}
-		err = config.ValidateConfigPath()
+		err = config.ValidateUserProvidedConfigPath()
 		if err != nil {
 			log.Fatal().Err(err).Msg("Could not load user provided config")
 		}

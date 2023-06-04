@@ -387,7 +387,7 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	if optsErr != nil {
 		log.Fatal().Err(optsErr).Msg("could not load configuration")
 	}
-	err := config.ValidateConfigPath()
+	err := config.ValidateUserProvidedConfigPath()
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}

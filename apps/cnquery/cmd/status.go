@@ -45,7 +45,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 			log.Fatal().Err(optsErr).Msg("could not load configuration")
 		}
 
-		err := config.ValidateConfigPath()
+		err := config.ValidateUserProvidedConfigPath()
 		if err != nil {
 			log.Fatal().Err(err).Msg("Could not load user provided config")
 		}

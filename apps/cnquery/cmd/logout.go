@@ -39,7 +39,7 @@ the credentials cannot be used in the future.
 			log.Fatal().Msg("could not load configuration")
 		}
 
-		err = config.ValidateConfigPath()
+		err = config.ValidateUserProvidedConfigPath()
 		if err != nil {
 			log.Fatal().Err(err).Msg("Could not load user provided config")
 		}
