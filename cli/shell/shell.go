@@ -25,6 +25,7 @@ import (
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/all"
 	"go.mondoo.com/cnquery/sortx"
+	"go.mondoo.com/cnquery/stringx"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -68,6 +69,7 @@ type Shell struct {
 	Theme       *theme.Theme
 	History     []string
 	HistoryPath string
+	MaxLines    int
 
 	completer       *Completer
 	alreadyPrinted  *sync.Map
@@ -85,6 +87,7 @@ func New(backend *motor.Motor, opts ...ShellOption) (*Shell, error) {
 		alreadyPrinted: &sync.Map{},
 		out:            os.Stdout,
 		features:       cnquery.DefaultFeatures,
+		MaxLines:       1024,
 	}
 
 	res.Registry = all.Registry
@@ -327,6 +330,11 @@ func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult,
 
 func (s *Shell) PrintResults(code *llx.CodeBundle, results map[string]*llx.RawResult) {
 	printedResult := s.Theme.PolicyPrinter.Results(code, results)
+
+	if s.MaxLines > 0 {
+		printedResult = stringx.MaxLines(s.MaxLines, printedResult)
+	}
+
 	fmt.Fprint(s.out, "\r")
 	fmt.Fprintln(s.out, printedResult)
 }
