@@ -16,8 +16,14 @@ func absRef(blockRef uint64, relRef uint32) uint64 {
 	return (blockRef & 0xFFFFFFFF00000000) | uint64(relRef)
 }
 
+// TailRef returns the reference to the last chunk of the block
 func (b *Block) TailRef(blockRef uint64) uint64 {
 	return absRef(blockRef, b.ChunkIndex())
+}
+
+// HeadRef returns the reference to the first chunk of the block
+func (b *Block) HeadRef(blockRef uint64) uint64 {
+	return absRef(blockRef, 1)
 }
 
 func (b *Block) ReplaceEntrypoint(old uint64, nu uint64) {
@@ -96,6 +102,11 @@ func (l *CodeV2) Chunk(ref uint64) *Chunk {
 // Retrieve a block for the given ref
 func (l *CodeV2) Block(ref uint64) *Block {
 	return l.Blocks[uint32(ref>>32)-1]
+}
+
+// LastBlockRef retrieves the ref for the last block in the code
+func (l *CodeV2) LastBlockRef() uint64 {
+	return uint64(len(l.Blocks) << 32)
 }
 
 // AddBlock adds a new block at the end of this code and returns its ref
@@ -406,7 +417,14 @@ func (l *CodeV2) entrypoint2assessment(bundle *CodeBundle, ref uint64, lookup fu
 			// We need to find this datapoint and use it as the listRef.
 		OUTER:
 			for i := range code.Blocks {
-				if code.Blocks[i].Entrypoints[0] != ref {
+				refIsEntrypoint := false
+				for j := range code.Blocks[i].Entrypoints {
+					if code.Blocks[i].Entrypoints[j] == ref {
+						refIsEntrypoint = true
+						break
+					}
+				}
+				if !refIsEntrypoint {
 					continue
 				}
 				for j := len(code.Blocks[i].Datapoints) - 1; j >= 0; j-- {

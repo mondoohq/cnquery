@@ -1684,15 +1684,130 @@ func (c *compiler) postCompile() {
 			chunk, typ, ref := c.expandListResource(chunk, ref)
 			switch chunk.Id {
 			case "$one", "$all", "$none", "$any":
+				// default fields
 				ref = chunk.Function.Binding
-				chunk := code.Chunk(chunk.Function.Binding)
+				chunk := code.Chunk(ref)
 				typ = types.Type(chunk.Function.Type)
-				c.expandResourceFields(chunk, typ, ref)
-				block.Datapoints = append(block.Datapoints, block.TailRef(ref))
+				expanded := c.expandResourceFields(chunk, typ, ref)
+				// when no defaults are definied or query isn't about a resource, no block was added
+				if expanded {
+					block.Datapoints = append(block.Datapoints, block.TailRef(ref))
+					c.addValueFieldChunks(ref)
+				}
 			default:
 				c.expandResourceFields(chunk, typ, ref)
 			}
 		}
+	}
+}
+
+// addValueFieldChunks takes the value fields of the assessment and adds them to the
+// block for the default fields
+// This way, the actual data of the assessment automatically shows up in the output
+// of the assessment that failed the assessment
+func (c *compiler) addValueFieldChunks(ref uint64) {
+	var whereChunk *llx.Chunk
+
+	// find chunk with where/whereNot function
+	// it holds the reference to the block with the predicate(s) for the assessment
+	for {
+		chunk := c.Result.CodeV2.Chunk(ref)
+		if chunk.Function == nil {
+			// this is a safe guard and shouldn't happen
+			log.Error().Msg("failed to find where function for assessment")
+			return
+		}
+		if chunk.Id == "$whereNot" || chunk.Id == "where" {
+			whereChunk = chunk
+			break
+		}
+		ref = chunk.Function.Binding
+	}
+
+	// This block holds all the data and function chunks used
+	// for the predicate(s) of the .all()/.none()/... fucntion
+	var assessmentBlock *llx.Block
+	var assessmentBlockRef uint64
+	// find the referenced block for the where function
+	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {
+		arg := whereChunk.Function.Args[i]
+		if types.Type(arg.Type).Underlying() == types.FunctionLike {
+			raw := arg.RawData()
+			blockRef := raw.Value.(uint64)
+			assessmentBlock = c.Result.CodeV2.Block(blockRef)
+			assessmentBlockRef = blockRef
+			break
+		}
+	}
+
+	defaultFieldsBlock := c.Result.CodeV2.Blocks[len(c.Result.CodeV2.Blocks)-1]
+	defaultFieldsRef := defaultFieldsBlock.HeadRef(c.Result.CodeV2.LastBlockRef())
+	var resourceFieldsRef uint64
+	if assessmentBlock.Chunks[1].Function != nil {
+		resourceFieldsRef = assessmentBlock.HeadRef(assessmentBlockRef)
+	}
+
+	chunksToAdd := []*llx.Chunk{}
+	// Check whether the chunk is already present in the default fields block
+	// This can happen, when the assessment checks one of the default fields
+	// We can skip the first Chunk, as it is the resource binding
+	for i := 1; i < len(assessmentBlock.Chunks); i++ {
+		chunk := assessmentBlock.Chunks[i]
+		// filter out nested function block and only add fields for outer most resource
+		if chunk.Id == "$whereNot" || chunk.Id == "where" {
+			break
+		}
+		chunkAlreadyPresent := false
+		for j := range defaultFieldsBlock.Chunks {
+			if chunk.Id == defaultFieldsBlock.Chunks[j].Id {
+				chunkAlreadyPresent = true
+				break
+			}
+		}
+		if chunkAlreadyPresent {
+			continue
+		}
+		// We do not need the comparison chunks
+		if _, compareable := llx.ComparableLabel(chunk.Id); compareable {
+			continue
+		}
+		newChunk := &llx.Chunk{
+			Call: chunk.Call,
+			Id:   chunk.Id,
+		}
+		if chunk.Function != nil {
+			newChunk.Function = &llx.Function{
+				Binding: chunk.Function.Binding,
+				Type:    chunk.Function.Type,
+				Args:    chunk.Function.Args,
+			}
+		}
+		chunksToAdd = append(chunksToAdd, newChunk)
+	}
+	if len(chunksToAdd) == 0 {
+		// looks like all fields are already present, nothing to do
+		// this can happen, when the assessment checks one of the default fields
+		return
+	}
+	chunkRef := defaultFieldsRef
+	for i := range chunksToAdd {
+		newChunk := chunksToAdd[i]
+		if newChunk.Function != nil {
+			// check whether the chunk originially bound to the resource, then bind it again to the resource and not the previous chunk
+			if newChunk.Function.Binding == resourceFieldsRef {
+				newChunk.Function.Binding = defaultFieldsRef
+			} else {
+				newChunk.Function.Binding = chunkRef
+			}
+		}
+
+		defaultFieldsBlock.AddChunk(c.Result.CodeV2, chunkRef, newChunk)
+		chunkRef = defaultFieldsBlock.TailRef(chunkRef)
+
+		// FIXME: it would be nice to only have the "leaf" chunks as entrypoints
+		// Now we get a lot of data that we don't necessarily need
+		// e.g. for dict["key"] we get the entry and the whole dict
+		defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, chunkRef)
 	}
 }
 
@@ -1724,25 +1839,25 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk,
 	return newChunk, newType, newRef
 }
 
-func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) {
+func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref uint64) bool {
 	resultType := types.Block
 	if typ.IsArray() {
 		resultType = types.Array(types.Block)
 		typ = typ.Child()
 	}
 	if !typ.IsResource() {
-		return
+		return false
 	}
 
 	info := c.Schema.Resources[typ.ResourceName()]
 	if info == nil || info.Defaults == "" {
-		return
+		return false
 	}
 
 	ast, err := parser.Parse(info.Defaults)
 	if ast == nil || len(ast.Expressions) == 0 {
 		log.Error().Err(err).Msg("failed to parse defaults for " + info.Name)
-		return
+		return false
 	}
 
 	refs, err := c.blockOnResource(ast.Expressions, types.Resource(info.Name), ref)
@@ -1769,6 +1884,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 	ref = ep
 
 	c.Result.AutoExpand[c.Result.CodeV2.Checksums[ref]] = refs.block
+	return true
 }
 
 func (c *compiler) updateLabels() {
