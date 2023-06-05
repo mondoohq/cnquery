@@ -304,8 +304,6 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 		// output rendering
 		cmd.Flags().StringP("output", "o", "compact", "Set output format: "+reporter.AllFormats())
 		cmd.Flags().BoolP("json", "j", false, "Set output to JSON (shorthand).")
-		cmd.Flags().Bool("no-pager", false, "Disable interactive scan output pagination.")
-		cmd.Flags().String("pager", "", "Enable scan output pagination with custom pagination command (default 'less -R').")
 	},
 	CommonPreRun: func(cmd *cobra.Command, args []string) {
 		// multiple assets mapping
@@ -325,9 +323,6 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 		viper.BindPFlag("record", cmd.Flags().Lookup("record"))
 
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
-		// the logic is that noPager takes precedence over pager if both are sent
-		viper.BindPFlag("no_pager", cmd.Flags().Lookup("no-pager"))
-		viper.BindPFlag("pager", cmd.Flags().Lookup("pager"))
 	},
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Special handling for users that want to see what output options are
@@ -571,8 +566,6 @@ func printReports(report *explorer.ReportCollection, conf *scanConfig, cmd *cobr
 		log.Fatal().Msg(err.Error())
 	}
 
-	r.UsePager, _ = cmd.Flags().GetBool("pager")
-	r.Pager, _ = cmd.Flags().GetString("pager")
 	r.IsIncognito = conf.IsIncognito
 
 	if err = r.Print(report, os.Stdout); err != nil {
