@@ -18,7 +18,8 @@ func TestWindowsRegistryKeyItemParser(t *testing.T) {
 	assert.Equal(t, "ConsentPromptBehaviorAdmin", items[0].Key)
 	assert.Equal(t, 4, items[0].Value.Kind)
 	assert.Equal(t, int64(5), items[0].Value.Number)
-	assert.Equal(t, "5", items[0].GetValue())
+	assert.Equal(t, int64(5), items[0].GetRawValue())
+	assert.Equal(t, "5", items[0].String())
 }
 
 func TestWindowsRegistryKeyChildParser(t *testing.T) {
@@ -28,4 +29,20 @@ func TestWindowsRegistryKeyChildParser(t *testing.T) {
 	items, err := ParseRegistryKeyChildren(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 5, len(items))
+}
+
+func TestWindowsRegistryKeyMultiStringParser(t *testing.T) {
+	r, err := os.Open("./testdata/registrykey_multistring.json")
+	require.NoError(t, err)
+
+	items, err := ParseRegistryKeyItems(r)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(items))
+	assert.Equal(t, "Machine", items[0].Key)
+	assert.Equal(t, 7, items[0].Value.Kind)
+	assert.Equal(t, []interface{}{
+		"Software\\Microsoft\\Windows NT\\CurrentVersion\\Print",
+		"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+		"System\\CurrentControlSet\\Control\\Print\\Printers",
+	}, items[0].GetRawValue())
 }

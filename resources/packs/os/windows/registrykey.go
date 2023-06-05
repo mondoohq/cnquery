@@ -7,10 +7,13 @@ import (
 	"io"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
+// RegistryKeyItem represents a registry key item and its properties
 const getRegistryKeyItemScript = `
 $path = '%s'
 $reg = Get-Item ('Registry::' + $path)
@@ -22,22 +25,28 @@ $properties = @()
 $reg.Property | ForEach-Object {
     $fetchKeyValue = $_
     if ("(default)".Equals($_)) { $fetchKeyValue = '' }
+	$data = $(Get-ItemProperty ('Registry::' + $path)).$_;
+	$kind = $reg.GetValueKind($fetchKeyValue);
+	if ($kind -eq 7) {
+      $data = $(Get-ItemProperty ('Registry::' + $path)) | Select-Object -ExpandProperty $_
+	}
     $entry = New-Object psobject -Property @{
       "key" = $_
       "value" = New-Object psobject -Property @{
-        "data" =  $(Get-ItemProperty ('Registry::' + $path)).$_;
-        "kind"  = $reg.GetValueKind($fetchKeyValue);
+        "data" = $data;
+        "kind" = $kind;
       }
     }
     $properties += $entry
 }
-ConvertTo-Json -Compress $properties
+ConvertTo-Json -Depth 3 -Compress $properties
 `
 
 func GetRegistryKeyItemScript(path string) string {
 	return fmt.Sprintf(getRegistryKeyItemScript, path)
 }
 
+// getRegistryKeyChildItemsScript represents a registry key item and its children
 const getRegistryKeyChildItemsScript = `
 $path = '%s'
 $children = Get-ChildItem -Path ('Registry::' + $path) -rec -ea SilentlyContinue
@@ -59,7 +68,7 @@ func GetRegistryKeyChildItemsScript(path string) string {
 	return fmt.Sprintf(getRegistryKeyChildItemsScript, path)
 }
 
-// derrived from "golang.org/x/sys/windows/registry"
+// derived from "golang.org/x/sys/windows/registry"
 // see https://github.com/golang/sys/blob/master/windows/registry/value.go#L17-L31
 const (
 	NONE                       = 0
@@ -81,11 +90,77 @@ type RegistryKeyItem struct {
 	Value RegistryKeyValue
 }
 
+func (k RegistryKeyItem) Kind() string {
+	switch k.Value.Kind {
+	case NONE:
+		return "bone"
+	case SZ:
+		return "string"
+	case EXPAND_SZ:
+		return "expandstring"
+	case BINARY:
+		return "binary"
+	case DWORD:
+		return "dword"
+	case DWORD_BIG_ENDIAN:
+		return "dword"
+	case LINK:
+		return "link"
+	case MULTI_SZ:
+		return "multistring"
+	case RESOURCE_LIST:
+		return "<unsupported>"
+	case FULL_RESOURCE_DESCRIPTOR:
+		return "<unsupported>"
+	case RESOURCE_REQUIREMENTS_LIST:
+		return "<unsupported>"
+	case QWORD:
+		return "qword"
+	}
+	return "<unsupported>"
+}
+
+func (k RegistryKeyItem) GetRawValue() interface{} {
+	switch k.Value.Kind {
+	case NONE:
+		return nil
+	case SZ:
+		return k.Value.String
+	case EXPAND_SZ:
+		return k.Value.String
+	case BINARY:
+		return k.Value.Binary
+	case DWORD:
+		return k.Value.Number
+	case DWORD_BIG_ENDIAN:
+		return nil
+	case LINK:
+		return nil
+	case MULTI_SZ:
+		return core.StrSliceToInterface(k.Value.MultiString)
+	case RESOURCE_LIST:
+		return nil
+	case FULL_RESOURCE_DESCRIPTOR:
+		return nil
+	case RESOURCE_REQUIREMENTS_LIST:
+		return nil
+	case QWORD:
+		return k.Value.Number
+	}
+	return nil
+}
+
+// String returns a string representation of the registry key value
+func (k RegistryKeyItem) String() string {
+	return k.Value.String // conversion to string is handled in UnmarshalJSON
+}
+
 type RegistryKeyValue struct {
-	Kind   int
-	Binary []byte
-	Number int64
-	String string
+	Kind        int
+	Binary      []byte
+	Number      int64
+	String      string
+	MultiString []string
 }
 
 type keyKindRaw struct {
@@ -112,13 +187,36 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 	case NONE:
 		// ignore
 	case SZ: // Any string value
-		k.String = raw.Data.(string)
+		value, ok := raw.Data.(string)
+		if !ok {
+			return fmt.Errorf("registry key value is not a string: %v", raw.Data)
+		}
+		k.String = value
 	case EXPAND_SZ: // A string that can contain environment variables that are dynamically expanded
-		k.String = raw.Data.(string)
+		value, ok := raw.Data.(string)
+		if !ok {
+			return fmt.Errorf("registry key value is not a string: %v", raw.Data)
+		}
+		k.String = value
 	case BINARY: // Binary data
-		k.Binary = []byte(raw.Data.(string))
+		rawData, ok := raw.Data.([]interface{})
+		if !ok {
+			return fmt.Errorf("registry key value is not a byte array: %v", raw.Data)
+		}
+		data := make([]byte, len(rawData))
+		for i, v := range rawData {
+			val, ok := v.(float64)
+			if !ok {
+				return fmt.Errorf("registry key value is not a byte array: %v", raw.Data)
+			}
+			data[i] = byte(val)
+		}
+		k.Binary = data
 	case DWORD: // A number that is a valid UInt32
-		data := raw.Data.(float64)
+		data, ok := raw.Data.(float64)
+		if !ok {
+			return fmt.Errorf("registry key value is not a number: %v", raw.Data)
+		}
 		number := int64(data)
 		// string fallback
 		k.Number = number
@@ -128,7 +226,22 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 	case LINK:
 		log.Warn().Msg("LINK for registry key is not supported")
 	case MULTI_SZ: // A multiline string
-		k.String = raw.Data.(string)
+		switch value := raw.Data.(type) {
+		case string:
+			k.String = value
+			if value != "" {
+				k.MultiString = []string{value}
+			}
+		case []interface{}:
+			if len(value) > 0 {
+				var multiString []string
+				for _, v := range value {
+					multiString = append(multiString, v.(string))
+				}
+				k.String = strings.Join(multiString, ",")
+				k.MultiString = multiString
+			}
+		}
 	case RESOURCE_LIST:
 		log.Warn().Msg("RESOURCE_LIST for registry key is not supported")
 	case FULL_RESOURCE_DESCRIPTOR:
@@ -136,16 +249,15 @@ func (k *RegistryKeyValue) UnmarshalJSON(b []byte) error {
 	case RESOURCE_REQUIREMENTS_LIST:
 		log.Warn().Msg("RESOURCE_REQUIREMENTS_LIST for registry key is not supported")
 	case QWORD: // 8 bytes of binary data
-		f := raw.Data.(float64)
+		f, ok := raw.Data.(float64)
+		if !ok {
+			return fmt.Errorf("registry key value is not a number: %v", raw.Data)
+		}
 		buf := make([]byte, 8)
 		binary.LittleEndian.PutUint64(buf[:], math.Float64bits(f))
 		k.Binary = buf
 	}
 	return nil
-}
-
-func (k RegistryKeyItem) GetValue() string {
-	return k.Value.String
 }
 
 type RegistryKeyChild struct {

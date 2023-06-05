@@ -44,13 +44,14 @@ func (k *mqlRegistrykey) GetExists() (bool, error) {
 	return true, nil
 }
 
-func (k *mqlRegistrykey) GetProperties() (map[string]interface{}, error) {
+// GetEntries returns a list of registry key property resources
+// TODO: cache the result of this function
+func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
 	path, err := k.Path()
 	if err != nil {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
 	mqlCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
@@ -67,19 +68,82 @@ func (k *mqlRegistrykey) GetProperties() (map[string]interface{}, error) {
 
 	stdout, err := cmd.Stdout()
 	if err != nil {
-		return res, err
+		return nil, err
 	}
+
 	entries, err := windows.ParseRegistryKeyItems(strings.NewReader(stdout))
+	if err != nil {
+		return nil, err
+	}
+
+	return entries, nil
+}
+
+// Deprecated: GetProperties returns the properties of a registry key
+// This function is deprecated and will be removed in a future release
+func (k *mqlRegistrykey) GetProperties() (map[string]interface{}, error) {
+	res := map[string]interface{}{}
+
+	entries, err := k.getEntries()
 	if err != nil {
 		return nil, err
 	}
 
 	for i := range entries {
 		rkey := entries[i]
-		res[rkey.Key] = rkey.GetValue()
+		res[rkey.Key] = rkey.String()
 	}
 
 	return res, nil
+}
+
+func (k *mqlRegistrykey) GetProps() (map[string]interface{}, error) {
+	res := map[string]interface{}{}
+
+	entries, err := k.getEntries()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range entries {
+		rkey := entries[i]
+		res[rkey.Key] = rkey.GetRawValue()
+	}
+
+	return res, nil
+}
+
+// GetItems returns a list of registry key property resources
+func (k *mqlRegistrykey) GetItems() ([]interface{}, error) {
+	entries, err := k.getEntries()
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := k.Path()
+	if err != nil {
+		return nil, err
+	}
+
+	// create MQL mount entry resources for each mount
+	items := make([]interface{}, len(entries))
+	for i, entry := range entries {
+		mqlRegistryPropertyEntry, err := k.MotorRuntime.CreateResource("registrykey.property",
+			"path", path,
+			"name", entry.Key,
+			"value", entry.String(),
+			"type", entry.Kind(),
+			"data", entry.GetRawValue(),
+			"exists", true,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		items[i] = mqlRegistryPropertyEntry.(RegistrykeyProperty)
+	}
+
+	return items, nil
 }
 
 func (k *mqlRegistrykey) GetChildren() ([]interface{}, error) {
@@ -156,6 +220,12 @@ func (p *mqlRegistrykeyProperty) init(args *resources.Args) (*resources.Args, Re
 		return args, nil, nil
 	}
 
+	// if the data is set, we do not need to fetch the data first
+	dataRaw := (*args)["data"]
+	if dataRaw != nil {
+		return args, nil, nil
+	}
+
 	// create resource here, but do not use it yet
 	obj, err := p.MotorRuntime.CreateResource("registrykey", "path", path)
 	if err != nil {
@@ -175,21 +245,25 @@ func (p *mqlRegistrykeyProperty) init(args *resources.Args) (*resources.Args, Re
 
 	// path exists
 	if exists {
-		properties, err := registryKey.Properties()
+		items, err := registryKey.Items()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		// search for property
-		for k := range properties {
-			if strings.EqualFold(k, name) {
-				(*args)["exists"] = true
-				(*args)["value"] = properties[k].(string)
-				break
+		for i := range items {
+			property := items[i].(RegistrykeyProperty)
+			itemName, err := property.Name()
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// property exists, return it
+			if strings.EqualFold(itemName, name) {
+				return nil, property, nil
 			}
 		}
 	}
-	return args, nil, nil
+	return nil, nil, errors.New("property does not exist")
 }
 
 func (p *mqlRegistrykeyProperty) GetExists() (bool, error) {
@@ -197,7 +271,17 @@ func (p *mqlRegistrykeyProperty) GetExists() (bool, error) {
 	return false, errors.New("could not determine if the property exists")
 }
 
-func (p *mqlRegistrykeyProperty) GetValue() (string, error) {
+func (p *mqlRegistrykeyProperty) GetType() (string, error) {
+	// NOTE: if we reach here the value has not been set in init, therefore we return an error
+	return "", errors.New("requested property does not exist")
+}
+
+func (p *mqlRegistrykeyProperty) GetData() (interface{}, error) {
+	// NOTE: if we reach here the value has not been set in init, therefore we return an error
+	return "", errors.New("requested property does not exist")
+}
+
+func (p *mqlRegistrykeyProperty) GetValue() (interface{}, error) {
 	// NOTE: if we reach here the value has not been set in init, therefore we return an error
 	return "", errors.New("requested property does not exist")
 }
