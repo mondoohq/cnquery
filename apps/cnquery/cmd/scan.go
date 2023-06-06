@@ -389,7 +389,12 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	}
 	err := config.ValidateUserProvidedConfigPath()
 	if err != nil {
-		log.Fatal().Msg(err.Error())
+		if serr, ok := err.(*config.FileNotFoundError); ok {
+			log.Error().Err(serr).Msg("Couldn't find user provided config file")
+			log.Info().Msgf("Ensure that %s provided through %s is a valid file path", serr.Path(), serr.Source())
+			os.Exit(1)
+		}
+		log.Fatal().Err(err).Msg("Failed to load user provided config")
 	}
 	config.DisplayUsedConfig()
 

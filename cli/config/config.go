@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -40,7 +39,15 @@ var (
 const (
 	configSourceBase64 = "MONDOO_CONFIG_BASE64"
 	configSourcePath   = "MONDOO_CONFIG_PATH"
+	configSourceFlag   = "--config"
 )
+
+type FileNotFoundError struct {
+	error
+	err    string
+	source string
+	path   string
+}
 
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
@@ -246,17 +253,37 @@ func ValidateUserProvidedConfigPath() error {
 	if !LoadedConfig && len(UserProvidedPath) > 0 {
 		_, err := os.Stat(UserProvidedPath)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Could not load config: %v - file does not exist", UserProvidedPath))
+			return &FileNotFoundError{
+				err:    "file not found",
+				path:   UserProvidedPath,
+				source: configSourceFlag,
+			}
 		} else {
-			return errors.New(fmt.Sprintf("Could not load config: %v", UserProvidedPath))
+			return errors.New("file exists but config not loaded - unkown problem")
 		}
 	} else if !LoadedConfig && len(configPath) > 0 {
 		_, err := os.Stat(configPath)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Could not load config: %v from $MONDOO_CONFIG_PATH - file does not exist", configPath))
+			return &FileNotFoundError{
+				err:    "file not found",
+				path:   UserProvidedPath,
+				source: configSourcePath,
+			}
 		} else {
-			return errors.New(fmt.Sprintf("Could not load config: %v from $MONDOO_CONFIG_PATH", configPath))
+			return errors.New("file exists but config not loaded - unkown problem")
 		}
 	}
 	return nil
+}
+
+func (e *FileNotFoundError) Error() string {
+	return e.err
+}
+
+func (e *FileNotFoundError) Path() string {
+	return e.path
+}
+
+func (e *FileNotFoundError) Source() string {
+	return e.source
 }
