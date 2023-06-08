@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/vault"
 )
@@ -75,15 +74,16 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 }
 
 func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
-	if len(v.kmsKeyID) == 0 {
-		return nil, errors.New("specified KMS key id is empty")
+	var kmsKeyID *string
+	if len(v.kmsKeyID) > 0 {
+		kmsKeyID = &v.kmsKeyID
 	}
 
 	c := secretsmanager.NewFromConfig(v.cfg)
 	o, err := c.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
 		Name:         &cred.Key,
 		SecretBinary: cred.Data,
-		KmsKeyId:     &v.kmsKeyID,
+		KmsKeyId:     kmsKeyID,
 	})
 	if err != nil {
 		return nil, err
