@@ -1,8 +1,6 @@
 package microsoft
 
 import (
-	"sync"
-
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/ms365report"
@@ -79,16 +77,14 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	}
 
 	p := &Provider{
-		assetType:      assetType,
-		tenantID:       tenantId,
-		subscriptionID: subscriptionId,
-		clientID:       clientId,
-		// TODO: we want to remove the data report with a proper implementation
-		powershellDataReportFile: pCfg.Options[OptionDataReport],
-		opts:                     pCfg.Options,
-		cred:                     cred,
-		rolesMap:                 map[string]struct{}{},
-		platformOverride:         pCfg.Options[OptionPlatformOverride],
+		assetType:        assetType,
+		tenantID:         tenantId,
+		subscriptionID:   subscriptionId,
+		clientID:         clientId,
+		opts:             pCfg.Options,
+		cred:             cred,
+		rolesMap:         map[string]struct{}{},
+		platformOverride: pCfg.Options[OptionPlatformOverride],
 	}
 	// map the roles that we request
 	// TODO: check that actual credentials include permissions, this is included in the tokens
@@ -101,17 +97,16 @@ func New(pCfg *providers.Config) (*Provider, error) {
 }
 
 type Provider struct {
-	assetType                   microsoftAssetType
-	tenantID                    string
-	clientID                    string
-	subscriptionID              string
-	cred                        *vault.Credential
-	opts                        map[string]string
-	rolesMap                    map[string]struct{}
-	powershellDataReportFile    string
-	ms365PowershellReport       *ms365report.Microsoft365Report
-	ms365PowershellReportLoader sync.Mutex
-	platformOverride            string
+	assetType                microsoftAssetType
+	tenantID                 string
+	clientID                 string
+	subscriptionID           string
+	cred                     *vault.Credential
+	opts                     map[string]string
+	rolesMap                 map[string]struct{}
+	powershellDataReportFile string
+	ms365PowershellReport    *ms365report.Microsoft365Report
+	platformOverride         string
 }
 
 func (p *Provider) Close() {}
@@ -120,6 +115,7 @@ func (p *Provider) Capabilities() providers.Capabilities {
 	return providers.Capabilities{
 		providers.Capability_Microsoft365,
 		providers.Capability_Azure,
+		providers.Capability_RunCommand,
 	}
 }
 
