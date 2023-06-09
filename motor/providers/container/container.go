@@ -1,6 +1,9 @@
 package container
 
 import (
+	"strings"
+	"time"
+
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -110,14 +113,28 @@ func NewDockerEngineImage(endpoint *providers.Config) (ContainerProvider, error)
 		return nil, err
 	}
 
+	labelImageIdFull := strings.Split(ii.Labels["docker.io/digests"], ",")[0]
+	labelImageId := strings.Split(labelImageIdFull, "@")[1]
+
 	log.Debug().Msg("found docker engine image " + ii.ID)
+	// This is the image id that is used to pull the image from the registry.
+	log.Debug().Msg("found docker engine image " + labelImageId)
+	if ii.Size > 1024 { // > 1GB
+		log.Warn().Int64("size", ii.Size).Msg("image is bigger than 1GB, this will take some time")
+	}
 	img, rc, err := image.LoadImageFromDockerEngine(ii.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	var identifier string
+	// This is not the digest used to pull the image from the registry.
+	// And it takes a lot of time on large images... >2min for 1.8GB image on my laptop
+	// because it actually calculates the hash of the image and does not fetch it from metadata
+	log.Debug().Msg("starting to calculate digest")
+	start := time.Now()
 	hash, err := img.Digest()
+	log.Debug().Msg("finished calculating digest in " + time.Since(start).String())
 	if err == nil {
 		identifier = containerid.MondooContainerImageID(hash.String())
 	}

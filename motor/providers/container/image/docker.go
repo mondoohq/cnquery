@@ -35,7 +35,8 @@ func (r ShaReference) Scope(scope string) string {
 }
 
 func LoadImageFromDockerEngine(sha string) (v1.Image, io.ReadCloser, error) {
-	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)})
+	opts := []daemon.Option{daemon.WithUnbufferedOpener()}
+	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)}, opts...)
 	if err != nil {
 		return nil, nil, err
 	}
