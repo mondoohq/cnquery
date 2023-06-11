@@ -1713,8 +1713,10 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 	for {
 		chunk := c.Result.CodeV2.Chunk(ref)
 		if chunk.Function == nil {
-			// this is a safe guard and shouldn't happen
-			log.Error().Msg("failed to find where function for assessment")
+			// this is a safe guard for some cases
+			// e.g. queries with .none() are totally valid and will not have a where block,
+			// because they do not check a specific field
+			log.Debug().Msg("failed to find where function for assessment, this can happen with empty assessments")
 			return
 		}
 		if chunk.Id == "$whereNot" || chunk.Id == "where" {

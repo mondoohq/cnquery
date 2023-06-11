@@ -308,6 +308,25 @@ func TestPrinter_Assessment(t *testing.T) {
 			}, "\n"),
 		},
 		{
+			"users.list.duplicates(gid).none()\n",
+			strings.Join([]string{
+				"[failed] [].none()",
+				"  actual:   [",
+				"    0: user {",
+				"      name: \"christopher\"",
+				"      gid: 1001",
+				"      uid: 1000",
+				"    }",
+				"    1: user {",
+				"      name: \"chris\"",
+				"      gid: 1001",
+				"      uid: 1000",
+				"    }",
+				"  ]",
+				"",
+			}, "\n"),
+		},
+		{
 			"users.all( uid < 1000 )\n",
 			strings.Join([]string{
 				"[failed] users.all()",
