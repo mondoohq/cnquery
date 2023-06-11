@@ -226,6 +226,10 @@ func (s *Shell) execCmd(cmd string) {
 	case cmd == "help":
 		s.listAvailableResources()
 		return
+	case cmd == "nyanya":
+		size := prompt.NewStandardInputParser().GetWinSize()
+		nyago(int(size.Col), int(size.Row))
+		return
 	case helpResource.MatchString(cmd):
 		s.listFilteredResources(cmd)
 		return
@@ -263,6 +267,7 @@ func (s *Shell) execQuery(cmd string) {
 	}
 
 	code, res, err := s.RunOnce(s.query)
+	// we can safely ignore err != nil, since RunOnce handles most of the printing we need
 	if err == nil {
 		s.PrintResults(code, res)
 	}
