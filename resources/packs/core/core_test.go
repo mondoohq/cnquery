@@ -871,6 +871,10 @@ func TestArray(t *testing.T) {
 			[]interface{}{"yo"},
 		},
 		{
+			"x = ['a','b']; y = 'c'; x.contains(y)",
+			1, false,
+		},
+		{
 			"[1,2,3].contains(_ >= 2)",
 			1, true,
 		},
@@ -1056,6 +1060,16 @@ func TestListResource(t *testing.T) {
 		{
 			"users.map(name)",
 			0, []interface{}([]interface{}{"root", "chris", "christopher", "chris", "bin"}),
+		},
+		{
+			// outside variables cause the block to be standalone
+			"n=false; users.contains(n)",
+			1, false,
+		},
+		{
+			// variables do not override local fields in blocks
+			"name=false; users.contains(name)",
+			1, true,
 		},
 	})
 }

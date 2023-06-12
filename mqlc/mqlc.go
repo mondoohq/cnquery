@@ -1239,7 +1239,6 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 			Call:      llx.Chunk_PRIMITIVE,
 			Primitive: llx.RefPrimitiveV2(variable.ref),
 		})
-		c.standalone = false
 		checksum := c.Result.CodeV2.Checksums[c.tailRef()]
 		c.Result.Labels.Labels[checksum] = variable.name
 		return restCalls, variable.typ, nil
