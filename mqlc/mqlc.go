@@ -1689,7 +1689,7 @@ func (c *compiler) postCompile() {
 				chunk := code.Chunk(ref)
 				typ = types.Type(chunk.Function.Type)
 				expanded := c.expandResourceFields(chunk, typ, ref)
-				// when no defaults are definied or query isn't about a resource, no block was added
+				// when no defaults are defined or query isn't about a resource, no block was added
 				if expanded {
 					block.Datapoints = append(block.Datapoints, block.TailRef(ref))
 					c.addValueFieldChunks(ref)
