@@ -303,6 +303,8 @@ func init() {
 			string("contains" + types.Array(types.String)): {f: stringContainsArrayStringV2, Label: "contains"},
 			string("contains" + types.Int):                 {f: stringContainsIntV2, Label: "contains"},
 			string("contains" + types.Array(types.Int)):    {f: stringContainsArrayIntV2, Label: "contains"},
+			string("contains" + types.Regex):               {f: stringContainsRegex, Label: "contains"},
+			string("contains" + types.Array(types.Regex)):  {f: stringContainsArrayRegex, Label: "contains"},
 			string("find"):      {f: stringFindV2, Label: "find"},
 			string("camelcase"): {f: stringCamelcaseV2, Label: "camelcase"},
 			string("downcase"):  {f: stringDowncaseV2, Label: "downcase"},
@@ -510,6 +512,8 @@ func init() {
 			string("contains" + types.Array(types.String)): {f: dictContainsArrayStringV2, Label: "contains"},
 			string("contains" + types.Int):                 {f: dictContainsIntV2, Label: "contains"},
 			string("contains" + types.Array(types.Int)):    {f: dictContainsArrayIntV2, Label: "contains"},
+			string("contains" + types.Regex):               {f: dictContainsRegex, Label: "contains"},
+			string("contains" + types.Array(types.Regex)):  {f: dictContainsArrayRegex, Label: "contains"},
 			string("find"): {f: dictFindV2, Label: "find"},
 			// NOTE: the following functions are internal ONLY!
 			// We have not yet decided if and how these may be exposed to users

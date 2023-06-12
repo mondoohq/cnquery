@@ -2,6 +2,7 @@ package llx
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -960,6 +961,26 @@ func anyContainsString(an interface{}, s string) bool {
 	}
 }
 
+func anyContainsRegex(an interface{}, re *regexp.Regexp) bool {
+	if an == nil {
+		return false
+	}
+
+	switch x := an.(type) {
+	case string:
+		return re.MatchString(x)
+	case []interface{}:
+		for i := range x {
+			if anyContainsRegex(x[i], re) {
+				return true
+			}
+		}
+		return false
+	default:
+		return false
+	}
+}
+
 func dictContainsStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	argRef := chunk.Function.Args[0]
 	arg, rref, err := e.resolveValue(argRef, ref)
@@ -992,6 +1013,27 @@ func dictContainsIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64
 	return BoolData(ok), 0, nil
 }
 
+func dictContainsRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	reContent := arg.Value.(string)
+	re, err := regexp.Compile(reContent)
+	if err != nil {
+		return nil, 0, errors.New("Failed to compile regular expression: " + reContent)
+	}
+
+	ok := anyContainsRegex(bind.Value, re)
+	return BoolData(ok), 0, nil
+}
+
 func dictContainsArrayStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch bind.Value.(type) {
 	case string:
@@ -1005,6 +1047,15 @@ func dictContainsArrayIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref u
 	switch bind.Value.(type) {
 	case string:
 		return stringContainsArrayIntV2(e, bind, chunk, ref)
+	default:
+		return nil, 0, errors.New("dict value does not support field `contains`")
+	}
+}
+
+func dictContainsArrayRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	switch bind.Value.(type) {
+	case string:
+		return stringContainsArrayRegex(e, bind, chunk, ref)
 	default:
 		return nil, 0, errors.New("dict value does not support field `contains`")
 	}

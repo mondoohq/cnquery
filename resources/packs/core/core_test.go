@@ -502,6 +502,22 @@ func TestString_Methods(t *testing.T) {
 			0, true,
 		},
 		{
+			"'hello'.contains(/l+/)",
+			0, true,
+		},
+		{
+			"'hello'.contains(/l$/)",
+			0, false,
+		},
+		{
+			"'hello'.contains([/^l/, /l$/])",
+			0, false,
+		},
+		{
+			"'hello'.contains([/z/, /ll/])",
+			0, true,
+		},
+		{
 			"'oh-hello-world!'.camelcase",
 			0, "ohHelloWorld!",
 		},

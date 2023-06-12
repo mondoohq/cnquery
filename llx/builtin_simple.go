@@ -2007,6 +2007,31 @@ func stringContainsIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	return BoolData(ok), 0, nil
 }
 
+func stringContainsRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	reContent := arg.Value.(string)
+	re, err := regexp.Compile(reContent)
+	if err != nil {
+		return nil, 0, errors.New("Failed to compile regular expression: " + reContent)
+	}
+
+	ok := re.MatchString(bind.Value.(string))
+	return BoolData(ok), 0, nil
+}
+
 func stringContainsArrayStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return BoolFalse, 0, nil
@@ -2022,13 +2047,11 @@ func stringContainsArrayStringV2(e *blockExecutor, bind *RawData, chunk *Chunk, 
 		return BoolFalse, 0, nil
 	}
 
-	var ok bool
 	arr := arg.Value.([]interface{})
 	for i := range arr {
 		v := arr[i].(string)
-		ok = strings.Contains(bind.Value.(string), v)
-		if ok {
-			return BoolData(ok), 0, nil
+		if strings.Contains(bind.Value.(string), v) {
+			return BoolData(true), 0, nil
 		}
 	}
 
@@ -2050,14 +2073,43 @@ func stringContainsArrayIntV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref
 		return BoolFalse, 0, nil
 	}
 
-	var ok bool
 	arr := arg.Value.([]interface{})
 	for i := range arr {
 		v := arr[i].(int64)
 		val := strconv.FormatInt(v, 10)
-		ok = strings.Contains(bind.Value.(string), val)
-		if ok {
-			return BoolData(ok), 0, nil
+		if strings.Contains(bind.Value.(string), val) {
+			return BoolData(true), 0, nil
+		}
+	}
+
+	return BoolData(false), 0, nil
+}
+
+func stringContainsArrayRegex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	argRef := chunk.Function.Args[0]
+	arg, rref, err := e.resolveValue(argRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+
+	if arg.Value == nil {
+		return BoolFalse, 0, nil
+	}
+
+	arr := arg.Value.([]interface{})
+	for i := range arr {
+		v := arr[i].(string)
+		re, err := regexp.Compile(v)
+		if err != nil {
+			return nil, 0, errors.New("Failed to compile regular expression: " + v)
+		}
+
+		if re.MatchString(bind.Value.(string)) {
+			return BoolData(true), 0, nil
 		}
 	}
 

@@ -51,6 +51,17 @@ func compileStringContains(c *compiler, typ types.Type, ref uint64, id string, c
 			},
 		})
 		return types.Bool, nil
+	case types.Regex:
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "contains" + string(types.Regex),
+			Function: &llx.Function{
+				Type:    string(types.Bool),
+				Binding: ref,
+				Args:    []*llx.Primitive{val},
+			},
+		})
+		return types.Bool, nil
 	case types.Array(types.String):
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
@@ -66,6 +77,17 @@ func compileStringContains(c *compiler, typ types.Type, ref uint64, id string, c
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
 			Id:   "contains" + string(types.Array(types.Int)),
+			Function: &llx.Function{
+				Type:    string(types.Bool),
+				Binding: ref,
+				Args:    []*llx.Primitive{val},
+			},
+		})
+		return types.Bool, nil
+	case types.Array(types.Regex):
+		c.addChunk(&llx.Chunk{
+			Call: llx.Chunk_FUNCTION,
+			Id:   "contains" + string(types.Array(types.Regex)),
 			Function: &llx.Function{
 				Type:    string(types.Bool),
 				Binding: ref,
