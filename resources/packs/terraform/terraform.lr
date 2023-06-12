@@ -167,7 +167,7 @@ terraform.plan.configuration {
 }
 
 // Terraform Plan Resource Change
-terraform.plan.resourceChange {
+terraform.plan.resourceChange @defaults("type name") {
   // Resource address
   address string
   // Resource previous address
@@ -191,7 +191,7 @@ terraform.plan.resourceChange {
 }
 
 // Terraform Plan Proposed Change
-terraform.plan.proposedChange {
+terraform.plan.proposedChange @defaults("actions after") {
   // Resource address
   address string
   // Actions that wil be taken for on the object
