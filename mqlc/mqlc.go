@@ -21,9 +21,10 @@ import (
 )
 
 type variable struct {
-	name string
-	ref  uint64
-	typ  types.Type
+	name     string
+	ref      uint64
+	typ      types.Type
+	callback func()
 }
 
 type varmap struct {
@@ -571,6 +572,9 @@ func (c *compiler) blockOnResource(expressions []*parser.Expression, typ types.T
 	v := variable{
 		ref: blockCompiler.blockRef | 1,
 		typ: typ,
+		callback: func() {
+			blockCompiler.standalone = false
+		},
 	}
 	blockCompiler.vars.add("_", v)
 	blockCompiler.Binding = &v
@@ -1234,11 +1238,16 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 
 	variable, ok := c.vars.lookup(id)
 	if ok {
+		if variable.callback != nil {
+			variable.callback()
+		}
+
 		c.blockDeps = append(c.blockDeps, variable.ref)
 		c.addChunk(&llx.Chunk{
 			Call:      llx.Chunk_PRIMITIVE,
 			Primitive: llx.RefPrimitiveV2(variable.ref),
 		})
+
 		checksum := c.Result.CodeV2.Checksums[c.tailRef()]
 		c.Result.Labels.Labels[checksum] = variable.name
 		return restCalls, variable.typ, nil

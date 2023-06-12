@@ -37,10 +37,22 @@ func compileDictWhere(c *compiler, typ types.Type, ref uint64, id string, call *
 	})
 
 	blockCompiler.addArgumentPlaceholder(keyType, bindingChecksum)
-	blockCompiler.vars.add("key", variable{ref: blockCompiler.tailRef(), typ: keyType})
+	blockCompiler.vars.add("key", variable{
+		ref: blockCompiler.tailRef(),
+		typ: keyType,
+		callback: func() {
+			blockCompiler.standalone = false
+		},
+	})
 
 	blockCompiler.addArgumentPlaceholder(valueType, bindingChecksum)
-	blockCompiler.vars.add("value", variable{ref: blockCompiler.tailRef(), typ: valueType})
+	blockCompiler.vars.add("value", variable{
+		ref: blockCompiler.tailRef(),
+		typ: valueType,
+		callback: func() {
+			blockCompiler.standalone = false
+		},
+	})
 
 	// we want to make sure the `_` points to the value, which is useful when dealing
 	// with arrays and the default in maps
@@ -397,10 +409,22 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 	})
 
 	blockCompiler.addArgumentPlaceholder(keyType, bindingChecksum)
-	blockCompiler.vars.add("key", variable{ref: blockCompiler.tailRef(), typ: keyType})
+	blockCompiler.vars.add("key", variable{
+		ref: blockCompiler.tailRef(),
+		typ: keyType,
+		callback: func() {
+			blockCompiler.standalone = false
+		},
+	})
 
 	blockCompiler.addArgumentPlaceholder(valueType, bindingChecksum)
-	blockCompiler.vars.add("value", variable{ref: blockCompiler.tailRef(), typ: valueType})
+	blockCompiler.vars.add("value", variable{
+		ref: blockCompiler.tailRef(),
+		typ: valueType,
+		callback: func() {
+			blockCompiler.standalone = false
+		},
+	})
 
 	// we want to make sure the `_` points to the value, which is useful when dealing
 	// with arrays and the default in maps
