@@ -1,17 +1,20 @@
-## dummy. we do not use bucket replication at all
+provider "aws" {
+  region = "us-east-1"
+}
+
 provider "aws" {
   alias  = "replica"
   region = "eu-west-1"
 }
 
 module "remote-state-s3-backend" {
+  source  = "nozaq/remote-state-s3-backend/aws"
+  version = "1.4.0"
+
   providers = {
     aws         = aws
     aws.replica = aws.replica
   }
-
-  source  = "nozaq/remote-state-s3-backend/aws"
-  version = "1.4.0"
 
   enable_replication = false
 

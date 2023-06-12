@@ -40,13 +40,13 @@ terraform.fileposition {
 }
 
 // Terraform Resource Block
-terraform.block {
-  // Resource type
+terraform.block @defaults("type labels") {
+  // Block type
   type string
-  // Resource Name Label
-  nameLabel() string
-  // Resource Labels
+  // Block Labels
   labels []string
+  // Block Name Label
+  nameLabel() string
   // Block Start Position
   start terraform.fileposition
   // Block End Position
@@ -114,7 +114,7 @@ terraform.state.output {
 }
 
 // Terraform State Module
-terraform.state.module {
+terraform.state.module @defaults("address") {
   init(identifier string)
   // Module identifier address
   address string
@@ -125,7 +125,7 @@ terraform.state.module {
 }
 
 // Terraform State Resource
-terraform.state.resource {
+terraform.state.resource @defaults("name") {
   // Address is the absolute resource address
   address string
   // Mode can be "managed" or "data"
