@@ -6,21 +6,31 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
-var notImplemented = errors.New("not implemented")
+type Option func(*Vault)
 
-func New(cfg aws.Config) *Vault {
-	return &Vault{
+func New(cfg aws.Config, opts ...Option) *Vault {
+	v := &Vault{
 		cfg: cfg.Copy(),
+	}
+	for _, opt := range opts {
+		opt(v)
+	}
+	return v
+}
+
+func WithKmsKey(kmsKeyID string) Option {
+	return func(v *Vault) {
+		v.kmsKeyID = kmsKeyID
 	}
 }
 
 type Vault struct {
-	cfg aws.Config
+	cfg      aws.Config
+	kmsKeyID string
 }
 
 func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
@@ -64,5 +74,20 @@ func (v *Vault) Get(ctx context.Context, id *vault.SecretID) (*vault.Secret, err
 }
 
 func (v *Vault) Set(ctx context.Context, cred *vault.Secret) (*vault.SecretID, error) {
-	return nil, errors.New("not implemented")
+	var kmsKeyID *string
+	if len(v.kmsKeyID) > 0 {
+		kmsKeyID = &v.kmsKeyID
+	}
+
+	c := secretsmanager.NewFromConfig(v.cfg)
+	o, err := c.CreateSecret(ctx, &secretsmanager.CreateSecretInput{
+		Name:         &cred.Key,
+		SecretBinary: cred.Data,
+		KmsKeyId:     kmsKeyID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &vault.SecretID{Key: *o.ARN}, err
 }
