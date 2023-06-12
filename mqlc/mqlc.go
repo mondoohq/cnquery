@@ -21,9 +21,14 @@ import (
 )
 
 type variable struct {
-	name     string
-	ref      uint64
-	typ      types.Type
+	name string
+	ref  uint64
+	typ  types.Type
+	// callback is run when the variable is used by the compiler.
+	// This is particularly useful when dealing with pre-defined
+	// variables which may or may not be used in the actual code
+	// (like `key` and `value`). One use-case is to tell the
+	// block compiler that its bound value has been used.
 	callback func()
 }
 
