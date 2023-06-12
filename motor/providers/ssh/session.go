@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cockroachdb/errors"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/ssh/awsinstanceconnect"
@@ -201,13 +204,47 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 		}
 	}
 
-	if len(sshSigners) > 0 {
-		auths = append(auths, ssh.PublicKeys(sshSigners...))
-	}
-
 	// if no credential was provided, fallback to ssh-agent and ssh-config
 	if len(pCfg.Credentials) == 0 {
 		sshSigners = append(sshSigners, signers.GetSignersFromSSHAgent()...)
+	}
+
+	// If no keys were loaded so far, then attempt loading the default keys in the home directory
+	if len(sshSigners) == 0 {
+		home, err := homedir.Dir()
+		if err == nil {
+			files := []string{
+				filepath.Join(home, ".ssh", "id_rsa"),
+				filepath.Join(home, ".ssh", "id_dsa"),
+				filepath.Join(home, ".ssh", "id_ed25519"),
+				filepath.Join(home, ".ssh", "id_ecdsa"),
+				// specific handling for google compute engine, see https://cloud.google.com/compute/docs/instances/connecting-to-instance
+				filepath.Join(home, ".ssh", "google_compute_engine"),
+			}
+
+			// filter keys by existence
+			for i := range files {
+				f := files[i]
+				_, err := os.Stat(f)
+				if err == nil {
+					pemBytes, err := os.ReadFile(f)
+					if err != nil {
+						log.Warn().Err(err).Msgf("private key %s exists but is not readable", f)
+						continue
+					}
+					priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(pemBytes, []byte(""))
+					if err != nil {
+						log.Warn().Err(err).Msgf("could not parse private key %s", f)
+						continue
+					}
+					sshSigners = append(sshSigners, priv)
+				}
+			}
+		}
+	}
+
+	if len(sshSigners) > 0 {
+		auths = append(auths, ssh.PublicKeys(sshSigners...))
 	}
 
 	return auths, closer, nil
