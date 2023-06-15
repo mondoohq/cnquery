@@ -533,6 +533,7 @@ func init() {
 			"$any":                   {f: arrayAnyV2},
 			"$one":                   {f: arrayOneV2},
 			"map":                    {f: arrayMapV2},
+			"flat":                   {f: arrayFlat},
 			"duplicates":             {f: arrayDuplicatesV2},
 			"fieldDuplicates":        {f: arrayFieldDuplicatesV2},
 			"unique":                 {f: arrayUniqueV2},

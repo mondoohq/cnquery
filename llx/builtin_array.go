@@ -432,6 +432,38 @@ func arrayMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Raw
 	return nil, 0, nil
 }
 
+func flatten(v interface{}) []interface{} {
+	list, ok := v.([]interface{})
+	if !ok {
+		return []interface{}{v}
+	}
+
+	var res []interface{}
+	for i := range list {
+		res = append(res, flatten(list[i])...)
+	}
+	return res
+}
+
+func arrayFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	list, ok := bind.Value.([]interface{})
+	// this should not happen at this point
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
+	}
+
+	var res []interface{}
+	for i := range list {
+		res = append(res, flatten(list[i])...)
+	}
+
+	return &RawData{Type: bind.Type.Child(), Value: res}, 0, nil
+}
+
 // Take an array and separate it into a list of unique entries and another
 // list of only duplicates. The latter list only has every entry appear only
 // once.
