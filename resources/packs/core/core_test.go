@@ -916,6 +916,11 @@ func TestArray(t *testing.T) {
 			[]interface{}{int64(1), int64(2)},
 		},
 		{
+			"[[0],[[1, 2]], 3].flat",
+			0,
+			[]interface{}{int64(0), int64(1), int64(2), int64(3)},
+		},
+		{
 			"[0].where(_ > 0).where(_ > 0)",
 			0,
 			[]interface{}{},
