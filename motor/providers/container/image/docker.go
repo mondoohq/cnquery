@@ -34,8 +34,12 @@ func (r ShaReference) Scope(scope string) string {
 	return ""
 }
 
-func LoadImageFromDockerEngine(sha string) (v1.Image, io.ReadCloser, error) {
-	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)})
+func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, io.ReadCloser, error) {
+	opts := []daemon.Option{}
+	if disableBuffer {
+		opts = append(opts, daemon.WithUnbufferedOpener())
+	}
+	img, err := daemon.Image(&ShaReference{SHA: strings.Replace(sha, "sha256:", "", -1)}, opts...)
 	if err != nil {
 		return nil, nil, err
 	}

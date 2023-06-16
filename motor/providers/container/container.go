@@ -1,6 +1,9 @@
 package container
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -99,6 +102,14 @@ func NewDockerEngineContainer(tc *providers.Config) (ContainerProvider, error) {
 }
 
 func NewDockerEngineImage(endpoint *providers.Config) (ContainerProvider, error) {
+	disableInmemoryCache := false
+	if _, ok := endpoint.Options["disable-cache"]; ok {
+		var err error
+		disableInmemoryCache, err = strconv.ParseBool(endpoint.Options["disable-cache"])
+		if err != nil {
+			return nil, err
+		}
+	}
 	// could be an image id/name, container id/name or a short reference to an image in docker engine
 	ded, err := docker_discovery.NewDockerEngineDiscovery()
 	if err != nil {
@@ -110,17 +121,27 @@ func NewDockerEngineImage(endpoint *providers.Config) (ContainerProvider, error)
 		return nil, err
 	}
 
-	log.Debug().Msg("found docker engine image " + ii.ID)
-	img, rc, err := image.LoadImageFromDockerEngine(ii.ID)
+	labelImageId := ii.ID
+	splitLabels := strings.Split(ii.Labels["docker.io/digests"], ",")
+	if len(splitLabels) > 1 {
+		labelImageIdFull := splitLabels[0]
+		splitFullLabel := strings.Split(labelImageIdFull, "@")
+		if len(splitFullLabel) > 1 {
+			labelImageId = strings.Split(labelImageIdFull, "@")[1]
+		}
+	}
+
+	// This is the image id that is used to pull the image from the registry.
+	log.Debug().Msg("found docker engine image " + labelImageId)
+	if ii.Size > 1024 && !disableInmemoryCache { // > 1GB
+		log.Warn().Int64("size", ii.Size).Msg("The image is bigger than 1GB, this will require a lot of memory. Consider disabling the in-memory cache with `--disable-cache=true`.")
+	}
+	_, rc, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
 	if err != nil {
 		return nil, err
 	}
 
-	var identifier string
-	hash, err := img.Digest()
-	if err == nil {
-		identifier = containerid.MondooContainerImageID(hash.String())
-	}
+	identifier := containerid.MondooContainerImageID(labelImageId)
 
 	p, err := tar.NewWithReader(rc, nil)
 	if err != nil {

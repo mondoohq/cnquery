@@ -230,6 +230,12 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		connection.Backend = providerType
 		connection.Host = args[0]
 	case providers.ProviderType_DOCKER_ENGINE_IMAGE:
+		disableInMemoryCache := false
+		disableInMemoryCache, err := cmd.Flags().GetBool("disable-cache")
+		if err != nil {
+			log.Error().Err(err).Msg("cannot parse --disable-cache value")
+		}
+		connection.Options["disable-cache"] = strconv.FormatBool(disableInMemoryCache)
 		connection.Backend = providerType
 		connection.Host = args[0]
 	case providers.ProviderType_TAR:

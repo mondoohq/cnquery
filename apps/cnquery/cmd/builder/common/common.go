@@ -171,14 +171,18 @@ func ContainerProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, r
 
 func ContainerImageProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "image ID",
-		Short:  docs.GetShort("container-image"),
-		Long:   docs.GetLong("container-image"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run:    runFn,
+		Use:   "image ID",
+		Short: docs.GetShort("container-image"),
+		Long:  docs.GetLong("container-image"),
+		Args:  cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+			viper.BindPFlag("disable-cache", cmd.Flags().Lookup("disable-cache"))
+		},
+		Run: runFn,
 	}
 	commonCmdFlags(cmd)
+	cmd.Flags().Bool("disable-cache", false, "Disable the in-memory cache for images. WARNING: This will slow down scans significantly.")
 	return cmd
 }
 
@@ -256,14 +260,18 @@ func DockerContainerProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRu
 
 func DockerImageProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "image ID",
-		Short:  docs.GetShort("docker-image"),
-		Long:   docs.GetLong("docker-image"),
-		Args:   cobra.ExactArgs(1),
-		PreRun: preRun,
-		Run:    runFn,
+		Use:   "image ID",
+		Short: docs.GetShort("docker-image"),
+		Long:  docs.GetLong("docker-image"),
+		Args:  cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+			viper.BindPFlag("disable-cache", cmd.Flags().Lookup("disable-cache"))
+		},
+		Run: runFn,
 	}
 	commonCmdFlags(cmd)
+	cmd.Flags().Bool("disable-cache", false, "Disable the in-memory cache for images. WARNING: This will slow down scans significantly.")
 	return cmd
 }
 
