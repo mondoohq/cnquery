@@ -842,6 +842,25 @@ func dictMapV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 	return nil, 0, nil
 }
 
+func dictFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	if bind.Value == nil {
+		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil
+	}
+
+	list, ok := bind.Value.([]interface{})
+	// this should not happen at this point
+	if !ok {
+		return &RawData{Type: bind.Type, Error: errors.New("incorrect type, no array data found")}, 0, nil
+	}
+
+	var res []interface{}
+	for i := range list {
+		res = append(res, flatten(list[i])...)
+	}
+
+	return &RawData{Type: bind.Type.Child(), Value: res}, 0, nil
+}
+
 func dictDifferenceV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	if bind.Value == nil {
 		return &RawData{Type: bind.Type, Error: bind.Error}, 0, nil

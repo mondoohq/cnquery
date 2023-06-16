@@ -73,6 +73,7 @@ func init() {
 			"one":          {compile: compileDictOne, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"none":         {compile: compileDictNone, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
 			"map":          {compile: compileArrayMap, signature: FunctionSignature{Required: 1, Args: []types.Type{types.FunctionLike}}},
+			"flat":         {compile: compileDictFlat, signature: FunctionSignature{}},
 			// map-ish
 			"keys":   {typ: stringArrayType, signature: FunctionSignature{}},
 			"values": {typ: dictArrayType, signature: FunctionSignature{}},

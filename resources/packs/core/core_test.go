@@ -237,7 +237,7 @@ func TestCore_Vars(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
 			"p = file('/dummy.json'); parse.json(file: p).params.length",
-			0, int64(10),
+			0, int64(11),
 		},
 		{
 			"a = [1,2,3]; return a",
@@ -1005,15 +1005,15 @@ func TestMap(t *testing.T) {
 		},
 		{
 			"parse.json('/dummy.json').params.length",
-			0, int64(10),
+			0, int64(11),
 		},
 		{
 			"parse.json('/dummy.json').params.keys.length",
-			0, int64(10),
+			0, int64(11),
 		},
 		{
 			"parse.json('/dummy.json').params.values.length",
-			0, int64(10),
+			0, int64(11),
 		},
 		{
 			"parse.json('/dummy.json').params { _['Protocol'] != 1 }",
@@ -1328,6 +1328,11 @@ func TestDict_Methods_Map(t *testing.T) {
 		{
 			p + "params.last",
 			0, true,
+		},
+		{
+			p + "params['aoa'].flat",
+			0,
+			[]interface{}{float64(1), float64(2), float64(3)},
 		},
 	})
 
