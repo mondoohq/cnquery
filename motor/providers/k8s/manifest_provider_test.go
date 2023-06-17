@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,14 +27,14 @@ func TestManifestFiles(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run("k8s "+testCase.kind, func(t *testing.T) {
 			manifestFile := "./resources/testdata/" + testCase.kind + ".yaml"
-			transport, err := newManifestProvider("", testCase.kind, WithManifestFile(manifestFile))
+			provider, err := newManifestProvider("", testCase.kind, WithManifestFile(manifestFile))
 			require.NoError(t, err)
-			require.NotNil(t, transport)
-			res, err := transport.Resources(testCase.kind, "mondoo", "default")
+			require.NotNil(t, provider)
+			res, err := provider.Resources(testCase.kind, "mondoo", "default")
 			require.NoError(t, err)
 			assert.Equal(t, "mondoo", res.Name)
 			assert.Equal(t, testCase.kind, res.Kind)
-			assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
+			assert.Equal(t, "k8s-manifest", provider.PlatformInfo().Runtime)
 			assert.Equal(t, 1, len(res.Resources))
 			podSpec, err := resources.GetPodSpec(res.Resources[0])
 			require.NoError(t, err)
@@ -50,32 +51,51 @@ func TestManifestFiles(t *testing.T) {
 
 func TestManifestFile_CustomResource(t *testing.T) {
 	manifestFile := "./resources/testdata/cr/tekton.yaml"
-	transport, err := newManifestProvider("", "", WithManifestFile(manifestFile))
+	provider, err := newManifestProvider("", "", WithManifestFile(manifestFile))
 	require.NoError(t, err)
-	require.NotNil(t, transport)
+	require.NotNil(t, provider)
 
 	name := "demo-pipeline"
 	namespace := "default"
 	kind := "pipeline.tekton.dev"
-	res, err := transport.Resources(kind, name, namespace)
+	res, err := provider.Resources(kind, name, namespace)
 	require.NoError(t, err)
 	assert.Equal(t, name, res.Name)
 	assert.Equal(t, namespace, res.Namespace)
 	assert.Equal(t, kind, res.Kind)
-	assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
+	assert.Equal(t, "k8s-manifest", provider.PlatformInfo().Runtime)
 	assert.Equal(t, 1, len(res.Resources))
 }
 
 func TestManifestFileProvider(t *testing.T) {
-	t.Run("k8s manifest provider", func(t *testing.T) {
+	t.Run("k8s manifest provider with file", func(t *testing.T) {
 		manifestFile := "./resources/testdata/pod.yaml"
-		transport, err := newManifestProvider("", "", WithManifestFile(manifestFile))
+		provider, err := newManifestProvider("", "", WithManifestFile(manifestFile))
 		require.NoError(t, err)
-		require.NotNil(t, transport)
-		assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Name)
-		assert.Equal(t, "k8s-manifest", transport.PlatformInfo().Runtime)
-		assert.Equal(t, providers.Kind_KIND_CODE, transport.PlatformInfo().Kind)
-		assert.Contains(t, transport.PlatformInfo().Family, "k8s")
+		require.NotNil(t, provider)
+		assert.Equal(t, "k8s-manifest", provider.PlatformInfo().Name)
+		assert.Equal(t, "k8s-manifest", provider.PlatformInfo().Runtime)
+		assert.Equal(t, providers.Kind_KIND_CODE, provider.PlatformInfo().Kind)
+		assert.Contains(t, provider.PlatformInfo().Family, "k8s")
+	})
+}
+
+func TestManifestContentProvider(t *testing.T) {
+	t.Run("k8s manifest provider with content", func(t *testing.T) {
+		manifestFile := "./resources/testdata/pod.yaml"
+		data, err := os.ReadFile(manifestFile)
+		require.NoError(t, err)
+
+		provider, err := newManifestProvider("", "", WithManifestContent(data))
+		require.NoError(t, err)
+		require.NotNil(t, provider)
+		name, err := provider.Name()
+		require.NoError(t, err)
+		assert.Equal(t, "K8s Manifest", name)
+		assert.Equal(t, "k8s-manifest", provider.PlatformInfo().Name)
+		assert.Equal(t, "k8s-manifest", provider.PlatformInfo().Runtime)
+		assert.Equal(t, providers.Kind_KIND_CODE, provider.PlatformInfo().Kind)
+		assert.Contains(t, provider.PlatformInfo().Family, "k8s")
 	})
 }
 

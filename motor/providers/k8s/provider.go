@@ -4,8 +4,10 @@ package k8s
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	platform "go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/k8s/resources"
@@ -19,11 +21,12 @@ import (
 )
 
 const (
-	OPTION_MANIFEST    = "path"
-	OPTION_NAMESPACE   = "namespace"
-	OPTION_ADMISSION   = "k8s-admission-review"
-	OPTION_OBJECT_KIND = "object-kind"
-	OPTION_CONTEXT     = "context"
+	OPTION_MANIFEST         = "path"
+	OPTION_IMMEMORY_CONTENT = "manifest-content"
+	OPTION_NAMESPACE        = "namespace"
+	OPTION_ADMISSION        = "k8s-admission-review"
+	OPTION_OBJECT_KIND      = "object-kind"
+	OPTION_CONTEXT          = "context"
 )
 
 var (
@@ -85,30 +88,43 @@ type ResourceResult struct {
 // Supported options are:
 // - namespace: limits the resources to a specific namespace
 // - path: use a manifest file instead of live API
-func New(ctx context.Context, tc *providers.Config) (KubernetesProvider, error) {
-	if tc.Backend != providers.ProviderType_K8S {
+func New(ctx context.Context, pc *providers.Config) (KubernetesProvider, error) {
+	if pc.Backend != providers.ProviderType_K8S {
 		return nil, providers.ErrProviderTypeDoesNotMatch
 	}
 
-	if manifestFile, manifestDefined := tc.Options[OPTION_MANIFEST]; manifestDefined {
-		return newManifestProvider(tc.PlatformId, tc.Options[OPTION_OBJECT_KIND], WithManifestFile(manifestFile), WithNamespace(tc.Options[OPTION_NAMESPACE]))
+	if manifestContent, manifestDefined := pc.Options[OPTION_IMMEMORY_CONTENT]; manifestDefined {
+		log.Debug().Msg("use in-memory manifest content")
+		data, err := base64.StdEncoding.DecodeString(manifestContent)
+		if err != nil {
+			return nil, err
+		}
+		println(string(data))
+		return newManifestProvider(pc.PlatformId, pc.Options[OPTION_OBJECT_KIND], WithManifestContent(data), WithNamespace(pc.Options[OPTION_NAMESPACE]))
 	}
 
-	if data, admissionDefined := tc.Options[OPTION_ADMISSION]; admissionDefined {
-		return newAdmissionProvider(data, tc.PlatformId, tc.Options[OPTION_OBJECT_KIND])
+	if manifestFile, manifestDefined := pc.Options[OPTION_MANIFEST]; manifestDefined {
+		log.Debug().Msg("use manifest file")
+		return newManifestProvider(pc.PlatformId, pc.Options[OPTION_OBJECT_KIND], WithManifestFile(manifestFile), WithNamespace(pc.Options[OPTION_NAMESPACE]))
+	}
+
+	if data, admissionDefined := pc.Options[OPTION_ADMISSION]; admissionDefined {
+		log.Debug().Msg("use admission review")
+		return newAdmissionProvider(data, pc.PlatformId, pc.Options[OPTION_OBJECT_KIND])
 	}
 
 	// initialize resource cache, so that the same k8s resources can be re-used
+	log.Debug().Msg("use Kubernetes API")
 	dCache, ok := resources.GetDiscoveryCache(ctx)
 	if !ok {
 		return nil, fmt.Errorf("context does not have an initialized discovery cache")
 	}
 
-	return newApiProvider(tc.Options[OPTION_CONTEXT], tc.Options[OPTION_NAMESPACE], tc.Options[OPTION_OBJECT_KIND], tc.PlatformId, dCache)
+	return newApiProvider(pc.Options[OPTION_CONTEXT], pc.Options[OPTION_NAMESPACE], pc.Options[OPTION_OBJECT_KIND], pc.PlatformId, dCache)
 }
 
 func getPlatformInfo(objectKind string, runtime string) *platform.Platform {
-	// We need this at two places (discovery and tranport)
+	// We need this at two places (discovery and provider)
 	// Here it is needed for the transport and this is what is shown on the cli
 	platformData := &platform.Platform{
 		Family:  []string{"k8s", "k8s-workload"},
