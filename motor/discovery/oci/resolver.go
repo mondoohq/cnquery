@@ -2,13 +2,15 @@ package oci
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
-	oci_provider "go.mondoo.com/cnquery/motor/providers/oci"
+	"go.mondoo.com/cnquery/motor/providers/oci"
+	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
@@ -34,12 +36,16 @@ func (r *Resolver) AvailableDiscoveryTargets() []string {
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
 	resolved := []*asset.Asset{}
 
-	// add aws api as asset
-	provider, err := oci_provider.New(tc)
+	m, err := resolver.NewMotorConnection(ctx, tc, credsResolver)
 	if err != nil {
 		return nil, err
 	}
+	defer m.Close()
 
+	provider, ok := m.Provider.(*oci.Provider)
+	if !ok {
+		return nil, errors.New("could not create oci transport")
+	}
 	identifier, err := provider.Identifier()
 	if err != nil {
 		return nil, err

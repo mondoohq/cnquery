@@ -480,17 +480,34 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 	case providers.ProviderType_OCI:
 		connection.Backend = providerType
-		//if profile, err := cmd.Flags().GetString("profile"); err != nil {
-		//	log.Fatal().Err(err).Msg("cannot parse --profile value")
-		//} else if profile != "" {
-		//	connection.Options["profile"] = profile
-		//}
-		//
-		//if region, err := cmd.Flags().GetString("region"); err != nil {
-		//	log.Fatal().Err(err).Msg("cannot parse --region values")
-		//} else if region != "" {
-		//	connection.Options["region"] = region
-		//}
+		tenancy, _ := cmd.Flags().GetString("tenancy")
+		fingerprint, _ := cmd.Flags().GetString("fingerprint")
+		user, _ := cmd.Flags().GetString("user")
+		keyPath, _ := cmd.Flags().GetString("key-path")
+		keyPassphrase, _ := cmd.Flags().GetString("key-passphrase")
+		region, _ := cmd.Flags().GetString("region")
+
+		if tenancy != "" {
+			connection.Options["tenancy"] = tenancy
+		}
+		if fingerprint != "" {
+			connection.Options["fingerprint"] = fingerprint
+		}
+		if region != "" {
+			connection.Options["region"] = region
+		}
+		if user != "" {
+			connection.Options["user"] = user
+		}
+
+		if keyPath != "" {
+			connection.Credentials = append(connection.Credentials, &vault.Credential{
+				Type:           vault.CredentialType_private_key,
+				PrivateKeyPath: keyPath,
+				Password:       keyPassphrase,
+			})
+		}
+
 	case providers.ProviderType_VSPHERE:
 		connection.Backend = providerType
 		target, err := parseTarget(args[0])
