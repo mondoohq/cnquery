@@ -99,7 +99,6 @@ func New(ctx context.Context, pc *providers.Config) (KubernetesProvider, error) 
 		if err != nil {
 			return nil, err
 		}
-		println(string(data))
 		return newManifestProvider(pc.PlatformId, pc.Options[OPTION_OBJECT_KIND], WithManifestContent(data), WithNamespace(pc.Options[OPTION_NAMESPACE]))
 	}
 
