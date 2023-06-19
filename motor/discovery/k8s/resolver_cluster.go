@@ -102,7 +102,7 @@ func (r *ClusterResolver) Resolve(ctx context.Context, root *asset.Asset, tc *pr
 		} else {
 			clusterName = ""
 
-			if tc.Options[k8s.OPTION_MANIFEST] != "" || tc.Options[k8s.OPTION_ADMISSION] != "" {
+			if tc.Options[k8s.OPTION_MANIFEST] != "" || tc.Options[k8s.OPTION_ADMISSION] != "" || tc.Options[k8s.OPTION_IMMEMORY_CONTENT] != "" {
 				clusterName, _ = p.Name()
 			} else {
 				// try to parse context from kubectl config

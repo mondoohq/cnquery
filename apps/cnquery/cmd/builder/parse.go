@@ -1,7 +1,9 @@
 package builder
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"regexp"
@@ -276,8 +278,16 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 	case providers.ProviderType_K8S:
 		connection.Backend = providerType
 
-		if filepath != "" {
-			if _, err := os.Stat(filepath); filepath != "-" && os.IsNotExist(err) {
+		// do pre-processing of piped manifest file
+		// TODO: consider using an afero.NewMemMapFs() in-memory file system instead of base64 encoding
+		if filepath == "-" {
+			data, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				log.Fatal().Err(err).Msg("cannot read Kubernetes manifest from stdin")
+			}
+			connection.Options["manifest-content"] = base64.StdEncoding.EncodeToString(data)
+		} else if filepath != "" {
+			if _, err := os.Stat(filepath); os.IsNotExist(err) {
 				log.Fatal().Str("file", filepath).Msg("Could not find the Kubernetes manifest file. Please specify the correct path.")
 			}
 			connection.Options["path"] = filepath
