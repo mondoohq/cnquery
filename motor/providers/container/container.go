@@ -134,7 +134,7 @@ func NewDockerEngineImage(endpoint *providers.Config) (ContainerProvider, error)
 	// This is the image id that is used to pull the image from the registry.
 	log.Debug().Msg("found docker engine image " + labelImageId)
 	if ii.Size > 1024 && !disableInmemoryCache { // > 1GB
-		log.Warn().Int64("size", ii.Size).Msg("The image is bigger than 1GB, this will require a lot of memory. Consider disabling the in-memory cache with `--disable-cache=true`.")
+		log.Warn().Int64("size", ii.Size).Msg("Because the image is larger than 1 GB, this task will require a lot of memory. Consider disabling the in-memory cache by adding this flag to the command: `--disable-cache=true`")
 	}
 	_, rc, err := image.LoadImageFromDockerEngine(ii.ID, disableInmemoryCache)
 	if err != nil {
