@@ -85,6 +85,8 @@ type ImageInfo struct {
 	PlatformID string
 	Labels     map[string]string
 	Arch       string
+	// Size in megabytes
+	Size int64
 }
 
 func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
@@ -103,6 +105,8 @@ func (e *dockerEngineDiscovery) ImageInfo(name string) (ImageInfo, error) {
 	case "amd64":
 		ii.Arch = "x86_64"
 	}
+
+	ii.Size = res.Size / 1024 / 1024
 
 	labels := map[string]string{}
 	labels["mondoo.com/image-id"] = res.ID

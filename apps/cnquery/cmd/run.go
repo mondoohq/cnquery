@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/inventoryloader"
+	"go.mondoo.com/cnquery/cli/prof"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/shared"
@@ -69,6 +70,7 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 		viper.BindPFlag("record-file", cmd.Flags().Lookup("record-file"))
 	},
 	Run: func(cmd *cobra.Command, args []string, provider providers.ProviderType, assetType builder.AssetType) {
+		prof.InitProfiler()
 		conf, err := GetCobraRunConfig(cmd, args, provider, assetType)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to prepare config")
