@@ -74,6 +74,19 @@ func convertInstance(vm instance, subscription string, tc *providers.Config, obj
 			vm.Tags["azure.mondoo.com/computername"] = osProfileDict["computerName"].(string)
 		}
 	}
+	storageProfile, ok := vm.Properties["storageProfile"]
+	if ok {
+		if storageProfile, ok := storageProfile.(map[string]interface{}); ok {
+			osDisk, ok := storageProfile["osDisk"]
+			if ok {
+				if osDisk, ok := osDisk.(map[string]interface{}); ok {
+					if osType, ok := osDisk["osType"]; ok {
+						vm.Tags["azure.mondoo.com/ostype"] = osType.(string)
+					}
+				}
+			}
+		}
+	}
 	vmId, ok := vm.Properties["vmId"]
 	if ok {
 		if casted, ok := vmId.(string); ok {
