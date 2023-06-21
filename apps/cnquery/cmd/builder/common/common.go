@@ -529,14 +529,18 @@ func OciProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn R
 		Args:  cobra.ExactArgs(0),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)
-			// viper.BindPFlag("project", cmd.Flags().Lookup("project"))
-			// viper.BindPFlag("region", cmd.Flags().Lookup("region"))
 		},
 		Run: runFn,
 	}
 	commonCmdFlags(cmd)
-	// cmd.Flags().String("profile", "", "pick a named AWS profile to use")
-	// cmd.Flags().String("region", "", "the AWS region to scan")
+	cmd.Flags().String("tenancy", "", "The tenancy's OCID")
+	cmd.Flags().String("user", "", "The user's OCID")
+	cmd.Flags().String("region", "", "The selected region")
+	cmd.Flags().String("key-path", "", "The path to the private key, that will be used for authentication")
+	cmd.Flags().String("fingerprint", "", "The fingerprint of the private key")
+	cmd.Flags().String("key-secret", "", "The passphrase for private key, that will be used for authentication")
+	// either we require all of the params, needed to build an OCI connection or we default to using the default provider there
+	cmd.MarkFlagsRequiredTogether("tenancy", "user", "region", "key-path", "fingerprint")
 	return cmd
 }
 
