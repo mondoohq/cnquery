@@ -488,3 +488,24 @@ func compileArrayMap(c *compiler, typ types.Type, ref uint64, id string, call *p
 	})
 	return types.Array(mappedType), nil
 }
+
+func compileArrayFlat(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	if call != nil && len(call.Function) > 0 {
+		return types.Nil, errors.New("no arguments supported for '" + id + "'")
+	}
+
+	for typ.IsArray() {
+		typ = typ.Child()
+	}
+	typ = types.Array(typ)
+
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+		},
+	})
+	return typ, nil
+}

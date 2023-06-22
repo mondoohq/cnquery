@@ -460,3 +460,16 @@ func compileMapWhere(c *compiler, typ types.Type, ref uint64, id string, call *p
 	})
 	return typ, nil
 }
+
+func compileMapValues(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
+	typ = types.Array(typ.Child())
+	c.addChunk(&llx.Chunk{
+		Call: llx.Chunk_FUNCTION,
+		Id:   id,
+		Function: &llx.Function{
+			Type:    string(typ),
+			Binding: ref,
+		},
+	})
+	return typ, nil
+}

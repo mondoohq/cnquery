@@ -177,9 +177,11 @@ func mapKeysV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 }
 
 func mapValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
+	typ := bind.Type.Child()
+
 	if bind.Value == nil {
 		return &RawData{
-			Type:  types.Array(types.Dict),
+			Type:  types.Array(typ),
 			Error: errors.New("Failed to get values of `null`"),
 		}, 0, nil
 	}
@@ -196,7 +198,7 @@ func mapValuesV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 		i++
 	}
 
-	return ArrayData(res, types.Dict), 0, nil
+	return ArrayData(res, typ), 0, nil
 }
 
 func dictGetIndexV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
