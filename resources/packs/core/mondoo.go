@@ -20,10 +20,6 @@ func (m *mqlMondoo) GetBuild() (string, error) {
 	return cnquery.GetBuild(), nil
 }
 
-func (m *mqlMondoo) GetNulllist() ([]interface{}, error) {
-	return nil, nil
-}
-
 func (m *mqlMondoo) GetResources() ([]interface{}, error) {
 	n := m.MotorRuntime.Registry.Names()
 	sort.Strings(n)
