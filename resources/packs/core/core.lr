@@ -12,7 +12,6 @@ mondoo @defaults("version") {
   jobEnvironment() dict
   // Transport capabilities
   capabilities() []string
-  nulllist() []string
 }
 
 // Returns platform EOL date information
