@@ -391,7 +391,7 @@ func getCobraScanConfig(cmd *cobra.Command, args []string, provider providers.Pr
 	if err != nil {
 		fileNotFoundError := new(config.FileNotFoundError)
 		if errors.As(err, &fileNotFoundError) {
-			log.Fatal().Err(fileNotFoundError).Msgf(
+			log.Fatal().Msgf(
 				"Couldn't find user provided config file \n\nEnsure that %s provided through %s is a valid file path", fileNotFoundError.Path(), fileNotFoundError.Source(),
 			)
 		} else {
