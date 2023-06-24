@@ -25,14 +25,14 @@ type fsInfo struct {
 	fstype string
 }
 
-func getRootBlockEntry(blockEntries blockdevices) (*fsInfo, error) {
+func (blockEntries blockdevices) GetRootBlockEntry() (*fsInfo, error) {
 	log.Debug().Msg("get root block entry")
 	for i := range blockEntries.Blockdevices {
 		d := blockEntries.Blockdevices[i]
 		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
 		for i := range d.Children {
 			entry := d.Children[i]
-			if validateBlockEntryValid(entry) {
+			if entry.IsValid() {
 				devFsName := "/dev/" + entry.Name
 				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
 			}
@@ -41,7 +41,7 @@ func getRootBlockEntry(blockEntries blockdevices) (*fsInfo, error) {
 	return nil, errors.New("target volume not found on instance")
 }
 
-func getMatchingBlockEntryByName(blockEntries blockdevices, name string) (*fsInfo, error) {
+func (blockEntries blockdevices) GetBlockEntryByName(name string) (*fsInfo, error) {
 	log.Debug().Str("name", name).Msg("get matching block entry")
 	var secondName string
 	if strings.HasPrefix(name, "/dev/sd") {
@@ -64,7 +64,7 @@ func getMatchingBlockEntryByName(blockEntries blockdevices, name string) (*fsInf
 		log.Debug().Msg("found match")
 		for i := range d.Children {
 			entry := d.Children[i]
-			if validateBlockEntryValidAndUnmounted(entry) {
+			if entry.IsValidAndUnmounted() {
 				devFsName := "/dev/" + entry.Name
 				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
 			}
@@ -73,10 +73,45 @@ func getMatchingBlockEntryByName(blockEntries blockdevices, name string) (*fsInf
 	return nil, errors.New("target volume not found on instance")
 }
 
-func validateBlockEntryValid(entry blockdevice) bool {
+func (blockEntries blockdevices) GetUnnamedBlockEntry() (*fsInfo, error) {
+	fsInfo, err := blockEntries.GetNonRootBlockEntry()
+	if err == nil && fsInfo != nil {
+		return fsInfo, nil
+	} else {
+		// if we get here, there was no non-root, non-mounted volume on the instance
+		// this is expected in the "no setup" case where we start an instance with the target
+		// volume attached and only that volume attached
+		fsInfo, err = blockEntries.GetRootBlockEntry()
+		if err == nil && fsInfo != nil {
+			return fsInfo, nil
+		}
+	}
+	return nil, errors.New("target volume not found on instance")
+}
+
+func (blockEntries blockdevices) GetNonRootBlockEntry() (*fsInfo, error) {
+	log.Debug().Msg("get non root block entry")
+	for i := range blockEntries.Blockdevices {
+		d := blockEntries.Blockdevices[i]
+		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
+		if d.MountPoint != "" { // empty string means it is not mounted
+			continue
+		}
+		for i := range d.Children {
+			entry := d.Children[i]
+			if entry.IsValidAndUnmounted() {
+				devFsName := "/dev/" + entry.Name
+				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
+			}
+		}
+	}
+	return nil, errors.New("target volume not found on instance")
+}
+
+func (entry blockdevice) IsValid() bool {
 	return entry.Uuid != "" && entry.FsType != "" && entry.Label != "EFI"
 }
 
-func validateBlockEntryValidAndUnmounted(entry blockdevice) bool {
+func (entry blockdevice) IsValidAndUnmounted() bool {
 	return entry.Uuid != "" && entry.FsType != "" && entry.Label != "EFI" && entry.MountPoint == ""
 }

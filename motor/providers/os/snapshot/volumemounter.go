@@ -49,7 +49,7 @@ func (m *VolumeMounter) Mount() error {
 
 func (m *VolumeMounter) createScanDir() error {
 	log.Info().Msg("create tmp scan dir")
-	dir, err := os.MkdirTemp("", "mondooscan")
+	dir, err := os.MkdirTemp("", "cnspec-scan")
 	if err != nil {
 		log.Error().Err(err).Msg("error creating directory")
 		return err
@@ -79,56 +79,21 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 	if m.opts[NoSetup] == "true" {
 		// this means we didn't attach the volume to the instance
 		// so we need to make a best effort guess
-		return getUnnamedBlockEntry(blockEntries)
+		return blockEntries.GetUnnamedBlockEntry()
 	}
 
-	fsInfo, err = getMatchingBlockEntryByName(blockEntries, m.VolumeAttachmentLoc)
+	fsInfo, err = blockEntries.GetBlockEntryByName(m.VolumeAttachmentLoc)
 	if err == nil && fsInfo != nil {
 		return fsInfo, nil
 	} else {
 		// if we get here, we couldn't find an fs loaded at the expected location
 		// AWS does not guarantee this, so that's expected. fallback to the non-root volume
-		fsInfo, err = getNonRootBlockEntry(blockEntries)
+		fsInfo, err = blockEntries.GetNonRootBlockEntry()
 		if err == nil && fsInfo != nil {
 			return fsInfo, nil
 		}
 	}
 	return nil, err
-}
-
-func getUnnamedBlockEntry(blockEntries blockdevices) (*fsInfo, error) {
-	fsInfo, err := getNonRootBlockEntry(blockEntries)
-	if err == nil && fsInfo != nil {
-		return fsInfo, nil
-	} else {
-		// if we get here, there was no non-root, non-mounted volume on the instance
-		// this is expected in the "no setup" case where we start an instance with the target
-		// volume attached and only that volume attached
-		fsInfo, err = getRootBlockEntry(blockEntries)
-		if err == nil && fsInfo != nil {
-			return fsInfo, nil
-		}
-	}
-	return nil, errors.New("target volume not found on instance")
-}
-
-func getNonRootBlockEntry(blockEntries blockdevices) (*fsInfo, error) {
-	log.Debug().Msg("get non root block entry")
-	for i := range blockEntries.Blockdevices {
-		d := blockEntries.Blockdevices[i]
-		log.Debug().Str("name", d.Name).Interface("children", d.Children).Interface("mountpoint", d.MountPoint).Msg("found block device")
-		if d.MountPoint != "" { // empty string means it is not mounted
-			continue
-		}
-		for i := range d.Children {
-			entry := d.Children[i]
-			if validateBlockEntryValidAndUnmounted(entry) {
-				devFsName := "/dev/" + entry.Name
-				return &fsInfo{name: devFsName, fstype: entry.FsType}, nil
-			}
-		}
-	}
-	return nil, errors.New("target volume not found on instance")
 }
 
 func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
@@ -153,7 +118,7 @@ func (m *VolumeMounter) UnmountVolumeFromInstance() error {
 	return nil
 }
 
-func (m *VolumeMounter) RemoveCreatedDir() error {
+func (m *VolumeMounter) RemoveTempScanDir() error {
 	log.Info().Msg("remove created dir")
 	return os.RemoveAll(m.ScanDir)
 }
