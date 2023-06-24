@@ -1,4 +1,4 @@
-package awsec2ebs
+package snapshot
 
 import (
 	"testing"
@@ -6,13 +6,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var RootDevice = blockdevice{Name: "sda", Children: []blockdevice{{Uuid: "1234", Fstype: "xfs", Label: "ROOT", Name: "sda1", Mountpoint: "/"}}}
+var RootDevice = blockdevice{Name: "sda", Children: []blockdevice{{Uuid: "1234", FsType: "xfs", Label: "ROOT", Name: "sda1", MountPoint: "/"}}}
 
 func TestGetMatchingBlockEntryByName(t *testing.T) {
 	blockEntries := blockdevices{Blockdevices: []blockdevice{RootDevice}}
 	blockEntries.Blockdevices = append(blockEntries.Blockdevices, []blockdevice{
-		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", Fstype: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
-		{Name: "sdx", Children: []blockdevice{{Uuid: "12346", Fstype: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
+		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+		{Name: "sdx", Children: []blockdevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "sdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
 	realFsInfo, err := getMatchingBlockEntryByName(blockEntries, "/dev/sdx")
@@ -21,8 +21,8 @@ func TestGetMatchingBlockEntryByName(t *testing.T) {
 
 	blockEntries = blockdevices{Blockdevices: []blockdevice{RootDevice}}
 	blockEntries.Blockdevices = append(blockEntries.Blockdevices, []blockdevice{
-		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", Fstype: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
-		{Name: "xvdx", Children: []blockdevice{{Uuid: "12346", Fstype: "xfs", Label: "ROOT", Name: "xvdh1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
+		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+		{Name: "xvdx", Children: []blockdevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "xvdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
 	realFsInfo, err = getMatchingBlockEntryByName(blockEntries, "/dev/sdx")
@@ -31,8 +31,8 @@ func TestGetMatchingBlockEntryByName(t *testing.T) {
 
 	blockEntries = blockdevices{Blockdevices: []blockdevice{RootDevice}}
 	blockEntries.Blockdevices = append(blockEntries.Blockdevices, []blockdevice{
-		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", Fstype: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
-		{Name: "xvdh", Children: []blockdevice{{Uuid: "12346", Fstype: "xfs", Label: "ROOT", Name: "xvdh1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
+		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
+		{Name: "xvdh", Children: []blockdevice{{Uuid: "12346", FsType: "xfs", Label: "ROOT", Name: "xvdh1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
 	realFsInfo, err = getMatchingBlockEntryByName(blockEntries, "/dev/xvdh")
@@ -41,7 +41,7 @@ func TestGetMatchingBlockEntryByName(t *testing.T) {
 
 	blockEntries = blockdevices{Blockdevices: []blockdevice{RootDevice}}
 	blockEntries.Blockdevices = append(blockEntries.Blockdevices, []blockdevice{
-		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", Fstype: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
+		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 
 	realFsInfo, err = getMatchingBlockEntryByName(blockEntries, "/dev/sdh")
@@ -55,7 +55,7 @@ func TestGetMatchingBlockEntryByName(t *testing.T) {
 func TestGetNonRootBlockEntry(t *testing.T) {
 	blockEntries := blockdevices{Blockdevices: []blockdevice{RootDevice}}
 	blockEntries.Blockdevices = append(blockEntries.Blockdevices, []blockdevice{
-		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", Fstype: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", Fstype: "", Label: "EFI"}}},
+		{Name: "nvme0n1", Children: []blockdevice{{Uuid: "12345", FsType: "xfs", Label: "ROOT", Name: "nvmd1n1"}, {Uuid: "12345", FsType: "", Label: "EFI"}}},
 	}...)
 	realFsInfo, err := getNonRootBlockEntry(blockEntries)
 	require.Nil(t, err)

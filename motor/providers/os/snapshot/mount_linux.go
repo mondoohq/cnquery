@@ -1,4 +1,4 @@
-package custommount
+package snapshot
 
 import (
 	"syscall"

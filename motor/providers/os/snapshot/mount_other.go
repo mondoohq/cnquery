@@ -1,7 +1,7 @@
 //go:build !linux
 // +build !linux
 
-package custommount
+package snapshot
 
 import "errors"
 
