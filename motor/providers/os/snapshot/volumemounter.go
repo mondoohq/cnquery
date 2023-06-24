@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"strings"
+
+	"go.mondoo.com/cnquery/stringx"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -40,11 +43,7 @@ func (m *VolumeMounter) Mount() error {
 		return errors.New("unable to find target volume on instance")
 	}
 	log.Info().Str("device name", fsInfo.name).Msg("found target volume")
-	err = m.mountVolume(fsInfo)
-	if err != nil {
-		return err
-	}
-	return err
+	return m.mountVolume(fsInfo)
 }
 
 func (m *VolumeMounter) createScanDir() error {
@@ -98,15 +97,13 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 
 func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
 	log.Info().Msg("mount volume")
-	opts := ""
+	opts := []string{}
 	if fsInfo.fstype == "xfs" {
-		opts = "nouuid"
+		opts = append(opts, "nouuid")
 	}
-	log.Debug().Str("fstype", fsInfo.fstype).Str("device", fsInfo.name).Str("scandir", m.ScanDir).Str("opts", opts).Msg("mount volume to scan dir")
-	if err := Mount(fsInfo.name, m.ScanDir, fsInfo.fstype, opts); err != nil {
-		return err
-	}
-	return nil
+	opts = stringx.DedupStringArray(opts)
+	log.Debug().Str("fstype", fsInfo.fstype).Str("device", fsInfo.name).Str("scandir", m.ScanDir).Str("opts", strings.Join(opts, ",")).Msg("mount volume to scan dir")
+	return Mount(fsInfo.name, m.ScanDir, fsInfo.fstype, opts)
 }
 
 func (m *VolumeMounter) UnmountVolumeFromInstance() error {

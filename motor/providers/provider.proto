@@ -41,6 +41,7 @@ enum ProviderType {
   VCD = 32;
   OCI = 33;
   OPCUA = 34;
+  GCP_COMPUTE_INSTANCE_SNAPSHOT =35;
 }
 
 enum Kind {

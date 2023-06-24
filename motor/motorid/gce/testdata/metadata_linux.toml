@@ -19,3 +19,7 @@ stdout = "4.9.125-linuxkit"
   command = "curl --noproxy '*' -H Metadata-Flavor:Google http://metadata.google.internal/computeMetadata/v1/instance/id?alt=json"
   stdout = "6001244637815193808"
   exit_status = 0
+[commands.76289c9f237055b0caa630b5573fb42549b144a61d722d17576eef5b698374f5]
+  command = "curl --noproxy '*' -H Metadata-Flavor:Google http://metadata.google.internal/computeMetadata/v1/instance/name?alt=json"
+  stdout = "\"instance-name\""
+  exit_status = 0

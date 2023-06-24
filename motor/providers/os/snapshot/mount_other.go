@@ -5,7 +5,7 @@ package snapshot
 
 import "errors"
 
-func Mount(attachedFS string, scanDir string, fsType string, opts string) error {
+func Mount(attachedFS string, scanDir string, fsType string, opts []string) error {
 	return errors.New("unsupported platform")
 }
 

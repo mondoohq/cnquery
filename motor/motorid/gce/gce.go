@@ -10,13 +10,20 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 )
 
+// deprecated: use MondooGcpInstancePlatformMrn
 func MondooGcpInstanceID(project string, zone string, instanceID uint64) string {
 	return "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/" + project + "/zones/" + zone + "/instances/" + strconv.FormatUint(uint64(instanceID), 10)
 }
 
+func MondooGcpInstancePlatformMrn(project string, zone string, instanceName string) string {
+	return "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/" + project + "/zones/" + zone + "/instances/" + instanceName
+}
+
 type Identity struct {
-	InstanceID string
-	ProjectID  string
+	ProjectID string
+	// deprecated: use PlatformMrn
+	InstanceID  string
+	PlatformMrn string
 }
 type InstanceIdentifier interface {
 	Identify() (Identity, error)

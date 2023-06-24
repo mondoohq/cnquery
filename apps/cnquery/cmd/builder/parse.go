@@ -461,7 +461,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		case DefaultAssetType:
 			// deprecated, remove in v9
 			if project, err := cmd.Flags().GetString("project-id"); err != nil {
-				log.Fatal().Err(err).Msg("cannot parse --project value")
+				log.Fatal().Err(err).Msg("cannot parse --project-id value")
 			} else if project != "" {
 				connection.Options["project-id"] = project
 			}
@@ -479,6 +479,25 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		case GcpFolderAssetType:
 			connection.Options["folder-id"] = args[0]
 		}
+	case providers.ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT:
+		connection.Backend = providerType
+		connection.Options = map[string]string{
+			"type":          "instance",
+			"instance-name": args[0],
+		}
+
+		if projectId, err := cmd.Flags().GetString("project-id"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --project-id value")
+		} else if projectId != "" {
+			connection.Options["project-id"] = projectId
+		}
+
+		if zone, err := cmd.Flags().GetString("zone"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --zone value")
+		} else if zone != "" {
+			connection.Options["zone"] = zone
+		}
+
 	case providers.ProviderType_OCI:
 		connection.Backend = providerType
 		tenancy, _ := cmd.Flags().GetString("tenancy")
