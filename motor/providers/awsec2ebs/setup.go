@@ -63,7 +63,7 @@ func (t *Provider) SetupForTargetVolume(ctx context.Context, volume VolumeInfo) 
 	if !volume.IsAvailable {
 		return t.SetupForTargetVolumeUnavailable(ctx, volume)
 	}
-	t.tmpInfo.scanVolumeInfo = &volume
+	t.scanVolumeInfo = &volume
 	return t.AttachVolumeToInstance(ctx, volume)
 }
 
@@ -87,7 +87,7 @@ func (t *Provider) SetupForTargetVolumeUnavailable(ctx context.Context, volume V
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeInfo = &volId
+	t.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
@@ -101,7 +101,7 @@ func (t *Provider) SetupForTargetSnapshot(ctx context.Context, snapshot Snapshot
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeInfo = &volId
+	t.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
@@ -131,7 +131,7 @@ func (t *Provider) SetupForTargetInstance(ctx context.Context, instanceinfo *typ
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeInfo = &volId
+	t.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
