@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gosimple/slug"
+	"github.com/mozillazg/go-slugify"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
@@ -155,7 +155,7 @@ func (t *apiProvider) Identifier() (string, error) {
 
 	id := NewPlatformID(uid)
 	if t.namespace != "" {
-		id += "/namespace/" + slug.Make(t.namespace)
+		id += "/namespace/" + slugify.Slugify(t.namespace)
 	}
 
 	return id, nil

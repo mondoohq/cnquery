@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gosimple/slug"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/platform"
@@ -731,6 +730,14 @@ var windows = &PlatformResolver{
 	},
 }
 
+var slugRe = regexp.MustCompile("[^a-z0-9]+")
+
+func slugifyDarwin(s string) string {
+	s = strings.ToLower(s)
+	s = slugRe.ReplaceAllString(s, "_")
+	return strings.Trim(s, "_")
+}
+
 // Families
 var darwinFamily = &PlatformResolver{
 	Name:     platform.FAMILY_DARWIN,
@@ -749,8 +756,7 @@ var darwinFamily = &PlatformResolver{
 		if err == nil {
 			if len(dsv["ProductName"]) > 0 {
 				// name needs to be slugged
-				key := slug.Make(strings.ToLower(dsv["ProductName"]))
-				pf.Name = strings.ReplaceAll(key, "-", "_")
+				pf.Name = slugifyDarwin(dsv["ProductName"])
 				if pf.Name == "mac_os_x" {
 					pf.Name = "macos"
 				}
