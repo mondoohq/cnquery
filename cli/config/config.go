@@ -74,7 +74,25 @@ func getFeatures() cnquery.Features {
 	return cnquery.Features(flags)
 }
 
-func isAccessible(path string) bool {
+func probePath(path string, asFile bool) bool {
+	stat, err := AppFs.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+		log.Warn().Str("path", path).Msg("detected Schrödinger's path, cannot detect if it is usable")
+		return false
+	}
+
+	if !asFile {
+		return stat.Mode().IsDir()
+	}
+
+	if !stat.Mode().IsRegular() {
+		log.Warn().Str("path", path).Msg("cannot use configuration file, it doesn't look like a regular file")
+		return false
+	}
+
 	f, err := AppFs.Open(path)
 	if err != nil {
 		return false
@@ -83,57 +101,68 @@ func isAccessible(path string) bool {
 	return true
 }
 
-// Test if we can use a config file in a path. Returns true if that's the case
-func probeConfig(path string) bool {
-	if stat, err := AppFs.Stat(path); err == nil {
-		if !stat.Mode().IsRegular() {
-			log.Warn().Str("path", path).Msg("cannot use configuration file, it doesn't look like a regular file")
-			return false
-		}
-		return isAccessible(path)
-	} else if os.IsNotExist(err) {
-		return false
-	} else {
-		log.Warn().Str("path", path).Msg("detected Schrödinger's config file, cannot detect if it is usable")
-	}
-
-	return false
+// ProbeDir tests a path if it's a directory and it exists
+func ProbeDir(path string) bool {
+	return probePath(path, false)
 }
 
-// HomePath returns the user-level configuration for Mondoo.
-func HomePath() (string, bool, error) {
+// ProbeFile tests a path if it's a file and if we can access it
+func ProbeFile(path string) bool {
+	return probePath(path, true)
+}
+
+// HomePath returns the user-level path for Mondoo. The given argument
+// is appended and checked if it is accessible and regular.
+// Returns error if the home directory could not be determined.
+func HomePath(childPath ...string) (string, error) {
 	home, err := homedir.Dir()
 	if err != nil {
-		return "", false, errors.Wrap(err, "failed to determine user home directory")
+		return "", errors.Wrap(err, "failed to determine user home directory")
 	}
 
-	homeConfig := filepath.Join(home, ".config", "mondoo", DefaultConfigFile)
-	useHome := probeConfig(homeConfig)
-
-	return homeConfig, useHome, nil
+	parts := append([]string{home, ".config", "mondoo"}, childPath...)
+	homeConfig := filepath.Join(parts...)
+	return homeConfig, nil
 }
 
-func SystemPath() (string, bool) {
-	var systemConfig string
+func systemPath(isConfig bool, childPath ...string) string {
+	var parts []string
 	if runtime.GOOS == "windows" {
-		systemConfig = filepath.Join(`C:\ProgramData\Mondoo\`, DefaultConfigFile)
+		parts = append([]string{`C:\ProgramData\Mondoo\`}, childPath...)
+	} else if isConfig {
+		parts = append([]string{"/etc", "opt", "mondoo"}, childPath...)
 	} else {
-		systemConfig = filepath.Join("/etc", "opt", "mondoo", DefaultConfigFile)
+		parts = append([]string{"/opt", "mondoo"}, childPath...)
 	}
-	return systemConfig, probeConfig(systemConfig)
+
+	systemConfig := filepath.Join(parts...)
+	return systemConfig
+}
+
+// SystemConfigPath returns the system-level config path for Mondoo. The given argument
+// is appended and checked if it is accessible and regular.
+func SystemConfigPath(childPath ...string) string {
+	return systemPath(true, childPath...)
+}
+
+// SystemDataPath returns the system-level data path for Mondoo. The given argument
+// is appended and checked if it is accessible and regular.
+func SystemDataPath(childPath ...string) string {
+	return systemPath(false, childPath...)
 }
 
 func autodetectConfig() string {
-	homeConfig, exists, err := HomePath()
+	homeConfig, err := HomePath(DefaultConfigFile)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to autodetect mondoo config")
 	}
-	if exists {
+	if ProbeFile(homeConfig) {
 		return homeConfig
 	}
 
-	if path, ok := SystemPath(); ok {
-		return path
+	sysConfig := SystemConfigPath(DefaultConfigFile)
+	if ProbeFile(sysConfig) {
+		return sysConfig
 	}
 
 	// Note: At this point we don't have any config. However, we will have to
@@ -149,7 +178,7 @@ func autodetectConfig() string {
 // returns the inventory path relative to the config file
 func InventoryPath(configPath string) (string, bool) {
 	inventoryPath := filepath.Join(filepath.Dir(configPath), DefaultInventoryFile)
-	return inventoryPath, probeConfig(inventoryPath)
+	return inventoryPath, ProbeFile(inventoryPath)
 }
 
 func initConfig() {
