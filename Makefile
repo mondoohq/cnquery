@@ -287,7 +287,7 @@ cnquery/build:
 
 .PHONY: cnquery/build/linux
 cnquery/build/linux:
-	GOOS=linux go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+	GOOS=linux GOARCH=amd64 go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
 
 .PHONY: cnquery/build/windows
 cnquery/build/windows:
