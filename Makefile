@@ -60,6 +60,19 @@ prep/tools:
 
 cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr shared/generate explorer/generate
 
+define genProvider
+	$(eval $@_HOME = $(1))
+	go run "${$@_HOME}"/gen/main.go "${$@_HOME}"
+	$(eval $@_BIN = "${$@_HOME}"/dist/"$(shell basename ${$@_HOME})")
+	echo "--> creating ${$@_BIN}"
+	go build -o "${$@_BIN}" "${$@_HOME}"/main.go
+endef
+
+.PHONY: providers
+providers:
+	@$(call genProvider, providers/os)
+# add more providers...
+
 motor/generate:
 	go generate .
 	go generate ./motor/providers
@@ -79,56 +92,10 @@ lr/build:
 	go generate .
 	go generate ./resources/packs/core/vadvisor/cvss
 	go build -o lr resources/lr/cli/main.go
-	./lr go resources/packs/core/core.lr
-	./lr docs json resources/packs/core/core.lr.manifest.yaml
-	./lr go resources/packs/os/os.lr
-	./lr docs json resources/packs/os/os.lr.manifest.yaml
-	./lr go resources/packs/aws/aws.lr
-	./lr docs json resources/packs/aws/aws.lr.manifest.yaml
-	./lr go resources/packs/azure/azure.lr
-	./lr docs yaml resources/packs/azure/azure.lr --docs-file resources/packs/azure/azure.lr.manifest.yaml
-	./lr docs json resources/packs/azure/azure.lr.manifest.yaml
-	./lr go resources/packs/gcp/gcp.lr
-	./lr docs json resources/packs/gcp/gcp.lr.manifest.yaml
-	./lr go resources/packs/ms365/ms365.lr
-	./lr docs json resources/packs/ms365/ms365.lr.manifest.yaml
-	./lr go resources/packs/github/github.lr
-	./lr docs json resources/packs/github/github.lr.manifest.yaml
-	./lr go resources/packs/gitlab/gitlab.lr
-	./lr docs json resources/packs/gitlab/gitlab.lr.manifest.yaml
-	./lr go resources/packs/terraform/terraform.lr
-	./lr docs json resources/packs/terraform/terraform.lr.manifest.yaml
-	./lr go resources/packs/k8s/k8s.lr
-	./lr docs json resources/packs/k8s/k8s.lr.manifest.yaml
-	./lr go resources/packs/vsphere/vsphere.lr
-	./lr docs json resources/packs/vsphere/vsphere.lr.manifest.yaml
-	./lr go resources/packs/okta/okta.lr
-	./lr docs yaml resources/packs/okta/okta.lr --docs-file resources/packs/okta/okta.lr.manifest.yaml
-	./lr docs json resources/packs/okta/okta.lr.manifest.yaml
-	./lr go resources/packs/googleworkspace/googleworkspace.lr
-	./lr docs yaml resources/packs/googleworkspace/googleworkspace.lr --docs-file resources/packs/googleworkspace/googleworkspace.lr.manifest.yaml
-	./lr docs json resources/packs/googleworkspace/googleworkspace.lr.manifest.yaml
-	./lr go resources/packs/slack/slack.lr
-	./lr docs yaml resources/packs/slack/slack.lr --docs-file resources/packs/slack/slack.lr.manifest.yaml
-	./lr docs json resources/packs/slack/slack.lr.manifest.yaml
-	./lr go resources/packs/vcd/vcd.lr
-	./lr docs yaml resources/packs/vcd/vcd.lr --docs-file resources/packs/vcd/vcd.lr.manifest.yaml
-	./lr docs json resources/packs/vcd/vcd.lr.manifest.yaml
-	./lr go resources/packs/arista/arista.lr
-	./lr docs yaml resources/packs/arista/arista.lr --docs-file resources/packs/arista/arista.lr.manifest.yaml
-	./lr docs json resources/packs/arista/arista.lr.manifest.yaml
-	./lr go resources/packs/ipmi/ipmi.lr
-	./lr docs yaml resources/packs/ipmi/ipmi.lr --docs-file resources/packs/ipmi/ipmi.lr.manifest.yaml
-	./lr docs json resources/packs/ipmi/ipmi.lr.manifest.yaml
-	./lr go resources/packs/python/python.lr
-	./lr docs yaml resources/packs/python/python.lr --docs-file resources/packs/python/python.lr.manifest.yaml
-	./lr docs json resources/packs/python/python.lr.manifest.yaml
-	./lr go resources/packs/oci/oci.lr
-	./lr docs yaml resources/packs/oci/oci.lr --docs-file resources/packs/oci/oci.lr.manifest.yaml
-	./lr docs json resources/packs/oci/oci.lr.manifest.yaml
-	./lr go resources/packs/opcua/opcua.lr
-	./lr docs yaml resources/packs/opcua/opcua.lr --docs-file resources/packs/opcua/opcua.lr.manifest.yaml
-	./lr docs json resources/packs/opcua/opcua.lr.manifest.yaml
+	./lr go providers/core/resources/core.lr
+	./lr docs json providers/core/resources/core.lr.manifest.yaml
+	./lr go providers/os/resources/os.lr
+	./lr docs json providers/os/resources/os.lr.manifest.yaml
 
 lr/release:
 	go generate .

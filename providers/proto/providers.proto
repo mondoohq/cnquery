@@ -1,0 +1,55 @@
+syntax = "proto3";
+package proto;
+option go_package = "go.mondoo.com/cnquery/providers/proto";
+
+import "motor/inventory/v1/inventory.proto";
+import "llx/llx.proto";
+
+message ParseCLIReq {
+  string connector = 1;
+  repeated string args = 2;
+  map<string,cnquery.llx.Primitive> flags = 3;
+}
+
+message ParseCLIRes {
+  // full inventory of everything that was requested
+  cnquery.motor.inventory.v1.Inventory inventory = 1;
+}
+
+message ConnectReq {
+  uint32 callback_server = 1;
+  bytes features = 2;
+  // Asset is one target that is being connected to
+  cnquery.motor.inventory.v1.Inventory asset = 3;
+}
+
+message Connection {
+  uint32 id = 1;
+}
+
+message DataReq {
+  uint32 connection = 1;
+  uint32 callback_server = 2;
+  string resource = 3;
+  string resource_id = 4;
+  string field = 5; 
+  map<string,cnquery.llx.Primitive> args = 6;
+}
+
+message DataRes {
+  cnquery.llx.Primitive data = 1;
+  string error = 2;
+  string code_id = 3;  
+}
+
+message Empty {}
+
+service Provider {
+  rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
+  rpc Connect(ConnectReq) returns (Connection);
+  rpc GetData(DataReq) returns (cnquery.llx.Result);
+}
+
+service LlxCallback {
+  rpc Collect(cnquery.llx.Result) returns (Empty);
+}

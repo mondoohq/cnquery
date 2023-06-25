@@ -8,6 +8,11 @@ import (
 )
 
 func Schema(ast *LR) (*resources.Schema, error) {
+	provider, ok := ast.Options["provider"]
+	if !ok {
+		return nil, errors.New("Missing provider name for resources to generate schema")
+	}
+
 	res := &resources.Schema{
 		Resources: make(map[string]*resources.ResourceInfo, len(ast.Resources)),
 	}
@@ -31,6 +36,10 @@ func Schema(ast *LR) (*resources.Schema, error) {
 			}
 		}
 		res.Resources[defName] = x
+	}
+
+	for _, v := range res.Resources {
+		v.Provider = provider
 	}
 
 	return res, nil

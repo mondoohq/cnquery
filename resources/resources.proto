@@ -35,6 +35,7 @@ message ResourceInfo {
   bool private = 24;
   string min_mondoo_version = 25;
   string defaults = 26;
+  string provider = 27;
 }
 
 message Field {
