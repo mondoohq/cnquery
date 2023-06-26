@@ -15,7 +15,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/all"
+	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 )
@@ -2026,7 +2026,7 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 }
 
 func getMinMondooVersion(current string, resource string, field string) string {
-	rd := all.ResourceDocs.Resources[resource]
+	rd := info.ResourceDocs.Resources[resource]
 	var minverDocs string
 	if rd != nil {
 		minverDocs = rd.MinMondooVersion

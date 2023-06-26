@@ -37,12 +37,12 @@ const (
 )
 
 type Flag struct {
-	Long    string      `json:",omitempty"`
-	Short   string      `json:",omitempty"`
-	Default interface{} `json:",omitempty"`
-	Desc    string      `json:",omitempty"`
-	Type    FlagType    `json:",omitempty"`
-	Option  FlagOption  `json:",omitempty"`
+	Long    string     `json:",omitempty"`
+	Short   string     `json:",omitempty"`
+	Default string     `json:",omitempty"`
+	Desc    string     `json:",omitempty"`
+	Type    FlagType   `json:",omitempty"`
+	Option  FlagOption `json:",omitempty"`
 }
 
 func Start(args []string) {
