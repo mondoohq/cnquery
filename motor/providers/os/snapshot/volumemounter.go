@@ -70,7 +70,7 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	blockEntries := blockdevices{}
+	blockEntries := blockDevices{}
 	if err := json.Unmarshal(data, &blockEntries); err != nil {
 		return nil, err
 	}
@@ -85,9 +85,9 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 	if err == nil && fsInfo != nil {
 		return fsInfo, nil
 	} else {
-		// if we get here, we couldn't find an fs loaded at the expected location
-		// AWS does not guarantee this, so that's expected. fallback to the non-root volume
-		fsInfo, err = blockEntries.GetNonRootBlockEntry()
+		// if we get here, we couldn't find a fs loaded at the expected location
+		// AWS does not guarantee this, so that's expected. fallback to find non-boot and non-mounted volume
+		fsInfo, err = blockEntries.GetUnmountedBlockEntry()
 		if err == nil && fsInfo != nil {
 			return fsInfo, nil
 		}
