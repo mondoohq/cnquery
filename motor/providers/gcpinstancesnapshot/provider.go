@@ -23,10 +23,10 @@ var (
 )
 
 type scanTarget struct {
-	targetType   string
-	projectID    string
-	zone         string
-	instanceName string
+	TargetType   string
+	ProjectID    string
+	Zone         string
+	InstanceName string
 }
 
 type scannerInstance struct {
@@ -86,13 +86,17 @@ func determineScannerInstanceInfo() (*scannerInstance, error) {
 	}, nil
 }
 
-func New(pCfg *providers.Config) (*Provider, error) {
-	target := scanTarget{
-		targetType:   pCfg.Options["type"],
-		projectID:    pCfg.Options["project-id"],
-		zone:         pCfg.Options["zone"],
-		instanceName: pCfg.Options["instance-name"],
+func ParseTarget(pCfg *providers.Config) scanTarget {
+	return scanTarget{
+		TargetType:   pCfg.Options["type"],
+		ProjectID:    pCfg.Options["project-id"],
+		Zone:         pCfg.Options["zone"],
+		InstanceName: pCfg.Options["instance-name"],
 	}
+}
+
+func New(pCfg *providers.Config) (*Provider, error) {
+	target := ParseTarget(pCfg)
 
 	// check if we run on a gcp instance
 	scanner, err := determineScannerInstanceInfo()
@@ -108,23 +112,20 @@ func New(pCfg *providers.Config) (*Provider, error) {
 
 	// setup disk image so and attach it to the instance
 	var diskUrl string
-	var platformIdentifier string
 	mi := mountInfo{}
-	switch target.targetType {
+	switch target.TargetType {
 	case "instance":
-		instanceInfo, err := sc.instanceInfo(target.projectID, target.zone, target.instanceName)
+		instanceInfo, err := sc.InstanceInfo(target.ProjectID, target.Zone, target.InstanceName)
 		if err != nil {
 			return nil, err
 		}
-		if instanceInfo.bootDiskSource == "" {
-			return nil, fmt.Errorf("could not find boot disk for instance %s", target.instanceName)
+		if instanceInfo.BootDiskSource == "" {
+			return nil, fmt.Errorf("could not find boot disk for instance %s", target.InstanceName)
 		}
-
-		platformIdentifier = instanceInfo.platformIdentifier
 
 		// clone the disk of the instance
 		// disk name does not allow colons, therefore we need a custom format
-		diskUrl, err = sc.cloneDisk(instanceInfo.bootDiskSource, scanner.projectID, scanner.zone, "cnspec-"+target.instanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+		diskUrl, err = sc.cloneDisk(instanceInfo.BootDiskSource, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
 		if err != nil {
 			log.Error().Err(err).Msg("could not complete snapshot creation")
 			return nil, errors.Wrap(err, "something went wrong; unable to complete setup for gcp instance snapshot")
@@ -172,13 +173,13 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	p := &Provider{
 		Provider:        fsProvider,
 		opts:            pCfg.Options,
-		targetType:      target.targetType,
+		targetType:      target.TargetType,
 		volumeMounter:   volumeMounter,
 		snapshotCreator: sc,
 		target:          target,
 		scanner:         *scanner,
 		mountInfo:       mi,
-		identifier:      platformIdentifier,
+		identifier:      pCfg.PlatformId,
 	}
 
 	return p, nil

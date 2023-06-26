@@ -60,14 +60,14 @@ func (sc *SnapshotCreator) computeServiceClient(ctx context.Context) (*compute.S
 }
 
 type instanceInfo struct {
-	platformIdentifier string
-	projectID          string
-	zone               string
-	instanceName       string
-	bootDiskSource     string
+	PlatformMrn    string
+	ProjectID      string
+	Zone           string
+	InstanceName   string
+	BootDiskSource string
 }
 
-func (sc *SnapshotCreator) instanceInfo(projectID, zone, instanceName string) (instanceInfo, error) {
+func (sc *SnapshotCreator) InstanceInfo(projectID, zone, instanceName string) (instanceInfo, error) {
 	ctx := context.Background()
 	ii := instanceInfo{}
 
@@ -81,10 +81,10 @@ func (sc *SnapshotCreator) instanceInfo(projectID, zone, instanceName string) (i
 		return ii, err
 	}
 
-	ii.projectID = projectID
-	ii.zone = instance.Zone
-	ii.instanceName = instance.Name
-	ii.platformIdentifier = gce.MondooGcpInstancePlatformMrn(projectID, instance.Zone, instance.Name)
+	ii.ProjectID = projectID
+	ii.Zone = instance.Zone
+	ii.InstanceName = instance.Name
+	ii.PlatformMrn = gce.MondooGcpInstancePlatformMrn(projectID, instance.Zone, instance.Name)
 
 	// search for boot disk
 	var bootDisk *compute.AttachedDisk
@@ -97,7 +97,7 @@ func (sc *SnapshotCreator) instanceInfo(projectID, zone, instanceName string) (i
 	}
 
 	if bootDisk != nil {
-		ii.bootDiskSource = bootDisk.Source
+		ii.BootDiskSource = bootDisk.Source
 	}
 
 	return ii, nil
@@ -182,7 +182,7 @@ func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskU
 
 func (sc *SnapshotCreator) detachDisk(projectID, zone, instanceName, deviceName string) error {
 	ctx := context.Background()
-
+	log.Debug().Str("device-name", deviceName).Msg("detach disk")
 	computeService, err := sc.computeServiceClient(ctx)
 	if err != nil {
 		return err
