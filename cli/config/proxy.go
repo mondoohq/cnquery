@@ -25,7 +25,7 @@ func GetAPIProxy() (*url.URL, error) {
 	return nil, nil
 }
 
-func (c *CommonCliConfig) GetAPIProxy() (*url.URL, error) {
+func (c *CommonOpts) GetAPIProxy() (*url.URL, error) {
 	proxy, err := GetAPIProxy()
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (c *CommonCliConfig) GetAPIProxy() (*url.URL, error) {
 	return nil, nil
 }
 
-func (c *CommonCliConfig) GetHttpClient() (*http.Client, error) {
+func (c *CommonOpts) GetHttpClient() (*http.Client, error) {
 	proxy, err := c.GetAPIProxy()
 	if err != nil {
 		return nil, err

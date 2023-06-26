@@ -4,18 +4,16 @@ import (
 	"bytes"
 	"encoding/base64"
 	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/upstream"
 )
 
 /*
@@ -26,17 +24,13 @@ import (
 // Path is the currently loaded config location
 // or default if no config exits
 var (
-	UserProvidedPath     string
-	Path                 string
-	LoadedConfig         bool
-	DefaultConfigFile    = "mondoo.yml"
-	DefaultInventoryFile = "inventory.yml"
-	Source               string
-	AppFs                afero.Fs
-	Features             cnquery.Features
+	Features cnquery.Features
 )
 
-const configSourceBase64 = "$MONDOO_CONFIG_BASE64"
+const (
+	configSourceBase64 = "$MONDOO_CONFIG_BASE64"
+	defaultAPIendpoint = "https://us.api.mondoo.com"
+)
 
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
@@ -72,113 +66,6 @@ func getFeatures() cnquery.Features {
 	}
 
 	return cnquery.Features(flags)
-}
-
-func probePath(path string, asFile bool) bool {
-	stat, err := AppFs.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-		log.Warn().Str("path", path).Msg("detected Schrödinger's path, cannot detect if it is usable")
-		return false
-	}
-
-	if !asFile {
-		return stat.Mode().IsDir()
-	}
-
-	if !stat.Mode().IsRegular() {
-		log.Warn().Str("path", path).Msg("cannot use configuration file, it doesn't look like a regular file")
-		return false
-	}
-
-	f, err := AppFs.Open(path)
-	if err != nil {
-		return false
-	}
-	defer f.Close()
-	return true
-}
-
-// ProbeDir tests a path if it's a directory and it exists
-func ProbeDir(path string) bool {
-	return probePath(path, false)
-}
-
-// ProbeFile tests a path if it's a file and if we can access it
-func ProbeFile(path string) bool {
-	return probePath(path, true)
-}
-
-// HomePath returns the user-level path for Mondoo. The given argument
-// is appended and checked if it is accessible and regular.
-// Returns error if the home directory could not be determined.
-func HomePath(childPath ...string) (string, error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to determine user home directory")
-	}
-
-	parts := append([]string{home, ".config", "mondoo"}, childPath...)
-	homeConfig := filepath.Join(parts...)
-	return homeConfig, nil
-}
-
-func systemPath(isConfig bool, childPath ...string) string {
-	var parts []string
-	if runtime.GOOS == "windows" {
-		parts = append([]string{`C:\ProgramData\Mondoo\`}, childPath...)
-	} else if isConfig {
-		parts = append([]string{"/etc", "opt", "mondoo"}, childPath...)
-	} else {
-		parts = append([]string{"/opt", "mondoo"}, childPath...)
-	}
-
-	systemConfig := filepath.Join(parts...)
-	return systemConfig
-}
-
-// SystemConfigPath returns the system-level config path for Mondoo. The given argument
-// is appended and checked if it is accessible and regular.
-func SystemConfigPath(childPath ...string) string {
-	return systemPath(true, childPath...)
-}
-
-// SystemDataPath returns the system-level data path for Mondoo. The given argument
-// is appended and checked if it is accessible and regular.
-func SystemDataPath(childPath ...string) string {
-	return systemPath(false, childPath...)
-}
-
-func autodetectConfig() string {
-	homeConfig, err := HomePath(DefaultConfigFile)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to autodetect mondoo config")
-	}
-	if ProbeFile(homeConfig) {
-		return homeConfig
-	}
-
-	sysConfig := SystemConfigPath(DefaultConfigFile)
-	if ProbeFile(sysConfig) {
-		return sysConfig
-	}
-
-	// Note: At this point we don't have any config. However, we will have to
-	// set up a potential config, which may be auto-created for us. Pointing it to
-	// the system config by default may be problematic, since:
-	// 1. if you're using a regular user, you can't create/write that path
-	// 2. if you're root, we probably don't want to auto-create it there
-	//    due to the far-reaching impact as it may influence all users
-
-	return homeConfig
-}
-
-// returns the inventory path relative to the config file
-func InventoryPath(configPath string) (string, bool) {
-	inventoryPath := filepath.Join(filepath.Dir(configPath), DefaultInventoryFile)
-	return inventoryPath, ProbeFile(inventoryPath)
 }
 
 func initConfig() {
@@ -266,4 +153,128 @@ func DisplayUsedConfig() {
 	} else {
 		log.Info().Msg("no Mondoo configuration file provided. using defaults")
 	}
+}
+
+func Read() (*Config, error) {
+	// load viper config into a struct
+	var opts Config
+	err := viper.Unmarshal(&opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to decode into config struct")
+	}
+
+	return &opts, nil
+}
+
+type Config struct {
+	// inherit common config
+	CommonOpts `mapstructure:",squash"`
+
+	// Asset Category
+	Category               string `json:"category,omitempty" mapstructure:"category"`
+	AutoDetectCICDCategory bool   `json:"detect-cicd,omitempty" mapstructure:"detect-cicd"`
+}
+
+type CommonOpts struct {
+	// client identifier
+	AgentMrn string `json:"agent_mrn,omitempty" mapstructure:"agent_mrn"`
+
+	// service account credentials
+	ServiceAccountMrn string `json:"mrn,omitempty" mapstructure:"mrn"`
+	ParentMrn         string `json:"parent_mrn,omitempty" mapstructure:"parent_mrn"`
+	SpaceMrn          string `json:"space_mrn,omitempty" mapstructure:"space_mrn"`
+	PrivateKey        string `json:"private_key,omitempty" mapstructure:"private_key"`
+	Certificate       string `json:"certificate,omitempty" mapstructure:"certificate"`
+	APIEndpoint       string `json:"api_endpoint,omitempty" mapstructure:"api_endpoint"`
+
+	// authentication
+	Authentication *CliConfigAuthentication `json:"auth,omitempty" mapstructure:"auth"`
+
+	// client features
+	Features []string `json:"features,omitempty" mapstructure:"features"`
+
+	// API Proxy for communicating with Mondoo API
+	APIProxy string `json:"api_proxy,omitempty" mapstructure:"api_proxy"`
+
+	// labels that will be applied to all assets
+	Labels map[string]string `json:"labels,omitempty" mapstructure:"labels"`
+}
+
+type CliConfigAuthentication struct {
+	Method string `json:"method,omitempty" mapstructure:"method"`
+}
+
+func (c *CommonOpts) GetFeatures() cnquery.Features {
+	bitSet := make([]bool, 256)
+	flags := []byte{}
+
+	for _, f := range cnquery.DefaultFeatures {
+		if !bitSet[f] {
+			bitSet[f] = true
+			flags = append(flags, f)
+		}
+	}
+
+	for _, name := range c.Features {
+		flag, ok := cnquery.FeaturesValue[name]
+		if ok {
+			if !bitSet[byte(flag)] {
+				bitSet[byte(flag)] = true
+				flags = append(flags, byte(flag))
+			}
+		} else {
+			log.Warn().Str("feature", name).Msg("could not parse feature")
+		}
+	}
+
+	return flags
+}
+
+// GetServiceCredential returns the service credential that is defined in the config.
+// If no service credential is defined, it will return nil.
+func (c *CommonOpts) GetServiceCredential() *upstream.ServiceAccountCredentials {
+	if c.Authentication != nil && c.Authentication.Method == "ssh" {
+		log.Info().Msg("using ssh authentication method, generate temporary credentials")
+		serviceAccount, err := upstream.ExchangeSSHKey(c.UpstreamApiEndpoint(), c.ServiceAccountMrn, c.GetParentMrn())
+		if err != nil {
+			log.Error().Err(err).Msg("could not exchange ssh key")
+			return nil
+		}
+		return serviceAccount
+	}
+
+	// return nil when no service account is defined
+	if c.ServiceAccountMrn == "" && c.PrivateKey == "" && c.Certificate == "" {
+		return nil
+	}
+
+	return &upstream.ServiceAccountCredentials{
+		Mrn:         c.ServiceAccountMrn,
+		ParentMrn:   c.GetParentMrn(),
+		PrivateKey:  c.PrivateKey,
+		Certificate: c.Certificate,
+		ApiEndpoint: c.APIEndpoint,
+	}
+}
+
+func (c *CommonOpts) GetParentMrn() string {
+	parent := c.ParentMrn
+
+	// fallback to old space_mrn config
+	if parent == "" {
+		parent = c.SpaceMrn
+	}
+
+	return parent
+}
+
+func (c *CommonOpts) UpstreamApiEndpoint() string {
+	apiEndpoint := c.APIEndpoint
+
+	// fallback to default api if nothing was set
+	if apiEndpoint == "" {
+		apiEndpoint = defaultAPIendpoint
+	}
+
+	return apiEndpoint
 }

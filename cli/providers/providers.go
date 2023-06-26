@@ -5,14 +5,18 @@ import (
 	"os"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers/plugin"
+	"go.mondoo.com/cnquery/providers/proto"
 )
 
 type Command struct {
 	Command *cobra.Command
+	Run     func(*cobra.Command, *proto.ParseCLIRes)
 	Action  string
 }
 
@@ -119,16 +123,76 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 	for _, provider := range existing {
 		for j := range provider.Connectors {
 			conn := provider.Connectors[j]
-			attachConnectorToCmd(provider.Provider, &conn, cmd)
+			attachConnectorCmd(provider.Provider, &conn, cmd)
+		}
+	}
+
+	// the default is always os.local if it exists
+	if p, ok := existing["os"]; ok {
+		for i := range p.Connectors {
+			c := p.Connectors[i]
+			if c.Name == "local" {
+				setDefaultConnector(p.Provider, &c, cmd)
+				break
+			}
 		}
 	}
 }
 
-func attachConnectorToCmd(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
+func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
+	cmd.Command.Run = func(cmd *cobra.Command, args []string) {
+		if len(args) > 0 {
+			log.Error().Msg("provider " + args[0] + " does not exist")
+			cmd.Help()
+			os.Exit(1)
+		}
+
+		log.Info().Msg("no provider specified, defaulting to local.\n  Use --help for a list of available providers.")
+	}
+	setConnector(provider, connector, cmd.Command)
+}
+
+func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
 	res := &cobra.Command{
 		Use:   connector.Use,
 		Short: cmd.Action + connector.Short,
 		Long:  connector.Long,
+		PreRun: func(cc *cobra.Command, args []string) {
+			if cmd.Command.PreRun != nil {
+				cmd.Command.PreRun(cc, args)
+			}
+		},
+	}
+	cmd.Command.AddCommand(res)
+	setConnector(provider, connector, res)
+}
+
+func setConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *cobra.Command) {
+	oldRun := cmd.Run
+	cmd.Run = func(cc *cobra.Command, args []string) {
+		if oldRun != nil {
+			oldRun(cc, args)
+		}
+
+		log.Debug().Msg("using provider " + provider.Name + " with connector " + connector.Name)
+
+		// TODO: replace this hard-coded block. This should be dynamic for all
+		// fields that are specified to be passwords with the --ask-field
+		// associated with it to make it simple.
+		// check if the user used --password without a value
+		askPass, err := cc.Flags().GetBool("ask-pass")
+		if err == nil && askPass {
+			pass, err := components.AskPassword("Enter password: ")
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to get password")
+			}
+			cc.Flags().Set("password", pass)
+		}
+		// ^^
+
+		panic("NOW DO THE PARSING stuff")
+
+		cmd.Run(cc, nil)
 	}
 
 	for i := range connector.Flags {
@@ -136,45 +200,43 @@ func attachConnectorToCmd(provider *plugin.Provider, connector *plugin.Connector
 		switch flag.Type {
 		case plugin.FlagType_Bool:
 			if flag.Short != "" {
-				res.Flags().BoolP(flag.Long, flag.Short, json2T(flag.Default, false), flag.Desc)
+				cmd.Flags().BoolP(flag.Long, flag.Short, json2T(flag.Default, false), flag.Desc)
 			} else {
-				res.Flags().Bool(flag.Long, json2T(flag.Default, false), flag.Desc)
+				cmd.Flags().Bool(flag.Long, json2T(flag.Default, false), flag.Desc)
 			}
 		case plugin.FlagType_Int:
 			if flag.Short != "" {
-				res.Flags().IntP(flag.Long, flag.Short, json2T(flag.Default, 0), flag.Desc)
+				cmd.Flags().IntP(flag.Long, flag.Short, json2T(flag.Default, 0), flag.Desc)
 			} else {
-				res.Flags().Int(flag.Long, json2T(flag.Default, 0), flag.Desc)
+				cmd.Flags().Int(flag.Long, json2T(flag.Default, 0), flag.Desc)
 			}
 		case plugin.FlagType_String:
 			if flag.Short != "" {
-				res.Flags().StringP(flag.Long, flag.Short, flag.Default, flag.Desc)
+				cmd.Flags().StringP(flag.Long, flag.Short, flag.Default, flag.Desc)
 			} else {
-				res.Flags().String(flag.Long, flag.Default, flag.Desc)
+				cmd.Flags().String(flag.Long, flag.Default, flag.Desc)
 			}
 		case plugin.FlagType_List:
 			if flag.Short != "" {
-				res.Flags().StringSliceP(flag.Long, flag.Short, json2T(flag.Default, []string{}), flag.Desc)
+				cmd.Flags().StringSliceP(flag.Long, flag.Short, json2T(flag.Default, []string{}), flag.Desc)
 			} else {
-				res.Flags().StringSlice(flag.Long, json2T(flag.Default, []string{}), flag.Desc)
+				cmd.Flags().StringSlice(flag.Long, json2T(flag.Default, []string{}), flag.Desc)
 			}
 		case plugin.FlagType_KeyValue:
 			if flag.Short != "" {
-				res.Flags().StringToStringP(flag.Long, flag.Short, json2T(flag.Default, map[string]string{}), flag.Desc)
+				cmd.Flags().StringToStringP(flag.Long, flag.Short, json2T(flag.Default, map[string]string{}), flag.Desc)
 			} else {
-				res.Flags().StringToString(flag.Long, json2T(flag.Default, map[string]string{}), flag.Desc)
+				cmd.Flags().StringToString(flag.Long, json2T(flag.Default, map[string]string{}), flag.Desc)
 			}
 		}
 
 		if flag.Option&plugin.FlagOption_Hidden != 0 {
-			res.Flags().MarkHidden(flag.Long)
+			cmd.Flags().MarkHidden(flag.Long)
 		}
 		if flag.Option&plugin.FlagOption_Deprecated != 0 {
-			res.Flags().MarkDeprecated(flag.Long, "has been deprecated")
+			cmd.Flags().MarkDeprecated(flag.Long, "has been deprecated")
 		}
 	}
-
-	cmd.Command.AddCommand(res)
 }
 
 func json2T[T any](s string, empty T) T {
