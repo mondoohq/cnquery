@@ -123,11 +123,11 @@ func New(pCfg *providers.Config) (*Provider, error) {
 			return nil, fmt.Errorf("could not find boot disk for instance %s", target.InstanceName)
 		}
 
-		// clone the disk of the instance
+		// clone the disk of the instance to the zone where the scanner runs
 		// disk name does not allow colons, therefore we need a custom format
 		diskUrl, err = sc.cloneDisk(instanceInfo.BootDiskSource, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
 		if err != nil {
-			log.Error().Err(err).Msg("could not complete snapshot creation")
+			log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot creation")
 			return nil, errors.Wrap(err, "something went wrong; unable to complete setup for gcp instance snapshot")
 		}
 		mi.diskUrl = diskUrl
@@ -142,9 +142,15 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	}
 
 	errorHandler := func() {
-		err = sc.detachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.deviceName)
-		if err != nil {
-			log.Error().Err(err).Send()
+		// use different err variable to ensure it does not overshadow the real error
+		dErr := sc.detachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.deviceName)
+		if dErr != nil {
+			log.Error().Err(dErr).Msg("could not detach created disk")
+		}
+
+		dErr = sc.deleteCreatedDisk(mi.diskUrl)
+		if dErr != nil {
+			log.Error().Err(dErr).Msg("could not delete created disk")
 		}
 	}
 
@@ -209,25 +215,21 @@ func (p *Provider) Close() {
 		}
 	}
 
-	if p.snapshotCreator != nil && p.mountInfo.diskUrl != "" {
-		err := p.snapshotCreator.detachDisk(p.scanner.projectID, p.scanner.zone, p.scanner.instanceName, p.mountInfo.deviceName)
-		if err != nil {
-			log.Error().Err(err).Send()
-		}
-	}
-
 	err := p.volumeMounter.UnmountVolumeFromInstance()
 	if err != nil {
 		log.Error().Err(err).Msg("unable to unmount volume")
 	}
-	err = p.snapshotCreator.detachDisk(p.scanner.projectID, p.scanner.zone, p.scanner.instanceName, p.mountInfo.deviceName)
-	if err != nil {
-		log.Error().Err(err).Msg("unable to detach volume")
-	}
 
-	err = p.snapshotCreator.deleteCreatedDisk(p.mountInfo.diskUrl)
-	if err != nil {
-		log.Error().Err(err).Msg("could not delete created disk")
+	if p.snapshotCreator != nil {
+		err = p.snapshotCreator.detachDisk(p.scanner.projectID, p.scanner.zone, p.scanner.instanceName, p.mountInfo.deviceName)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to detach volume")
+		}
+
+		err = p.snapshotCreator.deleteCreatedDisk(p.mountInfo.diskUrl)
+		if err != nil {
+			log.Error().Err(err).Msg("could not delete created disk")
+		}
 	}
 
 	err = p.volumeMounter.RemoveTempScanDir()
