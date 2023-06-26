@@ -16,10 +16,14 @@ type OperatingSystemProvider interface {
 	providers.Instance
 	// RunCommand executes a command on the target system
 	RunCommand(command string) (*Command, error)
-	// returns file permissions and ownership
+	// FileInfo returns file permissions and ownership
 	FileInfo(path string) (FileInfoDetails, error)
 	// FS provides access to the file system of the target system
 	FS() afero.Fs
+}
+
+type CommandRunner interface {
+	RunCommand(command string) (*Command, error)
 }
 
 type PerfStats struct {

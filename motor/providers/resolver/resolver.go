@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"go.mondoo.com/cnquery/motor/providers/gcpinstancesnapshot"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -320,6 +322,15 @@ func NewMotorConnection(ctx context.Context, tc *providers.Config, credsResolver
 		// TODO (jaym) before merge: The ebs provider is being lost. This
 		// is problematic. It will break the platform id detection being added
 		m, err = motor.New(p.FsProvider)
+		if err != nil {
+			return nil, err
+		}
+	case providers.ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT:
+		p, err := gcpinstancesnapshot.New(tc)
+		if err != nil {
+			return nil, err
+		}
+		m, err = motor.New(p)
 		if err != nil {
 			return nil, err
 		}

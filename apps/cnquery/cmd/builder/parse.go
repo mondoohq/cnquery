@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/motor/motorid/awsec2"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/awsec2ebs"
+	"go.mondoo.com/cnquery/motor/providers/os/snapshot"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
@@ -327,8 +328,8 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 
 	case providers.ProviderType_AWS_EC2_EBS:
 		noSetup := "false"
-		if connection.Options[awsec2ebs.NoSetup] != "" {
-			noSetup = connection.Options[awsec2ebs.NoSetup]
+		if connection.Options[snapshot.NoSetup] != "" {
+			noSetup = connection.Options[snapshot.NoSetup]
 		}
 		overrideRegion := connection.Options["region"]
 		assembleAwsEc2EbsConnectionUrl := func(flagAsset *asset.Asset, arg string, targetType string) string {
@@ -372,11 +373,11 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		connection.Backend = providerType
 		connection.PlatformId = platformId
 		connection.Options = map[string]string{
-			"account":         target.Account,
-			"region":          target.Region,
-			"id":              target.Id,
-			"type":            target.Type,
-			awsec2ebs.NoSetup: noSetup,
+			"account":        target.Account,
+			"region":         target.Region,
+			"id":             target.Id,
+			"type":           target.Type,
+			snapshot.NoSetup: noSetup,
 		}
 	case providers.ProviderType_AWS_SSM_RUN_COMMAND:
 		target, err := parseTarget(args[0])
@@ -460,7 +461,7 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		case DefaultAssetType:
 			// deprecated, remove in v9
 			if project, err := cmd.Flags().GetString("project-id"); err != nil {
-				log.Fatal().Err(err).Msg("cannot parse --project value")
+				log.Fatal().Err(err).Msg("cannot parse --project-id value")
 			} else if project != "" {
 				connection.Options["project-id"] = project
 			}
@@ -478,6 +479,25 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		case GcpFolderAssetType:
 			connection.Options["folder-id"] = args[0]
 		}
+	case providers.ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT:
+		connection.Backend = providerType
+		connection.Options = map[string]string{
+			"type":          "instance",
+			"instance-name": args[0],
+		}
+
+		if projectId, err := cmd.Flags().GetString("project-id"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --project-id value")
+		} else if projectId != "" {
+			connection.Options["project-id"] = projectId
+		}
+
+		if zone, err := cmd.Flags().GetString("zone"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --zone value")
+		} else if zone != "" {
+			connection.Options["zone"] = zone
+		}
+
 	case providers.ProviderType_OCI:
 		connection.Backend = providerType
 		tenancy, _ := cmd.Flags().GetString("tenancy")

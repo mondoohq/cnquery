@@ -92,6 +92,8 @@ func (cfg *Config) ToUrl() string {
 			return ProviderID_TLS + "://" + cfg.Host
 		}
 		return ProviderID_HOST + "://" + cfg.Host
+	case ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT:
+		return ProviderID_GCP_COMPUTE_INSTANCE
 	default:
 		log.Warn().Str("provider", cfg.Backend.String()).Msg("cannot render provider name")
 		return ""

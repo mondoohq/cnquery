@@ -1,0 +1,16 @@
+{
+  "blockdevices": [
+    {"name": "sda", "fstype": null, "label": null, "uuid": null, "mountpoint": null,
+      "children": [
+        {"name": "sda1", "fstype": "vfat", "label": null, "uuid": "A7CD-A139", "mountpoint": "/boot/efi"},
+        {"name": "sda2", "fstype": "xfs", "label": "root", "uuid": "1e310f26-65a0-40c7-9c2c-c4c06b80ce12", "mountpoint": "/"}
+      ]
+    },
+    {"name": "sdc", "fstype": null, "label": null, "uuid": null, "mountpoint": null,
+      "children": [
+        {"name": "sdc1", "fstype": "vfat", "label": null, "uuid": "7275-604F", "mountpoint": null},
+        {"name": "sdc2", "fstype": "xfs", "label": "root", "uuid": "93f10957-1975-4218-8c7b-b648ac195858", "mountpoint": null}
+      ]
+    }
+  ]
+}

@@ -63,7 +63,7 @@ func (t *Provider) SetupForTargetVolume(ctx context.Context, volume VolumeInfo) 
 	if !volume.IsAvailable {
 		return t.SetupForTargetVolumeUnavailable(ctx, volume)
 	}
-	t.tmpInfo.scanVolumeInfo = &volume
+	t.scanVolumeInfo = &volume
 	return t.AttachVolumeToInstance(ctx, volume)
 }
 
@@ -87,7 +87,7 @@ func (t *Provider) SetupForTargetVolumeUnavailable(ctx context.Context, volume V
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeInfo = &volId
+	t.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
@@ -101,7 +101,7 @@ func (t *Provider) SetupForTargetSnapshot(ctx context.Context, snapshot Snapshot
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeInfo = &volId
+	t.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
@@ -131,7 +131,7 @@ func (t *Provider) SetupForTargetInstance(ctx context.Context, instanceinfo *typ
 	if err != nil {
 		return false, err
 	}
-	t.tmpInfo.scanVolumeInfo = &volId
+	t.scanVolumeInfo = &volId
 	return t.AttachVolumeToInstance(ctx, volId)
 }
 
@@ -390,13 +390,13 @@ func AttachVolume(ctx context.Context, ec2svc *ec2.Client, location string, volI
 
 func (t *Provider) AttachVolumeToInstance(ctx context.Context, volume VolumeInfo) (bool, error) {
 	log.Info().Str("volume id", volume.Id).Msg("attach volume")
-	t.tmpInfo.volumeAttachmentLoc = newVolumeAttachmentLoc()
+	t.volumeMounter.VolumeAttachmentLoc = newVolumeAttachmentLoc()
 	ready := false
 	location, state, err := AttachVolume(ctx, t.scannerRegionEc2svc, newVolumeAttachmentLoc(), volume.Id, t.scannerInstance.Id)
 	if err != nil {
 		return ready, err
 	}
-	t.tmpInfo.volumeAttachmentLoc = location // warning: there is no guarantee from AWS that the device will be placed therev
+	t.volumeMounter.VolumeAttachmentLoc = location // warning: there is no guarantee from AWS that the device will be placed there
 	log.Debug().Str("location", location).Msg("target volume")
 
 	/*

@@ -2,29 +2,18 @@ package awsec2ebs
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers/awsec2ebs/custommount"
 )
-
-func (p *Provider) UnmountVolumeFromInstance() error {
-	log.Info().Msg("unmount volume")
-	if err := custommount.Unmount(p.tmpInfo.scanDir); err != nil {
-		log.Error().Err(err).Msg("failed to unmount dir")
-		return err
-	}
-	return nil
-}
 
 func (p *Provider) DetachVolumeFromInstance(ctx context.Context, volume *VolumeInfo) error {
 	log.Info().Msg("detach volume")
 	res, err := p.scannerRegionEc2svc.DetachVolume(ctx, &ec2.DetachVolumeInput{
-		Device: aws.String(p.tmpInfo.volumeAttachmentLoc), VolumeId: &volume.Id,
+		Device: aws.String(p.volumeMounter.VolumeAttachmentLoc), VolumeId: &volume.Id,
 		InstanceId: &p.scannerInstance.Id,
 	})
 	if err != nil {
@@ -51,9 +40,4 @@ func (p *Provider) DeleteCreatedVolume(ctx context.Context, volume *VolumeInfo) 
 	log.Info().Msg("delete created volume")
 	_, err := p.scannerRegionEc2svc.DeleteVolume(ctx, &ec2.DeleteVolumeInput{VolumeId: &volume.Id})
 	return err
-}
-
-func (p *Provider) RemoveCreatedDir() error {
-	log.Info().Msg("remove created dir")
-	return os.RemoveAll(p.tmpInfo.scanDir)
 }
