@@ -187,6 +187,9 @@ configure your Azure credentials and have SSH access to the virtual machines.`,
 			"gcp-gcr": {
 				Short: "Scan a Google Container Registry (GCR).",
 			},
+			"gcp-compute-instance": {
+				Short: "Scan a Google Cloud Platform (GCP) VM instance.",
+			},
 			"oci": {
 				Short: "Scan a Oracle Cloud Infrastructure (OCI) tenancy.",
 			},
