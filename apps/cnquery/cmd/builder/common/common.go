@@ -498,6 +498,7 @@ func ScanGcpComputeInstanceCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRun
 			viper.BindPFlag("project-id", cmd.Flags().Lookup("project-id"))
 			viper.BindPFlag("zone", cmd.Flags().Lookup("zone"))
 			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
+			viper.BindPFlag("use-latest-snapshot", cmd.Flags().Lookup("use-latest-snapshot"))
 		},
 		Run: runFn,
 	}
@@ -505,6 +506,7 @@ func ScanGcpComputeInstanceCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRun
 	cmd.Flags().String("project-id", "", "specify the GCP project ID where the target instance is located")
 	cmd.Flags().String("zone", "", "specify the GCP zone where the target instance is located")
 	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+	cmd.Flags().Bool("use-latest-snapshot", false, "use the latest available snapshot instead of creating a new one")
 	return cmd
 }
 

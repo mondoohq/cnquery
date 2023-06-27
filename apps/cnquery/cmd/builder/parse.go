@@ -487,6 +487,12 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		case GcpComputeInstanceAssetType:
 			connection.Options["type"] = "instance"
 			connection.Options["instance-name"] = args[0]
+
+			if useLatestSnapshot, err := cmd.Flags().GetBool("use-latest-snapshot"); err != nil {
+				log.Fatal().Err(err).Msg("cannot parse --use-latest-snapshot")
+			} else if useLatestSnapshot {
+				connection.Options["use-latest-snapshot"] = "true"
+			}
 		case GcpComputeInstanceSnapshotAssetType:
 			connection.Options["type"] = "snapshot"
 			connection.Options["snapshot-name"] = args[0]

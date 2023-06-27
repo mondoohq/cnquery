@@ -114,30 +114,48 @@ func New(pCfg *providers.Config) (*Provider, error) {
 
 	// setup disk image so and attach it to the instance
 	var diskUrl string
-	mi := mountInfo{}
+	mi := mountInfo{
+		deviceName: "cnspec",
+	}
 	switch target.TargetType {
 	case "instance":
 		instanceInfo, err := sc.InstanceInfo(target.ProjectID, target.Zone, target.InstanceName)
 		if err != nil {
 			return nil, err
 		}
-		if instanceInfo.BootDiskSource == "" {
+		if instanceInfo.BootDiskSourceURL == "" {
 			return nil, fmt.Errorf("could not find boot disk for instance %s", target.InstanceName)
 		}
 
-		// clone the disk of the instance to the zone where the scanner runs
-		// disk name does not allow colons, therefore we need a custom format
-		diskUrl, err = sc.cloneDisk(instanceInfo.BootDiskSource, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
-		if err != nil {
-			log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot creation")
-			return nil, errors.Wrap(err, "could not create gcp instance snapshot")
-		}
-		mi.diskUrl = diskUrl
-		mi.deviceName = "cnspec"
+		if pCfg.Options["use-latest-snapshot"] == "true" {
+			// search for the latest snapshot for this machine
+			snapshotUrl, err := sc.searchLatestSnapshot(target.ProjectID, instanceInfo.BootDiskSourceURL)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not search for gcp instance snapshot")
+			}
+			log.Debug().Str("snapshot", snapshotUrl).Msg("found latest snapshot")
 
-		err = sc.attachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.diskUrl, mi.deviceName)
-		if err != nil {
-			return nil, err
+			diskUrl, err = sc.createSnapshotDisk(snapshotUrl, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+			if err != nil {
+				log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot disk creation")
+				return nil, errors.Wrap(err, "could not create disk from snapshot")
+			}
+			log.Debug().Str("disk", diskUrl).Msg("created disk from snapshot")
+			mi.diskUrl = diskUrl
+		}
+
+		// if no disk was defined or found, clone the disk attached to the instance
+		if mi.diskUrl == "" {
+			// clone the disk of the instance to the zone where the scanner runs
+			// disk name does not allow colons, therefore we need a custom format
+			diskUrl, err = sc.cloneDisk(instanceInfo.BootDiskSourceURL, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+			if err != nil {
+				log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot creation")
+				return nil, errors.Wrap(err, "could not create gcp instance snapshot")
+			}
+			log.Debug().Str("disk", diskUrl).Msg("cloned disk from instance disk")
+			mi.diskUrl = diskUrl
+
 		}
 	case "snapshot":
 		snapshotInfo, err := sc.SnapshotInfo(target.ProjectID, target.SnapshotName)
@@ -150,16 +168,16 @@ func New(pCfg *providers.Config) (*Provider, error) {
 			log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot disk creation")
 			return nil, errors.Wrap(err, "could not create disk from snapshot")
 		}
-
+		log.Debug().Str("disk", diskUrl).Msg("created disk from snapshot")
 		mi.diskUrl = diskUrl
-		mi.deviceName = "cnspec"
-
-		err = sc.attachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.diskUrl, mi.deviceName)
-		if err != nil {
-			return nil, err
-		}
 	default:
 		return nil, errors.New("invalid target type")
+	}
+
+	// attach created disk to the scanner instance
+	err = sc.attachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.diskUrl, mi.deviceName)
+	if err != nil {
+		return nil, err
 	}
 
 	errorHandler := func() {
