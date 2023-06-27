@@ -103,8 +103,37 @@ func (sc *SnapshotCreator) InstanceInfo(projectID, zone, instanceName string) (i
 	return ii, nil
 }
 
-// cloneDisk clones a provided disk
-func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName string) (string, error) {
+type snapshotInfo struct {
+	PlatformMrn  string
+	ProjectID    string
+	SnapshotName string
+	SnapshotUrl  string
+}
+
+func (sc *SnapshotCreator) SnapshotInfo(projectID, snapshotName string) (snapshotInfo, error) {
+	ctx := context.Background()
+	si := snapshotInfo{}
+
+	computeService, err := sc.computeServiceClient(ctx)
+	if err != nil {
+		return si, err
+	}
+
+	snapshot, err := computeService.Snapshots.Get(projectID, snapshotName).Context(ctx).Do()
+	if err != nil {
+		return si, err
+	}
+
+	si.ProjectID = projectID
+	si.SnapshotName = snapshot.Name
+	si.SnapshotUrl = snapshot.SelfLink
+	si.PlatformMrn = SnapshotPlatformMrn(projectID, snapshot.Name)
+
+	return si, nil
+}
+
+// createDisk creates a new disk
+func (sc *SnapshotCreator) createDisk(disk *compute.Disk, projectID, zone, diskName string) (string, error) {
 	var clonedDiskUrl string
 	ctx := context.Background()
 
@@ -113,12 +142,6 @@ func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName strin
 		return "", err
 	}
 
-	// create a new disk clone
-	disk := &compute.Disk{
-		Name:       diskName,
-		SourceDisk: sourceDisk,
-		Labels:     sc.labels,
-	}
 	op, err := computeService.Disks.Insert(projectID, zone, disk).Context(ctx).Do()
 	if err != nil {
 		return clonedDiskUrl, err
@@ -140,6 +163,28 @@ func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName strin
 	}
 
 	return clonedDiskUrl, nil
+}
+
+// snapshotDisk creates a new disk from a snapshot
+func (sc *SnapshotCreator) createSnapshotDisk(snapshotUrl, projectID, zone, diskName string) (string, error) {
+	// create a new disk from snapshot
+	disk := &compute.Disk{
+		Name:           diskName,
+		SourceSnapshot: snapshotUrl,
+		Labels:         sc.labels,
+	}
+	return sc.createDisk(disk, projectID, zone, diskName)
+}
+
+// cloneDisk clones a provided disk
+func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName string) (string, error) {
+	// create a new disk clone
+	disk := &compute.Disk{
+		Name:       diskName,
+		SourceDisk: sourceDisk,
+		Labels:     sc.labels,
+	}
+	return sc.createDisk(disk, projectID, zone, diskName)
 }
 
 // attachDisk attaches a disk to an instanc

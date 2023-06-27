@@ -481,9 +481,15 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		}
 	case providers.ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT:
 		connection.Backend = providerType
-		connection.Options = map[string]string{
-			"type":          "instance",
-			"instance-name": args[0],
+		connection.Options = map[string]string{}
+
+		switch assetType {
+		case GcpComputeInstanceAssetType:
+			connection.Options["type"] = "instance"
+			connection.Options["instance-name"] = args[0]
+		case GcpComputeInstanceSnapshotAssetType:
+			connection.Options["type"] = "snapshot"
+			connection.Options["snapshot-name"] = args[0]
 		}
 
 		if projectId, err := cmd.Flags().GetString("project-id"); err != nil {

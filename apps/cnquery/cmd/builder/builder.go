@@ -25,6 +25,7 @@ const (
 	GcpOrganizationAssetType
 	GcpProjectAssetType
 	GcpFolderAssetType
+	GcpComputeInstanceAssetType
 	GcpComputeInstanceSnapshotAssetType
 	GcrContainerRegistryAssetType
 	GithubOrganizationAssetType
@@ -131,6 +132,7 @@ func buildCmd(baseCmd *cobra.Command, commonCmdFlags common.CommonFlagsFn, preRu
 	gcpCmd.AddCommand(scanGcpProjectCmd(commonCmdFlags, preRun, runFn, docs))
 	gcpCmd.AddCommand(scanGcpFolderCmd(commonCmdFlags, preRun, runFn, docs))
 	gcpCmd.AddCommand(scanGcpComputeInstanceCmd(commonCmdFlags, preRun, runFn, docs))
+	gcpCmd.AddCommand(scanGcpComputeSnapshotCmd(commonCmdFlags, preRun, runFn, docs))
 
 	// oci subcommand
 	ociCmd := ociProviderCmd(commonCmdFlags, preRun, runFn, docs)
@@ -426,10 +428,19 @@ func scanGcpGcrCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreR
 
 func scanGcpComputeInstanceCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
 	wrapRunFn := func(cmd *cobra.Command, args []string) {
-		runFn(cmd, args, providers.ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT, GcpComputeInstanceSnapshotAssetType)
+		runFn(cmd, args, providers.ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT, GcpComputeInstanceAssetType)
 	}
 
 	cmd := common.ScanGcpComputeInstanceCmd(commonCmdFlags, preRun, wrapRunFn, docs)
+	return cmd
+}
+
+func scanGcpComputeSnapshotCmd(commonCmdFlags common.CommonFlagsFn, preRun common.CommonPreRunFn, runFn runFn, docs common.CommandsDocs) *cobra.Command {
+	wrapRunFn := func(cmd *cobra.Command, args []string) {
+		runFn(cmd, args, providers.ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT, GcpComputeInstanceSnapshotAssetType)
+	}
+
+	cmd := common.ScanGcpComputeSnapshotCmd(commonCmdFlags, preRun, wrapRunFn, docs)
 	return cmd
 }
 

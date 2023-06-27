@@ -27,6 +27,7 @@ type scanTarget struct {
 	ProjectID    string
 	Zone         string
 	InstanceName string
+	SnapshotName string
 }
 
 type scannerInstance struct {
@@ -92,6 +93,7 @@ func ParseTarget(pCfg *providers.Config) scanTarget {
 		ProjectID:    pCfg.Options["project-id"],
 		Zone:         pCfg.Options["zone"],
 		InstanceName: pCfg.Options["instance-name"],
+		SnapshotName: pCfg.Options["snapshot-name"],
 	}
 }
 
@@ -128,8 +130,27 @@ func New(pCfg *providers.Config) (*Provider, error) {
 		diskUrl, err = sc.cloneDisk(instanceInfo.BootDiskSource, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
 		if err != nil {
 			log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot creation")
-			return nil, errors.Wrap(err, "something went wrong; unable to complete setup for gcp instance snapshot")
+			return nil, errors.Wrap(err, "could not create gcp instance snapshot")
 		}
+		mi.diskUrl = diskUrl
+		mi.deviceName = "cnspec"
+
+		err = sc.attachDisk(scanner.projectID, scanner.zone, scanner.instanceName, mi.diskUrl, mi.deviceName)
+		if err != nil {
+			return nil, err
+		}
+	case "snapshot":
+		snapshotInfo, err := sc.SnapshotInfo(target.ProjectID, target.SnapshotName)
+		if err != nil {
+			return nil, err
+		}
+
+		diskUrl, err = sc.createSnapshotDisk(snapshotInfo.SnapshotUrl, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+		if err != nil {
+			log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot disk creation")
+			return nil, errors.Wrap(err, "could not create disk from snapshot")
+		}
+
 		mi.diskUrl = diskUrl
 		mi.deviceName = "cnspec"
 

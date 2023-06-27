@@ -508,6 +508,27 @@ func ScanGcpComputeInstanceCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRun
 	return cmd
 }
 
+func ScanGcpComputeSnapshotCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "snapshot INSTANCE-NAME",
+		Short: docs.GetShort("gcp-compute-instance"),
+		Long:  docs.GetLong("gcp-compute-instance"),
+		Args:  cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			preRun(cmd, args)
+			viper.BindPFlag("project-id", cmd.Flags().Lookup("project-id"))
+			viper.BindPFlag("zone", cmd.Flags().Lookup("zone"))
+			viper.BindPFlag("credentials-path", cmd.Flags().Lookup("credentials-path"))
+		},
+		Run: runFn,
+	}
+	commonCmdFlags(cmd)
+	cmd.Flags().String("project-id", "", "specify the GCP project ID where the target instance is located")
+	cmd.Flags().String("zone", "", "specify the GCP zone where the target instance is located")
+	cmd.Flags().String("credentials-path", "", "The path to the service account credentials to access the APIs with")
+	return cmd
+}
+
 func ScanGcpFolderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "folder FOLDER-ID",
