@@ -8,10 +8,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/cli/components"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers/plugin"
 	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/types"
 )
 
 type Command struct {
@@ -157,11 +160,6 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 		Use:   connector.Use,
 		Short: cmd.Action + connector.Short,
 		Long:  connector.Long,
-		PreRun: func(cc *cobra.Command, args []string) {
-			if cmd.Command.PreRun != nil {
-				cmd.Command.PreRun(cc, args)
-			}
-		},
 	}
 	cmd.Command.AddCommand(res)
 	setConnector(provider, connector, res)
@@ -169,6 +167,30 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 
 func setConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *cobra.Command) {
 	oldRun := cmd.Run
+	oldPreRun := cmd.PreRun
+
+	cmd.PreRun = func(cc *cobra.Command, args []string) {
+		if oldPreRun != nil {
+			oldPreRun(cc, args)
+		}
+
+		// Config options need to be connected to flags before the Run begins.
+		// Flags are provided by the connector.
+		for i := range connector.Flags {
+			flag := connector.Flags[i]
+			if flag.ConfigEntry == "-" {
+				continue
+			}
+
+			flagName := flag.ConfigEntry
+			if flagName == "" {
+				flagName = flag.Long
+			}
+
+			viper.BindPFlag(flagName, cmd.Flags().Lookup(flag.Long))
+		}
+	}
+
 	cmd.Run = func(cc *cobra.Command, args []string) {
 		if oldRun != nil {
 			oldRun(cc, args)
@@ -190,7 +212,38 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *c
 		}
 		// ^^
 
-		panic("NOW DO THE PARSING stuff")
+		flags := map[string]*llx.Primitive{}
+		for i := range connector.Flags {
+			flag := connector.Flags[i]
+
+			// we skip this because it's coded above
+			if flag.Long == "ask-pass" {
+				continue
+			}
+
+			switch flag.Type {
+			case plugin.FlagType_Bool:
+				if v, err := cmd.Flags().GetBool(flag.Long); err == nil {
+					flags[flag.Long] = llx.BoolPrimitive(v)
+				}
+			case plugin.FlagType_Int:
+				if v, err := cmd.Flags().GetInt(flag.Long); err == nil {
+					flags[flag.Long] = llx.IntPrimitive(int64(v))
+				}
+			case plugin.FlagType_String:
+				if v, err := cmd.Flags().GetString(flag.Long); err == nil {
+					flags[flag.Long] = llx.StringPrimitive(v)
+				}
+			case plugin.FlagType_List:
+				if v, err := cmd.Flags().GetStringSlice(flag.Long); err == nil {
+					flags[flag.Long] = llx.ArrayPrimitiveT(v, llx.StringPrimitive, types.String)
+				}
+			case plugin.FlagType_KeyValue:
+				if v, err := cmd.Flags().GetStringToString(flag.Long); err == nil {
+					flags[flag.Long] = llx.MapPrimitiveT(v, llx.StringPrimitive, types.String)
+				}
+			}
+		}
 
 		cmd.Run(cc, nil)
 	}
