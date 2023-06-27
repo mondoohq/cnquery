@@ -247,15 +247,25 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			}
 		}
 
-		var cliRes *proto.ParseCLIRes
+		p, err := providers.Coordinator.Start(provider.Name)
+		if err != nil {
+			providers.Coordinator.Shutdown()
+			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
+		}
 
-		providers.Coordinator.Start(provider.Name)
+		cliRes, err := p.Plugin.ParseCLI(&proto.ParseCLIReq{})
+		if err != nil {
+			providers.Coordinator.Shutdown()
+			log.Fatal().Err(err).Msg("failed to parse cli arguments")
+		}
 
 		if cliRes == nil {
+			providers.Coordinator.Shutdown()
 			log.Fatal().Msg("failed to process CLI arguments, nothing was returned")
 		}
 
 		run(cc, cliRes)
+		providers.Coordinator.Shutdown()
 	}
 
 	for i := range connector.Flags {

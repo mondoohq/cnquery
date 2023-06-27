@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 
 	"go.mondoo.com/cnquery/llx"
@@ -15,7 +16,7 @@ func main() {
 type server struct{}
 
 func (s *server) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
-	panic("NOT YET FOR OS")
+	return &proto.ParseCLIRes{}, errors.New("OK, this is from the plugin now...")
 }
 
 func (s *server) Connect(req *proto.ConnectReq) (*proto.Connection, error) {

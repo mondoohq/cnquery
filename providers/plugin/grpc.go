@@ -5,6 +5,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/proto"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 func init() {
@@ -19,15 +20,32 @@ type GRPCClient struct {
 }
 
 func (m *GRPCClient) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
-	panic("NOT IMPL")
+	return m.client.ParseCLI(context.Background(), req)
 }
 
 func (m *GRPCClient) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
-	panic("NOT IMPL")
+	return m.client.Connect(context.Background(), req)
 }
 
 func (m *GRPCClient) GetData(req *proto.DataReq, callback ProviderCallback) (*llx.Result, error) {
-	panic("NOT IMPL")
+	helper := &GRPCProviderCallbackServer{Impl: callback}
+
+	var s *grpc.Server
+	serverFunc := func(opts []grpc.ServerOption) *grpc.Server {
+		s = grpc.NewServer(opts...)
+		proto.RegisterProviderCallbackServer(s, helper)
+
+		return s
+	}
+
+	brokerID := m.broker.NextId()
+	req.CallbackServer = brokerID
+	go m.broker.AcceptAndServe(brokerID, serverFunc)
+
+	res, err := m.client.GetData(context.Background(), req)
+
+	s.Stop()
+	return res, err
 }
 
 // Here is the gRPC server that GRPCClient talks to.
@@ -36,6 +54,14 @@ type GRPCServer struct {
 	Impl   ProviderPlugin
 	broker *plugin.GRPCBroker
 	proto.UnimplementedProviderPluginServer
+}
+
+func (m *GRPCServer) ParseCLI(ctx context.Context, req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
+	return m.Impl.ParseCLI(req)
+}
+
+func (m *GRPCServer) Connect(ctx context.Context, req *proto.ConnectReq) (*proto.Connection, error) {
+	return m.Impl.Connect(req)
 }
 
 func (m *GRPCServer) GetData(ctx context.Context, req *proto.DataReq) (*llx.Result, error) {

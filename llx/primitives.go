@@ -150,12 +150,30 @@ func ArrayPrimitive(v []*Primitive, childType types.Type) *Primitive {
 	}
 }
 
+// ArrayPrimitiveT create a primitive from an array of type T
+func ArrayPrimitiveT[T any](v []T, f func(T) *Primitive, typ types.Type) *Primitive {
+	vt := make([]*Primitive, len(v))
+	for i := range v {
+		vt[i] = f(v[i])
+	}
+	return ArrayPrimitive(vt, typ)
+}
+
 // MapPrimitive creates a primitive from a map of primitives
 func MapPrimitive(v map[string]*Primitive, childType types.Type) *Primitive {
 	return &Primitive{
 		Type: string(types.Map(types.String, childType)),
 		Map:  v,
 	}
+}
+
+// MapPrimitive creates a primitive from a map of type T
+func MapPrimitiveT[T any](v map[string]T, f func(T) *Primitive, typ types.Type) *Primitive {
+	vt := make(map[string]*Primitive, len(v))
+	for i := range v {
+		vt[i] = f(v[i])
+	}
+	return MapPrimitive(vt, typ)
 }
 
 // FunctionPrimitive points to a function in the call stack

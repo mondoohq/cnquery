@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sync"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-hclog"
@@ -15,22 +16,26 @@ import (
 
 type coordinator struct {
 	Providers Providers
+	Running   []*ProviderRuntime
+	mutex     sync.Mutex
 }
 
-var Coordinator = coordinator{}
+var Coordinator = coordinator{
+	Running: []*ProviderRuntime{},
+}
 
-func (c *coordinator) Start(name string) error {
+func (c *coordinator) Start(name string) (*ProviderRuntime, error) {
 	if c.Providers == nil {
 		var err error
 		c.Providers, err = List()
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	provider, ok := c.Providers[name]
 	if !ok {
-		return errors.New("cannot find provider " + name)
+		return nil, errors.New("cannot find provider " + name)
 	}
 
 	// disable the plugin's logs
@@ -56,45 +61,67 @@ func (c *coordinator) Start(name string) error {
 		Logger: pluginLogger,
 		Stderr: os.Stderr,
 	})
-	defer client.Kill()
 
 	// Connect via RPC
 	rpcClient, err := client.Client()
 	if err != nil {
-		return errors.Wrap(err, "failed to initialize plugin client")
+		client.Kill()
+		return nil, errors.Wrap(err, "failed to initialize plugin client")
 	}
 
 	// Request the plugin
 	pluginName := "provider"
 	raw, err := rpcClient.Dispense(pluginName)
 	if err != nil {
-		return errors.Wrap(err, "failed to call "+pluginName+" plugin")
+		client.Kill()
+		return nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
 	}
 
-	cnquery := raw.(pp.ProviderPlugin)
+	res := &ProviderRuntime{
+		Name:   name,
+		Plugin: raw.(pp.ProviderPlugin),
+		Client: client,
+	}
 
-	// writer := shared.IOWriter{Writer: os.Stdout}
-	// err = cnquery.RunQuery(conf, &writer)
-	// if err != nil {
-	// 	if status, ok := status.FromError(err); ok {
-	// 		code := status.Code()
-	// 		switch code {
-	// 		case codes.Unavailable, codes.Internal:
-	// 			return errors.New(pluginName + " plugin crashed, please report any stack trace you see with this error")
-	// 		case codes.Unimplemented:
-	// 			return errors.New(pluginName + " plugin failed, the call is not implemented, please report this error")
-	// 		default:
-	// 			return errors.New(pluginName + " plugin failed, error " + strconv.Itoa(int(code)) + ": " + status.Message())
-	// 		}
-	// 	}
+	c.mutex.Lock()
+	c.Running = append(c.Running, res)
+	c.mutex.Unlock()
 
-	// 	return err
-	// }
+	return res, nil
+}
 
-	panic("STH")
-	_ = cnquery
+type ProviderRuntime struct {
+	Name   string
+	Plugin pp.ProviderPlugin
+	Client *plugin.Client
 
-	return nil
+	isClosed bool
+}
+
+func (c *coordinator) Close(p *ProviderRuntime) {
+	if !p.isClosed {
+		p.isClosed = true
+		p.Client.Kill()
+	}
+
+	c.mutex.Lock()
+	for i := range c.Running {
+		if c.Running[i] == p {
+			c.Running = append(c.Running[0:i], c.Running[i+1:]...)
+			break
+		}
+	}
+	c.mutex.Unlock()
+}
+
+func (c *coordinator) Shutdown() {
+	c.mutex.Lock()
+	for i := range c.Running {
+		cur := c.Running[i]
+		cur.isClosed = true
+		cur.Client.Kill()
+	}
+	c.mutex.Unlock()
 }
 
 func addColorConfig(cmd *exec.Cmd) {
