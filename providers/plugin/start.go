@@ -1,5 +1,9 @@
 package plugin
 
+import (
+	"github.com/hashicorp/go-plugin"
+)
+
 type Provider struct {
 	Name       string
 	Connectors []Connector
@@ -43,12 +47,21 @@ type Flag struct {
 	Desc    string     `json:",omitempty"`
 	Type    FlagType   `json:",omitempty"`
 	Option  FlagOption `json:",omitempty"`
+	// ConfigEntry that is used for this flag:
+	// "" = use the same as Long
+	// "some.other" = map to some.other field
+	// "-" = do not read this from config
+	ConfigEntry string `json:",omitempty"`
 }
 
-func Start(args []string) {
-	if len(args) != 0 {
-		switch args[0] {
-		case "generate":
-		}
-	}
+func Start(args []string, impl ProviderPlugin) {
+	plugin.Serve(&plugin.ServeConfig{
+		HandshakeConfig: Handshake,
+		Plugins: map[string]plugin.Plugin{
+			"provider": &ProviderPluginImpl{Impl: impl},
+		},
+
+		// A non-nil value here enables gRPC serving for this plugin...
+		GRPCServer: plugin.DefaultGRPCServer,
+	})
 }

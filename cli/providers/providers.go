@@ -152,7 +152,9 @@ func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector,
 
 		log.Info().Msg("no provider specified, defaulting to local.\n  Use --help for a list of available providers.")
 	}
-	setConnector(provider, connector, cmd.Command)
+	cmd.Command.Short = cmd.Action + connector.Short
+
+	setConnector(provider, connector, cmd.Run, cmd.Command)
 }
 
 func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, cmd *Command) {
@@ -162,10 +164,10 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 		Long:  connector.Long,
 	}
 	cmd.Command.AddCommand(res)
-	setConnector(provider, connector, res)
+	setConnector(provider, connector, cmd.Run, res)
 }
 
-func setConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *cobra.Command) {
+func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *proto.ParseCLIRes), cmd *cobra.Command) {
 	oldRun := cmd.Run
 	oldPreRun := cmd.PreRun
 
@@ -245,7 +247,15 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, cmd *c
 			}
 		}
 
-		cmd.Run(cc, nil)
+		var cliRes *proto.ParseCLIRes
+
+		providers.Coordinator.Start(provider.Name)
+
+		if cliRes == nil {
+			log.Fatal().Msg("failed to process CLI arguments, nothing was returned")
+		}
+
+		run(cc, cliRes)
 	}
 
 	for i := range connector.Flags {

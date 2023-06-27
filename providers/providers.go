@@ -39,6 +39,10 @@ func List() (Providers, error) {
 			return nil, err
 		}
 	}
+
+	// useful for caching; even if the structure gets updated with new providers
+	Coordinator.Providers = res
+
 	return res, nil
 }
 

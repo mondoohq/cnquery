@@ -42,14 +42,14 @@ message DataRes {
   string code_id = 3;  
 }
 
-message Empty {}
+message CollectRes {}
 
-service Provider {
+service ProviderPlugin {
   rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
   rpc Connect(ConnectReq) returns (Connection);
   rpc GetData(DataReq) returns (cnquery.llx.Result);
 }
 
-service LlxCallback {
-  rpc Collect(cnquery.llx.Result) returns (Empty);
+service ProviderCallback {
+  rpc Collect(cnquery.llx.Result) returns (CollectRes);
 }

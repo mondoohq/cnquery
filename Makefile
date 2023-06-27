@@ -70,6 +70,7 @@ endef
 
 .PHONY: providers
 providers:
+	go generate ./providers/proto
 	@$(call genProvider, providers/os)
 # add more providers...
 
