@@ -461,7 +461,12 @@ func arrayFlat(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawD
 		res = append(res, flatten(list[i])...)
 	}
 
-	return &RawData{Type: bind.Type.Child(), Value: res}, 0, nil
+	typ := bind.Type
+	for typ.IsArray() {
+		typ = typ.Child()
+	}
+
+	return &RawData{Type: types.Array(typ), Value: res}, 0, nil
 }
 
 // Take an array and separate it into a list of unique entries and another

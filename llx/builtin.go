@@ -506,6 +506,7 @@ func init() {
 			"$any":                            {f: dictAnyV2},
 			"$one":                            {f: dictOneV2},
 			"map":                             {f: dictMapV2},
+			"flat":                            {f: dictFlat},
 			"difference":                      {f: dictDifferenceV2},
 			"containsNone":                    {f: dictContainsNoneV2},
 			string("contains" + types.String): {f: dictContainsStringV2, Label: "contains"},
