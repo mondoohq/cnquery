@@ -25,6 +25,11 @@ var Coordinator = coordinator{
 }
 
 func (c *coordinator) Start(name string) (*ProviderRuntime, error) {
+	if x, ok := builtinProviders[name]; ok {
+		log.Warn().Msg("using builtin provider for " + name)
+		return x.Runtime, nil
+	}
+
 	if c.Providers == nil {
 		var err error
 		c.Providers, err = List()
@@ -101,7 +106,9 @@ type ProviderRuntime struct {
 func (c *coordinator) Close(p *ProviderRuntime) {
 	if !p.isClosed {
 		p.isClosed = true
-		p.Client.Kill()
+		if p.Client != nil {
+			p.Client.Kill()
+		}
 	}
 
 	c.mutex.Lock()

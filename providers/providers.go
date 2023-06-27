@@ -43,6 +43,13 @@ func List() (Providers, error) {
 	// useful for caching; even if the structure gets updated with new providers
 	Coordinator.Providers = res
 
+	// we add builtin ones here, possibly overriding providers in paths
+	for name, x := range builtinProviders {
+		res[name] = &Provider{
+			Provider: x.Config,
+		}
+	}
+
 	return res, nil
 }
 
