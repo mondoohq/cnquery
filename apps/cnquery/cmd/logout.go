@@ -24,8 +24,8 @@ var logoutCmd = &cobra.Command{
 	Aliases: []string{"unregister"},
 	Short:   "Log out from Mondoo Platform.",
 	Long: `
-This process also revokes the client's service account to ensure
-the credentials cannot be used in the future.
+	This process also revokes the Mondoo Platform service account to 
+ensure the credentials cannot be used in the future.
 `,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("force", cmd.Flags().Lookup("force"))
@@ -69,7 +69,7 @@ the credentials cannot be used in the future.
 		}
 		client, err := upstream.NewAgentManagerClient(opts.UpstreamApiEndpoint(), httpClient, plugins...)
 		if err != nil {
-			log.Error().Err(err).Msg("could not initialize client authentication")
+			log.Error().Err(err).Msg("could not initialize connection to Mondoo Platform")
 			os.Exit(ConfigurationErrorCode)
 		}
 
