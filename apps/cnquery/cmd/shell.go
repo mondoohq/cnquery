@@ -27,19 +27,19 @@ func init() {
 var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 	Use:   "shell",
 	Short: "Interactive query shell for MQL.",
-	Long:  `Allows the interactive exploration of MQL queries.`,
+	Long:  `Run an interactive shell in which you can explore MQL queries.`,
 	CommonFlags: func(cmd *cobra.Command) {
 		cmd.Flags().StringP("password", "p", "", "Set the connection password, such as for SSH/WinRM.")
 		cmd.Flags().Bool("ask-pass", false, "Prompt for connection password.")
 
 		cmd.Flags().String("query", "", "MQL query to executed.")
 		cmd.Flags().MarkHidden("query")
-		cmd.Flags().StringP("command", "c", "", "MQL query to executed in the shell.")
+		cmd.Flags().StringP("command", "c", "", "MQL query to execute in the shell.")
 		cmd.Flags().StringP("identity-file", "i", "", "Select a file from which to read the identity (private key) for public key authentication.")
 		cmd.Flags().Bool("insecure", false, "Disable TLS/SSL checks or SSH hostkey config.")
 		cmd.Flags().Bool("sudo", false, "Elevate privileges with sudo.")
 		cmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
-		cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure or GCP).")
+		cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure, or GCP.")
 		cmd.Flags().Bool("host-machines", false, "Also scan host machines like ESXi server.")
 		cmd.Flags().Bool("record", false, "Record all backend calls.")
 		cmd.Flags().MarkHidden("record")
@@ -72,7 +72,7 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 			},
 			"mock": {
 				Short: "Connect to mock target (a simulated asset).",
-				Long: `Connect to a mock target. This is a simulated asset. The data was recorded beforehand.
+				Long: `Connect to a mock target. This connects to a simulated asset. We recorded the asset's data beforehand.
 Provide the recording with mock data as an argument:
 
     cnquery shell container ubuntu:latest --record
@@ -101,7 +101,7 @@ if it's not the full ID:
     cnquery shell container b62
     cnquery shell container ubuntu:latest
 
-You can also explicitly connect to an image or container registry:
+You can also explicitly connect to an image or a container registry:
 
     cnquery shell container image ubuntu:20.04
     cnquery shell container registry harbor.lunalectric.com/project/repository

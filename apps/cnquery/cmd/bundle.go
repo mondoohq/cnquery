@@ -108,7 +108,7 @@ func validate(queryPackBundle *explorer.Bundle) []string {
 var queryPackLintCmd = &cobra.Command{
 	Use:     "lint [path]",
 	Aliases: []string{"validate"},
-	Short:   "Lint a query pack.",
+	Short:   "Apply style formatting to a query pack.",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info().Str("file", args[0]).Msg("validate query pack")
@@ -133,7 +133,7 @@ var queryPackLintCmd = &cobra.Command{
 var queryPackPublishCmd = &cobra.Command{
 	Use:     "publish [path]",
 	Aliases: []string{"upload"},
-	Short:   "Add a user-owned query pack to Mondoo Query Hub.",
+	Short:   "Add a user-owned query pack to Mondoo Security Registry.",
 	Args:    cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))
@@ -191,7 +191,7 @@ var queryPackPublishCmd = &cobra.Command{
 		}
 		queryHubServices, err := explorer.NewQueryHubClient(opts.UpstreamApiEndpoint(), httpClient, certAuth)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not connect to query hub")
+			log.Fatal().Err(err).Msg("could not connect to Security Registry")
 		}
 
 		// set the owner mrn for spaces

@@ -29,7 +29,7 @@ var loginCmd = &cobra.Command{
 	Aliases: []string{"register"},
 	Short:   "Register with Mondoo Platform.",
 	Long: `
-Log in to Mondoo platform using a registration token. To pass in the token, use 
+Log in to Mondoo Platform using a registration token. To pass in the token, use 
 the '--token' flag.
 
 You can generate a new registration token on the Mondoo Dashboard. Go to

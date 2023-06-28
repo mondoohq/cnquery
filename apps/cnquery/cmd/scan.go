@@ -59,7 +59,7 @@ To manually configure a query pack, use this:
 			},
 			"mock": {
 				Short: "Scan a mock target (a simulated asset).",
-				Long: `Scan a mock target. The data was recorded beforehand.
+				Long: `Scan a mock target. This scans a simulated asset. We recorded the asset's data beforehand.
 Provide the recording with mock data as an argument:
 
     cnquery scan container ubuntu:latest --record
@@ -161,7 +161,7 @@ scan execute on an instance that is running inside of AWS.`,
 			"aws-ec2-ebs-snapshot": {
 				Short: "Scan a specific AWS snapshot using an EBS volume scan. This requires an AWS host.",
 				Long: `Scan a specific AWS snapshot using an EBS volume scan. This requires that the
-				scan execute on an instance that is running inside of AWS.`,
+scan execute on an instance that is running inside of AWS.`,
 			},
 			"aws-ec2-ssm": {
 				Short: "Scan an AWS instance using the AWS Systems Manager to connect.",
@@ -284,7 +284,7 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 		cmd.Flags().Bool("ask-pass", false, "Ask for connection password.")
 		cmd.Flags().StringP("identity-file", "i", "", "Select a file from which to read the identity (private key) for public key authentication.")
 		cmd.Flags().String("id-detector", "", "User override for platform ID detection mechanism. Supported: "+strings.Join(providers.AvailablePlatformIdDetector(), ", "))
-		cmd.Flags().String("asset-name", "", "User-override for the asset name")
+		cmd.Flags().String("asset-name", "", "User override for the asset name.")
 		cmd.Flags().StringToString("props", nil, "Custom values for properties")
 
 		cmd.Flags().String("path", "", "Path to a local file or directory for the connection to use.")
