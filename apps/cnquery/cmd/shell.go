@@ -181,8 +181,20 @@ configure your Azure credentials and have SSH access to the virtual machines.`,
 			"gcp": {
 				Short: "Connect to a Google Cloud Platform (GCP) project.",
 			},
+			"gcp-org": {
+				Short: "Connect to a Google Cloud Platform (GCP) organization.",
+			},
+			"gcp-project": {
+				Short: "Connect to a Google Cloud Platform (GCP) project.",
+			},
+			"gcp-folder": {
+				Short: "Connect to a Google Cloud Platform (GCP) folder.",
+			},
 			"gcp-gcr": {
 				Short: "Connect to a Google Container Registry (GCR).",
+			},
+			"gcp-compute-instance": {
+				Short: "Connect to a Google Cloud Platform (GCP) VM instance.",
 			},
 			"vsphere": {
 				Short: "Connect to a VMware vSphere API endpoint.",
