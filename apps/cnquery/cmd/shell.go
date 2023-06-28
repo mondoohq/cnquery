@@ -39,7 +39,7 @@ var shellCmd = builder.NewProviderCommand(builder.CommandOpts{
 		cmd.Flags().Bool("insecure", false, "Disable TLS/SSL checks or SSH hostkey config.")
 		cmd.Flags().Bool("sudo", false, "Elevate privileges with sudo.")
 		cmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
-		cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure or GCP.")
+		cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure, or GCP.")
 		cmd.Flags().Bool("host-machines", false, "Also scan host machines like ESXi server.")
 		cmd.Flags().Bool("record", false, "Record all backend calls.")
 		cmd.Flags().MarkHidden("record")
