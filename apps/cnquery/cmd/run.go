@@ -162,7 +162,7 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 				Short: "Run an MQL query against a mounted file system target.",
 			},
 			"opcua": {
-				Short: "Run an MQL query against a OPC UA endpoint.",
+				Short: "Run an MQL query against an OPC UA endpoint.",
 			},
 		},
 	},
