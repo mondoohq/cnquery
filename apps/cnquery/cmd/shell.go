@@ -175,7 +175,7 @@ scan execute on an instance that is running inside of AWS.`,
 			"azure": {
 				Short: "Connect to a Microsoft Azure subscription or virtual machines.",
 				Long: `Connect to a Microsoft Azure subscriptions or virtual machines. This uses your local Azure
-configuration for the account scan. To scan Azure virtual machines, you must
+configuration for the account scan. To connect to Azure virtual machines, you must
 configure your Azure credentials and have SSH access to the virtual machines.`,
 			},
 			"gcp": {
