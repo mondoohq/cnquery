@@ -24,7 +24,7 @@ var logoutCmd = &cobra.Command{
 	Aliases: []string{"unregister"},
 	Short:   "Log out from Mondoo Platform.",
 	Long: `
-	This process also revokes the Mondoo Platform service account to 
+This process also revokes the Mondoo Platform service account to 
 ensure the credentials cannot be used in the future.
 `,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -120,6 +120,6 @@ ensure the credentials cannot be used in the future.
 			}
 		}
 
-		log.Info().Msgf("Bye bye, space cowboy. Client %s unregistered successfully", credentials.Mrn)
+		log.Info().Msgf("Bye bye, space cat. Client %s unregistered successfully", credentials.Mrn)
 	},
 }

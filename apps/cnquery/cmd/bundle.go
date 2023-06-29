@@ -133,7 +133,7 @@ var queryPackLintCmd = &cobra.Command{
 var queryPackPublishCmd = &cobra.Command{
 	Use:     "publish [path]",
 	Aliases: []string{"upload"},
-	Short:   "Add a user-owned query pack to Mondoo Security Registry.",
+	Short:   "Add a user-owned query pack to the Mondoo Security Registry.",
 	Args:    cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))

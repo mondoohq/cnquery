@@ -175,7 +175,7 @@ scan execute on an instance that is running inside of AWS.`,
 			"azure": {
 				Short: "Connect to a Microsoft Azure subscription or virtual machines.",
 				Long: `Connect to a Microsoft Azure subscriptions or virtual machines. This uses your local Azure
-configuration for the account scan. To scan Azure virtual machines, you must
+configuration for the account scan. To connect to Azure virtual machines, you must
 configure your Azure credentials and have SSH access to the virtual machines.`,
 			},
 			"gcp": {
@@ -255,7 +255,7 @@ This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
 				Short: "Connect to a mounted file system target.",
 			},
 			"opcua": {
-				Short: "Connect to a OPC UA endpoint.",
+				Short: "Connect to an OPC UA endpoint.",
 			},
 		},
 	},
