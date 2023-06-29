@@ -11,6 +11,10 @@ var Config = plugin.Provider{
 			Short:   "your local system",
 			MinArgs: 0,
 			MaxArgs: 0,
+			Discovery: []string{
+				"containers",
+				"container-images",
+			},
 			Flags: []plugin.Flag{
 				{
 					Long:        "sudo",

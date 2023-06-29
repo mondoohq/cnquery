@@ -1,5 +1,19 @@
 package detector
 
+import (
+	"runtime"
+
+	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers/os/connection"
+)
+
+func Detect(conn connection.Connection) (*platform.Platform, bool) {
+	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
+		return WindowsFamily.Resolve(conn)
+	}
+	return OperatingSystems.Resolve(conn)
+}
+
 // map that is organized by platform name, to quickly determine its families
 var osTree = platfromPartens(OperatingSystems)
 

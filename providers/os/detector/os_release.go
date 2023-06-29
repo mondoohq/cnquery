@@ -6,19 +6,18 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
-func NewOSReleaseDetector(p os.OperatingSystemProvider) *OSReleaseDetector {
+func NewOSReleaseDetector(conn connection.Connection) *OSReleaseDetector {
 	return &OSReleaseDetector{
-		provider: p,
+		provider: conn,
 	}
 }
 
 type OSReleaseDetector struct {
-	provider os.OperatingSystemProvider
+	provider connection.Connection
 }
 
 func (d *OSReleaseDetector) command(command string) (string, error) {
@@ -65,7 +64,7 @@ func (d *OSReleaseDetector) unamem() (string, error) {
 // VERSION_CODENAME=xenial
 // UBUNTU_CODENAME=xenial
 func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
-	f, err := d.provider.FS().Open("/etc/os-release")
+	f, err := d.provider.FileSystem().Open("/etc/os-release")
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +86,7 @@ func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
 // lsb release is not the default on newer systems, but can still be used
 // as a fallback mechanism
 func (d *OSReleaseDetector) lsbconfig() (map[string]string, error) {
-	f, err := d.provider.FS().Open("/etc/lsb-release")
+	f, err := d.provider.FileSystem().Open("/etc/lsb-release")
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +117,7 @@ func (d *OSReleaseDetector) darwin_swversion() (map[string]string, error) {
 
 // macosSystemVersion is a specifc identifier for the operating system on macos
 func (d *OSReleaseDetector) macosSystemVersion() (map[string]string, error) {
-	f, err := d.provider.FS().Open("/System/Library/CoreServices/SystemVersion.plist")
+	f, err := d.provider.FileSystem().Open("/System/Library/CoreServices/SystemVersion.plist")
 	if err != nil {
 		return nil, err
 	}

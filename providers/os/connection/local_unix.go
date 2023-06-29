@@ -1,19 +1,17 @@
 //go:build !windows
 // +build !windows
 
-package local
+package connection
 
 import (
 	"os"
 	"syscall"
-
-	pos "go.mondoo.com/cnquery/motor/providers/os"
 )
 
-func (p *Provider) fileowner(stat os.FileInfo) (int64, int64) {
+func (c *LocalConnection) fileowner(stat os.FileInfo) (int64, int64) {
 	uid := int64(-1)
 	gid := int64(-1)
-	if stat, ok := stat.Sys().(*pos.FileInfo); ok {
+	if stat, ok := stat.Sys().(*FileInfo); ok {
 		uid = stat.Uid
 		gid = stat.Gid
 	}

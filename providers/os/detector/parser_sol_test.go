@@ -3,10 +3,9 @@ package detector_test
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/motor/platform/detector"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 func TestOpenSolaris2009Release(t *testing.T) {

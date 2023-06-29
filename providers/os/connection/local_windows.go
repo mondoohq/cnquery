@@ -1,11 +1,11 @@
 //go:build windows
 // +build windows
 
-package local
+package connection
 
 import "os"
 
-func (p *Provider) fileowner(stat os.FileInfo) (int64, int64) {
+func (c *Connection) fileowner(stat os.FileInfo) (int64, int64) {
 	uid := int64(-1)
 	gid := int64(-1)
 

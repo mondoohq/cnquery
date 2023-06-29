@@ -2,6 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"regexp"
+	"strings"
+
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -9,16 +14,13 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/config"
+	"go.mondoo.com/cnquery/cli/providers"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/scope"
-	"net/http"
-	"os"
-	"regexp"
-	"strings"
 )
 
 const (
@@ -42,9 +44,21 @@ var rootCmd = &cobra.Command{
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	// normal cli handling
+	err := providers.ProcessCLI(
+		rootCmd,
+		&providers.Command{
+			Command: shellCmd,
+			Run:     shellRun,
+			Action:  "Interactive shell with ",
+		},
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

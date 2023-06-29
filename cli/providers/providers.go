@@ -171,6 +171,18 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 	oldRun := cmd.Run
 	oldPreRun := cmd.PreRun
 
+	supportedDiscoveries := append([]string{"all", "auto"}, connector.Discovery...)
+
+	builtinFlags := []plugin.Flag{
+		{
+			Long: "discover",
+			Type: plugin.FlagType_List,
+			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ","),
+		},
+	}
+
+	allFlags := append(connector.Flags, builtinFlags...)
+
 	cmd.PreRun = func(cc *cobra.Command, args []string) {
 		if oldPreRun != nil {
 			oldPreRun(cc, args)
@@ -178,8 +190,8 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 
 		// Config options need to be connected to flags before the Run begins.
 		// Flags are provided by the connector.
-		for i := range connector.Flags {
-			flag := connector.Flags[i]
+		for i := range allFlags {
+			flag := allFlags[i]
 			if flag.ConfigEntry == "-" {
 				continue
 			}
@@ -214,9 +226,9 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 		// ^^
 
-		flags := map[string]*llx.Primitive{}
-		for i := range connector.Flags {
-			flag := connector.Flags[i]
+		flagVals := map[string]*llx.Primitive{}
+		for i := range allFlags {
+			flag := allFlags[i]
 
 			// we skip this because it's coded above
 			if flag.Long == "ask-pass" {
@@ -226,23 +238,23 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			switch flag.Type {
 			case plugin.FlagType_Bool:
 				if v, err := cmd.Flags().GetBool(flag.Long); err == nil {
-					flags[flag.Long] = llx.BoolPrimitive(v)
+					flagVals[flag.Long] = llx.BoolPrimitive(v)
 				}
 			case plugin.FlagType_Int:
 				if v, err := cmd.Flags().GetInt(flag.Long); err == nil {
-					flags[flag.Long] = llx.IntPrimitive(int64(v))
+					flagVals[flag.Long] = llx.IntPrimitive(int64(v))
 				}
 			case plugin.FlagType_String:
 				if v, err := cmd.Flags().GetString(flag.Long); err == nil {
-					flags[flag.Long] = llx.StringPrimitive(v)
+					flagVals[flag.Long] = llx.StringPrimitive(v)
 				}
 			case plugin.FlagType_List:
 				if v, err := cmd.Flags().GetStringSlice(flag.Long); err == nil {
-					flags[flag.Long] = llx.ArrayPrimitiveT(v, llx.StringPrimitive, types.String)
+					flagVals[flag.Long] = llx.ArrayPrimitiveT(v, llx.StringPrimitive, types.String)
 				}
 			case plugin.FlagType_KeyValue:
 				if v, err := cmd.Flags().GetStringToString(flag.Long); err == nil {
-					flags[flag.Long] = llx.MapPrimitiveT(v, llx.StringPrimitive, types.String)
+					flagVals[flag.Long] = llx.MapPrimitiveT(v, llx.StringPrimitive, types.String)
 				}
 			}
 		}
@@ -253,7 +265,11 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
 		}
 
-		cliRes, err := p.Plugin.ParseCLI(&proto.ParseCLIReq{})
+		cliRes, err := p.Plugin.ParseCLI(&proto.ParseCLIReq{
+			Connector: connector.Name,
+			Args:      args,
+			Flags:     flagVals,
+		})
 		if err != nil {
 			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to parse cli arguments")
@@ -268,8 +284,8 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		providers.Coordinator.Shutdown()
 	}
 
-	for i := range connector.Flags {
-		flag := connector.Flags[i]
+	for i := range allFlags {
+		flag := allFlags[i]
 		switch flag.Type {
 		case plugin.FlagType_Bool:
 			if flag.Short != "" {

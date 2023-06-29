@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
 type WmicOSInformation struct {
@@ -131,10 +131,10 @@ func ParseWinWmicOS(csvData io.Reader) (*WmicOSInformation, error) {
 	}
 }
 
-func powershellGetWmiInformation(t os.OperatingSystemProvider) (*WmicOSInformation, error) {
+func powershellGetWmiInformation(conn connection.Connection) (*WmicOSInformation, error) {
 	// wmic is available since Windows Server 2008/Vista
 	command := "wmic os get * /format:csv"
-	cmd, err := t.RunCommand(command)
+	cmd, err := conn.RunCommand(command)
 	if err != nil {
 		return nil, err
 	}

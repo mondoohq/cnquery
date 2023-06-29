@@ -9,15 +9,12 @@ import (
 	"strconv"
 
 	wmi "github.com/StackExchange/wmi"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/os"
 )
 
 const wmiOSQuery = "SELECT Name, Caption, Manufacturer, OSArchitecture, Version, BuildNumber, Description, OSType, ProductType, SerialNumber FROM Win32_OperatingSystem"
 
-func GetWmiInformation(p os.OperatingSystemProvider) (*WmicOSInformation, error) {
+func GetWmiInformation(conn connection.Connection) (*WmicOSInformation, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	_, ok := p.(*local.Provider)
 	if ok && runtime.GOOS == "windows" {
 
 		// we always get a list or entries

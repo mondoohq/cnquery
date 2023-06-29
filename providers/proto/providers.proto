@@ -17,7 +17,6 @@ message ParseCLIRes {
 }
 
 message ConnectReq {
-  uint32 callback_server = 1;
   bytes features = 2;
   // Asset is one target that is being connected to
   cnquery.motor.inventory.v1.Inventory asset = 3;

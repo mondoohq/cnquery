@@ -10,14 +10,15 @@ type Provider struct {
 }
 
 type Connector struct {
-	Name    string
-	Use     string   `json:",omitempty"`
-	Short   string   `json:",omitempty"`
-	Long    string   `json:",omitempty"`
-	MinArgs uint     `json:",omitempty"`
-	MaxArgs uint     `json:",omitempty"`
-	Flags   []Flag   `json:",omitempty"`
-	Aliases []string `json:",omitempty"`
+	Name      string
+	Use       string   `json:",omitempty"`
+	Short     string   `json:",omitempty"`
+	Long      string   `json:",omitempty"`
+	MinArgs   uint     `json:",omitempty"`
+	MaxArgs   uint     `json:",omitempty"`
+	Flags     []Flag   `json:",omitempty"`
+	Aliases   []string `json:",omitempty"`
+	Discovery []string `json:",omitempty"`
 }
 
 type FlagType byte
