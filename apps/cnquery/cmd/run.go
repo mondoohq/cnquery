@@ -96,7 +96,7 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 				Short: "Run an MQL query against a Microsoft Azure subscription or virtual machine.",
 			},
 			"gcp": {
-				Short: "Run an MQL query against a Google Cloud Platform (GCP) organization, project or folder.",
+				Short: "Run an MQL query against a Google Cloud Platform (GCP) organization, project, or folder.",
 			},
 			"gcp-org": {
 				Short: "Run an MQL query against a Google Cloud Platform (GCP) organization.",
@@ -114,7 +114,7 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 				Short: "Run an MQL query against a Google Cloud Platform (GCP) VM instance.",
 			},
 			"oci": {
-				Short: "Run an MQL query against a Oracle Cloud Infrastructure (OCI) tenancy.",
+				Short: "Run an MQL query against an Oracle Cloud Infrastructure (OCI) tenancy.",
 			},
 			"vsphere": {
 				Short: "Run an MQL query against a VMware vSphere API endpoint.",
@@ -180,7 +180,7 @@ var execCmd = builder.NewProviderCommand(builder.CommandOpts{
 		cmd.Flags().Bool("insecure", false, "Disable TLS/SSL checks or SSH hostkey config.")
 		cmd.Flags().Bool("sudo", false, "Elevate privileges with sudo.")
 		cmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
-		cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure or GCP.")
+		cmd.Flags().Bool("instances", false, "Also scan instances. This only applies to API targets like AWS, Azure, or GCP.")
 		cmd.Flags().Bool("host-machines", false, "Also scan host machines like ESXi servers.")
 
 		cmd.Flags().Bool("record", false, "Record provider calls. This only works for operating system providers.")

@@ -191,7 +191,7 @@ var queryPackPublishCmd = &cobra.Command{
 		}
 		queryHubServices, err := explorer.NewQueryHubClient(opts.UpstreamApiEndpoint(), httpClient, certAuth)
 		if err != nil {
-			log.Fatal().Err(err).Msg("could not connect to Security Registry")
+			log.Fatal().Err(err).Msg("could not connect to the Mondoo Security Registry")
 		}
 
 		// set the owner mrn for spaces
