@@ -1,24 +1,30 @@
-package awsecsid
+package awsecs
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/detector"
+	"gotest.tools/assert"
 )
 
+func TestParseECSContainerId(t *testing.T) {
+	path := "//platformid.api.mondoo.app/runtime/aws/ecs/v1/accounts/185972265011/regions/us-east-1/container/vjtest/f088b38d61ac45d6a946b5aebbe7197a/314e35e0-2d0a-4408-b37e-16063461d73a"
+	id, err := ParseMondooECSContainerId(path)
+	assert.NilError(t, err)
+	assert.Equal(t, id.Account, "185972265011")
+	assert.Equal(t, id.Region, "us-east-1")
+	assert.Equal(t, id.Id, "vjtest/f088b38d61ac45d6a946b5aebbe7197a/314e35e0-2d0a-4408-b37e-16063461d73a")
+}
+
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/container-identity.toml")
+	conn, err := mock.New("./testdata/container-identity.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	metadata := NewContainerMetadata(provider, p)
+	metadata := containerMetadata{conn, platform}
 	ident, err := metadata.Identify()
 
 	require.Nil(t, err)

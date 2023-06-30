@@ -1,4 +1,4 @@
-package awsec2_test
+package awsec2
 
 import (
 	"bytes"
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/motorid/awsec2"
 )
 
 func fakeConfig() aws.Config {
@@ -56,7 +55,7 @@ func TestEC2RoleProviderInstanceIdentityLocal(t *testing.T) {
 		}, nil
 	})
 
-	metadata := awsec2.NewLocal(cfg)
+	metadata := NewLocal(cfg)
 	ident, err := metadata.Identify()
 	assert.Nil(t, err)
 	assert.Equal(t, "ec2-name", ident.InstanceName)
@@ -87,7 +86,7 @@ func TestEC2RoleProviderInstanceIdentityLocalDisabledTagsService(t *testing.T) {
 		}, nil
 	})
 
-	metadata := awsec2.NewLocal(cfg)
+	metadata := NewLocal(cfg)
 	ident, err := metadata.Identify()
 	assert.Nil(t, err)
 	assert.Equal(t, "", ident.InstanceName)

@@ -5,15 +5,15 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/motorid/awsec2"
-	awsecsid "go.mondoo.com/cnquery/motor/motorid/awsecs"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/id/awsec2"
+	"go.mondoo.com/cnquery/providers/os/id/awsecs"
 	"go.mondoo.com/cnquery/resources/packs/os/smbios"
 )
 
-func readValue(provider os.OperatingSystemProvider, fPath string) string {
-	content, err := afero.ReadFile(provider.FS(), fPath)
+func readValue(conn connection.Connection, fPath string) string {
+	content, err := afero.ReadFile(conn.FileSystem(), fPath)
 	if err != nil {
 		log.Debug().Err(err).Msgf("unable to read %s", fPath)
 		return ""
@@ -21,7 +21,7 @@ func readValue(provider os.OperatingSystemProvider, fPath string) string {
 	return string(content)
 }
 
-func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, string, []string) {
+func Detect(conn connection.Connection, p *platform.Platform) (string, string, []string) {
 	var values []string
 	if p.IsFamily("linux") {
 		// Fetching the data from the smbios manager is slow for some transports
@@ -31,11 +31,11 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, 
 		// you want to make sure to only check the files we actually look at
 
 		values = []string{
-			readValue(provider, "/sys/class/dmi/id/product_version"),
-			readValue(provider, "/sys/class/dmi/id/bios_vendor"),
+			readValue(conn, "/sys/class/dmi/id/product_version"),
+			readValue(conn, "/sys/class/dmi/id/bios_vendor"),
 		}
 	} else {
-		mgr, err := smbios.ResolveManager(provider, p)
+		mgr, err := smbios.ResolveManager(conn, p)
 		if err != nil {
 			return "", "", nil
 		}
@@ -52,7 +52,7 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, 
 
 	for _, v := range values {
 		if strings.Contains(strings.ToLower(v), "amazon") {
-			mdsvc, err := awsec2.Resolve(provider, p)
+			mdsvc, err := awsec2.Resolve(conn, p)
 			if err != nil {
 				log.Debug().Err(err).Msg("failed to get metadata resolver")
 				return "", "", nil
@@ -62,11 +62,10 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, 
 				return id.InstanceID, id.InstanceName, []string{id.AccountID}
 			}
 			log.Debug().Err(err).
-				Str("provider", provider.Kind().String()).
 				Strs("platform", p.GetFamily()).
 				Msg("failed to get AWS platform id")
 			// try ecs
-			mdsvcEcs, err := awsecsid.Resolve(provider, p)
+			mdsvcEcs, err := awsecs.Resolve(conn, p)
 			if err != nil {
 				log.Debug().Err(err).Msg("failed to get metadata resolver")
 				return "", "", nil
@@ -76,7 +75,6 @@ func Detect(provider os.OperatingSystemProvider, p *platform.Platform) (string, 
 				return idEcs.PlatformIds[0], idEcs.Name, []string{idEcs.AccountPlatformID}
 			} else {
 				log.Debug().Err(err).
-					Str("provider", provider.Kind().String()).
 					Strs("platform", p.GetFamily()).
 					Msg("failed to get AWS platform id")
 			}

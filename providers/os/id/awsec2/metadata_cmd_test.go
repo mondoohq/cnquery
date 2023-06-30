@@ -1,27 +1,21 @@
-package awsec2_test
+package awsec2
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/motorid/awsec2"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/instance-identity_document_linux.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_linux.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	metadata := awsec2.NewCommandInstanceMetadata(provider, p, nil)
+	metadata := NewCommandInstanceMetadata(conn, platform, nil)
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
@@ -31,16 +25,12 @@ func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityUnixNoName(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/instance-identity_document_linux_no_tags.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_linux_no_tags.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	metadata := awsec2.NewCommandInstanceMetadata(provider, p, nil)
+	metadata := NewCommandInstanceMetadata(conn, platform, nil)
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
@@ -50,16 +40,12 @@ func TestEC2RoleProviderInstanceIdentityUnixNoName(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityWindows(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/instance-identity_document_windows.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_windows.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	metadata := awsec2.NewCommandInstanceMetadata(provider, p, nil)
+	metadata := NewCommandInstanceMetadata(conn, platform, nil)
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
@@ -69,16 +55,12 @@ func TestEC2RoleProviderInstanceIdentityWindows(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityWindowsNoName(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/instance-identity_document_windows_no_tags.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_windows_no_tags.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	metadata := awsec2.NewCommandInstanceMetadata(provider, p, nil)
+	metadata := NewCommandInstanceMetadata(conn, platform, nil)
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)

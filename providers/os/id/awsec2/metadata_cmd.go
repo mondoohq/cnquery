@@ -13,8 +13,8 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
 const (
@@ -22,16 +22,16 @@ const (
 	tagNameUrl  = "http://169.254.169.254/latest/meta-data/tags/instance/Name"
 )
 
-func NewCommandInstanceMetadata(provider os.OperatingSystemProvider, pf *platform.Platform, config *aws.Config) *CommandInstanceMetadata {
+func NewCommandInstanceMetadata(conn connection.Connection, pf *platform.Platform, config *aws.Config) *CommandInstanceMetadata {
 	return &CommandInstanceMetadata{
-		provider: provider,
+		conn:     conn,
 		platform: pf,
 		config:   config,
 	}
 }
 
 type CommandInstanceMetadata struct {
-	provider os.OperatingSystemProvider
+	conn     connection.Connection
 	platform *platform.Platform
 	config   *aws.Config
 }
@@ -85,7 +85,7 @@ func curlWindows(url string) string {
 func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
 	switch {
 	case m.platform.IsFamily(platform.FAMILY_UNIX):
-		cmd, err := m.provider.RunCommand("curl " + url)
+		cmd, err := m.conn.RunCommand("curl " + url)
 		if err != nil {
 			return "", err
 		}
@@ -98,7 +98,7 @@ func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
 	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
 		curlCmd := curlWindows(url)
 		encoded := powershell.Encode(curlCmd)
-		cmd, err := m.provider.RunCommand(encoded)
+		cmd, err := m.conn.RunCommand(encoded)
 		if err != nil {
 			return "", err
 		}

@@ -1,25 +1,21 @@
-package gce
+package gcp
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 func TestDetectLinuxInstance(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/instance_linux.toml")
+	conn, err := mock.New("./testdata/instance_linux.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	identifier, name, relatedIdentifiers := Detect(provider, p)
+	identifier, name, relatedIdentifiers := Detect(conn, platform)
 
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/6001244637815193808", identifier)
 	assert.Equal(t, "", name)
@@ -28,16 +24,12 @@ func TestDetectLinuxInstance(t *testing.T) {
 }
 
 func TestDetectWindowsInstance(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/instance_windows.toml")
+	conn, err := mock.New("./testdata/instance_windows.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	identifier, name, relatedIdentifiers := Detect(provider, p)
+	identifier, name, relatedIdentifiers := Detect(conn, platform)
 
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/gcp/compute/v1/projects/mondoo-dev-262313/zones/us-central1-a/instances/5275377306317132843", identifier)
 	assert.Equal(t, "", name)
@@ -46,16 +38,12 @@ func TestDetectWindowsInstance(t *testing.T) {
 }
 
 func TestNoMatch(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/aws_instance.toml")
+	conn, err := mock.New("./testdata/aws_instance.toml")
 	require.NoError(t, err)
+	platform, ok := detector.Detect(conn)
+	require.True(t, ok)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	identifier, name, relatedIdentifiers := Detect(provider, p)
+	identifier, name, relatedIdentifiers := Detect(conn, platform)
 
 	assert.Empty(t, identifier)
 	assert.Empty(t, name)

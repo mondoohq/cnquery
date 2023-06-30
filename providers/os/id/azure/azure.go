@@ -1,36 +1,36 @@
-package gce
+package azure
 
 import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/motorid/gce"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/id/azcompute"
 	"go.mondoo.com/cnquery/resources/packs/os/smbios"
 )
 
 const (
-	gceIdentifierFileLinux = "/sys/class/dmi/id/product_name"
+	azureIdentifierFileLinux = "/sys/class/dmi/id/sys_vendor"
 )
 
-func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string, string, []string) {
-	productName := ""
+func Detect(conn connection.Connection, pf *platform.Platform) (string, string, []string) {
+	sysVendor := ""
 	if pf.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow
 		// because it iterates through files we don't need to check. This
 		// is an optimization for our sshfs. Also, be aware that on linux,
 		// you may not have access to all the smbios things under /sys, so
-		// you want to make sure to only check the one file
-		content, err := afero.ReadFile(provider.FS(), gceIdentifierFileLinux)
+		// you want to make sure to only check the product_version file
+		content, err := afero.ReadFile(conn.FileSystem(), azureIdentifierFileLinux)
 		if err != nil {
-			log.Debug().Err(err).Msgf("unable to read %s", gceIdentifierFileLinux)
+			log.Debug().Err(err).Msgf("unable to read %s", azureIdentifierFileLinux)
 			return "", "", nil
 		}
-		productName = string(content)
+		sysVendor = string(content)
 	} else {
-		mgr, err := smbios.ResolveManager(provider, pf)
+		mgr, err := smbios.ResolveManager(conn, pf)
 		if err != nil {
 			return "", "", nil
 		}
@@ -39,11 +39,11 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 			log.Debug().Err(err).Msg("failed to query smbios")
 			return "", "", nil
 		}
-		productName = info.SysInfo.Model
+		sysVendor = info.SysInfo.Vendor
 	}
 
-	if strings.Contains(productName, "Google Compute Engine") {
-		mdsvc, err := gce.Resolve(provider, pf)
+	if strings.Contains(sysVendor, "Microsoft Corporation") {
+		mdsvc, err := azcompute.Resolve(conn, pf)
 		if err != nil {
 			log.Debug().Err(err).Msg("failed to get metadata resolver")
 			return "", "", nil
@@ -51,12 +51,12 @@ func Detect(provider os.OperatingSystemProvider, pf *platform.Platform) (string,
 		id, err := mdsvc.Identify()
 		if err != nil {
 			log.Debug().Err(err).
-				Str("provider", provider.Kind().String()).
 				Strs("platform", pf.GetFamily()).
-				Msg("failed to get GCE platform id")
+				Msg("failed to get Azure platform id")
 			return "", "", nil
 		}
-		return id.InstanceID, "", []string{id.ProjectID}
+		return id.InstanceID, "", []string{id.AccountID}
 	}
+
 	return "", "", nil
 }

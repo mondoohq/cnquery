@@ -2,14 +2,15 @@ package azcompute
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/motor/discovery/azure"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/plugin"
 )
 
 const (
@@ -17,38 +18,55 @@ const (
 	metadataIdentityScriptWindows = `Invoke-RestMethod -TimeoutSec 1 -Headers @{"Metadata"="true"} -Method GET -URI http://169.254.169.254/metadata/instance?api-version=2021-02-01 -UseBasicParsing | ConvertTo-Json`
 )
 
-func NewCommandInstanceMetadata(p os.OperatingSystemProvider, pf *platform.Platform) *CommandInstanceMetadata {
-	return &CommandInstanceMetadata{
-		provider: p,
-		platform: pf,
-	}
+type instanceMetadata struct {
+	Compute struct {
+		ResourceID     string `json:"resourceID"`
+		SubscriptionID string `json:"subscriptionId"`
+		Tags           string `json:"tags"`
+	} `json:"compute"`
 }
 
-type CommandInstanceMetadata struct {
-	provider os.OperatingSystemProvider
+type Identity struct {
+	InstanceID string
+	AccountID  string
+}
+
+type InstanceIdentifier interface {
+	Identify() (Identity, error)
+}
+
+func Resolve(conn connection.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
+	if pf.IsFamily(platform.FAMILY_UNIX) || pf.IsFamily(platform.FAMILY_WINDOWS) {
+		return &commandInstanceMetadata{conn, pf}, nil
+	}
+	return nil, errors.New(fmt.Sprintf("azure compute id detector is not supported for your asset: %s %s", pf.Name, pf.Version))
+}
+
+type commandInstanceMetadata struct {
+	conn     connection.Connection
 	platform *platform.Platform
 }
 
-func (m *CommandInstanceMetadata) Identify() (Identity, error) {
+func (m *commandInstanceMetadata) Identify() (Identity, error) {
 	var instanceDocument string
 	switch {
 	case m.platform.IsFamily(platform.FAMILY_UNIX):
-		cmd, err := m.provider.RunCommand("curl --noproxy '*' -H Metadata:true " + identityUrl)
+		cmd, err := m.conn.RunCommand("curl --noproxy '*' -H Metadata:true " + identityUrl)
 		if err != nil {
 			return Identity{}, err
 		}
-		data, err := ioutil.ReadAll(cmd.Stdout)
+		data, err := io.ReadAll(cmd.Stdout)
 		if err != nil {
 			return Identity{}, err
 		}
 
 		instanceDocument = strings.TrimSpace(string(data))
 	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
-		cmd, err := m.provider.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
+		cmd, err := m.conn.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
 			return Identity{}, err
 		}
-		data, err := ioutil.ReadAll(cmd.Stdout)
+		data, err := io.ReadAll(cmd.Stdout)
 		if err != nil {
 			return Identity{}, err
 		}
@@ -65,7 +83,7 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	}
 
 	return Identity{
-		InstanceID: azure.MondooAzureInstanceID(md.Compute.ResourceID),
+		InstanceID: plugin.MondooAzureInstanceID(md.Compute.ResourceID),
 		AccountID:  "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + md.Compute.SubscriptionID,
 	}, nil
 }
