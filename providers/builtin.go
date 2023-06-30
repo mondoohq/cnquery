@@ -6,9 +6,9 @@ package providers
 // connection separately.
 
 import (
-	"go.mondoo.com/cnquery/providers/plugin"
 	// osconf "go.mondoo.com/cnquery/providers/os/config"
 	// os "go.mondoo.com/cnquery/providers/os/provider"
+	"go.mondoo.com/cnquery/providers/plugin"
 )
 
 type builtinProvider struct {

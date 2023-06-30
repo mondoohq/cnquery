@@ -1,23 +1,21 @@
 package hostname
 
 import (
-	"errors"
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-
 	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
-func Hostname(p os.OperatingSystemProvider, pf *platform.Platform) (string, error) {
+func Hostname(conn connection.Connection, pf *platform.Platform) (string, bool) {
 	var hostname string
 
 	if !pf.IsFamily(platform.FAMILY_UNIX) && !pf.IsFamily(platform.FAMILY_WINDOWS) {
-		return hostname, errors.New("your platform is not supported by hostname resource")
+		log.Warn().Msg("your platform is not supported for hostname detection")
+		return hostname, false
 	}
 
 	// linux:
@@ -26,11 +24,11 @@ func Hostname(p os.OperatingSystemProvider, pf *platform.Platform) (string, erro
 	// windows:
 	// hostname command works more reliable than t.RunCommand("powershell -c \"$env:computername\"")
 	// since it will return a non-zero exit code.
-	cmd, err := p.RunCommand("hostname")
+	cmd, err := conn.RunCommand("hostname")
 	if err == nil && cmd.ExitStatus == 0 {
 		data, err := ioutil.ReadAll(cmd.Stdout)
 		if err == nil {
-			return strings.TrimSpace(string(data)), nil
+			return strings.TrimSpace(string(data)), true
 		}
 	} else {
 		log.Debug().Err(err).Msg("could not run hostname command")
@@ -38,17 +36,17 @@ func Hostname(p os.OperatingSystemProvider, pf *platform.Platform) (string, erro
 
 	// try to use /etc/hostname since it's also working on static analysis
 	if pf.IsFamily(platform.FAMILY_LINUX) {
-		afs := &afero.Afero{Fs: p.FS()}
+		afs := &afero.Afero{Fs: conn.FileSystem()}
 		ok, err := afs.Exists("/etc/hostname")
 		if err == nil && ok {
 			content, err := afs.ReadFile("/etc/hostname")
 			if err == nil {
-				return strings.TrimSpace(string(content)), nil
+				return strings.TrimSpace(string(content)), true
 			}
 		} else {
 			log.Debug().Err(err).Msg("could not read /etc/hostname file")
 		}
 	}
 
-	return "", errors.New("could not detect hostname")
+	return "", false
 }
