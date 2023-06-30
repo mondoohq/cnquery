@@ -701,26 +701,8 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 				}
 				mqlDevices = append(mqlDevices, mqlInstanceDevice)
 			}
-			sgs := []interface{}{}
-			for i := range instance.SecurityGroups {
-				// NOTE: this will create the resource and determine the data in its init method
-				mqlSg, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
-					"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, core.ToString(instance.SecurityGroups[i].GroupId)),
-				)
-				if err != nil {
-					return nil, err
-				}
-				sgs = append(sgs, mqlSg)
-			}
 
 			stateReason, err := core.JsonToDict(instance.StateReason)
-			if err != nil {
-				return nil, err
-			}
-
-			mqlImage, err := s.MotorRuntime.CreateResource("aws.ec2.image",
-				"arn", fmt.Sprintf(imageArnPattern, regionVal, account.ID, core.ToString(instance.ImageId)),
-			)
 			if err != nil {
 				return nil, err
 			}
@@ -735,17 +717,38 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 				"httpTokens", httpTokens,
 				"state", string(instance.State.Name),
 				"deviceMappings", mqlDevices,
-				"securityGroups", sgs,
 				"publicDnsName", core.ToString(instance.PublicDnsName),
 				"stateReason", stateReason,
 				"stateTransitionReason", core.ToString(instance.StateTransitionReason),
 				"ebsOptimized", core.ToBool(instance.EbsOptimized),
 				"instanceType", string(instance.InstanceType),
 				"tags", Ec2TagsToMap(instance.Tags),
-				"image", mqlImage,
 				"launchTime", instance.LaunchTime,
 				"privateIp", core.ToString(instance.PrivateIpAddress),
 				"privateDnsName", core.ToString(instance.PrivateDnsName),
+			}
+			sgs := []interface{}{}
+
+			for i := range instance.SecurityGroups {
+				// NOTE: this will create the resource and determine the data in its init method
+				mqlSg, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup",
+					"arn", fmt.Sprintf(securityGroupArnPattern, regionVal, account.ID, core.ToString(instance.SecurityGroups[i].GroupId)),
+				)
+				if err == nil {
+					sgs = append(sgs, mqlSg)
+				} else {
+					log.Warn().Err(err).Msg("unable to create security groups resource for instance")
+				}
+			}
+			args = append(args, "securityGroups", sgs)
+
+			mqlImage, err := s.MotorRuntime.CreateResource("aws.ec2.image",
+				"arn", fmt.Sprintf(imageArnPattern, regionVal, account.ID, core.ToString(instance.ImageId)),
+			)
+			if err == nil {
+				args = append(args, "image", mqlImage)
+			} else {
+				log.Warn().Err(err).Msg("unable to create image resource for instance")
 			}
 
 			// add vpc if there is one
@@ -754,11 +757,12 @@ func (s *mqlAwsEc2) gatherInstanceInfo(instances []types.Reservation, imdsvVersi
 				mqlVpcResource, err := s.MotorRuntime.CreateResource("aws.vpc",
 					"arn", fmt.Sprintf(vpcArnPattern, regionVal, account.ID, core.ToString(instance.VpcId)),
 				)
-				if err != nil {
-					return nil, err
+				if err == nil {
+					mqlVpc := mqlVpcResource.(AwsVpc)
+					args = append(args, "vpc", mqlVpc)
+				} else {
+					log.Warn().Err(err).Msg("unable to create vpc resource for instance")
 				}
-				mqlVpc := mqlVpcResource.(AwsVpc)
-				args = append(args, "vpc", mqlVpc)
 			}
 
 			// only add a keypair if the ec2 instance has one attached
