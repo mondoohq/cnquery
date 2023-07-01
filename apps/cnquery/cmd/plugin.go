@@ -65,7 +65,14 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 	err := config.ValidateUserProvidedConfigPath()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Could not load user provided config")
+		fileNotFoundError := new(config.FileNotFoundError)
+		if errors.As(err, &fileNotFoundError) {
+			log.Fatal().Msgf(
+				"Couldn't find user provided config file \n\nEnsure that %s provided through %s is a valid file path", fileNotFoundError.Path(), fileNotFoundError.Source(),
+			)
+		} else {
+			log.Fatal().Err(err).Msg("Could not load user provided config")
+		}
 	}
 	config.DisplayUsedConfig()
 
