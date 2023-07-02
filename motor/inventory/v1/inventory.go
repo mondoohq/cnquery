@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/segmentio/ksuid"
 	asset "go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/vault"

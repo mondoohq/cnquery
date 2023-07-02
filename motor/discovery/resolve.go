@@ -12,9 +12,9 @@ package discovery
 
 import (
 	"context"
+	"errors"
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/aws"

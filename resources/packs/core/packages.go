@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources"
@@ -106,7 +106,7 @@ func (p *mqlPackages) GetList() ([]interface{}, error) {
 	// retrieve all system packages
 	osPkgs, err := pm.List()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not retrieve package list for platform")
+		return nil, errors.Join(err, errors.New("could not retrieve package list for platform"))
 	}
 	log.Debug().Int("packages", len(osPkgs)).Msg("mql[packages]> installed packages")
 

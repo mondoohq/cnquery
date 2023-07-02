@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
@@ -156,14 +156,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		// create a map to track the platform ids of the ssm instances, to avoid duplication of assets
 		s, err := NewSSMManagedInstancesDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not initialize aws ec2 ssm discovery")
+			return nil, errors.Join(err, errors.New("could not initialize aws ec2 ssm discovery"))
 		}
 		s.FilterOptions = AssembleEc2InstancesFilters(discoverFilter)
 		s.profile = tc.Options["profile"]
 		s.PassInLabels = root.Labels
 		assetList, err := s.List()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch ec2 ssm instances")
+			return nil, errors.Join(err, errors.New("could not fetch ec2 ssm instances"))
 		}
 		log.Debug().Int("instances", len(assetList)).Msg("completed ssm instance search")
 		for i := range assetList {
@@ -179,7 +179,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryInstances) {
 		e, err := NewEc2Discovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not initialize aws ec2 discovery")
+			return nil, errors.Join(err, errors.New("could not initialize aws ec2 discovery"))
 		}
 
 		e.Insecure = tc.Insecure
@@ -188,7 +188,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 		e.PassInLabels = root.Labels
 		assetList, err := e.List()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch ec2 instances")
+			return nil, errors.Join(err, errors.New("could not fetch ec2 instances"))
 		}
 		log.Debug().Int("instances", len(assetList)).Bool("insecure", e.Insecure).Msg("completed instance search")
 		for i := range assetList {
@@ -219,14 +219,14 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECR) {
 		i, err := NewEcrDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not initialize aws ecr discovery")
+			return nil, errors.Join(err, errors.New("could not initialize aws ecr discovery"))
 		}
 
 		i.profile = tc.Options["profile"]
 		i.PassInLabels = root.Labels
 		assetList, err := i.List()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch ecr repositories information")
+			return nil, errors.Join(err, errors.New("could not fetch ecr repositories information"))
 		}
 		log.Debug().Int("images", len(assetList)).Msg("completed ecr search")
 		for i := range assetList {
@@ -241,12 +241,12 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, tc *providers
 	if tc.IncludesOneOfDiscoveryTarget(common.DiscoveryAll, DiscoveryECS) {
 		c, err := NewECSContainersDiscovery(mqldiscovery, tc.Clone(), info.ID)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not initialize aws ecs discovery")
+			return nil, errors.Join(err, errors.New("could not initialize aws ecs discovery"))
 		}
 		c.PassInLabels = root.Labels
 		assetList, err := c.List()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not fetch ecs clusters information")
+			return nil, errors.Join(err, errors.New("could not fetch ecs clusters information"))
 		}
 		log.Debug().Int("assets", len(assetList)).Msg("completed ecs search")
 		for i := range assetList {

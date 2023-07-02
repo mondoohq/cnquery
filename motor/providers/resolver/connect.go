@@ -3,7 +3,7 @@ package resolver
 import (
 	"context"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"

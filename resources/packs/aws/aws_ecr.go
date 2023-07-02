@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -140,19 +140,19 @@ func (e *mqlAwsEcr) getPrivateRepositories(provider *aws.Provider) []*jobpool.Jo
 func (e *mqlAwsEcrRepository) GetImages() ([]interface{}, error) {
 	name, err := e.Name()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse name")
+		return nil, errors.Join(err, errors.New("unable to parse name"))
 	}
 	region, err := e.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse region")
+		return nil, errors.Join(err, errors.New("unable to parse region"))
 	}
 	public, err := e.Public()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse public val")
+		return nil, errors.Join(err, errors.New("unable to parse public val"))
 	}
 	uri, err := e.Uri()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse uri val")
+		return nil, errors.Join(err, errors.New("unable to parse uri val"))
 	}
 	at, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {

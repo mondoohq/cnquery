@@ -3,7 +3,7 @@ package sshhostkey
 import (
 	"os"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -35,11 +35,11 @@ func Detect(t providers.Instance, p *platform.Platform) ([]string, error) {
 		} else if os.IsNotExist(err) {
 			continue
 		} else if err != nil {
-			return nil, errors.Wrap(err, "could not read file:"+hostKeyFilePath)
+			return nil, errors.Join(err, errors.New("could not read file:"+hostKeyFilePath))
 		}
 		publicKey, _, _, _, err := ssh.ParseAuthorizedKey(data)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not parse public key file:"+hostKeyFilePath)
+			return nil, errors.Join(err, errors.New("could not parse public key file:"+hostKeyFilePath))
 		}
 
 		identifiers = append(identifiers, ssh_transport.PlatformIdentifier(publicKey))

@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -141,7 +141,7 @@ func ParseOrUse(cliAsset *asset.Asset, insecure bool) (*v1.Inventory, error) {
 	// parses optional inventory file if inventory was not piped already
 	v1inventory, err = Parse()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse inventory")
+		return nil, errors.Join(err, errors.New("could not parse inventory"))
 	}
 
 	// add asset from cli to inventory

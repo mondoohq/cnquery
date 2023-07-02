@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/smithy-go/transport/http"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -64,7 +64,7 @@ func (l *mqlAwsLambda) getFunctions(provider *aws_provider.Provider) []*jobpool.
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 						return res, nil
 					}
-					return nil, errors.Wrap(err, "could not gather aws lambda functions")
+					return nil, errors.Join(err, errors.New("could not gather aws lambda functions"))
 				}
 				for _, function := range functionsResp.Functions {
 					vpcConfigJson, err := core.JsonToDict(function.VpcConfig)
@@ -168,7 +168,7 @@ func (l *mqlAwsLambdaFunction) GetConcurrency() (int64, error) {
 	// no pagination required
 	functionConcurrency, err := svc.GetFunctionConcurrency(ctx, &lambda.GetFunctionConcurrencyInput{FunctionName: &funcName})
 	if err != nil {
-		return 0, errors.Wrap(err, "could not gather aws lambda function concurrency")
+		return 0, errors.Join(err, errors.New("could not gather aws lambda function concurrency"))
 	}
 	if functionConcurrency.ReservedConcurrentExecutions != nil {
 		return core.ToInt64From32(functionConcurrency.ReservedConcurrentExecutions), nil

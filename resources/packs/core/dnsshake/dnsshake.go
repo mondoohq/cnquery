@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/hashicorp/go-multierror"
 	"github.com/miekg/dns"
 )

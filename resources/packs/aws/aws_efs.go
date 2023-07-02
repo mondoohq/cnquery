@@ -3,10 +3,10 @@ package aws
 import (
 	"context"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/smithy-go/transport/http"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -170,11 +170,11 @@ func (e *mqlAwsEfsFilesystem) GetKmsKey() (interface{}, error) {
 func (e *mqlAwsEfsFilesystem) GetBackupPolicy() (interface{}, error) {
 	id, err := e.Id()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse id")
+		return nil, errors.Join(err, errors.New("unable to parse id"))
 	}
 	region, err := e.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance region")
+		return nil, errors.Join(err, errors.New("unable to parse instance region"))
 	}
 	provider, err := awsProvider(e.MotorRuntime.Motor.Provider)
 	if err != nil {

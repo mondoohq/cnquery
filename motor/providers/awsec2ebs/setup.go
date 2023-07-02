@@ -2,15 +2,17 @@ package awsec2ebs
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
+
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/smithy-go"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	motoraws "go.mondoo.com/cnquery/motor/discovery/aws"
 )
@@ -265,7 +267,7 @@ func CreateSnapshotFromVolume(ctx context.Context, cfg aws.Config, volID string,
 			return nil, err
 		}
 		if len(snaps.Snapshots) != 1 {
-			return nil, errors.Newf("expected one snapshot, got %d", len(snaps.Snapshots))
+			return nil, errors.New(fmt.Sprintf("expected one snapshot, got %d", len(snaps.Snapshots)))
 		}
 		snapProgress = *snaps.Snapshots[0].Progress
 		snapState = snaps.Snapshots[0].State

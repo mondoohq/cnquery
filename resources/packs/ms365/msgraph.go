@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/microsoft/kiota-abstractions-go/authentication"
 	a "github.com/microsoft/kiota-authentication-azure-go"
 	msgraphclient "github.com/microsoftgraph/msgraph-sdk-go"

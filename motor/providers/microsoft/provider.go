@@ -3,7 +3,7 @@ package microsoft
 import (
 	"sync"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/microsoft/ms365/ms365report"
 	"go.mondoo.com/cnquery/motor/vault"

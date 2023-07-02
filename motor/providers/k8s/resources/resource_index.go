@@ -1,7 +1,9 @@
 package resources
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
+	"fmt"
+
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -13,7 +15,7 @@ func ResourceIndex(resList []*metav1.APIResourceList) (*ApiResourceIndex, error)
 		log.Debug().Msgf("iterating over group %s/%s (%d api resources types)", group.GroupVersion, group.APIVersion, len(group.APIResources))
 		gv, err := schema.ParseGroupVersion(group.GroupVersion)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%q cannot be parsed into groupversion", group.GroupVersion)
+			return nil, errors.Join(err, errors.New(fmt.Sprintf("%q cannot be parsed into groupversion", group.GroupVersion)))
 		}
 
 		for _, apiRes := range group.APIResources {

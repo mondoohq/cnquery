@@ -1,7 +1,7 @@
 package equinix
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/packethost/packngo"
 	"go.mondoo.com/cnquery/motor/providers"
 )
@@ -31,12 +31,12 @@ func New(cfg *providers.Config) (*Provider, error) {
 	// https://github.com/packethost/packngo/issues/245
 	//project, _, err := c.Projects.Get(projectId, nil)
 	//if err != nil {
-	//	return nil, errors.Wrap(err, "could not find the requested equinix project: "+projectId)
+	//	return nil, errors.Join(err, errors.New("could not find the requested equinix project: "+projectId))
 	//}
 
 	ps, _, err := c.Projects.List(nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot retrieve equinix projects")
+		return nil, errors.Join(err, errors.New("cannot retrieve equinix projects"))
 	}
 
 	var project *packngo.Project
@@ -46,7 +46,7 @@ func New(cfg *providers.Config) (*Provider, error) {
 		}
 	}
 	if project == nil {
-		return nil, errors.Wrap(err, "could not find the requested equinix project: "+projectId)
+		return nil, errors.Join(err, errors.New("could not find the requested equinix project: "+projectId))
 	}
 
 	return &Provider{

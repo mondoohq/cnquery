@@ -3,7 +3,7 @@ package motorid
 import (
 	"fmt"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/discovery/aws"
 	"go.mondoo.com/cnquery/motor/motorid/awsec2"

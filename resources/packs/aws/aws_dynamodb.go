@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -68,7 +68,7 @@ func (d *mqlAwsDynamodb) getBackups(provider *aws_provider.Provider) []*jobpool.
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 					return res, nil
 				}
-				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
+				return nil, errors.Join(err, errors.New("could not gather aws dynamodb backups"))
 			}
 			backupSummary, err := core.JsonToDictSlice(listBackupsResp.BackupSummaries)
 			if err != nil {
@@ -141,7 +141,7 @@ func (d *mqlAwsDynamodbTable) GetBackups() ([]interface{}, error) {
 
 	listBackupsResp, err := svc.ListBackups(ctx, &dynamodb.ListBackupsInput{TableName: &tableName})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
+		return nil, errors.Join(err, errors.New("could not gather aws dynamodb backups"))
 	}
 	return core.JsonToDictSlice(listBackupsResp.BackupSummaries)
 }
@@ -217,7 +217,7 @@ func (d *mqlAwsDynamodb) getLimits(provider *aws_provider.Provider) []*jobpool.J
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 					return res, nil
 				}
-				return nil, errors.Wrap(err, "could not gather aws dynamodb backups")
+				return nil, errors.Join(err, errors.New("could not gather aws dynamodb backups"))
 			}
 
 			mqlLimits, err := d.MotorRuntime.CreateResource("aws.dynamodb.limit",
@@ -253,7 +253,7 @@ func (d *mqlAwsDynamodb) GetGlobalTables() ([]interface{}, error) {
 	// no pagination required
 	listGlobalTablesResp, err := svc.ListGlobalTables(ctx, &dynamodb.ListGlobalTablesInput{})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws dynamodb global tables")
+		return nil, errors.Join(err, errors.New("could not gather aws dynamodb global tables"))
 	}
 	res := []interface{}{}
 	for _, table := range listGlobalTablesResp.GlobalTables {
@@ -317,13 +317,13 @@ func (d *mqlAwsDynamodb) getTables(provider *aws_provider.Provider) []*jobpool.J
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 					return res, nil
 				}
-				return nil, errors.Wrap(err, "could not gather aws dynamodb tables")
+				return nil, errors.Join(err, errors.New("could not gather aws dynamodb tables"))
 			}
 			for _, tableName := range listTablesResp.TableNames {
 				// call describe table to get real info/details about the table
 				table, err := svc.DescribeTable(ctx, &dynamodb.DescribeTableInput{TableName: &tableName})
 				if err != nil {
-					return nil, errors.Wrap(err, "could not get aws dynamodb table")
+					return nil, errors.Join(err, errors.New("could not get aws dynamodb table"))
 				}
 				sseDict, err := core.JsonToDict(table.Table.SSEDescription)
 				if err != nil {
@@ -381,7 +381,7 @@ func (d *mqlAwsDynamodbGlobaltable) GetReplicaSettings() ([]interface{}, error) 
 	// no pagination required
 	tableSettingsResp, err := svc.DescribeGlobalTableSettings(ctx, &dynamodb.DescribeGlobalTableSettingsInput{GlobalTableName: &tableName})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws dynamodb table settings")
+		return nil, errors.Join(err, errors.New("could not gather aws dynamodb table settings"))
 	}
 	return core.JsonToDictSlice(tableSettingsResp.ReplicaSettings)
 }
@@ -446,7 +446,7 @@ func (d *mqlAwsDynamodbTable) GetContinuousBackups() (interface{}, error) {
 	// no pagination required
 	continuousBackupsResp, err := svc.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{TableName: &tableName})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws dynamodb continuous backups")
+		return nil, errors.Join(err, errors.New("could not gather aws dynamodb continuous backups"))
 	}
 	return core.JsonToDict(continuousBackupsResp.ContinuousBackupsDescription)
 }

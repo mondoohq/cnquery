@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/go-vcloud-director/v2/govcd"
 	"go.mondoo.com/cnquery/motor/providers"

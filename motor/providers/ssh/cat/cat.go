@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	os_provider "go.mondoo.com/cnquery/motor/providers/os"

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/providers/os"
@@ -23,7 +23,7 @@ func (lpm *LinuxProcManager) List() ([]*OSProcess, error) {
 	// get all subdirectories of /proc, filter by numbers
 	f, err := lpm.provider.FS().Open("/proc")
 	if err != nil {
-		return nil, errors.WithMessage(err, "failed to access /proc")
+		return nil, errors.Join(err, errors.New("failed to access /proc"))
 	}
 
 	dirs, err := f.Readdirnames(-1)

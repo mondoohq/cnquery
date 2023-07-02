@@ -3,7 +3,7 @@ package github
 import (
 	"context"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -47,7 +47,7 @@ func (p *Provider) PlatformInfo() (*platform.Platform, error) {
 		return GithubRepoPlatform, nil
 	}
 
-	return nil, errors.Wrap(err, "could not detect GitHub asset type")
+	return nil, errors.Join(err, errors.New("could not detect GitHub asset type"))
 }
 
 func NewGithubOrgIdentifier(orgId string) string {

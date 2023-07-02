@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	dopts "github.com/docker/cli/opts"
 	"github.com/docker/docker/client"
 )

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
@@ -73,7 +73,7 @@ type networkResolver struct{}
 func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string, password string) (*providers.Config, error) {
 	url, err := url.Parse(fullUrl)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse target URL")
+		return nil, errors.Join(err, errors.New("failed to parse target URL"))
 	}
 
 	// TODO: Processing the family here needs a bit more work. It is unclear
@@ -104,7 +104,7 @@ func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string
 		res.Host = hostBits[0]
 		port, err := strconv.Atoi(hostBits[1])
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse port in target URL")
+			return nil, errors.Join(err, errors.New("failed to parse port in target URL"))
 		}
 		res.Port = int32(port)
 	default:

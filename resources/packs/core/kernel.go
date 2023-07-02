@@ -3,7 +3,7 @@ package core
 import (
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/resources"
@@ -208,7 +208,7 @@ func (k *mqlKernel) GetInfo() (interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "could not detect suitable kernel module manager for platform")
+		return nil, errors.Join(err, errors.New("could not detect suitable kernel module manager for platform"))
 	}
 
 	// retrieve all kernel modules
@@ -224,7 +224,7 @@ func (k *mqlKernel) GetParameters() (map[string]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "could not detect suitable kernel module manager for platform")
+		return nil, errors.Join(err, errors.New("could not detect suitable kernel module manager for platform"))
 	}
 
 	// retrieve all kernel modules
@@ -246,13 +246,13 @@ func (k *mqlKernel) GetModules() ([]interface{}, error) {
 	// find suitable kernel module manager
 	mm, err := kernel.ResolveManager(k.MotorRuntime.Motor)
 	if mm == nil || err != nil {
-		return nil, errors.Wrap(err, "could not detect suitable kernel module manager for platform")
+		return nil, errors.Join(err, errors.New("could not detect suitable kernel module manager for platform"))
 	}
 
 	// retrieve all kernel modules
 	kernelModules, err := mm.Modules()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not retrieve kernel module list for platform")
+		return nil, errors.Join(err, errors.New("could not retrieve kernel module list for platform"))
 	}
 	log.Debug().Int("modules", len(kernelModules)).Msg("[kernel.modules]> modules")
 

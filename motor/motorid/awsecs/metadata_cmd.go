@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"errors"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/motorid/containerid"
 	"go.mondoo.com/cnquery/motor/platform"
@@ -39,7 +39,7 @@ func (m *ContainerMetadata) Identify() (Identity, error) {
 	// parse into struct
 	doc := EcrContainerIdentityDoc{}
 	if err := json.NewDecoder(strings.NewReader(containerDocument)).Decode(&doc); err != nil {
-		return Identity{}, errors.Wrap(err, "failed to decode ECS container identity document")
+		return Identity{}, errors.Join(err, errors.New("failed to decode ECS container identity document"))
 	}
 	var accountID string
 	if arn.IsARN(doc.ContainerArn) {

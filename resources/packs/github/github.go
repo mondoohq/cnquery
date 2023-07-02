@@ -3,7 +3,7 @@ package github
 import (
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/motor/providers"
 	provider "go.mondoo.com/cnquery/motor/providers/github"

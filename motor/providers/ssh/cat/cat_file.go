@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/kballard/go-shellquote"
 )
 
@@ -42,7 +42,7 @@ func (f *File) readContent() (*bytes.Buffer, error) {
 	if f.useBase64encoding {
 		data, err = base64.StdEncoding.DecodeString(string(data))
 		if err != nil {
-			return nil, errors.Wrap(err, "could not decode base64 data stream")
+			return nil, errors.Join(err, errors.New("could not decode base64 data stream"))
 		}
 	}
 

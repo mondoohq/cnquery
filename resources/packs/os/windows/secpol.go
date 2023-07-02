@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"gopkg.in/ini.v1"
 )
 
@@ -26,7 +26,7 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 
 	cfg, err := ini.Load(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse secpol")
+		return nil, errors.Join(err, errors.New("could not parse secpol"))
 	}
 
 	sysAccess, err := cfg.GetSection("System Access")

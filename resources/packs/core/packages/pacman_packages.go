@@ -8,7 +8,7 @@ import (
 
 	"go.mondoo.com/cnquery/motor/providers/os"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 )
 
 const (

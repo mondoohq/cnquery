@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"path"
 	"regexp"
@@ -9,9 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 
+	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
@@ -26,12 +28,12 @@ func loadAwsSSMParameterStore(key string) error {
 	log.Info().Str("key", ssmKey).Msg("look for configuration stored in aws ssm parameter store")
 	err := viper.AddRemoteProvider("aws-ssm-ps", "localhost", ssmKey)
 	if err != nil {
-		return errors.Wrap(err, "could not initialize gs provider")
+		return errors.Join(err, errors.New("could not initialize gs provider"))
 	}
 	viper.SetConfigType("yaml")
 	err = viper.ReadRemoteConfig()
 	if err != nil {
-		return errors.Wrapf(err, "could not read aws ssm parameter config from %s", ssmKey)
+		return errors.Join(err, errors.New(fmt.Sprintf("could not read aws ssm parameter config from %s", ssmKey)))
 	}
 
 	return nil

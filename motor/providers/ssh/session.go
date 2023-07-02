@@ -6,8 +6,8 @@ import (
 	"io"
 	"strconv"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/ssh/awsinstanceconnect"
@@ -159,7 +159,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			// use the generated ssh credentials for authentication
 			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "could not read generated private key")
+				return nil, nil, errors.Join(err, errors.New("could not read generated private key"))
 			}
 			sshSigners = append(sshSigners, priv)
 			closer = append(closer, ssmConn)
@@ -190,7 +190,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 
 			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "could not read generated private key")
+				return nil, nil, errors.Join(err, errors.New("could not read generated private key"))
 			}
 			sshSigners = append(sshSigners, priv)
 

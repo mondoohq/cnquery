@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 
+	"errors"
 	ecsservice "github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -127,7 +127,7 @@ func (ecs *mqlAwsEcs) getECSClusters(provider *aws_provider.Provider) []*jobpool
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
-					return nil, errors.Wrap(err, "could not gather ecs cluster information")
+					return nil, errors.Join(err, errors.New("could not gather ecs cluster information"))
 				}
 				nextToken = resp.NextToken
 				if resp.NextToken != nil {
@@ -182,7 +182,7 @@ func (e *mqlAwsEcsCluster) init(args *resources.Args) (*resources.Args, AwsEcsCl
 		return nil, nil, err
 	}
 	if len(clusterDetails.Clusters) != 1 {
-		return nil, nil, errors.Newf("only expected one cluster, got %d", len(clusterDetails.Clusters))
+		return nil, nil, errors.New(fmt.Sprintf("only expected one cluster, got %d", len(clusterDetails.Clusters)))
 	}
 	c := clusterDetails.Clusters[0]
 	configuration, err := core.JsonToDict(c.Configuration)
@@ -306,7 +306,7 @@ func (ecs *mqlAwsEcsCluster) GetTasks() ([]interface{}, error) {
 	for nextToken != nil {
 		resp, err := svc.ListTasks(ctx, params)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather ecs tasks information")
+			return nil, errors.Join(err, errors.New("could not gather ecs tasks information"))
 		}
 		nextToken = resp.NextToken
 		if resp.NextToken != nil {
@@ -369,7 +369,7 @@ func (e *mqlAwsEcsTask) init(args *resources.Args) (*resources.Args, AwsEcsTask,
 		return nil, nil, err
 	}
 	if len(taskDetails.Tasks) != 1 {
-		return nil, nil, errors.Newf("only expected one task, got %d", len(taskDetails.Tasks))
+		return nil, nil, errors.New(fmt.Sprintf("only expected one task, got %d", len(taskDetails.Tasks)))
 	}
 	t := taskDetails.Tasks[0]
 	taskDefinitionArn := t.TaskDefinitionArn

@@ -3,7 +3,7 @@ package mockvault
 import (
 	"context"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/vault"
 )

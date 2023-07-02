@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/spf13/afero"
 )
 

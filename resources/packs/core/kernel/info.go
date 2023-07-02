@@ -1,7 +1,7 @@
 package kernel
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 	"io"
 	"io/ioutil"
 	"regexp"

@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 )
@@ -142,27 +142,27 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 
 	size, err := strconv.Atoi(statsData[0])
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	uid, err := strconv.ParseInt(statsData[2], 10, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	gid, err := strconv.ParseInt(statsData[3], 10, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	mask, err := strconv.ParseUint(statsData[1], 16, 32)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	// extract file modes
@@ -212,30 +212,30 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 
 	size, err := strconv.Atoi(statsData[0])
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	uid, err := strconv.ParseInt(statsData[2], 10, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	gid, err := strconv.ParseInt(statsData[3], 10, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	// NOTE: the base is 8 instead of 16 on linux systems
 	mask, err := strconv.ParseUint(statsData[1], 8, 32)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	mode := toFileMode(mask)
 
 	mtime, err := strconv.ParseInt(statsData[4], 10, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not stat "+name)
+		return nil, errors.Join(err, errors.New("could not stat "+name))
 	}
 
 	return &os_provider.FileInfo{

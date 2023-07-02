@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -108,7 +108,7 @@ func (t *mqlAwsCloudtrail) getTrails(provider *aws_provider.Provider) []*jobpool
 					log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 					return res, nil
 				}
-				return nil, errors.Wrap(err, "could not gather aws cloudtrail trails")
+				return nil, errors.Join(err, errors.New("could not gather aws cloudtrail trails"))
 			}
 
 			for i := range trailsResp.TrailList {

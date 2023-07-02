@@ -14,7 +14,7 @@ import (
 
 	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/platform"
@@ -150,7 +150,7 @@ func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
 	cmd, err := rpm.provider.RunCommand(command)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read package list")
+		return nil, errors.Join(err, errors.New("could not read package list"))
 	}
 	return ParseRpmPackages(cmd.Stdout), nil
 }
@@ -165,7 +165,7 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 	cmd, err := rpm.provider.RunCommand(script)
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
-		return nil, errors.Wrap(err, "could not read package update list")
+		return nil, errors.Join(err, errors.New("could not read package update list"))
 	}
 	return ParseRpmUpdates(cmd.Stdout)
 }
@@ -173,7 +173,7 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	rpmTmpDir, err := os.MkdirTemp(os.TempDir(), "mondoo-rpmdb")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not create local temp directory")
+		return nil, errors.Join(err, errors.New("could not create local temp directory"))
 	}
 	log.Debug().Str("path", rpmTmpDir).Msg("mql[packages]> cache rpm library locally")
 	defer os.RemoveAll(rpmTmpDir)
@@ -203,19 +203,19 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	}
 
 	if len(detectedPath) == 0 {
-		return nil, errors.Wrap(err, "could not find rpm packages location on : "+rpm.platform.Name)
+		return nil, errors.Join(err, errors.New("could not find rpm packages location on : "+rpm.platform.Name))
 	}
 	log.Debug().Str("path", detectedPath).Msg("found rpm packages location")
 
 	f, err := fs.Open(detectedPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch rpm package list")
+		return nil, errors.Join(err, errors.New("could not fetch rpm package list"))
 	}
 	defer f.Close()
 	fWriter, err := os.Create(tmpRpmDBFile)
 	if err != nil {
 		log.Error().Err(err).Msg("mql[packages]> could not create tmp file for rpm database")
-		return nil, errors.Wrap(err, "could not create local temp file")
+		return nil, errors.Join(err, errors.New("could not create local temp file"))
 	}
 	defer fWriter.Close()
 	_, err = io.Copy(fWriter, f)

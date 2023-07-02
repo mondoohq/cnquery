@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"os"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -70,7 +70,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	if conf.DoParse {
 		ast, err := parser.Parse(conf.Command)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse command")
+			return errors.Join(err, errors.New("failed to parse command"))
 		}
 		out.WriteString(logger.PrettyJSON(ast))
 		return nil
@@ -79,7 +79,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	if conf.DoAst {
 		b, err := mqlc.Compile(conf.Command, nil, mqlc.NewConfig(info.Registry.Schema(), conf.Features))
 		if err != nil {
-			return errors.Wrap(err, "failed to compile command")
+			return errors.Join(err, errors.New("failed to compile command"))
 		}
 
 		out.WriteString(logger.PrettyJSON((b)) + "\n" + printer.DefaultPrinter.CodeBundle(b))
@@ -90,7 +90,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	log.Info().Msgf("discover related assets for %d asset(s)", len(conf.Inventory.Spec.Assets))
 	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
 	if err != nil {
-		return errors.Wrap(err, "could not load asset information")
+		return errors.Join(err, errors.New("could not load asset information"))
 	}
 	assetErrors := im.Resolve(ctx)
 	if len(assetErrors) > 0 {
@@ -165,13 +165,13 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 		sh, err := shell.New(m, shellOptions...)
 		if err != nil {
-			return errors.Wrap(err, "failed to initialize the shell")
+			return errors.Join(err, errors.New("failed to initialize the shell"))
 		}
 		defer sh.Close()
 
 		code, results, err := sh.RunOnce(conf.Command)
 		if err != nil {
-			return errors.Wrap(err, "failed to run")
+			return errors.Join(err, errors.New("failed to run"))
 		}
 
 		if conf.Format != "json" {

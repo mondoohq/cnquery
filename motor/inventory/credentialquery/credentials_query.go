@@ -3,7 +3,7 @@ package credentialquery
 import (
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
@@ -40,7 +40,7 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 	// test query to see if it compiles well
 	_, err = mql.Exec(credentialQuery, rt, nil, props)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not compile the secret metadata function")
+		return nil, errors.Join(err, errors.New("could not compile the secret metadata function"))
 	}
 	return &CredentialQueryRunner{
 		mqlExecutor:         mqlExecutor,

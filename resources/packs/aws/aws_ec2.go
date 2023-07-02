@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -13,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/aws/smithy-go"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -144,11 +144,11 @@ func (s *mqlAwsEc2NetworkaclEntryPortrange) id() (string, error) {
 func (s *mqlAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 	id, err := s.Id()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse id")
+		return nil, errors.Join(err, errors.New("unable to parse id"))
 	}
 	region, err := s.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to region")
+		return nil, errors.Join(err, errors.New("unable to region"))
 	}
 	at, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -201,11 +201,11 @@ func (s *mqlAwsEc2NetworkaclEntry) GetPortRange() (interface{}, error) {
 func (s *mqlAwsEc2Securitygroup) GetIsAttachedToNetworkInterface() (bool, error) {
 	sgId, err := s.Id()
 	if err != nil {
-		return false, errors.Wrap(err, "unable to parse instance id")
+		return false, errors.Join(err, errors.New("unable to parse instance id"))
 	}
 	region, err := s.Region()
 	if err != nil {
-		return false, errors.Wrap(err, "unable to parse instance id")
+		return false, errors.Join(err, errors.New("unable to parse instance id"))
 	}
 	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -930,11 +930,11 @@ func (s *mqlAwsEc2Instance) GetKeypair() (interface{}, error) {
 func (s *mqlAwsEc2Instance) GetSsm() (interface{}, error) {
 	instanceId, err := s.InstanceId()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance id")
+		return nil, errors.Join(err, errors.New("unable to parse instance id"))
 	}
 	region, err := s.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance region")
+		return nil, errors.Join(err, errors.New("unable to parse instance region"))
 	}
 	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -963,11 +963,11 @@ func (s *mqlAwsEc2Instance) GetPatchState() (interface{}, error) {
 	var res interface{}
 	instanceId, err := s.InstanceId()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance id")
+		return nil, errors.Join(err, errors.New("unable to parse instance id"))
 	}
 	region, err := s.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance region")
+		return nil, errors.Join(err, errors.New("unable to parse instance region"))
 	}
 	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -995,11 +995,11 @@ func (s *mqlAwsEc2Instance) GetInstanceStatus() (interface{}, error) {
 	var res interface{}
 	instanceId, err := s.InstanceId()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance id")
+		return nil, errors.Join(err, errors.New("unable to parse instance id"))
 	}
 	region, err := s.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance region")
+		return nil, errors.Join(err, errors.New("unable to parse instance region"))
 	}
 	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {
@@ -1430,11 +1430,11 @@ func (s *mqlAwsEc2) getSnapshots(provider *aws_provider.Provider) []*jobpool.Job
 func (s *mqlAwsEc2Snapshot) GetCreateVolumePermission() ([]interface{}, error) {
 	id, err := s.Id()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance id")
+		return nil, errors.Join(err, errors.New("unable to parse instance id"))
 	}
 	region, err := s.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse instance region")
+		return nil, errors.Join(err, errors.New("unable to parse instance region"))
 	}
 	provider, err := awsProvider(s.MotorRuntime.Motor.Provider)
 	if err != nil {

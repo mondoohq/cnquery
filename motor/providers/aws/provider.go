@@ -4,10 +4,10 @@ import (
 	"context"
 	"sync"
 
+	"errors"
 	aws_sdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -79,7 +79,7 @@ func New(pCfg *providers.Config, opts ...ProviderOption) (*Provider, error) {
 
 	cfg, err := config.LoadDefaultConfig(context.Background(), t.awsConfigOptions...)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load aws configuration")
+		return nil, errors.Join(err, errors.New("could not load aws configuration"))
 	}
 	if cfg.Region == "" {
 		log.Info().Msg("no AWS region found, using us-east-1")

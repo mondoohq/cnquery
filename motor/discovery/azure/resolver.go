@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"

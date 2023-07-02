@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"time"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/smithy-go"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/resources"
@@ -77,7 +77,7 @@ func (c *mqlAwsIam) GetCredentialReport() ([]interface{}, error) {
 	if err != nil {
 		var awsFailErr *types.ServiceFailureException
 		if errors.As(err, &awsFailErr) {
-			return nil, errors.Wrap(err, "could not gather aws iam credential report")
+			return nil, errors.Join(err, errors.New("could not gather aws iam credential report"))
 		}
 
 		// if we have an error and it is not 500 we generate a report
@@ -116,7 +116,7 @@ func (c *mqlAwsIam) GetCredentialReport() ([]interface{}, error) {
 
 			if errors.As(err, &ae) {
 				if ae.ErrorCode() != "NoSuchEntity" && ae.ErrorCode() != "ReportInProgress" {
-					return nil, errors.Wrap(err, "could not gather aws iam credential report")
+					return nil, errors.Join(err, errors.New("could not gather aws iam credential report"))
 				}
 			}
 			time.Sleep(100 * time.Millisecond)
@@ -124,7 +124,7 @@ func (c *mqlAwsIam) GetCredentialReport() ([]interface{}, error) {
 	}
 
 	if rresp == nil {
-		return nil, errors.Wrap(err, "could not gather aws iam credential report")
+		return nil, errors.Join(err, errors.New("could not gather aws iam credential report"))
 	}
 
 	data = rresp.Content
@@ -132,7 +132,7 @@ func (c *mqlAwsIam) GetCredentialReport() ([]interface{}, error) {
 	// parse csv output
 	entries, err := awsiam.Parse(bytes.NewReader(data))
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse aws iam credential report")
+		return nil, errors.Join(err, errors.New("could not parse aws iam credential report"))
 	}
 
 	res := []interface{}{}
@@ -163,7 +163,7 @@ func (c *mqlAwsIam) GetAccountPasswordPolicy() (map[string]interface{}, error) {
 		if errors.As(err, &notFoundErr) {
 			return nil, nil
 		}
-		return nil, errors.Wrap(err, "could not gather aws iam account-password-policy")
+		return nil, errors.Join(err, errors.New("could not gather aws iam account-password-policy"))
 	}
 
 	res := ParsePasswordPolicy(resp.PasswordPolicy)
@@ -213,7 +213,7 @@ func (c *mqlAwsIam) GetAccountSummary() (map[string]interface{}, error) {
 
 	resp, err := svc.GetAccountSummary(ctx, &iam.GetAccountSummaryInput{})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws iam account-summary")
+		return nil, errors.Join(err, errors.New("could not gather aws iam account-summary"))
 	}
 
 	// convert result to MQL
@@ -239,7 +239,7 @@ func (c *mqlAwsIam) GetUsers() ([]interface{}, error) {
 	for {
 		usersResp, err := svc.ListUsers(ctx, &iam.ListUsersInput{Marker: marker})
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather aws iam users")
+			return nil, errors.Join(err, errors.New("could not gather aws iam users"))
 		}
 		for i := range usersResp.Users {
 			usr := usersResp.Users[i]
@@ -299,7 +299,7 @@ func (c *mqlAwsIam) GetVirtualMfaDevices() ([]interface{}, error) {
 
 	devicesResp, err := svc.ListVirtualMFADevices(ctx, &iam.ListVirtualMFADevicesInput{})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws iam virtual-mfa-devices")
+		return nil, errors.Join(err, errors.New("could not gather aws iam virtual-mfa-devices"))
 	}
 
 	// note: adding pagination to this call results in Throttling: Rate exceeded error
@@ -373,7 +373,7 @@ func (c *mqlAwsIam) GetAttachedPolicies() ([]interface{}, error) {
 			Marker:       marker,
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather aws iam policies")
+			return nil, errors.Join(err, errors.New("could not gather aws iam policies"))
 		}
 
 		policies, err := c.mqlPolicies(policiesResp.Policies)
@@ -407,7 +407,7 @@ func (c *mqlAwsIam) GetPolicies() ([]interface{}, error) {
 			Marker: marker,
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather aws iam policies")
+			return nil, errors.Join(err, errors.New("could not gather aws iam policies"))
 		}
 
 		policies, err := c.mqlPolicies(policiesResp.Policies)

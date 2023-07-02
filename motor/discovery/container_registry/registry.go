@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/authn"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog/log"
@@ -93,7 +93,7 @@ func (a *DockerRegistryImages) Repositories(reg name.Registry) ([]string, error)
 func (a *DockerRegistryImages) ListRegistry(registry string) ([]*asset.Asset, error) {
 	reg, err := name.NewRegistry(registry)
 	if err != nil {
-		return nil, errors.Wrap(err, "resolve registry")
+		return nil, errors.Join(err, errors.New("resolve registry"))
 	}
 
 	repos, err := a.Repositories(reg)

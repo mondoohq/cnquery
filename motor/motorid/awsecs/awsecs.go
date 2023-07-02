@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/motor/providers/mock"

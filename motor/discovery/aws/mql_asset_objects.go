@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -107,7 +107,7 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 			return awsObjectPlatformInfo{title: "AWS ECR Image", platform: "aws-ecr-image"}, nil
 		}
 	}
-	return awsObjectPlatformInfo{}, errors.Newf("missing runtime info for aws object service %s type %s", awsObject.service, awsObject.objectType)
+	return awsObjectPlatformInfo{}, errors.New(fmt.Sprintf("missing runtime info for aws object service %s type %s", awsObject.service, awsObject.objectType))
 }
 
 func s3Buckets(m *MqlDiscovery, account string, tc *providers.Config) ([]*asset.Asset, error) {

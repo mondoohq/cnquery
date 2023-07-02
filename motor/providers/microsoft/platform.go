@@ -1,7 +1,7 @@
 package microsoft
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"

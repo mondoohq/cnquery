@@ -2,6 +2,7 @@
 package prof
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -9,7 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -82,7 +84,7 @@ func parseProf(profVal string) (profilerOpts, error) {
 			if val != "" {
 				i, err := strconv.Atoi(val)
 				if err != nil {
-					return opts, errors.Wrapf(err, "invalid value %q for memprofilerate", val)
+					return opts, errors.Join(err, errors.New(fmt.Sprintf("invalid value %q for memprofilerate", val)))
 				}
 				opts.MemProfileRate = &i
 			}

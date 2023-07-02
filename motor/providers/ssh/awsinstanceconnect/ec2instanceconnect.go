@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/sethvargo/go-password/password"
 
 	"github.com/aws/aws-sdk-go-v2/aws"

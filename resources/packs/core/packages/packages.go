@@ -1,7 +1,7 @@
 package packages
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers/os"
 )

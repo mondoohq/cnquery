@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/checksums"
 )
 
@@ -172,7 +172,7 @@ func (s *Filters) AddQueryFiltersFn(ctx context.Context, query *Mquery, lookupQu
 		mrn := query.Variants[i].Mrn
 		variant, err := lookupQuery(ctx, mrn)
 		if err != nil {
-			return errors.Wrap(err, "cannot find query variant "+mrn)
+			return errors.Join(err, errors.New("cannot find query variant "+mrn))
 		}
 		s.AddQueryFiltersFn(ctx, variant, lookupQuery)
 	}

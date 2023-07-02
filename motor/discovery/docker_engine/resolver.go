@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -80,7 +80,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 
 	if pCfg.Backend == providers.ProviderType_DOCKER_ENGINE_CONTAINER {
 		if dockerEngErr != nil {
-			return nil, errors.Wrap(dockerEngErr, "cannot connect to docker engine to fetch the container")
+			return nil, errors.Join(dockerEngErr, errors.New("cannot connect to docker engine to fetch the container"))
 		}
 		resolvedAsset, err := r.container(ctx, root, pCfg, ded)
 		if err != nil {
@@ -126,7 +126,7 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	}
 
 	// if we reached here, we assume we have a name of an image or container from a registry
-	return nil, errors.Wrap(err, "could not find the container reference")
+	return nil, errors.Join(err, errors.New("could not find the container reference"))
 }
 
 func (k *Resolver) container(ctx context.Context, root *asset.Asset, pCfg *providers.Config, ded *dockerEngineDiscovery) (*asset.Asset, error) {

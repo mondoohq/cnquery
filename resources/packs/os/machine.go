@@ -3,7 +3,7 @@ package os
 import (
 	"fmt"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/os/smbios"
 )
@@ -29,7 +29,7 @@ func getbiosinfo(runtime *resources.Runtime) (*smbios.SmBiosInfo, error) {
 		// find suitable package manager
 		pf, err := runtime.Motor.Platform()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not detect suitable smbios manager for platform")
+			return nil, errors.Join(err, errors.New("could not detect suitable smbios manager for platform"))
 		}
 
 		osProvider, err := osProvider(runtime.Motor)
@@ -45,7 +45,7 @@ func getbiosinfo(runtime *resources.Runtime) (*smbios.SmBiosInfo, error) {
 		// retrieve smbios info
 		biosInfo, err = pm.Info()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not retrieve smbios info for platform")
+			return nil, errors.Join(err, errors.New("could not retrieve smbios info for platform"))
 		}
 
 		machine.MqlResource().Cache.Store("_biosInfo", &resources.CacheEntry{Data: biosInfo})

@@ -3,7 +3,7 @@ package gcp
 import (
 	"context"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/platform/detector"

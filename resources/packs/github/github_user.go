@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/google/go-github/v49/github"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"

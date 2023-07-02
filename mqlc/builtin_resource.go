@@ -1,6 +1,7 @@
 package mqlc
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -95,7 +96,7 @@ func (f *FunctionSignature) Validate(args []*llx.Primitive, c *compiler) error {
 		if argT == types.Ref {
 			argT, err = c.dereferenceType(args[i])
 			if err != nil {
-				return errors.Wrap(err, "failed to dereference argument in validating function signature")
+				return errors.Join(err, errors.New("failed to dereference argument in validating function signature"))
 			}
 		}
 

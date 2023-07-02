@@ -4,12 +4,14 @@ import (
 	"context"
 	"math/rand"
 	"time"
+	"errors"
+
+	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -35,11 +37,11 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	// TODO allow custom aws config
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load aws configuration")
+		return nil, errors.Join(err, errors.New("could not load aws configuration"))
 	}
 	i, err := RawInstanceInfo(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs provider only valid on ec2 instances")
+		return nil, errors.Join(err, errors.New("could not load instance info: aws-ec2-ebs provider only valid on ec2 instances"))
 	}
 
 	// ec2 client for the scanner region
@@ -82,7 +84,11 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	// 3. validate
 	instanceinfo, volumeid, snapshotid, err := p.Validate(ctx)
 	if err != nil {
+<<<<<<< HEAD
 		return p, errors.Wrap(err, "unable to validate")
+=======
+		return t, errors.Join(err, errors.New("unable to validate"))
+>>>>>>> 53cdaacd (:broom: replace cockroachdb/errors with standard library errors)
 	}
 
 	// 4. setup the volume for scanning
@@ -245,11 +251,11 @@ func GetRawInstanceInfo(profile string) (*imds.InstanceIdentityDocument, error) 
 		cfg, err = config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(profile))
 	}
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load aws configuration")
+		return nil, errors.Join(err, errors.New("could not load aws configuration"))
 	}
 	i, err := RawInstanceInfo(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load instance info: aws-ec2-ebs provider is only valid on ec2 instances")
+		return nil, errors.Join(err, errors.New("could not load instance info: aws-ec2-ebs provider is only valid on ec2 instances"))
 	}
 	return i, nil
 }

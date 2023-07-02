@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
@@ -24,10 +24,10 @@ func StoreConfig() error {
 		// write file
 		err = os.WriteFile(path, []byte{}, 0o644)
 		if err != nil {
-			return errors.Wrap(err, "failed to save mondoo config")
+			return errors.Join(err, errors.New("failed to save mondoo config"))
 		}
 	} else if err != nil {
-		return errors.Wrap(err, "failed to check stats for mondoo config")
+		return errors.Join(err, errors.New("failed to check stats for mondoo config"))
 	}
 
 	return viper.WriteConfig()

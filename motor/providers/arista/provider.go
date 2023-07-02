@@ -2,7 +2,7 @@ package arista
 
 import (
 	"github.com/aristanetworks/goeapi"
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
 )

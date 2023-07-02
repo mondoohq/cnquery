@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -309,7 +309,7 @@ func GetCobraShellConfig(cmd *cobra.Command, args []string, provider providers.P
 	flagAsset := builder.ParseTargetAsset(cmd, args, provider, assetType)
 	conf.Inventory, err = inventoryloader.ParseOrUse(flagAsset, viper.GetBool("insecure"))
 	if err != nil {
-		return nil, errors.Wrap(err, "could not load configuration")
+		return nil, errors.Join(err, errors.New("could not load configuration"))
 	}
 
 	conf.PlatformID = viper.GetString("platform-id")

@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 )
 
 // aws://ec2/v1/accounts/{account}/regions/{region}/instances/{instanceid}

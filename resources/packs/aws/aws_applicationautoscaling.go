@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources/library/jobpool"
@@ -17,7 +17,7 @@ import (
 func (a *mqlAwsApplicationAutoscaling) id() (string, error) {
 	n, err := a.Namespace()
 	if err != nil {
-		return "", errors.Wrap(err, "namespace required. please provide an aws service as argument. valid values: [comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, elasticache]")
+		return "", errors.Join(err, errors.New("namespace required. please provide an aws service as argument. valid values: [comprehend, rds, sagemaker, appstream, elasticmapreduce, dynamodb, lambda, ecs, cassandra, ec2, neptune, kafka, custom-resource, elasticache]"))
 	}
 	return "aws.applicationAutoscaling." + n, nil
 }
@@ -82,7 +82,7 @@ func (a *mqlAwsApplicationAutoscaling) getTargets(provider *aws_provider.Provide
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 						return res, nil
 					}
-					return nil, errors.Wrap(err, "could not gather application autoscaling scalable targets")
+					return nil, errors.Join(err, errors.New("could not gather application autoscaling scalable targets"))
 				}
 
 				for _, target := range resp.ScalableTargets {

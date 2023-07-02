@@ -3,9 +3,9 @@ package microsoft
 import (
 	"fmt"
 
+	"errors"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/vault"
 )
@@ -19,7 +19,7 @@ func (p *Provider) GetTokenCredential() (azcore.TokenCredential, error) {
 		log.Debug().Msg("using azure cli to get authorizer")
 		credential, err = azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{})
 		if err != nil {
-			return nil, errors.Wrap(err, "error creating cli credentials")
+			return nil, errors.Join(err, errors.New("error creating cli credentials"))
 		}
 	} else {
 		// we only support private key authentication for ms 365
@@ -27,16 +27,16 @@ func (p *Provider) GetTokenCredential() (azcore.TokenCredential, error) {
 		case vault.CredentialType_pkcs12:
 			certs, privateKey, err := azidentity.ParseCertificates(p.cred.Secret, []byte(p.cred.Password))
 			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("could not parse provided certificate at %s", p.cred.PrivateKeyPath))
+				return nil, errors.Join(err, errors.New(fmt.Sprintf("could not parse provided certificate at %s", p.cred.PrivateKeyPath)))
 			}
 			credential, err = azidentity.NewClientCertificateCredential(p.tenantID, p.clientID, certs, privateKey, &azidentity.ClientCertificateCredentialOptions{})
 			if err != nil {
-				return nil, errors.Wrap(err, "error creating credentials from a certificate")
+				return nil, errors.Join(err, errors.New("error creating credentials from a certificate"))
 			}
 		case vault.CredentialType_password:
 			credential, err = azidentity.NewClientSecretCredential(p.tenantID, p.clientID, string(p.cred.Secret), &azidentity.ClientSecretCredentialOptions{})
 			if err != nil {
-				return nil, errors.Wrap(err, "error creating credentials from a secret")
+				return nil, errors.Join(err, errors.New("error creating credentials from a secret"))
 			}
 		default:
 			return nil, errors.New("invalid secret configuration for microsoft transport: " + p.cred.Type.String())

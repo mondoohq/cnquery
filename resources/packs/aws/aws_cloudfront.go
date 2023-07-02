@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/resources/packs/core"
 )
 
@@ -47,7 +47,7 @@ func (f *mqlAwsCloudfront) GetDistributions() ([]interface{}, error) {
 	for {
 		distributions, err := svc.ListDistributions(ctx, &cloudfront.ListDistributionsInput{Marker: marker})
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather aws cloudfront distributions")
+			return nil, errors.Join(err, errors.New("could not gather aws cloudfront distributions"))
 		}
 
 		for i := range distributions.DistributionList.Items {
@@ -126,7 +126,7 @@ func (f *mqlAwsCloudfront) GetFunctions() ([]interface{}, error) {
 	for {
 		functions, err := svc.ListFunctions(ctx, &cloudfront.ListFunctionsInput{Marker: marker})
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather aws cloudfront functions")
+			return nil, errors.Join(err, errors.New("could not gather aws cloudfront functions"))
 		}
 
 		for i := range functions.FunctionList.Items {

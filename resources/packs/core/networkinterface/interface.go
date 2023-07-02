@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/platform"
@@ -95,7 +95,7 @@ func (i *GoNativeInterfaceHandler) Interfaces() ([]Interface, error) {
 	var goInterfaces []net.Interface
 	var err error
 	if goInterfaces, err = net.Interfaces(); err != nil {
-		return nil, errors.Wrap(err, "failed to load network interfaces")
+		return nil, errors.Join(err, errors.New("failed to load network interfaces"))
 	}
 
 	ifaces := make([]Interface, len(goInterfaces))
@@ -133,7 +133,7 @@ func (i *LinuxInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter via ip addr show
 	cmd, err := i.provider.RunCommand("ip -o addr show")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch macos network adapter")
+		return nil, errors.Join(err, errors.New("could not fetch macos network adapter"))
 	}
 
 	return i.ParseIpAddr(cmd.Stdout)
@@ -219,7 +219,7 @@ func (i *MacOSInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter
 	cmd, err := i.provider.RunCommand("ifconfig")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch macos network adapter")
+		return nil, errors.Join(err, errors.New("could not fetch macos network adapter"))
 	}
 
 	return i.ParseMacOS(cmd.Stdout)
@@ -245,7 +245,7 @@ func (i *MacOSInterfaceHandler) ParseMacOS(r io.Reader) ([]Interface, error) {
 			var err error
 			mtu, err = strconv.Atoi(strings.TrimSpace(m[4]))
 			if err != nil {
-				return nil, errors.Wrap(err, "cannot parse macos ifconfig mtu")
+				return nil, errors.Join(err, errors.New("cannot parse macos ifconfig mtu"))
 			}
 
 			var flags net.Flags
@@ -400,21 +400,21 @@ func (i *WindowsInterfaceHandler) Interfaces() ([]Interface, error) {
 	// fetch all network adapter
 	cmd, err := i.provider.RunCommand(powershell.Wrap(WinGetNetAdapter))
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch windows network adapter")
+		return nil, errors.Join(err, errors.New("could not fetch windows network adapter"))
 	}
 	winAdapter, err := i.ParseNetAdapter(cmd.Stdout)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse windows network adapter list")
+		return nil, errors.Join(err, errors.New("could not parse windows network adapter list"))
 	}
 
 	// fetch all ip addresses
 	cmd, err = i.provider.RunCommand(powershell.Wrap(WinGetNetIPAddress))
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch windows ip addresses")
+		return nil, errors.Join(err, errors.New("could not fetch windows ip addresses"))
 	}
 	winIpAddresses, err := i.ParseNetIpAdresses(cmd.Stdout)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse windows ip addresses")
+		return nil, errors.Join(err, errors.New("could not parse windows ip addresses"))
 	}
 
 	// map information together

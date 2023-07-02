@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -73,7 +73,7 @@ func (s *mqlAwsSsm) getInstances(provider *aws_provider.Provider) []*jobpool.Job
 						log.Warn().Str("region", region).Msg("error accessing region for AWS API")
 						return res, nil
 					}
-					return nil, errors.Wrap(err, "could not gather ssm information")
+					return nil, errors.Join(err, errors.New("could not gather ssm information"))
 				}
 				nextToken = isssmresp.NextToken
 				if isssmresp.NextToken != nil {

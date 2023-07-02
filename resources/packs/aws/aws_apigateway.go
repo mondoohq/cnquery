@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -71,7 +71,7 @@ func (a *mqlAwsApigateway) getRestApis(provider *aws_provider.Provider) []*jobpo
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 						return res, nil
 					}
-					return nil, errors.Wrap(err, "could not gather AWS API Gateway REST APIs")
+					return nil, errors.Join(err, errors.New("could not gather AWS API Gateway REST APIs"))
 				}
 
 				for _, restApi := range restApisResp.Items {
@@ -165,7 +165,7 @@ func (a *mqlAwsApigatewayRestapi) GetStages() ([]interface{}, error) {
 	// no pagination required
 	stagesResp, err := svc.GetStages(ctx, &apigateway.GetStagesInput{RestApiId: &restApiId})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather AWS API Gateway stages")
+		return nil, errors.Join(err, errors.New("could not gather AWS API Gateway stages"))
 	}
 	res := []interface{}{}
 	for _, stage := range stagesResp.Item {

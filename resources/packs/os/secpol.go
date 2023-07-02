@@ -1,7 +1,7 @@
 package os
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/os/windows"
@@ -30,7 +30,7 @@ func (s *mqlSecpol) policy() (*windows.Secpol, error) {
 
 	cmd, err := osProvider.RunCommand(encoded)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not run secpol script")
+		return nil, errors.Join(err, errors.New("could not run secpol script"))
 	}
 
 	policy, err = windows.ParseSecpol(cmd.Stdout)

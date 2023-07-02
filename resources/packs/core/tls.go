@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/providers/network"
 	"go.mondoo.com/cnquery/resources"

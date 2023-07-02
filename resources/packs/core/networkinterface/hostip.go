@@ -5,7 +5,7 @@ import (
 	"net"
 	"sort"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -92,7 +92,7 @@ func HostIP(interfaces []Interface) (ip string, err error) {
 func GetOutboundIP() (net.IP, error) {
 	conn, err := net.Dial("udp", "1.1.1.1:80")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not determine outbound ip")
+		return nil, errors.Join(err, errors.New("could not determine outbound ip"))
 	}
 	defer conn.Close()
 

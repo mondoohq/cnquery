@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/ext/typeexpr"
 	"github.com/hashicorp/hcl/v2/hclsyntax"

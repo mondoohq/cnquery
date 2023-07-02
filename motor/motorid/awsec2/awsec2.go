@@ -6,8 +6,8 @@ import (
 
 	"go.mondoo.com/cnquery/motor/providers/os"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/local"
 )
@@ -26,7 +26,7 @@ func Resolve(provider os.OperatingSystemProvider, pf *platform.Platform) (Instan
 	if ok {
 		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {
-			return nil, errors.Wrap(err, "cannot not determine aws environment")
+			return nil, errors.Join(err, errors.New("cannot not determine aws environment"))
 		}
 		return NewLocal(cfg), nil
 	} else {

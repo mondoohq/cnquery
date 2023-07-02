@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
@@ -15,7 +15,7 @@ func ReadConfig() (*CliConfig, error) {
 	var opts CliConfig
 	err := viper.Unmarshal(&opts)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to decode into config struct")
+		return nil, errors.Join(err, errors.New("unable to decode into config struct"))
 	}
 
 	return &opts, nil

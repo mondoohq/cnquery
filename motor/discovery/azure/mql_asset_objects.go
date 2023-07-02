@@ -1,7 +1,9 @@
 package azure
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
+	"fmt"
+
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -60,7 +62,7 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 			return azureObjectPlatformInfo{title: "Azure Key Vault", platform: "azure-keyvault-vault"}, nil
 		}
 	}
-	return azureObjectPlatformInfo{}, errors.Newf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType)
+	return azureObjectPlatformInfo{}, errors.New(fmt.Sprintf("missing runtime info for azure object service %s type %s", azureObject.service, azureObject.objectType))
 }
 
 func fetchInstances(m *MqlDiscovery) ([]instance, error) {

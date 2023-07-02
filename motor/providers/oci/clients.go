@@ -3,7 +3,7 @@ package oci
 import (
 	"context"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/oracle/oci-go-sdk/v65/audit"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/core"
@@ -63,7 +63,7 @@ func (p *Provider) GetCompartments(ctx context.Context) ([]identity.Compartment,
 
 		response, err := oClient.ListCompartments(ctx, request)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to list compartments in tenancy: "+p.tenancyOcid)
+			return nil, errors.Join(err, errors.New("failed to list compartments in tenancy: "+p.tenancyOcid))
 		}
 
 		for i := range response.Items {

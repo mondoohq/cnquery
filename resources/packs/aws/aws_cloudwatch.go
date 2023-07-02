@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	aws_provider "go.mondoo.com/cnquery/motor/providers/aws"
 	"go.mondoo.com/cnquery/resources"
@@ -224,15 +224,15 @@ func (p *mqlAwsCloudwatchMetric) init(args *resources.Args) (*resources.Args, Aw
 func (p *mqlAwsCloudwatchMetric) GetDimensions() ([]interface{}, error) {
 	name, err := p.Name()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric name")
+		return nil, errors.Join(err, errors.New("unable to parse metric name"))
 	}
 	namespace, err := p.Namespace()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric namespace")
+		return nil, errors.Join(err, errors.New("unable to parse metric namespace"))
 	}
 	regionVal, err := p.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric region")
+		return nil, errors.Join(err, errors.New("unable to parse metric region"))
 	}
 
 	at, err := awsProvider(p.MotorRuntime.Motor.Provider)
@@ -360,19 +360,19 @@ func (p *mqlAwsCloudwatchMetricstatistics) init(args *resources.Args) (*resource
 func (t *mqlAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 	metricName, err := t.Name()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric name")
+		return nil, errors.Join(err, errors.New("unable to parse metric name"))
 	}
 	namespace, err := t.Namespace()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric namespace")
+		return nil, errors.Join(err, errors.New("unable to parse metric namespace"))
 	}
 	dimensions, err := t.Dimensions()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric dimensions")
+		return nil, errors.Join(err, errors.New("unable to parse metric dimensions"))
 	}
 	regionVal, err := t.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric region")
+		return nil, errors.Join(err, errors.New("unable to parse metric region"))
 	}
 
 	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
@@ -389,11 +389,11 @@ func (t *mqlAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 		dimension := d.(*mqlAwsCloudwatchMetricdimension)
 		name, err := dimension.Name()
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to parse metric dimension name")
+			return nil, errors.Join(err, errors.New("unable to parse metric dimension name"))
 		}
 		val, err := dimension.Value()
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to parse metric dimension value")
+			return nil, errors.Join(err, errors.New("unable to parse metric dimension value"))
 		}
 		typedDimensions[i].Name = &name
 		typedDimensions[i].Value = &val
@@ -410,7 +410,7 @@ func (t *mqlAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 	// no pagination required
 	statsResp, err := svc.GetMetricStatistics(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws cloudwatch stats")
+		return nil, errors.Join(err, errors.New("could not gather aws cloudwatch stats"))
 	}
 	datapoints := []interface{}{}
 	for _, datapoint := range statsResp.Datapoints {
@@ -459,15 +459,15 @@ func formatDatapointId(d types.Datapoint) string {
 func (t *mqlAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 	metricName, err := t.Name()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric name")
+		return nil, errors.Join(err, errors.New("unable to parse metric name"))
 	}
 	namespace, err := t.Namespace()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric namespace")
+		return nil, errors.Join(err, errors.New("unable to parse metric namespace"))
 	}
 	regionVal, err := t.Region()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to parse metric region")
+		return nil, errors.Join(err, errors.New("unable to parse metric region"))
 	}
 
 	at, err := awsProvider(t.MotorRuntime.Motor.Provider)
@@ -484,7 +484,7 @@ func (t *mqlAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 	// no pagination required
 	alarmsResp, err := svc.DescribeAlarmsForMetric(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws cloudwatch alarms")
+		return nil, errors.Join(err, errors.New("could not gather aws cloudwatch alarms"))
 	}
 	res := []interface{}{}
 	for _, alarm := range alarmsResp.MetricAlarms {
@@ -633,7 +633,7 @@ func (t *mqlAwsSnsTopic) GetSubscriptions() ([]interface{}, error) {
 	for nextToken != nil {
 		subsByTopic, err := svc.ListSubscriptionsByTopic(ctx, params)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather sns subscriptions info")
+			return nil, errors.Join(err, errors.New("could not gather sns subscriptions info"))
 		}
 		nextToken = subsByTopic.NextToken
 		if subsByTopic.NextToken != nil {
@@ -697,7 +697,7 @@ func (t *mqlAwsCloudwatch) getLogGroups(provider *aws_provider.Provider) []*jobp
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 						return res, nil
 					}
-					return nil, errors.Wrap(err, "could not gather aws cloudwatch log groups")
+					return nil, errors.Join(err, errors.New("could not gather aws cloudwatch log groups"))
 				}
 				nextToken = logGroups.NextToken
 				if logGroups.NextToken != nil {
@@ -787,7 +787,7 @@ func (t *mqlAwsCloudwatchLoggroup) id() (string, error) {
 func (t *mqlAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 	arnValue, err := t.Arn()
 	if err != nil || len(arnValue) < 6 {
-		return nil, errors.Wrap(err, "unable to parse cloud watch log group arn")
+		return nil, errors.Join(err, errors.New("unable to parse cloud watch log group arn"))
 	}
 	// arn:aws:logs:<region>:<aws_account_number>:log-group:GROUPVAL:*
 	logGroupArn := strings.Split(arnValue, ":")
@@ -807,7 +807,7 @@ func (t *mqlAwsCloudwatchLoggroup) GetMetricsFilters() ([]interface{}, error) {
 	for nextToken != nil {
 		metricsResp, err := svc.DescribeMetricFilters(ctx, params)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not gather log metric filters")
+			return nil, errors.Join(err, errors.New("could not gather log metric filters"))
 		}
 		nextToken = metricsResp.NextToken
 		if metricsResp.NextToken != nil {

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"

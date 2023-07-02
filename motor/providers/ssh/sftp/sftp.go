@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/pkg/sftp"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
@@ -37,7 +37,7 @@ type Fs struct {
 func New(commandRunner cat.CommandRunner, client *ssh.Client) (afero.Fs, error) {
 	ftpClient, err := sftpClient(client)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize sftp backend")
+		return nil, errors.Join(err, errors.New("could not initialize sftp backend"))
 	}
 
 	return &Fs{

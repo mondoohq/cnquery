@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor/providers/local"
 )
 
@@ -23,7 +23,7 @@ func GetCurrentProject() (string, error) {
 
 	gcloudconfig, err := ParseGcloudConfig(cmd.Stdout)
 	if err != nil {
-		return "", errors.Wrap(err, "could not read gcloud config")
+		return "", errors.Join(err, errors.New("could not read gcloud config"))
 	}
 
 	return gcloudconfig.Configuration.Properties.Core.Project, nil

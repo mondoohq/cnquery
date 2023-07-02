@@ -3,7 +3,7 @@ package os
 import (
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/packethost/packngo"
 	"go.mondoo.com/cnquery/motor/providers"
 	equinix_provider "go.mondoo.com/cnquery/motor/providers/equinix"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/protobuf/proto"
@@ -42,7 +42,7 @@ func (x *Secret) Credential() (*Credential, error) {
 	}
 
 	if err != nil {
-		return nil, errors.Wrap(err, "unknown secret format")
+		return nil, errors.Join(err, errors.New("unknown secret format"))
 	}
 
 	cred.SecretId = x.Key

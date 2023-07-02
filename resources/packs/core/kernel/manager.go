@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -159,7 +159,7 @@ func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
 	// TODO: use proc in future
 	cmd, err := s.provider.RunCommand("/sbin/lsmod")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel modules")
+		return nil, errors.Join(err, errors.New("could not read kernel modules"))
 	}
 
 	return ParseLsmod(cmd.Stdout), nil
@@ -176,12 +176,12 @@ func (s *OSXKernelManager) Name() string {
 func (s *OSXKernelManager) Info() (KernelInfo, error) {
 	cmd, err := s.provider.RunCommand("uname -r")
 	if err != nil {
-		return KernelInfo{}, errors.Wrap(err, "could not read kernel parameters")
+		return KernelInfo{}, errors.Join(err, errors.New("could not read kernel parameters"))
 	}
 
 	data, err := ioutil.ReadAll(cmd.Stdout)
 	if err != nil {
-		return KernelInfo{}, errors.Wrap(err, "could not read kernel parameters")
+		return KernelInfo{}, errors.Join(err, errors.New("could not read kernel parameters"))
 	}
 
 	return KernelInfo{
@@ -192,7 +192,7 @@ func (s *OSXKernelManager) Info() (KernelInfo, error) {
 func (s *OSXKernelManager) Parameters() (map[string]string, error) {
 	cmd, err := s.provider.RunCommand("sysctl -a")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel parameters")
+		return nil, errors.Join(err, errors.New("could not read kernel parameters"))
 	}
 
 	return ParseSysctl(cmd.Stdout, ":")
@@ -201,7 +201,7 @@ func (s *OSXKernelManager) Parameters() (map[string]string, error) {
 func (s *OSXKernelManager) Modules() ([]*KernelModule, error) {
 	cmd, err := s.provider.RunCommand("kextstat")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel modules")
+		return nil, errors.Join(err, errors.New("could not read kernel modules"))
 	}
 
 	return ParseKextstat(cmd.Stdout), nil
@@ -222,7 +222,7 @@ func (s *FreebsdKernelManager) Info() (KernelInfo, error) {
 func (s *FreebsdKernelManager) Parameters() (map[string]string, error) {
 	cmd, err := s.provider.RunCommand("sysctl -a")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel parameters")
+		return nil, errors.Join(err, errors.New("could not read kernel parameters"))
 	}
 
 	return ParseSysctl(cmd.Stdout, ":")
@@ -231,7 +231,7 @@ func (s *FreebsdKernelManager) Parameters() (map[string]string, error) {
 func (s *FreebsdKernelManager) Modules() ([]*KernelModule, error) {
 	cmd, err := s.provider.RunCommand("kldstat")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read kernel modules")
+		return nil, errors.Join(err, errors.New("could not read kernel modules"))
 	}
 
 	return ParseKldstat(cmd.Stdout), nil

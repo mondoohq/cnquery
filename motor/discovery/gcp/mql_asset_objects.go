@@ -1,7 +1,9 @@
 package gcp
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
+	"fmt"
+
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
@@ -25,7 +27,7 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 		case "firewall":
 			return gcpObjectPlatformInfo{title: "GCP Compute Firewall", platform: "gcp-compute-firewall"}, nil
 		default:
-			return gcpObjectPlatformInfo{}, errors.Newf("unknown gcp compute object type", o.objectType)
+			return gcpObjectPlatformInfo{}, errors.New(fmt.Sprintf("unknown gcp compute object type", o.objectType))
 		}
 	case "gke":
 		if o.objectType == "cluster" {
@@ -40,7 +42,7 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 			return gcpObjectPlatformInfo{title: "GCP BigQuery Dataset", platform: "gcp-bigquery-dataset"}, nil
 		}
 	}
-	return gcpObjectPlatformInfo{}, errors.Newf("missing runtime info for gcp object service %s type %s", o.service, o.objectType)
+	return gcpObjectPlatformInfo{}, errors.New(fmt.Sprintf("missing runtime info for gcp object service %s type %s", o.service, o.objectType))
 }
 
 func computeInstances(m *MqlDiscovery, project string, tc *providers.Config, sfn common.QuerySecretFn) ([]*asset.Asset, error) {

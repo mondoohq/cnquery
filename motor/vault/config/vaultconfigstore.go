@@ -3,10 +3,12 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"runtime"
 
+	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/motor/vault/awsparameterstore"
@@ -54,13 +56,13 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 		// TODO: do we really want to load it from the env?
 		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {
-			return nil, errors.Wrap(err, "cannot not determine aws environment")
+			return nil, errors.Join(err, errors.New("cannot not determine aws environment"))
 		}
 		v = awssecretsmanager.New(cfg)
 	case vault.VaultType_AWSParameterStore:
 		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {
-			return nil, errors.Wrap(err, "cannot not determine aws environment")
+			return nil, errors.Join(err, errors.New("cannot not determine aws environment"))
 		}
 		v = awsparameterstore.New(cfg)
 	case vault.VaultType_GCPBerglas:
@@ -77,7 +79,7 @@ func New(vCfg *vault.VaultConfiguration) (vault.Vault, error) {
 		v = gcpberglas.New(projectID, opts...)
 
 	default:
-		return nil, errors.Errorf("could not connect to vault: %s (%s)", vCfg.Name, vCfg.Type.String())
+		return nil, errors.New(fmt.Sprintf("could not connect to vault: %s (%s)", vCfg.Name, vCfg.Type.String()))
 	}
 	return v, nil
 }
@@ -131,7 +133,7 @@ func NewClientVaultConfig(secret *vault.Secret) (ClientVaultConfig, error) {
 	var vCfg ClientVaultConfig
 	err := json.Unmarshal(secret.Data, &vCfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "corrupt vault configuration")
+		return nil, errors.Join(err, errors.New("corrupt vault configuration"))
 	}
 	return vCfg, nil
 }

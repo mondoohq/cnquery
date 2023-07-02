@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/platform/windows"
@@ -232,11 +232,11 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	// hotfixes
 	cmd, err = w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch hotfixes")
+		return nil, errors.Join(err, errors.New("could not fetch hotfixes"))
 	}
 	hotfixes, err := ParseWindowsHotfixes(cmd.Stdout)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not parse hotfix results")
+		return nil, errors.Join(err, errors.New("could not parse hotfix results"))
 	}
 	hotfixAsPkgs := HotFixesToPackages(hotfixes)
 

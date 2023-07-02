@@ -1,7 +1,7 @@
 package mount
 
 import (
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/providers/os"
@@ -69,7 +69,7 @@ func (s *LinuxMountManager) List() ([]MountPoint, error) {
 	if s.provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
 		cmd, err := s.provider.RunCommand("mount")
 		if err != nil {
-			return nil, errors.Wrap(err, "could not read mounts")
+			return nil, errors.Join(err, errors.New("could not read mounts"))
 		}
 		return ParseLinuxMountCmd(cmd.Stdout), nil
 	} else if s.provider.Capabilities().HasCapability(providers.Capability_File) {
@@ -90,7 +90,7 @@ func (s *UnixMountManager) Name() string {
 func (s *UnixMountManager) List() ([]MountPoint, error) {
 	cmd, err := s.provider.RunCommand("mount")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read package list")
+		return nil, errors.Join(err, errors.New("could not read package list"))
 	}
 
 	return ParseUnixMountCmd(cmd.Stdout), nil

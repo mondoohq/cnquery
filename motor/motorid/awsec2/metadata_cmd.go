@@ -7,11 +7,11 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"errors"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
@@ -44,7 +44,7 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	// parse into struct
 	doc := imds.InstanceIdentityDocument{}
 	if err := json.NewDecoder(strings.NewReader(instanceDocument)).Decode(&doc); err != nil {
-		return Identity{}, errors.Wrap(err, "failed to decode EC2 instance identity document")
+		return Identity{}, errors.Join(err, errors.New("failed to decode EC2 instance identity document"))
 	}
 
 	name := ""

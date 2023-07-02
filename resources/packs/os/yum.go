@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	"go.mondoo.com/cnquery/resources/packs/os/yum"
@@ -35,7 +35,7 @@ func (y *mqlYum) GetRepos() ([]interface{}, error) {
 
 	cmd, err := osProvider.RunCommand("yum -v repolist all")
 	if err != nil {
-		return nil, errors.Wrap(err, "could not retrieve yum repo list")
+		return nil, errors.Join(err, errors.New("could not retrieve yum repo list"))
 	}
 
 	if cmd.ExitStatus != 0 {

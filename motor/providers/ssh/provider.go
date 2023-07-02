@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	rawsftp "github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -115,7 +115,7 @@ func (p *Provider) Connect() error {
 	// load known hosts and track the fingerprint of the ssh server for later identification
 	knownHostsCallback, err := KnownHostsCallback()
 	if err != nil {
-		return errors.Wrap(err, "could not read hostkey file")
+		return errors.Join(err, errors.New("could not read hostkey file"))
 	}
 
 	var hostkey ssh.PublicKey

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor"
@@ -337,7 +337,7 @@ func (s *mqlOs) GetMachineid() (string, error) {
 
 	uuidProvider, err := platformid.MachineIDProvider(osProvider, platform)
 	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
+		return "", errors.Join(err, errors.New("cannot determine platform uuid"))
 	}
 
 	if uuidProvider == nil {
@@ -346,7 +346,7 @@ func (s *mqlOs) GetMachineid() (string, error) {
 
 	id, err := uuidProvider.ID()
 	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
+		return "", errors.Join(err, errors.New("cannot determine platform uuid"))
 	}
 
 	return id, nil
@@ -647,7 +647,7 @@ func (s *mqlOsBase) GetMachineid() (string, error) {
 
 	uuidProvider, err := platformid.MachineIDProvider(osProvider, platform)
 	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
+		return "", errors.Join(err, errors.New("cannot determine platform uuid"))
 	}
 
 	if uuidProvider == nil {
@@ -656,7 +656,7 @@ func (s *mqlOsBase) GetMachineid() (string, error) {
 
 	id, err := uuidProvider.ID()
 	if err != nil {
-		return "", errors.Wrap(err, "cannot determine platform uuid")
+		return "", errors.Join(err, errors.New("cannot determine platform uuid"))
 	}
 
 	return id, nil
