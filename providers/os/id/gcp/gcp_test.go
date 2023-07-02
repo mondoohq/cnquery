@@ -12,7 +12,7 @@ import (
 func TestDetectLinuxInstance(t *testing.T) {
 	conn, err := mock.New("./testdata/instance_linux.toml")
 	require.NoError(t, err)
-	platform, ok := detector.Detect(conn)
+	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
 	identifier, name, relatedIdentifiers := Detect(conn, platform)
@@ -26,7 +26,7 @@ func TestDetectLinuxInstance(t *testing.T) {
 func TestDetectWindowsInstance(t *testing.T) {
 	conn, err := mock.New("./testdata/instance_windows.toml")
 	require.NoError(t, err)
-	platform, ok := detector.Detect(conn)
+	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
 	identifier, name, relatedIdentifiers := Detect(conn, platform)
@@ -40,7 +40,7 @@ func TestDetectWindowsInstance(t *testing.T) {
 func TestNoMatch(t *testing.T) {
 	conn, err := mock.New("./testdata/aws_instance.toml")
 	require.NoError(t, err)
-	platform, ok := detector.Detect(conn)
+	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
 	identifier, name, relatedIdentifiers := Detect(conn, platform)

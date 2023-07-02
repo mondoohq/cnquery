@@ -2,6 +2,8 @@ package mock
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io"
 	"os"
@@ -57,9 +59,10 @@ type MockFileData struct {
 }
 
 type Connection struct {
-	data  *TomlData
-	mutex sync.Mutex
-	uid   uint32
+	data    *TomlData
+	mutex   sync.Mutex
+	uid     uint32
+	missing map[string]map[string]bool
 }
 
 func New(path string) (*Connection, error) {
@@ -90,6 +93,10 @@ func New(path string) (*Connection, error) {
 
 	return &Connection{
 		data: tomlContent,
+		missing: map[string]map[string]bool{
+			"file":    {},
+			"command": {},
+		},
 	}, nil
 }
 
@@ -101,16 +108,32 @@ func (c *Connection) Type() connection.ConnectionType {
 	return "local"
 }
 
+func hashCmd(message string) string {
+	hash := sha256.New()
+	hash.Write([]byte(message))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
 func (c *Connection) RunCommand(command string) (*connection.Command, error) {
 	found, ok := c.data.Commands[command]
 	if !ok {
-		return nil, errors.New("command not found: " + command)
+		// try to fetch command by hash (more reliable for whitespace)
+		found, ok = c.data.Commands[hashCmd(command)]
+	}
+	if !ok {
+		c.missing["command"][command] = true
+		return &connection.Command{
+			Command:    command,
+			Stdout:     bytes.NewBuffer([]byte{}),
+			Stderr:     bytes.NewBufferString("command not found: " + command),
+			ExitStatus: 1,
+		}, nil
 	}
 
 	return &connection.Command{
 		Command:    command,
-		Stdout:     bytes.NewBuffer([]byte(found.Stdout)),
-		Stderr:     bytes.NewBuffer([]byte(found.Stderr)),
+		Stdout:     bytes.NewBufferString(found.Stdout),
+		Stderr:     bytes.NewBufferString(found.Stderr),
 		ExitStatus: found.ExitStatus,
 	}, nil
 }

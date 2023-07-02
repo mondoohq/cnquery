@@ -18,7 +18,7 @@ func (s *Service) detect(asset *asset.Asset) error {
 	}
 
 	var ok bool
-	asset.Platform, ok = detector.Detect(conn)
+	asset.Platform, ok = detector.DetectOS(conn)
 	if !ok {
 		return errors.New("failed to detect OS")
 	}

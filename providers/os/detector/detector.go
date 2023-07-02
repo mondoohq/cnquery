@@ -7,7 +7,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
-func Detect(conn connection.Connection) (*platform.Platform, bool) {
+func DetectOS(conn connection.Connection) (*platform.Platform, bool) {
 	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
 		return WindowsFamily.Resolve(conn)
 	}

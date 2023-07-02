@@ -12,7 +12,7 @@ import (
 func TestCommandProviderLinux(t *testing.T) {
 	conn, err := mock.New("./testdata/metadata_linux.toml")
 	require.NoError(t, err)
-	platform, ok := detector.Detect(conn)
+	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
 	metadata := commandInstanceMetadata{conn, platform}
@@ -26,7 +26,7 @@ func TestCommandProviderLinux(t *testing.T) {
 func TestCommandProviderWindows(t *testing.T) {
 	conn, err := mock.New("./testdata/metadata_windows.toml")
 	require.NoError(t, err)
-	platform, ok := detector.Detect(conn)
+	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
 	metadata := commandInstanceMetadata{conn, platform}
