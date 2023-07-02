@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.24.4
+	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.20.7
