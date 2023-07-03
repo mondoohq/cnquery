@@ -42,23 +42,23 @@ func (m *VolumeMounter) Mount() error {
 	if fsInfo == nil {
 		return errors.New("unable to find target volume on instance")
 	}
-	log.Info().Str("device name", fsInfo.name).Msg("found target volume")
+	log.Debug().Str("device name", fsInfo.name).Msg("found target volume")
 	return m.mountVolume(fsInfo)
 }
 
 func (m *VolumeMounter) createScanDir() error {
-	log.Info().Msg("create tmp scan dir")
 	dir, err := os.MkdirTemp("", "cnspec-scan")
 	if err != nil {
 		log.Error().Err(err).Msg("error creating directory")
 		return err
 	}
 	m.ScanDir = dir
+	log.Debug().Str("dir", dir).Msg("created tmp scan dir")
 	return nil
 }
 
 func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
-	log.Info().Msg("search for target volume")
+	log.Debug().Msg("search for target volume")
 
 	// TODO: replace with mql query once version with lsblk resource is released
 	// TODO: only use sudo if we are not root
@@ -96,7 +96,6 @@ func (m *VolumeMounter) getFsInfo() (*fsInfo, error) {
 }
 
 func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
-	log.Info().Msg("mount volume")
 	opts := []string{}
 	if fsInfo.fstype == "xfs" {
 		opts = append(opts, "nouuid")
@@ -107,7 +106,7 @@ func (m *VolumeMounter) mountVolume(fsInfo *fsInfo) error {
 }
 
 func (m *VolumeMounter) UnmountVolumeFromInstance() error {
-	log.Info().Msg("unmount volume")
+	log.Debug().Str("dir", m.ScanDir).Msg("unmount volume")
 	if err := Unmount(m.ScanDir); err != nil {
 		log.Error().Err(err).Msg("failed to unmount dir")
 		return err
@@ -116,6 +115,6 @@ func (m *VolumeMounter) UnmountVolumeFromInstance() error {
 }
 
 func (m *VolumeMounter) RemoveTempScanDir() error {
-	log.Info().Msg("remove created dir")
+	log.Debug().Str("dir", m.ScanDir).Msg("remove created dir")
 	return os.RemoveAll(m.ScanDir)
 }

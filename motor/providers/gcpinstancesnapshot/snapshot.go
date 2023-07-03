@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/motorid/gce"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
@@ -60,11 +63,11 @@ func (sc *SnapshotCreator) computeServiceClient(ctx context.Context) (*compute.S
 }
 
 type instanceInfo struct {
-	PlatformMrn    string
-	ProjectID      string
-	Zone           string
-	InstanceName   string
-	BootDiskSource string
+	PlatformMrn       string
+	ProjectID         string
+	Zone              string
+	InstanceName      string
+	BootDiskSourceURL string
 }
 
 func (sc *SnapshotCreator) InstanceInfo(projectID, zone, instanceName string) (instanceInfo, error) {
@@ -97,7 +100,7 @@ func (sc *SnapshotCreator) InstanceInfo(projectID, zone, instanceName string) (i
 	}
 
 	if bootDisk != nil {
-		ii.BootDiskSource = bootDisk.Source
+		ii.BootDiskSourceURL = bootDisk.Source
 	}
 
 	return ii, nil
@@ -130,6 +133,51 @@ func (sc *SnapshotCreator) SnapshotInfo(projectID, snapshotName string) (snapsho
 	si.PlatformMrn = SnapshotPlatformMrn(projectID, snapshot.Name)
 
 	return si, nil
+}
+
+// searchLatestSnapshot looks for the latest available snapshot for the instance
+func (sc *SnapshotCreator) searchLatestSnapshot(projectID, sourceDiskUrl string) (string, time.Time, error) {
+	ctx := context.Background()
+	latestSnapshotTimestamp := time.UnixMilli(0)
+
+	computeService, err := sc.computeServiceClient(ctx)
+	if err != nil {
+		return "", latestSnapshotTimestamp, err
+	}
+
+	var latestSnapshot *compute.Snapshot
+
+	req := computeService.Snapshots.List(projectID)
+	if err := req.Pages(ctx, func(page *compute.SnapshotList) error {
+		for _, snapshot := range page.Items {
+			// we are only interested in disks that are attached to the
+			if snapshot.SourceDisk != sourceDiskUrl {
+				continue
+			}
+
+			// RFC3339 encoded like 2021-02-28T02:31:38.654-08:00
+			snapshotCreated, err := time.Parse(time.RFC3339, snapshot.CreationTimestamp)
+			if err != nil {
+				log.Err(err).Str("snapshot", snapshot.Name).Str("creation-timestamp", snapshot.CreationTimestamp).Msg("snapshot timestamp is not parsable")
+				// we ignore snapshots that we cannot parse
+				continue
+			}
+
+			if latestSnapshotTimestamp.Before(snapshotCreated) {
+				latestSnapshot = snapshot
+				latestSnapshotTimestamp = snapshotCreated
+			}
+		}
+		return nil
+	}); err != nil {
+		return "", latestSnapshotTimestamp, err
+	}
+
+	if latestSnapshot == nil {
+		return "", latestSnapshotTimestamp, status.Error(codes.NotFound, "no snapshot found")
+	}
+
+	return latestSnapshot.SelfLink, latestSnapshotTimestamp, nil
 }
 
 // createDisk creates a new disk
@@ -299,7 +347,7 @@ func (sc *SnapshotCreator) deleteCreatedDisk(diskUrl string) error {
 		if err != nil {
 			return err
 		}
-		log.Info().Str("disk", diskName).Msg("deleted temporary disk created by cnspec")
+		log.Debug().Str("disk", diskName).Msg("deleted temporary disk created by cnspec")
 	} else {
 		log.Debug().Str("disk", diskName).Msg("skipping disk deletion, not created by cnspec")
 	}

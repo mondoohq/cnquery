@@ -487,6 +487,12 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 		case GcpComputeInstanceAssetType:
 			connection.Options["type"] = "instance"
 			connection.Options["instance-name"] = args[0]
+
+			if createNewSnapshot, err := cmd.Flags().GetBool("create-snapshot"); err != nil {
+				log.Fatal().Err(err).Msg("cannot parse --create-snapshot")
+			} else if createNewSnapshot {
+				connection.Options["create-snapshot"] = "true"
+			}
 		case GcpComputeInstanceSnapshotAssetType:
 			connection.Options["type"] = "snapshot"
 			connection.Options["snapshot-name"] = args[0]
