@@ -510,9 +510,9 @@ func ScanGcpComputeInstanceCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRun
 
 func ScanGcpComputeSnapshotCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn RunFn, docs CommandsDocs) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "snapshot INSTANCE-NAME",
-		Short: docs.GetShort("gcp-compute-instance"),
-		Long:  docs.GetLong("gcp-compute-instance"),
+		Use:   "snapshot SNAPSHOT-NAME",
+		Short: docs.GetShort("gcp-compute-snapshot"),
+		Long:  docs.GetLong("gcp-compute-snapshot"),
 		Args:  cobra.ExactArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			preRun(cmd, args)

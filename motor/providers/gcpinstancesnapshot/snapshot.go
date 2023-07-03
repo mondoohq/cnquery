@@ -165,7 +165,7 @@ func (sc *SnapshotCreator) createDisk(disk *compute.Disk, projectID, zone, diskN
 	return clonedDiskUrl, nil
 }
 
-// snapshotDisk creates a new disk from a snapshot
+// createSnapshotDisk creates a new disk from a snapshot
 func (sc *SnapshotCreator) createSnapshotDisk(snapshotUrl, projectID, zone, diskName string) (string, error) {
 	// create a new disk from snapshot
 	disk := &compute.Disk{

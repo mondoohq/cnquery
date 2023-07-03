@@ -196,6 +196,9 @@ configure your Azure credentials and have SSH access to the virtual machines.`,
 			"gcp-compute-instance": {
 				Short: "Connect to a Google Cloud Platform (GCP) VM instance.",
 			},
+			"gcp-compute-snapshot": {
+				Short: "Connect to a Google Cloud Platform (GCP) VM snapshot.",
+			},
 			"vsphere": {
 				Short: "Connect to a VMware vSphere API endpoint.",
 			},
