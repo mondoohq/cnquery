@@ -2,6 +2,7 @@ package instancesnapshot
 
 import (
 	"context"
+	"errors"
 
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
@@ -30,18 +31,39 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 	}
 
 	target := gcpinstancesnapshot.ParseTarget(pCfg)
-	instanceInfo, err := sc.InstanceInfo(target.ProjectID, target.Zone, target.InstanceName)
-	if err != nil {
-		return nil, err
+	var assetInfo *asset.Asset
+
+	switch target.TargetType {
+	case "instance":
+		instanceInfo, err := sc.InstanceInfo(target.ProjectID, target.Zone, target.InstanceName)
+		if err != nil {
+			return nil, err
+		}
+
+		assetInfo = &asset.Asset{
+			Name:        instanceInfo.InstanceName,
+			Connections: []*providers.Config{pCfg},
+			State:       asset.State_STATE_ONLINE,
+			Labels:      map[string]string{},
+			PlatformIds: []string{instanceInfo.PlatformMrn},
+		}
+	case "snapshot":
+		snapshotInfo, err := sc.SnapshotInfo(target.ProjectID, target.SnapshotName)
+		if err != nil {
+			return nil, err
+		}
+
+		assetInfo = &asset.Asset{
+			Name:        snapshotInfo.SnapshotName,
+			Connections: []*providers.Config{pCfg},
+			State:       asset.State_STATE_ONLINE,
+			Labels:      map[string]string{},
+			PlatformIds: []string{snapshotInfo.PlatformMrn},
+		}
+	default:
+		return nil, errors.New("GCP compute discovery does not support asset type " + target.TargetType)
 	}
 
-	assetInfo := &asset.Asset{
-		Name:        instanceInfo.InstanceName,
-		Connections: []*providers.Config{pCfg},
-		State:       asset.State_STATE_ONLINE,
-		Labels:      map[string]string{},
-		PlatformIds: []string{instanceInfo.PlatformMrn},
-	}
 	// If there's a root-provided name, use that to overwrite
 	if root.Name != "" {
 		assetInfo.Name = root.Name
