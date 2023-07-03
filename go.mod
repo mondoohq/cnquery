@@ -17,7 +17,7 @@ require (
 	cloud.google.com/go/recommender v1.9.0
 	cloud.google.com/go/run v0.9.0
 	cloud.google.com/go/secretmanager v1.10.0
-	cloud.google.com/go/serviceusage v1.6.0
+	cloud.google.com/go/serviceusage v1.7.1
 	github.com/99designs/keyring v1.2.1
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.2.2
