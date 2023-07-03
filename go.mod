@@ -74,7 +74,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.18.7
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.15.6
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.24.2
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.19.9
 	github.com/aws/aws-sdk-go-v2/service/eks v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.26.6
