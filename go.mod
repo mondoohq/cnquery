@@ -11,8 +11,8 @@ require (
 	cloud.google.com/go/iam v0.13.0
 	cloud.google.com/go/kms v1.10.1
 	cloud.google.com/go/logging v1.7.0
-	cloud.google.com/go/longrunning v0.4.1
-	cloud.google.com/go/monitoring v1.13.0
+	cloud.google.com/go/longrunning v0.5.0
+	cloud.google.com/go/monitoring v1.15.1
 	cloud.google.com/go/pubsub v1.30.0
 	cloud.google.com/go/recommender v1.9.0
 	cloud.google.com/go/run v0.9.0
@@ -207,7 +207,7 @@ require (
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
-	cloud.google.com/go v0.110.0 // indirect
+	cloud.google.com/go v0.110.2 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/storage v1.29.0 // indirect
 	github.com/4meepo/tagalign v1.2.2 // indirect
@@ -341,7 +341,7 @@ require (
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.4 // indirect
-	github.com/googleapis/gax-go/v2 v2.10.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20230610083614-0e73809eb601 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
