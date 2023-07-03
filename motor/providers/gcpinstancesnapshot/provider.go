@@ -14,6 +14,8 @@ import (
 	"go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/snapshot"
 	"go.mondoo.com/cnquery/mrn"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 )
 
 var (
@@ -127,21 +129,28 @@ func New(pCfg *providers.Config) (*Provider, error) {
 			return nil, fmt.Errorf("could not find boot disk for instance %s", target.InstanceName)
 		}
 
-		if pCfg.Options["use-latest-snapshot"] == "true" {
+		if pCfg.Options["create-snapshot"] != "true" {
 			// search for the latest snapshot for this machine
-			snapshotUrl, err := sc.searchLatestSnapshot(target.ProjectID, instanceInfo.BootDiskSourceURL)
-			if err != nil {
+			snapshotUrl, created, err := sc.searchLatestSnapshot(target.ProjectID, instanceInfo.BootDiskSourceURL)
+			if status.Code(err) == codes.NotFound {
+				// expected behaviour if no snapshot exists, we fall back to cloning the disk
+				log.Debug().Msg("no snapshot found, cloning disk from instance")
+			} else if err != nil {
+				// real error occurred, we abort
 				return nil, errors.Wrap(err, "could not search for gcp instance snapshot")
+			} else if err == nil && time.Now().Sub(created).Hours() < 8 {
+				// use the snapshot if it was created less than 8 hours ago
+				log.Debug().Str("snapshot", snapshotUrl).Msg("found latest snapshot")
+				diskUrl, err = sc.createSnapshotDisk(snapshotUrl, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
+				if err != nil {
+					log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot disk creation")
+					return nil, errors.Wrap(err, "could not create disk from snapshot")
+				}
+				log.Debug().Str("disk", diskUrl).Msg("created disk from snapshot")
+				mi.diskUrl = diskUrl
+			} else {
+				log.Debug().Msg("no recent snapshot found, cloning disk from instance")
 			}
-			log.Debug().Str("snapshot", snapshotUrl).Msg("found latest snapshot")
-
-			diskUrl, err = sc.createSnapshotDisk(snapshotUrl, scanner.projectID, scanner.zone, "cnspec-"+target.InstanceName+"-snapshot-"+time.Now().Format("2006-01-02t15-04-05z00-00"))
-			if err != nil {
-				log.Error().Err(err).Str("disk", diskUrl).Msg("could not complete snapshot disk creation")
-				return nil, errors.Wrap(err, "could not create disk from snapshot")
-			}
-			log.Debug().Str("disk", diskUrl).Msg("created disk from snapshot")
-			mi.diskUrl = diskUrl
 		}
 
 		// if no disk was defined or found, clone the disk attached to the instance

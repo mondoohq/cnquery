@@ -10,6 +10,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/motorid/gce"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
@@ -134,15 +136,15 @@ func (sc *SnapshotCreator) SnapshotInfo(projectID, snapshotName string) (snapsho
 }
 
 // searchLatestSnapshot looks for the latest available snapshot for the instance
-func (sc *SnapshotCreator) searchLatestSnapshot(projectID, sourceDiskUrl string) (string, error) {
+func (sc *SnapshotCreator) searchLatestSnapshot(projectID, sourceDiskUrl string) (string, time.Time, error) {
 	ctx := context.Background()
+	latestSnapshotTimestamp := time.UnixMilli(0)
 
 	computeService, err := sc.computeServiceClient(ctx)
 	if err != nil {
-		return "", err
+		return "", latestSnapshotTimestamp, err
 	}
 
-	latestSnapshotTimestamp := time.UnixMilli(0)
 	var latestSnapshot *compute.Snapshot
 
 	req := computeService.Snapshots.List(projectID)
@@ -168,10 +170,14 @@ func (sc *SnapshotCreator) searchLatestSnapshot(projectID, sourceDiskUrl string)
 		}
 		return nil
 	}); err != nil {
-		return "", err
+		return "", latestSnapshotTimestamp, err
 	}
 
-	return latestSnapshot.SelfLink, nil
+	if latestSnapshot == nil {
+		return "", latestSnapshotTimestamp, status.Error(codes.NotFound, "no snapshot found")
+	}
+
+	return latestSnapshot.SelfLink, latestSnapshotTimestamp, nil
 }
 
 // createDisk creates a new disk
