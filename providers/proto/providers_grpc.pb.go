@@ -8,7 +8,6 @@ package proto
 
 import (
 	context "context"
-	llx "go.mondoo.com/cnquery/llx"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -31,7 +30,7 @@ const (
 type ProviderPluginClient interface {
 	ParseCLI(ctx context.Context, in *ParseCLIReq, opts ...grpc.CallOption) (*ParseCLIRes, error)
 	Connect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*Connection, error)
-	GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*llx.Result, error)
+	GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error)
 }
 
 type providerPluginClient struct {
@@ -60,8 +59,8 @@ func (c *providerPluginClient) Connect(ctx context.Context, in *ConnectReq, opts
 	return out, nil
 }
 
-func (c *providerPluginClient) GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*llx.Result, error) {
-	out := new(llx.Result)
+func (c *providerPluginClient) GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error) {
+	out := new(DataRes)
 	err := c.cc.Invoke(ctx, ProviderPlugin_GetData_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -75,7 +74,7 @@ func (c *providerPluginClient) GetData(ctx context.Context, in *DataReq, opts ..
 type ProviderPluginServer interface {
 	ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(context.Context, *ConnectReq) (*Connection, error)
-	GetData(context.Context, *DataReq) (*llx.Result, error)
+	GetData(context.Context, *DataReq) (*DataRes, error)
 	mustEmbedUnimplementedProviderPluginServer()
 }
 
@@ -89,7 +88,7 @@ func (UnimplementedProviderPluginServer) ParseCLI(context.Context, *ParseCLIReq)
 func (UnimplementedProviderPluginServer) Connect(context.Context, *ConnectReq) (*Connection, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
 }
-func (UnimplementedProviderPluginServer) GetData(context.Context, *DataReq) (*llx.Result, error) {
+func (UnimplementedProviderPluginServer) GetData(context.Context, *DataReq) (*DataRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetData not implemented")
 }
 func (UnimplementedProviderPluginServer) mustEmbedUnimplementedProviderPluginServer() {}
@@ -191,7 +190,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProviderCallbackClient interface {
-	Collect(ctx context.Context, in *llx.Result, opts ...grpc.CallOption) (*CollectRes, error)
+	Collect(ctx context.Context, in *DataRes, opts ...grpc.CallOption) (*CollectRes, error)
 }
 
 type providerCallbackClient struct {
@@ -202,7 +201,7 @@ func NewProviderCallbackClient(cc grpc.ClientConnInterface) ProviderCallbackClie
 	return &providerCallbackClient{cc}
 }
 
-func (c *providerCallbackClient) Collect(ctx context.Context, in *llx.Result, opts ...grpc.CallOption) (*CollectRes, error) {
+func (c *providerCallbackClient) Collect(ctx context.Context, in *DataRes, opts ...grpc.CallOption) (*CollectRes, error) {
 	out := new(CollectRes)
 	err := c.cc.Invoke(ctx, ProviderCallback_Collect_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -215,7 +214,7 @@ func (c *providerCallbackClient) Collect(ctx context.Context, in *llx.Result, op
 // All implementations must embed UnimplementedProviderCallbackServer
 // for forward compatibility
 type ProviderCallbackServer interface {
-	Collect(context.Context, *llx.Result) (*CollectRes, error)
+	Collect(context.Context, *DataRes) (*CollectRes, error)
 	mustEmbedUnimplementedProviderCallbackServer()
 }
 
@@ -223,7 +222,7 @@ type ProviderCallbackServer interface {
 type UnimplementedProviderCallbackServer struct {
 }
 
-func (UnimplementedProviderCallbackServer) Collect(context.Context, *llx.Result) (*CollectRes, error) {
+func (UnimplementedProviderCallbackServer) Collect(context.Context, *DataRes) (*CollectRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Collect not implemented")
 }
 func (UnimplementedProviderCallbackServer) mustEmbedUnimplementedProviderCallbackServer() {}
@@ -240,7 +239,7 @@ func RegisterProviderCallbackServer(s grpc.ServiceRegistrar, srv ProviderCallbac
 }
 
 func _ProviderCallback_Collect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(llx.Result)
+	in := new(DataRes)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -252,7 +251,7 @@ func _ProviderCallback_Collect_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: ProviderCallback_Collect_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProviderCallbackServer).Collect(ctx, req.(*llx.Result))
+		return srv.(ProviderCallbackServer).Collect(ctx, req.(*DataRes))
 	}
 	return interceptor(ctx, in, info, handler)
 }

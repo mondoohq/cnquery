@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -470,7 +469,7 @@ func MapIntData(v map[int32]interface{}, typ types.Type) *RawData {
 }
 
 // ResourceData creates a rawdata struct from a resource
-func ResourceData(v resources.ResourceType, name string) *RawData {
+func ResourceData(v Resource, name string) *RawData {
 	return &RawData{
 		Type:  types.Resource(name),
 		Value: v,

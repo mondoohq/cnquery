@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/types"
 	"google.golang.org/protobuf/proto"
 )
@@ -301,12 +300,15 @@ func map2result(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
-	m, ok := value.(resources.ResourceType)
+	m, ok := value.(Resource)
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
-	r := m.MqlResource()
-	return &Primitive{Type: string(typ), Value: []byte(r.Id)}, nil
+	id, err := m.MqlID()
+	if err != nil {
+		return nil, err
+	}
+	return &Primitive{Type: string(typ), Value: []byte(id)}, nil
 }
 
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -565,12 +567,11 @@ func pmap2raw(p *Primitive) *RawData {
 
 func presource2raw(p *Primitive) *RawData {
 	id := string(p.Value)
-
-	return &RawData{Value: resources.MockResource{
-		StaticResource: &resources.Resource{
-			ResourceID: resources.ResourceID{Name: types.Type(p.Type).ResourceName(), Id: id},
-		},
-	}, Type: types.Type(p.Type)}
+	typ := types.Type(p.Type)
+	return &RawData{Value: MockResource{
+		Name: typ.ResourceName(),
+		ID:   id,
+	}, Type: typ}
 }
 
 func pfunction2raw(p *Primitive) *RawData {

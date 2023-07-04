@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/proto"
@@ -9,7 +11,7 @@ import (
 
 type Runtime struct {
 	Connection connection.Connection
-	// ...
+	Resources  map[string]Resource
 }
 
 type Resource interface {
@@ -91,4 +93,19 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) (T, error
 
 	cached = &TValue[T]{Data: x, Error: err}
 	return x, err
+}
+
+func ProtoArgsToRawArgs(pargs map[string]*llx.Primitive) (map[string]interface{}, error) {
+	res := make(map[string]interface{}, len(pargs))
+	var err error
+	for k, v := range pargs {
+		raw := v.RawData()
+		if raw.Error != nil {
+			err = multierror.Append(err, errors.Wrap(raw.Error, "failed to convert '"+k+"'"))
+		} else {
+			res[k] = raw.Value
+		}
+	}
+
+	return res, err
 }

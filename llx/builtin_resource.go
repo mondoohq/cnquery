@@ -9,6 +9,26 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
+type Resource interface {
+	// Name of the resource
+	MqlName() string
+	// ID of this resource
+	MqlID() (string, error)
+}
+
+type MockResource struct {
+	Name string
+	ID   string
+}
+
+func (m *MockResource) MqlName() string {
+	return m.Name
+}
+
+func (m *MockResource) MqlID() (string, error) {
+	return m.ID, nil
+}
+
 // resourceFunctions are all the shared handlers for resource calls
 var resourceFunctionsV2 map[string]chunkHandlerV2
 

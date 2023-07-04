@@ -2,7 +2,6 @@ package plugin
 
 import (
 	plugin "github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -27,7 +26,7 @@ func (m *GRPCClient) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 	return m.client.Connect(context.Background(), req)
 }
 
-func (m *GRPCClient) GetData(req *proto.DataReq, callback ProviderCallback) (*llx.Result, error) {
+func (m *GRPCClient) GetData(req *proto.DataReq, callback ProviderCallback) (*proto.DataRes, error) {
 	helper := &GRPCProviderCallbackServer{Impl: callback}
 
 	var s *grpc.Server
@@ -64,7 +63,7 @@ func (m *GRPCServer) Connect(ctx context.Context, req *proto.ConnectReq) (*proto
 	return m.Impl.Connect(req)
 }
 
-func (m *GRPCServer) GetData(ctx context.Context, req *proto.DataReq) (*llx.Result, error) {
+func (m *GRPCServer) GetData(ctx context.Context, req *proto.DataReq) (*proto.DataRes, error) {
 	conn, err := m.broker.Dial(req.CallbackServer)
 	if err != nil {
 		return nil, err
@@ -78,7 +77,7 @@ func (m *GRPCServer) GetData(ctx context.Context, req *proto.DataReq) (*llx.Resu
 // GRPCClient is an implementation of ProviderCallback that talks over RPC.
 type GRPCProviderCallbackClient struct{ client proto.ProviderCallbackClient }
 
-func (m *GRPCProviderCallbackClient) Collect(req *llx.Result) error {
+func (m *GRPCProviderCallbackClient) Collect(req *proto.DataRes) error {
 	// _, err := m.client.Write(context.Background(), &proto.String{
 	// 	Data: string(b),
 	// })
@@ -100,6 +99,6 @@ type GRPCProviderCallbackServer struct {
 
 var empty proto.CollectRes
 
-func (m *GRPCProviderCallbackServer) Collect(ctx context.Context, req *llx.Result) (resp *proto.CollectRes, err error) {
+func (m *GRPCProviderCallbackServer) Collect(ctx context.Context, req *proto.DataRes) (resp *proto.CollectRes, err error) {
 	return &empty, m.Impl.Collect(req)
 }

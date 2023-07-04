@@ -3,7 +3,6 @@ package plugin
 
 import (
 	"github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -22,14 +21,14 @@ var PluginMap = map[string]plugin.Plugin{
 }
 
 type ProviderCallback interface {
-	Collect(req *llx.Result) error
+	Collect(req *proto.DataRes) error
 }
 
 // ProviderPlugin is the interface that we're exposing as a plugin.
 type ProviderPlugin interface {
 	ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error)
 	Connect(req *proto.ConnectReq) (*proto.Connection, error)
-	GetData(req *proto.DataReq, callback ProviderCallback) (*llx.Result, error)
+	GetData(req *proto.DataReq, callback ProviderCallback) (*proto.DataRes, error)
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.

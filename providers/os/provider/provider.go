@@ -2,18 +2,20 @@ package provider
 
 import (
 	"errors"
+	"strconv"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/asset"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/resources"
 	"go.mondoo.com/cnquery/providers/plugin"
 	"go.mondoo.com/cnquery/providers/proto"
 )
 
 type Service struct {
-	localConnections map[string]*connection.LocalConnection
+	runtimes         map[uint32]*plugin.Runtime
 	lastConnectionID uint32
 }
 
@@ -105,18 +107,53 @@ func (s *Service) connect(asset *asset.Asset) (connection.Connection, error) {
 		return nil, errors.New("no connection options for asset")
 	}
 
-	conn := asset.Connections[0]
-	switch conn.Backend {
+	var conn connection.Connection
+	conf := asset.Connections[0]
+	switch conf.Backend {
 	case providers.ProviderType_LOCAL_OS:
-		res := connection.NewLocalConnection(s.lastConnectionID)
+		conn = connection.NewLocalConnection(s.lastConnectionID)
 		s.lastConnectionID++
-		return res, nil
 
 	default:
-		return nil, errors.New("cannot find conneciton type " + conn.Backend.Id())
+		return nil, errors.New("cannot find conneciton type " + conf.Backend.Id())
 	}
+
+	s.runtimes[conn.ID()] = &plugin.Runtime{
+		Connection: conn,
+		Resources:  map[string]plugin.Resource{},
+	}
+
+	return conn, nil
 }
 
-func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) (*llx.Result, error) {
+func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) (*proto.DataRes, error) {
+	runtime, ok := s.runtimes[req.Connection]
+	if !ok {
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
+	}
+
+	args, err := plugin.ProtoArgsToRawArgs(req.Args)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.ResourceId == "" && req.Field == "" {
+		res, err := resources.CreateResource(runtime, req.Resource, args)
+		if err != nil {
+			return nil, err
+		}
+
+		name := res.MqlName()
+		id, err := res.MqlID()
+		if err != nil {
+			return nil, errors.New("failed to create resource " + name + ", ID returned an error: " + err.Error())
+		}
+		runtime.Resources[name+"\x00"+id] = res
+		rd := llx.ResourceData(res, name).Result()
+		return &proto.DataRes{
+			Data: rd.Data,
+		}, nil
+	}
+
 	return nil, errors.New("Not yet implemented GetData in os ...")
 }

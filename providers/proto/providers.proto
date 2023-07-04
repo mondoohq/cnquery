@@ -38,6 +38,8 @@ message DataReq {
 message DataRes {
   cnquery.llx.Primitive data = 1;
   string error = 2;
+  // The ID uniquely identifies this request and all associated callbacks
+  string id = 3;
 }
 
 message CollectRes {}
@@ -49,5 +51,5 @@ service ProviderPlugin {
 }
 
 service ProviderCallback {
-  rpc Collect(cnquery.llx.Result) returns (CollectRes);
+  rpc Collect(DataRes) returns (CollectRes);
 }
