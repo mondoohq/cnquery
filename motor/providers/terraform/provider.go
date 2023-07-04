@@ -13,7 +13,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"errors"
+	gerrors "errors"
+
+	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -104,7 +106,10 @@ func New(tc *providers.Config) (*Provider, error) {
 						if errors.Is(err, os.ErrNotExist) {
 							log.Debug().Str("path", path).Msg("no terraform module manifest found")
 						} else {
-							return errors.Join(err, errors.New(fmt.Sprintf("could not parse terraform module manifest %s", path)))
+							//return gerrors.Join(err, fmt.Errorf("could not parse terraform module manifest %s", path)) --> test fails
+							//return gerrors.New(fmt.Sprintf("could not parse terraform module manifest %s", path))  --> test fails
+							//return fmt.Errorf("could not parse terraform module manifest %s: %w", path, err) --> test fails
+							return errors.Wrap(err, fmt.Sprintf("could not parse terraform module manifest %s", path)) // --> test passes
 						}
 					}
 
@@ -116,12 +121,14 @@ func New(tc *providers.Config) (*Provider, error) {
 					log.Debug().Str("path", path).Msg("parsing hcl file")
 					err = loader.ParseHclFile(path)
 					if err != nil {
-						return errors.Join(err, errors.New("could not parse hcl file"))
+						//return errors.Wrap(err, "could not parse hcl file")
+						return gerrors.Join(err, errors.New("could not parse hcl file"))
 					}
 
 					err = ReadTfVarsFromFile(path, tfVars)
 					if err != nil {
-						return errors.Join(err, errors.New("could not parse tfvars file"))
+						//return errors.Wrap(err, "could not parse tfvars file")
+						return gerrors.Join(err, errors.New("could not parse tfvars file"))
 					}
 				}
 				return nil
@@ -129,12 +136,14 @@ func New(tc *providers.Config) (*Provider, error) {
 		} else {
 			err = loader.ParseHclFile(path)
 			if err != nil {
-				return nil, errors.Join(err, errors.New("could not parse hcl file"))
+				return nil, gerrors.Join(err, errors.New("could not parse hcl file"))
+				//return nil, errors.Wrap(err, "could not parse hcl file")
 			}
 
 			err = ReadTfVarsFromFile(path, tfVars)
 			if err != nil {
-				return nil, errors.Join(err, errors.New("could not parse tfvars file"))
+				return nil, gerrors.Join(err, errors.New("could not parse tfvars file"))
+				//return nil, errors.Wrap(err, "could not parse tfvars file")
 			}
 		}
 	}
