@@ -1,7 +1,7 @@
 packs:
   - uid: mondoo-windows-asset-inventory
     name: Windows Asset Inventory Pack
-    version: 1.0.0
+    version: 1.1.0
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
@@ -39,18 +39,27 @@ packs:
       - uid: mondoo-windows-hostname
         title: Retrieve the hostname
         mql: os.hostname
-      - uid: mondoo-windows-users 
-        title: Retrieve regular users 
+      - uid: mondoo-windows-users
+        title: Retrieve regular users
         mql: users
       - uid: mondoo-windows-packages
-        title: Retrieve Windows packages 
+        title: Retrieve Windows packages
         mql: packages
+      - uid: mondoo-windows-packages
+        title: Retrieve all installed Windows hotfixes
+        mql: windows.hotfixes { * }
+      - uid: mondoo-windows-packages
+        title: Retrieve all installed Windows features
+        mql: windows.features
       - uid: mondoo-windows-running-services
         title: Retrieve data on running services
         mql: services.where( running == true )
       - uid: mondoo-windows-ports-listening
-        title: Retrieve data on listening ports 
+        title: Retrieve data on listening ports
         mql: ports.listening
       - uid: mondoo-windows-interface-configuration
         title: Retrieve interface configuration of the system
-        mql: command('wmic nicconfig get macaddress,ipaddress,IPSubnet').stdout
+        mql: windows.computerInfo['CsNetworkAdapters']
+      - uid: mondoo-windows-interface-configuration
+        title: Retrieve all Windows Computer/ System information
+        mql: windows.computerInfo

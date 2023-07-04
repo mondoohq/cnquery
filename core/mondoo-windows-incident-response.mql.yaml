@@ -1,7 +1,7 @@
 packs:
   - uid: mondoo-windows-incident-response
     name: Windows Incident Response Pack
-    version: 1.0.0
+    version: 1.1.0
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
@@ -20,6 +20,12 @@ packs:
       - uid: mondoo-windows-installed-packages
         title: Retrieve list about installed packages
         mql: packages
+      - uid: mondoo-windows-packages
+        title: Retrieve Windows packages
+        mql: packages
+      - uid: mondoo-windows-packages
+        title: Retrieve all installed Windows Hotfixes
+        mql: windows.hotfixes { * }
       - uid: mondoo-windows-running-services
         title: Retrieve running services
         mql: services
