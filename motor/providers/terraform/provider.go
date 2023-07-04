@@ -13,9 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	gerrors "errors"
-
-	"github.com/cockroachdb/errors"
+	"errors"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"go.mondoo.com/cnquery/motor/providers"
@@ -106,10 +104,10 @@ func New(tc *providers.Config) (*Provider, error) {
 						if errors.Is(err, os.ErrNotExist) {
 							log.Debug().Str("path", path).Msg("no terraform module manifest found")
 						} else {
-							//return gerrors.Join(err, fmt.Errorf("could not parse terraform module manifest %s", path)) --> test fails
-							//return gerrors.New(fmt.Sprintf("could not parse terraform module manifest %s", path))  --> test fails
-							//return fmt.Errorf("could not parse terraform module manifest %s: %w", path, err) --> test fails
-							return errors.Wrap(err, fmt.Sprintf("could not parse terraform module manifest %s", path)) // --> test passes
+							return errors.Join(err, fmt.Errorf("could not parse terraform module manifest %s", path)) // -> test fails
+							//return gerrors.New(fmt.Sprintf("could not parse terraform module manifest %s", path))  -> test fails
+							//return fmt.Errorf("could not parse terraform module manifest %s: %w", path, err) -> test fails
+							// return errors.Wrap(err, fmt.Sprintf("could not parse terraform module manifest %s", path)) -> test passes using cockroachdb/errors
 						}
 					}
 
