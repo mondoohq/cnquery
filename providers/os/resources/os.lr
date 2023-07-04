@@ -1,0 +1,16 @@
+option provider = "go.mondoo.com/cnquery/providers/os"
+option go_package = "go.mondoo.com/cnquery/providers/os/resources"
+
+// Results of running a command on the system
+command {
+  init(command string)
+  // Raw contents of the command
+  command string
+  // Standard output from running the command
+  stdout(command) string
+  // Standard error output from running the command
+  stderr(command) string
+  // Exit code the command returned
+  exitcode(command) int
+}
+
