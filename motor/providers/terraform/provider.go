@@ -119,14 +119,12 @@ func New(tc *providers.Config) (*Provider, error) {
 					log.Debug().Str("path", path).Msg("parsing hcl file")
 					err = loader.ParseHclFile(path)
 					if err != nil {
-						//return errors.Wrap(err, "could not parse hcl file")
-						return gerrors.Join(err, errors.New("could not parse hcl file"))
+						return errors.Join(err, errors.New("could not parse hcl file"))
 					}
 
 					err = ReadTfVarsFromFile(path, tfVars)
 					if err != nil {
-						//return errors.Wrap(err, "could not parse tfvars file")
-						return gerrors.Join(err, errors.New("could not parse tfvars file"))
+						return errors.Join(err, errors.New("could not parse tfvars file"))
 					}
 				}
 				return nil
@@ -134,14 +132,12 @@ func New(tc *providers.Config) (*Provider, error) {
 		} else {
 			err = loader.ParseHclFile(path)
 			if err != nil {
-				return nil, gerrors.Join(err, errors.New("could not parse hcl file"))
-				//return nil, errors.Wrap(err, "could not parse hcl file")
+				return nil, errors.Join(err, errors.New("could not parse hcl file"))
 			}
 
 			err = ReadTfVarsFromFile(path, tfVars)
 			if err != nil {
-				return nil, gerrors.Join(err, errors.New("could not parse tfvars file"))
-				//return nil, errors.Wrap(err, "could not parse tfvars file")
+				return nil, errors.Join(err, errors.New("could not parse tfvars file"))
 			}
 		}
 	}
