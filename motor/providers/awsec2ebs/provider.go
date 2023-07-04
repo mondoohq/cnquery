@@ -2,11 +2,9 @@ package awsec2ebs
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"time"
-	"errors"
-
-	"go.mondoo.com/cnquery/motor/providers/os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -84,11 +82,7 @@ func New(pCfg *providers.Config) (*Provider, error) {
 	// 3. validate
 	instanceinfo, volumeid, snapshotid, err := p.Validate(ctx)
 	if err != nil {
-<<<<<<< HEAD
-		return p, errors.Wrap(err, "unable to validate")
-=======
-		return t, errors.Join(err, errors.New("unable to validate"))
->>>>>>> 53cdaacd (:broom: replace cockroachdb/errors with standard library errors)
+		return p, errors.Join(err, errors.New("unable to validate"))
 	}
 
 	// 4. setup the volume for scanning

@@ -27,7 +27,7 @@ func getTitleFamily(o gcpObject) (gcpObjectPlatformInfo, error) {
 		case "firewall":
 			return gcpObjectPlatformInfo{title: "GCP Compute Firewall", platform: "gcp-compute-firewall"}, nil
 		default:
-			return gcpObjectPlatformInfo{}, errors.New(fmt.Sprintf("unknown gcp compute object type", o.objectType))
+			return gcpObjectPlatformInfo{}, errors.New(fmt.Sprintf("unknown gcp compute object type %s", o.objectType))
 		}
 	case "gke":
 		if o.objectType == "cluster" {
