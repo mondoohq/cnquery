@@ -1,7 +1,7 @@
 packs:
   - uid: mondoo-windows-asset-inventory
     name: Windows Asset Inventory Pack
-    version: 1.1.0
+    version: 1.1.1
     authors:
       - name: Mondoo, Inc
         email: hello@mondoo.com
@@ -43,12 +43,12 @@ packs:
         title: Retrieve regular users
         mql: users
       - uid: mondoo-windows-packages
-        title: Retrieve Windows packages
+        title: Retrieve installed packages
         mql: packages
-      - uid: mondoo-windows-packages
+      - uid: mondoo-windows-hotfixes
         title: Retrieve all installed Windows hotfixes
         mql: windows.hotfixes { * }
-      - uid: mondoo-windows-packages
+      - uid: mondoo-windows-features
         title: Retrieve all installed Windows features
         mql: windows.features
       - uid: mondoo-windows-running-services
