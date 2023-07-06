@@ -115,7 +115,7 @@ func primitive2dictV2(p *Primitive) (interface{}, error) {
 	case types.String:
 		return string(p.Value), nil
 	case types.ArrayLike:
-		d, _, err := args2resourceargsV2(nil, 0, p.Array)
+		d, _, err := primitive2array(nil, 0, p.Array)
 		return d, err
 	case types.MapLike:
 		m, err := primitive2mapV2(p.Map)
@@ -304,11 +304,7 @@ func resource2result(value interface{}, typ types.Type) (*Primitive, error) {
 	if !ok {
 		return nil, errInvalidConversion(value, typ)
 	}
-	id, err := m.MqlID()
-	if err != nil {
-		return nil, err
-	}
-	return &Primitive{Type: string(typ), Value: []byte(id)}, nil
+	return &Primitive{Type: string(typ), Value: []byte(m.MqlID())}, nil
 }
 
 func function2result(value interface{}, typ types.Type) (*Primitive, error) {
@@ -553,7 +549,7 @@ func parray2raw(p *Primitive) *RawData {
 	// primitives that have refs in them, you should properly resolve them
 	// during the execution of the code. This function is really only applicable
 	// much later when you try to just get to the values of the returned data.
-	d, _, err := args2resourceargsV2(nil, 0, p.Array)
+	d, _, err := primitive2array(nil, 0, p.Array)
 	if d == nil {
 		d = []interface{}{}
 	}
@@ -595,26 +591,20 @@ func pref2raw(p *Primitive) *RawData {
 }
 
 // Tries to resolve primitives; returns refs if they don't exist yet.
-// Returns errors and ref=0 if there was an error.
-// Note: Returned array can be nil.
-func args2resourceargsV2(b *blockExecutor, ref uint64, args []*Primitive) ([]interface{}, uint64, error) {
+// Returns nil and a ref != 0 if a value needs resolving.
+func primitive2array(b *blockExecutor, ref uint64, args []*Primitive) ([]interface{}, uint64, error) {
 	if args == nil {
 		return []interface{}{}, 0, nil
 	}
 
+	var cur *RawData
+	var rref uint64
+	var err error
 	res := make([]interface{}, len(args))
 	for i := range args {
-		var cur *RawData
-
-		if b != nil && types.Type(args[i].Type) == types.Ref {
-			var rref uint64
-			var err error
-			cur, rref, err = b.resolveValue(args[i], ref)
-			if rref > 0 || err != nil {
-				return nil, rref, err
-			}
-		} else {
-			cur = args[i].RawData()
+		cur, rref, err = b.resolveValue(args[i], ref)
+		if rref > 0 || err != nil {
+			return nil, rref, err
 		}
 
 		if cur != nil {
@@ -737,8 +727,8 @@ func (b *blockExecutor) resolveValue(arg *Primitive, ref uint64) (*RawData, uint
 			Type:  typ,
 			Value: res,
 		}, 0, nil
+	default:
+		v := arg.RawData()
+		return v, 0, v.Error
 	}
-
-	v := arg.RawData()
-	return v, 0, v.Error
 }

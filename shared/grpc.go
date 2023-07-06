@@ -5,6 +5,7 @@ import (
 
 	hclog "github.com/hashicorp/go-hclog"
 	plugin "github.com/hashicorp/go-plugin"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/shared/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -34,7 +35,7 @@ func (i *IOWriter) WriteString(x string) error {
 	return err
 }
 
-func (m *GRPCClient) RunQuery(conf *proto.RunQueryConfig, out OutputHelper) error {
+func (m *GRPCClient) RunQuery(conf *proto.RunQueryConfig, runtime *providers.Runtime, out OutputHelper) error {
 	helper := &GRPCOutputHelperServer{Impl: &IOWriter{out}}
 
 	var s *grpc.Server
@@ -71,7 +72,8 @@ func (m *GRPCServer) RunQuery(ctx context.Context, req *proto.RunQueryConfig) (*
 	defer conn.Close()
 
 	a := &GRPCOutputHelperClient{proto.NewOutputHelperClient(conn)}
-	return &proto.Empty{}, m.Impl.RunQuery(req, a)
+	panic("UNCLEAR HOW TO GET RUNTIME YET")
+	return &proto.Empty{}, m.Impl.RunQuery(req, nil, a)
 }
 
 // GRPCClient is an implementation of KV that talks over RPC.

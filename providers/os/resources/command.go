@@ -17,7 +17,7 @@ func (c *mqlCommand) init(args map[string]interface{}) (map[string]interface{}, 
 	return args, nil, nil
 }
 
-func (c *mqlCommand) MqlID() (string, error) {
+func (c *mqlCommand) id() (string, error) {
 	return c.Command.Data, c.Command.Error
 }
 
@@ -32,19 +32,19 @@ func (c *mqlCommand) execute(cmd string) error {
 
 	x, err := c.MqlRuntime.Connection.RunCommand(cmd)
 	if err != nil {
-		c.Exitcode = plugin.TValue[int64]{Error: err}
-		c.Stdout = plugin.TValue[string]{Error: err}
-		c.Stderr = plugin.TValue[string]{Error: err}
+		c.Exitcode = plugin.TValue[int64]{Error: err, State: plugin.StateIsSet}
+		c.Stdout = plugin.TValue[string]{Error: err, State: plugin.StateIsSet}
+		c.Stderr = plugin.TValue[string]{Error: err, State: plugin.StateIsSet}
 		return err
 	}
 
-	c.Exitcode = plugin.TValue[int64]{Data: int64(x.ExitStatus)}
+	c.Exitcode = plugin.TValue[int64]{Data: int64(x.ExitStatus), State: plugin.StateIsSet}
 
 	stdout, err := io.ReadAll(x.Stdout)
-	c.Stdout = plugin.TValue[string]{Data: string(stdout), Error: err}
+	c.Stdout = plugin.TValue[string]{Data: string(stdout), Error: err, State: plugin.StateIsSet}
 
 	stderr, err := io.ReadAll(x.Stderr)
-	c.Stderr = plugin.TValue[string]{Data: string(stderr), Error: err}
+	c.Stderr = plugin.TValue[string]{Data: string(stderr), Error: err, State: plugin.StateIsSet}
 
 	c.lock.Lock()
 	c.commandIsRunning = false

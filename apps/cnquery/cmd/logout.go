@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/upstream"
@@ -34,7 +33,7 @@ ensure the credentials cannot be used in the future.
 		var err error
 
 		// its perfectly fine not to have a config here, therefore we ignore errors
-		opts, optsErr := cnquery_config.ReadConfig()
+		opts, optsErr := config.Read()
 		if optsErr != nil {
 			log.Fatal().Msg("could not load configuration")
 		}

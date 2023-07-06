@@ -51,6 +51,11 @@ func Execute() {
 			Run:     shellRun,
 			Action:  "Interactive shell with ",
 		},
+		&providers.Command{
+			Command: runCmd,
+			Run:     runcmdRun,
+			Action:  "Run a query with ",
+		},
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

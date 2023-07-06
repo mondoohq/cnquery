@@ -11,13 +11,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
-	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
-	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/upstream"
 	"go.mondoo.com/cnquery/upstream/health"
 	"go.mondoo.com/ranger-rpc"
@@ -40,7 +37,7 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		opts, optsErr := cnquery_config.ReadConfig()
+		opts, optsErr := config.Read()
 		if optsErr != nil {
 			log.Fatal().Err(optsErr).Msg("could not load configuration")
 		}
@@ -55,22 +52,12 @@ Status sends a ping to Mondoo Platform to verify the credentials.
 			},
 		}
 
-		provider, err := local.New()
-		if err != nil {
-			log.Fatal().Err(err).Send()
-		}
-
-		m, err := motor.New(provider)
-		if err != nil {
-			log.Fatal().Err(err).Send()
-		}
-
 		httpClient, err := opts.GetHttpClient()
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to set up Mondoo API client")
 		}
 
-		sysInfo, err := sysinfo.GatherSystemInfo(sysinfo.WithMotor(m))
+		sysInfo, err := sysinfo.GatherSystemInfo()
 		if err == nil {
 			s.Client.Platform = sysInfo.Platform
 			s.Client.Hostname = sysInfo.Hostname

@@ -1,7 +1,12 @@
 package plugin
 
 import (
+	"io/ioutil"
+
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/rs/zerolog"
+	"go.mondoo.com/cnquery/logger"
 )
 
 type Provider struct {
@@ -56,11 +61,23 @@ type Flag struct {
 }
 
 func Start(args []string, impl ProviderPlugin) {
+	logger.CliCompactLogger(logger.LogOutputWriter)
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
+	// disable the plugin's logs
+	pluginLogger := hclog.New(&hclog.LoggerOptions{
+		Name: "cnquery-plugin",
+		// Level: hclog.LevelFromString("DEBUG"),
+		Level:  hclog.Info,
+		Output: ioutil.Discard,
+	})
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: Handshake,
 		Plugins: map[string]plugin.Plugin{
 			"provider": &ProviderPluginImpl{Impl: impl},
 		},
+		Logger: pluginLogger,
 
 		// A non-nil value here enables gRPC serving for this plugin...
 		GRPCServer: plugin.DefaultGRPCServer,

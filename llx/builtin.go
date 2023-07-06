@@ -3,7 +3,6 @@ package llx
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/resources"
@@ -696,21 +695,15 @@ func validateBuiltinFunctionsV2() {
 
 func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	// ugh something is wrong here.... fix it later
-	rr, ok := bind.Value.(resources.ResourceType)
+	rr, ok := bind.Value.(Resource)
 	if !ok {
 		// TODO: can we get rid of this fmt call
 		return nil, 0, fmt.Errorf("cannot cast resource to resource type: %+v", bind.Value)
 	}
 
-	info := rr.MqlResource()
-	// resource := c.runtime.Registry.Resources[bind.Type]
-	if info == nil {
-		return nil, 0, errors.New("cannot retrieve resource from the binding to run the raw function")
-	}
-
-	resource, ok := e.ctx.runtime.Registry.Resources[info.Name]
+	resource, ok := e.ctx.runtime.Resource(rr.MqlName())
 	if !ok || resource == nil {
-		return nil, 0, fmt.Errorf("cannot retrieve resource definition for resource %q", info.Name)
+		return nil, 0, fmt.Errorf("cannot retrieve resource definition for resource %q", rr.MqlName())
 	}
 
 	// record this watcher on the executors watcher IDs
@@ -742,15 +735,6 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	})
 	if err != nil {
 		if _, ok := err.(resources.NotReadyError); !ok {
-			// TODO: Deduplicate storage between cache and resource storage
-			// This will take some work, but clearly we don't need both
-
-			info.Cache.Store(chunk.Id, &resources.CacheEntry{
-				Timestamp: time.Now().Unix(),
-				Valid:     true,
-				Error:     err,
-			})
-
 			fieldType := types.Unset
 			if field := resource.Fields[chunk.Id]; field != nil {
 				fieldType = types.Type(field.Type)

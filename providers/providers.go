@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/providers/plugin"
+	"go.mondoo.com/cnquery/resources"
 )
 
 var (
@@ -29,7 +30,8 @@ type Providers map[string]*Provider
 
 type Provider struct {
 	*plugin.Provider
-	Path string
+	Schema *resources.Schema
+	Path   string
 }
 
 func List() (Providers, error) {
@@ -164,11 +166,24 @@ func (p *Provider) LoadJson() error {
 	path := p.Path + ".json"
 	res, err := afero.ReadFile(config.AppFs, path)
 	if err != nil {
-		return errors.New("failed to read plugin json from " + path + ": " + err.Error())
+		return errors.New("failed to read provider json from " + path + ": " + err.Error())
 	}
 
 	if err := json.Unmarshal(res, &p.Provider); err != nil {
-		return errors.New("failed to parse plugin json from " + path + ": " + err.Error())
+		return errors.New("failed to parse provider json from " + path + ": " + err.Error())
+	}
+	return nil
+}
+
+func (p *Provider) LoadResources() error {
+	path := p.Path + ".resources.json"
+	res, err := afero.ReadFile(config.AppFs, path)
+	if err != nil {
+		return errors.New("failed to read provider resources json from " + path + ": " + err.Error())
+	}
+
+	if err := json.Unmarshal(res, &p.Schema); err != nil {
+		return errors.New("failed to parse provider resources json from " + path + ": " + err.Error())
 	}
 	return nil
 }

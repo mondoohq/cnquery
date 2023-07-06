@@ -1,30 +1,38 @@
 package providers
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"sync"
 
 	"github.com/cockroachdb/errors"
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog/log"
 	pp "go.mondoo.com/cnquery/providers/plugin"
+	"go.mondoo.com/cnquery/resources"
 )
 
 type coordinator struct {
 	Providers Providers
-	Running   []*ProviderRuntime
+	Running   []*RunningProvider
 	mutex     sync.Mutex
 }
 
 var Coordinator = coordinator{
-	Running: []*ProviderRuntime{},
+	Running: []*RunningProvider{},
 }
 
-func (c *coordinator) Start(name string) (*ProviderRuntime, error) {
+type RunningProvider struct {
+	Name   string
+	Plugin pp.ProviderPlugin
+	Client *plugin.Client
+	Schema *resources.Schema
+
+	isClosed bool
+}
+
+func (c *coordinator) Start(name string) (*RunningProvider, error) {
 	if x, ok := builtinProviders[name]; ok {
 		log.Warn().Msg("using builtin provider for " + name)
 		return x.Runtime, nil
@@ -43,13 +51,11 @@ func (c *coordinator) Start(name string) (*ProviderRuntime, error) {
 		return nil, errors.New("cannot find provider " + name)
 	}
 
-	// disable the plugin's logs
-	pluginLogger := hclog.New(&hclog.LoggerOptions{
-		Name: "provider-plugin",
-		// Level: hclog.LevelFromString("DEBUG"),
-		Level:  hclog.Info,
-		Output: ioutil.Discard,
-	})
+	if provider.Schema == nil {
+		if err := provider.LoadResources(); err != nil {
+			return nil, errors.Wrap(err, "failed to load provider "+name+" resources info")
+		}
+	}
 
 	pluginCmd := exec.Command(provider.Path, "run_as_plugin")
 	log.Debug().Str("path", pluginCmd.Path).Msg("running provider plugin")
@@ -63,7 +69,7 @@ func (c *coordinator) Start(name string) (*ProviderRuntime, error) {
 		AllowedProtocols: []plugin.Protocol{
 			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 		},
-		Logger: pluginLogger,
+		Logger: &hclogger{},
 		Stderr: os.Stderr,
 	})
 
@@ -82,10 +88,11 @@ func (c *coordinator) Start(name string) (*ProviderRuntime, error) {
 		return nil, errors.Wrap(err, "failed to call "+pluginName+" plugin")
 	}
 
-	res := &ProviderRuntime{
+	res := &RunningProvider{
 		Name:   name,
 		Plugin: raw.(pp.ProviderPlugin),
 		Client: client,
+		Schema: provider.Schema,
 	}
 
 	c.mutex.Lock()
@@ -95,15 +102,7 @@ func (c *coordinator) Start(name string) (*ProviderRuntime, error) {
 	return res, nil
 }
 
-type ProviderRuntime struct {
-	Name   string
-	Plugin pp.ProviderPlugin
-	Client *plugin.Client
-
-	isClosed bool
-}
-
-func (c *coordinator) Close(p *ProviderRuntime) {
+func (c *coordinator) Close(p *RunningProvider) {
 	if !p.isClosed {
 		p.isClosed = true
 		if p.Client != nil {

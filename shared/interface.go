@@ -3,6 +3,7 @@ package shared
 
 import (
 	"github.com/hashicorp/go-plugin"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/shared/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -27,7 +28,7 @@ type OutputHelper interface {
 
 // CNQuery is the interface that we're exposing as a plugin.
 type CNQuery interface {
-	RunQuery(conf *proto.RunQueryConfig, out OutputHelper) error
+	RunQuery(conf *proto.RunQueryConfig, runtime *providers.Runtime, out OutputHelper) error
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.

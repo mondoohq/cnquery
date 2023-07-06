@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
-	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/upstream"
@@ -63,7 +62,7 @@ func register(token string) {
 	token = strings.TrimSpace(token)
 
 	// NOTE: login is special because we do not have a config yet
-	proxy, err := cnquery_config.GetAPIProxy()
+	proxy, err := config.GetAPIProxy()
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not parse proxy URL")
 	}
@@ -143,7 +142,7 @@ func register(token string) {
 		credential = confirmation.Credential
 	} else {
 		// try to read local options
-		opts, optsErr := cnquery_config.ReadConfig()
+		opts, optsErr := config.Read()
 		if optsErr != nil {
 			log.Fatal().Msg("could not load configuration, please use --token or --config with the appropriate values")
 		}

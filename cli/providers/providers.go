@@ -19,7 +19,7 @@ import (
 
 type Command struct {
 	Command *cobra.Command
-	Run     func(*cobra.Command, *proto.ParseCLIRes)
+	Run     func(*cobra.Command, *providers.Runtime, *proto.ParseCLIRes)
 	Action  string
 }
 
@@ -150,7 +150,7 @@ func setDefaultConnector(provider *plugin.Provider, connector *plugin.Connector,
 			os.Exit(1)
 		}
 
-		log.Info().Msg("no provider specified, defaulting to local.\n  Use --help for a list of available providers.")
+		log.Info().Msg("no provider specified, defaulting to local. Use --help to see all providers.")
 	}
 	cmd.Command.Short = cmd.Action + connector.Short
 
@@ -167,7 +167,7 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 	setConnector(provider, connector, cmd.Run, res)
 }
 
-func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *proto.ParseCLIRes), cmd *cobra.Command) {
+func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *providers.Runtime, *proto.ParseCLIRes), cmd *cobra.Command) {
 	oldRun := cmd.Run
 	oldPreRun := cmd.PreRun
 
@@ -259,29 +259,29 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			}
 		}
 
-		p, err := providers.Coordinator.Start(provider.Name)
-		if err != nil {
+		runtime := providers.Coordinator.NewRuntime()
+		if err := runtime.UseProvider(provider.Name); err != nil {
 			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
 		}
 
-		cliRes, err := p.Plugin.ParseCLI(&proto.ParseCLIReq{
+		cliRes, err := runtime.Provider.Plugin.ParseCLI(&proto.ParseCLIReq{
 			Connector: connector.Name,
 			Args:      args,
 			Flags:     flagVals,
 		})
 		if err != nil {
-			providers.Coordinator.Shutdown()
+			runtime.Close()
 			log.Fatal().Err(err).Msg("failed to parse cli arguments")
 		}
 
 		if cliRes == nil {
-			providers.Coordinator.Shutdown()
+			runtime.Close()
 			log.Fatal().Msg("failed to process CLI arguments, nothing was returned")
 		}
 
-		run(cc, cliRes)
-		providers.Coordinator.Shutdown()
+		run(cc, runtime, cliRes)
+		runtime.Close()
 	}
 
 	for i := range allFlags {

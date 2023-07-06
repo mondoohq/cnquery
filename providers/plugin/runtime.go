@@ -15,7 +15,7 @@ type Runtime struct {
 }
 
 type Resource interface {
-	MqlID() (string, error)
+	MqlID() string
 	MqlName() string
 }
 
@@ -75,24 +75,24 @@ const (
 	StateIsNull
 )
 
-func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) (T, error) {
+func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T] {
 	if cached.State&StateIsSet != 0 {
-		return cached.Data, cached.Error
+		return cached
 	}
 
 	x, err := compute()
 	if err != nil {
-		return x, err
+		return &TValue[T]{Data: x, Error: err}
 	}
 
 	// this only happens if the function set the field proactively, in which
 	// case we grab the value from the cached entry for consistancy
 	if cached.State&StateIsSet != 0 {
-		return cached.Data, cached.Error
+		return cached
 	}
 
-	cached = &TValue[T]{Data: x, Error: err}
-	return x, err
+	(*cached) = TValue[T]{Data: x, Error: err}
+	return cached
 }
 
 func ProtoArgsToRawArgs(pargs map[string]*llx.Primitive) (map[string]interface{}, error) {

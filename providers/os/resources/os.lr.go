@@ -4,7 +4,6 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/plugin"
 	"go.mondoo.com/cnquery/providers/proto"
 	"go.mondoo.com/cnquery/types"
@@ -26,20 +25,20 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 
 var getDataFields = map[string]func(r plugin.Resource) *proto.DataRes{
 	"command.command": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlCommand).Command).ToDataRes(types.String)
+		return (r.(*mqlCommand).GetCommand()).ToDataRes(types.String)
 	},
 	"command.stdout": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlCommand).Stdout).ToDataRes(types.String)
+		return (r.(*mqlCommand).GetStdout()).ToDataRes(types.String)
 	},
 	"command.stderr": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlCommand).Stderr).ToDataRes(types.String)
+		return (r.(*mqlCommand).GetStderr()).ToDataRes(types.String)
 	},
 	"command.exitcode": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlCommand).Exitcode).ToDataRes(types.Int)
+		return (r.(*mqlCommand).GetExitcode()).ToDataRes(types.Int)
 	},
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]*llx.Primitive) *proto.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]interface{}) *proto.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
 		return &proto.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
@@ -86,6 +85,7 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 // mqlCommand for the command resource
 type mqlCommand struct {
 	MqlRuntime *plugin.Runtime
+	_id string
 	mqlCommandInternal
 
 	Command plugin.TValue[string]
@@ -96,8 +96,10 @@ type mqlCommand struct {
 
 // NewCommand creates a new instance of this resource
 func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
-	res := &mqlCommand{}
-	
+	res := &mqlCommand{
+		MqlRuntime: runtime,
+	}
+
 	var err error
 	var existing *mqlCommand
 	args, existing, err = res.init(args)
@@ -114,43 +116,48 @@ func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Re
 		}
 	}
 
-	return res, nil
+	res._id, err = res.id()
+	return res, err
 }
 
 func (c *mqlCommand) MqlName() string {
 	return "command"
 }
 
-func (c *mqlCommand) GetCommand() (string, error) {
-	return c.Command.Data, c.Command.Error
+func (c *mqlCommand) MqlID() string {
+	return c._id
 }
 
-func (c *mqlCommand) GetStdout() (string, error) {
+func (c *mqlCommand) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlCommand) GetStdout() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Stdout, func() (string, error) {
-		vargCommand, err := c.GetCommand()
-		if err != nil {
-			return "", err
+		vargCommand := c.GetCommand()
+		if vargCommand.Error != nil {
+			return "", vargCommand.Error
 		}
-		return c.stdout(vargCommand)
+		return c.stdout(vargCommand.Data)
 	})
 }
 
-func (c *mqlCommand) GetStderr() (string, error) {
+func (c *mqlCommand) GetStderr() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Stderr, func() (string, error) {
-		vargCommand, err := c.GetCommand()
-		if err != nil {
-			return "", err
+		vargCommand := c.GetCommand()
+		if vargCommand.Error != nil {
+			return "", vargCommand.Error
 		}
-		return c.stderr(vargCommand)
+		return c.stderr(vargCommand.Data)
 	})
 }
 
-func (c *mqlCommand) GetExitcode() (int64, error) {
+func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.Exitcode, func() (int64, error) {
-		vargCommand, err := c.GetCommand()
-		if err != nil {
-			return 0, err
+		vargCommand := c.GetCommand()
+		if vargCommand.Error != nil {
+			return 0, vargCommand.Error
 		}
-		return c.exitcode(vargCommand)
+		return c.exitcode(vargCommand.Data)
 	})
 }

@@ -8,5 +8,5 @@ import (
 )
 
 func main() {
-	plugin.Start(os.Args, &provider.Service{})
+	plugin.Start(os.Args, provider.Init())
 }

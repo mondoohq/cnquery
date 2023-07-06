@@ -1,30 +1,26 @@
 package cmd
 
 import (
-	"context"
-	"github.com/spf13/viper"
 	"os"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/printer"
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
-	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/all/info"
+	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers/proto"
 	"go.mondoo.com/cnquery/shared"
-	"go.mondoo.com/cnquery/shared/proto"
+	run "go.mondoo.com/cnquery/shared/proto"
 	"go.mondoo.com/cnquery/upstream"
 	"go.mondoo.com/ranger-rpc"
 )
@@ -53,19 +49,17 @@ func init() {
 
 type cnqueryPlugin struct{}
 
-func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHelper) error {
+func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtime, out shared.OutputHelper) error {
 	if conf.Command == "" {
 		return errors.New("No command provided, nothing to do.")
 	}
 
-	opts, optsErr := cnquery_config.ReadConfig()
+	opts, optsErr := config.Read()
 	if optsErr != nil {
 		log.Fatal().Err(optsErr).Msg("could not load configuration")
 	}
 
 	config.DisplayUsedConfig()
-
-	ctx := discovery.InitCtx(context.Background())
 
 	if conf.DoParse {
 		ast, err := parser.Parse(conf.Command)
@@ -77,7 +71,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 	}
 
 	if conf.DoAst {
-		b, err := mqlc.Compile(conf.Command, nil, mqlc.NewConfig(info.Registry.Schema(), conf.Features))
+		b, err := mqlc.Compile(conf.Command, nil, mqlc.NewConfig(runtime.Provider.Schema, conf.Features))
 		if err != nil {
 			return errors.Wrap(err, "failed to compile command")
 		}
@@ -87,22 +81,13 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		return nil
 	}
 
-	log.Info().Msgf("discover related assets for %d asset(s)", len(conf.Inventory.Spec.Assets))
 	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
 	if err != nil {
-		return errors.Wrap(err, "could not load asset information")
-	}
-	assetErrors := im.Resolve(ctx)
-	if len(assetErrors) > 0 {
-		for a := range assetErrors {
-			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
-		}
+		log.Fatal().Err(err).Msg("could not load asset information")
 	}
 
 	assetList := im.GetAssets()
-	if len(assetList) == 0 {
-		return errors.New("could not find an asset that we can connect to")
-	}
+	log.Debug().Msgf("resolved %d assets", len(assetList))
 
 	filteredAssets := []*asset.Asset{}
 	if len(assetList) > 1 && conf.PlatformId != "" {
@@ -123,7 +108,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 		out.WriteString("[")
 	}
 
-	var upstreamConfig *resources.UpstreamConfig
+	var upstreamConfig *providers.UpstreamConfig
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount != nil {
 		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
@@ -132,7 +117,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 			os.Exit(ConfigurationErrorCode)
 		}
 
-		upstreamConfig = &resources.UpstreamConfig{
+		upstreamConfig = &providers.UpstreamConfig{
 			// we currently do not expose incognito to the plugin/run command
 			Incognito:   true,
 			SpaceMrn:    opts.GetParentMrn(),
@@ -144,14 +129,19 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
-		m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredsResolver(), conf.DoRecord)
-		if err != nil {
-			return errors.New("could not connect to asset")
-		}
+		runtime.Connect(&proto.ConnectReq{
+			Features: config.Features,
+			Asset: &v1.Inventory{
+				Spec: &v1.InventorySpec{
+					Assets: []*asset.Asset{connectAsset},
+				},
+			},
+		})
 
 		// when we close the shell, we need to close the backend and store the recording
 		onCloseHandler := func() {
-			m.StoreRecording(viper.GetString("record-file"))
+			// FIXME: store recording
+			// m.StoreRecording(viper.GetString("record-file"))
 		}
 
 		shellOptions := []shell.ShellOption{}
@@ -163,7 +153,7 @@ func (c *cnqueryPlugin) RunQuery(conf *proto.RunQueryConfig, out shared.OutputHe
 			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
 		}
 
-		sh, err := shell.New(m, shellOptions...)
+		sh, err := shell.New(runtime, shellOptions...)
 		if err != nil {
 			return errors.Wrap(err, "failed to initialize the shell")
 		}

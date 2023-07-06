@@ -330,7 +330,7 @@ type DataRes struct {
 
 	Data  *llx.Primitive `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 	Error string         `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
-	// The ID unique identifies this request and all associated callbacks
+	// The ID uniquely identifies this request and all associated callbacks
 	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
 }
 

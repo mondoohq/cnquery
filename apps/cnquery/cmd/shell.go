@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -15,12 +14,10 @@ import (
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	provider_resolver "go.mondoo.com/cnquery/motor/providers/resolver"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers/proto"
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/upstream"
 	"go.mondoo.com/ranger-rpc"
 )
@@ -41,7 +38,7 @@ var shellCmd = &cobra.Command{
 	},
 }
 
-var shellRun = func(cmd *cobra.Command, cliRes *proto.ParseCLIRes) {
+var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *proto.ParseCLIRes) {
 	conf, err := config.Read()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load config")
@@ -65,7 +62,7 @@ var shellRun = func(cmd *cobra.Command, cliRes *proto.ParseCLIRes) {
 			os.Exit(ConfigurationErrorCode)
 		}
 
-		shellConf.UpstreamConfig = &resources.UpstreamConfig{
+		shellConf.UpstreamConfig = &providers.UpstreamConfig{
 			SpaceMrn:    conf.GetParentMrn(),
 			ApiEndpoint: conf.UpstreamApiEndpoint(),
 			Plugins:     []ranger.ClientPlugin{certAuth},
@@ -81,11 +78,11 @@ var shellRun = func(cmd *cobra.Command, cliRes *proto.ParseCLIRes) {
 		os.Exit(ConfigurationErrorCode)
 	}
 	if shellConf.UpstreamConfig == nil {
-		shellConf.UpstreamConfig = &resources.UpstreamConfig{}
+		shellConf.UpstreamConfig = &providers.UpstreamConfig{}
 	}
 	shellConf.UpstreamConfig.HttpClient = httpClient
 
-	err = StartShell(&shellConf)
+	err = StartShell(runtime, &shellConf)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run query")
 	}
@@ -101,14 +98,11 @@ type ShellConfig struct {
 	PlatformID     string
 	WelcomeMessage string
 
-	UpstreamConfig *resources.UpstreamConfig
+	UpstreamConfig *providers.UpstreamConfig
 }
 
 // StartShell will start an interactive CLI shell
-func StartShell(conf *ShellConfig) error {
-	ctx := discovery.InitCtx(context.Background())
-
-	log.Info().Msgf("discover related assets for %d asset(s)", len(conf.Inventory.Spec.Assets))
+func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
@@ -144,19 +138,19 @@ func StartShell(conf *ShellConfig) error {
 	}
 
 	pf := connectAsset.Platform
-	fmt.Println("----> found " + pf.Title + " (" + pf.Arch + ", " + pf.Version + ")")
-	os.Exit(0)
-	panic("COMPLETED DISCOVERY, onto connection")
+	log.Info().Msgf("connected to %s", pf.Title)
 
-	m, err := provider_resolver.OpenAssetConnection(ctx, connectAsset, im.GetCredsResolver(), false)
+	err = runtime.Connect(&proto.ConnectReq{
+		Features: conf.Features,
+		Asset:    conf.Inventory,
+	})
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not connect to asset")
+		log.Fatal().Err(err).Msg("failed to connect to asset")
 	}
 
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
-		// store tracked commands and files
-		m.StoreRecording(viper.GetString("record-file"))
+		runtime.Close()
 	}
 
 	shellOptions := []shell.ShellOption{}
@@ -167,7 +161,7 @@ func StartShell(conf *ShellConfig) error {
 		shellOptions = append(shellOptions, shell.WithUpstreamConfig(conf.UpstreamConfig))
 	}
 
-	sh, err := shell.New(m, shellOptions...)
+	sh, err := shell.New(runtime, shellOptions...)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to initialize interactive shell")
 	}

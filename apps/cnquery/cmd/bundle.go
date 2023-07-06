@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/stringx"
@@ -139,7 +138,7 @@ var queryPackPublishCmd = &cobra.Command{
 		viper.BindPFlag("pack-version", cmd.Flags().Lookup("pack-version"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		opts, optsErr := cnquery_config.ReadConfig()
+		opts, optsErr := config.Read()
 		if optsErr != nil {
 			log.Fatal().Err(optsErr).Msg("could not load configuration")
 		}

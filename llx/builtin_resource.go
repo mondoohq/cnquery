@@ -2,10 +2,8 @@ package llx
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -13,7 +11,7 @@ type Resource interface {
 	// Name of the resource
 	MqlName() string
 	// ID of this resource
-	MqlID() (string, error)
+	MqlID() string
 }
 
 type MockResource struct {

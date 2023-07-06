@@ -20,6 +20,14 @@ type ResultCallback func(*RawResult)
 
 var emptyFunction = Function{}
 
+type Runtime interface {
+	Unregister(watcherUID string) error
+	CreateResource(name string, args map[string]*Primitive) (Resource, error)
+	CreateResourceWithID(name string, id string, args map[string]*Primitive) (Resource, error)
+	WatchAndUpdate(resource Resource, field string, watcherUID string, callback func(res interface{}, err error)) error
+	Resource(name string) (*resources.ResourceInfo, bool)
+}
+
 // RawResult wraps RawData to code and refs
 type RawResult struct {
 	Data   *RawData
@@ -116,7 +124,7 @@ type blockExecutor struct {
 // MQLExecutorV2 is the runtime of MQL codestructure
 type MQLExecutorV2 struct {
 	id      string
-	runtime *resources.Runtime
+	runtime Runtime
 	code    *CodeV2
 	starts  []uint64
 	props   map[string]*Primitive
@@ -146,7 +154,7 @@ func errorResultMsg(msg string, codeID string) *RawResult {
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
 // callback whenever we get a result
-func NewExecutorV2(code *CodeV2, runtime *resources.Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV2, error) {
+func NewExecutorV2(code *CodeV2, runtime Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV2, error) {
 	if runtime == nil {
 		return nil, errors.New("cannot exec MQL without a runtime")
 	}
@@ -636,7 +644,7 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 		blockResult := data.Value.(map[string]interface{})
 
 		if bind != nil && bind.Type.IsResource() {
-			rr, ok := bind.Value.(resources.ResourceType)
+			rr, ok := bind.Value.(Resource)
 			if !ok {
 				log.Warn().Msg("cannot cast resource to resource type")
 			} else {
@@ -658,25 +666,55 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 }
 
 type resourceInterface interface {
-	MqlResource() *resources.Resource
+	MqlResource() Resource
+}
+
+func pargs2argmap(b *blockExecutor, ref uint64, args []*Primitive) (map[string]*Primitive, uint64, error) {
+	if len(args) == 0 {
+		return nil, 0, nil
+	}
+
+	res := make(map[string]*Primitive, len(args))
+	var x *RawData
+	var rref uint64
+	var err error
+	for i := 0; i+1 < len(args); i += 2 {
+		k := args[i]
+		if types.Type(k.Type) != types.String {
+			return nil, 0, errors.New("incorrect argument type (caller keys should always be strings)")
+		}
+
+		key := k.RawData().Value.(string)
+
+		// TODO: this is a tedious and slow approach, speed it up...
+		x, rref, err = b.resolveValue(args[i+1], ref)
+		if rref != 0 || err != nil {
+			return nil, rref, err
+		}
+		res[key] = x.Result().Data
+	}
+
+	return res, 0, nil
 }
 
 func (b *blockExecutor) createResource(name string, binding uint64, f *Function, ref uint64) (*RawData, uint64, error) {
 	runtime := b.ctx.runtime
 	if binding != 0 {
-		res, dref, err := b.resolveRef(binding, ref)
-		if dref != 0 || err != nil {
-			return res, dref, err
-		}
-		mqlResource := res.Value.(resourceInterface).MqlResource()
-		runtime = mqlResource.MotorRuntime
+		panic("NOT SURE HOW TO RESOLVE THIS")
+		// res, dref, err := b.resolveRef(binding, ref)
+		// if dref != 0 || err != nil {
+		// 	return res, dref, err
+		// }
+		// mqlResource := res.Value.(resourceInterface).MqlResource()
+		// runtime = mqlResource.MqlRuntime
 	}
-	args, rref, err := args2resourceargsV2(b, ref, f.Args)
+
+	args, rref, err := pargs2argmap(b, ref, f.Args)
 	if err != nil || rref != 0 {
 		return nil, rref, err
 	}
 
-	resource, err := runtime.CreateResource(name, args...)
+	resource, err := runtime.CreateResource(name, args)
 	if err != nil {
 		// in case it's not something that requires later loading, store the error
 		// so that consecutive steps can retrieve it cached

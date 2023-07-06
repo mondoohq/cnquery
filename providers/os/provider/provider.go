@@ -19,6 +19,13 @@ type Service struct {
 	lastConnectionID uint32
 }
 
+func Init() *Service {
+	return &Service{
+		runtimes:         map[uint32]*plugin.Runtime{},
+		lastConnectionID: 0,
+	}
+}
+
 func parseDiscover(flags map[string]*llx.Primitive) *providers.Discovery {
 	// TODO: parse me...
 	return &providers.Discovery{Targets: []string{"auto"}}
@@ -144,10 +151,7 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 		}
 
 		name := res.MqlName()
-		id, err := res.MqlID()
-		if err != nil {
-			return nil, errors.New("failed to create resource " + name + ", ID returned an error: " + err.Error())
-		}
+		id := res.MqlID()
 		runtime.Resources[name+"\x00"+id] = res
 		rd := llx.ResourceData(res, name).Result()
 		return &proto.DataRes{
@@ -155,5 +159,10 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 		}, nil
 	}
 
-	return nil, errors.New("Not yet implemented GetData in os ...")
+	resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
+	if !ok {
+		return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
+	}
+
+	return resources.GetData(resource, req.Field, args), nil
 }

@@ -8,7 +8,6 @@ import (
 	"path"
 	"regexp"
 	"runtime"
-	"sort"
 	"strings"
 	"sync"
 
@@ -18,12 +17,11 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/all"
 	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/stringx"
 	"go.mondoo.com/cnquery/types"
@@ -37,7 +35,7 @@ func WithOnCloseListener(onCloseHandler func()) ShellOption {
 	}
 }
 
-func WithUpstreamConfig(c *resources.UpstreamConfig) ShellOption {
+func WithUpstreamConfig(c *providers.UpstreamConfig) ShellOption {
 	return func(t *Shell) {
 		t.Runtime.UpstreamConfig = c
 	}
@@ -63,9 +61,7 @@ func WithTheme(theme *theme.Theme) ShellOption {
 
 // Shell is the interactive explorer
 type Shell struct {
-	Runtime     *resources.Runtime
-	Registry    *resources.Registry
-	Schema      *resources.Schema
+	Runtime     *providers.Runtime
 	Theme       *theme.Theme
 	History     []string
 	HistoryPath string
@@ -82,17 +78,14 @@ type Shell struct {
 }
 
 // New creates a new Shell
-func New(backend *motor.Motor, opts ...ShellOption) (*Shell, error) {
+func New(runtime *providers.Runtime, opts ...ShellOption) (*Shell, error) {
 	res := Shell{
 		alreadyPrinted: &sync.Map{},
 		out:            os.Stdout,
 		features:       cnquery.DefaultFeatures,
 		MaxLines:       1024,
+		Runtime:        runtime,
 	}
-
-	res.Registry = all.Registry
-	res.Runtime = resources.NewRuntime(res.Registry, backend)
-	res.Schema = res.Registry.Schema()
 
 	for i := range opts {
 		opts[i](&res)
@@ -102,7 +95,7 @@ func New(backend *motor.Motor, opts ...ShellOption) (*Shell, error) {
 		res.Theme = theme.DefaultTheme
 	}
 
-	res.completer = NewCompleter(res.Schema, res.features, func() string {
+	res.completer = NewCompleter(runtime.Schema, res.features, func() string {
 		return res.query
 	})
 
@@ -246,7 +239,7 @@ func (s *Shell) execQuery(cmd string) {
 	// the shell and we only deal with one query at a time, with the
 	// compiler being rather fast, the additional time is negligible
 	// and may not be worth coding around.
-	code, err := mqlc.Compile(s.query, nil, mqlc.NewConfig(s.Schema, s.features))
+	code, err := mqlc.Compile(s.query, nil, mqlc.NewConfig(s.Runtime.Schema, s.features))
 	if err != nil {
 		if e, ok := err.(*parser.ErrIncomplete); ok {
 			s.isMultiline = true
@@ -315,7 +308,7 @@ func (s *Shell) Close() {
 func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult, error) {
 	s.resetPrintCache()
 
-	code, err := mqlc.Compile(cmd, nil, mqlc.NewConfig(s.Schema, s.features))
+	code, err := mqlc.Compile(cmd, nil, mqlc.NewConfig(s.Runtime.Schema, s.features))
 	if err != nil {
 		fmt.Fprintln(s.out, s.Theme.Error("failed to compile: "+err.Error()))
 
@@ -325,7 +318,7 @@ func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult,
 		return nil, nil, err
 	}
 
-	results, err := mql.ExecuteCode(s.Schema, s.Runtime, code, nil, s.features)
+	results, err := mql.ExecuteCode(s.Runtime.Schema, s.Runtime, code, nil, s.features)
 	if err != nil {
 		panic(err)
 	}
@@ -354,11 +347,7 @@ func indent(indent int) string {
 
 // listAvailableResources lists resource names and their title
 func (s *Shell) listAvailableResources() {
-	schema := all.Registry.Schema()
-
-	// sort by keys
-	keys := sortx.Keys(schema.Resources)
-	s.renderResources(schema, keys)
+	panic("NEED A schema")
 }
 
 // listFilteredResources displays the schema of one or many resources that start with the provided prefix
@@ -368,24 +357,7 @@ func (s *Shell) listFilteredResources(cmd string) {
 		return
 	}
 
-	search := m[1]
-	schema := all.Registry.Schema()
-
-	// if we find the requested resource, just return it
-	if _, ok := schema.Resources[search]; ok {
-		s.renderResources(schema, []string{search})
-		return
-	}
-
-	// otherwise we will look for anything that matches
-	keys := []string{}
-	for k := range schema.Resources {
-		if strings.HasPrefix(k, search) {
-			keys = append(keys, k)
-		}
-	}
-	sort.Strings(keys)
-	s.renderResources(schema, keys)
+	panic("NEED A schema")
 }
 
 // renderResources renders a set of resources from a given schema
