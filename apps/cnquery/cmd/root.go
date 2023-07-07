@@ -56,6 +56,11 @@ func Execute() {
 			Run:     runcmdRun,
 			Action:  "Run a query with ",
 		},
+		&providers.Command{
+			Command: scanCmd,
+			Run:     scanCmdRun,
+			Action:  "Scan ",
+		},
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
