@@ -5,19 +5,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/detector"
 )
 
 func TestManagerCentos(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/centos.toml")
+	conn, err := mock.New("./testdata/centos.toml")
 	require.NoError(t, err)
-	m, err := motor.New(mock)
-	require.NoError(t, err)
-	pf, err := m.Platform()
-	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
 
-	mm, err := ResolveManager(mock, pf)
+	mm, err := ResolveManager(conn, platform)
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)
@@ -55,15 +53,12 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/macos.toml")
+	conn, err := mock.New("./testdata/macos.toml")
 	require.NoError(t, err)
-	m, err := motor.New(mock)
-	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
 
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	mm, err := ResolveManager(mock, p)
+	mm, err := ResolveManager(conn, platform)
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)
@@ -101,15 +96,12 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/windows.toml")
+	conn, err := mock.New("./testdata/windows.toml")
 	require.NoError(t, err)
-	m, err := motor.New(mock)
-	require.NoError(t, err)
+	platform, ok := detector.DetectOS(conn)
+	require.True(t, ok)
 
-	p, err := m.Platform()
-	require.NoError(t, err)
-
-	mm, err := ResolveManager(mock, p)
+	mm, err := ResolveManager(conn, platform)
 	require.NoError(t, err)
 	biosInfo, err := mm.Info()
 	require.NoError(t, err)

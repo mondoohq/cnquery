@@ -51,7 +51,9 @@ func (r *InterfaceResource) Interfaces() ([]Interface, error) {
 	osProvider, isOSProvider := r.motor.Provider.(os.OperatingSystemProvider)
 
 	log.Debug().Strs("families", pi.Family).Msg("check if platform is supported for network interface")
-	if r.motor.IsLocalProvider() {
+	panic("THIS CHECK DOESNT WORK vv")
+	if true {
+		// if r.motor.IsLocalProvider() {
 		handler := &GoNativeInterfaceHandler{}
 		return handler.Interfaces()
 	} else if isOSProvider && pi.Name == "macos" {

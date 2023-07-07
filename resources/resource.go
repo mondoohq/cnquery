@@ -29,6 +29,16 @@ type Resource struct {
 	ResourceID
 }
 
+// NewResource creates the base class for a new resource
+// called during the factory method of every resource creation
+func (ctx *Runtime) NewResource(name string) *Resource {
+	// initialize resource
+	return &Resource{
+		MotorRuntime: ctx,
+		ResourceID:   ResourceID{Name: name},
+	}
+}
+
 // UID combines the resources name and instance ID to a unique ID
 func (r *Resource) UID() string {
 	return r.Name + "\x00" + r.Id

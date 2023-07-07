@@ -2,6 +2,7 @@ package opcua
 
 import (
 	"context"
+
 	"github.com/gopcua/opcua/id"
 	"github.com/gopcua/opcua/ua"
 	"go.mondoo.com/cnquery/resources"

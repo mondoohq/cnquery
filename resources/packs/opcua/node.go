@@ -3,6 +3,7 @@ package opcua
 import (
 	"context"
 	"fmt"
+
 	"github.com/gopcua/opcua"
 	"github.com/gopcua/opcua/errors"
 	"github.com/gopcua/opcua/id"
@@ -34,7 +35,7 @@ func fetchNodeInfo(ctx context.Context, n *opcua.Node) (*nodeMeta, error) {
 		return nil, err
 	}
 
-	var def = nodeMeta{
+	def := nodeMeta{
 		NodeID: n.ID,
 	}
 

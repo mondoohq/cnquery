@@ -14,16 +14,6 @@ import (
 	"go.mondoo.com/cnquery/motor/providers"
 )
 
-// NewResource creates the base class for a new resource
-// called during the factory method of every resource creation
-func (ctx *Runtime) NewResource(name string) *Resource {
-	// initialize resource
-	return &Resource{
-		MotorRuntime: ctx,
-		ResourceID:   ResourceID{Name: name},
-	}
-}
-
 // NotReadyError indicates the results are not ready to be processed further
 type NotReadyError struct{}
 

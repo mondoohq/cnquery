@@ -3,9 +3,8 @@ package smbios
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
 type SmBiosInfo struct {
@@ -58,16 +57,16 @@ type SmBiosManager interface {
 	Info() (*SmBiosInfo, error)
 }
 
-func ResolveManager(provider os.OperatingSystemProvider, pf *platform.Platform) (SmBiosManager, error) {
+func ResolveManager(conn connection.Connection, pf *platform.Platform) (SmBiosManager, error) {
 	var biosM SmBiosManager
 
 	// check darwin before unix since darwin is also a unix
 	if pf.IsFamily("darwin") {
-		biosM = &OSXSmbiosManager{provider: provider, platform: pf}
+		biosM = &OSXSmbiosManager{provider: conn, platform: pf}
 	} else if pf.IsFamily("linux") {
-		biosM = &LinuxSmbiosManager{provider: provider}
+		biosM = &LinuxSmbiosManager{provider: conn}
 	} else if pf.IsFamily("windows") {
-		biosM = &WindowsSmbiosManager{provider: provider}
+		biosM = &WindowsSmbiosManager{provider: conn}
 	}
 
 	if biosM == nil {

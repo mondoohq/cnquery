@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/mql"
+	"go.mondoo.com/cnquery/providers/mock"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -22,11 +23,7 @@ type CredentialQueryResponse struct {
 }
 
 func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, error) {
-	rt, err := mql.MockRuntime()
-	if err != nil {
-		return nil, err
-	}
-
+	rt := mock.New()
 	mqlExecutor := mql.New(rt, cnquery.DefaultFeatures)
 
 	// just empty props to ensure we can compile
@@ -38,7 +35,7 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 	}
 
 	// test query to see if it compiles well
-	_, err = mql.Exec(credentialQuery, rt, nil, props)
+	_, err := mql.Exec(credentialQuery, rt, nil, props)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compile the secret metadata function")
 	}

@@ -10,8 +10,6 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/mock"
 	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/events"
 )
@@ -34,28 +32,8 @@ var (
 )
 
 func New(provider providers.Instance, motorOpts ...MotorOption) (*Motor, error) {
-	m := &Motor{
-		Provider: provider,
-	}
-
-	for i := range motorOpts {
-		motorOpts[i](m)
-	}
-	// set the detector after the opts have been applied to ensure its going via the recorder
-	// if activated
-	_, ok := m.Provider.(*local.Provider)
-	if ok && !m.isRecording {
-		localProviderLock.Lock()
-		if localProviderDetector == nil {
-			localProviderDetector = detector.New(m.Provider)
-		}
-		m.detector = localProviderDetector
-		localProviderLock.Unlock()
-	} else {
-		m.detector = detector.New(m.Provider)
-	}
-
-	return m, nil
+	panic("marked for deletion")
+	return nil, nil
 }
 
 type Motor struct {
@@ -99,13 +77,6 @@ func (m *Motor) ActivateRecorder() {
 		return
 	}
 
-	osProvider, isOSprovider := m.Provider.(os_provider.OperatingSystemProvider)
-	if !isOSprovider {
-		return
-	}
-
-	mockT, _ := mock.NewRecordProvider(osProvider)
-	m.Provider = mockT
 	m.isRecording = true
 }
 
@@ -120,16 +91,6 @@ func (m *Motor) IsRecording() bool {
 func (m *Motor) Recording() []byte {
 	m.l.Lock()
 	defer m.l.Unlock()
-
-	if m.isRecording {
-		rt := m.Provider.(*mock.MockRecordProvider)
-		data, err := rt.ExportData()
-		if err != nil {
-			log.Error().Err(err).Msg("could not export data")
-			return nil
-		}
-		return data
-	}
 	return nil
 }
 
@@ -171,11 +132,6 @@ func (m *Motor) Close() {
 func (m *Motor) IsLocalProvider() bool {
 	m.l.Lock()
 	defer m.l.Unlock()
-
-	_, ok := m.Provider.(*local.Provider)
-	if !ok {
-		return false
-	}
 	return true
 }
 

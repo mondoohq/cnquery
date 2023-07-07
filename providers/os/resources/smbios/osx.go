@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection"
 	plist "howett.net/plist"
 )
 
@@ -29,7 +29,7 @@ import (
 // results can be compared with dmidecode
 // http://cavaliercoder.com/blog/dmidecode-for-apple-osx.html
 type OSXSmbiosManager struct {
-	provider os.OperatingSystemProvider
+	provider connection.Connection
 	platform *platform.Platform
 }
 

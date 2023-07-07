@@ -17,35 +17,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery/aws"
-	"go.mondoo.com/cnquery/motor/discovery/aws/ebs"
-	"go.mondoo.com/cnquery/motor/discovery/azure"
 	"go.mondoo.com/cnquery/motor/discovery/common"
-	"go.mondoo.com/cnquery/motor/discovery/container_registry"
-	"go.mondoo.com/cnquery/motor/discovery/docker_engine"
-	"go.mondoo.com/cnquery/motor/discovery/equinix"
-	"go.mondoo.com/cnquery/motor/discovery/gcp"
-	"go.mondoo.com/cnquery/motor/discovery/gcp/instancesnapshot"
-	"go.mondoo.com/cnquery/motor/discovery/github"
-	"go.mondoo.com/cnquery/motor/discovery/gitlab"
-	"go.mondoo.com/cnquery/motor/discovery/googleworkspace"
-	"go.mondoo.com/cnquery/motor/discovery/ipmi"
-	"go.mondoo.com/cnquery/motor/discovery/k8s"
-	"go.mondoo.com/cnquery/motor/discovery/local"
-	"go.mondoo.com/cnquery/motor/discovery/mock"
-	"go.mondoo.com/cnquery/motor/discovery/ms365"
-	"go.mondoo.com/cnquery/motor/discovery/network"
-	"go.mondoo.com/cnquery/motor/discovery/oci"
-	"go.mondoo.com/cnquery/motor/discovery/okta"
-	"go.mondoo.com/cnquery/motor/discovery/opcua"
-	"go.mondoo.com/cnquery/motor/discovery/os"
-	"go.mondoo.com/cnquery/motor/discovery/slack"
-	"go.mondoo.com/cnquery/motor/discovery/tar"
-	"go.mondoo.com/cnquery/motor/discovery/terraform"
-	"go.mondoo.com/cnquery/motor/discovery/vagrant"
-	"go.mondoo.com/cnquery/motor/discovery/vcd"
-	"go.mondoo.com/cnquery/motor/discovery/vsphere"
-	"go.mondoo.com/cnquery/motor/motorid"
 	"go.mondoo.com/cnquery/motor/providers"
 	pr "go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/vault"
@@ -62,43 +34,7 @@ type Resolver interface {
 var resolver map[string]Resolver
 
 func init() {
-	resolver = map[string]Resolver{
-		providers.ProviderID_LOCAL:                &local.Resolver{},
-		providers.ProviderID_WINRM:                &os.Resolver{},
-		providers.ProviderID_SSH:                  &os.Resolver{},
-		providers.ProviderID_DOCKER:               &docker_engine.Resolver{},
-		providers.ProviderID_DOCKER_IMAGE:         &docker_engine.Resolver{},
-		providers.ProviderID_DOCKER_CONTAINER:     &docker_engine.Resolver{},
-		providers.ProviderID_TAR:                  &tar.Resolver{},
-		providers.ProviderID_K8S:                  &k8s.Resolver{},
-		providers.ProviderID_GCR:                  &gcp.GcrResolver{},
-		providers.ProviderID_GCP:                  &gcp.GcpResolver{},
-		providers.ProviderID_CONTAINER_REGISTRY:   &container_registry.Resolver{},
-		providers.ProviderID_AZURE:                &azure.Resolver{},
-		providers.ProviderID_AWS:                  &aws.Resolver{},
-		providers.ProviderID_VAGRANT:              &vagrant.Resolver{},
-		providers.ProviderID_MOCK:                 &mock.Resolver{},
-		providers.ProviderID_VSPHERE:              &vsphere.Resolver{},
-		providers.ProviderID_VSPHERE_VM:           &vsphere.VMGuestResolver{},
-		providers.ProviderID_ARISTA:               &os.Resolver{},
-		providers.ProviderID_MS365:                &ms365.Resolver{},
-		providers.ProviderID_IPMI:                 &ipmi.Resolver{},
-		providers.ProviderID_FS:                   &os.Resolver{},
-		providers.ProviderID_EQUINIX:              &equinix.Resolver{},
-		providers.ProviderID_GITHUB:               &github.Resolver{},
-		providers.ProviderID_AWS_EC2_EBS:          &ebs.Resolver{},
-		providers.ProviderID_GITLAB:               &gitlab.Resolver{},
-		providers.ProviderID_TERRAFORM:            &terraform.Resolver{},
-		providers.ProviderID_HOST:                 &network.Resolver{},
-		providers.ProviderID_TLS:                  &network.Resolver{},
-		providers.ProviderID_OKTA:                 &okta.Resolver{},
-		providers.ProviderID_GOOGLE_WORKSPACE:     &googleworkspace.Resolver{},
-		providers.ProviderID_SLACK:                &slack.Resolver{},
-		providers.ProviderID_VCD:                  &vcd.Resolver{},
-		providers.ProviderID_OCI:                  &oci.Resolver{},
-		providers.ProviderID_OPCUA:                &opcua.Resolver{},
-		providers.ProviderID_GCP_COMPUTE_INSTANCE: &instancesnapshot.Resolver{},
-	}
+	resolver = map[string]Resolver{}
 }
 
 // InitCtx initializes the context to support all resolvers
@@ -281,32 +217,34 @@ func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, pla
 					return
 				}
 				defer m.Close()
-				p, err := m.Platform()
+				// p, err := m.Platform()
 				if err != nil {
 					log.Warn().Err(err).Msg("could not get related asset platform")
 					return
 				}
-				fingerprint, err := motorid.IdentifyPlatform(m.Provider, p, m.Provider.PlatformIdDetectors())
-				if err != nil {
-					return
-				}
 
-				if fingerprint.Runtime != "" {
-					p.Runtime = fingerprint.Runtime
-				}
+				panic("REDO")
+				// fingerprint, err := motorid.IdentifyPlatform(m.Provider, p, m.Provider.PlatformIdDetectors())
+				// if err != nil {
+				// 	return
+				// }
 
-				if fingerprint.Kind != providers.Kind_KIND_UNKNOWN {
-					p.Kind = fingerprint.Kind
-				}
+				// if fingerprint.Runtime != "" {
+				// 	p.Runtime = fingerprint.Runtime
+				// }
 
-				assetObj.State = asset.State_STATE_ONLINE
-				assetObj.Name = fingerprint.Name
-				assetObj.PlatformIds = fingerprint.PlatformIDs
-				assetObj.Platform = p
+				// if fingerprint.Kind != providers.Kind_KIND_UNKNOWN {
+				// 	p.Kind = fingerprint.Kind
+				// }
 
-				for _, v := range fingerprint.PlatformIDs {
-					platformIdToAssetMap[v] = assetObj
-				}
+				// assetObj.State = asset.State_STATE_ONLINE
+				// assetObj.Name = fingerprint.Name
+				// assetObj.PlatformIds = fingerprint.PlatformIDs
+				// assetObj.Platform = p
+
+				// for _, v := range fingerprint.PlatformIDs {
+				// 	platformIdToAssetMap[v] = assetObj
+				// }
 			}()
 		}
 	}

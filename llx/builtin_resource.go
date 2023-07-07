@@ -23,103 +23,106 @@ func (m *MockResource) MqlName() string {
 	return m.Name
 }
 
-func (m *MockResource) MqlID() (string, error) {
-	return m.ID, nil
+func (m *MockResource) MqlID() string {
+	return m.ID
 }
 
 // resourceFunctions are all the shared handlers for resource calls
 var resourceFunctionsV2 map[string]chunkHandlerV2
 
 func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
-	// where(resource.list, function)
-	itemsRef := chunk.Function.Args[0]
-	items, rref, err := e.resolveValue(itemsRef, ref)
-	if err != nil || rref > 0 {
-		return nil, rref, err
-	}
-	list := items.Value.([]interface{})
-	if len(list) == 0 {
-		return bind, 0, nil
-	}
+	panic("PLEASE HOLD")
+	// // where(resource.list, function)
+	// itemsRef := chunk.Function.Args[0]
+	// items, rref, err := e.resolveValue(itemsRef, ref)
+	// if err != nil || rref > 0 {
+	// 	return nil, rref, err
+	// }
+	// list := items.Value.([]interface{})
+	// if len(list) == 0 {
+	// 	return bind, 0, nil
+	// }
 
-	resource := bind.Value.(resources.ResourceType)
+	// resource := bind.Value.(resources.ResourceType)
 
-	arg1 := chunk.Function.Args[1]
-	blockRef, ok := arg1.RefV2()
-	if !ok {
-		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
-	}
+	// arg1 := chunk.Function.Args[1]
+	// blockRef, ok := arg1.RefV2()
+	// if !ok {
+	// 	return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+	// }
 
-	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
-	if dref != 0 || err != nil {
-		return nil, dref, err
-	}
+	// dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	// if dref != 0 || err != nil {
+	// 	return nil, dref, err
+	// }
 
-	blockId := e.ctx.code.Id + strconv.FormatUint(blockRef>>32, 10)
+	// blockId := e.ctx.code.Id + strconv.FormatUint(blockRef>>32, 10)
 
-	ct := items.Type.Child()
+	// ct := items.Type.Child()
 
-	argsList := make([][]*RawData, len(list))
-	for i := range list {
-		argsList[i] = []*RawData{
-			{
-				Type:  ct,
-				Value: list[i],
-			},
-		}
-	}
+	// argsList := make([][]*RawData, len(list))
+	// for i := range list {
+	// 	argsList[i] = []*RawData{
+	// 		{
+	// 			Type:  ct,
+	// 			Value: list[i],
+	// 		},
+	// 	}
+	// }
 
-	err = e.runFunctionBlocks(argsList, blockRef, func(results []arrayBlockCallResult, errs []error) {
-		resList := []interface{}{}
+	// err = e.runFunctionBlocks(argsList, blockRef, func(results []arrayBlockCallResult, errs []error) {
+	// 	resList := []interface{}{}
 
-		for i, res := range results {
-			isTruthy := res.isTruthy()
-			if isTruthy == !invert {
-				resList = append(resList, list[i])
-			}
-		}
+	// 	for i, res := range results {
+	// 		isTruthy := res.isTruthy()
+	// 		if isTruthy == !invert {
+	// 			resList = append(resList, list[i])
+	// 		}
+	// 	}
 
-		// get all mandatory args
-		mqlResource := resource.MqlResource()
-		resourceInfo := mqlResource.MotorRuntime.Registry.Resources[mqlResource.Name]
+	// 	// get all mandatory args
+	// 	mqlResource := resource.MqlResource()
+	// 	resourceInfo := mqlResource.MqlRuntime.Registry.Resources[mqlResource.Name]
 
-		args := []interface{}{
-			"list", resList, "__id", blockId,
-		}
-		for k, v := range resourceInfo.Fields {
-			if k != "list" && v.IsMandatory {
-				if v, err := resource.Field(k); err == nil {
-					args = append(args, k, v)
-				}
-			}
-		}
+	// 	args := map[string]*RawData{
+	// 		"list": resList,
+	// 		"__id": blockId,
+	// 	}
+	// 	for k, v := range resourceInfo.Fields {
+	// 		if k != "list" && v.IsMandatory {
+	// 			if v, err := resource.Field(k); err == nil {
+	// 				args = append(args, k, v)
+	// 			}
+	// 		}
+	// 	}
 
-		resResource, err := e.ctx.runtime.CreateResourceWithID(mqlResource.Name, blockId, args...)
-		var data *RawData
-		if err != nil {
-			data = &RawData{
-				Error: errors.New("Failed to create filter result resource: " + err.Error()),
-			}
-			e.cache.Store(ref, &stepCache{
-				Result: data,
-			})
-		} else {
-			data = &RawData{
-				Type:  bind.Type,
-				Value: resResource,
-			}
-			e.cache.Store(ref, &stepCache{
-				Result:   data,
-				IsStatic: false,
-			})
-		}
+	// 	resResource, err := e.ctx.runtime.CreateResourceWithID(mqlResource.Name, blockId, args)
 
-		e.triggerChain(ref, data)
-	})
+	// 	var data *RawData
+	// 	if err != nil {
+	// 		data = &RawData{
+	// 			Error: errors.New("Failed to create filter result resource: " + err.Error()),
+	// 		}
+	// 		e.cache.Store(ref, &stepCache{
+	// 			Result: data,
+	// 		})
+	// 	} else {
+	// 		data = &RawData{
+	// 			Type:  bind.Type,
+	// 			Value: resResource,
+	// 		}
+	// 		e.cache.Store(ref, &stepCache{
+	// 			Result:   data,
+	// 			IsStatic: false,
+	// 		})
+	// 	}
 
-	if err != nil {
-		return nil, 0, err
-	}
+	// 	e.triggerChain(ref, data)
+	// })
+
+	// if err != nil {
+	// 	return nil, 0, err
+	// }
 
 	return nil, 0, nil
 }
@@ -247,36 +250,37 @@ var defaultTimeFormatsOrder = []string{
 }
 
 func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	args, rref, err := args2resourceargsV2(e, ref, chunk.Function.Args)
-	if err != nil || rref != 0 {
-		return nil, rref, err
-	}
+	panic("NO DATE PARSING YET")
+	// args, rref, err := args2resourceargsV2(e, ref, chunk.Function.Args)
+	// if err != nil || rref != 0 {
+	// 	return nil, rref, err
+	// }
 
-	var format string
-	if len(args) >= 2 {
-		format = args[1].(string)
-		if f, ok := timeFormats[format]; ok {
-			format = f
-		}
-	}
+	// var format string
+	// if len(args) >= 2 {
+	// 	format = args[1].(string)
+	// 	if f, ok := timeFormats[format]; ok {
+	// 		format = f
+	// 	}
+	// }
 
-	if format != "" {
-		parsed, err := time.Parse(format, args[0].(string))
-		if err != nil {
-			return nil, 0, errors.New("failed to parse time: " + err.Error())
-		}
-		return TimeData(parsed), 0, nil
-	}
+	// if format != "" {
+	// 	parsed, err := time.Parse(format, args[0].(string))
+	// 	if err != nil {
+	// 		return nil, 0, errors.New("failed to parse time: " + err.Error())
+	// 	}
+	// 	return TimeData(parsed), 0, nil
+	// }
 
-	// Note: Yes, this approach is much slower than giving us a hint
-	// about which time format is used.
-	for _, format := range defaultTimeFormatsOrder {
-		parsed, err := time.Parse(format, args[0].(string))
-		if err != nil {
-			continue
-		}
-		return TimeData(parsed), 0, nil
-	}
+	// // Note: Yes, this approach is much slower than giving us a hint
+	// // about which time format is used.
+	// for _, format := range defaultTimeFormatsOrder {
+	// 	parsed, err := time.Parse(format, args[0].(string))
+	// 	if err != nil {
+	// 		continue
+	// 	}
+	// 	return TimeData(parsed), 0, nil
+	// }
 
 	return nil, 0, errors.New("failed to parse time")
 }

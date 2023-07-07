@@ -9,7 +9,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/providers/os/id/awsecs"
-	"go.mondoo.com/cnquery/resources/packs/os/smbios"
+	"go.mondoo.com/cnquery/providers/os/resources/smbios"
 )
 
 func readValue(conn connection.Connection, fPath string) string {

@@ -81,6 +81,13 @@ func loadMqlInfo(raw interface{}, m *Mock) error {
 	return nil
 }
 
+func New() *Mock {
+	return &Mock{
+		Inventory: map[string]Resources{},
+		Providers: []string{},
+	}
+}
+
 func NewFromToml(raw []byte) (*Mock, error) {
 	var tmp interface{}
 	err := toml.Unmarshal(raw, &tmp)

@@ -1,8 +1,9 @@
 package opcua
 
 import (
-	"go.mondoo.com/cnquery/resources"
 	"strconv"
+
+	"go.mondoo.com/cnquery/resources"
 )
 
 func (o *mqlOpcuaNamespace) id() (string, error) {

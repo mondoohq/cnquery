@@ -8,7 +8,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/id/gce"
-	"go.mondoo.com/cnquery/resources/packs/os/smbios"
+	"go.mondoo.com/cnquery/providers/os/resources/smbios"
 )
 
 const (

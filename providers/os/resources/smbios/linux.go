@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
 type LinuxSmbiosManager struct {
-	provider os_provider.OperatingSystemProvider
+	provider connection.Connection
 }
 
 func (s *LinuxSmbiosManager) Name() string {
@@ -21,7 +21,7 @@ func (s *LinuxSmbiosManager) Name() string {
 func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 	smInfo := SmBiosInfo{}
 
-	fs := s.provider.FS()
+	fs := s.provider.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 	root := "/sys/class/dmi/id/"
 
