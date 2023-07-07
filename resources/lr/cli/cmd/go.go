@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -16,6 +17,14 @@ var goCmd = &cobra.Command{
 	Long:  `parse an LR file and convert it to go, saving it in the same location with the suffix .go`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		dist, err := cmd.Flags().GetString("dist")
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to get dist flag")
+		}
+		if dist == "" {
+			log.Fatal().Err(err).Msg("please provide a dist folder where generated json will go")
+		}
+
 		file := args[0]
 		packageName := path.Base(path.Dir(file))
 
@@ -48,8 +57,13 @@ var goCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to generate schema json")
 		}
 
-		infoFolder := ensureInfoFolder(file)
-		infoFile := path.Join(infoFolder, path.Base(args[0])+".json")
+		if err = os.MkdirAll(dist, 0o755); err != nil {
+			log.Fatal().Err(err).Msg("failed to create dist folder")
+		}
+
+		base := path.Base(args[0])
+		base = strings.TrimSuffix(base, ".lr")
+		infoFile := path.Join(dist, base+".resources.json")
 		err = os.WriteFile(infoFile, []byte(schemaData), 0o644)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to write schema json")
@@ -59,4 +73,5 @@ var goCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(goCmd)
+	goCmd.Flags().String("dist", "", "folder for output json generation")
 }

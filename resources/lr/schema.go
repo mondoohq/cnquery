@@ -40,6 +40,9 @@ func Schema(ast *LR) (*resources.Schema, error) {
 
 	for _, v := range res.Resources {
 		v.Provider = provider
+		for _, field := range v.Fields {
+			field.Provider = provider
+		}
 	}
 
 	return res, nil

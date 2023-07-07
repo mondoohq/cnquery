@@ -26,6 +26,7 @@ type Runtime interface {
 	CreateResourceWithID(name string, id string, args map[string]*Primitive) (Resource, error)
 	WatchAndUpdate(resource Resource, field string, watcherUID string, callback func(res interface{}, err error)) error
 	Resource(name string) (*resources.ResourceInfo, bool)
+	Schema() *resources.Schema
 }
 
 // RawResult wraps RawData to code and refs

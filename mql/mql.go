@@ -6,8 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/mql/internal"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/resources"
@@ -15,7 +13,7 @@ import (
 
 // New creates a new MQL executor instance. It allows you to easily run multiple queries against the
 // same runtime
-func New(runtime *resources.Runtime, features cnquery.Features) *Executor {
+func New(runtime llx.Runtime, features cnquery.Features) *Executor {
 	return &Executor{
 		runtime:  runtime,
 		features: features,
@@ -23,7 +21,7 @@ func New(runtime *resources.Runtime, features cnquery.Features) *Executor {
 }
 
 type Executor struct {
-	runtime  *resources.Runtime
+	runtime  llx.Runtime
 	features cnquery.Features
 }
 
@@ -32,8 +30,8 @@ func (e *Executor) Exec(query string, props map[string]*llx.Primitive) (*llx.Raw
 	return Exec(query, e.runtime, e.features, props)
 }
 
-func Exec(query string, runtime *resources.Runtime, features cnquery.Features, props map[string]*llx.Primitive) (*llx.RawData, error) {
-	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(runtime.Registry.Schema(), features))
+func Exec(query string, runtime llx.Runtime, features cnquery.Features, props map[string]*llx.Primitive) (*llx.RawData, error) {
+	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(runtime.Schema(), features))
 	if err != nil {
 		return nil, errors.New("failed to compile: " + err.Error())
 	}
@@ -48,7 +46,7 @@ func Exec(query string, runtime *resources.Runtime, features cnquery.Features, p
 		log.Warn().Str("query", query).Msg("mql> Code must only return one value, but it has many configured. Only returning last result.")
 	}
 
-	raw, err := ExecuteCode(runtime.Registry.Schema(), runtime, bundle, props, features)
+	raw, err := ExecuteCode(runtime.Schema(), runtime, bundle, props, features)
 	if err != nil {
 		return nil, err
 	}
@@ -71,21 +69,7 @@ func Exec(query string, runtime *resources.Runtime, features cnquery.Features, p
 	return res, nil
 }
 
-func MockRuntime() (*resources.Runtime, error) {
-	provider, err := mock.New()
-	if err != nil {
-		return nil, err
-	}
-	m, err := motor.New(provider)
-	if err != nil {
-		return nil, err
-	}
-
-	registry := resources.NewRegistry()
-	return resources.NewRuntime(registry, m), nil
-}
-
-func ExecuteCode(schema *resources.Schema, runtime *resources.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features cnquery.Features) (map[string]*llx.RawResult, error) {
+func ExecuteCode(schema *resources.Schema, runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features cnquery.Features) (map[string]*llx.RawResult, error) {
 	builder := internal.NewBuilder()
 	builder.WithFeatureBoolAssertions(features.IsActive(cnquery.BoolAssertions))
 

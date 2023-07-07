@@ -59,7 +59,6 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/plugin"
 	"go.mondoo.com/cnquery/providers/proto"
 	"go.mondoo.com/cnquery/types"%s
@@ -101,7 +100,7 @@ func (b *goBuilder) goGetData(r []*Resource) {
 			}
 
 			x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*%s).%s).ToDataRes(%s)
+		return (r.(*%s).Get%s()).ToDataRes(%s)
 	},`,
 				resource.ID, field.BasicField.ID,
 				resource.structName(b), field.BasicField.methodname(),
@@ -116,7 +115,7 @@ var getDataFields = map[string]func(r plugin.Resource) *proto.DataRes{
 	` + strings.Join(fields, "\n\t") + `
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]*llx.Primitive) *proto.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]interface{}) *proto.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
 		return &proto.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
@@ -195,6 +194,7 @@ func (b *goBuilder) goStruct(r *Resource) {
 // %s for the %s resource
 type %s struct {
 	MqlRuntime *plugin.Runtime
+	_id string
 	%s
 
 	%s
@@ -213,7 +213,9 @@ func (b *goBuilder) goFactory(r *Resource) {
 	b.data += fmt.Sprintf(`
 // %s creates a new instance of this resource
 func %s(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
-	res := &%s{}
+	res := &%s{
+		MqlRuntime: runtime,
+	}
 
 	var err error
 	var existing *%s
@@ -231,11 +233,16 @@ func %s(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, 
 		}
 	}
 
-	return res, nil
+	res._id, err = res.id()
+	return res, err
 }
 
 func (c *mqlCommand) MqlName() string {
 	return "%s"
+}
+
+func (c *mqlCommand) MqlID() string {
+	return c._id
 }
 `,
 		newName, newName, structName,
@@ -257,12 +264,12 @@ func (b *goBuilder) goFields(r *Resource) {
 func (b *goBuilder) goStaticField(r *Resource, field *Field) {
 	goName := field.BasicField.goName()
 	b.data += fmt.Sprintf(`
-func (c *%s) Get%s() (%s, error) {
-	return c.%s.Data, c.%s.Error
+func (c *%s) Get%s() *plugin.TValue[%s] {
+	return &c.%s
 }
 `,
 		r.structName(b), goName, field.BasicField.Type.goType(b),
-		goName, goName,
+		goName,
 	)
 }
 
@@ -283,17 +290,17 @@ func (b *goBuilder) goField(r *Resource, field *Field) {
 		for i := range args {
 			arg := args[i]
 			name := arg.goType(b)
-			argDefs = append(argDefs, fmt.Sprintf(`varg%s, err := c.Get%s()
-		if err != nil {
-			return %s, err
+			argDefs = append(argDefs, fmt.Sprintf(`varg%s := c.Get%s()
+		if varg%s.Error != nil {
+			return %s, varg%s.Error
 		}
-		`, name, name, goZero))
-			argCall = append(argCall, "varg"+name)
+		`, name, name, name, goZero, name))
+			argCall = append(argCall, "varg"+name+".Data")
 		}
 	}
 
 	b.data += fmt.Sprintf(`
-func (c *%s) Get%s() (%s, error) {
+func (c *%s) Get%s() *plugin.TValue[%s] {
 	return plugin.GetOrCompute[%s](&c.%s, func() (%s, error) {
 		%sreturn c.%s(%s)
 	})

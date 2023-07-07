@@ -1,32 +1,35 @@
-[commands."uname -s"]
+[mql]
+providers = ["core", "os"]
+
+[command."uname -s"]
 stdout = "Linux"
 
-[commands."uname -m"]
+[command."uname -m"]
 stdout = "x86_64"
 
-[commands."uname -r"]
+[command."uname -r"]
 stdout = "5.10.104-linuxkit"
 
-[commands."find -L \"/etc\" -xdev"]
+[command."find -L \"/etc\" -xdev"]
 stdout = """/etc/arch-release
 /etc/ssh/sshd_config
 """
 
-[commands."find -L \"/etc/pam.d\" -xdev -type f"]
+[command."find -L \"/etc/pam.d\" -xdev -type f"]
 stdout = """/etc/pam.d/sshd
 """
 
-[files."/etc/pam.d/sshd"]
+[file."/etc/pam.d/sshd"]
 content = """#%PAM-1.0
 #auth     required  pam_securetty.so     #disable remote root
 auth      include   system-remote-login
 account   include   system-remote-login
 """
 
-[files."/etc/arch-release"]
+[file."/etc/arch-release"]
 content = ""
 
-[commands."pacman -Q"]
+[command."pacman -Q"]
 stdout = """acl 2.3.1-2
 archlinux-keyring 20220831-1
 argon2 20190702-4
@@ -147,7 +150,7 @@ zlib 1:1.2.12-2
 zstd 1.5.2-7
 """
 
-[files."/etc/ssh/sshd_config"]
+[file."/etc/ssh/sshd_config"]
 content = """
 # #
 # Ansible managed
@@ -324,7 +327,7 @@ RevokedKeys /etc/ssh/revoked_keys
 """
 
 
-[files."/etc/login.defs"]
+[file."/etc/login.defs"]
 content = """FAIL_DELAY		3
 LOG_UNKFAIL_ENAB	no
 LOG_OK_LOGINS		no
@@ -361,7 +364,7 @@ MOTD_FILE
 ENCRYPT_METHOD	SHA512
 """
 
-[commands."/sbin/lsmod"]
+[command."/sbin/lsmod"]
 stdout = """Module                  Size  Used by
 xfrm_user              36864  1
 xfrm_algo              16384  1 xfrm_user
@@ -371,19 +374,28 @@ vmw_vsock_virtio_transport_common    24576  1 vmw_vsock_virtio_transport
 vsock                  36864  18 vmw_vsock_virtio_transport_common,vmw_vsock_virtio_transport
 """
 
-[files."/etc/passwd"]
+[file."/etc/passwd"]
 content = """root:x:0:0::/root:/bin/bash
 chris:x:1000:1001::/home/chris:/bin/bash
 christopher:x:1000:1001::/home/christopher:/bin/bash
 chris:x:1002:1003::/home/chris:/bin/bash
 bin:x:1:1::/:/usr/bin/nologin
 """
-[files."/etc/passwd".stat]
-mode = 420
+user = "user/0/root"
+permissions = "-rw-r--r--"
+
+[user."user/0/root"]
 uid = 0
 gid = 0
+name = "root"
 
-[files."/etc/group"]
+["file.permissions"."dr-xr-xr-x"]
+mode = 555
+
+["file.permissions"."-rw-r--r--"]
+mode = 420
+
+[file."/etc/group"]
 content = """
 cat /etc/group
 root:x:0:root
@@ -394,16 +406,16 @@ tty:x:5:
 daemon:x:2:bin
 """
 
-[files."/proc"]
-mode = 555
+[file."/proc"]
+permissions = "dr-xr-xr-x"
 
-[files."/proc/1"]
-mode = 555
+[file."/proc/1"]
+permissions = "dr-xr-xr-x"
 
-[files."/proc/1/cmdline"]
+[file."/proc/1/cmdline"]
 content = """/sbin/init"""
 
-[files."/proc/1/status"]
+[file."/proc/1/status"]
 content = """Name:	systemd
 Umask:	0000
 State:	S (sleeping)
@@ -463,22 +475,22 @@ voluntary_ctxt_switches:	5681
 nonvoluntary_ctxt_switches:	116
 """
 
-[files."/proc/sys/net/ipv4/ip_forward"]
+[file."/proc/sys/net/ipv4/ip_forward"]
 content = "1"
 
-[commands."mount"]
+[command."mount"]
 stdout = """overlay on / type overlay (rw,relatime)
 proc on /proc type proc (rw,nosuid,nodev,noexec,relatime)
 tmpfs on /dev type tmpfs (rw,nosuid,size=65536k,mode=755)
 """
 
-[files."/etc/shadow"]
+[file."/etc/shadow"]
 content = """root:!:14871::::::
 chris:*:18421:0:99999:7:::
 bin:!!:18360::::::
 """
 
-[commands."systemctl --all list-units --type service"]
+[command."systemctl --all list-units --type service"]
 stdout = """UNIT                                                                                     LOAD      ACTIVE   SUB       DESCRIPTION
   modprobe@drm.service                                                                     loaded    inactive dead      Load Kernel Module drm
   pacman-init.service                                                                      loaded    active   exited    Initializes Pacman keyring
@@ -492,7 +504,7 @@ stdout = """UNIT                                                                
 ● syslog.service                                                                           not-found inactive dead      syslog.service
 """
 
-[commands."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
+[command."ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command"]
 stdout = """    PID %CPU %MEM    VSZ   RSS TT       STAT STIME     TIME   UID COMMAND
 1  0.0  1.1  26904 11128 ?        Ss   15:10 00:00:00     0 /sbin/init
 2  0.0  0.0      0     0 ?        S    15:10 00:00:00     0 [kthreadd]
@@ -503,7 +515,7 @@ stdout = """    PID %CPU %MEM    VSZ   RSS TT       STAT STIME     TIME   UID CO
 974  0.0  0.3   8716  3100 pts/0    R+   16:24 00:00:00     0 ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command
 """
 
-[files."/etc/ntp.conf"]
+[file."/etc/ntp.conf"]
 content="""
 # --- GENERAL CONFIGURATION ---
 restrict default ignore
@@ -518,7 +530,7 @@ server 18.26.4.105
 server 128.249.1.10
 """
 
-[files."/etc/audit/auditd.conf"]
+[file."/etc/audit/auditd.conf"]
 content="""
 # Some random comment...
 local_events = yes
@@ -527,19 +539,19 @@ log_file = /var/log/audit/audit.log
 log_group = root
 """
 
-[files."/root/pod.yaml"]
+[file."/root/pod.yaml"]
 content="""
 apiVersion: v1
 kind: Pod
 """
 
-[files."/home/chris/.ssh/authorized_keys"]
+[file."/home/chris/.ssh/authorized_keys"]
 content="""
 # Comment
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDYuKamN4JXNYmolm+A9hM+xYanupG1VgbM/k0NwPiIPUdiU82IPbP7bunsngnOatSDyCrKrhL9FV3wuHFFBX0QE9KpS8bcIcT3ySsi3wgYV95P7anb7YhliDDx2w/QB97kCnAKjGFS1yphS6px0i9B29tGVJa22ODs/hebIKUCYKC9/+fnZ+bIqte1HctDP2lDBzMa/7j8BUXSwnTDXtAuEz5eSMIpv1ZdUdaSuO8xFbB0xrBHQJKuqboLPo3NSOCg6uhopO6GucZuNLJnqVLkyEPTKH0nv/8smz/q3v1GOGz8ZS0DIpkretKZmRB1VDhNqsAiOAWUTmg56xO7VZnlEvQRtyG8qyQHjlj6SDGtvxPDY58lz5nhIV9K6L7gHrOIcbSif5ZCt0e4DrKGaYXgH+mwIh2TMC2OCU6Xr6FRVQ9fBhilqMXuFIIezShN0hZb6mUCLkLVOzBBRKuz17S2a8twsuxix7ixqJPsIF3sI88tbxrFkSGSM02dhrmyZbkMr586rktVBB4T+8A28HJr4l9jkU0uk3l3le5bMcXhEuDkJUBnwEXEXfZa8Lw4sg2VuFgw0Ah0kw0/mAorpsFahXstNgrHhy3HoPKDCw/a/sXL4+fE72I1L96Lb7HOxTrdhEGnd65W4mPlTnbGW9YDQqTfZgRlpuffqQuWWYXolw== chris@lollyrock.com
 """
 
-[files."/etc/ssl/cert.pem"]
+[file."/etc/ssl/cert.pem"]
 content="""
 # Amazon Root CA 1
 -----BEGIN CERTIFICATE-----
@@ -564,7 +576,7 @@ rqXRfboQnoZsG4q5WTP468SQvvG5
 -----END CERTIFICATE-----
 """
 
-[files."/dummy.json"]
+[file."/dummy.json"]
 content="""
 {
   "_": null,
@@ -585,27 +597,27 @@ content="""
 }
 """
 
-[files."/dummy.array.json"]
+[file."/dummy.array.json"]
 content="""
 [1,"hi",{"ll": 0},"z"]
 """
 
-[files."/dummy.true.json"]
+[file."/dummy.true.json"]
 content="""true"""
 
-[files."/dummy.false.json"]
+[file."/dummy.false.json"]
 content="""false"""
 
-[files."/dummy.number.json"]
+[file."/dummy.number.json"]
 content="""1.23"""
 
-[files."/dummy.string.json"]
+[file."/dummy.string.json"]
 content="""\"hi\""""
 
-[files."/dummy.null.json"]
+[file."/dummy.null.json"]
 content="""null"""
 
-[files."/dummy.plist"]
+[file."/dummy.plist"]
 content="""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

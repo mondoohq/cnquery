@@ -10,11 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources"
-	resource_pack "go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers/mock"
 )
 
 var features cnquery.Features
@@ -43,23 +40,15 @@ func getEnvFeatures() cnquery.Features {
 	return fts
 }
 
-func initRuntime() *resources.Runtime {
-	provider, err := mock.NewFromTomlFile("../resources/packs/testdata/arch.toml")
+func initRuntime() llx.Runtime {
+	m, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
 	if err != nil {
 		panic(err.Error())
 	}
-
-	motor, err := motor.New(provider)
-	if err != nil {
+	if err = m.LoadSchemas(providers.Coordinator.LoadSchema); err != nil {
 		panic(err.Error())
 	}
-	if info, err := motor.Platform(); err == nil {
-		motor.SetAsset(&asset.Asset{Platform: info})
-	}
-
-	runtime := resources.NewRuntime(resource_pack.Registry, motor)
-
-	return runtime
+	return m
 }
 
 func TestMqlSimple(t *testing.T) {

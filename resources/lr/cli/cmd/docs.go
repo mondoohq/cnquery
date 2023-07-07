@@ -20,6 +20,7 @@ func init() {
 	docsYamlCmd.Flags().String("docs-file", "", "optional file path to write content to a file")
 	docsYamlCmd.Flags().String("version", defaultVersion, "optional version to mark resource, default is latest")
 	docsCmd.AddCommand(docsYamlCmd)
+	docsJSONCmd.Flags().String("dist", "", "folder for output json generation")
 	docsCmd.AddCommand(docsJSONCmd)
 	rootCmd.AddCommand(docsCmd)
 }
@@ -221,6 +222,14 @@ var docsJSONCmd = &cobra.Command{
 	Long:  `convert a yaml-based docs manifest into its json description, ready for loading`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		dist, err := cmd.Flags().GetString("dist")
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to get dist flag")
+		}
+		if dist == "" {
+			log.Fatal().Err(err).Msg("please provide a dist folder where generated json will go")
+		}
+
 		file := args[0]
 
 		raw, err := os.ReadFile(file)
@@ -239,8 +248,10 @@ var docsJSONCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to convert yaml to json")
 		}
 
-		infoFolder := ensureInfoFolder(file)
-		infoFile := path.Join(infoFolder, strings.TrimSuffix(path.Base(args[0]), ".yaml")+".json")
+		if err = os.MkdirAll(dist, 0o755); err != nil {
+			log.Fatal().Err(err).Msg("failed to create dist folder")
+		}
+		infoFile := path.Join(dist, strings.TrimSuffix(path.Base(args[0]), ".yaml")+".json")
 		err = os.WriteFile(infoFile, []byte(out), 0o644)
 		if err != nil {
 			log.Fatal().Err(err).Str("path", infoFile).Msg("failed to write to json file")

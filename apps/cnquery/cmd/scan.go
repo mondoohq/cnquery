@@ -1,265 +1,40 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
 	"os"
-	"sort"
-	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery"
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder"
-	"go.mondoo.com/cnquery/apps/cnquery/cmd/builder/common"
-	cnquery_config "go.mondoo.com/cnquery/apps/cnquery/cmd/config"
-	"go.mondoo.com/cnquery/cli/components"
-	"go.mondoo.com/cnquery/cli/config"
-	"go.mondoo.com/cnquery/cli/execruntime"
-	"go.mondoo.com/cnquery/cli/inventoryloader"
-	"go.mondoo.com/cnquery/cli/reporter"
-	"go.mondoo.com/cnquery/cli/sysinfo"
-	"go.mondoo.com/cnquery/cli/theme"
-	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/explorer/scan"
-	"go.mondoo.com/cnquery/motor/asset"
-	discovery_common "go.mondoo.com/cnquery/motor/discovery/common"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/ranger-rpc"
+	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/shared"
+	run "go.mondoo.com/cnquery/shared/proto"
 )
 
 func init() {
 	rootCmd.AddCommand(scanCmd)
+
+	scanCmd.Flags().BoolP("json", "j", false, "Run the query and return the object in a JSON structure.")
+	scanCmd.Flags().String("platform-id", "", "Select a specific target asset by providing its platform ID.")
 }
 
-var scanCmd = builder.NewProviderCommand(builder.CommandOpts{
-	Use:     "scan",
-	Aliases: []string{"explore"},
-	Short:   "Scan assets with one or more query packs.",
+var scanCmd = &cobra.Command{
+	Use:   "scan",
+	Short: "Scan assets with one or more query packs.",
 	Long: `
 This command scans an asset using a query pack. For example, you can scan
 the local system with its pre-configured query pack:
 
-    $ cnquery scan local
+		$ cnquery scan local
 
 To manually configure a query pack, use this:
 
-    $ cnquery scan local -f bundle.mql.yaml --incognito
+		$ cnquery scan local -f bundle.mql.yaml --incognito
 
-	`,
-	Docs: common.CommandsDocs{
-		Entries: map[string]common.CommandDocsEntry{
-			"local": {
-				Short: "Scan your local system.",
-			},
-			"mock": {
-				Short: "Scan a mock target (a simulated asset).",
-				Long: `Scan a mock target. This scans a simulated asset. We recorded the asset's data beforehand.
-Provide the recording with mock data as an argument:
-
-    cnquery scan container ubuntu:latest --record
-    cnquery scan mock recording-20220519173543.toml
 `,
-			},
-			"vagrant": {
-				Short: "Scan a Vagrant host.",
-			},
-			"terraform": {
-				Short: "Scan Terraform HCL (files.tf and directories), plan files (json), and state files (json).",
-			},
-			"ssh": {
-				Short: "Scan an SSH target.",
-			},
-			"winrm": {
-				Short: "Scan a WinRM target.",
-			},
-			"container": {
-				Short: "Scan a container, image, or registry.",
-				Long: `Scan a container, container image, or container registry. By default
-we try to auto-detect the container or image from the provided ID, even
-if it's not the full ID:
-
-    cnquery scan container b62b276baab6
-    cnquery scan container b62
-    cnquery scan container ubuntu:latest
-
-You can also explicitly request the scan of an image or a container registry:
-
-    cnquery scan container image ubuntu:20.04
-    cnquery scan container registry harbor.lunalectric.com/project/repository
-`,
-			},
-			"container-image": {
-				Short: "Scan a container image.",
-			},
-			"container-tar": {
-				Short: "Scan an OCI container image from a tar file.",
-				Long: `Scan an OCI container image by providing a path to the tar file: 
-
-    cnquery scan container tar /path/to/image.tar
-`,
-			},
-			"container-registry": {
-				Short: "Scan a container registry.",
-				Long: `Scan a container registry. This supports more parameters for different registries:
-
-    cnquery scan container registry harbor.lunalectric.com/project/repository
-    cnquery scan container registry yourname.azurecr.io
-    cnquery scan container registry 123456789.dkr.ecr.us-east-1.amazonaws.com/repository
-`,
-			},
-			"docker": {
-				Short: "Scan a Docker container or image.",
-				Long: `Scan a Docker container or image by automatically detecting the provided ID.
-You can also specify a subcommand to narrow the scan to containers or images.
-
-    cnquery scan docker b62b276baab6
-
-    cnquery scan docker container b62b
-    cnquery scan docker image ubuntu:latest
-`,
-			},
-			"docker-container": {
-				Short: "Scan a Docker container.",
-				Long: `Scan a Docker container. You can specify the container ID (such as b62b276baab6)
-or container name (such as elated_poincare).`,
-			},
-			"docker-image": {
-				Short: "Scan a Docker image.",
-				Long: `Scan a Docker image. You can specify the image ID (such as b6f507652425)
-or the image name (such as ubuntu:latest).`,
-			},
-			"kubernetes": {
-				Short: "Scan a Kubernetes cluster or local manifest file(s).",
-			},
-			"aws": {
-				Short: "Scan an AWS account or instance.",
-				Long: `Scan an AWS account or EC2 instance. cnquery uses your local AWS configuration
-for the account scan. See the subcommands to scan EC2 instances.`,
-			},
-			"aws-ec2": {
-				Short: "Scan an AWS instance using one of the available connectors.",
-			},
-			"aws-ec2-connect": {
-				Short: "Scan an AWS instance using EC2 Instance Connect.",
-			},
-			"aws-ec2-ebs-instance": {
-				Short: "Scan an AWS instance using an EBS volume scan. This requires an AWS host.",
-				Long: `Scan an AWS instance using an EBS volume scan. This requires that the
-scan execute on an instance that is running inside of AWS.`,
-			},
-			"aws-ec2-ebs-volume": {
-				Short: "Scan a specific AWS volume using an EBS volume scan. This requires an AWS host.",
-				Long: `Scan a specific AWS volume using an EBS volume scan. This requires that the
-scan execute on an instance that is running inside of AWS.`,
-			},
-			"aws-ec2-ebs-snapshot": {
-				Short: "Scan a specific AWS snapshot using an EBS volume scan. This requires an AWS host.",
-				Long: `Scan a specific AWS snapshot using an EBS volume scan. This requires that the
-scan execute on an instance that is running inside of AWS.`,
-			},
-			"aws-ec2-ssm": {
-				Short: "Scan an AWS instance using the AWS Systems Manager to connect.",
-			},
-			"azure": {
-				Short: "Scan a Microsoft Azure subscription or virtual machine.",
-				Long: `Scan a Microsoft Azure subscription or virtual machine. cnquery uses your local Azure
-configuration for the account scan. To scan Azure virtual machines, you must
-configure your Azure credentials and have SSH access to the virtual machines.`,
-			},
-			"gcp": {
-				Short: "Scan a Google Cloud Platform (GCP) organization, project or folder.",
-			},
-			"gcp-org": {
-				Short: "Scan a Google Cloud Platform (GCP) organization.",
-			},
-			"gcp-project": {
-				Short: "Scan a Google Cloud Platform (GCP) project.",
-			},
-			"gcp-folder": {
-				Short: "Scan a Google Cloud Platform (GCP) folder.",
-			},
-			"gcp-gcr": {
-				Short: "Scan a Google Container Registry (GCR).",
-			},
-			"gcp-compute-instance": {
-				Short: "Scan a Google Cloud Platform (GCP) VM instance.",
-			},
-			"gcp-compute-snapshot": {
-				Short: "Scan a Google Cloud Platform (GCP) VM snapshot.",
-			},
-			"oci": {
-				Short: "Scan a Oracle Cloud Infrastructure (OCI) tenancy.",
-			},
-			"vsphere": {
-				Short: "Scan a VMware vSphere API endpoint.",
-			},
-			"vsphere-vm": {
-				Short: "Scan a VMware vSphere VM.",
-			},
-			"vcd": {
-				Short: "Scan a VMware Virtual Cloud Director organization.",
-			},
-			"github": {
-				Short: "Scan a GitHub organization or repository.",
-			},
-			"okta": {
-				Short: "Scan an Okta organization.",
-			},
-			"googleworkspace": {
-				Short: "Scan a Google Workspace organization.",
-			},
-			"slack": {
-				Short: "Scan a Slack team.",
-			},
-			"github-org": {
-				Short: "Scan a GitHub organization.",
-			},
-			"github-repo": {
-				Short: "Scan a GitHub repository.",
-			},
-			"github-user": {
-				Short: "Scan a GitHub user.",
-			},
-			"gitlab": {
-				Short: "Scan a GitLab group.",
-			},
-			"ms365": {
-				Short: "Scan a Microsoft 365 tenant.",
-				Long: `
-Here is an example using Microsoft 365:
-
-    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --client-secret {client secret}
-
-This example connects to Microsoft 365 using the PKCS #12 formatted certificate:
-
-    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --certificate-secret {certificate secret}
-    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pfx} --ask-pass
-
-This example connects to Microsoft 365 using the PEM formatted certificate:
-
-    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pem} --certificate-secret {certificate secret}
-    $ cnquery scan ms365 --tenant-id {tenant id} --client-id {client id} --certificate-path {certificate.pem} --ask-pass
-`,
-			},
-			"host": {
-				Short: "Scan a host endpoint (domain name).",
-			},
-			"arista": {
-				Short: "Scan an Arista endpoint.",
-			},
-			"filesystem": {
-				Short: "Scan a mounted file system target.",
-			},
-			"opcua": {
-				Short: "Scan an OPC UA endpoint.",
-			},
-		},
+	PreRun: func(cmd *cobra.Command, args []string) {
+		viper.BindPFlag("platform-id", cmd.Flags().Lookup("platform-id"))
 	},
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
@@ -287,7 +62,7 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 		cmd.Flags().Bool("ask-pass", false, "Ask for connection password.")
 		cmd.Flags().StringP("identity-file", "i", "", "Select a file from which to read the identity (private key) for public key authentication.")
 		cmd.Flags().String("id-detector", "", "User override for platform ID detection mechanism. Supported: "+strings.Join(providers.AvailablePlatformIdDetector(), ", "))
-		cmd.Flags().String("asset-name", "", "User override for the asset name.")
+		cmd.Flags().String("asset-name", "", "User-override for the asset name")
 		cmd.Flags().StringToString("props", nil, "Custom values for properties")
 
 		cmd.Flags().String("path", "", "Path to a local file or directory for the connection to use.")

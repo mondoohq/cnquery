@@ -8,6 +8,7 @@ import (
 	"path"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 
@@ -95,7 +96,7 @@ func New(runtime *providers.Runtime, opts ...ShellOption) (*Shell, error) {
 		res.Theme = theme.DefaultTheme
 	}
 
-	res.completer = NewCompleter(runtime.Schema, res.features, func() string {
+	res.completer = NewCompleter(runtime.Schema(), res.features, func() string {
 		return res.query
 	})
 
@@ -239,7 +240,7 @@ func (s *Shell) execQuery(cmd string) {
 	// the shell and we only deal with one query at a time, with the
 	// compiler being rather fast, the additional time is negligible
 	// and may not be worth coding around.
-	code, err := mqlc.Compile(s.query, nil, mqlc.NewConfig(s.Runtime.Schema, s.features))
+	code, err := mqlc.Compile(s.query, nil, mqlc.NewConfig(s.Runtime.Schema(), s.features))
 	if err != nil {
 		if e, ok := err.(*parser.ErrIncomplete); ok {
 			s.isMultiline = true
@@ -308,7 +309,7 @@ func (s *Shell) Close() {
 func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult, error) {
 	s.resetPrintCache()
 
-	code, err := mqlc.Compile(cmd, nil, mqlc.NewConfig(s.Runtime.Schema, s.features))
+	code, err := mqlc.Compile(cmd, nil, mqlc.NewConfig(s.Runtime.Schema(), s.features))
 	if err != nil {
 		fmt.Fprintln(s.out, s.Theme.Error("failed to compile: "+err.Error()))
 
@@ -318,7 +319,7 @@ func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult,
 		return nil, nil, err
 	}
 
-	results, err := mql.ExecuteCode(s.Runtime.Schema, s.Runtime, code, nil, s.features)
+	results, err := mql.ExecuteCode(s.Runtime.Schema(), s.Runtime, code, nil, s.features)
 	if err != nil {
 		panic(err)
 	}
@@ -347,7 +348,9 @@ func indent(indent int) string {
 
 // listAvailableResources lists resource names and their title
 func (s *Shell) listAvailableResources() {
-	panic("NEED A schema")
+	schema := s.Runtime.Schema()
+	keys := sortx.Keys(schema.Resources)
+	s.renderResources(schema, keys)
 }
 
 // listFilteredResources displays the schema of one or many resources that start with the provided prefix
@@ -357,7 +360,24 @@ func (s *Shell) listFilteredResources(cmd string) {
 		return
 	}
 
-	panic("NEED A schema")
+	search := m[1]
+	schema := s.Runtime.Schema()
+
+	// if we find the requested resource, just return it
+	if _, ok := schema.Resources[search]; ok {
+		s.renderResources(schema, []string{search})
+		return
+	}
+
+	// otherwise we will look for anything that matches
+	keys := []string{}
+	for k := range schema.Resources {
+		if strings.HasPrefix(k, search) {
+			keys = append(keys, k)
+		}
+	}
+	sort.Strings(keys)
+	s.renderResources(schema, keys)
 }
 
 // renderResources renders a set of resources from a given schema

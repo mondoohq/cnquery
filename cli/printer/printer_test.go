@@ -11,12 +11,11 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mqlc"
+	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers/mock"
 	"go.mondoo.com/cnquery/resources"
-	resource_pack "go.mondoo.com/cnquery/resources/packs/os"
 	"go.mondoo.com/cnquery/sortx"
 )
 
@@ -47,20 +46,16 @@ func getEnvFeatures() cnquery.Features {
 	return fts
 }
 
-func executionContext() (*resources.Schema, *resources.Runtime) {
-	transport, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
+func executionContext() (*resources.Schema, llx.Runtime) {
+	m, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
 	if err != nil {
 		panic(err.Error())
 	}
-
-	motor, err := motor.New(transport)
-	if err != nil {
+	if err = m.LoadSchemas(providers.Coordinator.LoadSchema); err != nil {
 		panic(err.Error())
 	}
 
-	registry := resource_pack.Registry
-	runtime := resources.NewRuntime(registry, motor)
-	return registry.Schema(), runtime
+	return m.Schema(), m
 }
 
 func testQuery(t *testing.T, query string) (*llx.CodeBundle, map[string]*llx.RawResult) {

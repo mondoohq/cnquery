@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
 )
@@ -627,11 +626,10 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 			return print.Secondary("null")
 		}
 
-		r := data.(resources.ResourceType)
-		i := r.MqlResource()
-		idline := i.Name
-		if i.Id != "" {
-			idline += " id = " + i.Id
+		r := data.(llx.Resource)
+		idline := r.MqlName()
+		if id := r.MqlID(); id != "" {
+			idline += " id = " + id
 		}
 
 		return idline

@@ -12,7 +12,7 @@ import (
 
 type executionManager struct {
 	schema  *resources.Schema
-	runtime *resources.Runtime
+	runtime llx.Runtime
 	// runQueue is the channel the execution manager will read
 	// items that need to be run from
 	runQueue chan runQueueItem
@@ -35,7 +35,7 @@ type runQueueItem struct {
 	props      map[string]*llx.Result
 }
 
-func newExecutionManager(schema *resources.Schema, runtime *resources.Runtime, runQueue chan runQueueItem,
+func newExecutionManager(schema *resources.Schema, runtime llx.Runtime, runQueue chan runQueueItem,
 	resultChan chan *llx.RawResult, timeout time.Duration,
 ) *executionManager {
 	return &executionManager{

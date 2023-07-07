@@ -130,6 +130,18 @@ func (c *coordinator) Shutdown() {
 	c.mutex.Unlock()
 }
 
+func (c *coordinator) LoadSchema(name string) *resources.Schema {
+	if x, ok := builtinProviders[name]; ok {
+		return x.Runtime.Schema
+	}
+
+	provider, ok := c.Providers[name]
+	if !ok {
+		return nil
+	}
+	return provider.Schema
+}
+
 func addColorConfig(cmd *exec.Cmd) {
 	switch termenv.EnvColorProfile() {
 	case termenv.ANSI256, termenv.ANSI, termenv.TrueColor:

@@ -62,15 +62,22 @@ cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr 
 
 define genProvider
 	$(eval $@_HOME = $(1))
+	$(eval $@_NAME = $(shell basename ${$@_HOME}))
+	$(eval $@_DIST = "${$@_HOME}"/dist)
+	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	go run "${$@_HOME}"/gen/main.go "${$@_HOME}"
-	$(eval $@_BIN = "${$@_HOME}"/dist/"$(shell basename ${$@_HOME})")
+	echo "--> process resources for ${$@_NAME}"
+	./lr go "${$@_HOME}"/resources/${$@_NAME}.lr --dist "${$@_DIST}"
+	./lr docs json "${$@_HOME}"/resources/${$@_NAME}.lr.manifest.yaml --dist "${$@_DIST}"
 	echo "--> creating ${$@_BIN}"
 	go build -o "${$@_BIN}" "${$@_HOME}"/main.go
 endef
 
 .PHONY: providers
 providers:
+	go generate .
 	go generate ./providers/proto
+	go build -o lr resources/lr/cli/main.go
 	@$(call genProvider, providers/os)
 # add more providers...
 
