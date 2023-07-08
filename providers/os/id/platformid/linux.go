@@ -1,17 +1,17 @@
 package platformid
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
 // LinuxIdProvider read the following files to extract the machine id
 // "/var/lib/dbus/machine-id" and "/etc/machine-id"
 // TODO: this approach is only reliable for systemd managed machines
 type LinuxIdProvider struct {
-	provider os.OperatingSystemProvider
+	connection connection.Connection
 }
 
 func (p *LinuxIdProvider) Name() string {
@@ -30,13 +30,13 @@ func (p *LinuxIdProvider) ID() (string, error) {
 }
 
 func (p *LinuxIdProvider) retrieveFile(path string) ([]byte, error) {
-	f, err := p.provider.FS().Open(path)
+	f, err := p.connection.FileSystem().Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	content, err := ioutil.ReadAll(f)
+	content, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}

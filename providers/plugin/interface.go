@@ -29,6 +29,7 @@ type ProviderPlugin interface {
 	ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error)
 	Connect(req *proto.ConnectReq) (*proto.Connection, error)
 	GetData(req *proto.DataReq, callback ProviderCallback) (*proto.DataRes, error)
+	StoreData(req *proto.StoreReq) (*proto.StoreRes, error)
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.

@@ -3,6 +3,7 @@ package provider
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/asset"
@@ -56,6 +57,13 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 	})
 	if err != nil {
 		return nil, errors.New("failed to resolve: " + err.Error())
+	}
+
+	idDetector := string(flags["id-detector"].Value)
+	if idDetector != "" {
+		for i := range assets {
+			assets[i].IdDetector = []string{idDetector}
+		}
 	}
 
 	res := proto.ParseCLIRes{
@@ -165,4 +173,44 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 	}
 
 	return resources.GetData(resource, req.Field, args), nil
+}
+
+func (s *Service) StoreData(req *proto.StoreReq) (*proto.StoreRes, error) {
+	runtime, ok := s.runtimes[req.Connection]
+	if !ok {
+		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
+	}
+
+	var errs []string
+	for i := range req.Resources {
+		info := req.Resources[i]
+
+		args, err := plugin.ProtoArgsToRawArgs(info.Fields)
+		if err != nil {
+			errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), failed to parse arguments")
+			continue
+		}
+
+		resource, ok := runtime.Resources[info.Name+"\x00"+info.Id]
+		if !ok {
+			resource, err = resources.CreateResource(runtime, info.Name, args)
+			if err != nil {
+				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), creation failed: "+err.Error())
+				continue
+			}
+
+			runtime.Resources[info.Name+"\x00"+info.Id] = resource
+		}
+
+		for k, v := range args {
+			if err := resources.SetData(resource, k, v); err != nil {
+				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())
+			}
+		}
+	}
+
+	if len(errs) != 0 {
+		return nil, errors.New(strings.Join(errs, ", "))
+	}
+	return nil, nil
 }

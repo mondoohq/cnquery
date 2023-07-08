@@ -47,6 +47,10 @@ func (m *GRPCClient) GetData(req *proto.DataReq, callback ProviderCallback) (*pr
 	return res, err
 }
 
+func (m *GRPCClient) StoreData(req *proto.StoreReq) (*proto.StoreRes, error) {
+	return m.client.StoreData(context.Background(), req)
+}
+
 // Here is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {
 	// This is the real implementation
@@ -72,6 +76,10 @@ func (m *GRPCServer) GetData(ctx context.Context, req *proto.DataReq) (*proto.Da
 
 	a := &GRPCProviderCallbackClient{proto.NewProviderCallbackClient(conn)}
 	return m.Impl.GetData(req, a)
+}
+
+func (m *GRPCServer) StoreData(ctx context.Context, req *proto.StoreReq) (*proto.StoreRes, error) {
+	return m.Impl.StoreData(req)
 }
 
 // GRPCClient is an implementation of ProviderCallback that talks over RPC.

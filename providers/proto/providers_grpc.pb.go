@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	ProviderPlugin_ParseCLI_FullMethodName = "/proto.ProviderPlugin/ParseCLI"
-	ProviderPlugin_Connect_FullMethodName  = "/proto.ProviderPlugin/Connect"
-	ProviderPlugin_GetData_FullMethodName  = "/proto.ProviderPlugin/GetData"
+	ProviderPlugin_ParseCLI_FullMethodName  = "/proto.ProviderPlugin/ParseCLI"
+	ProviderPlugin_Connect_FullMethodName   = "/proto.ProviderPlugin/Connect"
+	ProviderPlugin_GetData_FullMethodName   = "/proto.ProviderPlugin/GetData"
+	ProviderPlugin_StoreData_FullMethodName = "/proto.ProviderPlugin/StoreData"
 )
 
 // ProviderPluginClient is the client API for ProviderPlugin service.
@@ -31,6 +32,7 @@ type ProviderPluginClient interface {
 	ParseCLI(ctx context.Context, in *ParseCLIReq, opts ...grpc.CallOption) (*ParseCLIRes, error)
 	Connect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*Connection, error)
 	GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error)
+	StoreData(ctx context.Context, in *StoreReq, opts ...grpc.CallOption) (*StoreRes, error)
 }
 
 type providerPluginClient struct {
@@ -68,6 +70,15 @@ func (c *providerPluginClient) GetData(ctx context.Context, in *DataReq, opts ..
 	return out, nil
 }
 
+func (c *providerPluginClient) StoreData(ctx context.Context, in *StoreReq, opts ...grpc.CallOption) (*StoreRes, error) {
+	out := new(StoreRes)
+	err := c.cc.Invoke(ctx, ProviderPlugin_StoreData_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProviderPluginServer is the server API for ProviderPlugin service.
 // All implementations must embed UnimplementedProviderPluginServer
 // for forward compatibility
@@ -75,6 +86,7 @@ type ProviderPluginServer interface {
 	ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(context.Context, *ConnectReq) (*Connection, error)
 	GetData(context.Context, *DataReq) (*DataRes, error)
+	StoreData(context.Context, *StoreReq) (*StoreRes, error)
 	mustEmbedUnimplementedProviderPluginServer()
 }
 
@@ -90,6 +102,9 @@ func (UnimplementedProviderPluginServer) Connect(context.Context, *ConnectReq) (
 }
 func (UnimplementedProviderPluginServer) GetData(context.Context, *DataReq) (*DataRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetData not implemented")
+}
+func (UnimplementedProviderPluginServer) StoreData(context.Context, *StoreReq) (*StoreRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StoreData not implemented")
 }
 func (UnimplementedProviderPluginServer) mustEmbedUnimplementedProviderPluginServer() {}
 
@@ -158,6 +173,24 @@ func _ProviderPlugin_GetData_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProviderPlugin_StoreData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StoreReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderPluginServer).StoreData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProviderPlugin_StoreData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderPluginServer).StoreData(ctx, req.(*StoreReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProviderPlugin_ServiceDesc is the grpc.ServiceDesc for ProviderPlugin service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +209,10 @@ var ProviderPlugin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetData",
 			Handler:    _ProviderPlugin_GetData_Handler,
+		},
+		{
+			MethodName: "StoreData",
+			Handler:    _ProviderPlugin_StoreData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

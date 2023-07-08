@@ -3,12 +3,12 @@ package machineid
 import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/resources/packs/core/platformid"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/id/platformid"
 )
 
-func MachineId(provider os.OperatingSystemProvider, pf *platform.Platform) (string, error) {
-	uuidProvider, err := platformid.MachineIDProvider(provider, pf)
+func MachineId(conn connection.Connection, p *platform.Platform) (string, error) {
+	uuidProvider, err := platformid.MachineIDProvider(conn, p)
 	if err != nil {
 		return "", errors.Wrap(err, "cannot determine platform uuid")
 	}

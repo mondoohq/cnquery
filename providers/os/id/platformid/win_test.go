@@ -5,14 +5,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 )
 
 func TestGuidWindows(t *testing.T) {
-	provider, err := mock.NewFromTomlFile("./testdata/guid_windows.toml")
+	provider, err := mock.New("./testdata/guid_windows.toml")
 	require.NoError(t, err)
 
-	lid := WinIdProvider{provider: provider}
+	lid := WinIdProvider{connection: provider}
 	id, err := lid.ID()
 	require.NoError(t, err)
 

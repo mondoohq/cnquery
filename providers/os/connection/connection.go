@@ -14,10 +14,6 @@ import (
 
 type ConnectionType string
 
-const (
-	Local ConnectionType = "local"
-)
-
 type Connection interface {
 	RunCommand(command string) (*Command, error)
 	FileInfo(path string) (FileInfoDetails, error)

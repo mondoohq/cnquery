@@ -23,6 +23,13 @@ var Config = plugin.Provider{
 					Desc:        "Elevate privileges with sudo.",
 					ConfigEntry: "sudo.active",
 				},
+				{
+					Long:    "id-detector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "User override for platform ID detection mechanism",
+					Option:  plugin.FlagOption_Hidden,
+				},
 			},
 		},
 		{
@@ -60,6 +67,13 @@ var Config = plugin.Provider{
 					Option:      plugin.FlagOption_Password,
 					ConfigEntry: "-",
 				},
+				{
+					Long:    "id-detector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "User override for platform ID detection mechanism",
+					Option:  plugin.FlagOption_Hidden,
+				},
 			},
 		},
 		{
@@ -89,6 +103,13 @@ var Config = plugin.Provider{
 					Type:        plugin.FlagType_String,
 					Option:      plugin.FlagOption_Password,
 					ConfigEntry: "-",
+				},
+				{
+					Long:    "id-detector",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "User override for platform ID detection mechanism",
+					Option:  plugin.FlagOption_Hidden,
 				},
 			},
 		},

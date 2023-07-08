@@ -5,6 +5,12 @@ option go_package = "go.mondoo.com/cnquery/providers/proto";
 import "motor/inventory/v1/inventory.proto";
 import "llx/llx.proto";
 
+message Resource {
+  string name = 3;
+  string id = 4;
+  map<string, cnquery.llx.Primitive> fields = 5;
+}
+
 message ParseCLIReq {
   string connector = 1;
   repeated string args = 2;
@@ -44,10 +50,18 @@ message DataRes {
 
 message CollectRes {}
 
+message StoreReq {
+  uint32 connection = 1;
+  repeated Resource resources = 2;
+}
+
+message StoreRes {}
+
 service ProviderPlugin {
   rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
   rpc Connect(ConnectReq) returns (Connection);
   rpc GetData(DataReq) returns (DataRes);
+  rpc StoreData(StoreReq) returns (StoreRes);
 }
 
 service ProviderCallback {

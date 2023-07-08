@@ -13,6 +13,10 @@ import (
 	"github.com/spf13/afero"
 )
 
+const (
+	Local ConnectionType = "local"
+)
+
 type LocalConnection struct {
 	shell   []string
 	fs      afero.Fs

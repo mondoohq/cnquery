@@ -6,21 +6,20 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
-	ssh_transport "go.mondoo.com/cnquery/motor/providers/ssh"
+	"go.mondoo.com/cnquery/providers/os/connection"
 	"golang.org/x/crypto/ssh"
 )
 
-func Detect(t providers.Instance, p *platform.Platform) ([]string, error) {
+func Detect(t connection.Connection, p *platform.Platform) ([]string, error) {
 	// if we are using an ssh connection we can read the hostkey from the connection
-	sshTransport, ok := t.(*ssh_transport.Provider)
-	if ok {
-		identifier, err := sshTransport.Identifier()
+	if sshTransport, ok := t.(*connection.SshConnection); ok {
+		identifier, err := sshTransport.PlatformID()
 		if err != nil {
 			return nil, err
 		}
 		return []string{identifier}, nil
 	}
+
 	// if we are not at the remote system, we try to load the ssh host key from local system
 	identifiers := []string{}
 
@@ -42,7 +41,7 @@ func Detect(t providers.Instance, p *platform.Platform) ([]string, error) {
 			return nil, errors.Wrap(err, "could not parse public key file:"+hostKeyFilePath)
 		}
 
-		identifiers = append(identifiers, ssh_transport.PlatformIdentifier(publicKey))
+		identifiers = append(identifiers, connection.PlatformIdentifier(publicKey))
 	}
 
 	return identifiers, nil

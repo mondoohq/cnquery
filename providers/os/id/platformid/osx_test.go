@@ -6,15 +6,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 )
 
 func TestMacOSMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/osx_test.toml")
-	provider, err := mock.NewFromTomlFile(filepath)
+	provider, err := mock.New(filepath)
 	require.NoError(t, err)
 
-	lid := MacOSIdProvider{provider: provider}
+	lid := MacOSIdProvider{connection: provider}
 	id, err := lid.ID()
 	require.NoError(t, err)
 

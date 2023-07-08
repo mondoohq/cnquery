@@ -8,15 +8,12 @@ import (
 	"runtime"
 
 	wmi "github.com/StackExchange/wmi"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection"
 )
 
-func windowsMachineId(p os.OperatingSystemProvider) (string, error) {
+func windowsMachineId(conn connection.Connection) (string, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	_, ok := p.(*local.Provider)
-	if ok && runtime.GOOS == "windows" {
-
+	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
 		// we always get a list or entries
 		type win32ComputerSystemProduct struct {
 			UUID *string
@@ -34,5 +31,6 @@ func windowsMachineId(p os.OperatingSystemProvider) (string, error) {
 
 		return *entries[0].UUID, nil
 	}
+
 	return PowershellWindowsMachineId(p)
 }
