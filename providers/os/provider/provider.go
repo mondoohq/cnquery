@@ -6,8 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/inventory"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
@@ -16,6 +18,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/resources"
 	"go.mondoo.com/cnquery/providers/plugin"
 	"go.mondoo.com/cnquery/providers/proto"
+	protobuf "google.golang.org/protobuf/proto"
 )
 
 type Service struct {
@@ -90,7 +93,7 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
-	assets, err := s.Resolve(&asset.Asset{
+	assets, err := s.resolve(&asset.Asset{
 		Connections: []*providers.Config{conn},
 	})
 	if err != nil {
@@ -115,22 +118,40 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 	return &res, nil
 }
 
-func (s *Service) Resolve(rootAsset *asset.Asset) ([]*asset.Asset, error) {
-	obj := &asset.Asset{
-		Name:        rootAsset.Mrn,
-		State:       asset.State_STATE_ONLINE,
-		Connections: rootAsset.Connections,
-	}
-
-	if err := s.detect(obj); err != nil {
+func (s *Service) resolve(rootAsset *asset.Asset) ([]*asset.Asset, error) {
+	inventory, err := inventory.New(inventory.WithInventory(&v1.Inventory{
+		Spec: &v1.InventorySpec{
+			Assets: []*asset.Asset{rootAsset},
+		},
+	}))
+	if err != nil {
 		return nil, err
 	}
 
-	res := []*asset.Asset{obj}
+	inventoryAsset := inventory.GetAssets()[0]
+	if err = s.detect(inventoryAsset, inventory); err != nil {
+		return nil, err
+	}
 
-	// TODO: discovery of other related assets
+	res := []*asset.Asset{inventoryAsset}
+
+	// TODO: discovery of related assets
 
 	return res, nil
+}
+
+// LocalAssetReq ist a sample request to connect to the local OS.
+// Useful for test automation.
+var LocalAssetReq = &proto.ConnectReq{
+	Asset: &v1.Inventory{
+		Spec: &v1.InventorySpec{
+			Assets: []*asset.Asset{{
+				Connections: []*providers.Config{{
+					Backend: providers.ProviderType_LOCAL_OS,
+				}},
+			}},
+		},
+	},
 }
 
 func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
@@ -138,7 +159,12 @@ func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 		return nil, errors.New("no connection data provided")
 	}
 
-	assets := req.Asset.Spec.Assets
+	inventory, err := inventory.New(inventory.WithInventory(req.Asset))
+	if err != nil {
+		return nil, errors.New("could not load inventory to connect")
+	}
+
+	assets := inventory.GetAssets()
 	if len(assets) == 0 {
 		return nil, errors.New("no assets provided in connection")
 	}
@@ -146,8 +172,7 @@ func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 		return nil, errors.New("too many assets provided in connection")
 	}
 
-	asset := assets[0]
-	conn, err := s.connect(asset)
+	conn, err := s.connect(assets[0], inventory)
 	if err != nil {
 		return nil, err
 	}
@@ -155,22 +180,50 @@ func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 	return &proto.Connection{Id: uint32(conn.ID())}, nil
 }
 
-func (s *Service) connect(asset *asset.Asset) (shared.Connection, error) {
+func resolveConnection(conn *providers.Config, inventory inventory.InventoryManager) (*providers.Config, error) {
+	creds := inventory.GetCredsResolver()
+	if creds == nil {
+		return nil, nil
+	}
+
+	res := protobuf.Clone(conn).(*providers.Config)
+	for i := range res.Credentials {
+		credential := res.Credentials[i]
+		if credential.SecretId == "" {
+			continue
+		}
+
+		resolvedCredential, err := creds.GetCredential(credential)
+		if err != nil {
+			log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
+			return nil, err
+		}
+
+		res.Credentials[i] = resolvedCredential
+	}
+
+	return res, nil
+}
+
+func (s *Service) connect(asset *asset.Asset, inventory inventory.InventoryManager) (shared.Connection, error) {
 	if len(asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 
 	var conn shared.Connection
-	var err error
-	conf := asset.Connections[0]
+	conf, err := resolveConnection(asset.Connections[0], inventory)
+	if err != nil {
+		return nil, err
+	}
+
 	switch conf.Backend {
 	case providers.ProviderType_LOCAL_OS:
-		conn = connection.NewLocalConnection(s.lastConnectionID)
 		s.lastConnectionID++
+		conn = connection.NewLocalConnection(s.lastConnectionID)
 
 	case providers.ProviderType_SSH:
-		conn, err = connection.NewSshConnection(s.lastConnectionID, conf)
 		s.lastConnectionID++
+		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, inventory)
 
 	default:
 		return nil, errors.New("cannot find conneciton type " + conf.Backend.Id())
@@ -180,6 +233,7 @@ func (s *Service) connect(asset *asset.Asset) (shared.Connection, error) {
 		return nil, err
 	}
 
+	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection: conn,
 		Resources:  map[string]plugin.Resource{},

@@ -20,11 +20,12 @@ message ParseCLIReq {
 message ParseCLIRes {
   // full inventory of everything that was requested
   cnquery.motor.inventory.v1.Inventory inventory = 1;
+  uint32 connection = 2;
 }
 
 message ConnectReq {
   bytes features = 2;
-  // Asset is one target that is being connected to
+  // Asset must be only one target asset
   cnquery.motor.inventory.v1.Inventory asset = 3;
 }
 

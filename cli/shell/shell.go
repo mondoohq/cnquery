@@ -38,7 +38,9 @@ func WithOnCloseListener(onCloseHandler func()) ShellOption {
 
 func WithUpstreamConfig(c *providers.UpstreamConfig) ShellOption {
 	return func(t *Shell) {
-		t.Runtime.UpstreamConfig = c
+		if x, ok := t.Runtime.(*providers.Runtime); ok {
+			x.UpstreamConfig = c
+		}
 	}
 }
 
@@ -62,7 +64,7 @@ func WithTheme(theme *theme.Theme) ShellOption {
 
 // Shell is the interactive explorer
 type Shell struct {
-	Runtime     *providers.Runtime
+	Runtime     llx.Runtime
 	Theme       *theme.Theme
 	History     []string
 	HistoryPath string
@@ -79,7 +81,7 @@ type Shell struct {
 }
 
 // New creates a new Shell
-func New(runtime *providers.Runtime, opts ...ShellOption) (*Shell, error) {
+func New(runtime llx.Runtime, opts ...ShellOption) (*Shell, error) {
 	res := Shell{
 		alreadyPrinted: &sync.Map{},
 		out:            os.Stdout,
@@ -140,7 +142,7 @@ func (s *Shell) RunInteractive(cmd string) {
 	}
 
 	if cmd != "" {
-		s.execCmd(cmd)
+		s.ExecCmd(cmd)
 		s.History = append(s.History, cmd)
 	}
 
@@ -154,7 +156,7 @@ func (s *Shell) RunInteractive(cmd string) {
 	}
 
 	p := prompt.New(
-		s.execCmd,
+		s.ExecCmd,
 		completer,
 		prompt.OptionPrefix(s.Theme.Prefix),
 		prompt.OptionPrefixTextColor(s.Theme.PromptColors.PrefixTextColor),
@@ -202,7 +204,7 @@ func (s *Shell) RunInteractive(cmd string) {
 
 var helpResource = regexp.MustCompile(`help\s(.*)`)
 
-func (s *Shell) execCmd(cmd string) {
+func (s *Shell) ExecCmd(cmd string) {
 	switch {
 	case s.isMultiline:
 		s.execQuery(cmd)

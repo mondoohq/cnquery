@@ -15,7 +15,7 @@ type Runtime struct {
 	coordinator    *coordinator
 	Provider       *RunningProvider
 	Connection     *proto.Connection
-	schema         *resources.Schema
+	SchemaData     *resources.Schema
 	UpstreamConfig *UpstreamConfig
 }
 
@@ -41,7 +41,7 @@ func (c *coordinator) NewRuntime() *Runtime {
 
 func (r *Runtime) Close() {
 	r.coordinator.Close(r.Provider)
-	r.schema = nil
+	r.SchemaData = nil
 }
 
 // UseProvider sets the main provider for this runtime.
@@ -63,7 +63,7 @@ func (r *Runtime) UseProvider(name string) error {
 	}
 
 	r.Provider = running
-	r.schema = running.Schema
+	r.SchemaData = running.Schema
 
 	return nil
 }
@@ -72,6 +72,18 @@ func (r *Runtime) UseProvider(name string) error {
 func (r *Runtime) Connect(req *proto.ConnectReq) error {
 	if r.Provider == nil {
 		return errors.New("cannot connect, please select a provider first")
+	}
+
+	// TODO: this needs heavy rewriting...
+	// See if there is an existing connection already and use it if available
+	if req.Asset != nil && req.Asset.Spec != nil && len(req.Asset.Spec.Assets) != 0 {
+		asset := req.Asset.Spec.Assets[0]
+		if len(asset.Connections) != 0 {
+			if asset.Connections[0].Id != 0 {
+				r.Connection = &proto.Connection{Id: asset.Connections[0].Id}
+				return nil
+			}
+		}
 	}
 
 	var err error
@@ -98,7 +110,7 @@ func (r *Runtime) CreateResourceWithID(name string, id string, args map[string]*
 }
 
 func (r *Runtime) Resource(name string) (*resources.ResourceInfo, bool) {
-	x, ok := r.schema.Resources[name]
+	x, ok := r.SchemaData.Resources[name]
 	return x, ok
 }
 
@@ -115,7 +127,7 @@ func fieldUID(resource string, id string, field string) string {
 func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID string, callback func(res interface{}, err error)) error {
 	name := resource.MqlName()
 	id := resource.MqlID()
-	info, ok := r.schema.Resources[name]
+	info, ok := r.SchemaData.Resources[name]
 	if !ok {
 		return errors.New("cannot get resource info on " + name)
 	}
@@ -142,5 +154,5 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 }
 
 func (r *Runtime) Schema() *resources.Schema {
-	return r.schema
+	return r.SchemaData
 }

@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/inventory"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
@@ -81,12 +80,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		return nil
 	}
 
-	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not load asset information")
-	}
-
-	assetList := im.GetAssets()
+	assetList := conf.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
 	filteredAssets := []*asset.Asset{}
@@ -129,7 +123,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
-		runtime.Connect(&proto.ConnectReq{
+		err := runtime.Connect(&proto.ConnectReq{
 			Features: config.Features,
 			Asset: &v1.Inventory{
 				Spec: &v1.InventorySpec{
@@ -137,6 +131,9 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 				},
 			},
 		})
+		if err != nil {
+			return err
+		}
 
 		// when we close the shell, we need to close the backend and store the recording
 		onCloseHandler := func() {

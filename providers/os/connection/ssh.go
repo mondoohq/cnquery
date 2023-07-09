@@ -18,6 +18,7 @@ import (
 	rawsftp "github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -35,10 +36,11 @@ const (
 )
 
 type SshConnection struct {
-	fs   afero.Fs
-	Sudo *shared.Sudo
-	id   uint32
-	conf *providers.Config
+	fs        afero.Fs
+	Sudo      *shared.Sudo
+	id        uint32
+	conf      *providers.Config
+	inventory inventory.InventoryManager
 
 	serverVersion    string
 	UseScpFilesystem bool
@@ -46,10 +48,11 @@ type SshConnection struct {
 	SSHClient        *ssh.Client
 }
 
-func NewSshConnection(id uint32, conf *providers.Config) (*SshConnection, error) {
+func NewSshConnection(id uint32, conf *providers.Config, inventory inventory.InventoryManager) (*SshConnection, error) {
 	res := SshConnection{
-		id:   id,
-		conf: conf,
+		id:        id,
+		conf:      conf,
+		inventory: inventory,
 	}
 
 	host := conf.GetHost()
@@ -479,16 +482,21 @@ func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
 
 // prepareConnection determines the auth methods required for a ssh connection and also prepares any other
 // pre-conditions for the connection like tunnelling the connection via AWS SSM session
-func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, error) {
+func prepareConnection(conf *providers.Config) ([]ssh.AuthMethod, []io.Closer, error) {
 	auths := []ssh.AuthMethod{}
 	closer := []io.Closer{}
 
 	// only one public auth method is allowed, therefore multiple keys need to be encapsulated into one auth method
 	sshSigners := []ssh.Signer{}
 
+	// if no credential was provided, fallback to ssh-agent and ssh-config
+	if len(conf.Credentials) == 0 {
+		sshSigners = append(sshSigners, signers.GetSignersFromSSHAgent()...)
+	}
+
 	// use key auth, only load if the key was not found in ssh agent
-	for i := range pCfg.Credentials {
-		credential := pCfg.Credentials[i]
+	for i := range conf.Credentials {
+		credential := conf.Credentials[i]
 
 		switch credential.Type {
 		case vault.CredentialType_private_key:
@@ -518,15 +526,15 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			}
 
 			loadOpts := []func(*awsconf.LoadOptions) error{}
-			if pCfg.Options != nil && pCfg.Options["region"] != "" {
-				loadOpts = append(loadOpts, awsconf.WithRegion(pCfg.Options["region"]))
+			if conf.Options != nil && conf.Options["region"] != "" {
+				loadOpts = append(loadOpts, awsconf.WithRegion(conf.Options["region"]))
 			}
 			profile := ""
-			if pCfg.Options != nil && pCfg.Options["profile"] != "" {
-				loadOpts = append(loadOpts, awsconf.WithSharedConfigProfile(pCfg.Options["profile"]))
-				profile = pCfg.Options["profile"]
+			if conf.Options != nil && conf.Options["profile"] != "" {
+				loadOpts = append(loadOpts, awsconf.WithSharedConfigProfile(conf.Options["profile"]))
+				profile = conf.Options["profile"]
 			}
-			log.Debug().Str("profile", pCfg.Options["profile"]).Str("region", pCfg.Options["region"]).Msg("using aws creds")
+			log.Debug().Str("profile", conf.Options["profile"]).Str("region", conf.Options["region"]).Msg("using aws creds")
 
 			cfg, err := awsconf.LoadDefaultConfig(context.Background(), loadOpts...)
 			if err != nil {
@@ -535,8 +543,8 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 
 			// we use ec2 instance connect api to create credentials for an aws instance
 			eic := awsinstanceconnect.New(cfg)
-			host := pCfg.Host
-			if id, ok := pCfg.Options["instance"]; ok {
+			host := conf.Host
+			if id, ok := conf.Options["instance"]; ok {
 				host = id
 			}
 			creds, err := eic.GenerateCredentials(host, credential.User)
@@ -554,25 +562,25 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			localIp := "localhost"
 			remotePort := "22"
 			// NOTE: for SSM we always target the instance id
-			pCfg.Host = creds.InstanceId
+			conf.Host = creds.InstanceId
 			localPort, err := awsssmsession.GetAvailablePort()
 			if err != nil {
 				return nil, nil, errors.New("could not find an available port to start the ssm proxy")
 			}
-			ssmConn, err := sManager.Dial(pCfg, strconv.Itoa(localPort), remotePort)
+			ssmConn, err := sManager.Dial(conf, strconv.Itoa(localPort), remotePort)
 			if err != nil {
 				return nil, nil, err
 			}
 
 			// update endpoint information for ssh to connect via local ssm proxy
 			// TODO: this has a side-effect, we may need extend the struct to include resolved connection data
-			pCfg.Host = localIp
-			pCfg.Port = int32(localPort)
+			conf.Host = localIp
+			conf.Port = int32(localPort)
 
 			// NOTE: we need to set insecure so that ssh does not complain about the host key
 			// It is okay do that since the connection is established via aws api itself and it ensures that
 			// the instance id is okay
-			pCfg.Insecure = true
+			conf.Insecure = true
 
 			// use the generated ssh credentials for authentication
 			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
@@ -582,14 +590,14 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			sshSigners = append(sshSigners, priv)
 			closer = append(closer, ssmConn)
 		case vault.CredentialType_aws_ec2_instance_connect:
-			log.Debug().Str("profile", pCfg.Options["profile"]).Str("region", pCfg.Options["region"]).Msg("using aws creds")
+			log.Debug().Str("profile", conf.Options["profile"]).Str("region", conf.Options["region"]).Msg("using aws creds")
 
 			loadOpts := []func(*awsconf.LoadOptions) error{}
-			if pCfg.Options != nil && pCfg.Options["region"] != "" {
-				loadOpts = append(loadOpts, awsconf.WithRegion(pCfg.Options["region"]))
+			if conf.Options != nil && conf.Options["region"] != "" {
+				loadOpts = append(loadOpts, awsconf.WithRegion(conf.Options["region"]))
 			}
-			if pCfg.Options != nil && pCfg.Options["profile"] != "" {
-				loadOpts = append(loadOpts, awsconf.WithSharedConfigProfile(pCfg.Options["profile"]))
+			if conf.Options != nil && conf.Options["profile"] != "" {
+				loadOpts = append(loadOpts, awsconf.WithSharedConfigProfile(conf.Options["profile"]))
 			}
 			cfg, err := awsconf.LoadDefaultConfig(context.Background(), loadOpts...)
 			if err != nil {
@@ -597,8 +605,8 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			}
 			log.Debug().Msg("generating instance connect credentials")
 			eic := awsinstanceconnect.New(cfg)
-			host := pCfg.Host
-			if id, ok := pCfg.Options["instance"]; ok {
+			host := conf.Host
+			if id, ok := conf.Options["instance"]; ok {
 				host = id
 			}
 			creds, err := eic.GenerateCredentials(host, credential.User)
@@ -613,7 +621,7 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 			sshSigners = append(sshSigners, priv)
 
 			// NOTE: this creates a side-effect where the host is overwritten
-			pCfg.Host = creds.PublicIpAddress
+			conf.Host = creds.PublicIpAddress
 		default:
 			return nil, nil, errors.New("unsupported authentication mechanism for ssh: " + credential.Type.String())
 		}
@@ -621,11 +629,6 @@ func prepareConnection(pCfg *providers.Config) ([]ssh.AuthMethod, []io.Closer, e
 
 	if len(sshSigners) > 0 {
 		auths = append(auths, ssh.PublicKeys(sshSigners...))
-	}
-
-	// if no credential was provided, fallback to ssh-agent and ssh-config
-	if len(pCfg.Credentials) == 0 {
-		sshSigners = append(sshSigners, signers.GetSignersFromSSHAgent()...)
 	}
 
 	return auths, closer, nil
@@ -640,9 +643,9 @@ func (c *SshConnection) verify() error {
 		out, err = c.runRawCommand(command)
 	} else {
 		out, err = c.runRawCommand("echo 'hi'")
-		if err != nil {
-			return err
-		}
+	}
+	if err != nil {
+		return err
 	}
 
 	if out.ExitStatus == 0 {

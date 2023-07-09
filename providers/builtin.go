@@ -35,7 +35,7 @@ type builtinProvider struct {
 	Config  *plugin.Provider
 }
 
-func mustLoadSchema(name string, data []byte) *resources.Schema {
+func MustLoadSchema(name string, data []byte) *resources.Schema {
 	var res resources.Schema
 	if err := json.Unmarshal(data, &res); err != nil {
 		panic("failed to embed schema for " + name)

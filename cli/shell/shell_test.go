@@ -1,27 +1,31 @@
-package shell
+package shell_test
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/cli/shell"
+	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/provider"
 )
 
-func localShell() *Shell {
-	transport, err := local.New()
+func localShell() *shell.Shell {
+	runtime := providers.Coordinator.NewRuntime()
+	schema, err := os.ReadFile("../../providers/os/dist/os.resources.json")
 	if err != nil {
 		panic(err.Error())
 	}
 
-	motor, err := motor.New(transport)
+	runtime.SchemaData = providers.MustLoadSchema("os", schema)
+	runtime.Connection, err = provider.Init().Connect(provider.LocalAssetReq)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	res, err := New(motor)
+	res, err := shell.New(runtime)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -29,19 +33,14 @@ func localShell() *Shell {
 	return res
 }
 
-func mockShell(filename string, opts ...ShellOption) *Shell {
-	filepath, _ := filepath.Abs(filename)
-	provider, err := mock.NewFromTomlFile(filepath)
+func mockShell(filename string, opts ...shell.ShellOption) *shell.Shell {
+	path, _ := filepath.Abs(filename)
+	runtime, err := mock.NewFromTomlFile(path)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	motor, err := motor.New(provider)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	res, err := New(motor, opts...)
+	res, err := shell.New(runtime, opts...)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -67,11 +66,11 @@ func TestShell_RunOnce(t *testing.T) {
 func TestShell_Help(t *testing.T) {
 	shell := localShell()
 	assert.NotPanics(t, func() {
-		shell.execCmd("help")
+		shell.ExecCmd("help")
 	}, "should not panic on help command")
 
 	assert.NotPanics(t, func() {
-		shell.execCmd("help platform")
+		shell.ExecCmd("help platform")
 	}, "should not panic on help subcommand")
 }
 

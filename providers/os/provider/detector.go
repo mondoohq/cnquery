@@ -5,6 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/providers/os/detector"
 	"go.mondoo.com/cnquery/providers/os/id/aws"
 	"go.mondoo.com/cnquery/providers/os/id/azure"
@@ -55,8 +56,8 @@ func mapDetectors(raw []string) map[string]struct{} {
 	return res
 }
 
-func (s *Service) detect(asset *asset.Asset) error {
-	conn, err := s.connect(asset)
+func (s *Service) detect(asset *asset.Asset, inventory inventory.InventoryManager) error {
+	conn, err := s.connect(asset, inventory)
 	if err != nil {
 		return err
 	}

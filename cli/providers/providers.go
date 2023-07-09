@@ -163,6 +163,11 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 		Short: cmd.Action + connector.Short,
 		Long:  connector.Long,
 	}
+
+	cmd.Command.Flags().VisitAll(func(flag *pflag.Flag) {
+		res.Flags().AddFlag(flag)
+	})
+
 	cmd.Command.AddCommand(res)
 	setConnector(provider, connector, cmd.Run, res)
 }

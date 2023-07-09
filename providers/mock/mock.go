@@ -245,3 +245,7 @@ func (m *Mock) LoadSchemas(f func(name string) *resources.Schema) error {
 	}
 	return nil
 }
+
+func (m *Mock) Close() {
+	// nothing to do yet...
+}

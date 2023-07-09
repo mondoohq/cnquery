@@ -75,6 +75,7 @@ message Config {
   // Therefore it is up to the provider to convert the port to what they need
   int32 port = 3;
   string path = 4;
+  uint32 id = 5;
 
   // credentials available for this provider configuration
   repeated cnquery.motor.vault.v1.Credential credentials = 11;
