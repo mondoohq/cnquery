@@ -4,6 +4,7 @@ import (
 	"io"
 	"sync"
 
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/plugin"
 )
 
@@ -30,7 +31,7 @@ func (c *mqlCommand) execute(cmd string) error {
 	c.commandIsRunning = true
 	c.lock.Unlock()
 
-	x, err := c.MqlRuntime.Connection.RunCommand(cmd)
+	x, err := c.MqlRuntime.Connection.(shared.Connection).RunCommand(cmd)
 	if err != nil {
 		c.Exitcode = plugin.TValue[int64]{Error: err, State: plugin.StateIsSet}
 		c.Stdout = plugin.TValue[string]{Error: err, State: plugin.StateIsSet}

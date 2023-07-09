@@ -10,20 +10,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/os/cmd"
-	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/connection/ssh/cat"
 )
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/cat.toml")
-	p, err := mock.NewFromTomlFile(filepath)
+	p, err := mock.New(filepath)
 	require.NoError(t, err)
 
 	cw := &CommandWrapper{
 		commandRunner: p,
-		wrapper:       cmd.NewSudo(),
+		wrapper:       shared.NewSudo(),
 	}
 
 	catfs := cat.New(cw)
@@ -70,10 +69,10 @@ UsePAM yes
 
 type CommandWrapper struct {
 	commandRunner cat.CommandRunner
-	wrapper       cmd.Wrapper
+	wrapper       shared.Wrapper
 }
 
-func (cw *CommandWrapper) RunCommand(command string) (*os_provider.Command, error) {
+func (cw *CommandWrapper) RunCommand(command string) (*shared.Command, error) {
 	cmd := cw.wrapper.Build(command)
 	return cw.commandRunner.RunCommand(cmd)
 }

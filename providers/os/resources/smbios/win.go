@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const smbiosWindowsScript = `
@@ -73,7 +73,7 @@ type smbiosSystemProduct struct {
 // see https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/sample-powershell-script-to-query-smbios-locally
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/bringup/smbios
 type WindowsSmbiosManager struct {
-	provider connection.Connection
+	provider shared.Connection
 }
 
 func (s *WindowsSmbiosManager) Name() string {

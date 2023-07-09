@@ -6,13 +6,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/providers/os/id/awsecs"
 	"go.mondoo.com/cnquery/providers/os/resources/smbios"
 )
 
-func readValue(conn connection.Connection, fPath string) string {
+func readValue(conn shared.Connection, fPath string) string {
 	content, err := afero.ReadFile(conn.FileSystem(), fPath)
 	if err != nil {
 		log.Debug().Err(err).Msgf("unable to read %s", fPath)
@@ -21,7 +21,7 @@ func readValue(conn connection.Connection, fPath string) string {
 	return string(content)
 }
 
-func Detect(conn connection.Connection, p *platform.Platform) (string, string, []string) {
+func Detect(conn shared.Connection, p *platform.Platform) (string, string, []string) {
 	var values []string
 	if p.IsFamily("linux") {
 		// Fetching the data from the smbios manager is slow for some transports

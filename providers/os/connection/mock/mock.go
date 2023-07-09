@@ -16,7 +16,7 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 // Data holds the mocked data entries
@@ -104,7 +104,7 @@ func (c *Connection) ID() uint32 {
 	return c.uid
 }
 
-func (c *Connection) Type() connection.ConnectionType {
+func (c *Connection) Type() shared.ConnectionType {
 	return "local"
 }
 
@@ -114,7 +114,7 @@ func hashCmd(message string) string {
 	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func (c *Connection) RunCommand(command string) (*connection.Command, error) {
+func (c *Connection) RunCommand(command string) (*shared.Command, error) {
 	found, ok := c.data.Commands[command]
 	if !ok {
 		// try to fetch command by hash (more reliable for whitespace)
@@ -122,7 +122,7 @@ func (c *Connection) RunCommand(command string) (*connection.Command, error) {
 	}
 	if !ok {
 		c.missing["command"][command] = true
-		return &connection.Command{
+		return &shared.Command{
 			Command:    command,
 			Stdout:     bytes.NewBuffer([]byte{}),
 			Stderr:     bytes.NewBufferString("command not found: " + command),
@@ -130,7 +130,7 @@ func (c *Connection) RunCommand(command string) (*connection.Command, error) {
 		}, nil
 	}
 
-	return &connection.Command{
+	return &shared.Command{
 		Command:    command,
 		Stdout:     bytes.NewBufferString(found.Stdout),
 		Stderr:     bytes.NewBufferString(found.Stderr),
@@ -138,16 +138,16 @@ func (c *Connection) RunCommand(command string) (*connection.Command, error) {
 	}, nil
 }
 
-func (c *Connection) FileInfo(path string) (connection.FileInfoDetails, error) {
+func (c *Connection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	found, ok := c.data.Files[path]
 	if !ok {
-		return connection.FileInfoDetails{}, errors.New("file not found: " + path)
+		return shared.FileInfoDetails{}, errors.New("file not found: " + path)
 	}
 
 	stat := found.StatData
-	return connection.FileInfoDetails{
+	return shared.FileInfoDetails{
 		Size: stat.Size,
-		Mode: connection.FileModeDetails{
+		Mode: shared.FileModeDetails{
 			FileMode: stat.Mode,
 		},
 		Uid: stat.Uid,
@@ -301,7 +301,7 @@ func (mf *MockFile) Stat() (os.FileInfo, error) {
 		size = int64(len(mf.data.Content))
 	}
 
-	return &connection.FileInfo{
+	return &shared.FileInfo{
 		FName:    filepath.Base(mf.data.Path),
 		FSize:    size,
 		FModTime: mf.data.StatData.ModTime,

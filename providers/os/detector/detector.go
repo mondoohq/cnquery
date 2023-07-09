@@ -5,9 +5,10 @@ import (
 
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
-func DetectOS(conn connection.Connection) (*platform.Platform, bool) {
+func DetectOS(conn shared.Connection) (*platform.Platform, bool) {
 	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
 		return WindowsFamily.Resolve(conn)
 	}

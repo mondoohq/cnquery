@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type SmBiosInfo struct {
@@ -57,7 +57,7 @@ type SmBiosManager interface {
 	Info() (*SmBiosInfo, error)
 }
 
-func ResolveManager(conn connection.Connection, pf *platform.Platform) (SmBiosManager, error) {
+func ResolveManager(conn shared.Connection, pf *platform.Platform) (SmBiosManager, error) {
 	var biosM SmBiosManager
 
 	// check darwin before unix since darwin is also a unix

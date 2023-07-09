@@ -7,17 +7,17 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
-func NewOSReleaseDetector(conn connection.Connection) *OSReleaseDetector {
+func NewOSReleaseDetector(conn shared.Connection) *OSReleaseDetector {
 	return &OSReleaseDetector{
 		provider: conn,
 	}
 }
 
 type OSReleaseDetector struct {
-	provider connection.Connection
+	provider shared.Connection
 }
 
 func (d *OSReleaseDetector) command(command string) (string, error) {

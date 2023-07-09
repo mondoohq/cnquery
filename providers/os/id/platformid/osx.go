@@ -6,14 +6,14 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 // MacOSIdProvider read the operating system id by calling
 // "ioreg -rd1 -c IOPlatformExpertDevice" and extracting
 // the IOPlatformUUID
 type MacOSIdProvider struct {
-	connection connection.Connection
+	connection shared.Connection
 }
 
 func (p *MacOSIdProvider) Name() string {

@@ -7,12 +7,12 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/os/statutil"
+	"go.mondoo.com/cnquery/providers/os/connection/local/statutil"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type CommandRunner interface {
-	RunCommand(command string) (*os_provider.Command, error)
+	RunCommand(command string) (*shared.Command, error)
 }
 
 func New(cmdRunner CommandRunner) *Fs {

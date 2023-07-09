@@ -7,10 +7,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
-func Hostname(conn connection.Connection, pf *platform.Platform) (string, bool) {
+func Hostname(conn shared.Connection, pf *platform.Platform) (string, bool) {
 	var hostname string
 
 	if !pf.IsFamily(platform.FAMILY_UNIX) && !pf.IsFamily(platform.FAMILY_WINDOWS) {

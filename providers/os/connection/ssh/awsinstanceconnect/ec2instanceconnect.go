@@ -4,14 +4,13 @@ import (
 	"context"
 	"net"
 
-	"github.com/cockroachdb/errors"
-	"github.com/sethvargo/go-password/password"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2instanceconnect"
-	"go.mondoo.com/cnquery/motor/providers/ssh/keypair"
+	"github.com/cockroachdb/errors"
+	"github.com/sethvargo/go-password/password"
+	"go.mondoo.com/cnquery/providers/os/connection/ssh/keypair"
 )
 
 type generator struct {

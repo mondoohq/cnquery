@@ -2,7 +2,6 @@ package connection
 
 import (
 	"bytes"
-	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -11,16 +10,17 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
-	Local ConnectionType = "local"
+	Local shared.ConnectionType = "local"
 )
 
 type LocalConnection struct {
 	shell   []string
 	fs      afero.Fs
-	Sudo    *Sudo
+	Sudo    *shared.Sudo
 	runtime string
 	id      uint32
 }
@@ -46,11 +46,11 @@ func (p *LocalConnection) ID() uint32 {
 	return p.id
 }
 
-func (p *LocalConnection) Type() ConnectionType {
+func (p *LocalConnection) Type() shared.ConnectionType {
 	return Local
 }
 
-func (p *LocalConnection) RunCommand(command string) (*Command, error) {
+func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {
 	log.Debug().Msgf("local> run command %s", command)
 	if p.Sudo != nil {
 		command = p.Sudo.Build(command)
@@ -77,57 +77,23 @@ func (p *LocalConnection) FileSystem() afero.Fs {
 	return p.fs
 }
 
-func (p *LocalConnection) FileInfo(path string) (FileInfoDetails, error) {
+func (p *LocalConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
 	fs := p.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 	stat, err := afs.Stat(path)
 	if err != nil {
-		return FileInfoDetails{}, err
+		return shared.FileInfoDetails{}, err
 	}
 
 	uid, gid := p.fileowner(stat)
 
 	mode := stat.Mode()
-	return FileInfoDetails{
-		Mode: FileModeDetails{mode},
+	return shared.FileInfoDetails{
+		Mode: shared.FileModeDetails{mode},
 		Size: stat.Size(),
 		Uid:  uid,
 		Gid:  gid,
 	}, nil
-}
-
-type FileInfo struct {
-	FName    string
-	FSize    int64
-	FIsDir   bool
-	FModTime time.Time
-	FMode    os.FileMode
-	Uid      int64
-	Gid      int64
-}
-
-func (f *FileInfo) Name() string {
-	return f.FName
-}
-
-func (f *FileInfo) Size() int64 {
-	return f.FSize
-}
-
-func (f *FileInfo) Mode() os.FileMode {
-	return f.FMode
-}
-
-func (f *FileInfo) ModTime() time.Time {
-	return f.FModTime
-}
-
-func (f *FileInfo) IsDir() bool {
-	return f.FIsDir
-}
-
-func (f *FileInfo) Sys() interface{} {
-	return f
 }
 
 func (p *LocalConnection) Close() {
@@ -135,12 +101,12 @@ func (p *LocalConnection) Close() {
 }
 
 type commandRunner struct {
-	Command
+	shared.Command
 	cmdExecutor *exec.Cmd
 	Shell       []string
 }
 
-func (c *commandRunner) Exec(usercmd string, args []string) (*Command, error) {
+func (c *commandRunner) Exec(usercmd string, args []string) (*shared.Command, error) {
 	c.Command.Stats.Start = time.Now()
 
 	var cmd string

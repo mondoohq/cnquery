@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type Identity struct {
@@ -19,7 +20,7 @@ type InstanceIdentifier interface {
 	Identify() (Identity, error)
 }
 
-func Resolve(conn connection.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
+func Resolve(conn shared.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
 		// for local environments we must have a config, or it won't work

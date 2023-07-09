@@ -3,12 +3,12 @@ package platformid
 import (
 	"io"
 
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const wmiMachineIDQuery = "SELECT UUID FROM Win32_ComputerSystemProduct"
 
-func PowershellWindowsMachineId(conn connection.Connection) (string, error) {
+func PowershellWindowsMachineId(conn shared.Connection) (string, error) {
 	cmd, err := conn.RunCommand("powershell -c \"Get-WmiObject -Query '" + wmiMachineIDQuery + "' | Select-Object -ExpandProperty UUID\"")
 	if err != nil {
 		return "", err
@@ -22,7 +22,7 @@ func PowershellWindowsMachineId(conn connection.Connection) (string, error) {
 }
 
 type WinIdProvider struct {
-	connection connection.Connection
+	connection shared.Connection
 }
 
 func (p *WinIdProvider) Name() string {

@@ -3,10 +3,10 @@ package detector
 import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
-type detect func(r *PlatformResolver, pf *platform.Platform, conn connection.Connection) (bool, error)
+type detect func(r *PlatformResolver, pf *platform.Platform, conn shared.Connection) (bool, error)
 
 type PlatformResolver struct {
 	Name     string
@@ -15,7 +15,7 @@ type PlatformResolver struct {
 	Detect   detect
 }
 
-func (r *PlatformResolver) Resolve(conn connection.Connection) (*platform.Platform, bool) {
+func (r *PlatformResolver) Resolve(conn shared.Connection) (*platform.Platform, bool) {
 	// prepare detect info object
 	di := &platform.Platform{}
 	di.Family = make([]string, 0)
@@ -57,7 +57,7 @@ func (r *PlatformResolver) Resolve(conn connection.Connection) (*platform.Platfo
 // Resolve tries to find recursively all
 // platforms until a leaf (operating systems) detect
 // mechanism is returning true
-func (r *PlatformResolver) resolvePlatform(pf *platform.Platform, conn connection.Connection) (*platform.Platform, bool) {
+func (r *PlatformResolver) resolvePlatform(pf *platform.Platform, conn shared.Connection) (*platform.Platform, bool) {
 	detected, err := r.Detect(r, pf, conn)
 	if err != nil {
 		return pf, false

@@ -35,16 +35,24 @@ var IdDetectors = []string{
 	IdDetector_SshHostkey,
 }
 
-func hasDetector(all []string, any ...string) bool {
-	if len(all) == 0 {
-		return true
-	}
+func hasDetector(detectors map[string]struct{}, any ...string) bool {
 	for i := range any {
-		if all[0] == any[i] {
+		if _, ok := detectors[any[i]]; ok {
 			return true
 		}
 	}
 	return false
+}
+
+func mapDetectors(raw []string) map[string]struct{} {
+	if len(raw) == 0 {
+		raw = IdDetectors
+	}
+	res := make(map[string]struct{}, len(raw))
+	for _, v := range raw {
+		res[v] = struct{}{}
+	}
+	return res
 }
 
 func (s *Service) detect(asset *asset.Asset) error {
@@ -59,13 +67,15 @@ func (s *Service) detect(asset *asset.Asset) error {
 		return errors.New("failed to detect OS")
 	}
 
-	if hasDetector(asset.IdDetector, IdDetector_Hostname) {
+	detectors := mapDetectors(asset.IdDetector)
+
+	if hasDetector(detectors, IdDetector_Hostname) {
 		if id, ok := hostname.Hostname(conn, asset.Platform); ok {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 		}
 	}
 
-	if hasDetector(asset.IdDetector, IdDetector_CloudDetect, IdDetector_AwsEc2) {
+	if hasDetector(detectors, IdDetector_CloudDetect, IdDetector_AwsEc2) {
 		if id, name, related := aws.Detect(conn, asset.Platform); id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 			asset.Platform.Name = name
@@ -85,7 +95,7 @@ func (s *Service) detect(asset *asset.Asset) error {
 		}
 	}
 
-	if hasDetector(asset.IdDetector, IdDetector_SshHostkey) {
+	if hasDetector(detectors, IdDetector_SshHostkey) {
 		ids, err := sshhostkey.Detect(conn, asset.Platform)
 		if err != nil {
 			log.Warn().Err(err).Msg("failure in ssh hostkey detector")
@@ -94,7 +104,7 @@ func (s *Service) detect(asset *asset.Asset) error {
 		}
 	}
 
-	if hasDetector(asset.IdDetector, IdDetector_MachineID) {
+	if hasDetector(detectors, IdDetector_MachineID) {
 		id, hostErr := machineid.MachineId(conn, asset.Platform)
 		if hostErr != nil {
 			log.Warn().Err(err).Msg("failure in machineID detector")

@@ -1,4 +1,4 @@
-package connection
+package shared
 
 import (
 	"io"
@@ -33,6 +33,40 @@ type Command struct {
 type PerfStats struct {
 	Start    time.Time     `json:"start"`
 	Duration time.Duration `json:"duration"`
+}
+
+type FileInfo struct {
+	FName    string
+	FSize    int64
+	FIsDir   bool
+	FModTime time.Time
+	FMode    os.FileMode
+	Uid      int64
+	Gid      int64
+}
+
+func (f *FileInfo) Name() string {
+	return f.FName
+}
+
+func (f *FileInfo) Size() int64 {
+	return f.FSize
+}
+
+func (f *FileInfo) Mode() os.FileMode {
+	return f.FMode
+}
+
+func (f *FileInfo) ModTime() time.Time {
+	return f.FModTime
+}
+
+func (f *FileInfo) IsDir() bool {
+	return f.FIsDir
+}
+
+func (f *FileInfo) Sys() interface{} {
+	return f
 }
 
 type FileInfoDetails struct {
@@ -163,4 +197,8 @@ func (sudo *Sudo) Build(cmd string) string {
 	}
 
 	return sb.String()
+}
+
+type Wrapper interface {
+	Build(cmd string) string
 }

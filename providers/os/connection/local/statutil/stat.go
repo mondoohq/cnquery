@@ -13,11 +13,11 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type CommandRunner interface {
-	RunCommand(command string) (*os_provider.Command, error)
+	RunCommand(command string) (*shared.Command, error)
 }
 
 var ESCAPEREGEX = regexp.MustCompile(`[^\w@%+=:,./-]`)
@@ -168,7 +168,7 @@ func (s *statHelper) linux(name string) (os.FileInfo, error) {
 	// extract file modes
 	mapMode := toFileMode(mask)
 
-	return &os_provider.FileInfo{
+	return &shared.FileInfo{
 		FName:    filepath.Base(path),
 		FSize:    int64(size),
 		FMode:    mapMode,
@@ -238,7 +238,7 @@ func (s *statHelper) unix(name string) (os.FileInfo, error) {
 		return nil, errors.Wrap(err, "could not stat "+name)
 	}
 
-	return &os_provider.FileInfo{
+	return &shared.FileInfo{
 		FName:    filepath.Base(path),
 		FSize:    int64(size),
 		FMode:    mode,

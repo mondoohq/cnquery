@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 var WinBuildVersionRegex = regexp.MustCompile(`^(\d+)(?:\.(\d+)){0,1}`)
@@ -79,7 +79,7 @@ func ParseWinRegistryCurrentVersion(r io.Reader) (*WindowsCurrentVersion, error)
 }
 
 // powershellGetWindowsOSBuild runs a powershell script to retrieve the current version from windows
-func powershellGetWindowsOSBuild(conn connection.Connection) (*WindowsCurrentVersion, error) {
+func powershellGetWindowsOSBuild(conn shared.Connection) (*WindowsCurrentVersion, error) {
 	pscommand := "Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' -Name CurrentBuild, UBR, EditionID | ConvertTo-Json"
 	cmd, err := conn.RunCommand(powershell.Wrap(pscommand))
 	if err != nil {

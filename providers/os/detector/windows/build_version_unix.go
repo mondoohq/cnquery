@@ -3,8 +3,8 @@
 
 package windows
 
-import "go.mondoo.com/cnquery/providers/os/connection"
+import "go.mondoo.com/cnquery/providers/os/connection/shared"
 
-func GetWindowsOSBuild(conn connection.Connection) (*WindowsCurrentVersion, error) {
+func GetWindowsOSBuild(conn shared.Connection) (*WindowsCurrentVersion, error) {
 	return powershellGetWindowsOSBuild(conn)
 }

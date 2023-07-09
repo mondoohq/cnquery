@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"go.mondoo.com/cnquery/motor/providers/ssh/signers"
+	"go.mondoo.com/cnquery/providers/os/connection/ssh/signers"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/crypto/ssh"
 )

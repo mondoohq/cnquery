@@ -6,12 +6,14 @@ package connection
 import (
 	"os"
 	"syscall"
+
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 func (c *LocalConnection) fileowner(stat os.FileInfo) (int64, int64) {
 	uid := int64(-1)
 	gid := int64(-1)
-	if stat, ok := stat.Sys().(*FileInfo); ok {
+	if stat, ok := stat.Sys().(*shared.FileInfo); ok {
 		uid = stat.Uid
 		gid = stat.Gid
 	}

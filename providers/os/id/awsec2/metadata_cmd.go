@@ -14,7 +14,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 	tagNameUrl  = "http://169.254.169.254/latest/meta-data/tags/instance/Name"
 )
 
-func NewCommandInstanceMetadata(conn connection.Connection, pf *platform.Platform, config *aws.Config) *CommandInstanceMetadata {
+func NewCommandInstanceMetadata(conn shared.Connection, pf *platform.Platform, config *aws.Config) *CommandInstanceMetadata {
 	return &CommandInstanceMetadata{
 		conn:     conn,
 		platform: pf,
@@ -31,7 +31,7 @@ func NewCommandInstanceMetadata(conn connection.Connection, pf *platform.Platfor
 }
 
 type CommandInstanceMetadata struct {
-	conn     connection.Connection
+	conn     shared.Connection
 	platform *platform.Platform
 	config   *aws.Config
 }

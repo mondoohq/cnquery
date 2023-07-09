@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type LinuxSmbiosManager struct {
-	provider connection.Connection
+	provider shared.Connection
 }
 
 func (s *LinuxSmbiosManager) Name() string {

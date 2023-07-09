@@ -3,8 +3,8 @@
 
 package windows
 
-import "go.mondoo.com/cnquery/providers/os/connection"
+import "go.mondoo.com/cnquery/providers/os/connection/shared"
 
-func GetWmiInformation(conn connection.Connection) (*WmicOSInformation, error) {
+func GetWmiInformation(conn shared.Connection) (*WmicOSInformation, error) {
 	return powershellGetWmiInformation(conn)
 }

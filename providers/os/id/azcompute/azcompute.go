@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/plugin"
 )
 
@@ -35,7 +35,7 @@ type InstanceIdentifier interface {
 	Identify() (Identity, error)
 }
 
-func Resolve(conn connection.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
+func Resolve(conn shared.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
 	if pf.IsFamily(platform.FAMILY_UNIX) || pf.IsFamily(platform.FAMILY_WINDOWS) {
 		return &commandInstanceMetadata{conn, pf}, nil
 	}
@@ -43,7 +43,7 @@ func Resolve(conn connection.Connection, pf *platform.Platform) (InstanceIdentif
 }
 
 type commandInstanceMetadata struct {
-	conn     connection.Connection
+	conn     shared.Connection
 	platform *platform.Platform
 }
 

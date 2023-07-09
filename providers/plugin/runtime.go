@@ -4,15 +4,16 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/proto"
 	"go.mondoo.com/cnquery/types"
 )
 
 type Runtime struct {
-	Connection connection.Connection
+	Connection Connection
 	Resources  map[string]Resource
 }
+
+type Connection interface{}
 
 type Resource interface {
 	MqlID() string

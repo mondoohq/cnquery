@@ -4,14 +4,14 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 // LinuxIdProvider read the following files to extract the machine id
 // "/var/lib/dbus/machine-id" and "/etc/machine-id"
 // TODO: this approach is only reliable for systemd managed machines
 type LinuxIdProvider struct {
-	connection connection.Connection
+	connection shared.Connection
 }
 
 func (p *LinuxIdProvider) Name() string {

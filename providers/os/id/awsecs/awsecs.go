@@ -10,7 +10,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
 
@@ -64,12 +64,12 @@ type InstanceIdentifier interface {
 	Identify() (Identity, error)
 }
 
-func Resolve(conn connection.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
+func Resolve(conn shared.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
 	return &containerMetadata{conn, pf}, nil
 }
 
 type containerMetadata struct {
-	conn     connection.Connection
+	conn     shared.Connection
 	platform *platform.Platform
 }
 
