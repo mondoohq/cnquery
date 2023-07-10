@@ -156,11 +156,14 @@ func ref2resultV2(value interface{}, typ types.Type) (*Primitive, error) {
 }
 
 func int2result(value interface{}, typ types.Type) (*Primitive, error) {
-	v, ok := value.(int64)
-	if !ok {
-		return nil, errInvalidConversion(value, typ)
+	if v, ok := value.(int64); ok {
+		return IntPrimitive(v), nil
 	}
-	return IntPrimitive(v), nil
+	// try to convert float64, which happens when we load this from JSON
+	if v, ok := value.(float64); ok {
+		return IntPrimitive(int64(v)), nil
+	}
+	return nil, errInvalidConversion(value, typ)
 }
 
 func float2result(value interface{}, typ types.Type) (*Primitive, error) {

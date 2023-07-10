@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/platform/detector"
 	"go.mondoo.com/cnquery/motor/providers"
 	os_provider "go.mondoo.com/cnquery/motor/providers/os"
 	"go.mondoo.com/cnquery/motor/providers/os/events"
@@ -27,8 +26,7 @@ func WithRecoding(record bool) MotorOption {
 // implement special case for local platform to speed things up, this is especially important on windows where
 // powershell calls are pretty expensive and slow
 var (
-	localProviderLock     = &sync.Mutex{}
-	localProviderDetector *detector.Detector
+	localProviderLock = &sync.Mutex{}
 )
 
 func New(provider providers.Instance, motorOpts ...MotorOption) (*Motor, error) {
@@ -41,7 +39,6 @@ type Motor struct {
 
 	Provider    providers.Instance
 	asset       *asset.Asset
-	detector    *detector.Detector
 	watcher     providers.Watcher
 	isRecording bool
 	isClosed    bool
@@ -50,7 +47,7 @@ type Motor struct {
 func (m *Motor) Platform() (*platform.Platform, error) {
 	m.l.Lock()
 	defer m.l.Unlock()
-	return m.detector.Platform()
+	return nil, nil
 }
 
 func (m *Motor) Watcher() providers.Watcher {

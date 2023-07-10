@@ -46,6 +46,10 @@ func (p *LocalConnection) ID() uint32 {
 	return p.id
 }
 
+func (p *LocalConnection) Name() string {
+	return "local"
+}
+
 func (p *LocalConnection) Type() shared.ConnectionType {
 	return Local
 }

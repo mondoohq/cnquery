@@ -23,9 +23,9 @@ type Command struct {
 	Action  string
 }
 
-// ProcessCLI will attempt to parse the current commandline and look for providers.
+// AttachCLIs will attempt to parse the current commandline and look for providers.
 // This step is done before cobra ever takes effect
-func ProcessCLI(rootCmd *cobra.Command, commands ...*Command) error {
+func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 	existing, err := providers.List()
 	if err != nil {
 		return err
@@ -184,6 +184,16 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			Type: plugin.FlagType_List,
 			Desc: "Enable the discovery of nested assets. Supports: " + strings.Join(supportedDiscoveries, ","),
 		},
+		{
+			Long: "record",
+			Type: plugin.FlagType_Bool,
+			Desc: "Enable the recording of all resources and fields",
+		},
+		{
+			Long: "recording",
+			Type: plugin.FlagType_String,
+			Desc: "Use a recording for caching or create a new recording (with --record)",
+		},
 	}
 
 	allFlags := append(connector.Flags, builtinFlags...)
@@ -231,12 +241,29 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 		// ^^
 
+		recording, err := cc.Flags().GetString("recording")
+		if err != nil {
+			log.Warn().Msg("failed to get flag --recording")
+		}
+		doRecord, err := cc.Flags().GetBool("record")
+		if err != nil {
+			log.Warn().Msg("failed to get flag --record")
+		}
+
+		// the following flags are not processed by the provider; we handle them
+		// here instead
+		skipFlags := map[string]struct{}{
+			"ask-pass":  {},
+			"record":    {},
+			"recording": {},
+		}
+
 		flagVals := map[string]*llx.Primitive{}
 		for i := range allFlags {
 			flag := allFlags[i]
 
-			// we skip this because it's coded above
-			if flag.Long == "ask-pass" {
+			// we skip these because they are coded above
+			if _, skip := skipFlags[flag.Long]; skip {
 				continue
 			}
 
@@ -268,6 +295,11 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if err := runtime.UseProvider(provider.Name); err != nil {
 			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
+		}
+
+		runtime.Recording, err = providers.NewRecording(recording, doRecord)
+		if err != nil {
+			log.Fatal().Msg(err.Error())
 		}
 
 		cliRes, err := runtime.Provider.Plugin.ParseCLI(&proto.ParseCLIReq{

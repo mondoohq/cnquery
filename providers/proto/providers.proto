@@ -31,6 +31,7 @@ message ConnectReq {
 
 message Connection {
   uint32 id = 1;
+  string name = 2;
 }
 
 message DataReq {

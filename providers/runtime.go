@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/proto"
 	"go.mondoo.com/cnquery/resources"
@@ -17,6 +18,9 @@ type Runtime struct {
 	Connection     *proto.Connection
 	SchemaData     *resources.Schema
 	UpstreamConfig *UpstreamConfig
+	Recording      Recording
+
+	isClosed bool
 }
 
 // mondoo platform config so that resource scan talk upstream
@@ -40,6 +44,15 @@ func (c *coordinator) NewRuntime() *Runtime {
 }
 
 func (r *Runtime) Close() {
+	if r.isClosed {
+		return
+	}
+	r.isClosed = true
+
+	if err := r.Recording.Save(); err != nil {
+		log.Error().Err(err).Msg("failed to save recording")
+	}
+
 	r.coordinator.Close(r.Provider)
 	r.SchemaData = nil
 }
@@ -74,21 +87,30 @@ func (r *Runtime) Connect(req *proto.ConnectReq) error {
 		return errors.New("cannot connect, please select a provider first")
 	}
 
-	// TODO: this needs heavy rewriting...
-	// See if there is an existing connection already and use it if available
-	if req.Asset != nil && req.Asset.Spec != nil && len(req.Asset.Spec.Assets) != 0 {
-		asset := req.Asset.Spec.Assets[0]
-		if len(asset.Connections) != 0 {
-			if asset.Connections[0].Id != 0 {
-				r.Connection = &proto.Connection{Id: asset.Connections[0].Id}
-				return nil
-			}
-		}
+	if req.Asset == nil || req.Asset.Spec == nil || len(req.Asset.Spec.Assets) == 0 {
+		return errors.New("cannot connect, no asset info provided")
+	}
+
+	asset := req.Asset.Spec.Assets[0]
+	if len(asset.Connections) == 0 {
+		return errors.New("cannot connect to asset, no connection info provided")
+	}
+
+	conn := asset.Connections[0]
+	if conn.Id != 0 {
+		r.Connection = &proto.Connection{Id: asset.Connections[0].Id}
+		r.Recording.EnsureAsset(asset, r.Provider.Name, conn)
+		return nil
 	}
 
 	var err error
 	r.Connection, err = r.Provider.Plugin.Connect(req)
-	return err
+	if err != nil {
+		return err
+	}
+
+	r.Recording.EnsureAsset(asset, r.Provider.Name, conn)
+	return nil
 }
 
 func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
@@ -99,6 +121,24 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 	}, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if cached, ok := r.Recording.GetResource(r.Connection.Id, name, string(res.Data.Value)); ok {
+		fields, err := RawDataArgsToPrimitiveArgs(cached)
+		if err != nil {
+			log.Error().Str("resource", name).Str("id", string(res.Data.Value)).Msg("failed to load resource from recording")
+		} else {
+			r.Provider.Plugin.StoreData(&proto.StoreReq{
+				Connection: r.Connection.Id,
+				Resources: []*proto.Resource{{
+					Name:   name,
+					Id:     string(res.Data.Value),
+					Fields: fields,
+				}},
+			})
+		}
+	} else {
+		r.Recording.AddData(r.Connection.Id, name, string(res.Data.Value), "", nil)
 	}
 
 	typ := types.Type(res.Data.Type)
@@ -135,6 +175,11 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 		return errors.New("cannot get field '" + field + "' for resource '" + name + "'")
 	}
 
+	if cached, ok := r.Recording.GetData(r.Connection.Id, name, id, field); ok {
+		callback(cached.Value, cached.Error)
+		return nil
+	}
+
 	data, err := r.Provider.Plugin.GetData(&proto.DataReq{
 		Connection: r.Connection.Id,
 		Resource:   name,
@@ -149,6 +194,9 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 		err = errors.New(data.Error)
 	}
 	raw := data.Data.RawData()
+
+	r.Recording.AddData(r.Connection.Id, name, id, field, raw)
+
 	callback(raw.Value, err)
 	return nil
 }

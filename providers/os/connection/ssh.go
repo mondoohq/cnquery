@@ -112,6 +112,10 @@ func (c *SshConnection) ID() uint32 {
 	return c.id
 }
 
+func (c *SshConnection) Name() string {
+	return "ssh"
+}
+
 func (c *SshConnection) Type() shared.ConnectionType {
 	return SSH
 }

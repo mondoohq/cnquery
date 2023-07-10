@@ -47,6 +47,7 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 	conn := &providers.Config{
 		Sudo:     shared.ParseSudo(flags),
 		Discover: parseDiscover(flags),
+		Type:     req.Connector,
 	}
 
 	port := 0
@@ -177,7 +178,10 @@ func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 		return nil, err
 	}
 
-	return &proto.Connection{Id: uint32(conn.ID())}, nil
+	return &proto.Connection{
+		Id:   uint32(conn.ID()),
+		Name: conn.Name(),
+	}, nil
 }
 
 func resolveConnection(conn *providers.Config, inventory inventory.InventoryManager) (*providers.Config, error) {
