@@ -350,9 +350,9 @@ func indent(indent int) string {
 
 // listAvailableResources lists resource names and their title
 func (s *Shell) listAvailableResources() {
-	schema := s.Runtime.Schema()
-	keys := sortx.Keys(schema.Resources)
-	s.renderResources(schema, keys)
+	resources := s.Runtime.Schema().AllResources()
+	keys := sortx.Keys(resources)
+	s.renderResources(resources, keys)
 }
 
 // listFilteredResources displays the schema of one or many resources that start with the provided prefix
@@ -363,27 +363,27 @@ func (s *Shell) listFilteredResources(cmd string) {
 	}
 
 	search := m[1]
-	schema := s.Runtime.Schema()
+	resources := s.Runtime.Schema().AllResources()
 
 	// if we find the requested resource, just return it
-	if _, ok := schema.Resources[search]; ok {
-		s.renderResources(schema, []string{search})
+	if _, ok := resources[search]; ok {
+		s.renderResources(resources, []string{search})
 		return
 	}
 
 	// otherwise we will look for anything that matches
 	keys := []string{}
-	for k := range schema.Resources {
+	for k := range resources {
 		if strings.HasPrefix(k, search) {
 			keys = append(keys, k)
 		}
 	}
 	sort.Strings(keys)
-	s.renderResources(schema, keys)
+	s.renderResources(resources, keys)
 }
 
 // renderResources renders a set of resources from a given schema
-func (s *Shell) renderResources(schema *resources.Schema, keys []string) {
+func (s *Shell) renderResources(resources map[string]*resources.ResourceInfo, keys []string) {
 	// list resources and field
 	type rowEntry struct {
 		key       string
@@ -397,7 +397,7 @@ func (s *Shell) renderResources(schema *resources.Schema, keys []string) {
 
 	for i := range keys {
 		k := keys[i]
-		resource := schema.Resources[k]
+		resource := resources[k]
 
 		keyLength := len(resource.Name) + len(seperator)
 		rows = append(rows, rowEntry{
@@ -421,7 +421,7 @@ func (s *Shell) renderResources(schema *resources.Schema, keys []string) {
 			displayType := ""
 			fieldComment := field.Title
 			if fieldComment == "" && types.Type(field.Type).IsResource() {
-				r, ok := schema.Resources[fieldType]
+				r, ok := resources[fieldType]
 				if ok {
 					fieldComment = r.Title
 				}

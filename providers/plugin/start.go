@@ -11,6 +11,7 @@ import (
 
 type Provider struct {
 	Name       string
+	ID         string
 	Connectors []Connector
 }
 

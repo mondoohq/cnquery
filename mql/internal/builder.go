@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
 )
 
 type query struct {
@@ -100,7 +99,7 @@ func (b *GraphBuilder) WithFeatureBoolAssertions(featureBoolAssertions bool) {
 	b.featureBoolAssertions = featureBoolAssertions
 }
 
-func (b *GraphBuilder) Build(schema *resources.Schema, runtime llx.Runtime, assetMrn string) (*GraphExecutor, error) {
+func (b *GraphBuilder) Build(schema llx.Schema, runtime llx.Runtime, assetMrn string) (*GraphExecutor, error) {
 	resultChan := make(chan *llx.RawResult, 128)
 
 	queries := make(map[string]query, len(b.queries))

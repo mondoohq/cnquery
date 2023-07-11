@@ -159,7 +159,7 @@ func (c *compiler) compileImplicitBuiltin(typ types.Type, id string) (*compileHa
 	}
 
 	r := typ.ResourceName()
-	resource := c.Schema.Resources[r]
+	resource := c.Schema.Lookup(r)
 	if resource == nil || resource.ListType == "" {
 		return nil, nil, nil
 	}
@@ -196,8 +196,8 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 
 		if v.IsEmbedded && c.UseAssetContext {
 			name := types.Type(v.Type).ResourceName()
-			child, ok := c.Schema.Resources[name]
-			if !ok {
+			child := c.Schema.Lookup(name)
+			if child == nil {
 				continue
 			}
 			childFields := publicFieldsInfo(c, child)
@@ -209,7 +209,7 @@ func publicFieldsInfo(c *compiler, resourceInfo *resources.ResourceInfo) map[str
 
 		if v.IsImplicitResource {
 			name := types.Type(v.Type).ResourceName()
-			child := c.Schema.Resources[name]
+			child := c.Schema.Lookup(name)
 			if !child.HasEmptyInit() {
 				continue
 			}
@@ -243,10 +243,10 @@ func availableGlobFields(c *compiler, typ types.Type, descend bool) map[string]l
 		return res
 	}
 
-	resourceInfo := c.Schema.Resources[typ.ResourceName()]
+	resourceInfo := c.Schema.Lookup(typ.ResourceName())
 	if descend && resourceInfo.ListType != "" {
 		base := types.Type(resourceInfo.ListType).ResourceName()
-		if info, ok := c.Schema.Resources[base]; ok {
+		if info := c.Schema.Lookup(base); info != nil {
 			resourceInfo = info
 		}
 	}
@@ -259,7 +259,7 @@ func availableFields(c *compiler, typ types.Type) map[string]llx.Documentation {
 
 	// resources maintain their own fields and may be list resources
 	if typ.IsResource() {
-		resourceInfo := c.Schema.Resources[typ.ResourceName()]
+		resourceInfo := c.Schema.Lookup(typ.ResourceName())
 		res = publicFieldsInfo(c, resourceInfo)
 
 		_, err := listResource(c, typ)

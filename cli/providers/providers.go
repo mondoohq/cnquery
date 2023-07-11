@@ -131,7 +131,7 @@ func attachProvidersToCmd(existing providers.Providers, cmd *Command) {
 	}
 
 	// the default is always os.local if it exists
-	if p, ok := existing["os"]; ok {
+	if p, ok := existing[providers.DefaultOsID]; ok {
 		for i := range p.Connectors {
 			c := p.Connectors[i]
 			if c.Name == "local" {
@@ -292,7 +292,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 
 		runtime := providers.Coordinator.NewRuntime()
-		if err := runtime.UseProvider(provider.Name); err != nil {
+		if err := runtime.UseProvider(provider.ID); err != nil {
 			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
 		}
@@ -302,7 +302,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			log.Fatal().Msg(err.Error())
 		}
 
-		cliRes, err := runtime.Provider.Plugin.ParseCLI(&proto.ParseCLIReq{
+		cliRes, err := runtime.Provider.Instance.Plugin.ParseCLI(&proto.ParseCLIReq{
 			Connector: connector.Name,
 			Args:      args,
 			Flags:     flagVals,

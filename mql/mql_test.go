@@ -1,4 +1,4 @@
-package mql
+package mql_test
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers/mock"
 )
@@ -41,7 +42,7 @@ func getEnvFeatures() cnquery.Features {
 }
 
 func initRuntime() llx.Runtime {
-	m, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
+	m, err := mock.NewFromTomlFile("./testdata/arch.toml")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -74,7 +75,7 @@ func TestMqlSimple(t *testing.T) {
 		one := tests[i]
 		t.Run(one.query, func(t *testing.T) {
 			runtime := initRuntime()
-			res, err := Exec(one.query, runtime, features, nil)
+			res, err := mql.Exec(one.query, runtime, features, nil)
 			assert.NoError(t, err)
 			assert.NoError(t, res.Error)
 			assert.Equal(t, one.assertion, res.Value)
@@ -86,7 +87,7 @@ func TestCustomData(t *testing.T) {
 	query := "{ \"a\": \"valuea\", \"b\": \"valueb\"}"
 
 	runtime := initRuntime()
-	value, err := Exec(query, runtime, features, nil)
+	value, err := mql.Exec(query, runtime, features, nil)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]interface{}{"a": "valuea", "b": "valueb"}, value.Value)
 }
@@ -99,13 +100,13 @@ func TestMqlProps(t *testing.T) {
 	}
 
 	runtime := initRuntime()
-	value, err := Exec(query, runtime, features, props)
+	value, err := mql.Exec(query, runtime, features, props)
 	require.NoError(t, err)
 	assert.Equal(t, int64(4), value.Value)
 }
 
 func TestMqlIfElseProps(t *testing.T) {
-	me := New(initRuntime(), cnquery.DefaultFeatures)
+	me := mql.New(initRuntime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} } return {\"a\": \"valueb\"}"
 
 	props := map[string]*llx.Primitive{
@@ -124,7 +125,7 @@ func TestMqlIfElseProps(t *testing.T) {
 }
 
 func TestMqlIfAndProps(t *testing.T) {
-	me := New(initRuntime(), cnquery.DefaultFeatures)
+	me := mql.New(initRuntime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} }"
 
 	props := map[string]*llx.Primitive{

@@ -222,7 +222,7 @@ func (m *Mock) Resource(name string) (*resources.ResourceInfo, bool) {
 	return nil, false
 }
 
-func (m *Mock) Schema() *resources.Schema {
+func (m *Mock) Schema() llx.Schema {
 	return m.schema
 }
 

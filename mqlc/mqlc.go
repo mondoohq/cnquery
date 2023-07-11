@@ -65,11 +65,11 @@ func (vm *varmap) len() int {
 }
 
 type compilerConfig struct {
-	Schema          *resources.Schema
+	Schema          llx.Schema
 	UseAssetContext bool
 }
 
-func NewConfig(schema *resources.Schema, features cnquery.Features) compilerConfig {
+func NewConfig(schema llx.Schema, features cnquery.Features) compilerConfig {
 	return compilerConfig{
 		Schema:          schema,
 		UseAssetContext: features.IsActive(cnquery.MQLAssetContext),
@@ -171,7 +171,8 @@ func findFuzzy(name string, names []string) fuzzy.Ranks {
 	return suggested
 }
 
-func addResourceSuggestions(resourceInfos map[string]*resources.ResourceInfo, name string, res *llx.CodeBundle) {
+func addResourceSuggestions(schema llx.Schema, name string, res *llx.CodeBundle) {
+	resourceInfos := schema.AllResources()
 	names := make([]string, len(resourceInfos))
 	i := 0
 	for key := range resourceInfos {
@@ -257,7 +258,7 @@ func addFieldSuggestions(fields map[string]llx.Documentation, fieldName string, 
 // 	return typ
 // }
 
-func blockCallType(typ types.Type, schema *resources.Schema) types.Type {
+func blockCallType(typ types.Type, schema llx.Schema) types.Type {
 	if typ.IsArray() {
 		return types.Array(types.Block)
 	}
@@ -266,7 +267,7 @@ func blockCallType(typ types.Type, schema *resources.Schema) types.Type {
 		return types.Block
 	}
 
-	info := schema.Resources[typ.ResourceName()]
+	info := schema.Lookup(typ.ResourceName())
 	if info != nil && info.ListType != "" {
 		return types.Array(types.Block)
 	}
@@ -662,7 +663,7 @@ func (c *compiler) blockExpressions(expressions []*parser.Expression, typ types.
 	// when calling a block {} on an array resource, we expand it to all its list
 	// items and apply the block to those only
 	if typ.IsResource() {
-		info := c.Schema.Resources[typ.ResourceName()]
+		info := c.Schema.Lookup(typ.ResourceName())
 		if info != nil && info.ListType != "" {
 			typ = types.Type(info.ListType)
 			c.addChunk(&llx.Chunk{
@@ -906,8 +907,8 @@ func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string)
 	for _, f := range resource.Fields {
 		if f.IsEmbedded {
 			typ := types.Type(f.Type)
-			nextResource, ok := c.Schema.Resources[typ.ResourceName()]
-			if !ok {
+			nextResource := c.Schema.Lookup(typ.ResourceName())
+			if nextResource == nil {
 				continue
 			}
 			childFieldPath, childFieldInfos, ok := c.findField(nextResource, fieldName)
@@ -944,8 +945,8 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 	typ := binding.typ
 
 	if typ.IsResource() {
-		resource, ok := c.Schema.Resources[typ.ResourceName()]
-		if !ok {
+		resource := c.Schema.Lookup(typ.ResourceName())
+		if resource == nil {
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
 
@@ -979,8 +980,8 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 						},
 					}
 					if call != nil && len(call.Function) > 0 {
-						realResource, ok := c.Schema.Resources[typ.ResourceName()]
-						if !ok {
+						realResource := c.Schema.Lookup(typ.ResourceName())
+						if realResource == nil {
 							return true, types.Nil, errors.New("could not find resource " + typ.ResourceName())
 						}
 						args, err := c.resourceArgs(realResource, call.Function)
@@ -1039,8 +1040,8 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 	typ := binding.typ
 
 	if typ.IsResource() {
-		resource, ok := c.Schema.Resources[typ.ResourceName()]
-		if !ok {
+		resource := c.Schema.Lookup(typ.ResourceName())
+		if resource == nil {
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
 
@@ -1099,15 +1100,15 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 // compile a resource from an identifier, trying to find the longest matching resource
 // and execute all call functions if there are any
 func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*parser.Call, types.Type, error) {
-	resource, ok := c.Schema.Resources[id]
-	if !ok {
+	resource := c.Schema.Lookup(id)
+	if resource == nil {
 		return false, nil, types.Nil, nil
 	}
 
 	for len(calls) > 0 && calls[0].Ident != nil {
 		nuID := id + "." + (*calls[0].Ident)
-		nuResource, ok := c.Schema.Resources[nuID]
-		if !ok {
+		nuResource := c.Schema.Lookup(nuID)
+		if nuResource == nil {
 			break
 		}
 		resource, id = nuResource, nuID
@@ -1265,7 +1266,7 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 
 	// suggestions
 	if callBinding == nil {
-		addResourceSuggestions(c.Schema.Resources, id, c.Result)
+		addResourceSuggestions(c.Schema, id, c.Result)
 		return nil, types.Nil, errors.New("cannot find resource for identifier '" + id + "'")
 	}
 	addFieldSuggestions(availableFields(c, callBinding.typ), id, c.Result)
@@ -1832,7 +1833,7 @@ func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk,
 		return chunk, typ, ref
 	}
 
-	info := c.Schema.Resources[typ.ResourceName()]
+	info := c.Schema.Lookup(typ.ResourceName())
 	if info == nil || info.ListType == "" {
 		return chunk, typ, ref
 	}
@@ -1864,7 +1865,7 @@ func (c *compiler) expandResourceFields(chunk *llx.Chunk, typ types.Type, ref ui
 		return false
 	}
 
-	info := c.Schema.Resources[typ.ResourceName()]
+	info := c.Schema.Lookup(typ.ResourceName())
 	if info == nil || info.Defaults == "" {
 		return false
 	}

@@ -12,7 +12,7 @@ import (
 
 func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	name := typ.ResourceName()
-	resource := c.Schema.Resources[name]
+	resource := c.Schema.Lookup(name)
 	if resource == nil {
 		return types.Nil, errors.New("cannot find resource '" + name + "' when compiling field '" + id + "'")
 	}
@@ -24,8 +24,8 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 	prev := c.Result.CodeV2.Chunk(prevRef)
 	if prev.Call == llx.Chunk_FUNCTION && prev.Function == nil {
 		name := prev.Id + "." + id
-		resourceinfo, isResource := c.Schema.Resources[name]
-		if isResource {
+		resourceinfo := c.Schema.Lookup(name)
+		if resourceinfo != nil {
 			c.popChunk()
 			return c.addResource(name, resourceinfo, call)
 		}
@@ -111,7 +111,7 @@ func (f *FunctionSignature) Validate(args []*llx.Primitive, c *compiler) error {
 
 func listResource(c *compiler, typ types.Type) (*resources.ResourceInfo, error) {
 	name := typ.ResourceName()
-	resource := c.Schema.Resources[name]
+	resource := c.Schema.Lookup(name)
 	if resource == nil {
 		return nil, errors.New("cannot find resource '" + name + "'")
 	}

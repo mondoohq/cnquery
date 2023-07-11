@@ -35,15 +35,14 @@ type Provider struct {
 }
 
 func List() (Providers, error) {
-	res := listPaths()
-	for _, v := range res {
+	local := listPaths()
+	var res Providers = make(map[string]*Provider, len(local))
+	for _, v := range local {
 		if err := v.LoadJson(); err != nil {
 			return nil, err
 		}
+		res[v.ID] = v
 	}
-
-	// useful for caching; even if the structure gets updated with new providers
-	Coordinator.Providers = res
 
 	// we add builtin ones here, possibly overriding providers in paths
 	for name, x := range builtinProviders {
@@ -52,6 +51,8 @@ func List() (Providers, error) {
 		}
 	}
 
+	// useful for caching; even if the structure gets updated with new providers
+	Coordinator.Providers = res
 	return res, nil
 }
 

@@ -4,6 +4,7 @@ import "go.mondoo.com/cnquery/providers/plugin"
 
 var Config = plugin.Provider{
 	Name: "os",
+	ID:   "go.mondoo.com/cnquery/providers/os",
 	Connectors: []plugin.Connector{
 		{
 			Name:    "local",

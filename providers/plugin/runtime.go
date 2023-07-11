@@ -92,7 +92,7 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 		return cached
 	}
 
-	(*cached) = TValue[T]{Data: x, Error: err}
+	(*cached) = TValue[T]{Data: x, State: StateIsSet, Error: err}
 	return cached
 }
 

@@ -1,5 +1,5 @@
-option provider = "go.mondoo.com/cnquery/providers/os"
-option go_package = "go.mondoo.com/cnquery/providers/os/resources"
+option provider = "go.mondoo.com/cnquery/providers/core"
+option go_package = "go.mondoo.com/cnquery/providers/core/resources"
 
 // Provide contextual information about MQL runtime and environment
 mondoo @defaults("version") {
@@ -7,10 +7,8 @@ mondoo @defaults("version") {
   version() string
   // The build of the client (e.g. production, development)
   build() string
-  // All resources supported by the language
-  resources() []string
+  // The architecture of this client (e.g. linux-amd64)
+  arch() string
   // Returns the agent execution environment
   jobEnvironment() dict
-  // Transport capabilities
-  capabilities() []string
 }

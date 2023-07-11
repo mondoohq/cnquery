@@ -4,7 +4,6 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/plugin"
 	"go.mondoo.com/cnquery/providers/proto"
 	"go.mondoo.com/cnquery/types"
@@ -26,23 +25,20 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 
 var getDataFields = map[string]func(r plugin.Resource) *proto.DataRes{
 	"mondoo.version": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlMondoo).Version).ToDataRes(types.String)
+		return (r.(*mqlMondoo).GetVersion()).ToDataRes(types.String)
 	},
 	"mondoo.build": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlMondoo).Build).ToDataRes(types.String)
+		return (r.(*mqlMondoo).GetBuild()).ToDataRes(types.String)
 	},
-	"mondoo.resources": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlMondoo).Resources).ToDataRes(types.Array(types.String))
+	"mondoo.arch": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlMondoo).GetArch()).ToDataRes(types.String)
 	},
 	"mondoo.jobEnvironment": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlMondoo).JobEnvironment).ToDataRes(types.Dict)
-	},
-	"mondoo.capabilities": func(r plugin.Resource) *proto.DataRes {
-		return (&r.(*mqlMondoo).Capabilities).ToDataRes(types.Array(types.String))
+		return (r.(*mqlMondoo).GetJobEnvironment()).ToDataRes(types.Dict)
 	},
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]*llx.Primitive) *proto.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]interface{}) *proto.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
 		return &proto.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
@@ -62,19 +58,14 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlMondoo).Build, ok = plugin.RawToTValue[string](v)
 		return ok
 	},
-	"mondoo.resources": func(r plugin.Resource, v interface{}) bool {
+	"mondoo.arch": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
-		r.(*mqlMondoo).Resources, ok = plugin.RawToTValue[[]interface{}](v)
+		r.(*mqlMondoo).Arch, ok = plugin.RawToTValue[string](v)
 		return ok
 	},
 	"mondoo.jobEnvironment": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[interface{}](v)
-		return ok
-	},
-	"mondoo.capabilities": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlMondoo).Capabilities, ok = plugin.RawToTValue[[]interface{}](v)
 		return ok
 	},
 }
@@ -94,28 +85,22 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 // mqlMondoo for the mondoo resource
 type mqlMondoo struct {
 	MqlRuntime *plugin.Runtime
+	_id string
 	// optional: if you define mqlMondooInternal it will be used here
 
 	Version plugin.TValue[string]
 	Build plugin.TValue[string]
-	Resources plugin.TValue[[]interface{}]
+	Arch plugin.TValue[string]
 	JobEnvironment plugin.TValue[interface{}]
-	Capabilities plugin.TValue[[]interface{}]
 }
 
 // NewMondoo creates a new instance of this resource
 func NewMondoo(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
-	res := &mqlMondoo{}
+	res := &mqlMondoo{
+		MqlRuntime: runtime,
+	}
 
 	var err error
-	var existing *mqlMondoo
-	args, existing, err = res.init(args)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
 
 	for k, v := range args {
 		if err = SetData(res, k, v); err != nil {
@@ -123,39 +108,38 @@ func NewMondoo(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Res
 		}
 	}
 
-	return res, nil
+	res._id, err = res.id()
+	return res, err
 }
 
-func (c *mqlCommand) MqlName() string {
+func (c *mqlMondoo) MqlName() string {
 	return "mondoo"
 }
 
-func (c *mqlMondoo) GetVersion() (string, error) {
+func (c *mqlMondoo) MqlID() string {
+	return c._id
+}
+
+func (c *mqlMondoo) GetVersion() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
 		return c.version()
 	})
 }
 
-func (c *mqlMondoo) GetBuild() (string, error) {
+func (c *mqlMondoo) GetBuild() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Build, func() (string, error) {
 		return c.build()
 	})
 }
 
-func (c *mqlMondoo) GetResources() ([]interface{}, error) {
-	return plugin.GetOrCompute[[]interface{}](&c.Resources, func() ([]interface{}, error) {
-		return c.resources()
+func (c *mqlMondoo) GetArch() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Arch, func() (string, error) {
+		return c.arch()
 	})
 }
 
-func (c *mqlMondoo) GetJobEnvironment() (interface{}, error) {
+func (c *mqlMondoo) GetJobEnvironment() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.JobEnvironment, func() (interface{}, error) {
 		return c.jobEnvironment()
-	})
-}
-
-func (c *mqlMondoo) GetCapabilities() ([]interface{}, error) {
-	return plugin.GetOrCompute[[]interface{}](&c.Capabilities, func() ([]interface{}, error) {
-		return c.capabilities()
 	})
 }

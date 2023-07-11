@@ -3,21 +3,21 @@ package shell
 import (
 	"github.com/c-bata/go-prompt"
 	"go.mondoo.com/cnquery"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/resources"
 )
 
 var completerSeparator = string([]byte{'.', ' '})
 
 // Completer is an auto-complete helper for the shell
 type Completer struct {
-	schema      *resources.Schema
+	schema      llx.Schema
 	features    cnquery.Features
 	queryPrefix func() string
 }
 
 // NewCompleter creates a new Mondoo completer object
-func NewCompleter(schema *resources.Schema, features cnquery.Features, queryPrefix func() string) *Completer {
+func NewCompleter(schema llx.Schema, features cnquery.Features, queryPrefix func() string) *Completer {
 	return &Completer{
 		schema:      schema,
 		features:    features,

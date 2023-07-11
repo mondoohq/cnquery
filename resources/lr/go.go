@@ -210,6 +210,21 @@ func (b *goBuilder) goFactory(r *Resource) {
 	newName := "New" + r.interfaceName(b)
 	structName := r.structName(b)
 
+	var initCode string
+	if b.collector.HasInit(structName) {
+		initCode = `var err error
+	var existing *` + structName + `
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}`
+	} else {
+		initCode = `var err error`
+	}
+
 	b.data += fmt.Sprintf(`
 // %s creates a new instance of this resource
 func %s(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
@@ -217,15 +232,7 @@ func %s(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, 
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	var existing *%s
-	args, existing, err = res.init(args)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
+	%s
 
 	for k, v := range args {
 		if err = SetData(res, k, v); err != nil {
@@ -237,16 +244,18 @@ func %s(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, 
 	return res, err
 }
 
-func (c *mqlCommand) MqlName() string {
+func (c *%s) MqlName() string {
 	return "%s"
 }
 
-func (c *mqlCommand) MqlID() string {
+func (c *%s) MqlID() string {
 	return c._id
 }
 `,
 		newName, newName, structName,
+		initCode,
 		structName, r.ID,
+		structName,
 	)
 }
 

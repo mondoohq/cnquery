@@ -25,6 +25,7 @@ var Coordinator = coordinator{
 
 type RunningProvider struct {
 	Name   string
+	ID     string
 	Plugin pp.ProviderPlugin
 	Client *plugin.Client
 	Schema *resources.Schema
@@ -32,9 +33,13 @@ type RunningProvider struct {
 	isClosed bool
 }
 
-func (c *coordinator) Start(name string) (*RunningProvider, error) {
-	if x, ok := builtinProviders[name]; ok {
-		log.Warn().Msg("using builtin provider for " + name)
+func (c *coordinator) Start(id string) (*RunningProvider, error) {
+	if x, ok := builtinProviders[id]; ok {
+		// We don't warn for the core provider, which is the only provider expected
+		// to be built into the binary for now.
+		if id != BuiltinCoreID {
+			log.Warn().Msg("using builtin provider for " + x.Config.Name)
+		}
 		return x.Runtime, nil
 	}
 
@@ -46,14 +51,14 @@ func (c *coordinator) Start(name string) (*RunningProvider, error) {
 		}
 	}
 
-	provider, ok := c.Providers[name]
+	provider, ok := c.Providers[id]
 	if !ok {
-		return nil, errors.New("cannot find provider " + name)
+		return nil, errors.New("cannot find provider " + id)
 	}
 
 	if provider.Schema == nil {
 		if err := provider.LoadResources(); err != nil {
-			return nil, errors.Wrap(err, "failed to load provider "+name+" resources info")
+			return nil, errors.Wrap(err, "failed to load provider "+id+" resources info")
 		}
 	}
 
@@ -89,7 +94,8 @@ func (c *coordinator) Start(name string) (*RunningProvider, error) {
 	}
 
 	res := &RunningProvider{
-		Name:   name,
+		Name:   id,
+		ID:     provider.ID,
 		Plugin: raw.(pp.ProviderPlugin),
 		Client: client,
 		Schema: provider.Schema,

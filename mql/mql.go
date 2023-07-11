@@ -8,7 +8,6 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mql/internal"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/resources"
 )
 
 // New creates a new MQL executor instance. It allows you to easily run multiple queries against the
@@ -69,7 +68,7 @@ func Exec(query string, runtime llx.Runtime, features cnquery.Features, props ma
 	return res, nil
 }
 
-func ExecuteCode(schema *resources.Schema, runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features cnquery.Features) (map[string]*llx.RawResult, error) {
+func ExecuteCode(schema llx.Schema, runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features cnquery.Features) (map[string]*llx.RawResult, error) {
 	builder := internal.NewBuilder()
 	builder.WithFeatureBoolAssertions(features.IsActive(cnquery.BoolAssertions))
 

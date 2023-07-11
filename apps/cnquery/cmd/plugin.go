@@ -70,7 +70,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	}
 
 	if conf.DoAst {
-		b, err := mqlc.Compile(conf.Command, nil, mqlc.NewConfig(runtime.Provider.Schema, conf.Features))
+		b, err := mqlc.Compile(conf.Command, nil, mqlc.NewConfig(runtime.Schema(), conf.Features))
 		if err != nil {
 			return errors.Wrap(err, "failed to compile command")
 		}

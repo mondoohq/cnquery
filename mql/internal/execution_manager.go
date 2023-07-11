@@ -7,11 +7,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
 )
 
 type executionManager struct {
-	schema  *resources.Schema
+	schema  llx.Schema
 	runtime llx.Runtime
 	// runQueue is the channel the execution manager will read
 	// items that need to be run from
@@ -35,7 +34,7 @@ type runQueueItem struct {
 	props      map[string]*llx.Result
 }
 
-func newExecutionManager(schema *resources.Schema, runtime llx.Runtime, runQueue chan runQueueItem,
+func newExecutionManager(schema llx.Schema, runtime llx.Runtime, runQueue chan runQueueItem,
 	resultChan chan *llx.RawResult, timeout time.Duration,
 ) *executionManager {
 	return &executionManager{

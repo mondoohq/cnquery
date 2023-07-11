@@ -701,8 +701,8 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		return nil, 0, fmt.Errorf("cannot cast resource to resource type: %+v", bind.Value)
 	}
 
-	resource, ok := e.ctx.runtime.Resource(rr.MqlName())
-	if !ok || resource == nil {
+	resource := e.ctx.runtime.Schema().Lookup(rr.MqlName())
+	if resource == nil {
 		return nil, 0, fmt.Errorf("cannot retrieve resource definition for resource %q", rr.MqlName())
 	}
 

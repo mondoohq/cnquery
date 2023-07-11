@@ -1,7 +1,6 @@
 package lr
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -34,12 +33,12 @@ func NewCollector(lrFile string) *Collector {
 }
 
 var regexMaps = map[string]*regexp.Regexp{
-	"init":   regexp.MustCompile("func \\(\\S+ \\*(mql\\S+)\\) init\\(\\S+ \\*resources.Args\\) \\(\\*resources.Args, \\S+, error\\) {"),
+	"init":   regexp.MustCompile(`func \(\S+ \*(mql\S+)\) init\(\S+ [^)]+\) \([^,]+, \*\S+, error\) {`),
 	"struct": regexp.MustCompile("type (mql\\S+Internal) struct "),
 }
 
 func (c *Collector) collect() error {
-	files, err := ioutil.ReadDir(c.path)
+	files, err := os.ReadDir(c.path)
 	if err != nil {
 		return err
 	}

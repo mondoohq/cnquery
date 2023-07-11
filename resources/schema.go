@@ -9,3 +9,11 @@ func (s *Schema) Add(other *Schema) {
 		s.Resources[k] = v
 	}
 }
+
+func (s *Schema) Lookup(name string) *ResourceInfo {
+	return s.Resources[name]
+}
+
+func (s *Schema) AllResources() map[string]*ResourceInfo {
+	return s.Resources
+}

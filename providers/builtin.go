@@ -9,21 +9,41 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	// osconf "go.mondoo.com/cnquery/providers/os/config"
-	// os "go.mondoo.com/cnquery/providers/os/provider"
+	coreconf "go.mondoo.com/cnquery/providers/core/config"
+	core "go.mondoo.com/cnquery/providers/core/provider"
 	"go.mondoo.com/cnquery/providers/plugin"
 	"go.mondoo.com/cnquery/resources"
+	// osconf "go.mondoo.com/cnquery/providers/os/config"
+	// os "go.mondoo.com/cnquery/providers/os/provider"
 )
+
+var BuiltinCoreID = coreconf.Config.ID
+
+const DefaultOsID = "go.mondoo.com/cnquery/providers/os"
+
+//go:embed core/dist/core.resources.json
+var coreInfo []byte
 
 // //go:embed os/dist/os.resources.json
 // var osInfo []byte
 
 var builtinProviders = map[string]*builtinProvider{
-	// "os": {
+	coreconf.Config.ID: {
+		Runtime: &RunningProvider{
+			Name:     coreconf.Config.Name,
+			ID:       coreconf.Config.ID,
+			Plugin:   core.Init(),
+			Schema:   MustLoadSchema("core", coreInfo),
+			isClosed: false,
+		},
+		Config: &coreconf.Config,
+	},
+	// osconf.Config.ID: {
 	// 	Runtime: &RunningProvider{
-	// 		Name:     "os",
+	// 		Name:     osconf.Config.Name,
+	// 		ID:       osconf.Config.ID,
 	// 		Plugin:   os.Init(),
-	// 		Schema:   mustLoadSchema("os", osInfo),
+	// 		Schema:   MustLoadSchema("os", osInfo),
 	// 		isClosed: false,
 	// 	},
 	// 	Config: &osconf.Config,

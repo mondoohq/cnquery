@@ -78,6 +78,7 @@ providers:
 	go generate .
 	go generate ./providers/proto
 	go build -o lr resources/lr/cli/main.go
+	@$(call genProvider, providers/core)
 	@$(call genProvider, providers/os)
 # add more providers...
 
