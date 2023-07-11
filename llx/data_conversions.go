@@ -735,3 +735,53 @@ func (b *blockExecutor) resolveValue(arg *Primitive, ref uint64) (*RawData, uint
 		return v, 0, v.Error
 	}
 }
+
+func TArr2Raw[T any](arr []T) []interface{} {
+	res := make([]interface{}, len(arr))
+	for i := range arr {
+		res[i] = arr[i]
+	}
+	return res
+}
+
+func TMap2Raw[T any](m map[string]T) map[string]interface{} {
+	res := make(map[string]interface{}, len(m))
+	for k, v := range m {
+		res[k] = v
+	}
+	return res
+}
+
+func TRaw2T[T any](v interface{}) T {
+	if res, ok := v.(T); ok {
+		return res
+	}
+	var res T
+	return res
+}
+
+func TRaw2TArr[T any](v interface{}) []T {
+	arr, ok := v.([]interface{})
+	if !ok {
+		return nil
+	}
+
+	res := make([]T, len(arr))
+	for i := range arr {
+		res[i], _ = arr[i].(T)
+	}
+	return res
+}
+
+func TRaw2TMap[T any](v interface{}) map[string]T {
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	res := make(map[string]T, len(m))
+	for k, v := range m {
+		res[k], _ = v.(T)
+	}
+	return res
+}

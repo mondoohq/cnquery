@@ -11,6 +11,7 @@ import (
 
 var newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error){
 	"mondoo": NewMondoo,
+	"asset": NewAsset,
 }
 
 // CreateResource is used by the runtime of this plugin
@@ -35,6 +36,42 @@ var getDataFields = map[string]func(r plugin.Resource) *proto.DataRes{
 	},
 	"mondoo.jobEnvironment": func(r plugin.Resource) *proto.DataRes {
 		return (r.(*mqlMondoo).GetJobEnvironment()).ToDataRes(types.Dict)
+	},
+	"asset.name": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetName()).ToDataRes(types.String)
+	},
+	"asset.ids": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetIds()).ToDataRes(types.Array(types.String))
+	},
+	"asset.platform": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetPlatform()).ToDataRes(types.String)
+	},
+	"asset.kind": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetKind()).ToDataRes(types.String)
+	},
+	"asset.runtime": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetRuntime()).ToDataRes(types.String)
+	},
+	"asset.version": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetVersion()).ToDataRes(types.String)
+	},
+	"asset.arch": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetArch()).ToDataRes(types.String)
+	},
+	"asset.title": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetTitle()).ToDataRes(types.String)
+	},
+	"asset.family": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetFamily()).ToDataRes(types.Array(types.String))
+	},
+	"asset.fqdn": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetFqdn()).ToDataRes(types.String)
+	},
+	"asset.build": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetBuild()).ToDataRes(types.String)
+	},
+	"asset.labels": func(r plugin.Resource) *proto.DataRes {
+		return (r.(*mqlAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
@@ -66,6 +103,66 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 	"mondoo.jobEnvironment": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[interface{}](v)
+		return ok
+	},
+	"asset.name": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Name, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.ids": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Ids, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"asset.platform": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Platform, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.kind": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Kind, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.runtime": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Runtime, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.version": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Version, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.arch": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Arch, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.title": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Title, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.family": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Family, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"asset.fqdn": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Fqdn, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.build": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Build, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"asset.labels": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v)
 		return ok
 	},
 }
@@ -142,4 +239,98 @@ func (c *mqlMondoo) GetJobEnvironment() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.JobEnvironment, func() (interface{}, error) {
 		return c.jobEnvironment()
 	})
+}
+
+// mqlAsset for the asset resource
+type mqlAsset struct {
+	MqlRuntime *plugin.Runtime
+	_id string
+	// optional: if you define mqlAssetInternal it will be used here
+
+	Name plugin.TValue[string]
+	Ids plugin.TValue[[]interface{}]
+	Platform plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Runtime plugin.TValue[string]
+	Version plugin.TValue[string]
+	Arch plugin.TValue[string]
+	Title plugin.TValue[string]
+	Family plugin.TValue[[]interface{}]
+	Fqdn plugin.TValue[string]
+	Build plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+}
+
+// NewAsset creates a new instance of this resource
+func NewAsset(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlAsset{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res._id, err = res.id()
+	return res, err
+}
+
+func (c *mqlAsset) MqlName() string {
+	return "asset"
+}
+
+func (c *mqlAsset) MqlID() string {
+	return c._id
+}
+
+func (c *mqlAsset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAsset) GetIds() *plugin.TValue[[]interface{}] {
+	return &c.Ids
+}
+
+func (c *mqlAsset) GetPlatform() *plugin.TValue[string] {
+	return &c.Platform
+}
+
+func (c *mqlAsset) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAsset) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
+}
+
+func (c *mqlAsset) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAsset) GetArch() *plugin.TValue[string] {
+	return &c.Arch
+}
+
+func (c *mqlAsset) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAsset) GetFamily() *plugin.TValue[[]interface{}] {
+	return &c.Family
+}
+
+func (c *mqlAsset) GetFqdn() *plugin.TValue[string] {
+	return &c.Fqdn
+}
+
+func (c *mqlAsset) GetBuild() *plugin.TValue[string] {
+	return &c.Build
+}
+
+func (c *mqlAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
 }

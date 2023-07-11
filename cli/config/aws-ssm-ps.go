@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cockroachdb/errors"
@@ -40,7 +39,7 @@ func loadAwsSSMParameterStore(key string) error {
 type awsSSMParamConfigFactory struct{}
 
 func (a *awsSSMParamConfigFactory) Get(rp viper.RemoteProvider) (io.Reader, error) {
-	ssmParameter, err := ParseSSMParameterPath(rp.Path())
+	ssmParameter, err := parseSsmParameterPath(rp.Path())
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +78,7 @@ type SsmParameter struct {
 	// todo: add optional decrypt and account arguments
 }
 
-func NewSSMParameter(region string, parameter string) (*SsmParameter, error) {
+func newSsmParameter(region string, parameter string) (*SsmParameter, error) {
 	if region == "" || parameter == "" {
 		return nil, errors.New("invalid parameter. region and parameter name required.")
 	}
@@ -91,19 +90,19 @@ func (s *SsmParameter) String() string {
 	return path.Join("region", s.Region, "parameter", s.Parameter)
 }
 
-func ParseSSMParameterPath(path string) (*SsmParameter, error) {
-	if !IsValidSSMParameterPath(path) {
+func parseSsmParameterPath(path string) (*SsmParameter, error) {
+	if !isValidSSMParameterPath(path) {
 		return nil, errors.New("invalid parameter path. expected region/<region-val>/parameter/<parameter-name>")
 	}
 	keyValues := strings.Split(path, "/")
 	if len(keyValues) != 4 {
 		return nil, errors.New("invalid parameter path. expected region/<region-val>/parameter/<parameter-name>")
 	}
-	return NewSSMParameter(keyValues[1], keyValues[3])
+	return newSsmParameter(keyValues[1], keyValues[3])
 }
 
 var VALID_SSM_PARAMETER_PATH = regexp.MustCompile(`^region\/(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d\/parameter\/.+$`)
 
-func IsValidSSMParameterPath(path string) bool {
+func isValidSSMParameterPath(path string) bool {
 	return VALID_SSM_PARAMETER_PATH.MatchString(path)
 }

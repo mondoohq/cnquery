@@ -101,7 +101,10 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 		return nil, errors.New("failed to resolve: " + err.Error())
 	}
 
-	idDetector := string(flags["id-detector"].Value)
+	idDetector := "hostname"
+	if flag, ok := flags["id-detector"]; ok {
+		idDetector = string(flag.Value)
+	}
 	if idDetector != "" {
 		for i := range assets {
 			assets[i].IdDetector = []string{idDetector}
@@ -265,7 +268,12 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 
 		name := res.MqlName()
 		id := res.MqlID()
-		runtime.Resources[name+"\x00"+id] = res
+		if x, ok := runtime.Resources[name+"\x00"+id]; ok {
+			res = x
+		} else {
+			runtime.Resources[name+"\x00"+id] = res
+		}
+
 		rd := llx.ResourceData(res, name).Result()
 		return &proto.DataRes{
 			Data: rd.Data,

@@ -1,28 +1,26 @@
 package sysinfo
 
 import (
-	"github.com/rs/zerolog/log"
+	"errors"
+
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/execruntime"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/motorid"
-	"go.mondoo.com/cnquery/motor/motorid/hostname"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/resources/packs/core/networkinterface"
+	"go.mondoo.com/cnquery/mql"
+	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers/proto"
 )
 
 type sysInfoConfig struct {
-	m *motor.Motor
+	runtime *providers.Runtime
 }
 
 type SystemInfoOption func(t *sysInfoConfig) error
 
-func WithMotor(m *motor.Motor) SystemInfoOption {
+func WithRuntime(r *providers.Runtime) SystemInfoOption {
 	return func(c *sysInfoConfig) error {
-		c.m = m
+		c.runtime = r
 		return nil
 	}
 }
@@ -43,17 +41,22 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 		opt(cfg)
 	}
 
-	if cfg.m == nil {
-		provider, err := local.New()
+	if cfg.runtime == nil {
+		cfg.runtime = providers.Coordinator.NewRuntime()
+		if err := cfg.runtime.UseProvider(providers.DefaultOsID); err != nil {
+			return nil, err
+		}
+
+		args, err := cfg.runtime.Provider.Instance.Plugin.ParseCLI(&proto.ParseCLIReq{
+			Connector: "local",
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		m, err := motor.New(provider)
-		if err != nil {
+		if err = cfg.runtime.Connect(&proto.ConnectReq{Asset: args.Inventory}); err != nil {
 			return nil, err
 		}
-		cfg.m = m
 	}
 
 	sysInfo := &SystemInfo{
@@ -61,38 +64,38 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 		Build:   cnquery.GetBuild(),
 	}
 
-	pi, err := cfg.m.Platform()
-	if err == nil {
-		sysInfo.Platform = pi
-
-		idDetector := providers.HostnameDetector
-		if pi.IsFamily(platform.FAMILY_WINDOWS) {
-			idDetector = providers.MachineIdDetector
-		}
-
-		info, err := motorid.GatherPlatformInfo(cfg.m.Provider, pi, idDetector)
-		if err == nil && len(info.IDs) > 0 {
-			sysInfo.PlatformId = info.IDs[0]
-		}
+	exec := mql.New(cfg.runtime, nil)
+	raw, err := exec.Exec("asset{*}", nil)
+	if err != nil {
+		return sysInfo, err
 	}
 
-	var ip string
-	ipAddr, err := networkinterface.GetOutboundIP()
-	if err == nil {
-		ip = ipAddr.String()
-	}
-	sysInfo.IP = ip
-
-	var hn string
-	osProvider, isOSProvider := cfg.m.Provider.(os.OperatingSystemProvider)
-	pf, err := cfg.m.Platform()
-	if isOSProvider && err == nil {
-		hn, err = hostname.Hostname(osProvider, pf)
-		if err != nil {
-			log.Debug().Err(err).Msg("could not determine hostname")
+	if vals, ok := raw.Value.(map[string]interface{}); ok {
+		sysInfo.Platform = &platform.Platform{
+			Name:    llx.TRaw2T[string](vals["name"]),
+			Arch:    llx.TRaw2T[string](vals["arch"]),
+			Title:   llx.TRaw2T[string](vals["title"]),
+			Family:  llx.TRaw2TArr[string](vals["family"]),
+			Build:   llx.TRaw2T[string](vals["build"]),
+			Version: llx.TRaw2T[string](vals["version"]),
+			// Kind: llx.TRaw2T[string](vals["kind"]),
+			Runtime: llx.TRaw2T[string](vals["Runtime"]),
+			Labels:  llx.TRaw2TMap[string](vals["labels"]),
 		}
+	} else {
+		return sysInfo, errors.New("returned asset detection type is incorrect")
 	}
-	sysInfo.Hostname = hn
+
+	// TODO: platform IDs
+	// 	idDetector := providers.HostnameDetector
+	// 	if pi.IsFamily(platform.FAMILY_WINDOWS) {
+	// 		idDetector = providers.MachineIdDetector
+	// 	}
+	// 		sysInfo.PlatformId = info.IDs[0]
+	// TODO: outbound ip
+	// sysInfo.IP = ip
+	// TODO: hostname
+	// sysInfo.Hostname = hn
 
 	// detect the execution runtime
 	execEnv := execruntime.Detect()
