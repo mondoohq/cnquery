@@ -4,6 +4,7 @@ ipaddress
 macaddress
 mpim
 nicconfig
+Operatingsystem
 saas
 usergroups
 wmic

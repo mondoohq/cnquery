@@ -1,0 +1,34 @@
+packs:
+  - uid: mondoo-asset-count
+    name: Asset Count Query Pack
+    queries:
+      - uid: mondoo-asset-count-on-vsphere-cluster-esxi
+        title: Retrieve all ESXi hosts
+        filters: asset.platform == 'vmware-vsphere'
+        query: |
+          vsphere.datacenters { hosts.length }
+      - uid: mondoo-asset-count-on-vsphere-cluster-vms
+        title: Retrieve all VMs from vsphere cluster
+        filters: asset.platform == 'vmware-vsphere'
+        query: |
+          vsphere.datacenters { vms.length }
+      - uid: mondoo-asset-count-on-azure
+        title: Retrieve all VMs from Azure
+        filters: asset.platform == 'azure'
+        query: |
+          azure.compute.vms.length
+      - uid: mondoo-count-users-in-azure
+        title: Retrieve all VMs from Azure
+        filters: asset.platform == 'azure' || asset.platform == 'microsoft365'
+        query: |
+          azuread.users.length
+      - uid: mondoo-asset-count-on-aws
+        title: Retrieve all VMs from AWS
+        filters: asset.platform == 'aws'
+        query: |
+          aws.ec2.instances.length
+      - uid: mondoo-asset-count-in-windows-domain
+        title: Retrieve all computer object from the windows domain
+        filters: asset.platform == "windows" && windows.computerInfo['OsProductType'] == 2
+        query: |
+          parse.json(content: powershell('Get-ADComputer -Filter * -properties * | select Name, Enabled,Operatingsystem,OperatingSystemVersion | ConvertTo-Json').stdout).params
