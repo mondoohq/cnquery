@@ -1,7 +1,7 @@
 package detector
 
 import (
-	"io/ioutil"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -27,7 +27,7 @@ func (d *OSReleaseDetector) command(command string) (string, error) {
 		return "", err
 	}
 
-	content, err := ioutil.ReadAll(cmd.Stdout)
+	content, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +70,7 @@ func (d *OSReleaseDetector) osrelease() (map[string]string, error) {
 	}
 	defer f.Close()
 
-	content, err := ioutil.ReadAll(f)
+	content, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (d *OSReleaseDetector) lsbconfig() (map[string]string, error) {
 	}
 	defer f.Close()
 
-	content, err := ioutil.ReadAll(f)
+	content, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (d *OSReleaseDetector) macosSystemVersion() (map[string]string, error) {
 	}
 	defer f.Close()
 
-	content, err := ioutil.ReadAll(f)
+	content, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}

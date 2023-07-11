@@ -3,7 +3,6 @@ package smbios
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"go.mondoo.com/cnquery/motor/platform"
@@ -107,7 +106,7 @@ func ParseMacosIOPlatformExpertDevice(input io.Reader) (*IOPlatformExpertDevice,
 
 	// if the read seeker is not implemented lets cache stdout in-memory
 	if !ok {
-		entries, err := ioutil.ReadAll(input)
+		entries, err := io.ReadAll(input)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +135,7 @@ func ParseMacosBios(input io.Reader) (*IODeviceTree, error) {
 
 	// if the read seeker is not implemented lets cache stdout in-memory
 	if !ok {
-		entries, err := ioutil.ReadAll(input)
+		entries, err := io.ReadAll(input)
 		if err != nil {
 			return nil, err
 		}

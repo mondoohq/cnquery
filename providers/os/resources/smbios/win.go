@@ -3,7 +3,6 @@ package smbios
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -130,7 +129,7 @@ func toString(i *string) string {
 
 func ParseWindowsSmbiosInfo(r io.Reader) (smbiosWindows, error) {
 	var smbios smbiosWindows
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return smbios, err
 	}

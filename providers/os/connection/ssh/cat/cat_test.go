@@ -2,7 +2,7 @@ package cat_test
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -41,7 +41,7 @@ func TestCatFs(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	require.NoError(t, err)
 
 	expected := `X11Forwarding no

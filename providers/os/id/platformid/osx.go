@@ -2,7 +2,7 @@ package platformid
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"regexp"
 	"strings"
 
@@ -29,7 +29,7 @@ func (p *MacOSIdProvider) ID() (string, error) {
 	}
 
 	// parse string with regex with \"IOPlatformUUID\"\s*=\s*\"(.*)\"
-	content, err := ioutil.ReadAll(c.Stdout)
+	content, err := io.ReadAll(c.Stdout)
 	if err != nil {
 		return "", err
 	}

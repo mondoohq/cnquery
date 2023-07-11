@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 
@@ -64,7 +63,7 @@ type WindowsCurrentVersion struct {
 }
 
 func ParseWinRegistryCurrentVersion(r io.Reader) (*WindowsCurrentVersion, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

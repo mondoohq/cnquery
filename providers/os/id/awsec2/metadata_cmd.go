@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -89,7 +89,7 @@ func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		data, err := ioutil.ReadAll(cmd.Stdout)
+		data, err := io.ReadAll(cmd.Stdout)
 		if err != nil {
 			return "", err
 		}
@@ -102,7 +102,7 @@ func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		data, err := ioutil.ReadAll(cmd.Stdout)
+		data, err := io.ReadAll(cmd.Stdout)
 		if err != nil {
 			return "", err
 		}

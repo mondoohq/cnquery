@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"io/ioutil"
+	"io"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -70,7 +70,7 @@ func Start(args []string, impl ProviderPlugin) {
 		Name: "cnquery-plugin",
 		// Level: hclog.LevelFromString("DEBUG"),
 		Level:  hclog.Info,
-		Output: ioutil.Discard,
+		Output: io.Discard,
 	})
 
 	plugin.Serve(&plugin.ServeConfig{

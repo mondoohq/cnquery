@@ -1,4 +1,4 @@
-package gce
+package gce_test
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/providers/os/detector"
+	"go.mondoo.com/cnquery/providers/os/id/gce"
 )
 
 func TestCommandProviderLinux(t *testing.T) {
@@ -15,7 +16,7 @@ func TestCommandProviderLinux(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	metadata := &commandInstanceMetadata{conn, platform}
+	metadata := gce.NewCommandInstanceMetadata(conn, platform)
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)
@@ -30,7 +31,7 @@ func TestCommandProviderWindows(t *testing.T) {
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
 
-	metadata := &commandInstanceMetadata{conn, platform}
+	metadata := gce.NewCommandInstanceMetadata(conn, platform)
 	ident, err := metadata.Identify()
 
 	assert.Nil(t, err)

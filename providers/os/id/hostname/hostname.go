@@ -1,7 +1,7 @@
 package hostname
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -26,7 +26,7 @@ func Hostname(conn shared.Connection, pf *platform.Platform) (string, bool) {
 	// since it will return a non-zero exit code.
 	cmd, err := conn.RunCommand("hostname")
 	if err == nil && cmd.ExitStatus == 0 {
-		data, err := ioutil.ReadAll(cmd.Stdout)
+		data, err := io.ReadAll(cmd.Stdout)
 		if err == nil {
 			return strings.TrimSpace(string(data)), true
 		}

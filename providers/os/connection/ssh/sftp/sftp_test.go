@@ -20,7 +20,7 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -108,7 +108,7 @@ func RunSftpServer(rootpath string) {
 	flag.StringVar(&rootDir, "root", rootpath, "root directory")
 	flag.Parse()
 
-	debugStream := ioutil.Discard
+	debugStream := io.Discard
 
 	// An SSH server is represented by a ServerConfig, which holds
 	// certificate details and handles authentication of ServerConns.

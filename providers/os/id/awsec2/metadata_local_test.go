@@ -2,7 +2,7 @@ package awsec2
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -45,13 +45,13 @@ func TestEC2RoleProviderInstanceIdentityLocal(t *testing.T) {
 			return &http.Response{
 				StatusCode: 200,
 				Header:     http.Header{},
-				Body:       ioutil.NopCloser(bytes.NewBufferString("ec2-name")),
+				Body:       io.NopCloser(bytes.NewBufferString("ec2-name")),
 			}, nil
 		}
 		return &http.Response{
 			StatusCode: 200,
 			Header:     http.Header{},
-			Body:       ioutil.NopCloser(bytes.NewReader(instanceIdentityDocument)),
+			Body:       io.NopCloser(bytes.NewReader(instanceIdentityDocument)),
 		}, nil
 	})
 
@@ -76,13 +76,13 @@ func TestEC2RoleProviderInstanceIdentityLocalDisabledTagsService(t *testing.T) {
 			return &http.Response{
 				StatusCode: 404,
 				Header:     http.Header{},
-				Body:       ioutil.NopCloser(bytes.NewBufferString("not enabled")),
+				Body:       io.NopCloser(bytes.NewBufferString("not enabled")),
 			}, nil
 		}
 		return &http.Response{
 			StatusCode: 200,
 			Header:     http.Header{},
-			Body:       ioutil.NopCloser(bytes.NewReader(instanceIdentityDocument)),
+			Body:       io.NopCloser(bytes.NewReader(instanceIdentityDocument)),
 		}, nil
 	})
 

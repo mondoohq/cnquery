@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/motor/providers"
 	os_provider "go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/ssh/cat"
 )
 
 var (
@@ -55,7 +54,7 @@ func New(container string) (*Provider, error) {
 		dockerClient: t.dockerClient,
 		Container:    t.container,
 		Provider:     t,
-		catFS:        cat.New(t),
+		// catFS:        cat.New(t),
 	}
 	return t, nil
 }

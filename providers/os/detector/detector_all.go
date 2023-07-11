@@ -3,7 +3,6 @@ package detector
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,7 +27,7 @@ var macOS = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			return false, nil
 		}
@@ -84,7 +83,7 @@ var alpine = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			return false, nil
 		}
@@ -128,7 +127,7 @@ var debian = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			return false, nil
 		}
@@ -228,7 +227,7 @@ var rhel = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			return false, nil
 		}
@@ -314,7 +313,7 @@ var fedora = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			return false, nil
 		}
@@ -344,7 +343,7 @@ var oracle = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			return false, nil
 		}
@@ -443,7 +442,7 @@ var gentoo = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			log.Debug().Err(err)
 			return false, nil
@@ -494,7 +493,7 @@ var busybox = &PlatformResolver{
 		}
 		defer f.Close()
 
-		content, err := ioutil.ReadAll(f)
+		content, err := io.ReadAll(f)
 		if err != nil {
 			return false, err
 		}
@@ -548,7 +547,7 @@ var openwrt = &PlatformResolver{
 		}
 		defer f.Close()
 
-		content, err := ioutil.ReadAll(f)
+		content, err := io.ReadAll(f)
 		if err != nil {
 			return false, err
 		}
@@ -813,7 +812,7 @@ var redhatFamily = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
 			log.Debug().Err(err)
 			return false, nil
@@ -872,7 +871,7 @@ var archFamily = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil {
 			return false, nil
 		}
@@ -1044,7 +1043,7 @@ var solaris = &PlatformResolver{
 		}
 		defer f.Close()
 
-		c, err := ioutil.ReadAll(f)
+		c, err := io.ReadAll(f)
 		if err != nil {
 			return false, nil
 		}
@@ -1071,7 +1070,7 @@ var esxi = &PlatformResolver{
 			log.Debug().Err(err).Msg("could not run command")
 			return false, nil
 		}
-		vmware_info, err := ioutil.ReadAll(cmd.Stdout)
+		vmware_info, err := io.ReadAll(cmd.Stdout)
 		if err != nil {
 			log.Debug().Err(err).Msg("could not run command")
 			return false, err
