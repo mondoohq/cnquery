@@ -113,6 +113,8 @@ func ResolveManager(motor *motor.Motor) (OSServiceManager, error) {
 		} else {
 			osm = ResolveSystemdServiceManager(osProvider)
 		}
+	case pf.Name == "raspbian":
+		osm = ResolveSystemdServiceManager(osProvider)
 	case pf.Name == "suse-microos": // it is suse family but uses a different version scheme
 		osm = ResolveSystemdServiceManager(osProvider)
 	case pf.IsFamily("suse"):
