@@ -7,10 +7,6 @@ import (
 	"go.mondoo.com/cnquery/cli/execruntime"
 )
 
-func (m *mqlMondoo) id() (string, error) {
-	return "", nil
-}
-
 func (m *mqlMondoo) version() (string, error) {
 	return cnquery.GetVersion(), nil
 }

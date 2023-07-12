@@ -222,7 +222,15 @@ func (b *goBuilder) goFactory(r *Resource) {
 		return existing, nil
 	}`
 	} else {
-		initCode = `var err error`
+		initCode = `var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *` + structName + `, error)`
+	}
+
+	var idCode string
+	if b.collector.HasID(structName) {
+		idCode = "res._id, err = res.id()"
+	} else {
+		idCode = `res._id = "" // to override implement: id() (string, error)`
 	}
 
 	b.data += fmt.Sprintf(`
@@ -240,7 +248,7 @@ func %s(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, 
 		}
 	}
 
-	res._id, err = res.id()
+	%s
 	return res, err
 }
 
@@ -254,6 +262,7 @@ func (c *%s) MqlID() string {
 `,
 		newName, newName, structName,
 		initCode,
+		idCode,
 		structName, r.ID,
 		structName,
 	)

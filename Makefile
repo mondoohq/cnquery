@@ -58,7 +58,7 @@ prep/tools:
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto motor/generate resources/generate llx/generate lr shared/generate explorer/generate
+cnquery/generate: clean/proto motor/generate resources/generate llx/generate shared/generate explorer/generate
 
 define genProvider
 	$(eval $@_HOME = $(1))
@@ -77,6 +77,7 @@ endef
 providers:
 	go generate .
 	go generate ./providers/proto
+	go generate ./resources/packs/core/vadvisor/cvss # TODO: migrate
 	go build -o lr resources/lr/cli/main.go
 	@$(call genProvider, providers/core)
 	@$(call genProvider, providers/os)
@@ -94,38 +95,16 @@ motor/generate:
 motor/test:
 	gotestsum -f short-verbose $(shell go list ./motor/...)
 
-.PHONY: lr
-lr: | lr/build lr/test
-
-lr/build:
-	go generate .
-	go generate ./resources/packs/core/vadvisor/cvss
-	go build -o lr resources/lr/cli/main.go
-	./lr go providers/core/resources/core.lr
-	./lr docs json providers/core/resources/core.lr.manifest.yaml
-	./lr go providers/os/resources/os.lr
-	./lr docs json providers/os/resources/os.lr.manifest.yaml
-
-lr/release:
-	go generate .
-	go build -o lr resources/lr/cli/main.go
-	./lr docs yaml resources/packs/core/core.lr --version ${MANIFEST_VERSION} --docs-file resources/packs/core/core.lr.manifest.yaml
-	./lr docs go resources/packs/core/core.lr.manifest.yaml
-	go fmt resources/packs/core/core.lr.manifest.go
-
 lr/test:
 	go test ./resources/lr/...
 
-lr/docs: lr/build
-	./lr parse resources/packs/core/core.lr > resources/docs/static/$(shell make version).json
-	cd resources/docs/static && python -c 'import os, json; print json.dumps(os.listdir("."))' > snapshots.json
-	cd resources/docs && node ./refresh_snapshots.js
-
+# TODO: migrate
 .PHONY: lr/docs/serve
 lr/docs/serve:
 	cd resources/docs && yarn
 	cd resources/docs && $(shell cd resources/docs && npm bin)/parcel -p 1235 index.html
 
+# TODO: migrate
 .PHONY: lr/docs/markdown
 lr/docs/markdown: lr/build
 	./lr markdown resources/packs/aws/aws.lr \

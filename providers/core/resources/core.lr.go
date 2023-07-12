@@ -198,6 +198,7 @@ func NewMondoo(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Res
 	}
 
 	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlMondoo, error)
 
 	for k, v := range args {
 		if err = SetData(res, k, v); err != nil {
@@ -205,7 +206,7 @@ func NewMondoo(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Res
 		}
 	}
 
-	res._id, err = res.id()
+	res._id = "" // to override implement: id() (string, error)
 	return res, err
 }
 
@@ -268,6 +269,7 @@ func NewAsset(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Reso
 	}
 
 	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlAsset, error)
 
 	for k, v := range args {
 		if err = SetData(res, k, v); err != nil {
@@ -275,7 +277,7 @@ func NewAsset(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Reso
 		}
 	}
 
-	res._id, err = res.id()
+	res._id = "" // to override implement: id() (string, error)
 	return res, err
 }
 

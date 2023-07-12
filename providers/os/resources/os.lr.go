@@ -101,14 +101,7 @@ func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Re
 	}
 
 	var err error
-	var existing *mqlCommand
-	args, existing, err = res.init(args)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlCommand, error)
 
 	for k, v := range args {
 		if err = SetData(res, k, v); err != nil {

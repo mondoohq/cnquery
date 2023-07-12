@@ -34,7 +34,8 @@ func NewCollector(lrFile string) *Collector {
 
 var regexMaps = map[string]*regexp.Regexp{
 	"init":   regexp.MustCompile(`func \(\S+ \*(mql\S+)\) init\(\S+ [^)]+\) \([^,]+, \*\S+, error\) {`),
-	"struct": regexp.MustCompile("type (mql\\S+Internal) struct "),
+	"id":     regexp.MustCompile(`func \(\S+ \*(mql\S+)\) id\(\) \(string, error\)`),
+	"struct": regexp.MustCompile(`type (mql\S+Internal) struct `),
 }
 
 func (c *Collector) collect() error {
@@ -78,6 +79,12 @@ func (c *Collector) HasInit(structname string) bool {
 	return c.data.Exist("init", structname)
 }
 
+// HasID will verify if the given struct has a mondoo id function
+func (c *Collector) HasID(structname string) bool {
+	return c.data.Exist("id", structname)
+}
+
+// HasStruct will verify if the given struct is created (for embedding)
 func (c *Collector) HasStruct(structname string) bool {
 	return c.data.Exist("struct", structname)
 }

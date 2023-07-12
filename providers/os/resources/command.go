@@ -13,11 +13,6 @@ type mqlCommandInternal struct {
 	commandIsRunning bool
 }
 
-// this method is optional, remove it...
-func (c *mqlCommand) init(args map[string]interface{}) (map[string]interface{}, *mqlCommand, error) {
-	return args, nil, nil
-}
-
 func (c *mqlCommand) id() (string, error) {
 	return c.Command.Data, c.Command.Error
 }
