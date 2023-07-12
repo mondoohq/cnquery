@@ -251,7 +251,7 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 		}
 		pack.ComputedFilters.AddFilters(pack.Filters)
 
-		if err := cache.compileQueries(pack.Queries, pack); err != nil {
+		if err := cache.compileQueries(pack.Queries, pack.ComputedFilters); err != nil {
 			return nil, err
 		}
 
@@ -262,11 +262,16 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 			if err = group.Filters.Compile(ownerMrn); err != nil {
 				return nil, errors.Wrap(err, "failed to compile querypack filters")
 			}
-			pack.ComputedFilters.AddFilters(group.Filters)
+			// we must have filters set per group, they are required for selection
+			if group.Filters == nil {
+				group.Filters = NewFilters()
+			}
 
-			if err := cache.compileQueries(group.Queries, pack); err != nil {
+			if err := cache.compileQueries(group.Queries, group.Filters); err != nil {
 				return nil, err
 			}
+
+			pack.ComputedFilters.AddFilters(group.Filters)
 		}
 	}
 
@@ -304,9 +309,13 @@ func (c *bundleCache) error() error {
 	return errors.New(msg.String())
 }
 
-func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
+func (c *bundleCache) compileQueries(queries []*Mquery, filters *Filters) error {
 	for i := range queries {
-		c.precompileQuery(queries[i], pack)
+		c.precompileQuery(queries[i], filters == nil)
+	}
+
+	for i := range queries {
+		c.processQueryFilters(queries[i], filters)
 	}
 
 	// After the first pass we may have errors. We try to collect as many errors
@@ -329,7 +338,7 @@ func (c *bundleCache) compileQueries(queries []*Mquery, pack *QueryPack) error {
 
 // precompileQuery indexes the query, turns UIDs into MRNs, compiles properties
 // and filters, and pre-processes variants. Also makes sure the query isn't nil.
-func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
+func (c *bundleCache) precompileQuery(query *Mquery, isGlobal bool) {
 	if query == nil {
 		c.errors = append(c.errors, errors.New("received null query"))
 		return
@@ -348,8 +357,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 		c.uid2mrn[uid] = query.Mrn
 	}
 
-	// the pack is only nil if we are dealing with shared queries
-	if pack == nil {
+	if isGlobal {
 		c.lookupQuery[query.Mrn] = query
 	} else if existing, ok := c.lookupQuery[query.Mrn]; ok {
 		query.AddBase(existing)
@@ -368,20 +376,6 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 		}
 	}
 
-	// filters have no dependencies, so we can compile them early
-	if err := query.Filters.Compile(c.ownerMrn); err != nil {
-		c.errors = append(c.errors, errors.New("failed to compile filters for query "+query.Mrn))
-		return
-	}
-
-	// filters will need to be aggregated into the pack's filters
-	if pack != nil {
-		if err := pack.ComputedFilters.AddQueryFilters(query, c.lookupQuery); err != nil {
-			c.errors = append(c.errors, errors.New("failed to register filters for query "+query.Mrn))
-			return
-		}
-	}
-
 	// ensure MRNs for variants
 	for i := range query.Variants {
 		variant := query.Variants[i]
@@ -392,6 +386,26 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 		}
 		if uid != "" {
 			c.uid2mrn[uid] = variant.Mrn
+		}
+	}
+}
+
+// prepareQuery turns UIDs into MRNs and indexes the queries, compiles properties
+// and filters, and pre-processes variants. Also makes sure the query isn't nil.
+func (c *bundleCache) processQueryFilters(query *Mquery, filters *Filters) {
+	query = c.lookupQuery[query.Mrn]
+
+	// filters have no dependencies, so we can compile them early
+	if err := query.Filters.Compile(c.ownerMrn); err != nil {
+		c.errors = append(c.errors, errors.New("failed to compile filters for query "+query.Mrn))
+		return
+	}
+
+	// filters will need to be aggregated into the pack's filters
+	if filters != nil {
+		if err := filters.AddQueryFilters(query, c.lookupQuery); err != nil {
+			c.errors = append(c.errors, errors.New("failed to register filters for query "+query.Mrn))
+			return
 		}
 	}
 }

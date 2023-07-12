@@ -116,7 +116,7 @@ func ChecksumQueries(queries []*Mquery) (checksums.Fast, checksums.Fast) {
 
 		// we add this sanity check since we expose the method, but can't ensure
 		// that users have compiled everything beforehand
-		if query.Checksum == "" || query.CodeId == "" {
+		if query.Checksum == "" || (query.CodeId == "" && len(query.Variants) == 0) {
 			panic("internal error processing filter checksums: query is compiled")
 		}
 
