@@ -100,7 +100,7 @@ packs:
         title: Retrieve data on IAM users, groups, and roles to which any 'FullAccess' policy is attached
         docs:
           desc: |
-            This query retrieves all IAM users, croups, and roles that have any one of the AWS FullAccess roles attached.
+            This query retrieves all IAM users, groups, and roles with an AWS FullAccess role attached.
         mql: |
           aws.iam.policies.
             where( name == /FullAccess/i && attachmentCount != 0) { 

@@ -18,10 +18,10 @@ packs:
         title: Retrieve operating system uptime
         mql: os.uptime
       - uid: mondoo-windows-installed-packages
-        title: Retrieve list about installed packages
+        title: Retrieve list of installed packages
         mql: packages
       - uid: mondoo-windows-interface-configuration
-        title: Retrieve all Windows Computer/ System information
+        title: Retrieve all Windows Computer/System information
         mql: windows.computerInfo
       - uid: mondoo-windows-running-services
         title: Retrieve running services

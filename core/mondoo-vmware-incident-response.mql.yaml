@@ -12,7 +12,7 @@ packs:
       desc: |
         ## Overview
 
-        VMware vCenter Incident Response Pack by Mondoo is designed to retrieve data about vCenter and its ESXi hosts.
+        VMware vCenter Incident Response Pack by Mondoo retrieves data about vCenter and its ESXi hosts.
 
         ### Run query pack
 
@@ -47,11 +47,11 @@ packs:
       - uid: mondoo-vmware-incident-response-acceptance-level
         title: Retrieve host acceptance level
         docs:
-          desc: The host acceptance level determines which VIBs can be installed to a host. 
+          desc: The host acceptance level determines which VIBs can be installed on a host. 
         mql: vsphere.host.acceptanceLevel
         refs:
           - title:
             url: https://docs.vmware.com/en/VMware-vSphere/6.5/com.vmware.vsphere.upgrade.doc/GUID-27BBBAB8-01EA-4238-8140-1C3C3EFC0AA6.html
-      - uid: mondoo-vmware-incident-response-acceptanceLevel
-        title: Retrieve list configured ntp server
+      - uid: mondoo-vmware-incident-response-ntp-servers
+        title: Retrieve all configured NTP servers
         mql: vsphere.host.ntp.server

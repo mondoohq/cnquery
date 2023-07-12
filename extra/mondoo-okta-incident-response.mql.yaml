@@ -12,7 +12,7 @@ packs:
       desc: |
         ### Overview
 
-        The Okta Incident Response query pack retrieves configuration data about your Okta configuration during a security incident.
+        During a security incident, the Okta Incident Response query pack retrieves configuration data about your Okta configuration.
 
         ### Prerequisites
 
@@ -23,7 +23,7 @@ packs:
 
         ### Run query pack
 
-        To run this query pack against a Okta domain:
+        To run this query pack against an Okta domain:
 
         ```bash
         export OKTA_TOKEN=<TOKEN>

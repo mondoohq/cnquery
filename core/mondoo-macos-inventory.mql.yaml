@@ -10,7 +10,7 @@ packs:
       mondoo.com/category: best-practices
     docs:
       desc: |
-        The macOS Inventory Pack by Mondoo is designed to retrieve data about macOS hosts for asset inventory. 
+        The macOS Inventory Pack by Mondoo retrieves data about macOS hosts for asset inventory. 
 
         ## Local scan
         To run this pack locally on a macOS host:
@@ -27,7 +27,7 @@ packs:
         ```
 
         ## Join the community!
-        Our goal is to build query packs that are simple to deploy, and provide accurate and useful data. 
+        Our goal is to build query packs that are simple to deploy and provide accurate and useful data. 
         
         If you have any suggestions for improving this query pack, or if you need support, [join the Mondoo community](https://github.com/orgs/mondoohq/discussions) in GitHub Discussions. 
     filters:

@@ -82,16 +82,16 @@ packs:
             This query retrieves data for all databases in sql servers
         mql: azure.subscription.sql.servers { databases }
       - uid: mondoo-asset-inventory-azure-postgresql                                                                                                                                                         
-        title: Retrieve data for all Azure postgresql servers                                                                                                                                                         
+        title: Retrieve data for all Azure PostgreSQL servers                                                                                                                                                         
         docs:
           desc: |
-            This query retrieves data for all postgresql servers
+            This query retrieves data for all PostgreSQL servers
         mql: azure.subscription.postgreSql.servers
       - uid: mondoo-asset-inventory-azure-postgresql-firewallrules                                                                                                                                                        
-        title: Retrieve data for all firewall rules in Azure postgresql servers                                                                                                                                                         
+        title: Retrieve data for all firewall rules in Azure PostgreSQL servers                                                                                                                                                         
         docs:
           desc: |
-            This query retrieves data for all firewall rules in postgresql servers
+            This query retrieves data for all firewall rules in PostgreSQL servers
         mql: azure.subscription.postgreSql.servers { firewallRules }
       - uid: mondoo-asset-inventory-azure-mysql                                                                                                                                                        
         title: Retrieve data for all Azure MySQL servers                                                                                                                                                         
@@ -100,16 +100,16 @@ packs:
             This query retrieves data for all sql servers
         mql: azure.subscription.mySql.servers
       - uid: mondoo-asset-inventory-azure-mariaDb
-        title: Retrieve data for all Azure mariaDb servers
+        title: Retrieve data for all Azure MariaDB servers
         docs:
           desc: |
-            This query retrieves data for all mariaDb servers
+            This query retrieves data for all MariaDB servers
         mql: azure.subscription.mariaDb.servers
       - uid: mondoo-asset-inventory-azure-diagnosticSettings                                                                                                                                                       
-        title: Retrieve data for all Azure diagnostic Settings                                                                                                                                                         
+        title: Retrieve data for all Azure diagnostic settings                                                                                                                                                         
         docs:
           desc: |
-            This query retrieves data for all diagnostic Settings
+            This query retrieves data for all diagnostic settings
         mql: azure.subscription.monitor.diagnosticSettings
       - uid: mondoo-asset-inventory-azure-keyVaults
         title: Retrieve data for all Azure Key Vaults
@@ -165,11 +165,11 @@ packs:
           desc: |
             This query retrieves data for all web apps
         mql: azure.subscription.web.apps
-      - uid: mondoo-asset-inventory-azure-cosmoDb
-        title: Retrieve data for all Azure cosmoDb accounts
+      - uid: mondoo-asset-inventory-azure-cosmosDb
+        title: Retrieve data for all Azure Cosmos DB accounts
         docs:
           desc: |
-            This query retrieves data for all cosmoDb accounts
+            This query retrieves data for all Cosmos DB accounts
         mql: azure.subscription.cosmosDb.accounts
       - uid: mondoo-asset-inventory-azure-applicationInsight
         title: Retrieve data for all Azure applicationInsight
@@ -184,10 +184,10 @@ packs:
             This query retrieves data for all ApplicationInsight
         mql: azure.subscription.network.watchers
       - uid: mondoo-asset-inventory-azure-bastionHosts
-        title: Retrieve data for all Azure bastionHosts
+        title: Retrieve data for all Azure Bastion hosts
         docs:
           desc: |
-            This query retrieves data for all bastionHosts
+            This query retrieves data for all Bastion hosts
         mql: azure.subscription.network.bastionHosts
       - uid: mondoo-asset-inventory-azure-compute-disks
         title: Retrieve data for all compute disks under the subscription

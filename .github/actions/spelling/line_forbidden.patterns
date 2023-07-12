@@ -44,6 +44,17 @@
 # Product Names
 #
 
+# s.b. Jira
+\bJIRA\b
+
+# s.b. MariaDB
+\bMaria DB\b
+\bmariaDB\b
+\bmariaDb\b
+
+# s.b. PostgreSQL
+\bPostgreSql\b
+
 # s.b. Firefox
 \bFireFox\b
 
@@ -158,6 +169,10 @@
 # s.b. vCenter
 \bVcenter\b
 \bVCenter\b
+
+# s.b. vSphere
+\bVsphere\b
+\bVSphere\b
 
 # s.b. ESXi
 \bEsxi\b
@@ -417,6 +432,8 @@
 
 # s.b. Cosmos DB
 \bCosmosDB\b
+\bCosmoDB\b
+\bCosmo DB\b
 
 # s.b. SignalR Service
 \bSignalR service\b
