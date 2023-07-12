@@ -115,7 +115,11 @@ func (e *mqlAwsEcr) getPrivateRepositories(provider *aws.Provider) []*jobpool.Jo
 				return nil, err
 			}
 			for i := range repoResp.Repositories {
+				imageScanOnPush := false
 				r := repoResp.Repositories[i]
+				if r.ImageScanningConfiguration != nil {
+					imageScanOnPush = r.ImageScanningConfiguration.ScanOnPush
+				}
 				mqlRepoResource, err := e.MotorRuntime.CreateResource("aws.ecr.repository",
 					"arn", core.ToString(r.RepositoryArn),
 					"name", core.ToString(r.RepositoryName),
@@ -123,6 +127,7 @@ func (e *mqlAwsEcr) getPrivateRepositories(provider *aws.Provider) []*jobpool.Jo
 					"registryId", core.ToString(r.RegistryId),
 					"public", false,
 					"region", region,
+					"imageScanOnPush", imageScanOnPush,
 				)
 				if err != nil {
 					return nil, err
@@ -309,6 +314,7 @@ func (e *mqlAwsEcr) GetPublicRepositories() ([]interface{}, error) {
 			"registryId", core.ToString(r.RegistryId),
 			"public", true,
 			"region", "us-east-1",
+			"imageScanOnPush", false,
 		)
 		if err != nil {
 			return nil, err
