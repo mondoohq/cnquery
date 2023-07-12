@@ -1,4 +1,4 @@
-package asset
+package inventory
 
 import (
 	"encoding/json"
@@ -9,15 +9,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. asset.proto
-
 func (a *Asset) HumanName() string {
 	if a == nil {
 		return ""
 	}
 
 	if a.Platform != nil {
-		return fmt.Sprintf("%s (%s)", a.Name, a.Platform.Kind.Name())
+		return fmt.Sprintf(a.Name + " (" + a.Platform.Title + ")")
 	}
 
 	return a.Name
@@ -123,7 +121,9 @@ func (s *AssetCategory) UnmarshalJSON(data []byte) error {
 		*s = AssetCategory(code)
 	} else {
 		var name string
-		err = json.Unmarshal(data, &name)
+		// we can ignore the error here because we just look it up and otherwise
+		// tell users that we can't find the backend value
+		_ = json.Unmarshal(data, &name)
 		code, ok := AssetCategory_schemevalue[strings.TrimSpace(name)]
 		if !ok {
 			return errors.New("unknown backend value: " + string(data))

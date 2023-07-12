@@ -8,14 +8,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/types"
 )
 
 type Recording interface {
 	Save() error
-	EnsureAsset(asset *asset.Asset, provider string, conf *providers.Config)
+	EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config)
 	AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData)
 	GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool)
 	GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool)
@@ -57,7 +56,7 @@ func (n nullRecording) Save() error {
 	return nil
 }
 
-func (n nullRecording) EnsureAsset(asset *asset.Asset, provider string, conf *providers.Config) {}
+func (n nullRecording) EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config) {}
 
 func (n nullRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 }
@@ -78,7 +77,7 @@ func (n *readOnlyRecording) Save() error {
 	return nil
 }
 
-func (n *readOnlyRecording) EnsureAsset(asset *asset.Asset, provider string, conf *providers.Config) {
+func (n *readOnlyRecording) EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config) {
 	// For read-only recordings we are still loading from file, so that means
 	// we are severly lacking connection IDs.
 	found, _ := n.findAssetConnID(asset, conf)
@@ -210,7 +209,7 @@ func (r *recording) finalize() {
 	}
 }
 
-func (r *recording) findAssetConnID(asset *asset.Asset, conf *providers.Config) (int, string) {
+func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Config) (int, string) {
 	var id string
 	if asset.Mrn != "" {
 		id = asset.Mrn
@@ -231,7 +230,7 @@ func (r *recording) findAssetConnID(asset *asset.Asset, conf *providers.Config) 
 	return found, id
 }
 
-func (r *recording) EnsureAsset(asset *asset.Asset, provider string, conf *providers.Config) {
+func (r *recording) EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config) {
 	found, id := r.findAssetConnID(asset, conf)
 
 	if found == -1 {

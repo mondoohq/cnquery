@@ -11,18 +11,17 @@ import (
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/resources"
 )
 
 func RunExecutionJob(
-	schema *resources.Schema, runtime *resources.Runtime, collectorSvc explorer.QueryConductor, assetMrn string,
+	runtime llx.Runtime, collectorSvc explorer.QueryConductor, assetMrn string,
 	job *explorer.ExecutionJob, features cnquery.Features, progressReporter progress.Progress,
 ) (*instance, error) {
 	// We are setting a sensible default timeout for jobs here. This will need
 	// user-configuration.
 	timeout := 30 * time.Minute
 
-	res := newInstance(schema, runtime, progressReporter)
+	res := newInstance(runtime, progressReporter)
 	res.assetMrn = assetMrn
 	res.collector = collectorSvc
 	res.datapoints = job.Datapoints
@@ -30,10 +29,7 @@ func RunExecutionJob(
 	return res, res.runCode(job.Queries, timeout)
 }
 
-func RunFilterQueries(
-	schema *resources.Schema, runtime *resources.Runtime,
-	queries []*explorer.Mquery, timeout time.Duration,
-) ([]*explorer.Mquery, []error) {
+func RunFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout time.Duration) ([]*explorer.Mquery, []error) {
 	errs := []error{}
 	equeries := map[string]*explorer.ExecutionQuery{}
 	mqueries := map[string]*explorer.Mquery{}
@@ -55,7 +51,7 @@ func RunFilterQueries(
 		return nil, errs
 	}
 
-	instance := newInstance(schema, runtime, nil)
+	instance := newInstance(runtime, nil)
 	err := instance.runCode(equeries, timeout)
 	if err != nil {
 		return nil, []error{err}
@@ -149,8 +145,7 @@ func (e *instance) runCode(queries map[string]*explorer.ExecutionQuery, timeout 
 // One instance of the executor. May be returned but not instantiated
 // from outside this package.
 type instance struct {
-	schema  *resources.Schema
-	runtime *resources.Runtime
+	runtime llx.Runtime
 	// raw list of executino queries mapped via CodeID
 	queries map[string]*explorer.ExecutionQuery
 	// an optional list of datapoints as an allow-list of data that will be returned
@@ -175,13 +170,13 @@ type instance struct {
 	assetMrn         string
 }
 
-func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressReporter progress.Progress) *instance {
+func newInstance(runtime llx.Runtime, progressReporter progress.Progress) *instance {
 	if progressReporter == nil {
 		progressReporter = progress.Noop{}
 	}
 
+	panic("PORT: ASSET MRN")
 	return &instance{
-		schema:           schema,
 		runtime:          runtime,
 		datapointTracker: map[string][]*explorer.ExecutionQuery{},
 		queries:          map[string]*explorer.ExecutionQuery{},
@@ -191,7 +186,7 @@ func newInstance(schema *resources.Schema, runtime *resources.Runtime, progressR
 		isDone:           false,
 		done:             make(chan struct{}),
 		progressReporter: progressReporter,
-		assetMrn:         runtime.Motor.GetAsset().Mrn,
+		// assetMrn:         runtime.Motor.GetAsset().Mrn,
 	}
 }
 

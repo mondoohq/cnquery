@@ -1,4 +1,4 @@
-package credentialquery
+package manager
 
 import (
 	"strings"
@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/mql"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/mock"
 	"go.mondoo.com/cnquery/types"
 )
@@ -50,7 +50,7 @@ type CredentialQueryRunner struct {
 	secretMetadataQuery string
 }
 
-func (sq *CredentialQueryRunner) Run(a *asset.Asset) (*vault.Credential, error) {
+func (sq *CredentialQueryRunner) Run(a *inventory.Asset) (*vault.Credential, error) {
 	// map labels to props
 	labelProps := map[string]interface{}{}
 	labels := a.GetLabels()

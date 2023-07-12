@@ -1,6 +1,6 @@
 package llx
 
-import "go.mondoo.com/cnquery/resources"
+import "go.mondoo.com/cnquery/providers-sdk/v1/resources"
 
 type Runtime interface {
 	Unregister(watcherUID string) error

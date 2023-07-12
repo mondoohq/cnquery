@@ -4,7 +4,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers/proto"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -26,16 +25,16 @@ type TValue[T any] struct {
 	Error error
 }
 
-func (x *TValue[T]) ToDataRes(typ types.Type) *proto.DataRes {
+func (x *TValue[T]) ToDataRes(typ types.Type) *DataRes {
 	if x.State&StateIsSet == 0 {
-		return &proto.DataRes{}
+		return &DataRes{}
 	}
 	if x.State&StateIsNull != 0 {
-		return &proto.DataRes{Data: &llx.Primitive{Type: string(typ)}}
+		return &DataRes{Data: &llx.Primitive{Type: string(typ)}}
 	}
 	raw := llx.RawData{Type: typ, Value: x.Data, Error: x.Error}
 	res := raw.Result()
-	return &proto.DataRes{Data: res.Data, Error: res.Error}
+	return &DataRes{Data: res.Data, Error: res.Error}
 }
 
 func PrimitiveToTValue[T any](p *llx.Primitive) TValue[T] {

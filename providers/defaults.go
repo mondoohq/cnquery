@@ -1,6 +1,17 @@
 package providers
 
-import "go.mondoo.com/cnquery/providers/plugin"
+import "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+
+const DefaultOsID = "go.mondoo.com/cnquery/providers/os"
+
+var defaultRuntime *Runtime
+
+func DefaultRuntime() *Runtime {
+	if defaultRuntime == nil {
+		defaultRuntime = Coordinator.NewRuntime()
+	}
+	return defaultRuntime
+}
 
 // DefaultProviders are useful when working in air-gapped environments
 // to tell users what providers are used for common connections, when there

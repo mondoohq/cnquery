@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func NewAwsSsmSessionManager(cfg aws.Config, profile string) (*AwsSsmSessionManager, error) {
@@ -37,7 +37,7 @@ type AwsSsmSessionManager struct {
 	cfg     aws.Config
 }
 
-func (a *AwsSsmSessionManager) Dial(tc *providers.Config, localPort string, remotePort string) (*AwsSsmSessionConnection, error) {
+func (a *AwsSsmSessionManager) Dial(tc *inventory.Config, localPort string, remotePort string) (*AwsSsmSessionConnection, error) {
 	return NewAwsSsmSessionConnection(a.cfg, a.profile, tc.Host, localPort, remotePort)
 }
 

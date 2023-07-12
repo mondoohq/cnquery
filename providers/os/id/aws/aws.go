@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/id/awsec2"
 	"go.mondoo.com/cnquery/providers/os/id/awsecs"
@@ -21,7 +21,7 @@ func readValue(conn shared.Connection, fPath string) string {
 	return string(content)
 }
 
-func Detect(conn shared.Connection, p *platform.Platform) (string, string, []string) {
+func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []string) {
 	var values []string
 	if p.IsFamily("linux") {
 		// Fetching the data from the smbios manager is slow for some transports

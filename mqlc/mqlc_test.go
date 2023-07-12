@@ -11,14 +11,14 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
-	resource_info "go.mondoo.com/cnquery/resources/packs/os/info"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/types"
 )
 
 var (
 	features = cnquery.Features{}
 	conf     = NewConfig(
-		resource_info.Registry.Schema(),
+		providers.MustLoadSchemaFromFile("os", "../providers/os/dist/os.resources.json"),
 		features,
 	)
 )
@@ -742,7 +742,6 @@ func TestCompiler_Switch(t *testing.T) {
 			assert.Equal(t, types.Any, res.CodeV2.Blocks[0].Chunks[2].Type())
 		})
 	})
-
 }
 
 // //    =======================

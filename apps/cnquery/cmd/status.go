@@ -14,7 +14,7 @@ import (
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/upstream"
 	"go.mondoo.com/cnquery/upstream/health"
 	"go.mondoo.com/ranger-rpc"
@@ -124,18 +124,18 @@ type Status struct {
 }
 
 type ClientStatus struct {
-	Timestamp      string             `json:"timestamp,omitempty"`
-	Mrn            string             `json:"mrn,omitempty"`
-	ServiceAccount string             `json:"service_account,omitempty"`
-	ParentMrn      string             `json:"parentMrn,omitempty"`
-	Version        string             `json:"version,omitempty"`
-	Build          string             `json:"build,omitempty"`
-	Labels         map[string]string  `json:"labels,omitempty"`
-	Platform       *platform.Platform `json:"platform,omitempty"`
-	IP             string             `json:"ip,omitempty"`
-	Hostname       string             `json:"hostname,omitempty"`
-	Registered     bool               `json:"registered,omitempty"`
-	PingPongError  error              `json:"pingPongError,omitempty"`
+	Timestamp      string              `json:"timestamp,omitempty"`
+	Mrn            string              `json:"mrn,omitempty"`
+	ServiceAccount string              `json:"service_account,omitempty"`
+	ParentMrn      string              `json:"parentMrn,omitempty"`
+	Version        string              `json:"version,omitempty"`
+	Build          string              `json:"build,omitempty"`
+	Labels         map[string]string   `json:"labels,omitempty"`
+	Platform       *inventory.Platform `json:"platform,omitempty"`
+	IP             string              `json:"ip,omitempty"`
+	Hostname       string              `json:"hostname,omitempty"`
+	Registered     bool                `json:"registered,omitempty"`
+	PingPongError  error               `json:"pingPongError,omitempty"`
 }
 
 func (s Status) RenderCliStatus() {

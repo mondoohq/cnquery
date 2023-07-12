@@ -6,10 +6,10 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/execruntime"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 )
 
 type sysInfoConfig struct {
@@ -26,13 +26,13 @@ func WithRuntime(r *providers.Runtime) SystemInfoOption {
 }
 
 type SystemInfo struct {
-	Version    string             `json:"version,omitempty"`
-	Build      string             `json:"build,omitempty"`
-	Platform   *platform.Platform `json:"platform,omitempty"`
-	IP         string             `json:"ip,omitempty"`
-	Hostname   string             `json:"platform_hostname,omitempty"`
-	Labels     map[string]string  `json:"labels,omitempty"`
-	PlatformId string             `json:"platform_id,omitempty"`
+	Version    string              `json:"version,omitempty"`
+	Build      string              `json:"build,omitempty"`
+	Platform   *inventory.Platform `json:"platform,omitempty"`
+	IP         string              `json:"ip,omitempty"`
+	Hostname   string              `json:"platform_hostname,omitempty"`
+	Labels     map[string]string   `json:"labels,omitempty"`
+	PlatformId string              `json:"platform_id,omitempty"`
 }
 
 func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
@@ -47,14 +47,14 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 			return nil, err
 		}
 
-		args, err := cfg.runtime.Provider.Instance.Plugin.ParseCLI(&proto.ParseCLIReq{
+		args, err := cfg.runtime.Provider.Instance.Plugin.ParseCLI(&plugin.ParseCLIReq{
 			Connector: "local",
 		})
 		if err != nil {
 			return nil, err
 		}
 
-		if err = cfg.runtime.Connect(&proto.ConnectReq{Asset: args.Inventory}); err != nil {
+		if err = cfg.runtime.Connect(&plugin.ConnectReq{Asset: args.Inventory}); err != nil {
 			return nil, err
 		}
 	}
@@ -71,14 +71,14 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 	}
 
 	if vals, ok := raw.Value.(map[string]interface{}); ok {
-		sysInfo.Platform = &platform.Platform{
+		sysInfo.Platform = &inventory.Platform{
 			Name:    llx.TRaw2T[string](vals["name"]),
 			Arch:    llx.TRaw2T[string](vals["arch"]),
 			Title:   llx.TRaw2T[string](vals["title"]),
 			Family:  llx.TRaw2TArr[string](vals["family"]),
 			Build:   llx.TRaw2T[string](vals["build"]),
 			Version: llx.TRaw2T[string](vals["version"]),
-			// Kind: llx.TRaw2T[string](vals["kind"]),
+			Kind:    llx.TRaw2T[string](vals["kind"]),
 			Runtime: llx.TRaw2T[string](vals["Runtime"]),
 			Labels:  llx.TRaw2TMap[string](vals["labels"]),
 		}

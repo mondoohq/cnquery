@@ -1,15 +1,9 @@
 syntax = "proto3";
-package proto;
-option go_package = "go.mondoo.com/cnquery/providers/proto";
+package cnquery.providers.v1;
+option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/plugin";
 
-import "motor/inventory/v1/inventory.proto";
+import "providers-sdk/v1/inventory/inventory.proto";
 import "llx/llx.proto";
-
-message Resource {
-  string name = 3;
-  string id = 4;
-  map<string, cnquery.llx.Primitive> fields = 5;
-}
 
 message ParseCLIReq {
   string connector = 1;
@@ -19,17 +13,17 @@ message ParseCLIReq {
 
 message ParseCLIRes {
   // full inventory of everything that was requested
-  cnquery.motor.inventory.v1.Inventory inventory = 1;
+  Inventory inventory = 1;
   uint32 connection = 2;
 }
 
 message ConnectReq {
   bytes features = 2;
   // Asset must be only one target asset
-  cnquery.motor.inventory.v1.Inventory asset = 3;
+  Inventory asset = 3;
 }
 
-message Connection {
+message ConnectRes {
   uint32 id = 1;
   string name = 2;
 }
@@ -54,14 +48,20 @@ message CollectRes {}
 
 message StoreReq {
   uint32 connection = 1;
-  repeated Resource resources = 2;
+  repeated ResourceData resources = 2;
+}
+
+message ResourceData {
+  string name = 3;
+  string id = 4;
+  map<string, cnquery.llx.Primitive> fields = 5;
 }
 
 message StoreRes {}
 
 service ProviderPlugin {
   rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
-  rpc Connect(ConnectReq) returns (Connection);
+  rpc Connect(ConnectReq) returns (ConnectRes);
   rpc GetData(DataReq) returns (DataRes);
   rpc StoreData(StoreReq) returns (StoreRes);
 }

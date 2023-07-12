@@ -1,81 +1,71 @@
-package inventory
+package manager
 
 import (
 	"context"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/discovery"
-	"go.mondoo.com/cnquery/motor/inventory/credentialquery"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/motor/vault/config"
 	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	"go.mondoo.com/cnquery/motor/vault/inmemory"
 	"go.mondoo.com/cnquery/motor/vault/multivault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 var _ InventoryManager = (*inventoryManager)(nil)
 
 type InventoryManager interface {
 	// GetAssets returns all assets under management
-	GetAssets() []*asset.Asset
+	GetAssets() []*inventory.Asset
 	// GetRelatedAssets returns a list of assets related to those under management
-	GetRelatedAssets() []*asset.Asset
+	GetRelatedAssets() []*inventory.Asset
 	// Resolve will iterate over all assets and try to discover all nested assets. After this operation
 	// GetAssets will return the fully resolved list of assets
-	Resolve(ctx context.Context) map[*asset.Asset]error
+	Resolve(ctx context.Context) map[*inventory.Asset]error
 	// GetCredential returns a full credential including the secret from vault
 	GetCredential(*vault.Credential) (*vault.Credential, error)
 	// QuerySecretId runs the credential query to determine the secret id for an asset, the resulting credential
 	// only returns a secret id
-	QuerySecretId(a *asset.Asset) (*vault.Credential, error)
+	QuerySecretId(a *inventory.Asset) (*vault.Credential, error)
 	// GetVault returns the configured Vault
 	GetVault() vault.Vault
 	GetCredsResolver() vault.Resolver
 }
 
-type Option func(*inventoryManager) error
+type imOption func(*inventoryManager) error
 
 // passes a pre-parsed asset inventory into the Inventory Manager
-func WithInventory(inventory *v1.Inventory) Option {
+func WithInventory(inventory *inventory.Inventory) imOption {
 	return func(im *inventoryManager) error {
 		logger.DebugDumpJSON("inventory-unresolved", inventory)
 		return im.loadInventory(inventory)
 	}
 }
 
-// passes a list of asset into the Inventory Manager
-func WithAssets(assetList []*asset.Asset) Option {
-	return func(im *inventoryManager) error {
-		return im.loadInventory(v1.New(v1.WithAssets(assetList...)))
-	}
-}
-
-func WithCredentialQuery(query string) Option {
+func WithCredentialQuery(query string) imOption {
 	return func(im *inventoryManager) error {
 		return im.SetCredentialQuery(query)
 	}
 }
 
-func WithVault(v vault.Vault) Option {
+func WithVault(v vault.Vault) imOption {
 	return func(im *inventoryManager) error {
 		im.vault = v
 		return nil
 	}
 }
 
-func WithCachedCredsResolver() Option {
+func WithCachedCredsResolver() imOption {
 	return func(im *inventoryManager) error {
 		im.isCached = true
 		return nil
 	}
 }
 
-func New(opts ...Option) (*inventoryManager, error) {
+func NewManager(opts ...imOption) (*inventoryManager, error) {
 	im := &inventoryManager{
-		assetList: []*asset.Asset{},
+		assetList: []*inventory.Asset{},
 	}
 
 	for _, option := range opts {
@@ -90,20 +80,19 @@ func New(opts ...Option) (*inventoryManager, error) {
 
 type inventoryManager struct {
 	isCached      bool
-	assetList     []*asset.Asset
-	relatedAssets []*asset.Asset
+	assetList     []*inventory.Asset
+	relatedAssets []*inventory.Asset
 	// optional vault set by user
 	vault vault.Vault
 	// internal vault used to store embedded credentials
 	inmemoryVault vault.Vault
 	// wrapper vault to access the credentials
-	accessVault vault.Vault
-
-	credentialQueryRunner *credentialquery.CredentialQueryRunner
+	accessVault           vault.Vault
+	credentialQueryRunner *CredentialQueryRunner
 }
 
 // TODO: define what happens when we call load multiple times?
-func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
+func (im *inventoryManager) loadInventory(inventory *inventory.Inventory) error {
 	err := inventory.PreProcess()
 	if err != nil {
 		return err
@@ -168,7 +157,7 @@ func (im *inventoryManager) loadInventory(inventory *v1.Inventory) error {
 }
 
 func (im *inventoryManager) SetCredentialQuery(query string) error {
-	qr, err := credentialquery.NewCredentialQueryRunner(query)
+	qr, err := NewCredentialQueryRunner(query)
 	if err != nil {
 		return err
 	}
@@ -176,18 +165,18 @@ func (im *inventoryManager) SetCredentialQuery(query string) error {
 	return nil
 }
 
-func (im *inventoryManager) GetAssets() []*asset.Asset {
+func (im *inventoryManager) GetAssets() []*inventory.Asset {
 	// TODO: do we need additional work to make this thread-safe
 	return im.assetList
 }
 
-func (im *inventoryManager) GetRelatedAssets() []*asset.Asset {
+func (im *inventoryManager) GetRelatedAssets() []*inventory.Asset {
 	return im.relatedAssets
 }
 
 // QuerySecretId provides an input and determines the credential information for an asset
 // The credential will only include the reference to the secret and not include the actual secret
-func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, error) {
+func (im *inventoryManager) QuerySecretId(a *inventory.Asset) (*vault.Credential, error) {
 	if im.credentialQueryRunner == nil {
 		log.Debug().Msg("no credential query set")
 		return nil, nil
@@ -198,16 +187,18 @@ func (im *inventoryManager) QuerySecretId(a *asset.Asset) (*vault.Credential, er
 	return im.credentialQueryRunner.Run(a)
 }
 
-func (im *inventoryManager) Resolve(ctx context.Context) map[*asset.Asset]error {
-	resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.GetCredsResolver(), im.QuerySecretId)
+func (im *inventoryManager) Resolve(ctx context.Context) map[*inventory.Asset]error {
+	// resolvedAssets := discovery.ResolveAssets(ctx, im.assetList, im.GetCredsResolver(), im.QuerySecretId)
+	panic("NEED TO RESOLVE")
 
-	// TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
-	im.assetList = resolvedAssets.Assets
-	im.relatedAssets = resolvedAssets.RelatedAssets
+	// // TODO: iterate over all resolved assets and match them with the original list and try to find credentials for each asset
+	// im.assetList = resolvedAssets.Assets
+	// im.relatedAssets = resolvedAssets.RelatedAssets
 
-	log.Info().Int("resolved-assets", len(im.assetList)).Msg("resolved assets")
-	logger.DebugDumpJSON("inventory-resolved-assets", im.assetList)
-	return resolvedAssets.Errors
+	// log.Info().Int("resolved-assets", len(im.assetList)).Msg("resolved assets")
+	// logger.DebugDumpJSON("inventory-resolved-assets", im.assetList)
+	// return resolvedAssets.Errors
+	return nil
 }
 
 func (im *inventoryManager) GetCredsResolver() vault.Resolver {

@@ -6,12 +6,11 @@ import (
 	"net/http"
 	"sync"
 
-	"go.mondoo.com/ranger-rpc"
-
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/ranger-rpc"
 )
 
 // NotReadyError indicates the results are not ready to be processed further
@@ -219,7 +218,7 @@ func (ctx *Runtime) CreateResource(name string, args ...interface{}) (ResourceTy
 // what "ctx" already holds, we do not need to create a new Runtime and can attach it directly to the
 // new resource. Otherwise, a new runtime is created, where the asset and provider are changed.
 // We probably also need to do something about ctx.UpstreamConfig
-func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *asset.Asset, p providers.Instance, args ...interface{}) (ResourceType, error) {
+func (ctx *Runtime) CreateResourceWithAssetContext(name string, a *inventory.Asset, p providers.Instance, args ...interface{}) (ResourceType, error) {
 	if p == nil {
 		p = ctx.Motor.Provider
 	}

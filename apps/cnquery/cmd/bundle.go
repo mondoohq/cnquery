@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/explorer"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/stringx"
 	"go.mondoo.com/cnquery/upstream"
 )
@@ -96,7 +97,8 @@ func validate(queryPackBundle *explorer.Bundle) []string {
 	}
 
 	// we compile after the checks because it removes the uids and replaces it with mrns
-	_, err := queryPackBundle.Compile(context.Background())
+	schema := providers.DefaultRuntime().Schema()
+	_, err := queryPackBundle.Compile(context.Background(), schema)
 	if err != nil {
 		errors = append(errors, "could not compile the query pack bundle", err.Error())
 	}

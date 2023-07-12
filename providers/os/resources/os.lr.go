@@ -4,8 +4,7 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -23,25 +22,25 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 	return f(runtime, args)
 }
 
-var getDataFields = map[string]func(r plugin.Resource) *proto.DataRes{
-	"command.command": func(r plugin.Resource) *proto.DataRes {
+var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"command.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetCommand()).ToDataRes(types.String)
 	},
-	"command.stdout": func(r plugin.Resource) *proto.DataRes {
+	"command.stdout": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetStdout()).ToDataRes(types.String)
 	},
-	"command.stderr": func(r plugin.Resource) *proto.DataRes {
+	"command.stderr": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetStderr()).ToDataRes(types.String)
 	},
-	"command.exitcode": func(r plugin.Resource) *proto.DataRes {
+	"command.exitcode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetExitcode()).ToDataRes(types.Int)
 	},
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]interface{}) *proto.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]interface{}) *plugin.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return &proto.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
+		return &plugin.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
 	}
 
 	return f(resource)

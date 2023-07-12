@@ -12,14 +12,13 @@ import (
 	"go.mondoo.com/cnquery/cli/components"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/types"
 )
 
 type Command struct {
 	Command *cobra.Command
-	Run     func(*cobra.Command, *providers.Runtime, *proto.ParseCLIRes)
+	Run     func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes)
 	Action  string
 }
 
@@ -172,7 +171,7 @@ func attachConnectorCmd(provider *plugin.Provider, connector *plugin.Connector, 
 	setConnector(provider, connector, cmd.Run, res)
 }
 
-func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *providers.Runtime, *proto.ParseCLIRes), cmd *cobra.Command) {
+func setConnector(provider *plugin.Provider, connector *plugin.Connector, run func(*cobra.Command, *providers.Runtime, *plugin.ParseCLIRes), cmd *cobra.Command) {
 	oldRun := cmd.Run
 	oldPreRun := cmd.PreRun
 
@@ -302,7 +301,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			log.Fatal().Msg(err.Error())
 		}
 
-		cliRes, err := runtime.Provider.Instance.Plugin.ParseCLI(&proto.ParseCLIReq{
+		cliRes, err := runtime.Provider.Instance.Plugin.ParseCLI(&plugin.ParseCLIReq{
 			Connector: connector.Name,
 			Args:      args,
 			Flags:     flagVals,

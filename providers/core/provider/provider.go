@@ -6,9 +6,8 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/core/resources"
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/providers/proto"
 )
 
 const defaultConnection uint32 = 1
@@ -24,11 +23,11 @@ func Init() *Service {
 	}
 }
 
-func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
+func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	return nil, errors.New("core doesn't offer any connectors")
 }
 
-func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
+func (s *Service) Connect(req *plugin.ConnectReq) (*plugin.ConnectRes, error) {
 	if req == nil || req.Asset == nil || req.Asset.Spec == nil {
 		return nil, errors.New("no connection data provided")
 	}
@@ -49,7 +48,7 @@ func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 	assetObj, err := resources.CreateResource(runtime, "asset", map[string]interface{}{
 		"ids":      llx.TArr2Raw(asset.PlatformIds),
 		"platform": asset.Platform.Name,
-		"kind":     asset.Platform.Kind.String(),
+		"kind":     asset.Platform.Kind,
 		"runtime":  asset.Platform.Runtime,
 		"version":  asset.Platform.Version,
 		"arch":     asset.Platform.Arch,
@@ -64,13 +63,13 @@ func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 	}
 	runtime.Resources["asset\x00"] = assetObj
 
-	return &proto.Connection{
+	return &plugin.ConnectRes{
 		Id:   defaultConnection,
 		Name: "core",
 	}, nil
 }
 
-func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) (*proto.DataRes, error) {
+func (s *Service) GetData(req *plugin.DataReq, callback plugin.ProviderCallback) (*plugin.DataRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
@@ -96,7 +95,7 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 		}
 
 		rd := llx.ResourceData(res, name).Result()
-		return &proto.DataRes{
+		return &plugin.DataRes{
 			Data: rd.Data,
 		}, nil
 	}
@@ -109,7 +108,7 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 	return resources.GetData(resource, req.Field, args), nil
 }
 
-func (s *Service) StoreData(req *proto.StoreReq) (*proto.StoreRes, error) {
+func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")

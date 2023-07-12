@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -32,8 +32,8 @@ type InstanceIdentifier interface {
 	Identify() (Identity, error)
 }
 
-func Resolve(conn shared.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
-	if pf.IsFamily(platform.FAMILY_UNIX) || pf.IsFamily(platform.FAMILY_WINDOWS) {
+func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
+	if pf.IsFamily(inventory.FAMILY_UNIX) || pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		return NewCommandInstanceMetadata(conn, pf), nil
 	}
 	return nil, errors.New(fmt.Sprintf("gce id detector is not supported for your asset: %s %s", pf.Name, pf.Version))
@@ -57,7 +57,7 @@ $doc | ConvertTo-Json
 `
 )
 
-func NewCommandInstanceMetadata(conn shared.Connection, platform *platform.Platform) *CommandInstanceMetadata {
+func NewCommandInstanceMetadata(conn shared.Connection, platform *inventory.Platform) *CommandInstanceMetadata {
 	return &CommandInstanceMetadata{
 		connection: conn,
 		platform:   platform,
@@ -66,7 +66,7 @@ func NewCommandInstanceMetadata(conn shared.Connection, platform *platform.Platf
 
 type CommandInstanceMetadata struct {
 	connection shared.Connection
-	platform   *platform.Platform
+	platform   *inventory.Platform
 }
 
 func (m *CommandInstanceMetadata) curl(key string, v interface{}) error {
@@ -80,7 +80,7 @@ func (m *CommandInstanceMetadata) curl(key string, v interface{}) error {
 
 func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 	switch {
-	case m.platform.IsFamily(platform.FAMILY_UNIX):
+	case m.platform.IsFamily(inventory.FAMILY_UNIX):
 		var projectID string
 		var instanceID uint64
 		var instanceName string
@@ -108,7 +108,7 @@ func (m *CommandInstanceMetadata) Identify() (Identity, error) {
 			InstanceID:  MondooGcpInstanceID(projectID, zone, instanceID),
 			PlatformMrn: MondooGcpInstancePlatformMrn(projectID, zone, instanceName),
 		}, nil
-	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
+	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
 		cmd, err := m.connection.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
 			return Identity{}, err

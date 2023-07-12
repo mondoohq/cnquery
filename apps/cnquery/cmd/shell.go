@@ -13,11 +13,10 @@ import (
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/cli/theme"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/inventory"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/upstream"
 	"go.mondoo.com/ranger-rpc"
 )
@@ -38,7 +37,7 @@ var shellCmd = &cobra.Command{
 	},
 }
 
-var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *proto.ParseCLIRes) {
+var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
 	conf, err := config.Read()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load config")
@@ -93,7 +92,7 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *prot
 // TODO: the config is a shared structure, which should be moved to proto
 type ShellConfig struct {
 	Command        string
-	Inventory      *v1.Inventory
+	Inventory      *inventory.Inventory
 	Features       cnquery.Features
 	PlatformID     string
 	WelcomeMessage string
@@ -103,7 +102,7 @@ type ShellConfig struct {
 
 // StartShell will start an interactive CLI shell
 func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
-	im, err := inventory.New(inventory.WithInventory(conf.Inventory))
+	im, err := manager.NewManager(manager.WithInventory(conf.Inventory))
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
@@ -115,7 +114,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Msg("could not find an asset that we can connect to")
 	}
 
-	var connectAsset *asset.Asset
+	var connectAsset *inventory.Asset
 	if len(assetList) == 1 {
 		connectAsset = assetList[0]
 	} else if len(assetList) > 1 && conf.PlatformID != "" {
@@ -140,7 +139,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	pf := connectAsset.Platform
 	log.Info().Msgf("connected to %s", pf.Title)
 
-	err = runtime.Connect(&proto.ConnectReq{
+	err = runtime.Connect(&plugin.ConnectReq{
 		Features: conf.Features,
 		Asset:    conf.Inventory,
 	})

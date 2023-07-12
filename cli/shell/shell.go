@@ -22,7 +22,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/stringx"
 	"go.mondoo.com/cnquery/types"
@@ -321,7 +321,7 @@ func (s *Shell) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult,
 		return nil, nil, err
 	}
 
-	results, err := mql.ExecuteCode(s.Runtime.Schema(), s.Runtime, code, nil, s.features)
+	results, err := mql.ExecuteCode(s.Runtime, code, nil, s.features)
 	if err != nil {
 		panic(err)
 	}

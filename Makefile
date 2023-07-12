@@ -76,7 +76,9 @@ endef
 .PHONY: providers
 providers:
 	go generate .
-	go generate ./providers/proto
+	go generate ./providers-sdk/v1/resources
+	go generate ./providers-sdk/v1/inventory
+	go generate ./providers-sdk/v1/plugin
 	go generate ./resources/packs/core/vadvisor/cvss # TODO: migrate
 	go build -o lr resources/lr/cli/main.go
 	@$(call genProvider, providers/core)
@@ -85,10 +87,8 @@ providers:
 
 motor/generate:
 	go generate .
-	go generate ./motor/providers
 	go generate ./motor/providers/k8s
 	go generate ./motor/platform
-	go generate ./motor/asset
 	go generate ./motor/vault
 	go generate ./motor/inventory/v1
 

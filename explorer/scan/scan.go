@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/cnquery/motor"
 	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/vault"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers"
 )
 
 //go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. cnquery_explorer_scan.proto
@@ -21,7 +21,7 @@ func init() {
 
 type AssetJob struct {
 	DoRecord         bool
-	UpstreamConfig   resources.UpstreamConfig
+	UpstreamConfig   providers.UpstreamConfig
 	Asset            *asset.Asset
 	Bundle           *explorer.Bundle
 	QueryPackFilters []string

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/id/containerid"
 )
@@ -64,13 +64,13 @@ type InstanceIdentifier interface {
 	Identify() (Identity, error)
 }
 
-func Resolve(conn shared.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
+func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
 	return &containerMetadata{conn, pf}, nil
 }
 
 type containerMetadata struct {
 	conn     shared.Connection
-	platform *platform.Platform
+	platform *inventory.Platform
 }
 
 func (m *containerMetadata) Identify() (Identity, error) {

@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/shared"
-	run "go.mondoo.com/cnquery/shared/proto"
+	"go.mondoo.com/cnquery/shared/proto"
 )
 
 func init() {
@@ -31,8 +31,8 @@ var runCmd = &cobra.Command{
 	},
 }
 
-var runcmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *proto.ParseCLIRes) {
-	conf := run.RunQueryConfig{}
+var runcmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
+	conf := proto.RunQueryConfig{}
 
 	conf.Command, _ = cmd.Flags().GetString("command")
 	conf.DoAst, _ = cmd.Flags().GetBool("ast")

@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/plugin"
 )
 
 const (
@@ -35,8 +35,8 @@ type InstanceIdentifier interface {
 	Identify() (Identity, error)
 }
 
-func Resolve(conn shared.Connection, pf *platform.Platform) (InstanceIdentifier, error) {
-	if pf.IsFamily(platform.FAMILY_UNIX) || pf.IsFamily(platform.FAMILY_WINDOWS) {
+func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier, error) {
+	if pf.IsFamily(inventory.FAMILY_UNIX) || pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		return &commandInstanceMetadata{conn, pf}, nil
 	}
 	return nil, errors.New(fmt.Sprintf("azure compute id detector is not supported for your asset: %s %s", pf.Name, pf.Version))
@@ -44,13 +44,13 @@ func Resolve(conn shared.Connection, pf *platform.Platform) (InstanceIdentifier,
 
 type commandInstanceMetadata struct {
 	conn     shared.Connection
-	platform *platform.Platform
+	platform *inventory.Platform
 }
 
 func (m *commandInstanceMetadata) Identify() (Identity, error) {
 	var instanceDocument string
 	switch {
-	case m.platform.IsFamily(platform.FAMILY_UNIX):
+	case m.platform.IsFamily(inventory.FAMILY_UNIX):
 		cmd, err := m.conn.RunCommand("curl --noproxy '*' -H Metadata:true " + identityUrl)
 		if err != nil {
 			return Identity{}, err
@@ -61,7 +61,7 @@ func (m *commandInstanceMetadata) Identify() (Identity, error) {
 		}
 
 		instanceDocument = strings.TrimSpace(string(data))
-	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
+	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
 		cmd, err := m.conn.RunCommand(powershell.Encode(metadataIdentityScriptWindows))
 		if err != nil {
 			return Identity{}, err

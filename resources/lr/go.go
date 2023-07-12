@@ -59,8 +59,7 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/types"%s
 )
 `
@@ -99,7 +98,7 @@ func (b *goBuilder) goGetData(r []*Resource) {
 				continue
 			}
 
-			x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource) *proto.DataRes {
+			x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*%s).Get%s()).ToDataRes(%s)
 	},`,
 				resource.ID, field.BasicField.ID,
@@ -111,14 +110,14 @@ func (b *goBuilder) goGetData(r []*Resource) {
 	}
 
 	b.data += `
-var getDataFields = map[string]func(r plugin.Resource) *proto.DataRes{
+var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	` + strings.Join(fields, "\n\t") + `
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]interface{}) *proto.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]interface{}) *plugin.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return &proto.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
+		return &plugin.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
 	}
 
 	return f(resource)

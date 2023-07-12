@@ -1,12 +1,12 @@
-package credentialquery
+package manager
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func TestSecretKeySimple(t *testing.T) {
@@ -14,7 +14,7 @@ func TestSecretKeySimple(t *testing.T) {
 
 	runner, err := NewCredentialQueryRunner(query)
 	require.NoError(t, err)
-	cred, err := runner.Run(&asset.Asset{})
+	cred, err := runner.Run(&inventory.Asset{})
 	require.NoError(t, err)
 	assert.Equal(t, vault.CredentialType_ssh_agent, cred.Type)
 }
@@ -30,7 +30,7 @@ func TestSecretKeyIfReturn(t *testing.T) {
 	runner, err := NewCredentialQueryRunner(query)
 	require.NoError(t, err)
 
-	cred, err := runner.Run(&asset.Asset{
+	cred, err := runner.Run(&inventory.Asset{
 		Labels: map[string]string{
 			"key": "value",
 		},
@@ -53,7 +53,7 @@ func TestSecretKeyIfConditionalReturn(t *testing.T) {
 	require.NoError(t, err)
 
 	// check with provided label
-	cred, err := runner.Run(&asset.Asset{
+	cred, err := runner.Run(&inventory.Asset{
 		Labels: map[string]string{
 			"Name": "ssh",
 		},
@@ -63,7 +63,7 @@ func TestSecretKeyIfConditionalReturn(t *testing.T) {
 	assert.Equal(t, "arn:aws:secretsmanager:us-east-2:172746783610:secret:vj/secret-lHvP9r", cred.SecretId)
 
 	// check without a label
-	cred, err = runner.Run(&asset.Asset{
+	cred, err = runner.Run(&inventory.Asset{
 		Labels: map[string]string{},
 	})
 	require.NoError(t, err)

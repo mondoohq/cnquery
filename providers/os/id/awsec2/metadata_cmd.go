@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/cnquery/motor/platform"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -22,7 +22,7 @@ const (
 	tagNameUrl  = "http://169.254.169.254/latest/meta-data/tags/instance/Name"
 )
 
-func NewCommandInstanceMetadata(conn shared.Connection, pf *platform.Platform, config *aws.Config) *CommandInstanceMetadata {
+func NewCommandInstanceMetadata(conn shared.Connection, pf *inventory.Platform, config *aws.Config) *CommandInstanceMetadata {
 	return &CommandInstanceMetadata{
 		conn:     conn,
 		platform: pf,
@@ -32,7 +32,7 @@ func NewCommandInstanceMetadata(conn shared.Connection, pf *platform.Platform, c
 
 type CommandInstanceMetadata struct {
 	conn     shared.Connection
-	platform *platform.Platform
+	platform *inventory.Platform
 	config   *aws.Config
 }
 
@@ -84,7 +84,7 @@ func curlWindows(url string) string {
 
 func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
 	switch {
-	case m.platform.IsFamily(platform.FAMILY_UNIX):
+	case m.platform.IsFamily(inventory.FAMILY_UNIX):
 		cmd, err := m.conn.RunCommand("curl " + url)
 		if err != nil {
 			return "", err
@@ -95,7 +95,7 @@ func (m *CommandInstanceMetadata) curlDocument(url string) (string, error) {
 		}
 
 		return strings.TrimSpace(string(data)), nil
-	case m.platform.IsFamily(platform.FAMILY_WINDOWS):
+	case m.platform.IsFamily(inventory.FAMILY_WINDOWS):
 		curlCmd := curlWindows(url)
 		encoded := powershell.Encode(curlCmd)
 		cmd, err := m.conn.RunCommand(encoded)

@@ -6,14 +6,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
-func Hostname(conn shared.Connection, pf *platform.Platform) (string, bool) {
+func Hostname(conn shared.Connection, pf *inventory.Platform) (string, bool) {
 	var hostname string
 
-	if !pf.IsFamily(platform.FAMILY_UNIX) && !pf.IsFamily(platform.FAMILY_WINDOWS) {
+	if !pf.IsFamily(inventory.FAMILY_UNIX) && !pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		log.Warn().Msg("your platform is not supported for hostname detection")
 		return hostname, false
 	}
@@ -35,7 +35,7 @@ func Hostname(conn shared.Connection, pf *platform.Platform) (string, bool) {
 	}
 
 	// try to use /etc/hostname since it's also working on static analysis
-	if pf.IsFamily(platform.FAMILY_LINUX) {
+	if pf.IsFamily(inventory.FAMILY_LINUX) {
 		afs := &afero.Afero{Fs: conn.FileSystem()}
 		ok, err := afs.Exists("/etc/hostname")
 		if err == nil && ok {

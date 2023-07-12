@@ -2,7 +2,6 @@ package plugin
 
 import (
 	plugin "github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/providers/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -15,24 +14,24 @@ func init() {
 // GRPCClient is an implementation of KV that talks over RPC.
 type GRPCClient struct {
 	broker *plugin.GRPCBroker
-	client proto.ProviderPluginClient
+	client ProviderPluginClient
 }
 
-func (m *GRPCClient) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
+func (m *GRPCClient) ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error) {
 	return m.client.ParseCLI(context.Background(), req)
 }
 
-func (m *GRPCClient) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
+func (m *GRPCClient) Connect(req *ConnectReq) (*ConnectRes, error) {
 	return m.client.Connect(context.Background(), req)
 }
 
-func (m *GRPCClient) GetData(req *proto.DataReq, callback ProviderCallback) (*proto.DataRes, error) {
+func (m *GRPCClient) GetData(req *DataReq, callback ProviderCallback) (*DataRes, error) {
 	helper := &GRPCProviderCallbackServer{Impl: callback}
 
 	var s *grpc.Server
 	serverFunc := func(opts []grpc.ServerOption) *grpc.Server {
 		s = grpc.NewServer(opts...)
-		proto.RegisterProviderCallbackServer(s, helper)
+		RegisterProviderCallbackServer(s, helper)
 
 		return s
 	}
@@ -47,7 +46,7 @@ func (m *GRPCClient) GetData(req *proto.DataReq, callback ProviderCallback) (*pr
 	return res, err
 }
 
-func (m *GRPCClient) StoreData(req *proto.StoreReq) (*proto.StoreRes, error) {
+func (m *GRPCClient) StoreData(req *StoreReq) (*StoreRes, error) {
 	return m.client.StoreData(context.Background(), req)
 }
 
@@ -56,37 +55,37 @@ type GRPCServer struct {
 	// This is the real implementation
 	Impl   ProviderPlugin
 	broker *plugin.GRPCBroker
-	proto.UnimplementedProviderPluginServer
+	UnimplementedProviderPluginServer
 }
 
-func (m *GRPCServer) ParseCLI(ctx context.Context, req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
+func (m *GRPCServer) ParseCLI(ctx context.Context, req *ParseCLIReq) (*ParseCLIRes, error) {
 	return m.Impl.ParseCLI(req)
 }
 
-func (m *GRPCServer) Connect(ctx context.Context, req *proto.ConnectReq) (*proto.Connection, error) {
+func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes, error) {
 	return m.Impl.Connect(req)
 }
 
-func (m *GRPCServer) GetData(ctx context.Context, req *proto.DataReq) (*proto.DataRes, error) {
+func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (*DataRes, error) {
 	conn, err := m.broker.Dial(req.CallbackServer)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 
-	a := &GRPCProviderCallbackClient{proto.NewProviderCallbackClient(conn)}
+	a := &GRPCProviderCallbackClient{NewProviderCallbackClient(conn)}
 	return m.Impl.GetData(req, a)
 }
 
-func (m *GRPCServer) StoreData(ctx context.Context, req *proto.StoreReq) (*proto.StoreRes, error) {
+func (m *GRPCServer) StoreData(ctx context.Context, req *StoreReq) (*StoreRes, error) {
 	return m.Impl.StoreData(req)
 }
 
 // GRPCClient is an implementation of ProviderCallback that talks over RPC.
-type GRPCProviderCallbackClient struct{ client proto.ProviderCallbackClient }
+type GRPCProviderCallbackClient struct{ client ProviderCallbackClient }
 
-func (m *GRPCProviderCallbackClient) Collect(req *proto.DataRes) error {
-	// _, err := m.client.Write(context.Background(), &proto.String{
+func (m *GRPCProviderCallbackClient) Collect(req *DataRes) error {
+	// _, err := m.client.Write(context.Background(), &String{
 	// 	Data: string(b),
 	// })
 	// if err != nil {
@@ -102,11 +101,11 @@ func (m *GRPCProviderCallbackClient) Collect(req *proto.DataRes) error {
 type GRPCProviderCallbackServer struct {
 	// This is the real implementation
 	Impl ProviderCallback
-	proto.UnsafeProviderCallbackServer
+	UnsafeProviderCallbackServer
 }
 
-var empty proto.CollectRes
+var empty CollectRes
 
-func (m *GRPCProviderCallbackServer) Collect(ctx context.Context, req *proto.DataRes) (resp *proto.CollectRes, err error) {
+func (m *GRPCProviderCallbackServer) Collect(ctx context.Context, req *DataRes) (resp *CollectRes, err error) {
 	return &empty, m.Impl.Collect(req)
 }

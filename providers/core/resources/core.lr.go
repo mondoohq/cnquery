@@ -4,8 +4,7 @@ package resources
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -24,61 +23,61 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 	return f(runtime, args)
 }
 
-var getDataFields = map[string]func(r plugin.Resource) *proto.DataRes{
-	"mondoo.version": func(r plugin.Resource) *proto.DataRes {
+var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"mondoo.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondoo).GetVersion()).ToDataRes(types.String)
 	},
-	"mondoo.build": func(r plugin.Resource) *proto.DataRes {
+	"mondoo.build": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondoo).GetBuild()).ToDataRes(types.String)
 	},
-	"mondoo.arch": func(r plugin.Resource) *proto.DataRes {
+	"mondoo.arch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondoo).GetArch()).ToDataRes(types.String)
 	},
-	"mondoo.jobEnvironment": func(r plugin.Resource) *proto.DataRes {
+	"mondoo.jobEnvironment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondoo).GetJobEnvironment()).ToDataRes(types.Dict)
 	},
-	"asset.name": func(r plugin.Resource) *proto.DataRes {
+	"asset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetName()).ToDataRes(types.String)
 	},
-	"asset.ids": func(r plugin.Resource) *proto.DataRes {
+	"asset.ids": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetIds()).ToDataRes(types.Array(types.String))
 	},
-	"asset.platform": func(r plugin.Resource) *proto.DataRes {
+	"asset.platform": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetPlatform()).ToDataRes(types.String)
 	},
-	"asset.kind": func(r plugin.Resource) *proto.DataRes {
+	"asset.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetKind()).ToDataRes(types.String)
 	},
-	"asset.runtime": func(r plugin.Resource) *proto.DataRes {
+	"asset.runtime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetRuntime()).ToDataRes(types.String)
 	},
-	"asset.version": func(r plugin.Resource) *proto.DataRes {
+	"asset.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVersion()).ToDataRes(types.String)
 	},
-	"asset.arch": func(r plugin.Resource) *proto.DataRes {
+	"asset.arch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetArch()).ToDataRes(types.String)
 	},
-	"asset.title": func(r plugin.Resource) *proto.DataRes {
+	"asset.title": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetTitle()).ToDataRes(types.String)
 	},
-	"asset.family": func(r plugin.Resource) *proto.DataRes {
+	"asset.family": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetFamily()).ToDataRes(types.Array(types.String))
 	},
-	"asset.fqdn": func(r plugin.Resource) *proto.DataRes {
+	"asset.fqdn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetFqdn()).ToDataRes(types.String)
 	},
-	"asset.build": func(r plugin.Resource) *proto.DataRes {
+	"asset.build": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetBuild()).ToDataRes(types.String)
 	},
-	"asset.labels": func(r plugin.Resource) *proto.DataRes {
+	"asset.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]interface{}) *proto.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]interface{}) *plugin.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
-		return &proto.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
+		return &plugin.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
 	}
 
 	return f(resource)

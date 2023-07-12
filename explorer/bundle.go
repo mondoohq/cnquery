@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/checksums"
+	llx "go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mrn"
 	"sigs.k8s.io/yaml"
 )
@@ -212,7 +213,7 @@ func (p *Bundle) AddBundle(other *Bundle) error {
 // 4. generate MRNs for all packs, queries, and updates referencing local fields
 // 5. snapshot all queries into the packs
 // 6. make queries public that are only embedded
-func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
+func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, error) {
 	ownerMrn := p.OwnerMrn
 	if ownerMrn == "" {
 		// this only happens for local bundles where queries have no mrn yet
@@ -225,6 +226,7 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 		uid2mrn:     map[string]string{},
 		lookupProp:  map[string]PropertyRef{},
 		lookupQuery: map[string]*Mquery{},
+		schema:      schema,
 	}
 
 	if err := cache.compileQueries(p.Queries, nil); err != nil {
@@ -246,7 +248,7 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 			return nil, errors.New("failed to refresh query pack " + pack.Mrn + ": " + err.Error())
 		}
 
-		if err = pack.Filters.Compile(ownerMrn); err != nil {
+		if err = pack.Filters.Compile(ownerMrn, schema); err != nil {
 			return nil, errors.Wrap(err, "failed to compile querypack filters")
 		}
 		pack.ComputedFilters.AddFilters(pack.Filters)
@@ -259,7 +261,7 @@ func (p *Bundle) Compile(ctx context.Context) (*BundleMap, error) {
 			group := pack.Groups[i]
 
 			// When filters are initially added they haven't been compiled
-			if err = group.Filters.Compile(ownerMrn); err != nil {
+			if err = group.Filters.Compile(ownerMrn, schema); err != nil {
 				return nil, errors.Wrap(err, "failed to compile querypack filters")
 			}
 			pack.ComputedFilters.AddFilters(group.Filters)
@@ -280,6 +282,7 @@ type bundleCache struct {
 	uid2mrn     map[string]string
 	bundle      *Bundle
 	errors      []error
+	schema      llx.Schema
 }
 
 type PropertyRef struct {
@@ -369,7 +372,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 	}
 
 	// filters have no dependencies, so we can compile them early
-	if err := query.Filters.Compile(c.ownerMrn); err != nil {
+	if err := query.Filters.Compile(c.ownerMrn, c.schema); err != nil {
 		c.errors = append(c.errors, errors.New("failed to compile filters for query "+query.Mrn))
 		return
 	}
@@ -400,7 +403,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 // dependencies have been processed. Properties must be compiled. Connected
 // queries may not be ready yet, but we have to have precompiled them.
 func (c *bundleCache) compileQuery(query *Mquery) {
-	_, err := query.RefreshChecksumAndType(c.lookupQuery, c.lookupProp)
+	_, err := query.RefreshChecksumAndType(c.lookupQuery, c.lookupProp, c.schema)
 	if err != nil {
 		c.errors = append(c.errors, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
 	}
@@ -429,7 +432,7 @@ func (c *bundleCache) compileProp(prop *Property) error {
 		name = m.Basename()
 	}
 
-	if _, err := prop.RefreshChecksumAndType(); err != nil {
+	if _, err := prop.RefreshChecksumAndType(c.schema); err != nil {
 		return err
 	}
 

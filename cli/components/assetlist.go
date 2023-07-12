@@ -5,10 +5,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/cli/theme"
-	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
-func AssetList(theme *theme.Theme, assetList []*asset.Asset) string {
+func AssetList(theme *theme.Theme, assetList []*inventory.Asset) string {
 	b := strings.Builder{}
 
 	log.Info().Msgf("discovered %d asset(s)", len(assetList))

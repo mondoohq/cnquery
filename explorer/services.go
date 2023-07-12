@@ -3,6 +3,8 @@ package explorer
 import (
 	"net/http"
 
+	llx "go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/sync/semaphore"
 )
@@ -28,6 +30,7 @@ type LocalServices struct {
 	DataLake  DataLake
 	Upstream  *Services
 	Incognito bool
+	runtime   llx.Runtime
 }
 
 // NewLocalServices initializes a reasonably configured local services struct
@@ -36,6 +39,7 @@ func NewLocalServices(datalake DataLake, uuid string) *LocalServices {
 		DataLake:  datalake,
 		Upstream:  nil,
 		Incognito: false,
+		runtime:   providers.DefaultRuntime(),
 	}
 }
 

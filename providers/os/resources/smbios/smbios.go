@@ -3,7 +3,7 @@ package smbios
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -57,7 +57,7 @@ type SmBiosManager interface {
 	Info() (*SmBiosInfo, error)
 }
 
-func ResolveManager(conn shared.Connection, pf *platform.Platform) (SmBiosManager, error) {
+func ResolveManager(conn shared.Connection, pf *inventory.Platform) (SmBiosManager, error) {
 	var biosM SmBiosManager
 
 	// check darwin before unix since darwin is also a unix

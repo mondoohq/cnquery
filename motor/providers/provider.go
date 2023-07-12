@@ -1,7 +1,5 @@
 package providers
 
-//go:generate protoc --proto_path=../..:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. provider.proto
-
 type PlatformIdDetector string
 
 const (
@@ -48,7 +46,6 @@ type Instance interface {
 	// returns if this is a static asset that does not allow run command
 	Capabilities() Capabilities
 
-	Kind() Kind
 	Runtime() string
 
 	// Close closes the transport

@@ -22,13 +22,11 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/discovery"
 	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mrn"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/all"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -84,16 +82,14 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	dctx := discovery.InitCtx(ctx)
-
-	upstreamConfig := resources.UpstreamConfig{
+	upstreamConfig := providers.UpstreamConfig{
 		SpaceMrn:    s.spaceMrn,
 		ApiEndpoint: s.apiEndpoint,
 		Incognito:   false,
 		Plugins:     s.plugins,
 	}
 
-	reports, _, err := s.distributeJob(job, dctx, upstreamConfig)
+	reports, _, err := s.distributeJob(job, ctx, upstreamConfig)
 	if err != nil {
 		if code := status.Code(err); code == codes.Unauthenticated {
 			return nil, errors.Wrapf(err,
@@ -119,13 +115,11 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	dctx := discovery.InitCtx(ctx)
-
-	upstreamConfig := resources.UpstreamConfig{
+	upstreamConfig := providers.UpstreamConfig{
 		Incognito: true,
 	}
 
-	reports, _, err := s.distributeJob(job, dctx, upstreamConfig)
+	reports, _, err := s.distributeJob(job, ctx, upstreamConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -154,20 +148,21 @@ func preprocessQueryPackFilters(filters []string) []string {
 	return res
 }
 
-func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig resources.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
+func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig providers.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 	im, err := inventory.New(inventory.WithInventory(job.Inventory))
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not load asset information")
 	}
 
-	assetErrors := im.Resolve(ctx)
-	if len(assetErrors) > 0 {
-		for a := range assetErrors {
-			log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
-		}
-		return nil, false, errors.New("failed to resolve multiple assets")
-	}
+	panic("IMPLEMENT RESOLVE")
+	// assetErrors := im.Resolve(ctx)
+	// if len(assetErrors) > 0 {
+	// 	for a := range assetErrors {
+	// 		log.Error().Err(assetErrors[a]).Str("asset", a.Name).Msg("could not resolve asset")
+	// 	}
+	// 	return nil, false, errors.New("failed to resolve multiple assets")
+	// }
 
 	assetList := im.GetAssets()
 	if len(assetList) == 0 {
@@ -373,9 +368,9 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 			services.Upstream = upstream
 		}
 
-		registry := all.Registry
-		schema := registry.Schema()
-		runtime := resources.NewRuntime(registry, job.connection)
+		runtime := providers.Coordinator.NewRuntime()
+		// runtime := resources.NewRuntime(registry, job.connection)
+		panic("PORT SCANNER")
 		runtime.UpstreamConfig = &job.UpstreamConfig
 
 		scanner := &localAssetScanner{
@@ -383,8 +378,6 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 			services: services,
 			job:      job,
 			fetcher:  s.fetcher,
-			Registry: registry,
-			Schema:   schema,
 			Runtime:  runtime,
 		}
 		res, scanErr = scanner.run()
@@ -403,9 +396,7 @@ type localAssetScanner struct {
 	job      *AssetJob
 	fetcher  *fetcher
 
-	Registry *resources.Registry
-	Schema   *resources.Schema
-	Runtime  *resources.Runtime
+	Runtime  llx.Runtime
 	Progress progress.Progress
 }
 
@@ -490,7 +481,7 @@ func (s *localAssetScanner) ensureBundle() error {
 	}
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	res, err := mql.ExecuteCode(s.Schema, s.Runtime, assetDetectBundle, nil, features)
+	res, err := mql.ExecuteCode(s.Runtime, assetDetectBundle, nil, features)
 	if err != nil {
 		panic(err)
 	}
@@ -578,7 +569,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 	logger.DebugDumpJSON("resolvedPack", resolvedPack)
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	e, err := executor.RunExecutionJob(s.Schema, s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.ProgressReporter)
+	e, err := executor.RunExecutionJob(s.Runtime, conductor, s.job.Asset.Mrn, resolvedPack.ExecutionJob, features, s.job.ProgressReporter)
 	if err != nil {
 		return nil, err
 	}
@@ -620,7 +611,7 @@ func (s *localAssetScanner) runQueryPack() (*AssetReport, error) {
 
 // FilterQueries returns all queries whose result is truthy
 func (s *localAssetScanner) FilterQueries(queries []*explorer.Mquery, timeout time.Duration) ([]*explorer.Mquery, []error) {
-	return executor.RunFilterQueries(s.Schema, s.Runtime, queries, timeout)
+	return executor.RunFilterQueries(s.Runtime, queries, timeout)
 }
 
 // UpdateFilters takes a list of test filters and runs them against the backend

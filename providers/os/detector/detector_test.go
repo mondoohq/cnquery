@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func TestFamilyParents(t *testing.T) {
@@ -41,11 +41,11 @@ func TestIsFamily(t *testing.T) {
 		Expected bool
 	}{
 		{
-			Val:      IsFamily("redhat", platform.FAMILY_LINUX),
+			Val:      IsFamily("redhat", inventory.FAMILY_LINUX),
 			Expected: true,
 		},
 		{
-			Val:      IsFamily("redhat", platform.FAMILY_UNIX),
+			Val:      IsFamily("redhat", inventory.FAMILY_UNIX),
 			Expected: true,
 		},
 		{
@@ -53,7 +53,7 @@ func TestIsFamily(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Val:      IsFamily("centos", platform.FAMILY_LINUX),
+			Val:      IsFamily("centos", inventory.FAMILY_LINUX),
 			Expected: true,
 		},
 		{

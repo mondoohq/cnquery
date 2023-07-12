@@ -14,7 +14,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/resources/lr"
 	"go.mondoo.com/cnquery/resources/lr/docs"
 	"sigs.k8s.io/yaml"

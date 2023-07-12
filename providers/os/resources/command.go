@@ -4,8 +4,8 @@ import (
 	"io"
 	"sync"
 
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/providers/plugin"
 )
 
 type mqlCommandInternal struct {

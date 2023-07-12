@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/id/gce"
 	"go.mondoo.com/cnquery/providers/os/resources/smbios"
@@ -15,7 +15,7 @@ const (
 	gceIdentifierFileLinux = "/sys/class/dmi/id/product_name"
 )
 
-func Detect(conn shared.Connection, p *platform.Platform) (string, string, []string) {
+func Detect(conn shared.Connection, p *inventory.Platform) (string, string, []string) {
 	productName := ""
 	if p.IsFamily("linux") {
 		// Fetching the product version from the smbios manager is slow

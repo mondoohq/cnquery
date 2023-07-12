@@ -5,13 +5,13 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"golang.org/x/crypto/ssh"
 )
 
-func Detect(t shared.Connection, p *platform.Platform) ([]string, error) {
+func Detect(t shared.Connection, p *inventory.Platform) ([]string, error) {
 	// if we are using an ssh connection we can read the hostkey from the connection
 	if sshTransport, ok := t.(*connection.SshConnection); ok {
 		identifier, err := sshTransport.PlatformID()

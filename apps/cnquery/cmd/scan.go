@@ -16,11 +16,9 @@ import (
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/motor/asset"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers/proto"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 )
 
 func init() {
@@ -102,7 +100,7 @@ To manually configure a query pack, use this:
 	},
 }
 
-var scanCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *proto.ParseCLIRes) {
+var scanCmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) {
 	conf, err := getCobraScanConfig(cmd, runtime, cliRes)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to prepare config")
@@ -133,20 +131,21 @@ func getQueryPacksForCompletion() []string {
 
 type scanConfig struct {
 	Features       cnquery.Features
-	Inventory      *v1.Inventory
+	Inventory      *inventory.Inventory
 	Output         string
 	QueryPackPaths []string
 	QueryPackNames []string
 	Props          map[string]string
 	Bundle         *explorer.Bundle
+	runtime        *providers.Runtime
 
 	IsIncognito bool
 	DoRecord    bool
 
-	UpstreamConfig *resources.UpstreamConfig
+	UpstreamConfig *providers.UpstreamConfig
 }
 
-func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *proto.ParseCLIRes) (*scanConfig, error) {
+func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
 	opts, err := config.Read()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load config")
@@ -166,6 +165,7 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
 		QueryPackNames: viper.GetStringSlice("querypacks"),
 		Props:          props,
+		runtime:        runtime,
 	}
 
 	// if users want to get more information on available output options,
@@ -192,7 +192,7 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 			runtimeLabels := runtimeEnv.Labels()
 			conf.Inventory.ApplyLabels(runtimeLabels)
 		}
-		conf.Inventory.ApplyCategory(asset.AssetCategory_CATEGORY_CICD)
+		conf.Inventory.ApplyCategory(inventory.AssetCategory_CATEGORY_CICD)
 	}
 
 	panic("todo: service account credentials cleanup")
@@ -259,7 +259,7 @@ func (c *scanConfig) loadBundles() error {
 			return err
 		}
 
-		_, err = bundle.Compile(context.Background())
+		_, err = bundle.Compile(context.Background(), c.runtime.Schema())
 		if err != nil {
 			return errors.Wrap(err, "failed to compile bundle")
 		}

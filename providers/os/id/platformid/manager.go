@@ -1,7 +1,7 @@
 package platformid
 
 import (
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -10,7 +10,7 @@ type UniquePlatformIDProvider interface {
 	ID() (string, error)
 }
 
-func MachineIDProvider(conn shared.Connection, platform *platform.Platform) (UniquePlatformIDProvider, error) {
+func MachineIDProvider(conn shared.Connection, platform *inventory.Platform) (UniquePlatformIDProvider, error) {
 	var uuidProvider UniquePlatformIDProvider
 	for i := range platform.Family {
 		if platform.Family[i] == "linux" {

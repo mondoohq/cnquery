@@ -7,10 +7,9 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor/asset"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/providers/proto"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
 	"go.mondoo.com/ranger-rpc"
 )
@@ -23,7 +22,7 @@ type Runtime struct {
 	Recording      Recording
 
 	features []byte
-	asset    *asset.Asset
+	asset    *inventory.Asset
 	// coordinator is used to grab providers
 	coordinator *coordinator
 	// providers for with open connections
@@ -35,7 +34,7 @@ type Runtime struct {
 
 type ConnectedProvider struct {
 	Instance   *RunningProvider
-	Connection *proto.Connection
+	Connection *plugin.ConnectRes
 }
 
 // mondoo platform config so that resource scan talk upstream
@@ -122,7 +121,7 @@ func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 }
 
 // Connect to an asset using the main provider
-func (r *Runtime) Connect(req *proto.ConnectReq) error {
+func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if r.Provider == nil {
 		return errors.New("cannot connect, please select a provider first")
 	}
@@ -143,7 +142,7 @@ func (r *Runtime) Connect(req *proto.ConnectReq) error {
 	// when there is discovery of assets going on as well...
 	conn := asset.Connections[0]
 	if conn.Id != 0 {
-		r.Provider.Connection = &proto.Connection{Id: conn.Id, Name: conn.ToUrl()}
+		r.Provider.Connection = &plugin.ConnectRes{Id: conn.Id, Name: conn.ToUrl()}
 		r.Recording.EnsureAsset(asset, r.Provider.Instance.Name, conn)
 		return nil
 	}
@@ -164,7 +163,7 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		return nil, err
 	}
 
-	res, err := provider.Instance.Plugin.GetData(&proto.DataReq{
+	res, err := provider.Instance.Plugin.GetData(&plugin.DataReq{
 		Connection: provider.Connection.Id,
 		Resource:   name,
 		Args:       args,
@@ -178,9 +177,9 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		if err != nil {
 			log.Error().Str("resource", name).Str("id", string(res.Data.Value)).Msg("failed to load resource from recording")
 		} else {
-			provider.Instance.Plugin.StoreData(&proto.StoreReq{
+			provider.Instance.Plugin.StoreData(&plugin.StoreReq{
 				Connection: provider.Connection.Id,
-				Resources: []*proto.Resource{{
+				Resources: []*plugin.ResourceData{{
 					Name:   name,
 					Id:     string(res.Data.Value),
 					Fields: fields,
@@ -227,7 +226,7 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 		return nil
 	}
 
-	data, err := provider.Instance.Plugin.GetData(&proto.DataReq{
+	data, err := provider.Instance.Plugin.GetData(&plugin.DataReq{
 		Connection: provider.Connection.Id,
 		Resource:   name,
 		ResourceId: id,
@@ -263,9 +262,9 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		return nil, nil, errors.New("failed to start provider '" + info.Provider + "': " + err.Error())
 	}
 
-	conn, err := res.Instance.Plugin.Connect(&proto.ConnectReq{
+	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
-		Asset:    &v1.Inventory{Spec: &v1.InventorySpec{Assets: []*asset.Asset{r.asset}}},
+		Asset:    &inventory.Inventory{Spec: &inventory.InventorySpec{Assets: []*inventory.Asset{r.asset}}},
 	})
 	if err != nil {
 		return nil, nil, err

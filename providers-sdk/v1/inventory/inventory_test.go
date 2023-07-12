@@ -1,12 +1,10 @@
-package v1
+package inventory
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
@@ -62,12 +60,12 @@ func TestPreprocess(t *testing.T) {
 	t.Run("preprocess private key", func(t *testing.T) {
 		v1inventory := &Inventory{
 			Spec: &InventorySpec{
-				Assets: []*asset.Asset{
+				Assets: []*Asset{
 					{
 						Name: "test",
-						Connections: []*providers.Config{
+						Connections: []*Config{
 							{
-								Backend: providers.ProviderType_SSH,
+								Type: "ssh",
 								Credentials: []*vault.Credential{
 									{
 										PrivateKey: "./testdata/private_key_01",
@@ -88,12 +86,12 @@ func TestPreprocess(t *testing.T) {
 	t.Run("preprocess pkcs12 credential with loading from file", func(t *testing.T) {
 		v1inventory := &Inventory{
 			Spec: &InventorySpec{
-				Assets: []*asset.Asset{
+				Assets: []*Asset{
 					{
 						Name: "test",
-						Connections: []*providers.Config{
+						Connections: []*Config{
 							{
-								Backend: providers.ProviderType_MS365,
+								Type: "ms365",
 								Credentials: []*vault.Credential{
 									{
 										Type:           vault.CredentialType_pkcs12,
@@ -115,12 +113,12 @@ func TestPreprocess(t *testing.T) {
 	t.Run("preprocess pkcs12 credential with loading from file", func(t *testing.T) {
 		v1inventory := &Inventory{
 			Spec: &InventorySpec{
-				Assets: []*asset.Asset{
+				Assets: []*Asset{
 					{
 						Name: "test",
-						Connections: []*providers.Config{
+						Connections: []*Config{
 							{
-								Backend: providers.ProviderType_MS365,
+								Type: "ms365",
 								Credentials: []*vault.Credential{
 									{
 										Type:       vault.CredentialType_pkcs12,
@@ -148,7 +146,7 @@ func TestParseGCPInventory(t *testing.T) {
 	err = inventory.PreProcess()
 	require.NoError(t, err)
 
-	assert.Equal(t, providers.ProviderType_GCP, inventory.Spec.Assets[0].Connections[0].Backend)
+	assert.Equal(t, "gcp", inventory.Spec.Assets[0].Connections[0].Type)
 	// ensure that all assets have a valid secret reference
 	err = inventory.Validate()
 	require.NoError(t, err)
@@ -252,7 +250,7 @@ func TestMarkInsecure(t *testing.T) {
 	}
 }
 
-func findAsset(assets []*asset.Asset, id string) *asset.Asset {
+func findAsset(assets []*Asset, id string) *Asset {
 	for i := range assets {
 		a := assets[i]
 		if a.Id == id {

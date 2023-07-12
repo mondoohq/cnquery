@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	plist "howett.net/plist"
 )
@@ -29,7 +29,7 @@ import (
 // http://cavaliercoder.com/blog/dmidecode-for-apple-osx.html
 type OSXSmbiosManager struct {
 	provider shared.Connection
-	platform *platform.Platform
+	platform *inventory.Platform
 }
 
 func (s *OSXSmbiosManager) Name() string {

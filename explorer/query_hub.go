@@ -35,13 +35,13 @@ func NewQueryPackMrn(namespace string, uid string) string {
 
 // ValidateBundle and check queries, relationships, MRNs, and versions
 func (s *LocalServices) ValidateBundle(ctx context.Context, bundle *Bundle) (*Empty, error) {
-	_, err := bundle.Compile(ctx)
+	_, err := bundle.Compile(ctx, s.runtime.Schema())
 	return globalEmpty, err
 }
 
 // SetBundle stores a bundle of query packs and queries in this marketplace
 func (s *LocalServices) SetBundle(ctx context.Context, bundle *Bundle) (*Empty, error) {
-	bundlemap, err := bundle.Compile(ctx)
+	bundlemap, err := bundle.Compile(ctx, s.runtime.Schema())
 	if err != nil {
 		return globalEmpty, err
 	}

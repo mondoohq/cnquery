@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
 )
 

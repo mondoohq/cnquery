@@ -5,28 +5,26 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/providers"
 )
 
 func TestResolverWithAssetName(t *testing.T) {
 	inventory := &v1.Inventory{
 		Spec: &v1.InventorySpec{
-			Assets: []*asset.Asset{
+			Assets: []*v1.Asset{
 				{
 					Name: "test",
-					Connections: []*providers.Config{
+					Connections: []*v1.Config{
 						{
-							Backend: providers.ProviderType_LOCAL_OS,
+							Type: "local",
 						},
 					},
 				},
 				{
-					Connections: []*providers.Config{
+					Connections: []*v1.Config{
 						{
-							Backend: providers.ProviderType_MOCK,
+							Type: "mock",
 							Options: map[string]string{
 								"path": "./testdata/mock.toml",
 							},

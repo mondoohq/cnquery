@@ -11,7 +11,7 @@ import (
 	uuid "github.com/gofrs/uuid"
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
 )
 

@@ -2,11 +2,11 @@ package detector
 
 import (
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/platform"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
-type detect func(r *PlatformResolver, pf *platform.Platform, conn shared.Connection) (bool, error)
+type detect func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error)
 
 type PlatformResolver struct {
 	Name     string
@@ -15,9 +15,9 @@ type PlatformResolver struct {
 	Detect   detect
 }
 
-func (r *PlatformResolver) Resolve(conn shared.Connection) (*platform.Platform, bool) {
+func (r *PlatformResolver) Resolve(conn shared.Connection) (*inventory.Platform, bool) {
 	// prepare detect info object
-	di := &platform.Platform{}
+	di := &inventory.Platform{}
 	di.Family = make([]string, 0)
 
 	// start recursive platform resolution
@@ -57,7 +57,7 @@ func (r *PlatformResolver) Resolve(conn shared.Connection) (*platform.Platform, 
 // Resolve tries to find recursively all
 // platforms until a leaf (operating systems) detect
 // mechanism is returning true
-func (r *PlatformResolver) resolvePlatform(pf *platform.Platform, conn shared.Connection) (*platform.Platform, bool) {
+func (r *PlatformResolver) resolvePlatform(pf *inventory.Platform, conn shared.Connection) (*inventory.Platform, bool) {
 	detected, err := r.Detect(r, pf, conn)
 	if err != nil {
 		return pf, false

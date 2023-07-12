@@ -1,12 +1,12 @@
-package v1
+package inventory
 
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/segmentio/ksuid"
-	asset "go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/vault"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
@@ -21,7 +21,7 @@ const (
 type Option func(*Inventory)
 
 // passes a list of asset into the Inventory Manager
-func WithAssets(assetList ...*asset.Asset) Option {
+func WithAssets(assetList ...*Asset) Option {
 	return func(inventory *Inventory) {
 		inventory.AddAssets(assetList...)
 	}
@@ -223,7 +223,7 @@ func (p *Inventory) Validate() error {
 	return nil
 }
 
-func (p *Inventory) AddAssets(assetList ...*asset.Asset) {
+func (p *Inventory) AddAssets(assetList ...*Asset) {
 	if p.Spec == nil {
 		p.Spec = &InventorySpec{}
 	}
@@ -246,7 +246,7 @@ func (p *Inventory) ApplyLabels(labels map[string]string) {
 	}
 }
 
-func (p *Inventory) ApplyCategory(category asset.AssetCategory) {
+func (p *Inventory) ApplyCategory(category AssetCategory) {
 	for i := range p.Spec.Assets {
 		a := p.Spec.Assets[i]
 		a.Category = category
@@ -267,4 +267,49 @@ func isValidCredentialRef(cred *vault.Credential) error {
 	}
 
 	return nil
+}
+
+// often used family names
+var (
+	FAMILY_UNIX    = "unix"
+	FAMILY_DARWIN  = "darwin"
+	FAMILY_LINUX   = "linux"
+	FAMILY_BSD     = "bsd"
+	FAMILY_WINDOWS = "windows"
+)
+
+func (p *Platform) IsFamily(family string) bool {
+	for i := range p.Family {
+		if p.Family[i] == family {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *Platform) PrettyTitle() string {
+	prettyTitle := p.Title
+	panic("MIGRATE PrettyTitle")
+	return prettyTitle
+}
+
+func (c *Config) ToUrl() string {
+	schema := c.Type
+	if _, ok := c.Options["tls"]; ok {
+		schema = "tls"
+	}
+
+	host := c.Host
+	if strings.HasPrefix(host, "sha256:") {
+		host = strings.Replace(host, "sha256:", "", -1)
+	}
+
+	path := c.Path
+	if path != "" {
+		if path[0] != '/' {
+			path = "/" + path
+		}
+	}
+
+	return schema + "://" + host + path
 }

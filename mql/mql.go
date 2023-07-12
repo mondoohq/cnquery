@@ -45,7 +45,7 @@ func Exec(query string, runtime llx.Runtime, features cnquery.Features, props ma
 		log.Warn().Str("query", query).Msg("mql> Code must only return one value, but it has many configured. Only returning last result.")
 	}
 
-	raw, err := ExecuteCode(runtime.Schema(), runtime, bundle, props, features)
+	raw, err := ExecuteCode(runtime, bundle, props, features)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func Exec(query string, runtime llx.Runtime, features cnquery.Features, props ma
 	return res, nil
 }
 
-func ExecuteCode(schema llx.Schema, runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features cnquery.Features) (map[string]*llx.RawResult, error) {
+func ExecuteCode(runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features cnquery.Features) (map[string]*llx.RawResult, error) {
 	builder := internal.NewBuilder()
 	builder.WithFeatureBoolAssertions(features.IsActive(cnquery.BoolAssertions))
 
@@ -87,7 +87,7 @@ func ExecuteCode(schema llx.Schema, runtime llx.Runtime, codeBundle *llx.CodeBun
 	}
 	builder.AddDatapointCollector(collector)
 
-	ge, err := builder.Build(schema, runtime, "")
+	ge, err := builder.Build(runtime.Schema(), runtime, "")
 	if err != nil {
 		return nil, err
 	}

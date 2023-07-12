@@ -9,18 +9,18 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog/log"
-	pp "go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/resources"
+	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 )
+
+var Coordinator = coordinator{
+	Running: []*RunningProvider{},
+}
 
 type coordinator struct {
 	Providers Providers
 	Running   []*RunningProvider
 	mutex     sync.Mutex
-}
-
-var Coordinator = coordinator{
-	Running: []*RunningProvider{},
 }
 
 type RunningProvider struct {

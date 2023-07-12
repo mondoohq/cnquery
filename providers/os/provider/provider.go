@@ -8,16 +8,13 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/inventory"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources"
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/providers/proto"
 	protobuf "google.golang.org/protobuf/proto"
 )
 
@@ -33,18 +30,18 @@ func Init() *Service {
 	}
 }
 
-func parseDiscover(flags map[string]*llx.Primitive) *providers.Discovery {
+func parseDiscover(flags map[string]*llx.Primitive) *inventory.Discovery {
 	// TODO: parse me...
-	return &providers.Discovery{Targets: []string{"auto"}}
+	return &inventory.Discovery{Targets: []string{"auto"}}
 }
 
-func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
+func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	flags := req.Flags
 	if flags == nil {
 		flags = map[string]*llx.Primitive{}
 	}
 
-	conn := &providers.Config{
+	conn := &inventory.Config{
 		Sudo:     shared.ParseSudo(flags),
 		Discover: parseDiscover(flags),
 		Type:     req.Connector,
@@ -53,12 +50,12 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 	port := 0
 	switch req.Connector {
 	case "local":
-		conn.Backend = providers.ProviderType_LOCAL_OS
+		conn.Type = "local"
 	case "ssh":
-		conn.Backend = providers.ProviderType_SSH
+		conn.Type = "ssh"
 		port = 22
 	case "winrm":
-		conn.Backend = providers.ProviderType_WINRM
+		conn.Type = "winrm"
 		port = 5985
 	}
 
@@ -94,8 +91,8 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
-	assets, err := s.resolve(&asset.Asset{
-		Connections: []*providers.Config{conn},
+	assets, err := s.resolve(&inventory.Asset{
+		Connections: []*inventory.Config{conn},
 	})
 	if err != nil {
 		return nil, errors.New("failed to resolve: " + err.Error())
@@ -111,9 +108,9 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 		}
 	}
 
-	res := proto.ParseCLIRes{
-		Inventory: &v1.Inventory{
-			Spec: &v1.InventorySpec{
+	res := plugin.ParseCLIRes{
+		Inventory: &inventory.Inventory{
+			Spec: &inventory.InventorySpec{
 				Assets: assets,
 			},
 		},
@@ -122,22 +119,22 @@ func (s *Service) ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error) {
 	return &res, nil
 }
 
-func (s *Service) resolve(rootAsset *asset.Asset) ([]*asset.Asset, error) {
-	inventory, err := inventory.New(inventory.WithInventory(&v1.Inventory{
-		Spec: &v1.InventorySpec{
-			Assets: []*asset.Asset{rootAsset},
+func (s *Service) resolve(rootAsset *inventory.Asset) ([]*inventory.Asset, error) {
+	manager, err := manager.NewManager(manager.WithInventory(&inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{rootAsset},
 		},
 	}))
 	if err != nil {
 		return nil, err
 	}
 
-	inventoryAsset := inventory.GetAssets()[0]
-	if err = s.detect(inventoryAsset, inventory); err != nil {
+	inventoryAsset := manager.GetAssets()[0]
+	if err = s.detect(inventoryAsset, manager); err != nil {
 		return nil, err
 	}
 
-	res := []*asset.Asset{inventoryAsset}
+	res := []*inventory.Asset{inventoryAsset}
 
 	// TODO: discovery of related assets
 
@@ -146,24 +143,24 @@ func (s *Service) resolve(rootAsset *asset.Asset) ([]*asset.Asset, error) {
 
 // LocalAssetReq ist a sample request to connect to the local OS.
 // Useful for test automation.
-var LocalAssetReq = &proto.ConnectReq{
-	Asset: &v1.Inventory{
-		Spec: &v1.InventorySpec{
-			Assets: []*asset.Asset{{
-				Connections: []*providers.Config{{
-					Backend: providers.ProviderType_LOCAL_OS,
+var LocalAssetReq = &plugin.ConnectReq{
+	Asset: &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{{
+				Connections: []*inventory.Config{{
+					Type: "local",
 				}},
 			}},
 		},
 	},
 }
 
-func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
+func (s *Service) Connect(req *plugin.ConnectReq) (*plugin.ConnectRes, error) {
 	if req == nil || req.Asset == nil || req.Asset.Spec == nil {
 		return nil, errors.New("no connection data provided")
 	}
 
-	inventory, err := inventory.New(inventory.WithInventory(req.Asset))
+	inventory, err := manager.NewManager(manager.WithInventory(req.Asset))
 	if err != nil {
 		return nil, errors.New("could not load inventory to connect")
 	}
@@ -181,19 +178,19 @@ func (s *Service) Connect(req *proto.ConnectReq) (*proto.Connection, error) {
 		return nil, err
 	}
 
-	return &proto.Connection{
+	return &plugin.ConnectRes{
 		Id:   uint32(conn.ID()),
 		Name: conn.Name(),
 	}, nil
 }
 
-func resolveConnection(conn *providers.Config, inventory inventory.InventoryManager) (*providers.Config, error) {
-	creds := inventory.GetCredsResolver()
+func resolveConnection(conn *inventory.Config, manager manager.InventoryManager) (*inventory.Config, error) {
+	creds := manager.GetCredsResolver()
 	if creds == nil {
 		return nil, nil
 	}
 
-	res := protobuf.Clone(conn).(*providers.Config)
+	res := protobuf.Clone(conn).(*inventory.Config)
 	for i := range res.Credentials {
 		credential := res.Credentials[i]
 		if credential.SecretId == "" {
@@ -212,7 +209,7 @@ func resolveConnection(conn *providers.Config, inventory inventory.InventoryMana
 	return res, nil
 }
 
-func (s *Service) connect(asset *asset.Asset, inventory inventory.InventoryManager) (shared.Connection, error) {
+func (s *Service) connect(asset *inventory.Asset, inventory manager.InventoryManager) (shared.Connection, error) {
 	if len(asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
@@ -223,17 +220,17 @@ func (s *Service) connect(asset *asset.Asset, inventory inventory.InventoryManag
 		return nil, err
 	}
 
-	switch conf.Backend {
-	case providers.ProviderType_LOCAL_OS:
+	switch conf.Type {
+	case "local":
 		s.lastConnectionID++
 		conn = connection.NewLocalConnection(s.lastConnectionID)
 
-	case providers.ProviderType_SSH:
+	case "ssh":
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, inventory)
 
 	default:
-		return nil, errors.New("cannot find conneciton type " + conf.Backend.Id())
+		return nil, errors.New("cannot find connection type " + conf.Type)
 	}
 
 	if err != nil {
@@ -249,7 +246,7 @@ func (s *Service) connect(asset *asset.Asset, inventory inventory.InventoryManag
 	return conn, err
 }
 
-func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) (*proto.DataRes, error) {
+func (s *Service) GetData(req *plugin.DataReq, callback plugin.ProviderCallback) (*plugin.DataRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
@@ -275,7 +272,7 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 		}
 
 		rd := llx.ResourceData(res, name).Result()
-		return &proto.DataRes{
+		return &plugin.DataRes{
 			Data: rd.Data,
 		}, nil
 	}
@@ -288,7 +285,7 @@ func (s *Service) GetData(req *proto.DataReq, callback plugin.ProviderCallback) 
 	return resources.GetData(resource, req.Field, args), nil
 }
 
-func (s *Service) StoreData(req *proto.StoreReq) (*proto.StoreRes, error) {
+func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")

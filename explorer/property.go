@@ -10,7 +10,6 @@ import (
 	llx "go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mrn"
-	"go.mondoo.com/cnquery/resources/packs/all/info"
 	"go.mondoo.com/cnquery/types"
 	"google.golang.org/protobuf/proto"
 )
@@ -30,18 +29,17 @@ func (p *Property) RefreshMRN(ownerMRN string) error {
 }
 
 // Compile a given property and return the bundle.
-func (p *Property) Compile(props map[string]*llx.Primitive) (*llx.CodeBundle, error) {
-	schema := info.Registry.Schema()
+func (p *Property) Compile(props map[string]*llx.Primitive, schema llx.Schema) (*llx.CodeBundle, error) {
 	return mqlc.Compile(p.Mql, props, mqlc.NewConfig(schema, cnquery.DefaultFeatures))
 }
 
 // RefreshChecksumAndType by compiling the query and updating the Checksum field
-func (p *Property) RefreshChecksumAndType() (*llx.CodeBundle, error) {
-	return p.refreshChecksumAndType()
+func (p *Property) RefreshChecksumAndType(schema llx.Schema) (*llx.CodeBundle, error) {
+	return p.refreshChecksumAndType(schema)
 }
 
-func (p *Property) refreshChecksumAndType() (*llx.CodeBundle, error) {
-	bundle, err := p.Compile(nil)
+func (p *Property) refreshChecksumAndType(schema llx.Schema) (*llx.CodeBundle, error) {
+	bundle, err := p.Compile(nil, schema)
 	if err != nil {
 		return bundle, errors.New("failed to compile property '" + p.Mql + "': " + err.Error())
 	}

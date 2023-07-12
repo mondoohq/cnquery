@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/asset"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 )
@@ -38,7 +37,7 @@ func TestInventoryLoader(t *testing.T) {
 }
 
 func TestAssetLoader(t *testing.T) {
-	_, err := New(WithAssets([]*asset.Asset{
+	_, err := New(WithAssets([]*v1.Asset{
 		{
 			Name: "test asset",
 		},

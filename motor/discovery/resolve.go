@@ -16,8 +16,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
 	"go.mondoo.com/cnquery/motor/discovery/common"
+	inventory "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/providers"
 	pr "go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/motor/vault"
@@ -26,8 +26,8 @@ import (
 
 type Resolver interface {
 	Name() string
-	Resolve(ctx context.Context, root *asset.Asset, t *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn,
-		userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error)
+	Resolve(ctx context.Context, root *inventory.Asset, t *inventory.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn,
+		userIdDetectors ...providers.PlatformIdDetector) ([]*inventory.Asset, error)
 	AvailableDiscoveryTargets() []string
 }
 
@@ -48,13 +48,13 @@ func InitCtx(ctx context.Context) context.Context {
 	return initCtx
 }
 
-func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*asset.Asset, error) {
-	resolved := []*asset.Asset{}
+func ResolveAsset(ctx context.Context, root *inventory.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ([]*inventory.Asset, error) {
+	resolved := []*inventory.Asset{}
 
 	// if the asset is missing a secret, we try to add this for the asset
 	common.EnrichAssetWithSecrets(root, sfn)
 
-	assetFallbackName := func(a *asset.Asset, c *providers.Config) {
+	assetFallbackName := func(a *inventory.Asset, c *inventory.Config) {
 		// set the asset name to the config name. This is only required for error cases where the discovery
 		// is not successful
 		if a.Name == "" {
@@ -65,7 +65,7 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver vault.Re
 	for i := range root.Connections {
 		pCfg := root.Connections[i]
 
-		resolverId := pCfg.Backend.Id()
+		resolverId := pCfg.Type
 		r, ok := resolver[resolverId]
 		if !ok {
 			assetFallbackName(root, pCfg)
@@ -133,17 +133,17 @@ func ResolveAsset(ctx context.Context, root *asset.Asset, credsResolver vault.Re
 }
 
 type ResolvedAssets struct {
-	Assets        []*asset.Asset
-	RelatedAssets []*asset.Asset
-	Errors        map[*asset.Asset]error
+	Assets        []*inventory.Asset
+	RelatedAssets []*inventory.Asset
+	Errors        map[*inventory.Asset]error
 }
 
-func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ResolvedAssets {
-	resolved := []*asset.Asset{}
+func ResolveAssets(ctx context.Context, rootAssets []*inventory.Asset, credsResolver vault.Resolver, sfn common.QuerySecretFn) ResolvedAssets {
+	resolved := []*inventory.Asset{}
 	resolvedMap := map[string]struct{}{}
-	errors := map[*asset.Asset]error{}
-	relatedAssets := []*asset.Asset{}
-	platformIdToAssetMap := map[string]*asset.Asset{}
+	errors := map[*inventory.Asset]error{}
+	relatedAssets := []*inventory.Asset{}
+	platformIdToAssetMap := map[string]*inventory.Asset{}
 
 	for i := range rootAssets {
 		asset := rootAssets[i]
@@ -172,7 +172,7 @@ func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, credsResolver
 
 	resolveRelatedAssets(ctx, relatedAssets, platformIdToAssetMap, credsResolver)
 
-	neededRelatedAssets := []*asset.Asset{}
+	neededRelatedAssets := []*inventory.Asset{}
 	for _, a := range relatedAssets {
 		found := false
 		for _, platformId := range a.PlatformIds {
@@ -194,7 +194,7 @@ func ResolveAssets(ctx context.Context, rootAssets []*asset.Asset, credsResolver
 	}
 }
 
-func resolveRelatedAssets(ctx context.Context, relatedAssets []*asset.Asset, platformIdToAssetMap map[string]*asset.Asset, credsResolver vault.Resolver) {
+func resolveRelatedAssets(ctx context.Context, relatedAssets []*inventory.Asset, platformIdToAssetMap map[string]*inventory.Asset, credsResolver vault.Resolver) {
 	for _, assetObj := range relatedAssets {
 		if len(assetObj.PlatformIds) > 0 {
 			for _, platformId := range assetObj.PlatformIds {

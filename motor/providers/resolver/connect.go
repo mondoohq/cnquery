@@ -6,12 +6,11 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/providers"
+	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/motor/vault"
 )
 
-func EstablishConnection(ctx context.Context, tc *providers.Config, credsResolver vault.Resolver, insecure bool, record bool) (*motor.Motor, error) {
+func EstablishConnection(ctx context.Context, tc *v1.Config, credsResolver vault.Resolver, insecure bool, record bool) (*motor.Motor, error) {
 	log.Debug().Str("connection", tc.ToUrl()).Bool("insecure", insecure).Msg("establish connection to asset")
 	// overwrite connection specific insecure with global insecure
 	if insecure {
@@ -25,7 +24,7 @@ func EstablishConnection(ctx context.Context, tc *providers.Config, credsResolve
 	return NewMotorConnection(ctx, tc, credsResolver)
 }
 
-func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credsResolver vault.Resolver, record bool) (*motor.Motor, error) {
+func OpenAssetConnection(ctx context.Context, assetInfo *v1.Asset, credsResolver vault.Resolver, record bool) (*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -46,7 +45,6 @@ func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credsResol
 	// some transports have their own kind/runtime information already
 	// NOTE: going forward we may want to enforce that assets have at least kind and runtime information
 	if assetInfo.Platform != nil {
-		pCfg.Kind = assetInfo.Platform.Kind
 		pCfg.Runtime = assetInfo.Platform.Runtime
 		if pCfg.Options == nil {
 			pCfg.Options = map[string]string{}
@@ -70,7 +68,7 @@ func OpenAssetConnection(ctx context.Context, assetInfo *asset.Asset, credsResol
 	return m, nil
 }
 
-func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credsResolver vault.Resolver, record bool) ([]*motor.Motor, error) {
+func OpenAssetConnections(ctx context.Context, assetInfo *v1.Asset, credsResolver vault.Resolver, record bool) ([]*motor.Motor, error) {
 	if assetInfo == nil {
 		return nil, errors.New("asset is not defined")
 	}
@@ -93,7 +91,6 @@ func OpenAssetConnections(ctx context.Context, assetInfo *asset.Asset, credsReso
 		// some transports have their own kind/runtime information already
 		// NOTE: going forward we may want to enforce that assets have at least kind and runtime information
 		if assetInfo.Platform != nil {
-			pCfg.Kind = assetInfo.Platform.Kind
 			pCfg.Runtime = assetInfo.Platform.Runtime
 			if pCfg.Options == nil {
 				pCfg.Options = map[string]string{}

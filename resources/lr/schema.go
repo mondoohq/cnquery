@@ -3,7 +3,7 @@ package lr
 import (
 	"errors"
 
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
 )
 

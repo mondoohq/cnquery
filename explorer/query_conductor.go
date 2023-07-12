@@ -88,7 +88,7 @@ func (s *LocalServices) SetProps(ctx context.Context, req *PropsReq) (*Empty, er
 	// validate that the queries compile and fill in checksums
 	for i := range req.Props {
 		prop := req.Props[i]
-		code, err := prop.RefreshChecksumAndType()
+		code, err := prop.RefreshChecksumAndType(s.runtime.Schema())
 		if err != nil {
 			return nil, err
 		}
@@ -122,7 +122,7 @@ func (s *LocalServices) Resolve(ctx context.Context, req *ResolveReq) (*Resolved
 
 	bundleMap := bundle.ToMap()
 
-	filtersChecksum, err := MatchFilters(req.EntityMrn, req.AssetFilters, bundle.Packs)
+	filtersChecksum, err := MatchFilters(req.EntityMrn, req.AssetFilters, bundle.Packs, s.runtime.Schema())
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 				continue
 			}
 
-			code, err := prop.Compile(nil)
+			code, err := prop.Compile(nil, s.runtime.Schema())
 			if err != nil {
 				return errors.Wrap(err, "failed to compile property for query "+query.Mrn)
 			}
@@ -239,7 +239,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 		return nil
 	}
 
-	codeBundle, err := query.Compile(props)
+	codeBundle, err := query.Compile(props, s.runtime.Schema())
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 
 // MatchFilters will take the list of filters and only return the ones
 // that are supported by the given querypacks.
-func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack) (string, error) {
+func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack, schema llx.Schema) (string, error) {
 	supported := map[string]*Mquery{}
 	for i := range packs {
 		pack := packs[i]
@@ -299,7 +299,7 @@ func MatchFilters(entityMrn string, filters []*Mquery, packs []*QueryPack) (stri
 		return "", NewAssetMatchError(entityMrn, "querypacks", "no-matching-packs", filters, &Filters{Items: supported})
 	}
 
-	sum, err := ChecksumFilters(matching)
+	sum, err := ChecksumFilters(matching, schema)
 	if err != nil {
 		return "", err
 	}

@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers/os/detector"
 	"go.mondoo.com/cnquery/providers/os/id/aws"
 	"go.mondoo.com/cnquery/providers/os/id/azure"
@@ -56,8 +56,8 @@ func mapDetectors(raw []string) map[string]struct{} {
 	return res
 }
 
-func (s *Service) detect(asset *asset.Asset, inventory inventory.InventoryManager) error {
-	conn, err := s.connect(asset, inventory)
+func (s *Service) detect(asset *inventory.Asset, manager manager.InventoryManager) error {
+	conn, err := s.connect(asset, manager)
 	if err != nil {
 		return err
 	}
@@ -117,10 +117,10 @@ func (s *Service) detect(asset *asset.Asset, inventory inventory.InventoryManage
 	return nil
 }
 
-func relatedIds2assets(ids []string) []*asset.Asset {
-	res := make([]*asset.Asset, len(ids))
+func relatedIds2assets(ids []string) []*inventory.Asset {
+	res := make([]*inventory.Asset, len(ids))
 	for i := range ids {
-		res[i] = &asset.Asset{Id: ids[i]}
+		res[i] = &inventory.Asset{Id: ids[i]}
 	}
 	return res
 }

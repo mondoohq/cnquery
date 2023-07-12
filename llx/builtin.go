@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
 )
 

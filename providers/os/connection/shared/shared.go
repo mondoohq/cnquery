@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 type ConnectionType string
@@ -151,7 +151,7 @@ func (mode FileModeDetails) UnixMode() uint32 {
 }
 
 // TODO: unify the internal sudy and this data structure
-func ParseSudo(flags map[string]*llx.Primitive) *providers.Sudo {
+func ParseSudo(flags map[string]*llx.Primitive) *inventory.Sudo {
 	sudo := flags["sudo"]
 	if sudo == nil {
 		return nil
@@ -162,7 +162,7 @@ func ParseSudo(flags map[string]*llx.Primitive) *providers.Sudo {
 		return nil
 	}
 
-	return &providers.Sudo{
+	return &inventory.Sudo{
 		Active: true,
 	}
 }

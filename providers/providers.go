@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/cli/config"
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 )
 
 var (

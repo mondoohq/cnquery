@@ -18,7 +18,7 @@ import (
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/plugins/scope"
 )
@@ -109,8 +109,8 @@ func initLogger(cmd *cobra.Command) {
 	logger.Set(level)
 }
 
-func filterAssetByPlatformID(assetList []*asset.Asset, selectionID string) (*asset.Asset, error) {
-	var foundAsset *asset.Asset
+func filterAssetByPlatformID(assetList []*inventory.Asset, selectionID string) (*inventory.Asset, error) {
+	var foundAsset *inventory.Asset
 	for i := range assetList {
 		assetObj := assetList[i]
 		for j := range assetObj.PlatformIds {

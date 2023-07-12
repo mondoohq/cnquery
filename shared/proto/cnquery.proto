@@ -2,13 +2,13 @@ syntax = "proto3";
 package proto;
 option go_package = "go.mondoo.com/cnquery/shared/proto";
 
-import "motor/inventory/v1/inventory.proto";
+import "providers-sdk/v1/inventory/inventory.proto";
 
 message RunQueryConfig {
   string command = 1;
   uint32 callback_server = 2;
 
-  cnquery.motor.inventory.v1.Inventory inventory = 3;
+  cnquery.providers.v1.Inventory inventory = 3;
   bytes features = 4;
 
   bool do_parse = 5;

@@ -12,12 +12,11 @@ import (
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor/asset"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers/proto"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/shared"
 	run "go.mondoo.com/cnquery/shared/proto"
 	"go.mondoo.com/cnquery/upstream"
@@ -83,7 +82,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 	assetList := conf.Inventory.Spec.Assets
 	log.Debug().Msgf("resolved %d assets", len(assetList))
 
-	filteredAssets := []*asset.Asset{}
+	filteredAssets := []*inventory.Asset{}
 	if len(assetList) > 1 && conf.PlatformId != "" {
 		filteredAsset, err := filterAssetByPlatformID(assetList, conf.PlatformId)
 		if err != nil {
@@ -123,11 +122,11 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 
 	for i := range filteredAssets {
 		connectAsset := filteredAssets[i]
-		err := runtime.Connect(&proto.ConnectReq{
+		err := runtime.Connect(&pp.ConnectReq{
 			Features: config.Features,
-			Asset: &v1.Inventory{
-				Spec: &v1.InventorySpec{
-					Assets: []*asset.Asset{connectAsset},
+			Asset: &inventory.Inventory{
+				Spec: &inventory.InventorySpec{
+					Assets: []*inventory.Asset{connectAsset},
 				},
 			},
 		})

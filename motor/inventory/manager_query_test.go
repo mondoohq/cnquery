@@ -7,10 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/asset"
 	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
 	mockvault "go.mondoo.com/cnquery/motor/vault/mock"
 )
@@ -26,11 +23,11 @@ func TestSecretManagerPassword(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	assetObj := &asset.Asset{
+	assetObj := &v1.Asset{
 		Name:     "asset-name",
-		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*providers.Config{
-			{Backend: providers.ProviderType_SSH, Insecure: true},
+		Platform: &v1.Platform{Name: "ubuntu"},
+		Connections: []*v1.Config{
+			{Type: "ssh", Insecure: true},
 		},
 	}
 
@@ -58,11 +55,11 @@ func TestSecretManagerPrivateKey(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	assetObj := &asset.Asset{
+	assetObj := &v1.Asset{
 		Name:     "asset-name",
-		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*providers.Config{
-			{Backend: providers.ProviderType_SSH, Insecure: true},
+		Platform: &v1.Platform{Name: "ubuntu"},
+		Connections: []*v1.Config{
+			{Type: "ssh", Insecure: true},
 		},
 	}
 
@@ -90,11 +87,11 @@ func TestSecretManagerBadKey(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	assetObj := &asset.Asset{
+	assetObj := &v1.Asset{
 		Name:     "asset-name",
-		Platform: &platform.Platform{Name: "ubuntu"},
-		Connections: []*providers.Config{
-			{Backend: providers.ProviderType_SSH, Insecure: true},
+		Platform: &v1.Platform{Name: "ubuntu"},
+		Connections: []*v1.Config{
+			{Type: "ssh", Insecure: true},
 		},
 	}
 

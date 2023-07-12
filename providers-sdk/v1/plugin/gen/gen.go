@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/providers/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 )
 
 // This package contains shared components for plugin generation.

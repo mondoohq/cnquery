@@ -6,10 +6,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
-func AssetSelect(assetList []*asset.Asset) *asset.Asset {
+func AssetSelect(assetList []*inventory.Asset) *inventory.Asset {
 	list := make([]string, len(assetList))
 
 	// map asset name to list

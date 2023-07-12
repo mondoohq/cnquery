@@ -3,7 +3,6 @@ package plugin
 
 import (
 	"github.com/hashicorp/go-plugin"
-	"go.mondoo.com/cnquery/providers/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -21,15 +20,15 @@ var PluginMap = map[string]plugin.Plugin{
 }
 
 type ProviderCallback interface {
-	Collect(req *proto.DataRes) error
+	Collect(req *DataRes) error
 }
 
 // ProviderPlugin is the interface that we're exposing as a plugin.
 type ProviderPlugin interface {
-	ParseCLI(req *proto.ParseCLIReq) (*proto.ParseCLIRes, error)
-	Connect(req *proto.ConnectReq) (*proto.Connection, error)
-	GetData(req *proto.DataReq, callback ProviderCallback) (*proto.DataRes, error)
-	StoreData(req *proto.StoreReq) (*proto.StoreRes, error)
+	ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error)
+	Connect(req *ConnectReq) (*ConnectRes, error)
+	GetData(req *DataReq, callback ProviderCallback) (*DataRes, error)
+	StoreData(req *StoreReq) (*StoreRes, error)
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.
@@ -43,7 +42,7 @@ type ProviderPluginImpl struct {
 }
 
 func (p *ProviderPluginImpl) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterProviderPluginServer(s, &GRPCServer{
+	RegisterProviderPluginServer(s, &GRPCServer{
 		Impl:   p.Impl,
 		broker: broker,
 	})
@@ -52,7 +51,7 @@ func (p *ProviderPluginImpl) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Serve
 
 func (p *ProviderPluginImpl) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
 	return &GRPCClient{
-		client: proto.NewProviderPluginClient(c),
+		client: NewProviderPluginClient(c),
 		broker: broker,
 	}, nil
 }

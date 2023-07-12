@@ -8,18 +8,17 @@ package providers
 import (
 	_ "embed"
 	"encoding/json"
+	osfs "os"
 
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	core "go.mondoo.com/cnquery/providers/core/provider"
-	"go.mondoo.com/cnquery/providers/plugin"
-	"go.mondoo.com/cnquery/resources"
 	// osconf "go.mondoo.com/cnquery/providers/os/config"
 	// os "go.mondoo.com/cnquery/providers/os/provider"
 )
 
 var BuiltinCoreID = coreconf.Config.ID
-
-const DefaultOsID = "go.mondoo.com/cnquery/providers/os"
 
 //go:embed core/dist/core.resources.json
 var coreInfo []byte
@@ -61,4 +60,12 @@ func MustLoadSchema(name string, data []byte) *resources.Schema {
 		panic("failed to embed schema for " + name)
 	}
 	return &res
+}
+
+func MustLoadSchemaFromFile(name string, path string) *resources.Schema {
+	raw, err := osfs.ReadFile(path)
+	if err != nil {
+		panic("cannot read schema file: " + path)
+	}
+	return MustLoadSchema(name, raw)
 }

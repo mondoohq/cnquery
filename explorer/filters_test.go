@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers"
 )
 
 func TestNewFilters(t *testing.T) {
@@ -52,7 +53,7 @@ func TestBundleAssetFilter(t *testing.T) {
 	assert.Equal(t, (*Filters)(nil), bundle.Packs[0].ComputedFilters)
 
 	// check that the computed asset filters are set
-	pbm, err := bundle.Compile(context.Background())
+	pbm, err := bundle.Compile(context.Background(), providers.DefaultRuntime().Schema())
 	require.NoError(t, err)
 	assert.Equal(t, "asset.family.contains(\"unix\")", pbm.Packs["//local.cnquery.io/run/local-execution/querypacks/linux-mixed-queries"].ComputedFilters.Summarize())
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers/proto"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 )
 
 // Unlike other providers, we are currently building this into the core
@@ -31,7 +31,7 @@ type Mock struct {
 type Resources map[string]Resource
 
 type Resource struct {
-	Fields map[string]proto.DataRes
+	Fields map[string]plugin.DataRes
 }
 
 func NewFromTomlFile(path string) (*Mock, error) {
@@ -43,14 +43,14 @@ func NewFromTomlFile(path string) (*Mock, error) {
 	return NewFromToml(data)
 }
 
-func loadRawDataRes(raw interface{}) (proto.DataRes, error) {
+func loadRawDataRes(raw interface{}) (plugin.DataRes, error) {
 	switch v := raw.(type) {
 	case string:
-		return proto.DataRes{Data: llx.StringPrimitive(v)}, nil
+		return plugin.DataRes{Data: llx.StringPrimitive(v)}, nil
 	case int64:
-		return proto.DataRes{Data: llx.IntPrimitive(v)}, nil
+		return plugin.DataRes{Data: llx.IntPrimitive(v)}, nil
 	default:
-		return proto.DataRes{}, errors.New("failed to load value")
+		return plugin.DataRes{}, errors.New("failed to load value")
 	}
 }
 
@@ -121,7 +121,7 @@ func NewFromToml(raw []byte) (*Mock, error) {
 
 		for id, vv := range rawList {
 			resource := Resource{
-				Fields: map[string]proto.DataRes{},
+				Fields: map[string]plugin.DataRes{},
 			}
 
 			rawFields, ok := vv.(map[string]interface{})

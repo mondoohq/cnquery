@@ -9,6 +9,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/checksums"
+	llx "go.mondoo.com/cnquery/llx"
 )
 
 // NewFilters creates a Filters object from a simple list of MQL snippets
@@ -109,14 +110,14 @@ func (s *Filters) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, (*tmp)(s))
 }
 
-func (s *Filters) Compile(ownerMRN string) error {
+func (s *Filters) Compile(ownerMRN string, schema llx.Schema) error {
 	if s == nil || len(s.Items) == 0 {
 		return nil
 	}
 
 	res := make(map[string]*Mquery, len(s.Items))
 	for _, query := range s.Items {
-		query.RefreshAsFilter(ownerMRN)
+		query.RefreshAsFilter(ownerMRN, schema)
 
 		if _, ok := res[query.CodeId]; ok {
 			continue

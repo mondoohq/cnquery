@@ -18,9 +18,10 @@ import (
 	rawsftp "github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/inventory"
 	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/awsinstanceconnect"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/awsssmsession"
@@ -39,8 +40,8 @@ type SshConnection struct {
 	fs        afero.Fs
 	Sudo      *shared.Sudo
 	id        uint32
-	conf      *providers.Config
-	inventory inventory.InventoryManager
+	conf      *inventory.Config
+	inventory manager.InventoryManager
 
 	serverVersion    string
 	UseScpFilesystem bool
@@ -48,11 +49,11 @@ type SshConnection struct {
 	SSHClient        *ssh.Client
 }
 
-func NewSshConnection(id uint32, conf *providers.Config, inventory inventory.InventoryManager) (*SshConnection, error) {
+func NewSshConnection(id uint32, conf *inventory.Config, im manager.InventoryManager) (*SshConnection, error) {
 	res := SshConnection{
 		id:        id,
 		conf:      conf,
-		inventory: inventory,
+		inventory: im,
 	}
 
 	host := conf.GetHost()
@@ -336,7 +337,7 @@ func PlatformIdentifier(publicKey ssh.PublicKey) string {
 	return identifier
 }
 
-func readSSHConfig(cc *providers.Config) *providers.Config {
+func readSSHConfig(cc *inventory.Config) *inventory.Config {
 	host := cc.Host
 
 	home, err := homedir.Dir()
@@ -390,7 +391,7 @@ func readSSHConfig(cc *providers.Config) *providers.Config {
 				credential, _ := vault.NewPrivateKeyCredentialFromPath(user, expandedPath, "")
 				// apply the option manually
 				if credential != nil {
-					cc.AddCredential(credential)
+					cc.Credentials = append(cc.Credentials, credential)
 				}
 			}
 		}
@@ -406,8 +407,8 @@ func readSSHConfig(cc *providers.Config) *providers.Config {
 	return cc
 }
 
-func verifyConfig(conf *providers.Config) error {
-	if conf.Backend != providers.ProviderType_SSH {
+func verifyConfig(conf *inventory.Config) error {
+	if conf.Type != "ssh" {
 		return providers.ErrProviderTypeDoesNotMatch
 	}
 
@@ -443,7 +444,7 @@ func knownHostsCallback() (ssh.HostKeyCallback, error) {
 	return knownhosts.New(existentKnownHosts...)
 }
 
-func establishClientConnection(pCfg *providers.Config, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
+func establishClientConnection(pCfg *inventory.Config, hostKeyCallback ssh.HostKeyCallback) (*ssh.Client, []io.Closer, error) {
 	authMethods, closer, err := prepareConnection(pCfg)
 	if err != nil {
 		return nil, nil, err
@@ -486,7 +487,7 @@ func hasAgentLoadedKey(list []*agent.Key, filename string) bool {
 
 // prepareConnection determines the auth methods required for a ssh connection and also prepares any other
 // pre-conditions for the connection like tunnelling the connection via AWS SSM session
-func prepareConnection(conf *providers.Config) ([]ssh.AuthMethod, []io.Closer, error) {
+func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, error) {
 	auths := []ssh.AuthMethod{}
 	closer := []io.Closer{}
 
