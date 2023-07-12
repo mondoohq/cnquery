@@ -1309,6 +1309,8 @@ private aws.ecr.repository {
   images() []aws.ecr.image
   // Region where the image is stored
   region string
+  // Repository option to scan on image push
+  imageScanOnPush bool
 }
 
 // AWS Elastic Container Registry Image
