@@ -42,7 +42,19 @@ packs:
           - uid: k8s-cluster-clusterroles
             title: Retrieve cluster RBAC ClusterRoles
             mql: |
-              k8s.clusterroles  
+              k8s.clusterroles
+          - uid: k8s-cluster-roles
+            title: Retrieve RBAC Roles
+            mql: |
+              k8s.roles
+          - uid: k8s-cluster-clusterrolebindings
+            title: Retrieve RBAC cluster-rolebindings
+            mql: |
+              k8s.clusterrolebindings
+          - uid: k8s-cluster-rolebindings
+            title: Retrieve RBAC rolebindings
+            mql: |
+              k8s.rolebindings
       - title: Pods inventory
         filters:
           - asset.platform == "k8s-pod"
