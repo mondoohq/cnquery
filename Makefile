@@ -76,6 +76,7 @@ endef
 .PHONY: providers
 providers:
 	go generate .
+	go generate ./providers-sdk/v1/vault
 	go generate ./providers-sdk/v1/resources
 	go generate ./providers-sdk/v1/inventory
 	go generate ./providers-sdk/v1/plugin
@@ -89,8 +90,6 @@ motor/generate:
 	go generate .
 	go generate ./motor/providers/k8s
 	go generate ./motor/platform
-	go generate ./motor/vault
-	go generate ./motor/inventory/v1
 
 motor/test:
 	gotestsum -f short-verbose $(shell go list ./motor/...)

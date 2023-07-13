@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package cnquery.providers.v1;
+option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/vault";
+
+message SecretID {
+  string key = 1;
+}
+
+message Secret {
+  string key = 1;
+  string label = 2;
+  bytes data = 3;
+  SecretEncoding encoding = 4;
+}
+
+service Vault {
+  rpc About(Empty) returns (VaultInfo);
+  rpc Get(SecretID) returns (Secret);
+  rpc Set(Secret) returns (SecretID);
+}
+
+enum CredentialType {
+  undefined = 0;
+  password = 1;
+  private_key = 2;
+  ssh_agent = 3;
+  bearer = 4;
+  credentials_query = 5;
+  json = 6;
+  aws_ec2_instance_connect = 7;
+  aws_ec2_ssm_session = 8;
+  pkcs12 = 9;
+}
+
+enum SecretEncoding {
+  encoding_undefined = 0;
+  encoding_json = 1;
+  encoding_proto = 2;
+  encoding_binary = 3;
+}
+
+message Empty {}
+
+message VaultInfo {
+  string name = 1;
+}
+
+// Credential holds authentication information
+message Credential {
+  string secret_id = 1;
+  CredentialType type = 2;
+  string user = 3;
+  bytes secret = 4;
+  reserved 5;
+
+  // the following are optional and sugar for defining a secret
+  // those values are only allowed for reading in yaml values but not via API calls
+  string password = 21; // optional, could also be the password for the private key
+
+  // for user convenience we define private_key, this allows yaml/json writers
+  // to just embed the string representation, otherwise it would need to be base64 encoded
+  string private_key = 22;
+
+  // for user convenience we define private_key_path which loads a local file into the
+  // secret
+  string private_key_path = 23;
+}
+
+enum VaultType {
+  None = 0;
+  KeyRing = 1;
+  LinuxKernelKeyring = 2;
+  EncryptedFile = 3;
+  HashiCorp = 4;
+  GCPSecretsManager = 5;
+  AWSSecretsManager = 6;
+  AWSParameterStore = 7;
+  GCPBerglas = 8;
+  Memory = 9;
+}
+
+message VaultConfiguration {
+  string name = 1;
+  VaultType type = 2;
+  map <string, string> options = 3;
+}

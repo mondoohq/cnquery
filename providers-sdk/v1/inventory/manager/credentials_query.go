@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/mock"
 	"go.mondoo.com/cnquery/types"
 )

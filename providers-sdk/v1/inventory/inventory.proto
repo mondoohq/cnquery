@@ -2,7 +2,7 @@ syntax = "proto3";
 package cnquery.providers.v1;
 option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/inventory";
 
-import "motor/vault/vault.proto";
+import "providers-sdk/v1/vault/vault.proto";
 import "upstream/upstream.proto";
 
 enum State {
@@ -84,7 +84,7 @@ message Config {
   string type = 12;
 
   // credentials available for this provider configuration
-  repeated cnquery.motor.vault.v1.Credential credentials = 11;
+  repeated Credential credentials = 11;
 
   bool insecure = 8;  // disable ssl/tls checks
   Sudo sudo = 21;
@@ -253,7 +253,7 @@ message Inventory {
 
 message InventorySpec {
   repeated Asset assets = 1;
-  map<string, cnquery.motor.vault.v1.Credential> credentials = 2;
+  map<string, Credential> credentials = 2;
   VaultConfiguration vault = 3;
   string credential_query = 4;
 
@@ -262,9 +262,3 @@ message InventorySpec {
 }
 
 message InventoryStatus {}
-
-message VaultConfiguration {
-  string name = 1;
-  string type = 2;
-  map<string, string> options = 3;
-}

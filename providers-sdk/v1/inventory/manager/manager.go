@@ -5,12 +5,12 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor/vault"
-	"go.mondoo.com/cnquery/motor/vault/config"
-	"go.mondoo.com/cnquery/motor/vault/credentials_resolver"
-	"go.mondoo.com/cnquery/motor/vault/inmemory"
-	"go.mondoo.com/cnquery/motor/vault/multivault"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault/config"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault/credentials_resolver"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault/inmemory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault/multivault"
 )
 
 var _ InventoryManager = (*inventoryManager)(nil)
@@ -126,13 +126,13 @@ func (im *inventoryManager) loadInventory(inventory *inventory.Inventory) error 
 	if inventory.Spec.Vault != nil {
 		var v vault.Vault
 		// when the type is not provided but a name was given, then look up in our internal vault configuration
-		if inventory.Spec.Vault.Name != "" && inventory.Spec.Vault.Type == "" {
+		if inventory.Spec.Vault.Name != "" && inventory.Spec.Vault.Type == vault.VaultType_None {
 			v, err = config.GetConfiguredVault(inventory.Spec.Vault.Name)
 			if err != nil {
 				return err
 			}
 		} else {
-			t, err := vault.NewVaultType(inventory.Spec.Vault.Type)
+			t, err := vault.NewVaultType(inventory.Spec.Vault.Type.String())
 			if err != nil {
 				return err
 			}
