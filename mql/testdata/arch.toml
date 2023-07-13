@@ -1,6 +1,10 @@
 [mql]
 providers = ["core", "os"]
 
+[mondoo.""]
+version = "unstable"
+build = "development"
+
 [command."uname -s"]
 stdout = "Linux"
 

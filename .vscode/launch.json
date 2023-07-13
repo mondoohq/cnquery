@@ -164,7 +164,7 @@
       "name": "zlr",
       "type": "go",
       "request": "launch",
-      "program": "${workspaceRoot}/resources/lr/cli/main.go",
+      "program": "${workspaceRoot}/providers-sdk/v1/lr/cli/main.go",
       "cwd": "${workspaceRoot}/",
       "args": [
         // "-v", "--log-level", "warn",

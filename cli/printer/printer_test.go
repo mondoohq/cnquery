@@ -13,7 +13,6 @@ import (
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers/mock"
 	"go.mondoo.com/cnquery/sortx"
 )
@@ -48,9 +47,6 @@ func getEnvFeatures() cnquery.Features {
 func executionContext() (llx.Schema, llx.Runtime) {
 	m, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
 	if err != nil {
-		panic(err.Error())
-	}
-	if err = m.LoadSchemas(providers.Coordinator.LoadSchema); err != nil {
 		panic(err.Error())
 	}
 

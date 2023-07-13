@@ -3,10 +3,10 @@ package mock
 import (
 	"errors"
 	"os"
-	"strings"
 
 	"github.com/BurntSushi/toml"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 )
@@ -25,7 +25,7 @@ import (
 type Mock struct {
 	Inventory map[string]Resources
 	Providers []string
-	schema    *resources.Schema
+	schema    llx.Schema
 }
 
 type Resources map[string]Resource
@@ -97,6 +97,7 @@ func NewFromToml(raw []byte) (*Mock, error) {
 
 	res := Mock{
 		Inventory: map[string]Resources{},
+		schema:    providers.DefaultRuntime().Schema(),
 	}
 	err = nil
 
@@ -170,6 +171,11 @@ func (m *Mock) CreateResource(name string, args map[string]*llx.Primitive) (llx.
 		}
 
 		return &llx.MockResource{Name: name, ID: id}, nil
+	default:
+		// for all static resources
+		if _, ok := resourceCache[""]; ok {
+			return &llx.MockResource{Name: name, ID: ""}, nil
+		}
 	}
 
 	return nil, errors.New("cannot create resource '" + name + "' from recording yet")
@@ -224,26 +230,6 @@ func (m *Mock) Resource(name string) (*resources.ResourceInfo, bool) {
 
 func (m *Mock) Schema() llx.Schema {
 	return m.schema
-}
-
-func (m *Mock) LoadSchemas(f func(name string) *resources.Schema) error {
-	var errs []string
-	m.schema = &resources.Schema{
-		Resources: map[string]*resources.ResourceInfo{},
-	}
-
-	for _, name := range m.Providers {
-		if schema := f(name); schema != nil {
-			m.schema.Add(schema)
-		} else {
-			errs = append(errs, name)
-		}
-	}
-
-	if len(errs) != 0 {
-		return errors.New("failed to load schemas for recordings: " + strings.Join(errs, ", "))
-	}
-	return nil
 }
 
 func (m *Mock) Close() {

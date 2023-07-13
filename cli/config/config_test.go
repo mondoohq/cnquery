@@ -77,9 +77,10 @@ func Test_probeConfigMemFs(t *testing.T) {
 	resetAppFsToMemFs()
 	afero.WriteFile(AppFs, homeConfig, configBody, 0o644)
 
-	assert.Equal(t, false, ProbeDir(homeConfigDir))
-	assert.Equal(t, true, ProbeFile(homeConfig))
-	assert.Equal(t, false, ProbeFile(homeConfig+".nothere"))
+	assert.False(t, ProbeFile(homeConfigDir))
+	assert.True(t, ProbeDir(homeConfigDir))
+	assert.True(t, ProbeFile(homeConfig))
+	assert.False(t, ProbeFile(homeConfig+".nothere"))
 }
 
 func Test_probeConfigOsFs(t *testing.T) {
