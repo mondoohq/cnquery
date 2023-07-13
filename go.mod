@@ -48,6 +48,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20221106050444-61f0cd9a192a
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.1
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pierrec/lz4/v4 v4.1.17
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
@@ -245,7 +246,6 @@ require (
 	github.com/nishanths/predeclared v0.2.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.12.1 // indirect
 	github.com/oklog/run v1.0.0 // indirect
-	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

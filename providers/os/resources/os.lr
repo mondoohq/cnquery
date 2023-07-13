@@ -1,6 +1,138 @@
 option provider = "go.mondoo.com/cnquery/providers/os"
 option go_package = "go.mondoo.com/cnquery/providers/os/resources"
 
+// // File on the system
+// file @defaults("path size permissions.string") {
+//   init(path string)
+//   // Location of the file on the system
+//   path string
+//   // Filename without path prefix of this file
+//   basename(path) string
+//   // Path to the folder containing this file
+//   dirname(path) string
+//   // Contents of this file
+//   content(path, exists) string
+//   // Indicator if this file exists on the system
+//   exists() bool
+//   // Permissions for this file
+//   permissions() file.permissions
+//   // Size of this file on disk
+//   size() int
+//   // Ownership information about the user
+//   user() user
+//   // Ownership information about the group
+//   group() group
+//   // Denotes whether the path is empty
+//   empty() bool
+// }
+
+// // Access permissions for a given file
+// private file.permissions @defaults("string") {
+//   // Raw POSIX mode for the permissions
+//   mode int
+//   // Indicator if this file is readable by its owner
+//   user_readable bool
+//   // Indicator if this file is writeable by its owner
+//   user_writeable bool
+//   // Indicator if this file is executable by its owner
+//   user_executable bool
+//   // Indicator if this file is readable by members of the group
+//   group_readable bool
+//   // Indicator if this file is writeable by members of the group
+//   group_writeable bool
+//   // Indicator if this file is executable by members of the group
+//   group_executable bool
+//   // Indicator if this file is readable by others
+//   other_readable bool
+//   // Indicator if this file is writeable by others
+//   other_writeable bool
+//   // Indicator if this file is executable by others
+//   other_executable bool
+//   // SUID bit indicator
+//   suid bool
+//   // SGID bit indicator
+//   sgid bool
+//   // Sticky bit indicator
+//   sticky bool
+//   // Whether the file describes a directory
+//   isDirectory bool
+//   // Whether the file describes a regular file
+//   isFile bool
+//   // Whether the file is a symlink
+//   isSymlink bool
+//   // A simple printed string version of the permissions
+//   string() string
+// }
+
+// // User on this system
+// user @defaults("name uid gid") {
+//   // User ID
+//   uid int
+//   // User's Group ID
+//   gid int
+//   // User's Security Identifier (Windows)
+//   sid string
+//   // Name of the user
+//   name string
+//   // Home folder
+//   home string
+//   // Default shell configured
+//   shell string
+//   // Indicates if the user is enabled
+//   enabled bool
+//   // List of authorized keys
+//   authorizedkeys() authorizedkeys
+//   // List of SSH keys
+//   sshkeys() []privatekey
+//   // Group that user is a member of
+//   group() group
+// }
+
+// // Users configured on this system
+// users {
+//   []user
+// }
+
+// // List of SSH Authorized Keys
+// authorizedkeys {
+//   []authorizedkeys.entry(file, content)
+//   init(path string)
+//   path string
+//   file() file
+//   content(file) string
+// }
+
+// // SSH authorized keys entry
+// authorizedkeys.entry @defaults("key") {
+//   line int
+//   type string
+//   key string
+//   label() string
+//   options() []string
+//   file file
+// }
+
+// // Group on this system
+// group @defaults("name gid") {
+//   init(id string)
+//   // Group ID
+//   gid int
+//   // Group's Security Identifier (Windows)
+//   sid string
+//   // Name of this group
+//   name string
+//   // Users who are members of this group
+//   members() []user
+// }
+
+// // Groups configured on this system
+// groups {
+//   []group
+// }
+
+
+
+
 // Results of running a command on the system
 command {
   init(command string)

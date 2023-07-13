@@ -20,10 +20,10 @@ import (
 
 var BuiltinCoreID = coreconf.Config.ID
 
-//go:embed core/dist/core.resources.json
+//go:embed core/resources/core.resources.json
 var coreInfo []byte
 
-// //go:embed os/dist/os.resources.json
+// //go:embed os/resources/os.resources.json
 // var osInfo []byte
 
 var builtinProviders = map[string]*builtinProvider{

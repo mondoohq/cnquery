@@ -16,7 +16,7 @@ import (
 func localShell() *shell.Shell {
 	runtime := providers.Coordinator.NewRuntime()
 	runtime.DeactivateProviderDiscovery()
-	schema, err := os.ReadFile("../../providers/core/dist/core.resources.json")
+	schema, err := os.ReadFile("../../providers/core/resources/core.resources.json")
 	if err != nil {
 		panic(err.Error())
 	}
