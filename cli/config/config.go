@@ -8,7 +8,6 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
@@ -35,7 +34,6 @@ const (
 // Init initializes and loads the mondoo config
 func Init(rootCmd *cobra.Command) {
 	cobra.OnInitialize(initConfig)
-	AppFs = afero.NewOsFs()
 	Features = getFeatures()
 	// persistent flags are global for the application
 	rootCmd.PersistentFlags().StringVar(&UserProvidedPath, "config", "", "Set config file path (default $HOME/.config/mondoo/mondoo.yml)")

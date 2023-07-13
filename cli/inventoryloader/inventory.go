@@ -9,10 +9,9 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/inventory/ansibleinventory"
-	"go.mondoo.com/cnquery/motor/inventory/domainlist"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/ansibleinventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/domainlist"
 )
 
 func loadDataPipe() ([]byte, bool) {
@@ -51,12 +50,12 @@ func loadDataPipe() ([]byte, bool) {
 }
 
 // Parse uses the viper flags for `--inventory-file` to load the inventory
-func Parse() (*v1.Inventory, error) {
+func Parse() (*inventory.Inventory, error) {
 	inventoryFilePath := viper.GetString("inventory-file")
 
 	// check in an inventory file was provided
 	if inventoryFilePath == "" {
-		return v1.New(), nil
+		return inventory.New(), nil
 	}
 
 	var data []byte
@@ -99,24 +98,24 @@ func Parse() (*v1.Inventory, error) {
 
 	// load mondoo inventory
 	log.Debug().Msg("parse inventory")
-	inventory, err := v1.InventoryFromYAML(data)
+	res, err := inventory.InventoryFromYAML(data)
 	if err != nil {
 		return nil, err
 	}
 	// we preprocess the content here, to ensure relative paths are
-	if inventory.Metadata.Labels == nil {
-		inventory.Metadata.Labels = map[string]string{}
+	if res.Metadata.Labels == nil {
+		res.Metadata.Labels = map[string]string{}
 	}
-	inventory.Metadata.Labels[v1.InventoryFilePath] = inventoryFilePath
-	err = inventory.PreProcess()
+	res.Metadata.Labels[inventory.InventoryFilePath] = inventoryFilePath
+	err = res.PreProcess()
 	if err != nil {
 		return nil, err
 	}
 
-	return inventory, nil
+	return res, nil
 }
 
-func parseAnsibleInventory(data []byte) (*v1.Inventory, error) {
+func parseAnsibleInventory(data []byte) (*inventory.Inventory, error) {
 	inventory, err := ansibleinventory.Parse(data)
 	if err != nil {
 		return nil, err
@@ -124,7 +123,7 @@ func parseAnsibleInventory(data []byte) (*v1.Inventory, error) {
 	return inventory.ToV1Inventory(), nil
 }
 
-func parseDomainListInventory(data []byte) (*v1.Inventory, error) {
+func parseDomainListInventory(data []byte) (*inventory.Inventory, error) {
 	inventory, err := domainlist.Parse(bytes.NewReader(data))
 	if err != nil {
 		return nil, err
@@ -134,8 +133,8 @@ func parseDomainListInventory(data []byte) (*v1.Inventory, error) {
 
 // ParseOrUse tries to load the inventory and if nothing exists it
 // will instead use the provided asset.
-func ParseOrUse(cliAsset *asset.Asset, insecure bool) (*v1.Inventory, error) {
-	var v1inventory *v1.Inventory
+func ParseOrUse(cliAsset *inventory.Asset, insecure bool) (*inventory.Inventory, error) {
+	var v1inventory *inventory.Inventory
 	var err error
 
 	// parses optional inventory file if inventory was not piped already

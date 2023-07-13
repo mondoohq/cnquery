@@ -1,4 +1,4 @@
-package fsutil
+package linefeed
 
 import "io"
 

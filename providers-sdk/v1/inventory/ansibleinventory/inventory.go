@@ -5,16 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/vault"
-
-	"github.com/rs/zerolog/log"
-
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/providers"
-
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"sigs.k8s.io/yaml"
 )
 
@@ -209,8 +203,8 @@ func Filter(vs []string, f func(string) bool) []string {
 	return vsf
 }
 
-func (i *Inventory) ToV1Inventory() *v1.Inventory {
-	out := v1.New()
+func (i *Inventory) ToV1Inventory() *inventory.Inventory {
+	out := inventory.New()
 
 	// convert assets
 	hosts := i.List()
@@ -222,7 +216,7 @@ func (i *Inventory) ToV1Inventory() *v1.Inventory {
 			name = host.Alias
 		}
 
-		asset := &asset.Asset{
+		asset := &inventory.Asset{
 			Name:        name,
 			Connections: ansibleConnections(host),
 			Labels:      map[string]string{},
@@ -256,36 +250,35 @@ func isValidConnectionType(conn string) bool {
 // ansibleBackend maps an ansible connection to mondoo backend
 // https://docs.ansible.com/ansible/latest/plugins/connection.html
 // quickly get a list of available plugins via `ansible-doc -t connection -l`
-func ansibleBackend(connection string) providers.ProviderType {
-	var res providers.ProviderType
+func ansibleBackend(connection string) string {
 	switch strings.TrimSpace(connection) {
 	case "local":
-		res = providers.ProviderType_LOCAL_OS
+		break
 	case "ssh":
-		res = providers.ProviderType_SSH
+		break
 	case "winrm":
-		res = providers.ProviderType_WINRM
+		break
 	case "docker":
-		res = providers.ProviderType_DOCKER
+		break
 	default:
 		log.Warn().Str("ansible-connection", connection).Msg("unknown connection, fallback to ssh")
-		res = providers.ProviderType_SSH
+		return "ssh"
 	}
-	return res
+	return connection
 }
 
-func ansibleConnections(host *Host) []*providers.Config {
+func ansibleConnections(host *Host) []*inventory.Config {
 	backend := ansibleBackend(host.Connection)
 
 	// in the case where the port is 0, we will fallback to default ports (eg 22)
 	// further down in the execution chain
 	port, _ := strconv.Atoi(host.Port)
 
-	res := &providers.Config{
-		Backend: backend,
-		Host:    host.Host,
-		Port:    int32(port),
-		Sudo: &providers.Sudo{
+	res := &inventory.Config{
+		Type: backend,
+		Host: host.Host,
+		Port: int32(port),
+		Sudo: &inventory.Sudo{
 			Active: host.Become,
 		},
 	}
@@ -309,7 +302,7 @@ func ansibleConnections(host *Host) []*providers.Config {
 	}
 
 	// fallback to ssh agent as default in case nothing was provided
-	if len(credentials) == 0 && backend == providers.ProviderType_SSH {
+	if len(credentials) == 0 && backend == "ssh" {
 		credentials = append(credentials, &vault.Credential{
 			Type: vault.CredentialType_ssh_agent,
 			User: host.User,
@@ -317,5 +310,5 @@ func ansibleConnections(host *Host) []*providers.Config {
 	}
 
 	res.Credentials = credentials
-	return []*providers.Config{res}
+	return []*inventory.Config{res}
 }

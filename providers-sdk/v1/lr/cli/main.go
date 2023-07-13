@@ -6,7 +6,7 @@ package main
 
 import (
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/resources/lr/cli/cmd"
+	"go.mondoo.com/cnquery/providers-sdk/v1/lr/cli/cmd"
 )
 
 func init() {

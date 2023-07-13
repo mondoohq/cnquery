@@ -3,12 +3,12 @@ package scan
 import (
 	"github.com/hashicorp/go-multierror"
 	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/motor/asset"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 type Reporter interface {
-	AddReport(asset *asset.Asset, results *AssetReport)
-	AddScanError(asset *asset.Asset, err error)
+	AddReport(asset *inventory.Asset, results *AssetReport)
+	AddScanError(asset *inventory.Asset, err error)
 }
 
 type AssetReport struct {
@@ -26,7 +26,7 @@ type AggregateReporter struct {
 	resolved     map[string]*explorer.ResolvedPack
 }
 
-func NewAggregateReporter(assetList []*asset.Asset) *AggregateReporter {
+func NewAggregateReporter(assetList []*inventory.Asset) *AggregateReporter {
 	assets := make(map[string]*explorer.Asset, len(assetList))
 	for i := range assetList {
 		cur := assetList[i]
@@ -44,13 +44,13 @@ func NewAggregateReporter(assetList []*asset.Asset) *AggregateReporter {
 	}
 }
 
-func (r *AggregateReporter) AddReport(asset *asset.Asset, results *AssetReport) {
+func (r *AggregateReporter) AddReport(asset *inventory.Asset, results *AssetReport) {
 	r.assetReports[asset.Mrn] = results.Report
 	r.resolved[asset.Mrn] = results.Resolved
 	r.bundle = results.Bundle
 }
 
-func (r *AggregateReporter) AddScanError(asset *asset.Asset, err error) {
+func (r *AggregateReporter) AddScanError(asset *inventory.Asset, err error) {
 	r.assetErrors[asset.Mrn] = err
 }
 

@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/inventory/ansibleinventory"
-	"go.mondoo.com/cnquery/motor/vault"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/ansibleinventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
 func TestValidInventory(t *testing.T) {
@@ -320,7 +320,7 @@ func TestTagsAndGroups(t *testing.T) {
 	assert.Equal(t, "/home/custom-user/.ssh/id_rsa", cred.PrivateKeyPath)
 }
 
-func findAsset(assetList []*asset.Asset, name string) *asset.Asset {
+func findAsset(assetList []*inventory.Asset, name string) *inventory.Asset {
 	for i := range assetList {
 		if assetList[i].Name == name {
 			return assetList[i]

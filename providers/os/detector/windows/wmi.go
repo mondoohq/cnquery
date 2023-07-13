@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers/os/fsutil"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/linefeed"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -79,7 +79,7 @@ type WmicOSInformation struct {
 }
 
 func ParseWinWmicOS(csvData io.Reader) (*WmicOSInformation, error) {
-	reader := csv.NewReader(fsutil.NewLineFeedReader(csvData))
+	reader := csv.NewReader(linefeed.NewLineFeedReader(csvData))
 	os := []*WmicOSInformation{}
 	header := map[string]int{}
 

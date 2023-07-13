@@ -21,6 +21,10 @@ var (
 	AppFs                afero.Fs
 )
 
+func init() {
+	AppFs = afero.NewOsFs()
+}
+
 func probePath(path string, asFile bool) bool {
 	stat, err := AppFs.Stat(path)
 	if err != nil {

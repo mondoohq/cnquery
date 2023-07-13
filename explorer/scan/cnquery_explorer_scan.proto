@@ -3,11 +3,11 @@ syntax = "proto3";
 package cnquery.explorer.scan;
 option go_package = "go.mondoo.com/cnquery/explorer/scan";
 
-import "motor/inventory/v1/inventory.proto";
+import "providers-sdk/v1/inventory/inventory.proto";
 import "explorer/cnquery_explorer.proto";
 
 message Job {
-  cnquery.motor.inventory.v1.Inventory inventory = 1;
+  cnquery.providers.v1.Inventory inventory = 1;
   cnquery.explorer.Bundle bundle = 2;
   
   bool do_record = 20;

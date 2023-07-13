@@ -80,8 +80,7 @@ providers:
 	go generate ./providers-sdk/v1/resources
 	go generate ./providers-sdk/v1/inventory
 	go generate ./providers-sdk/v1/plugin
-	go generate ./resources/packs/core/vadvisor/cvss # TODO: migrate
-	go build -o lr resources/lr/cli/main.go
+	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 	@$(call genProvider, providers/core)
 	@$(call genProvider, providers/os)
 # add more providers...

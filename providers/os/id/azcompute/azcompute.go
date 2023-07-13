@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/resources/powershell"
 )
 
 const (

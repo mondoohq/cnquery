@@ -140,6 +140,36 @@
         "--log-level",
         "debug"
       ],
+    },
+    {
+      "name": "z",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/apps/cnquery/cnquery.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        // "run", "ssh", "root@127.0.0.1:32771", "-p", "raoshie3quuY6ceeFaeliuvoNgae7w", "-c", "command('echo hello world'){ stdout stderr exitcode }",
+        // "--record", 
+        // "--recording", "recording.json",
+        // "-v", "--log-level", "warn",
+        // "run", "-c", "mondoo.version",
+        // "run", "-c", "asset{*}",
+        "run", "-c", "command('echo hello world') { stdout stderr exitcode }",
+        // "ports.all(ip6tables.input.any(options.contains(port)))",
+        // "sshd.config.params",
+        // "status",
+      ],
+    },
+    {
+      "name": "zlr",
+      "type": "go",
+      "request": "launch",
+      "program": "${workspaceRoot}/providers-sdk/v1/lr/cli/main.go",
+      "cwd": "${workspaceRoot}/",
+      "args": [
+        // "-v", "--log-level", "warn",
+        "go", "providers/os/resources/os.lr", "--dist", "providers/os/dist",
+      ],
     }
   ]
 }

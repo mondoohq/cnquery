@@ -10,3 +10,4 @@ mondoo-test-secret-key
 gha-creds-*.json
 /tools
 /dist
+providers/*/resources/*.resources.json

@@ -18,6 +18,8 @@ const (
 	InventoryFilePath = "mondoo.app/source-file"
 )
 
+var ErrProviderTypeDoesNotMatch = errors.New("provider type does not match")
+
 type Option func(*Inventory)
 
 // passes a list of asset into the Inventory Manager

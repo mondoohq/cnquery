@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/cnquery/resources/lr"
+	"go.mondoo.com/cnquery/providers-sdk/v1/lr"
 )
 
 var goCmd = &cobra.Command{
@@ -20,9 +20,6 @@ var goCmd = &cobra.Command{
 		dist, err := cmd.Flags().GetString("dist")
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to get dist flag")
-		}
-		if dist == "" {
-			log.Fatal().Err(err).Msg("please provide a dist folder where generated json will go")
 		}
 
 		file := args[0]
@@ -57,16 +54,24 @@ var goCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to generate schema json")
 		}
 
-		if err = os.MkdirAll(dist, 0o755); err != nil {
-			log.Fatal().Err(err).Msg("failed to create dist folder")
-		}
-
 		base := path.Base(args[0])
 		base = strings.TrimSuffix(base, ".lr")
-		infoFile := path.Join(dist, base+".resources.json")
-		err = os.WriteFile(infoFile, []byte(schemaData), 0o644)
+
+		dst := strings.TrimSuffix(file, ".lr") + ".resources.json"
+		err = os.WriteFile(dst, []byte(schemaData), 0o644)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to write schema json")
+			log.Fatal().Err(err).Str("dst", dst).Msg("failed to write schema json")
+		}
+
+		if dist != "" {
+			if err = os.MkdirAll(dist, 0o755); err != nil {
+				log.Fatal().Err(err).Msg("failed to create dist folder")
+			}
+			infoFile := path.Join(dist, base+".resources.json")
+			err = os.WriteFile(infoFile, []byte(schemaData), 0o644)
+			if err != nil {
+				log.Fatal().Err(err).Str("dst", infoFile).Msg("failed to write schema json")
+			}
 		}
 	},
 }

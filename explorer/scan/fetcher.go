@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/explorer"
+	"go.mondoo.com/cnquery/providers"
 )
 
 type fetcher struct {
@@ -36,7 +37,7 @@ func (f *fetcher) fetchBundles(ctx context.Context, urls ...string) (*explorer.B
 		}
 
 		// need to generate MRNs for everything
-		if _, err := cur.Compile(ctx); err != nil {
+		if _, err := cur.Compile(ctx, providers.DefaultRuntime().Schema()); err != nil {
 			return nil, errors.Wrap(err, "failed to compile fetched bundle")
 		}
 

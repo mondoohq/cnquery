@@ -8,21 +8,21 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/cli/shell"
 	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/core/provider"
 	"go.mondoo.com/cnquery/providers/mock"
-	"go.mondoo.com/cnquery/providers/proto"
 )
 
 func localShell() *shell.Shell {
 	runtime := providers.Coordinator.NewRuntime()
 	runtime.DeactivateProviderDiscovery()
-	schema, err := os.ReadFile("../../providers/core/dist/core.resources.json")
+	schema, err := os.ReadFile("../../providers/core/resources/core.resources.json")
 	if err != nil {
 		panic(err.Error())
 	}
 
 	runtime.AddSchema("core", providers.MustLoadSchema("core", schema))
-	conn, err := provider.Init().Connect(&proto.ConnectReq{})
+	conn, err := provider.Init().Connect(&plugin.ConnectReq{})
 	if err != nil {
 		panic(err.Error())
 	}

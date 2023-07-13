@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/resources/powershell"
 )
 
 const smbiosWindowsScript = `
