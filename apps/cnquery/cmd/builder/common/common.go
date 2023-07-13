@@ -319,6 +319,8 @@ func AwsProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn R
 	commonCmdFlags(cmd)
 	cmd.Flags().String("profile", "", "pick a named AWS profile to use")
 	cmd.Flags().String("region", "", "the AWS region to scan")
+	cmd.Flags().String("role-arn", "", "the role ARN to use for assume-role")
+	cmd.Flags().String("external-id", "", "the external id to use for assume-role")
 	return cmd
 }
 

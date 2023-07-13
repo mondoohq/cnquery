@@ -326,6 +326,16 @@ func ParseTargetAsset(cmd *cobra.Command, args []string, providerType providers.
 			connection.Options["region"] = region
 		}
 
+		if role, err := cmd.Flags().GetString("role-arn"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --role-arn values")
+		} else if role != "" {
+			connection.Options["role-arn"] = role
+		}
+		if ext, err := cmd.Flags().GetString("external-id"); err != nil {
+			log.Fatal().Err(err).Msg("cannot parse --external-id values")
+		} else if ext != "" {
+			connection.Options["external-id"] = ext
+		}
 	case providers.ProviderType_AWS_EC2_EBS:
 		noSetup := "false"
 		if connection.Options[snapshot.NoSetup] != "" {

@@ -4,9 +4,12 @@ import (
 	"context"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	aws_sdk "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/motor/platform"
@@ -45,6 +48,30 @@ func WithProfile(profile string) ProviderOption {
 	}
 }
 
+func WithExternalId(id string) func(o *stscreds.AssumeRoleOptions) {
+	if id != "" {
+		return func(o *stscreds.AssumeRoleOptions) {
+			o.ExternalID = &id
+		}
+	}
+	return func(o *stscreds.AssumeRoleOptions) {}
+}
+
+func WithAssumeRole(defaultCfg aws_sdk.Config, roleArn string, externalId string) ProviderOption {
+	opts := WithExternalId(externalId)
+	return func(p *Provider) {
+		stsClient := sts.NewFromConfig(defaultCfg)
+		p.awsConfigOptions = append(p.awsConfigOptions, config.WithCredentialsProvider(
+			aws.NewCredentialsCache(
+				stscreds.NewAssumeRoleProvider(
+					stsClient,
+					roleArn,
+					opts,
+				)),
+		))
+	}
+}
+
 func TransportOptions(opts map[string]string) []ProviderOption {
 	// extract config options
 	transportOpts := []ProviderOption{}
@@ -60,6 +87,13 @@ func TransportOptions(opts map[string]string) []ProviderOption {
 	if awsProfile, ok := opts["profile"]; ok {
 		log.Debug().Str("profile", awsProfile).Msg("using aws profile")
 		transportOpts = append(transportOpts, WithProfile(awsProfile))
+	}
+
+	if role, ok := opts["role-arn"]; ok {
+		log.Debug().Str("role", role).Msg("using aws sts assume role")
+		cfg, _ := config.LoadDefaultConfig(context.Background())
+		externalId := opts["external-id"]
+		transportOpts = append(transportOpts, WithAssumeRole(cfg, role, externalId))
 	}
 	return transportOpts
 }
