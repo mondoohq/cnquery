@@ -4,12 +4,12 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/resources/packs/all/info"
+	"go.mondoo.com/cnquery/providers"
 )
 
 func MustCompile(code string) *llx.CodeBundle {
 	codeBundle, err := mqlc.Compile(code, nil,
-		mqlc.NewConfig(info.Registry.Schema(), cnquery.DefaultFeatures))
+		mqlc.NewConfig(providers.DefaultRuntime().Schema(), cnquery.DefaultFeatures))
 	if err != nil {
 		panic(err)
 	}

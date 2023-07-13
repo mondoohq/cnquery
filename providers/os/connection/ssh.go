@@ -18,7 +18,6 @@ import (
 	rawsftp "github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
@@ -409,7 +408,7 @@ func readSSHConfig(cc *inventory.Config) *inventory.Config {
 
 func verifyConfig(conf *inventory.Config) error {
 	if conf.Type != "ssh" {
-		return providers.ErrProviderTypeDoesNotMatch
+		return inventory.ErrProviderTypeDoesNotMatch
 	}
 
 	return nil

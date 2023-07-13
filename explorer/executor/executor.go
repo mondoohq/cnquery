@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers"
 )
 
 func RunExecutionJob(
@@ -35,7 +36,7 @@ func RunFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout t
 	mqueries := map[string]*explorer.Mquery{}
 	for i := range queries {
 		query := queries[i]
-		code, err := query.Compile(nil)
+		code, err := query.Compile(nil, providers.DefaultRuntime().Schema())
 		if err != nil {
 			errs = append(errs, err)
 			continue

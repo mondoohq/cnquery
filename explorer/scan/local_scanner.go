@@ -21,12 +21,10 @@ import (
 	"go.mondoo.com/cnquery/internal/datalakes/inmemory"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/inventory"
-	"go.mondoo.com/cnquery/motor/providers/resolver"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -150,7 +148,7 @@ func preprocessQueryPackFilters(filters []string) []string {
 
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig providers.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
-	im, err := inventory.New(inventory.WithInventory(job.Inventory))
+	im, err := manager.NewManager(manager.WithInventory(job.Inventory))
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not load asset information")
 	}
@@ -291,7 +289,10 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 	log.Debug().Msgf("connecting to asset %s", job.Asset.HumanName())
 
 	// run over all connections
-	connections, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.CredsResolver, job.DoRecord)
+	panic("NEEDS MIGRATION")
+	// runtimes, err := resolver.OpenAssetConnections(job.Ctx, job.Asset, job.CredsResolver, job.DoRecord)
+	var runtimes []*providers.Runtime
+	var err error
 	if err != nil {
 		job.Reporter.AddScanError(job.Asset, err)
 		es := explorer.NewErrorStatus(err)
@@ -303,34 +304,17 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 		return
 	}
 
-	for c := range connections {
+	for c := range runtimes {
 		// We use a function since we want to close the motor once the current iteration finishes. If we directly
 		// use defer in the loop m.Close() for each connection will only be executed once the entire loop is
 		// finished.
-		func(m *motor.Motor) {
+		func(m *providers.Runtime) {
 			// ensures temporary files get deleted
 			defer m.Close()
 
 			log.Debug().Msg("established connection")
-			// It's possible that the platform information was not collected at all or only partially during the
-			// discovery phase.
-			// For example, the ebs discovery does not detect the platform because it requires mounting
-			// the filesystem. Another example is the docker container discovery, where it collects a lot of metadata
-			// but does not have platform name and arch available.
-			// TODO: It feels like this will only happen for performance optimizations. I think a better approach
-			// would be to make it so that the motor used in the discovery phase gets reused here, instead
-			// of being recreated.
-			if job.Asset.Platform == nil || job.Asset.Platform.Name == "" {
-				p, err := m.Platform()
-				if err != nil {
-					log.Warn().Err(err).Msg("failed to query platform information")
-				} else {
-					job.Asset.Platform = p
-					// resyncAssets = append(resyncAssets, assetEntry)
-				}
-			}
 
-			job.connection = m
+			job.runtime = m
 			results, err := s.runMotorizedAsset(job)
 			if err != nil {
 				log.Debug().Err(err).Str("asset", job.Asset.Name).Msg("could not scan asset")
@@ -346,11 +330,7 @@ func (s *LocalScanner) RunAssetJob(job *AssetJob) {
 			}
 
 			job.Reporter.AddReport(job.Asset, results)
-
-			if m.IsRecording() {
-				m.StoreRecording("") // if no filename is provided it generates one
-			}
-		}(connections[c])
+		}(runtimes[c])
 	}
 }
 

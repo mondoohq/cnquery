@@ -15,7 +15,6 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers/mock"
-	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/sortx"
 )
 
@@ -46,7 +45,7 @@ func getEnvFeatures() cnquery.Features {
 	return fts
 }
 
-func executionContext() (*resources.Schema, llx.Runtime) {
+func executionContext() (llx.Schema, llx.Runtime) {
 	m, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
 	if err != nil {
 		panic(err.Error())
@@ -63,7 +62,7 @@ func testQuery(t *testing.T, query string) (*llx.CodeBundle, map[string]*llx.Raw
 	codeBundle, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
 	require.NoError(t, err)
 
-	results, err := mql.ExecuteCode(schema, runtime, codeBundle, nil, features)
+	results, err := mql.ExecuteCode(runtime, codeBundle, nil, features)
 	require.NoError(t, err)
 
 	return codeBundle, results

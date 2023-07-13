@@ -9,9 +9,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/asset"
-	v1 "go.mondoo.com/cnquery/motor/inventory/v1"
-	"go.mondoo.com/cnquery/motor/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 )
 
 func Parse(input io.Reader) (*Inventory, error) {
@@ -40,8 +38,8 @@ type Inventory struct {
 	Hosts []string
 }
 
-func (in *Inventory) ToV1Inventory() *v1.Inventory {
-	out := v1.New()
+func (in *Inventory) ToV1Inventory() *inventory.Inventory {
+	out := inventory.New()
 
 	r := &networkResolver{}
 
@@ -59,9 +57,9 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 			log.Warn().Err(err).Str("hostname", host).Msg("could not parse hostname")
 		}
 
-		out.Spec.Assets = append(out.Spec.Assets, &asset.Asset{
+		out.Spec.Assets = append(out.Spec.Assets, &inventory.Asset{
 			Name:        name,
-			Connections: []*providers.Config{tc},
+			Connections: []*inventory.Config{tc},
 		})
 	}
 
@@ -70,7 +68,7 @@ func (in *Inventory) ToV1Inventory() *v1.Inventory {
 
 type networkResolver struct{}
 
-func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string, password string) (*providers.Config, error) {
+func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string, password string) (*inventory.Config, error) {
 	url, err := url.Parse(fullUrl)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse target URL")
@@ -81,8 +79,8 @@ func (r *networkResolver) ParseConnectionURL(fullUrl string, identityFile string
 	// So far we know:
 	// - all of them are in the `api` family (also their kind is set this way)
 	// - multiple families on one service are possible (eg: http, tls, tcp)
-	res := providers.Config{
-		Backend: providers.ProviderType_HOST,
+	res := inventory.Config{
+		Type:    "host",
 		Options: map[string]string{"scheme": url.Scheme},
 	}
 

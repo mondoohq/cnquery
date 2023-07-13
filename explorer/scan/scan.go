@@ -7,10 +7,9 @@ import (
 
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/asset"
-	"go.mondoo.com/cnquery/motor/vault"
 	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
 //go:generate protoc --proto_path=../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. cnquery_explorer_scan.proto
@@ -22,13 +21,13 @@ func init() {
 type AssetJob struct {
 	DoRecord         bool
 	UpstreamConfig   providers.UpstreamConfig
-	Asset            *asset.Asset
+	Asset            *inventory.Asset
 	Bundle           *explorer.Bundle
 	QueryPackFilters []string
 	Props            map[string]string
 	Ctx              context.Context
 	CredsResolver    vault.Resolver
 	Reporter         Reporter
-	connection       *motor.Motor
+	runtime          *providers.Runtime
 	ProgressReporter progress.Progress
 }
