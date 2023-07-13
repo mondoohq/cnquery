@@ -171,6 +171,26 @@ func (p *Bundle) ToMap() *BundleMap {
 	for i := range p.Packs {
 		c := p.Packs[i]
 		res.Packs[c.Mrn] = c
+
+		// TODO: this should move into the earlier phase, where we store
+		// the globally exposed queries from the compile step
+		// for queries that are only embedded, lift them to the outer layer
+		// for fast search and access
+		for j := range c.Queries {
+			q := c.Queries[j]
+			if _, ok := res.Queries[q.Mrn]; !ok {
+				res.Queries[q.Mrn] = q
+			}
+		}
+		for g := range c.Groups {
+			group := c.Groups[g]
+			for j := range group.Queries {
+				q := group.Queries[j]
+				if _, ok := res.Queries[q.Mrn]; !ok {
+					res.Queries[q.Mrn] = q
+				}
+			}
+		}
 	}
 
 	return res
