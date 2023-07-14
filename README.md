@@ -133,7 +133,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 
 ## Distribute queries across your fleet with private query packs
 
-You can create and share query packs using the Registry in the Mondoo Console. The Registry a secure, private environment in your account where you store both Mondoo query packs and custom query packs. This lets you use the same query packs for all assets.
+You can create and share query packs using the Registry in the Mondoo Console. The Registry is a secure, private environment in your account where you store both Mondoo query packs and custom query packs. This lets you use the same query packs for all assets.
 
 To use the Registry:
 
