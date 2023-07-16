@@ -1,68 +1,68 @@
 option provider = "go.mondoo.com/cnquery/providers/os"
 option go_package = "go.mondoo.com/cnquery/providers/os/resources"
 
-// // File on the system
-// file @defaults("path size permissions.string") {
-//   init(path string)
-//   // Location of the file on the system
-//   path string
-//   // Filename without path prefix of this file
-//   basename(path) string
-//   // Path to the folder containing this file
-//   dirname(path) string
-//   // Contents of this file
-//   content(path, exists) string
-//   // Indicator if this file exists on the system
-//   exists() bool
-//   // Permissions for this file
-//   permissions() file.permissions
-//   // Size of this file on disk
-//   size() int
-//   // Ownership information about the user
-//   user() user
-//   // Ownership information about the group
-//   group() group
-//   // Denotes whether the path is empty
-//   empty() bool
-// }
+// File on the system
+file @defaults("path size permissions.string") {
+  init(path string)
+  // Location of the file on the system
+  path string
+  // Filename without path prefix of this file
+  basename(path) string
+  // Path to the folder containing this file
+  dirname(path) string
+  // Contents of this file
+  content(path, exists) string
+  // Indicator if this file exists on the system
+  exists(path) bool
+  // Permissions for this file
+  permissions(path) file.permissions
+  // Size of this file on disk
+  size(path) int
+  // // Ownership information about the user
+  // user() user
+  // // Ownership information about the group
+  // group() group
+  // Denotes whether the path is empty
+  empty(path) bool
+}
 
-// // Access permissions for a given file
-// private file.permissions @defaults("string") {
-//   // Raw POSIX mode for the permissions
-//   mode int
-//   // Indicator if this file is readable by its owner
-//   user_readable bool
-//   // Indicator if this file is writeable by its owner
-//   user_writeable bool
-//   // Indicator if this file is executable by its owner
-//   user_executable bool
-//   // Indicator if this file is readable by members of the group
-//   group_readable bool
-//   // Indicator if this file is writeable by members of the group
-//   group_writeable bool
-//   // Indicator if this file is executable by members of the group
-//   group_executable bool
-//   // Indicator if this file is readable by others
-//   other_readable bool
-//   // Indicator if this file is writeable by others
-//   other_writeable bool
-//   // Indicator if this file is executable by others
-//   other_executable bool
-//   // SUID bit indicator
-//   suid bool
-//   // SGID bit indicator
-//   sgid bool
-//   // Sticky bit indicator
-//   sticky bool
-//   // Whether the file describes a directory
-//   isDirectory bool
-//   // Whether the file describes a regular file
-//   isFile bool
-//   // Whether the file is a symlink
-//   isSymlink bool
-//   // A simple printed string version of the permissions
-//   string() string
-// }
+// Access permissions for a given file
+private file.permissions @defaults("string") {
+  // Raw POSIX mode for the permissions
+  mode int
+  // Indicator if this file is readable by its owner
+  user_readable bool
+  // Indicator if this file is writeable by its owner
+  user_writeable bool
+  // Indicator if this file is executable by its owner
+  user_executable bool
+  // Indicator if this file is readable by members of the group
+  group_readable bool
+  // Indicator if this file is writeable by members of the group
+  group_writeable bool
+  // Indicator if this file is executable by members of the group
+  group_executable bool
+  // Indicator if this file is readable by others
+  other_readable bool
+  // Indicator if this file is writeable by others
+  other_writeable bool
+  // Indicator if this file is executable by others
+  other_executable bool
+  // SUID bit indicator
+  suid bool
+  // SGID bit indicator
+  sgid bool
+  // Sticky bit indicator
+  sticky bool
+  // Whether the file describes a directory
+  isDirectory bool
+  // Whether the file describes a regular file
+  isFile bool
+  // Whether the file is a symlink
+  isSymlink bool
+  // A simple printed string version of the permissions
+  string() string
+}
 
 // // User on this system
 // user @defaults("name uid gid") {

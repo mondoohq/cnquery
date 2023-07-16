@@ -1,0 +1,164 @@
+package resources
+
+import (
+	"errors"
+	"os"
+	"path"
+
+	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+)
+
+func (s *mqlFile) id() (string, error) {
+	return s.Path.Data, nil
+}
+
+func (s *mqlFile) content(path string, exists bool) (string, error) {
+	if !exists {
+		return "", errors.New("file not found: '" + path + "' does not exist")
+	}
+
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+	res, err := afs.ReadFile(path)
+	return string(res), err
+}
+
+func (s *mqlFile) stat() error {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	stat, err := conn.FileInfo(s.Path.Data)
+	if err != nil {
+		return err
+	}
+
+	mode := stat.Mode.UnixMode()
+	res, err := CreateResource(s.MqlRuntime, "file.permissions", map[string]interface{}{
+		"mode":             int64(uint32(mode) & 0o7777),
+		"user_readable":    stat.Mode.UserReadable(),
+		"user_writeable":   stat.Mode.UserWriteable(),
+		"user_executable":  stat.Mode.UserExecutable(),
+		"group_readable":   stat.Mode.GroupReadable(),
+		"group_writeable":  stat.Mode.GroupWriteable(),
+		"group_executable": stat.Mode.GroupExecutable(),
+		"other_readable":   stat.Mode.OtherReadable(),
+		"other_writeable":  stat.Mode.OtherWriteable(),
+		"other_executable": stat.Mode.OtherExecutable(),
+		"suid":             stat.Mode.Suid(),
+		"sgid":             stat.Mode.Sgid(),
+		"sticky":           stat.Mode.Sticky(),
+		"isDirectory":      stat.Mode.IsDir(),
+		"isFile":           stat.Mode.IsRegular(),
+		"isSymlink":        stat.Mode.FileMode&os.ModeSymlink != 0,
+	})
+	if err != nil {
+		return err
+	}
+
+	s.Permissions = plugin.TValue[*mqlFilePermissions]{
+		Data:  res.(*mqlFilePermissions),
+		State: plugin.StateIsSet,
+	}
+
+	s.Size = plugin.TValue[int64]{
+		Data:  stat.Size,
+		State: plugin.StateIsSet,
+	}
+
+	return nil
+}
+
+func (s *mqlFile) size(path string) (int64, error) {
+	return 0, s.stat()
+}
+
+func (s *mqlFile) permissions(path string) (*mqlFilePermissions, error) {
+	return nil, s.stat()
+}
+
+func (s *mqlFile) empty(path string) (bool, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+	return afs.IsEmpty(path)
+}
+
+func (s *mqlFile) basename(fullPath string) (string, error) {
+	return path.Base(fullPath), nil
+}
+
+func (s *mqlFile) dirname(fullPath string) (string, error) {
+	return path.Dir(fullPath), nil
+}
+
+func (s *mqlFile) exists(path string) (bool, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
+	afs := &afero.Afero{Fs: conn.FileSystem()}
+	return afs.Exists(path)
+}
+
+func (l *mqlFilePermissions) id() (string, error) {
+	res := []byte("----------")
+
+	if l.IsDirectory.Data {
+		res[0] = 'd'
+	} else if l.IsSymlink.Data {
+		res[0] = 'l'
+	}
+
+	if l.User_readable.Data {
+		res[1] = 'r'
+	}
+	if l.User_writeable.Data {
+		res[2] = 'w'
+	}
+	if l.User_executable.Data {
+		res[3] = 'x'
+		if l.Suid.Data {
+			res[3] = 's'
+		}
+	} else {
+		if l.Suid.Data {
+			res[3] = 'S'
+		}
+	}
+
+	if l.Group_readable.Data {
+		res[4] = 'r'
+	}
+	if l.Group_writeable.Data {
+		res[5] = 'w'
+	}
+	if l.Group_executable.Data {
+		res[6] = 'x'
+		if l.Sgid.Data {
+			res[6] = 's'
+		}
+	} else {
+		if l.Sgid.Data {
+			res[6] = 'S'
+		}
+	}
+
+	if l.Other_readable.Data {
+		res[7] = 'r'
+	}
+	if l.Other_writeable.Data {
+		res[8] = 'w'
+	}
+	if l.Other_executable.Data {
+		res[9] = 'x'
+		if l.Sticky.Data {
+			res[9] = 't'
+		}
+	} else {
+		if l.Sticky.Data {
+			res[9] = 'T'
+		}
+	}
+
+	return string(res), nil
+}
+
+func (l *mqlFilePermissions) string() (string, error) {
+	return l._id, nil
+}
