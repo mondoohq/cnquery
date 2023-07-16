@@ -6,16 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources"
-	protobuf "google.golang.org/protobuf/proto"
 )
 
 type Service struct {
@@ -120,21 +117,11 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 }
 
 func (s *Service) resolve(rootAsset *inventory.Asset) ([]*inventory.Asset, error) {
-	manager, err := manager.NewManager(manager.WithInventory(&inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: []*inventory.Asset{rootAsset},
-		},
-	}))
-	if err != nil {
+	res := []*inventory.Asset{rootAsset}
+
+	if err := s.detect(rootAsset); err != nil {
 		return nil, err
 	}
-
-	inventoryAsset := manager.GetAssets()[0]
-	if err = s.detect(inventoryAsset, manager); err != nil {
-		return nil, err
-	}
-
-	res := []*inventory.Asset{inventoryAsset}
 
 	// TODO: discovery of related assets
 
@@ -160,20 +147,12 @@ func (s *Service) Connect(req *plugin.ConnectReq) (*plugin.ConnectRes, error) {
 		return nil, errors.New("no connection data provided")
 	}
 
-	inventory, err := manager.NewManager(manager.WithInventory(req.Asset))
-	if err != nil {
-		return nil, errors.New("could not load inventory to connect")
-	}
-
-	assets := inventory.GetAssets()
-	if len(assets) == 0 {
-		return nil, errors.New("no assets provided in connection")
-	}
+	assets := req.Asset.Spec.Assets
 	if len(assets) != 1 {
 		return nil, errors.New("too many assets provided in connection")
 	}
 
-	conn, err := s.connect(assets[0], inventory)
+	conn, err := s.connect(assets[0])
 	if err != nil {
 		return nil, err
 	}
@@ -184,41 +163,14 @@ func (s *Service) Connect(req *plugin.ConnectReq) (*plugin.ConnectRes, error) {
 	}, nil
 }
 
-func resolveConnection(conn *inventory.Config, manager manager.InventoryManager) (*inventory.Config, error) {
-	creds := manager.GetCredsResolver()
-	if creds == nil {
-		return nil, nil
-	}
-
-	res := protobuf.Clone(conn).(*inventory.Config)
-	for i := range res.Credentials {
-		credential := res.Credentials[i]
-		if credential.SecretId == "" {
-			continue
-		}
-
-		resolvedCredential, err := creds.GetCredential(credential)
-		if err != nil {
-			log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
-			return nil, err
-		}
-
-		res.Credentials[i] = resolvedCredential
-	}
-
-	return res, nil
-}
-
-func (s *Service) connect(asset *inventory.Asset, inventory manager.InventoryManager) (shared.Connection, error) {
+func (s *Service) connect(asset *inventory.Asset) (shared.Connection, error) {
 	if len(asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 
+	conf := asset.Connections[0]
 	var conn shared.Connection
-	conf, err := resolveConnection(asset.Connections[0], inventory)
-	if err != nil {
-		return nil, err
-	}
+	var err error
 
 	switch conf.Type {
 	case "local":
@@ -227,7 +179,7 @@ func (s *Service) connect(asset *inventory.Asset, inventory manager.InventoryMan
 
 	case "ssh":
 		s.lastConnectionID++
-		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, inventory)
+		conn, err = connection.NewSshConnection(s.lastConnectionID, conf)
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)
@@ -263,15 +215,7 @@ func (s *Service) GetData(req *plugin.DataReq, callback plugin.ProviderCallback)
 			return nil, err
 		}
 
-		name := res.MqlName()
-		id := res.MqlID()
-		if x, ok := runtime.Resources[name+"\x00"+id]; ok {
-			res = x
-		} else {
-			runtime.Resources[name+"\x00"+id] = res
-		}
-
-		rd := llx.ResourceData(res, name).Result()
+		rd := llx.ResourceData(res, res.MqlName()).Result()
 		return &plugin.DataRes{
 			Data: rd.Data,
 		}, nil

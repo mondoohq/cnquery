@@ -8,10 +8,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
 	"go.mondoo.com/ranger-rpc"
+	protobuf "google.golang.org/protobuf/proto"
 )
 
 // Runtimes are associated with one asset and carry all providers
@@ -147,7 +149,44 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		return nil
 	}
 
-	var err error
+	manager, err := manager.NewManager(manager.WithInventory(req.Asset, r))
+	if err != nil {
+		return errors.New("failed to resolve inventory for connection: " + err.Error())
+	}
+
+	inventoryAsset := manager.GetAssets()[0]
+
+	creds := manager.GetCredsResolver()
+	if creds != nil {
+		inventoryAsset = protobuf.Clone(inventoryAsset).(*inventory.Asset)
+		req = &plugin.ConnectReq{
+			Features: req.Features,
+			Asset: &inventory.Inventory{
+				Spec: &inventory.InventorySpec{
+					Assets: []*inventory.Asset{inventoryAsset},
+				},
+			},
+		}
+
+		for j := range inventoryAsset.Connections {
+			conn := inventoryAsset.Connections[j]
+			for k := range conn.Credentials {
+				credential := conn.Credentials[k]
+				if credential.SecretId == "" {
+					continue
+				}
+
+				resolvedCredential, err := creds.GetCredential(credential)
+				if err != nil {
+					log.Debug().Str("secret-id", credential.SecretId).Err(err).Msg("could not fetch secret for motor connection")
+					return err
+				}
+
+				conn.Credentials[k] = resolvedCredential
+			}
+		}
+	}
+
 	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req)
 	if err != nil {
 		return err

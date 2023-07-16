@@ -567,7 +567,7 @@ func pmap2raw(p *Primitive) *RawData {
 func presource2raw(p *Primitive) *RawData {
 	id := string(p.Value)
 	typ := types.Type(p.Type)
-	return &RawData{Value: MockResource{
+	return &RawData{Value: &MockResource{
 		Name: typ.ResourceName(),
 		ID:   id,
 	}, Type: typ}
@@ -600,14 +600,19 @@ func primitive2array(b *blockExecutor, ref uint64, args []*Primitive) ([]interfa
 		return []interface{}{}, 0, nil
 	}
 
-	var cur *RawData
-	var rref uint64
-	var err error
 	res := make([]interface{}, len(args))
 	for i := range args {
-		cur, rref, err = b.resolveValue(args[i], ref)
-		if rref > 0 || err != nil {
-			return nil, rref, err
+		var cur *RawData
+
+		if b != nil && types.Type(args[i].Type) == types.Ref {
+			var rref uint64
+			var err error
+			cur, rref, err = b.resolveValue(args[i], ref)
+			if rref > 0 || err != nil {
+				return nil, rref, err
+			}
+		} else {
+			cur = args[i].RawData()
 		}
 
 		if cur != nil {

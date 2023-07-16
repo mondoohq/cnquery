@@ -19,7 +19,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/awsinstanceconnect"
@@ -36,11 +35,10 @@ const (
 )
 
 type SshConnection struct {
-	fs        afero.Fs
-	Sudo      *shared.Sudo
-	id        uint32
-	conf      *inventory.Config
-	inventory manager.InventoryManager
+	fs   afero.Fs
+	Sudo *shared.Sudo
+	id   uint32
+	conf *inventory.Config
 
 	serverVersion    string
 	UseScpFilesystem bool
@@ -48,11 +46,10 @@ type SshConnection struct {
 	SSHClient        *ssh.Client
 }
 
-func NewSshConnection(id uint32, conf *inventory.Config, im manager.InventoryManager) (*SshConnection, error) {
+func NewSshConnection(id uint32, conf *inventory.Config) (*SshConnection, error) {
 	res := SshConnection{
-		id:        id,
-		conf:      conf,
-		inventory: im,
+		id:   id,
+		conf: conf,
 	}
 
 	host := conf.GetHost()
