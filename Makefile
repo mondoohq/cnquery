@@ -196,7 +196,7 @@ lr/docs/markdown: lr/build
 		--docs-file resources/packs/oci/oci.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/oci-pack
 	./lr markdown resources/packs/opcua/opcua.lr \
-		--pack-name "OPC UP" \
+		--pack-name "OPC UA" \
 		--description "The OPC-UA resource pack lets you use MQL to query and assess the security of your OPC-UA servers." \
 		--docs-file resources/packs/opcua/opcua.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/opcua-pack

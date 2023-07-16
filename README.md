@@ -3,10 +3,9 @@
 ![cnquery light-mode logo](docs/images/cnquery-light.svg#gh-light-mode-only)
 ![cnquery dark-mode logo](docs/images/cnquery-dark.svg#gh-dark-mode-only)
 
-
 **Open source, cloud-native asset inventory and discovery**
 
-cnquery is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure, and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
+cnquery is a cloud-native tool for querying your entire fleet. It answers thousands of questions about your infrastructure and integrates with over 300 resources across cloud accounts, Kubernetes, containers, services, VMs, APIs, and more.
 
 ![cnquery run example](docs/images/cnquery-run.gif)
 
@@ -45,7 +44,7 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://install.mondoo.co
 Install-Mondoo;
 ```
 
-If you prefer manual installation, you find the cnquery packages on  [GitHub releases](https://github.com/mondoohq/cnquery/releases).
+If you prefer manual installation, you can find the cnquery packages in our [GitHub releases](https://github.com/mondoohq/cnquery/releases).
 
 ## Interactive shell
 
@@ -121,7 +120,7 @@ Like all other commands, you can specify different providers like `k8s`, `aws`, 
 
 ![](docs/images/cnquery-scan.gif)
 
-These files can also contain multiple query packs for many different target systems. For an example, see `examples/multi-target.mql.yaml`.
+These files can also contain multiple query packs for many different target systems.
 
 ## Explore your infrastructure in Mondoo Platform​
 
@@ -131,19 +130,17 @@ Go to [console.mondoo.com](http://console.mondoo.com) to sign up.
 
 To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.com/docs/platform/home/) or visit [mondoo.com](https://www.mondoo.com).
 
-## Private query packs
+## Distribute queries across your fleet with private query packs
 
-Distributing queries across your fleet
+You can create and share query packs using the Registry in the Mondoo Console. The Registry is a secure, private environment in your account where you store both Mondoo query packs and custom query packs. This lets you use the same query packs for all assets.
 
-You can create and share query packs using the Query Hub feature of the Mondoo Console. The Query Hub creates a secure, private environment in your account that stores data about your assets. It makes it very easy for all assets to report on query packs and define custom rules for your fleet.
-
-To use the Query Hub:
+To use the Registry:
 
 ```bash
 cnquery login --token TOKEN
 ```
 
-Once set up, activate the packs, and you can collect your asset's data (for example, `aws`):
+Once set up, enable the query packs you want to use to collect your asset's data. For example, you can activate one or more AWS query packs in the Mondoo Console. Then run this command any time to collect the AWS information you need:
 
 ```bash
 cnquery scan aws
@@ -157,40 +154,43 @@ cnquery bundle upload mypack.mql.yaml
 
 ## Supported targets
 
-| Target                        | Provider                   | Example                                                                                                                                                     |
-| ----------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AWS accounts                  | `aws`                      | `cnquery shell aws`                                                                                                                                         |
-| AWS EC2 instances             | `ssh`                      | `cnquery shell ssh user@host`                                                                                                                               |
-| AWS EC2 Instance Connect      | `aws ec2 instance-connect` | `cnquery shell aws ec2 instance-connect ec2-user@INSTANCEID`                                                                                                |
-| AWS EC2 EBS snapshot          | `aws ec2 ebs snapshot`     | `cnquery shell aws ec2 ebs snapshot SNAPSHOTID`                                                                                                             |
-| AWS EC2 EBS volume            | `aws ec2 ebs volume`       | `cnquery shell aws ec2 ebs volume VOLUMEID`                                                                                                                 |
-| Container images              | `container`, `docker`      | `cnquery shell container ubuntu:latest`                                                                                                                     |
-| Container registries          | `container registry`       | `cnquery shell container registry index.docker.io/library/rockylinux:8 `                                                                                    |
-| DNS records                   | `host`                     | `cnquery shell host mondoo.com`                                                                                                                             |
-| GitHub organizations          | `github org`               | `cnquery shell github org mondoohq`                                                                                                                         |
-| GitHub repositories           | `github repo`              | `cnquery shell github repo mondoohq/cnquery`                                                                                                                |
-| GitLab groups                 | `gitlab`                   | `cnquery shell gitlab --group mondoohq`                                                                                                                     |
-| Google Cloud projects         | `gcp`                      | `cnquery shell gcp`                                                                                                                                         |
-| Google Workspace              | `google-workspace`         | `cnquery shell google-workspace --customer-id CUSTOMER_ID --impersonated-user-email EMAIL --credentials-path JSON_FILE`                                     |
-| Kubernetes cluster nodes      | `local`, `ssh`             | `cnquery shell ssh user@host`                                                                                                                               |
-| Kubernetes clusters           | `k8s`                      | `cnquery shell k8s`                                                                                                                                         |
-| Kubernetes manifests          | `k8s`                      | `cnquery shell k8s manifest.yaml `                                                                                                                          |
-| Kubernetes workloads          | `k8s`                      | `cnquery shell k8s --discover pods,deployments`                                                                                                             |
-| Linux hosts                   | `local`, `ssh`             | `cnquery shell local` or<br></br>`cnquery shell ssh user@host`                                                                                              |
-| macOS hosts                   | `local`, `ssh`             | `cnquery shell local` or<br></br>`cnquery shell ssh user@IP_ADDRESS`                                                                                        |
-| Microsoft 365 tenants         | `ms365`                    | `cnquery shell ms365 --tenant-id TENANT_ID --client-id CLIENT_ID --certificate-path PFX_FILE`                                                               |
-| Microsoft Azure subscriptions | `azure`                    | `cnquery shell azure --subscription SUBSCRIPTION_ID`                                                                                                        |
-| Microsoft Azure instances     | `ssh`                      | `cnquery shell ssh user@host`                                                                                                                               |
-| Okta                          | `okta`                     | `cnquery shell okta --token TOKEN --organization ORGANIZATION`                                                                                              |
-| Running containers            | `docker`                   | `cnquery shell docker CONTAINER_ID`                                                                                                                         |
-| Slack                         | `slack`                    | `cnquery shell slack --token TOKEN`                                                                                                                         |
-| SSL certificates on websites  | `host`                     | `cnquery shell host mondoo.com`                                                                                                                             |
-| Terraform HCL                 | `terraform hcl`            | `cnquery shell terraform <directory> HCL_FILE_OR_PATH`                                                                                                      |
-| Terraform plan                | `terraform plan`           | `cnquery shell terraform plan <plan.json> json`                                                                                                             |
-| Terraform state               | `terraform state`          | `cnquery shell terraform state <state_file>.json`                                                                                                           |
-| Vagrant virtual machines      | `vagrant`                  | `cnquery shell vagrant HOST`                                                                                                                                |
-| VMware vSphere                | `vsphere`                  | `cnquery shell vsphere user@domain@host --ask-pass`                                                                                                         |
-| Windows hosts                 | `local`, `ssh`, `winrm`    | `cnquery shell local`,<br></br>`cnquery shell ssh Administrator@IP_ADDRESS --ask-pass` or<br></br>`cnquery shell winrm Administrator@IP_ADDRESS --ask-pass` |
+| Target                            | Provider                   | Example                                                                                                                                                 |
+| --------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Arista EOS                        | `arista`                   | `cnquery shell arista`                                                                                                                                  |
+| AWS accounts                      | `aws`                      | `cnquery shell aws`                                                                                                                                     |
+| AWS EC2 instances                 | `ssh`                      | `cnquery shell ssh user@host`                                                                                                                           |
+| AWS EC2 Instance Connect          | `aws ec2 instance-connect` | `cnquery shell aws ec2 instance-connect ec2-user@INSTANCEID`                                                                                            |
+| AWS EC2 EBS snapshot              | `aws ec2 ebs snapshot`     | `cnquery shell aws ec2 ebs snapshot SNAPSHOTID`                                                                                                         |
+| AWS EC2 EBS volume                | `aws ec2 ebs volume`       | `cnquery shell aws ec2 ebs volume VOLUMEID`                                                                                                             |
+| Container images                  | `container`, `docker`      | `cnquery shell container ubuntu:latest`                                                                                                                 |
+| Container registries              | `container registry`       | `cnquery shell container registry index.docker.io/library/rockylinux:8 `                                                                                |
+| DNS records                       | `host`                     | `cnquery shell host mondoo.com`                                                                                                                         |
+| GitHub organizations              | `github org`               | `cnquery shell github org mondoohq`                                                                                                                     |
+| GitHub repositories               | `github repo`              | `cnquery shell github repo mondoohq/cnquery`                                                                                                            |
+| GitLab groups                     | `gitlab`                   | `cnquery shell gitlab --group mondoohq`                                                                                                                 |
+| Google Cloud projects             | `gcp`                      | `cnquery shell gcp`                                                                                                                                     |
+| Google Workspace                  | `google-workspace`         | `cnquery shell google-workspace --customer-id CUSTOMER_ID --impersonated-user-email EMAIL --credentials-path JSON_FILE`                                 |
+| Kubernetes cluster nodes          | `local`, `ssh`             | `cnquery shell ssh user@host`                                                                                                                           |
+| Kubernetes clusters               | `k8s`                      | `cnquery shell k8s`                                                                                                                                     |
+| Kubernetes manifests              | `k8s`                      | `cnquery shell k8s manifest.yaml `                                                                                                                      |
+| Kubernetes workloads              | `k8s`                      | `cnquery shell k8s --discover pods,deployments`                                                                                                         |
+| Linux hosts                       | `local`, `ssh`             | `cnquery shell local` or<br></br>`cnquery shell ssh user@host`                                                                                          |
+| macOS hosts                       | `local`, `ssh`             | `cnquery shell local` or<br></br>`cnquery shell ssh user@IP_ADDRESS`                                                                                    |
+| Microsoft 365 tenants             | `ms365`                    | `cnquery shell ms365 --tenant-id TENANT_ID --client-id CLIENT_ID --certificate-path PFX_FILE`                                                           |
+| Microsoft Azure subscriptions     | `azure`                    | `cnquery shell azure --subscription SUBSCRIPTION_ID`                                                                                                    |
+| Microsoft Azure instances         | `ssh`                      | `cnquery shell ssh user@host`                                                                                                                           |
+| Okta                              | `okta`                     | `cnquery shell okta --token TOKEN --organization ORGANIZATION`                                                                                          |
+| OPC UA                            | `opcua`                    | `cnquery shell opcua`                                                                                                                                   |
+| Oracle Cloud Infrastructure (OCI) | `oci`                      | `cnquery shell oci`                                                                                                                                     |
+| Running containers                | `docker`                   | `cnquery shell docker CONTAINER_ID`                                                                                                                     |
+| Slack                             | `slack`                    | `cnquery shell slack --token TOKEN`                                                                                                                     |
+| SSL certificates on websites      | `host`                     | `cnquery shell host mondoo.com`                                                                                                                         |
+| Terraform HCL                     | `terraform hcl`            | `cnquery shell terraform <directory> HCL_FILE_OR_PATH`                                                                                                  |
+| Terraform plan                    | `terraform plan`           | `cnquery shell terraform plan <plan.json> json`                                                                                                         |
+| Terraform state                   | `terraform state`          | `cnquery shell terraform state <state_file>.json`                                                                                                       |
+| Vagrant virtual machines          | `vagrant`                  | `cnquery shell vagrant HOST`                                                                                                                            |
+| VMware vSphere                    | `vsphere`                  | `cnquery shell vsphere user@domain@host --ask-pass`                                                                                                     |
+| Windows hosts                     | `local`, `ssh`, `winrm`    | `cnquery shell local`<br></br>`cnquery shell ssh Administrator@IP_ADDRESS --ask-pass`<br></br>`cnquery shell winrm Administrator@IP_ADDRESS --ask-pass` |
 
 ## What's next?
 
