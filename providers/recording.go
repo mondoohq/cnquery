@@ -24,7 +24,8 @@ type recording struct {
 	Assets []assetRecording `json:"assets"`
 	Path   string           `json:"-"`
 	// assets is used for fast connection to asset lookup
-	assets map[uint32]*assetRecording `json:"-"`
+	assets          map[uint32]*assetRecording `json:"-"`
+	prettyPrintJSON bool                       `json:"-"`
 }
 
 type assetRecording struct {
@@ -89,15 +90,20 @@ func (n *readOnlyRecording) EnsureAsset(asset *inventory.Asset, provider string,
 func (n *readOnlyRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 }
 
+type RecordingOptions struct {
+	DoRecord        bool
+	PrettyPrintJSON bool
+}
+
 // NewRecording loads and creates a new recording based on user settings.
 // If no recording is available and users don't wish to record, it throws an error.
 // If users don't wish to record and no recording is available, it will return
 // the null-recording.
-func NewRecording(path string, doRecord bool) (Recording, error) {
+func NewRecording(path string, opts RecordingOptions) (Recording, error) {
 	if path == "" {
 		// we don't want to record and we don't want to load a recording path...
 		// so there is nothing to do, so return nil
-		if !doRecord {
+		if !opts.DoRecord {
 			return nullRecording{}, nil
 		}
 		// for all remaining cases we do want to record and we want to check
@@ -112,14 +118,18 @@ func NewRecording(path string, doRecord bool) (Recording, error) {
 		}
 		res.Path = path
 
-		if doRecord {
+		if opts.DoRecord {
+			res.prettyPrintJSON = opts.PrettyPrintJSON
 			return res, nil
 		}
 		return &readOnlyRecording{res}, nil
 
 	} else if errors.Is(err, os.ErrNotExist) {
-		if doRecord {
-			res := &recording{Path: path}
+		if opts.DoRecord {
+			res := &recording{
+				Path:            path,
+				prettyPrintJSON: opts.PrettyPrintJSON,
+			}
 			res.refreshCache() // only for initialization
 			return res, nil
 		}
@@ -143,14 +153,26 @@ func LoadRecordingFile(path string) (*recording, error) {
 		return nil, err
 	}
 
-	(&res).refreshCache()
-	return &res, err
+	pres := &res
+	pres.refreshCache()
+
+	if err = pres.reconnectResources(); err != nil {
+		return nil, err
+	}
+
+	return pres, err
 }
 
 func (r *recording) Save() error {
 	r.finalize()
 
-	raw, err := json.Marshal(r)
+	var raw []byte
+	var err error
+	if r.prettyPrintJSON {
+		raw, err = json.MarshalIndent(r, "", "  ")
+	} else {
+		raw, err = json.Marshal(r)
+	}
 	if err != nil {
 		return errors.New("failed to marshal json for recording: " + err.Error())
 	}
@@ -187,6 +209,50 @@ func (r *recording) refreshCache() {
 			}
 		}
 	}
+}
+
+func (r *recording) reconnectResources() error {
+	var err error
+	for i := range r.Assets {
+		asset := r.Assets[i]
+		for j := range asset.Resources {
+			if err = r.reconnectResource(&asset, &asset.Resources[j]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (r *recording) reconnectResource(asset *assetRecording, resource *resourceRecording) error {
+	for k, v := range resource.Fields {
+		typ := types.Type(v.Type)
+		if !typ.IsResource() || v.Value == nil {
+			continue
+		}
+
+		vals, ok := v.Value.(map[string]interface{})
+		if !ok {
+			return errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect reference")
+		}
+		name, ok := vals["Name"].(string)
+		if !ok {
+			return errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect type in Name field")
+		}
+		id, ok := vals["ID"].(string)
+		if !ok {
+			return errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect type in ID field")
+		}
+
+		// TODO: Not sure yet if we need to check the recording for the reference.
+		// Unless it is used by the code, we may get away with it.
+		// if _, ok = asset.resources[name+"\x00"+id]; !ok {
+		// 	return errors.New("cannot find resource '" + resource.Resource + "' (ID:" + resource.ID + ") in recording")
+		// }
+
+		resource.Fields[k].Value = &llx.MockResource{Name: name, ID: id}
+	}
+	return nil
 }
 
 func (r *recording) finalize() {

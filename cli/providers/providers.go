@@ -193,6 +193,12 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			Type: plugin.FlagType_String,
 			Desc: "Use a recording for caching or create a new recording (with --record)",
 		},
+		{
+			Long:   "prettyjson",
+			Type:   plugin.FlagType_Bool,
+			Desc:   "Pretty-print json in recording",
+			Option: plugin.FlagOption_Hidden,
+		},
 	}
 
 	allFlags := append(connector.Flags, builtinFlags...)
@@ -248,6 +254,10 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		if err != nil {
 			log.Warn().Msg("failed to get flag --record")
 		}
+		prettyJSON, err := cc.Flags().GetBool("prettyjson")
+		if err != nil {
+			log.Warn().Msg("failed to get flag --prettyjson")
+		}
 
 		// the following flags are not processed by the provider; we handle them
 		// here instead
@@ -296,7 +306,10 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
 		}
 
-		runtime.Recording, err = providers.NewRecording(recording, doRecord)
+		runtime.Recording, err = providers.NewRecording(recording, providers.RecordingOptions{
+			DoRecord:        doRecord,
+			PrettyPrintJSON: prettyJSON,
+		})
 		if err != nil {
 			log.Fatal().Msg(err.Error())
 		}
