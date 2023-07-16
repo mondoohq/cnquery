@@ -9,6 +9,8 @@ import (
 )
 
 var newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error){
+	"file": NewFile,
+	"file.permissions": NewFilePermissions,
 	"command": NewCommand,
 }
 
@@ -19,10 +21,97 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 		return nil, errors.New("cannot find resource " + name + " in os provider")
 	}
 
-	return f(runtime, args)
+	res, err := f(runtime, args)
+	if err != nil {
+		return nil, err
+	}
+
+	id := res.MqlID()
+	if x, ok := runtime.Resources[name+"\x00"+id]; ok {
+		res = x
+	} else {
+		runtime.Resources[name+"\x00"+id] = res
+	}
+
+	return res, nil
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"file.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetPath()).ToDataRes(types.String)
+	},
+	"file.basename": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetBasename()).ToDataRes(types.String)
+	},
+	"file.dirname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetDirname()).ToDataRes(types.String)
+	},
+	"file.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetContent()).ToDataRes(types.String)
+	},
+	"file.exists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetExists()).ToDataRes(types.Bool)
+	},
+	"file.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetPermissions()).ToDataRes(types.Resource("file.permissions"))
+	},
+	"file.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetSize()).ToDataRes(types.Int)
+	},
+	"file.empty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetEmpty()).ToDataRes(types.Bool)
+	},
+	"file.permissions.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetMode()).ToDataRes(types.Int)
+	},
+	"file.permissions.user_readable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetUser_readable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.user_writeable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetUser_writeable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.user_executable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetUser_executable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.group_readable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetGroup_readable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.group_writeable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetGroup_writeable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.group_executable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetGroup_executable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.other_readable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetOther_readable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.other_writeable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetOther_writeable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.other_executable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetOther_executable()).ToDataRes(types.Bool)
+	},
+	"file.permissions.suid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetSuid()).ToDataRes(types.Bool)
+	},
+	"file.permissions.sgid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetSgid()).ToDataRes(types.Bool)
+	},
+	"file.permissions.sticky": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetSticky()).ToDataRes(types.Bool)
+	},
+	"file.permissions.isDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetIsDirectory()).ToDataRes(types.Bool)
+	},
+	"file.permissions.isFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetIsFile()).ToDataRes(types.Bool)
+	},
+	"file.permissions.isSymlink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetIsSymlink()).ToDataRes(types.Bool)
+	},
+	"file.permissions.string": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilePermissions).GetString()).ToDataRes(types.String)
+	},
 	"command.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetCommand()).ToDataRes(types.String)
 	},
@@ -47,6 +136,131 @@ func GetData(resource plugin.Resource, field string, args map[string]interface{}
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
+	"file.path": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Path, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"file.basename": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Basename, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"file.dirname": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Dirname, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"file.content": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Content, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"file.exists": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Exists, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Permissions, ok = plugin.RawToTValue[*mqlFilePermissions](v)
+		return ok
+	},
+	"file.size": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Size, ok = plugin.RawToTValue[int64](v)
+		return ok
+	},
+	"file.empty": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.mode": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Mode, ok = plugin.RawToTValue[int64](v)
+		return ok
+	},
+	"file.permissions.user_readable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).User_readable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.user_writeable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).User_writeable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.user_executable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).User_executable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.group_readable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Group_readable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.group_writeable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Group_writeable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.group_executable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Group_executable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.other_readable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Other_readable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.other_writeable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Other_writeable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.other_executable": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Other_executable, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.suid": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Suid, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.sgid": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Sgid, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.sticky": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).Sticky, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.isDirectory": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).IsDirectory, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.isFile": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).IsFile, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.isSymlink": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).IsSymlink, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"file.permissions.string": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
 	"command.command": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlCommand).Command, ok = plugin.RawToTValue[string](v)
@@ -79,6 +293,250 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
 	}
 	return nil
+}
+
+// mqlFile for the file resource
+type mqlFile struct {
+	MqlRuntime *plugin.Runtime
+	_id string
+	// optional: if you define mqlFileInternal it will be used here
+
+	Path plugin.TValue[string]
+	Basename plugin.TValue[string]
+	Dirname plugin.TValue[string]
+	Content plugin.TValue[string]
+	Exists plugin.TValue[bool]
+	Permissions plugin.TValue[*mqlFilePermissions]
+	Size plugin.TValue[int64]
+	Empty plugin.TValue[bool]
+}
+
+// NewFile creates a new instance of this resource
+func NewFile(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlFile{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlFile, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res._id, err = res.id()
+	return res, err
+}
+
+func (c *mqlFile) MqlName() string {
+	return "file"
+}
+
+func (c *mqlFile) MqlID() string {
+	return c._id
+}
+
+func (c *mqlFile) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlFile) GetBasename() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Basename, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+		return c.basename(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetDirname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Dirname, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+		return c.dirname(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return "", vargPath.Error
+		}
+
+		vargExists := c.GetExists()
+		if vargExists.Error != nil {
+			return "", vargExists.Error
+		}
+		return c.content(vargPath.Data, vargExists.Data)
+	})
+}
+
+func (c *mqlFile) GetExists() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Exists, func() (bool, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return false, vargPath.Error
+		}
+		return c.exists(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetPermissions() *plugin.TValue[*mqlFilePermissions] {
+	return plugin.GetOrCompute[*mqlFilePermissions](&c.Permissions, func() (*mqlFilePermissions, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+		return c.permissions(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Size, func() (int64, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return 0, vargPath.Error
+		}
+		return c.size(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetEmpty() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Empty, func() (bool, error) {
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return false, vargPath.Error
+		}
+		return c.empty(vargPath.Data)
+	})
+}
+
+// mqlFilePermissions for the file.permissions resource
+type mqlFilePermissions struct {
+	MqlRuntime *plugin.Runtime
+	_id string
+	// optional: if you define mqlFilePermissionsInternal it will be used here
+
+	Mode plugin.TValue[int64]
+	User_readable plugin.TValue[bool]
+	User_writeable plugin.TValue[bool]
+	User_executable plugin.TValue[bool]
+	Group_readable plugin.TValue[bool]
+	Group_writeable plugin.TValue[bool]
+	Group_executable plugin.TValue[bool]
+	Other_readable plugin.TValue[bool]
+	Other_writeable plugin.TValue[bool]
+	Other_executable plugin.TValue[bool]
+	Suid plugin.TValue[bool]
+	Sgid plugin.TValue[bool]
+	Sticky plugin.TValue[bool]
+	IsDirectory plugin.TValue[bool]
+	IsFile plugin.TValue[bool]
+	IsSymlink plugin.TValue[bool]
+	String plugin.TValue[string]
+}
+
+// NewFilePermissions creates a new instance of this resource
+func NewFilePermissions(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlFilePermissions{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlFilePermissions, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res._id, err = res.id()
+	return res, err
+}
+
+func (c *mqlFilePermissions) MqlName() string {
+	return "file.permissions"
+}
+
+func (c *mqlFilePermissions) MqlID() string {
+	return c._id
+}
+
+func (c *mqlFilePermissions) GetMode() *plugin.TValue[int64] {
+	return &c.Mode
+}
+
+func (c *mqlFilePermissions) GetUser_readable() *plugin.TValue[bool] {
+	return &c.User_readable
+}
+
+func (c *mqlFilePermissions) GetUser_writeable() *plugin.TValue[bool] {
+	return &c.User_writeable
+}
+
+func (c *mqlFilePermissions) GetUser_executable() *plugin.TValue[bool] {
+	return &c.User_executable
+}
+
+func (c *mqlFilePermissions) GetGroup_readable() *plugin.TValue[bool] {
+	return &c.Group_readable
+}
+
+func (c *mqlFilePermissions) GetGroup_writeable() *plugin.TValue[bool] {
+	return &c.Group_writeable
+}
+
+func (c *mqlFilePermissions) GetGroup_executable() *plugin.TValue[bool] {
+	return &c.Group_executable
+}
+
+func (c *mqlFilePermissions) GetOther_readable() *plugin.TValue[bool] {
+	return &c.Other_readable
+}
+
+func (c *mqlFilePermissions) GetOther_writeable() *plugin.TValue[bool] {
+	return &c.Other_writeable
+}
+
+func (c *mqlFilePermissions) GetOther_executable() *plugin.TValue[bool] {
+	return &c.Other_executable
+}
+
+func (c *mqlFilePermissions) GetSuid() *plugin.TValue[bool] {
+	return &c.Suid
+}
+
+func (c *mqlFilePermissions) GetSgid() *plugin.TValue[bool] {
+	return &c.Sgid
+}
+
+func (c *mqlFilePermissions) GetSticky() *plugin.TValue[bool] {
+	return &c.Sticky
+}
+
+func (c *mqlFilePermissions) GetIsDirectory() *plugin.TValue[bool] {
+	return &c.IsDirectory
+}
+
+func (c *mqlFilePermissions) GetIsFile() *plugin.TValue[bool] {
+	return &c.IsFile
+}
+
+func (c *mqlFilePermissions) GetIsSymlink() *plugin.TValue[bool] {
+	return &c.IsSymlink
+}
+
+func (c *mqlFilePermissions) GetString() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.String, func() (string, error) {
+		return c.string()
+	})
 }
 
 // mqlCommand for the command resource

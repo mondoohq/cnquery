@@ -20,7 +20,19 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 		return nil, errors.New("cannot find resource " + name + " in os provider")
 	}
 
-	return f(runtime, args)
+	res, err := f(runtime, args)
+	if err != nil {
+		return nil, err
+	}
+
+	id := res.MqlID()
+	if x, ok := runtime.Resources[name+"\x00"+id]; ok {
+		res = x
+	} else {
+		runtime.Resources[name+"\x00"+id] = res
+	}
+
+	return res, nil
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
