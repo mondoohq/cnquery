@@ -291,7 +291,7 @@ cnquery/build/linux:
 
 .PHONY: cnquery/build/windows
 cnquery/build/windows:
-	GOOS=windows go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
+	GOOS=windows GOARCH=amd64 go build ${LDFLAGSDIST} apps/cnquery/cnquery.go
 
 cnquery/build/darwin:
 	GOOS=darwin go build ${LDFLAGSDIST} apps/cnquery/cnquery.go

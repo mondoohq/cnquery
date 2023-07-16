@@ -2,12 +2,16 @@ package os
 
 import (
 	"errors"
+	"runtime"
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/motor/providers/local"
 	"go.mondoo.com/cnquery/motor/providers/os/powershell"
 	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/os/windows"
+	"go.mondoo.com/ranger-rpc/codes"
+	"go.mondoo.com/ranger-rpc/status"
 )
 
 func (k *mqlRegistrykey) id() (string, error) {
@@ -18,6 +22,22 @@ func (k *mqlRegistrykey) GetExists() (bool, error) {
 	path, err := k.Path()
 	if err != nil {
 		return false, err
+	}
+
+	// if we are running locally on windows, we can use native api
+	_, ok := k.MotorRuntime.Motor.Provider.(*local.Provider)
+	if ok && runtime.GOOS == "windows" {
+		items, err := windows.GetNativeRegistryKeyItems(path)
+		if err == nil && len(items) > 0 {
+			return true, nil
+		}
+		std, ok := status.FromError(err)
+		if ok && std.Code() == codes.NotFound {
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
 	}
 
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
@@ -45,13 +65,19 @@ func (k *mqlRegistrykey) GetExists() (bool, error) {
 }
 
 // GetEntries returns a list of registry key property resources
-// TODO: cache the result of this function
 func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
 	path, err := k.Path()
 	if err != nil {
 		return nil, err
 	}
 
+	// if we are running locally on windows, we can use native api
+	_, ok := k.MotorRuntime.Motor.Provider.(*local.Provider)
+	if ok && runtime.GOOS == "windows" {
+		return windows.GetNativeRegistryKeyItems(path)
+	}
+
+	// parse the output of the powershell script
 	script := powershell.Encode(windows.GetRegistryKeyItemScript(path))
 	mqlCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
 	if err != nil {
@@ -71,12 +97,7 @@ func (k *mqlRegistrykey) getEntries() ([]windows.RegistryKeyItem, error) {
 		return nil, err
 	}
 
-	entries, err := windows.ParseRegistryKeyItems(strings.NewReader(stdout))
-	if err != nil {
-		return nil, err
-	}
-
-	return entries, nil
+	return windows.ParsePowershellRegistryKeyItems(strings.NewReader(stdout))
 }
 
 // Deprecated: GetProperties returns the properties of a registry key
@@ -92,22 +113,6 @@ func (k *mqlRegistrykey) GetProperties() (map[string]interface{}, error) {
 	for i := range entries {
 		rkey := entries[i]
 		res[rkey.Key] = rkey.String()
-	}
-
-	return res, nil
-}
-
-func (k *mqlRegistrykey) GetProps() (map[string]interface{}, error) {
-	res := map[string]interface{}{}
-
-	entries, err := k.getEntries()
-	if err != nil {
-		return nil, err
-	}
-
-	for i := range entries {
-		rkey := entries[i]
-		res[rkey.Key] = rkey.GetRawValue()
 	}
 
 	return res, nil
@@ -154,27 +159,38 @@ func (k *mqlRegistrykey) GetChildren() ([]interface{}, error) {
 		return nil, err
 	}
 
-	script := powershell.Encode(windows.GetRegistryKeyChildItemsScript(path))
-	mqlCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
-	if err != nil {
-		return res, err
-	}
-	cmd := mqlCmd.(Command)
-	exitcode, err := cmd.Exitcode()
-	if err != nil {
-		return nil, err
-	}
-	if exitcode != 0 {
-		return nil, errors.New("could not retrieve registry key")
-	}
+	var children []windows.RegistryKeyChild
+	// if we are running locally on windows, we can use native api
+	_, ok := k.MotorRuntime.Motor.Provider.(*local.Provider)
+	if ok && runtime.GOOS == "windows" {
+		children, err = windows.GetNativeRegistryKeyChildren(path)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// parse powershell script
+		script := powershell.Encode(windows.GetRegistryKeyChildItemsScript(path))
+		mqlCmd, err := k.MotorRuntime.CreateResource("command", "command", script)
+		if err != nil {
+			return res, err
+		}
+		cmd := mqlCmd.(Command)
+		exitcode, err := cmd.Exitcode()
+		if err != nil {
+			return nil, err
+		}
+		if exitcode != 0 {
+			return nil, errors.New("could not retrieve registry key")
+		}
 
-	stdout, err := cmd.Stdout()
-	if err != nil {
-		return res, err
-	}
-	children, err := windows.ParseRegistryKeyChildren(strings.NewReader(stdout))
-	if err != nil {
-		return nil, err
+		stdout, err := cmd.Stdout()
+		if err != nil {
+			return res, err
+		}
+		children, err = windows.ParsePowershellRegistryKeyChildren(strings.NewReader(stdout))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for i := range children {
@@ -263,7 +279,7 @@ func (p *mqlRegistrykeyProperty) init(args *resources.Args) (*resources.Args, Re
 			}
 		}
 	}
-	return nil, nil, errors.New("property does not exist")
+	return args, nil, nil
 }
 
 func (p *mqlRegistrykeyProperty) GetExists() (bool, error) {

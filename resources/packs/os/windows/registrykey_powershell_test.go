@@ -12,7 +12,7 @@ func TestWindowsRegistryKeyItemParser(t *testing.T) {
 	r, err := os.Open("./testdata/registrykey.json")
 	require.NoError(t, err)
 
-	items, err := ParseRegistryKeyItems(r)
+	items, err := ParsePowershellRegistryKeyItems(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 10, len(items))
 	assert.Equal(t, "ConsentPromptBehaviorAdmin", items[0].Key)
@@ -26,7 +26,7 @@ func TestWindowsRegistryKeyChildParser(t *testing.T) {
 	r, err := os.Open("./testdata/registrykey-children.json")
 	require.NoError(t, err)
 
-	items, err := ParseRegistryKeyChildren(r)
+	items, err := ParsePowershellRegistryKeyChildren(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 5, len(items))
 }
@@ -35,7 +35,7 @@ func TestWindowsRegistryKeyMultiStringParser(t *testing.T) {
 	r, err := os.Open("./testdata/registrykey_multistring.json")
 	require.NoError(t, err)
 
-	items, err := ParseRegistryKeyItems(r)
+	items, err := ParsePowershellRegistryKeyItems(r)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(items))
 	assert.Equal(t, "Machine", items[0].Key)

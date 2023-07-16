@@ -465,11 +465,9 @@ registrykey @defaults("path") {
   path string
   // Indicates if the property exists
   exists() bool
-  // deprecated: Registry key properties, use `props` instead
+  // deprecated: Registry key properties, use `items` instead
   properties() map[string]string
-  // Registry key properties
-  props() map[string]dict
-  // Items
+  // Registry key items
   items() []registrykey.property
   // Registry key children
   children() []string
