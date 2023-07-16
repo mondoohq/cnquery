@@ -12,9 +12,9 @@ import (
 // It cannot be sent over the wire unless serialized (expensive) or
 // converted to a proto data structure
 type RawData struct {
-	Type  types.Type
-	Value interface{}
-	Error error
+	Type  types.Type  `json:"type"`
+	Value interface{} `json:"value"`
+	Error error       `json:"error,omitempty"`
 }
 
 func dictRawDataString(value interface{}) string {
