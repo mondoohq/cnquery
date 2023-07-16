@@ -11,7 +11,6 @@ import (
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
-	"go.mondoo.com/cnquery/providers/mock"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -22,9 +21,8 @@ type CredentialQueryResponse struct {
 	SecretId string `json:"secret_id,omitempty"` // id to use to fetch the secret from the source vault
 }
 
-func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, error) {
-	rt := mock.New()
-	mqlExecutor := mql.New(rt, cnquery.DefaultFeatures)
+func NewCredentialQueryRunner(credentialQuery string, runtime llx.Runtime) (*CredentialQueryRunner, error) {
+	mqlExecutor := mql.New(runtime, cnquery.DefaultFeatures)
 
 	// just empty props to ensure we can compile
 	props := map[string]*llx.Primitive{
@@ -35,7 +33,7 @@ func NewCredentialQueryRunner(credentialQuery string) (*CredentialQueryRunner, e
 	}
 
 	// test query to see if it compiles well
-	_, err := mql.Exec(credentialQuery, rt, nil, props)
+	_, err := mql.Exec(credentialQuery, runtime, nil, props)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not compile the secret metadata function")
 	}

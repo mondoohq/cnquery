@@ -83,7 +83,19 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 		return nil, errors.New("cannot find resource " + name + " in os provider")
 	}
 
-	return f(runtime, args)
+	res, err := f(runtime, args)
+	if err != nil {
+		return nil, err
+	}
+
+	id := res.MqlID()
+	if x, ok := runtime.Resources[name+"\x00"+id]; ok {
+		res = x
+	} else {
+		runtime.Resources[name+"\x00"+id] = res
+	}
+
+	return res, nil
 }
 `
 }
@@ -306,7 +318,7 @@ func (b *goBuilder) goField(r *Resource, field *Field) {
 		args := field.BasicField.Args.List
 		for i := range args {
 			arg := args[i]
-			name := arg.goType(b)
+			name := resource2goname(arg.Type, b)
 			argDefs = append(argDefs, fmt.Sprintf(`varg%s := c.Get%s()
 		if varg%s.Error != nil {
 			return %s, varg%s.Error
@@ -325,7 +337,7 @@ func (c *%s) Get%s() *plugin.TValue[%s] {
 `,
 		r.structName(b), goName, goType,
 		goType, goName, goType,
-		strings.Join(argDefs, "\n"),
+		strings.Join(argDefs, "\n\t\t"),
 		field.BasicField.ID, strings.Join(argCall, ", "),
 	)
 }
@@ -563,8 +575,7 @@ func (t *SimpleType) goType(b *goBuilder) string {
 		return pt
 	}
 
-	// TODO: check if the resource exists
-	return resource2goname(t.Type, b)
+	return "*mql" + resource2goname(t.Type, b)
 }
 
 func (t *Type) goZeroValue() string {

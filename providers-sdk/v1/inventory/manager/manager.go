@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
@@ -36,16 +37,16 @@ type InventoryManager interface {
 type imOption func(*inventoryManager) error
 
 // passes a pre-parsed asset inventory into the Inventory Manager
-func WithInventory(inventory *inventory.Inventory) imOption {
+func WithInventory(inventory *inventory.Inventory, runtime llx.Runtime) imOption {
 	return func(im *inventoryManager) error {
 		logger.DebugDumpJSON("inventory-unresolved", inventory)
-		return im.loadInventory(inventory)
+		return im.loadInventory(inventory, runtime)
 	}
 }
 
-func WithCredentialQuery(query string) imOption {
+func WithCredentialQuery(query string, runtime llx.Runtime) imOption {
 	return func(im *inventoryManager) error {
-		return im.SetCredentialQuery(query)
+		return im.SetCredentialQuery(query, runtime)
 	}
 }
 
@@ -92,7 +93,7 @@ type inventoryManager struct {
 }
 
 // TODO: define what happens when we call load multiple times?
-func (im *inventoryManager) loadInventory(inventory *inventory.Inventory) error {
+func (im *inventoryManager) loadInventory(inventory *inventory.Inventory, runtime llx.Runtime) error {
 	err := inventory.PreProcess()
 	if err != nil {
 		return err
@@ -115,7 +116,7 @@ func (im *inventoryManager) loadInventory(inventory *inventory.Inventory) error 
 	}
 
 	if inventory.Spec.CredentialQuery != "" {
-		err = im.SetCredentialQuery(inventory.Spec.CredentialQuery)
+		err = im.SetCredentialQuery(inventory.Spec.CredentialQuery, runtime)
 		if err != nil {
 			return err
 		}
@@ -156,8 +157,8 @@ func (im *inventoryManager) loadInventory(inventory *inventory.Inventory) error 
 	return nil
 }
 
-func (im *inventoryManager) SetCredentialQuery(query string) error {
-	qr, err := NewCredentialQueryRunner(query)
+func (im *inventoryManager) SetCredentialQuery(query string, runtime llx.Runtime) error {
+	qr, err := NewCredentialQueryRunner(query, runtime)
 	if err != nil {
 		return err
 	}

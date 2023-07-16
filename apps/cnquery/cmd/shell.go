@@ -102,7 +102,7 @@ type ShellConfig struct {
 
 // StartShell will start an interactive CLI shell
 func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
-	im, err := manager.NewManager(manager.WithInventory(conf.Inventory))
+	im, err := manager.NewManager(manager.WithInventory(conf.Inventory, runtime))
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
