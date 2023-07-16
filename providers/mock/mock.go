@@ -85,6 +85,7 @@ func New() *Mock {
 	return &Mock{
 		Inventory: map[string]Resources{},
 		Providers: []string{},
+		schema:    emptySchema{},
 	}
 }
 
@@ -232,6 +233,14 @@ func (m *Mock) Schema() llx.Schema {
 	return m.schema
 }
 
-func (m *Mock) Close() {
-	// nothing to do yet...
+func (m *Mock) Close() {}
+
+type emptySchema struct{}
+
+func (e emptySchema) Lookup(resource string) *resources.ResourceInfo {
+	return nil
+}
+
+func (e emptySchema) AllResources() map[string]*resources.ResourceInfo {
+	return nil
 }
