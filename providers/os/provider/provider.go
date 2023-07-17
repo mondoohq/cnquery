@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources"
 )
@@ -180,6 +181,10 @@ func (s *Service) connect(asset *inventory.Asset) (shared.Connection, error) {
 	case "ssh":
 		s.lastConnectionID++
 		conn, err = connection.NewSshConnection(s.lastConnectionID, conf)
+
+	case "mock":
+		s.lastConnectionID++
+		conn, err = mock.New("")
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)

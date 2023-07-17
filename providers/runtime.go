@@ -98,6 +98,11 @@ func (r *Runtime) UseProvider(id string) error {
 	return nil
 }
 
+func (r *Runtime) AddConnectedProvider(c *ConnectedProvider) {
+	r.providers[c.Instance.ID] = c
+	r.schema.Add(c.Instance.Name, c.Instance.Schema)
+}
+
 func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	var running *RunningProvider
 	for _, p := range r.coordinator.Running {
@@ -116,8 +121,7 @@ func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	}
 
 	res := &ConnectedProvider{Instance: running}
-	r.providers[running.ID] = res
-	r.schema.Add(running.Name, running.Schema)
+	r.AddConnectedProvider(res)
 
 	return res, nil
 }
@@ -283,6 +287,43 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 	r.Recording.AddData(provider.Connection.Id, name, id, field, raw)
 
 	callback(raw.Value, err)
+	return nil
+}
+
+func (r *Runtime) SetMockConnection(id string) (uint32, error) {
+	provider, ok := r.providers[id]
+	if !ok {
+		return 0, errors.New("cannot find provider to mock connection: " + id)
+	}
+
+	res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{
+		Asset: &inventory.Inventory{
+			Spec: &inventory.InventorySpec{
+				Assets: []*inventory.Asset{{
+					Id: "mock-asset",
+					Connections: []*inventory.Config{{
+						Type: "mock",
+					}},
+				}},
+			},
+		},
+	})
+	if err != nil {
+		return 0, errors.New("failed to set mock connection: " + err.Error())
+	}
+
+	provider.Connection = res
+	return res.Id, nil
+}
+
+func (r *Runtime) SetRecording(recording *recording, providerID string) error {
+	r.Recording = recording
+	provider, ok := r.providers[providerID]
+	if !ok {
+		return errors.New("cannot set recording, provider '" + providerID + "' not found")
+	}
+
+	recording.assets[provider.Connection.Id] = &recording.Assets[0]
 	return nil
 }
 

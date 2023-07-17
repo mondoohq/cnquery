@@ -3,6 +3,7 @@ package testutils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,12 +14,12 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/local"
-	"go.mondoo.com/cnquery/motor/providers/mock"
 	"go.mondoo.com/cnquery/mql"
 	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers/mock"
+	osconf "go.mondoo.com/cnquery/providers/os/config"
+	osprovider "go.mondoo.com/cnquery/providers/os/provider"
 )
 
 var Features cnquery.Features
@@ -48,32 +49,32 @@ func getEnvFeatures() cnquery.Features {
 	return fts
 }
 
-func mockTransport(filepath string) (*motor.Motor, error) {
+func TomlMock(filepath string) llx.Runtime {
 	trans, err := mock.NewFromTomlFile(filepath)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return motor.New(trans)
+	return trans
 }
 
 type tester struct {
-	runtime *resources.Runtime
+	runtime llx.Runtime
 }
 
-func InitTester(motor *motor.Motor, registry *resources.Registry) *tester {
+func InitTester(runtime llx.Runtime) *tester {
 	return &tester{
-		runtime: resources.NewRuntime(registry, motor),
+		runtime: runtime,
 	}
 }
 
 func (ctx *tester) Compile(query string) (*llx.CodeBundle, error) {
-	return mqlc.Compile(query, nil, mqlc.NewConfig(ctx.runtime.Registry.Schema(), Features))
+	return mqlc.Compile(query, nil, mqlc.NewConfig(ctx.runtime.Schema(), Features))
 }
 
 func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
-	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.runtime.Registry.Schema(), Features))
+	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.runtime.Schema(), Features))
 	if err != nil {
 		t.Fatal("failed to compile code: " + err.Error())
 	}
@@ -89,7 +90,7 @@ func (ctx *tester) TestQuery(t *testing.T, query string) []*llx.RawResult {
 func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
 
-	resultMap, err := mql.ExecuteCode(ctx.runtime.Registry.Schema(), ctx.runtime, bundle, props, Features)
+	resultMap, err := mql.ExecuteCode(ctx.runtime, bundle, props, Features)
 	require.NoError(t, err)
 
 	lastQueryResult := &llx.RawResult{}
@@ -126,47 +127,63 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	return results
 }
 
-func Local() *motor.Motor {
-	transport, err := local.New()
+func Local() llx.Runtime {
+	raw, err := os.ReadFile("../../../providers/os/resources/os.resources.json")
 	if err != nil {
-		panic(err.Error())
+		panic("failed to load os resources for testing: " + err.Error())
 	}
 
-	m, err := motor.New(transport)
-	if err != nil {
-		panic(err.Error())
+	provider := &providers.RunningProvider{
+		Name:   osconf.Config.Name,
+		ID:     osconf.Config.ID,
+		Plugin: osprovider.Init(),
+		Schema: providers.MustLoadSchema("os", raw),
 	}
 
-	return m
+	runtime := providers.DefaultRuntime()
+	runtime.Provider = &providers.ConnectedProvider{Instance: provider}
+	runtime.AddConnectedProvider(runtime.Provider)
+
+	return runtime
 }
 
-func Mock(path string) *motor.Motor {
-	m, err := mockTransport(path)
+func mockRuntime(path string) llx.Runtime {
+	runtime := Local().(*providers.Runtime)
+
+	abs, _ := filepath.Abs(path)
+	recording, err := providers.LoadRecordingFile(abs)
 	if err != nil {
-		panic(err.Error())
+		panic("failed to load recording: " + err.Error())
 	}
 
-	return m
+	_, err = runtime.SetMockConnection(runtime.Provider.Instance.ID)
+	if err != nil {
+		panic("failed to set mock connection: " + err.Error())
+	}
+
+	runtime.SetRecording(recording, runtime.Provider.Instance.ID)
+
+	return runtime
 }
 
-func LinuxMock() *motor.Motor {
-	return Mock("../testdata/arch.toml")
+func LinuxMock() llx.Runtime {
+	return mockRuntime("../../../providers-sdk/v1/testutils/testdata/arch.json")
 }
 
-func KubeletMock() *motor.Motor {
-	return Mock("../k8s/testdata/kubelet.toml")
+func KubeletMock() llx.Runtime {
+	return TomlMock("./k8s/testdata/kubelet.toml")
 }
 
-func KubeletAKSMock() *motor.Motor {
-	return Mock("../k8s/testdata/kubelet-aks.toml")
+func KubeletAKSMock() llx.Runtime {
+	return TomlMock("./k8s/testdata/kubelet-aks.toml")
 }
 
-func WindowsMock() *motor.Motor {
-	return Mock("../testdata/windows.toml")
+func WindowsMock() llx.Runtime {
+	return TomlMock("./testdata/windows.toml")
 }
 
-func CustomMock(path string) *motor.Motor {
-	return Mock(path)
+func CustomMock(path string) llx.Runtime {
+	return TomlMock(path)
 }
 
 type SimpleTest struct {

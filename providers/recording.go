@@ -29,12 +29,26 @@ type recording struct {
 }
 
 type assetRecording struct {
-	Asset       string                `json:"asset"`
+	Asset       assetInfo             `json:"asset"`
 	Connections []connectionRecording `json:"connections"`
 	Resources   []resourceRecording   `json:"resources"`
 
 	connections map[string]*connectionRecording `json:"-"`
 	resources   map[string]*resourceRecording   `json:"-"`
+}
+
+type assetInfo struct {
+	ID          string            `json:"id"`
+	PlatformIDs []string          `json:"platformIDs,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	Arch        string            `json:"arch,omitempty"`
+	Title       string            `json:"title,omitempty"`
+	Family      []string          `json:"family,omitempty"`
+	Build       string            `json:"build,omitempty"`
+	Version     string            `json:"version,omitempty"`
+	Kind        string            `json:"kind,omitempty"`
+	Runtime     string            `json:"runtime,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
 }
 
 type connectionRecording struct {
@@ -155,6 +169,7 @@ func LoadRecordingFile(path string) (*recording, error) {
 
 	pres := &res
 	pres.refreshCache()
+	pres.fixTypes()
 
 	if err = pres.reconnectResources(); err != nil {
 		return nil, err
@@ -207,6 +222,26 @@ func (r *recording) refreshCache() {
 			if conn.id != 0 {
 				r.assets[conn.id] = asset
 			}
+		}
+	}
+}
+
+// json during the unmarshal step will load some things in a way that we
+// can't process. For example: numbers are loaded as float64, but can also
+// be int64's in MQL. This fixes the loaded types.
+func (r *recording) fixTypes() {
+	for i := range r.Assets {
+		asset := r.Assets[i]
+		for j := range asset.Resources {
+			fixResourceTypes(&asset.Resources[j])
+		}
+	}
+}
+
+func fixResourceTypes(r *resourceRecording) {
+	for _, v := range r.Fields {
+		if v.Type == types.Int {
+			v.Value = int64(v.Value.(float64))
 		}
 	}
 }
@@ -287,7 +322,7 @@ func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Conf
 
 	found := -1
 	for i := range r.Assets {
-		if r.Assets[i].Asset == id {
+		if r.Assets[i].Asset.ID == id {
 			found = i
 			break
 		}
@@ -297,11 +332,30 @@ func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Conf
 }
 
 func (r *recording) EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config) {
-	found, id := r.findAssetConnID(asset, conf)
+	found, _ := r.findAssetConnID(asset, conf)
 
 	if found == -1 {
+		id := asset.Mrn
+		if id == "" {
+			id = asset.Id
+		}
+		if id == "" {
+			id = asset.Platform.Title
+		}
 		r.Assets = append(r.Assets, assetRecording{
-			Asset:       id,
+			Asset: assetInfo{
+				ID:          id,
+				PlatformIDs: asset.PlatformIds,
+				Name:        asset.Platform.Name,
+				Arch:        asset.Platform.Arch,
+				Title:       asset.Platform.Title,
+				Family:      asset.Platform.Family,
+				Build:       asset.Platform.Build,
+				Version:     asset.Platform.Version,
+				Kind:        asset.Platform.Kind,
+				Runtime:     asset.Platform.Runtime,
+				Labels:      asset.Platform.Labels,
+			},
 			connections: map[string]*connectionRecording{},
 			resources:   map[string]*resourceRecording{},
 		})

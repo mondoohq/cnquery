@@ -1,0 +1,91 @@
+{
+  "assets": [
+    {
+      "asset": {
+        "id": "Arch Linux",
+        "platformIDs": [
+          "archlinux"
+        ],
+        "name": "arch",
+        "arch": "x86_64",
+        "title": "Arch Linux",
+        "family": [
+          "arch",
+          "linux",
+          "unix",
+          "os"
+        ],
+        "build": "rolling",
+        "version": "rolling"
+      },
+      "connections": [
+        {
+          "url": "local://",
+          "provider": "os",
+          "connector": "local",
+          "version": ""
+        }
+      ],
+      "resources": [
+        {
+          "Resource": "file",
+          "ID": "/etc/passwd",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "root:x:0:0::/root:/bin/bash\nbin:x:1:1::/:/usr/bin/nologin\ndaemon:x:2:2::/:/usr/bin/nologin\nmail:x:8:12::/var/spool/mail:/usr/bin/nologin\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 137
+            }
+          }
+        },
+        {
+          "Resource": "file.permissions",
+          "ID": "-rw-r--r--",
+          "Fields": {
+            "mode": {
+              "type": "\u0005",
+              "value": 420
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/home",
+          "Fields": {
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "drwxr-xr-x"
+              }
+            }
+          }
+        },
+        {
+          "Resource": "file.permissions",
+          "ID": "drwxr-xr-x",
+          "Fields": {
+            "string": {
+              "type": "\u0007",
+              "value": "drwxr-xr-x"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
