@@ -12,6 +12,10 @@ func (b *Block) ChunkIndex() uint32 {
 	return uint32(len(b.Chunks))
 }
 
+func ChunkIndex(ref uint64) uint32 {
+	return uint32(ref & 0xFFFFFFFF)
+}
+
 func absRef(blockRef uint64, relRef uint32) uint64 {
 	return (blockRef & 0xFFFFFFFF00000000) | uint64(relRef)
 }
