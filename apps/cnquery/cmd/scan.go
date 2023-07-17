@@ -288,7 +288,7 @@ This example connects to Microsoft 365 using the PEM formatted certificate:
 		cmd.Flags().StringP("identity-file", "i", "", "Select a file from which to read the identity (private key) for public key authentication.")
 		cmd.Flags().String("id-detector", "", "User override for platform ID detection mechanism. Supported: "+strings.Join(providers.AvailablePlatformIdDetector(), ", "))
 		cmd.Flags().String("asset-name", "", "User override for the asset name.")
-		cmd.Flags().StringToString("props", nil, "Custom values for properties")
+		cmd.Flags().StringToString("props", nil, "Custom values for properties.")
 
 		cmd.Flags().String("path", "", "Path to a local file or directory for the connection to use.")
 		cmd.Flags().StringToString("option", nil, "Additional connection options. You can pass multiple options using `--option key=value`.")
