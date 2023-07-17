@@ -14,36 +14,35 @@ import (
 var x = testutils.InitTester(testutils.LinuxMock())
 
 const passwdContent = `root:x:0:0::/root:/bin/bash
-chris:x:1000:1001::/home/chris:/bin/bash
-christopher:x:1000:1001::/home/christopher:/bin/bash
-chris:x:1002:1003::/home/chris:/bin/bash
 bin:x:1:1::/:/usr/bin/nologin
+daemon:x:2:2::/:/usr/bin/nologin
+mail:x:8:12::/var/spool/mail:/usr/bin/nologin
 `
 
 func TestResource_File(t *testing.T) {
 	x.TestSimple(t, []testutils.SimpleTest{
 		{
-			Code:        "file(\"/etc/passwd\").exists",
+			Code:        "file('/etc/passwd').exists",
 			ResultIndex: 0, Expectation: true,
 		},
 		{
-			Code:        "file(\"/etc/passwd\").basename",
+			Code:        "file('/etc/passwd').basename",
 			ResultIndex: 0, Expectation: "passwd",
 		},
 		{
-			Code:        "file(\"/etc/passwd\").dirname",
+			Code:        "file('/etc/passwd').dirname",
 			ResultIndex: 0, Expectation: "/etc",
 		},
 		{
-			Code:        "file(\"/etc/passwd\").size",
-			ResultIndex: 0, Expectation: int64(193),
+			Code:        "file('/etc/passwd').size",
+			ResultIndex: 0, Expectation: int64(len(passwdContent)),
 		},
 		{
-			Code:        "file(\"/etc/passwd\").permissions.mode",
+			Code:        "file('/etc/passwd').permissions.mode",
 			ResultIndex: 0, Expectation: int64(420),
 		},
 		{
-			Code:        "file(\"/etc/passwd\").content",
+			Code:        "file('/etc/passwd').content",
 			ResultIndex: 0, Expectation: passwdContent,
 		},
 	})

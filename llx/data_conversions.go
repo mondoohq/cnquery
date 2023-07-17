@@ -365,9 +365,16 @@ func (r *RawData) Result() *Result {
 
 	data, err := raw2primitive(r.Value, r.Type)
 	if err != nil {
+		// If we already have an error on record, we just return that instead.
+		// This typically only happens when the above check for Value==nil cannot
+		// be determined, because it is hidden behind an interface{}. See:
+		// https://stackoverflow.com/questions/43059653/golang-interfacenil-is-nil-or-not
+		if errorMsg == "" {
+			errorMsg = err.Error()
+		}
 		return &Result{
 			Data:  &Primitive{Type: string(r.Type)},
-			Error: err.Error(),
+			Error: errorMsg,
 		}
 	}
 	return &Result{

@@ -1,10 +1,10 @@
 package mock
 
 import (
-	"errors"
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -49,6 +49,8 @@ func loadRawDataRes(raw interface{}) (plugin.DataRes, error) {
 		return plugin.DataRes{Data: llx.StringPrimitive(v)}, nil
 	case int64:
 		return plugin.DataRes{Data: llx.IntPrimitive(v)}, nil
+	case bool:
+		return plugin.DataRes{Data: llx.BoolPrimitive(v)}, nil
 	default:
 		return plugin.DataRes{}, errors.New("failed to load value")
 	}
@@ -150,7 +152,7 @@ func (m *Mock) Unregister(watcherUID string) error {
 func (m *Mock) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
 	resourceCache, ok := m.Inventory[name]
 	if !ok {
-		return nil, errors.New("resource '" + name + "' is not in recording")
+		return nil, errors.Wrap(resources.NotFound, "resource '"+name+"' is not in recording")
 	}
 
 	// FIXME: we currently have no way of generating the ID that we need to get the right resource,
@@ -162,7 +164,7 @@ func (m *Mock) CreateResource(name string, args map[string]*llx.Primitive) (llx.
 	case "command":
 		rid, ok := args["command"]
 		if !ok {
-			return nil, errors.New("cannot find '" + name + "' in recording")
+			return nil, errors.New("cannot find '" + name + "' ID in recording")
 		}
 
 		id := string(rid.Value)
@@ -172,6 +174,21 @@ func (m *Mock) CreateResource(name string, args map[string]*llx.Primitive) (llx.
 		}
 
 		return &llx.MockResource{Name: name, ID: id}, nil
+
+	case "file":
+		fid, ok := args["path"]
+		if !ok {
+			return nil, errors.New("cannot find '" + name + "' ID in recording")
+		}
+
+		id := string(fid.Value)
+		_, ok = resourceCache[id]
+		if !ok {
+			return nil, errors.New("cannot find " + name + " '" + id + "' in recording")
+		}
+
+		return &llx.MockResource{Name: name, ID: id}, nil
+
 	default:
 		// for all static resources
 		if _, ok := resourceCache[""]; ok {

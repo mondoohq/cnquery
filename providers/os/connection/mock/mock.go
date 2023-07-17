@@ -66,38 +66,45 @@ type Connection struct {
 }
 
 func New(path string) (*Connection, error) {
+	res := &Connection{
+		missing: map[string]map[string]bool{
+			"file":    {},
+			"command": {},
+		},
+		data: &TomlData{},
+	}
+
+	if path == "" {
+		res.data.Commands = map[string]*Command{}
+		res.data.Files = map[string]*MockFileData{}
+		return res, nil
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.New("could not open: " + path)
 	}
 
-	tomlContent := &TomlData{}
-	if _, err := toml.Decode(string(data), &tomlContent); err != nil {
+	if _, err := toml.Decode(string(data), &res.data); err != nil {
 		return nil, errors.New("could not decode toml: " + err.Error())
 	}
 
 	// just for sanitization, make sure the path is set correctly
-	for path, f := range tomlContent.Files {
+	for path, f := range res.data.Files {
 		f.Path = path
 	}
 
-	log.Debug().Int("commands", len(tomlContent.Commands)).Int("files", len(tomlContent.Files)).Msg("mock> loaded data successfully")
+	log.Debug().Int("commands", len(res.data.Commands)).Int("files", len(res.data.Files)).Msg("mock> loaded data successfully")
 
-	for k := range tomlContent.Commands {
+	for k := range res.data.Commands {
 		log.Trace().Str("cmd", k).Msg("load command")
 	}
 
-	for k := range tomlContent.Files {
+	for k := range res.data.Files {
 		log.Trace().Str("file", k).Msg("load file")
 	}
 
-	return &Connection{
-		data: tomlContent,
-		missing: map[string]map[string]bool{
-			"file":    {},
-			"command": {},
-		},
-	}, nil
+	return res, nil
 }
 
 func (c *Connection) ID() uint32 {

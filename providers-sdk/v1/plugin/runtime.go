@@ -30,7 +30,13 @@ func (x *TValue[T]) ToDataRes(typ types.Type) *DataRes {
 		return &DataRes{}
 	}
 	if x.State&StateIsNull != 0 {
-		return &DataRes{Data: &llx.Primitive{Type: string(typ)}}
+		res := &DataRes{
+			Data: &llx.Primitive{Type: string(typ)},
+		}
+		if x.Error != nil {
+			res.Error = x.Error.Error()
+		}
+		return res
 	}
 	raw := llx.RawData{Type: typ, Value: x.Data, Error: x.Error}
 	res := raw.Result()
@@ -82,7 +88,11 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 
 	x, err := compute()
 	if err != nil {
-		return &TValue[T]{Data: x, Error: err}
+		res := &TValue[T]{Data: x, Error: err}
+		if err != NotReady {
+			res.State = StateIsSet | StateIsNull
+		}
+		return res
 	}
 
 	// this only happens if the function set the field proactively, in which
