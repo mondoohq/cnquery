@@ -297,9 +297,9 @@ func KubernetesProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, 
 	}
 	commonCmdFlags(cmd)
 
-	cmd.Flags().String("context", "", "target a Kubernetes context")
-	cmd.Flags().String("namespaces-exclude", "", "filter out Kubernetes objects in the matching namespaces")
-	cmd.Flags().String("namespaces", "", "only include Kubernetes object in the matching namespaces")
+	cmd.Flags().String("context", "", "Target a Kubernetes context.")
+	cmd.Flags().String("namespaces-exclude", "", "Filter out Kubernetes objects in the matching namespaces.")
+	cmd.Flags().String("namespaces", "", "Only include Kubernetes object in the matching namespaces.")
 	return cmd
 }
 
@@ -317,10 +317,10 @@ func AwsProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn R
 		Run: runFn,
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().String("profile", "", "pick a named AWS profile to use")
-	cmd.Flags().String("region", "", "the AWS region to scan")
-	cmd.Flags().String("role-arn", "", "the role ARN to use for assume-role")
-	cmd.Flags().String("external-id", "", "the external id to use for assume-role")
+	cmd.Flags().String("profile", "", "Pick a named AWS profile to use.")
+	cmd.Flags().String("region", "", "AWS region to scan.")
+	cmd.Flags().String("role-arn", "", "Role ARN to use for assume-role.")
+	cmd.Flags().String("external-id", "", "External ID to use for assume-role.")
 	return cmd
 }
 
@@ -417,14 +417,14 @@ func AzureProviderCmd(commonCmdFlags CommonFlagsFn, preRun CommonPreRunFn, runFn
 		Run: runFn,
 	}
 	commonCmdFlags(cmd)
-	cmd.Flags().String("tenant-id", "", "Directory (tenant) ID of the service principal")
-	cmd.Flags().String("client-id", "", "Application (client) ID of the service principal")
-	cmd.Flags().String("client-secret", "", "Secret for application")
-	cmd.Flags().String("certificate-path", "", "Path (in PKCS #12/PFX or PEM format) to the authentication certificate")
-	cmd.Flags().String("certificate-secret", "", "Passphrase for the authentication certificate file")
-	cmd.Flags().String("subscription", "", "ID of the Azure subscription to scan")
-	cmd.Flags().String("subscriptions", "", "Comma-separated list of Azure subscriptions to include")
-	cmd.Flags().String("subscriptions-exclude", "", "Comma-separated list of Azure subscriptions to exclude")
+	cmd.Flags().String("tenant-id", "", "Directory (tenant) ID of the service principal.")
+	cmd.Flags().String("client-id", "", "Application (client) ID of the service principal.")
+	cmd.Flags().String("client-secret", "", "Secret for application.")
+	cmd.Flags().String("certificate-path", "", "Path (in PKCS #12/PFX or PEM format) to the authentication certificate.")
+	cmd.Flags().String("certificate-secret", "", "Passphrase for the authentication certificate file.")
+	cmd.Flags().String("subscription", "", "ID of the Azure subscription to scan.")
+	cmd.Flags().String("subscriptions", "", "Comma-separated list of Azure subscriptions to include.")
+	cmd.Flags().String("subscriptions-exclude", "", "Comma-separated list of Azure subscriptions to exclude.")
 
 	return cmd
 }
