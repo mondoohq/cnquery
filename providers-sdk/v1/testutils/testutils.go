@@ -72,6 +72,10 @@ func (ctx *tester) Compile(query string) (*llx.CodeBundle, error) {
 	return mqlc.Compile(query, nil, mqlc.NewConfig(ctx.runtime.Schema(), Features))
 }
 
+func (ctx *tester) ExecuteCode(bundle *llx.CodeBundle, props map[string]*llx.Primitive) (map[string]*llx.RawResult, error) {
+	return mql.ExecuteCode(ctx.runtime, bundle, props, Features)
+}
+
 func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
 	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.runtime.Schema(), Features))
@@ -127,8 +131,8 @@ func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[stri
 	return results
 }
 
-func Local() llx.Runtime {
-	raw, err := os.ReadFile("../../../providers/os/resources/os.resources.json")
+func Local(pathToTestutils string) llx.Runtime {
+	raw, err := os.ReadFile(filepath.Join(pathToTestutils, "../../../providers/os/resources/os.resources.json"))
 	if err != nil {
 		panic("failed to load os resources for testing: " + err.Error())
 	}
@@ -147,10 +151,10 @@ func Local() llx.Runtime {
 	return runtime
 }
 
-func mockRuntime(path string) llx.Runtime {
-	runtime := Local().(*providers.Runtime)
+func mockRuntime(pathToTestutils string, testdata string) llx.Runtime {
+	runtime := Local(pathToTestutils).(*providers.Runtime)
 
-	abs, _ := filepath.Abs(path)
+	abs, _ := filepath.Abs(filepath.Join(pathToTestutils, testdata))
 	recording, err := providers.LoadRecordingFile(abs)
 	if err != nil {
 		panic("failed to load recording: " + err.Error())
@@ -161,13 +165,13 @@ func mockRuntime(path string) llx.Runtime {
 		panic("failed to set mock connection: " + err.Error())
 	}
 
-	runtime.SetRecording(recording, runtime.Provider.Instance.ID)
+	runtime.SetRecording(recording, runtime.Provider.Instance.ID, true)
 
 	return runtime
 }
 
-func LinuxMock() llx.Runtime {
-	return mockRuntime("../../../providers-sdk/v1/testutils/testdata/arch.json")
+func LinuxMock(pathToTestutils string) llx.Runtime {
+	return mockRuntime(pathToTestutils, "testdata/arch.json")
 }
 
 func KubeletMock() llx.Runtime {

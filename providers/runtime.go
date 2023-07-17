@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/cockroachdb/errors"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -316,14 +316,22 @@ func (r *Runtime) SetMockConnection(id string) (uint32, error) {
 	return res.Id, nil
 }
 
-func (r *Runtime) SetRecording(recording *recording, providerID string) error {
-	r.Recording = recording
+func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly bool) error {
+	if readOnly {
+		r.Recording = &readOnlyRecording{recording}
+	} else {
+		r.Recording = recording
+	}
+
 	provider, ok := r.providers[providerID]
 	if !ok {
 		return errors.New("cannot set recording, provider '" + providerID + "' not found")
 	}
 
-	recording.assets[provider.Connection.Id] = &recording.Assets[0]
+	asset := &recording.Assets[0]
+	recording.assets[provider.Connection.Id] = asset
+	r.asset = asset.Asset.ToInventory()
+
 	return nil
 }
 
