@@ -15,7 +15,7 @@ import (
 
 func TestLinuxStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux.toml")
-	p, err := mock.New(filepath)
+	p, err := mock.New(filepath, nil)
 	require.NoError(t, err)
 
 	statHelper := New(p)
@@ -42,7 +42,7 @@ func TestLinuxStatCmd(t *testing.T) {
 
 func TestOpenbsdStatCmd(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/openbsd.toml")
-	p, err := mock.New(filepath)
+	p, err := mock.New(filepath, nil)
 	require.NoError(t, err)
 
 	statHelper := New(p)

@@ -6,9 +6,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 var USER_OSX_DSCL_REGEX = regexp.MustCompile(`(?m)^(\S*)\s*(.*)$`)
@@ -33,7 +32,7 @@ func ParseDsclListResult(input io.Reader) (map[string]string, error) {
 }
 
 type OSXUserManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *OSXUserManager) Name() string {
@@ -66,7 +65,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	users := make(map[string]*User)
 
 	// fetch all uids first
-	f, err := s.provider.RunCommand("dscl . -list /Users UniqueID")
+	f, err := s.conn.RunCommand("dscl . -list /Users UniqueID")
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +88,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch shells
-	f, err = s.provider.RunCommand("dscl . -list /Users UserShell")
+	f, err = s.conn.RunCommand("dscl . -list /Users UserShell")
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +102,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch home
-	f, err = s.provider.RunCommand("dscl . -list /Users NFSHomeDirectory")
+	f, err = s.conn.RunCommand("dscl . -list /Users NFSHomeDirectory")
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +116,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch usernames
-	f, err = s.provider.RunCommand("dscl . -list /Users RealName")
+	f, err = s.conn.RunCommand("dscl . -list /Users RealName")
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +130,7 @@ func (s *OSXUserManager) List() ([]*User, error) {
 	}
 
 	// fetch gid
-	f, err = s.provider.RunCommand("dscl . -list /Users PrimaryGroupID")
+	f, err = s.conn.RunCommand("dscl . -list /Users PrimaryGroupID")
 	if err != nil {
 		return nil, err
 	}

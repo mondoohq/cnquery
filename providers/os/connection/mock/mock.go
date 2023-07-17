@@ -16,6 +16,7 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -60,18 +61,20 @@ type MockFileData struct {
 
 type Connection struct {
 	data    *TomlData
+	asset   *inventory.Asset
 	mutex   sync.Mutex
 	uid     uint32
 	missing map[string]map[string]bool
 }
 
-func New(path string) (*Connection, error) {
+func New(path string, asset *inventory.Asset) (*Connection, error) {
 	res := &Connection{
+		data:  &TomlData{},
+		asset: asset,
 		missing: map[string]map[string]bool{
 			"file":    {},
 			"command": {},
 		},
-		data: &TomlData{},
 	}
 
 	if path == "" {
@@ -113,6 +116,10 @@ func (c *Connection) ID() uint32 {
 
 func (c *Connection) Type() shared.ConnectionType {
 	return "local"
+}
+
+func (c *Connection) Asset() *inventory.Asset {
+	return c.asset
 }
 
 func hashCmd(message string) string {

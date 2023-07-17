@@ -6,9 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 // a good description of this file is available at:
@@ -54,7 +53,7 @@ func ParseEtcGroup(input io.Reader) ([]*Group, error) {
 }
 
 type UnixGroupManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *UnixGroupManager) Name() string {
@@ -71,7 +70,7 @@ func (s *UnixGroupManager) Group(id string) (*Group, error) {
 }
 
 func (s *UnixGroupManager) List() ([]*Group, error) {
-	f, err := s.provider.FS().Open("/etc/group")
+	f, err := s.conn.FileSystem().Open("/etc/group")
 	if err != nil {
 		return nil, err
 	}

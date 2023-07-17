@@ -6,9 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 // a good description of this file is available at:
@@ -54,7 +53,7 @@ func ParseEtcPasswd(input io.Reader) ([]*User, error) {
 }
 
 type UnixUserManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *UnixUserManager) Name() string {
@@ -71,7 +70,7 @@ func (s *UnixUserManager) User(id string) (*User, error) {
 }
 
 func (s *UnixUserManager) List() ([]*User, error) {
-	f, err := s.provider.FS().Open("/etc/passwd")
+	f, err := s.conn.FileSystem().Open("/etc/passwd")
 	if err != nil {
 		return nil, err
 	}

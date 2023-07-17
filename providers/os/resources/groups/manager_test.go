@@ -5,18 +5,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/groups"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/groups"
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
-	require.NoError(t, err)
-	m, err := motor.New(mock)
+	mock, err := mock.New("./testdata/debian.toml", nil)
 	require.NoError(t, err)
 
-	mm, err := groups.ResolveManager(m)
+	mm, err := groups.ResolveManager(mock)
 	require.NoError(t, err)
 	groupList, err := mm.List()
 	require.NoError(t, err)
@@ -31,12 +28,10 @@ func TestManagerDebian(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
-	require.NoError(t, err)
-	m, err := motor.New(mock)
+	mock, err := mock.New("./testdata/osx.toml", nil)
 	require.NoError(t, err)
 
-	mm, err := groups.ResolveManager(m)
+	mm, err := groups.ResolveManager(mock)
 	require.NoError(t, err)
 	groupList, err := mm.List()
 	require.NoError(t, err)
@@ -51,12 +46,10 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
-	require.NoError(t, err)
-	m, err := motor.New(mock)
+	mock, err := mock.New("./testdata/freebsd12.toml", nil)
 	require.NoError(t, err)
 
-	mm, err := groups.ResolveManager(m)
+	mm, err := groups.ResolveManager(mock)
 	require.NoError(t, err)
 	groupList, err := mm.List()
 	require.NoError(t, err)
@@ -71,12 +64,10 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/windows.toml")
-	require.NoError(t, err)
-	m, err := motor.New(mock)
+	mock, err := mock.New("./testdata/windows.toml", nil)
 	require.NoError(t, err)
 
-	mm, err := groups.ResolveManager(m)
+	mm, err := groups.ResolveManager(mock)
 	require.NoError(t, err)
 	groupList, err := mm.List()
 	require.NoError(t, err)

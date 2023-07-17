@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"errors"
 	"os"
 	"path"
 
@@ -65,6 +66,38 @@ func (s *mqlFile) stat() error {
 		State: plugin.StateIsSet,
 	}
 
+	raw, err := CreateResource(s.MqlRuntime, "users", nil)
+	if err != nil {
+		return errors.New("cannot get users info for file: " + err.Error())
+	}
+	users := raw.(*mqlUsers)
+
+	user, err := users.findID(stat.Uid)
+	if err != nil {
+		return err
+	}
+
+	s.User = plugin.TValue[*mqlUser]{
+		Data:  user,
+		State: plugin.StateIsSet,
+	}
+
+	raw, err = CreateResource(s.MqlRuntime, "groups", nil)
+	if err != nil {
+		return errors.New("cannot get groups info for file: " + err.Error())
+	}
+	groups := raw.(*mqlGroups)
+
+	group, err := groups.findID(stat.Gid)
+	if err != nil {
+		return err
+	}
+
+	s.Group = plugin.TValue[*mqlGroup]{
+		Data:  group,
+		State: plugin.StateIsSet,
+	}
+
 	return nil
 }
 
@@ -73,6 +106,14 @@ func (s *mqlFile) size(path string) (int64, error) {
 }
 
 func (s *mqlFile) permissions(path string) (*mqlFilePermissions, error) {
+	return nil, s.stat()
+}
+
+func (s *mqlFile) user() (*mqlUser, error) {
+	return nil, s.stat()
+}
+
+func (s *mqlFile) group() (*mqlGroup, error) {
 	return nil, s.stat()
 }
 

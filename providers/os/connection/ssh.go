@@ -35,10 +35,11 @@ const (
 )
 
 type SshConnection struct {
-	fs   afero.Fs
-	Sudo *shared.Sudo
-	id   uint32
-	conf *inventory.Config
+	fs    afero.Fs
+	Sudo  *shared.Sudo
+	id    uint32
+	conf  *inventory.Config
+	asset *inventory.Asset
 
 	serverVersion    string
 	UseScpFilesystem bool
@@ -46,10 +47,11 @@ type SshConnection struct {
 	SSHClient        *ssh.Client
 }
 
-func NewSshConnection(id uint32, conf *inventory.Config) (*SshConnection, error) {
+func NewSshConnection(id uint32, conf *inventory.Config, asset *inventory.Asset) (*SshConnection, error) {
 	res := SshConnection{
-		id:   id,
-		conf: conf,
+		id:    id,
+		conf:  conf,
+		asset: asset,
 	}
 
 	host := conf.GetHost()
@@ -115,6 +117,10 @@ func (c *SshConnection) Name() string {
 
 func (c *SshConnection) Type() shared.ConnectionType {
 	return SSH
+}
+
+func (p *SshConnection) Asset() *inventory.Asset {
+	return p.asset
 }
 
 func (c *SshConnection) RunCommand(command string) (*shared.Command, error) {

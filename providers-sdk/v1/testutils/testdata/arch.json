@@ -28,6 +28,66 @@
       ],
       "resources": [
         {
+          "Resource": "group",
+          "ID": "group/1/bin",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "bin"
+            }
+          }
+        },
+        {
+          "Resource": "user",
+          "ID": "user/1/bin",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "bin"
+            },
+            "uid": {
+              "type": "\u0005",
+              "value": 1
+            }
+          }
+        },
+        {
+          "Resource": "group",
+          "ID": "group/998/wheel",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 998
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "wheel"
+            }
+          }
+        },
+        {
+          "Resource": "group",
+          "ID": "group/1000/chris",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1000
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "chris"
+            }
+          }
+        },
+        {
           "Resource": "file",
           "ID": "/etc/passwd",
           "Fields": {
@@ -53,25 +113,16 @@
           }
         },
         {
-          "Resource": "file.permissions",
-          "ID": "-rw-r--r--",
+          "Resource": "group",
+          "ID": "group/0/root",
           "Fields": {
-            "mode": {
+            "gid": {
               "type": "\u0005",
-              "value": 420
-            }
-          }
-        },
-        {
-          "Resource": "file",
-          "ID": "/home",
-          "Fields": {
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "drwxr-xr-x"
-              }
+              "value": 0
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "root"
             }
           }
         },
@@ -82,6 +133,98 @@
             "string": {
               "type": "\u0007",
               "value": "drwxr-xr-x"
+            }
+          }
+        },
+        {
+          "Resource": "user",
+          "ID": "user/1000/chris",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1000
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "chris"
+            },
+            "uid": {
+              "type": "\u0005",
+              "value": 1000
+            }
+          }
+        },
+        {
+          "Resource": "groups",
+          "ID": "",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bgroup",
+              "value": [
+                {
+                  "Name": "group",
+                  "ID": "group/0/root"
+                },
+                {
+                  "Name": "group",
+                  "ID": "group/1/bin"
+                },
+                {
+                  "Name": "group",
+                  "ID": "group/1000/chris"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "file.permissions",
+          "ID": "-rw-r--r--",
+          "Fields": {
+            "mode": {
+              "type": "\u0005",
+              "value": 420
+            }
+          }
+        },
+        {
+          "Resource": "users",
+          "ID": "",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001buser",
+              "value": [
+                {
+                  "ID": "user/0/root",
+                  "Name": "user"
+                },
+                {
+                  "ID": "user/1/bin",
+                  "Name": "user"
+                },
+                {
+                  "ID": "user/1000/chris",
+                  "Name": "user"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "user",
+          "ID": "user/0/root",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 0
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "root"
+            },
+            "uid": {
+              "type": "\u0005",
+              "value": 0
             }
           }
         }

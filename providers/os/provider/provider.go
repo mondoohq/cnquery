@@ -176,15 +176,15 @@ func (s *Service) connect(asset *inventory.Asset) (shared.Connection, error) {
 	switch conf.Type {
 	case "local":
 		s.lastConnectionID++
-		conn = connection.NewLocalConnection(s.lastConnectionID)
+		conn = connection.NewLocalConnection(s.lastConnectionID, asset)
 
 	case "ssh":
 		s.lastConnectionID++
-		conn, err = connection.NewSshConnection(s.lastConnectionID, conf)
+		conn, err = connection.NewSshConnection(s.lastConnectionID, conf, asset)
 
 	case "mock":
 		s.lastConnectionID++
-		conn, err = mock.New("")
+		conn, err = mock.New("", asset)
 
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)

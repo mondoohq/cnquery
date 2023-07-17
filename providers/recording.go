@@ -260,34 +260,78 @@ func (r *recording) reconnectResources() error {
 }
 
 func (r *recording) reconnectResource(asset *assetRecording, resource *resourceRecording) error {
+	var err error
 	for k, v := range resource.Fields {
 		typ := types.Type(v.Type)
-		if !typ.IsResource() || v.Value == nil {
-			continue
+		resource.Fields[k].Value, err = tryReconnect(typ, v.Value, resource)
+		if err != nil {
+			return err
 		}
-
-		vals, ok := v.Value.(map[string]interface{})
-		if !ok {
-			return errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect reference")
-		}
-		name, ok := vals["Name"].(string)
-		if !ok {
-			return errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect type in Name field")
-		}
-		id, ok := vals["ID"].(string)
-		if !ok {
-			return errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect type in ID field")
-		}
-
-		// TODO: Not sure yet if we need to check the recording for the reference.
-		// Unless it is used by the code, we may get away with it.
-		// if _, ok = asset.resources[name+"\x00"+id]; !ok {
-		// 	return errors.New("cannot find resource '" + resource.Resource + "' (ID:" + resource.ID + ") in recording")
-		// }
-
-		resource.Fields[k].Value = &llx.MockResource{Name: name, ID: id}
 	}
 	return nil
+}
+
+func tryReconnect(typ types.Type, v interface{}, resource *resourceRecording) (interface{}, error) {
+	var err error
+
+	if typ.IsArray() {
+		arr, ok := v.([]interface{})
+		if !ok {
+			return nil, errors.New("failed to reconnect array type")
+		}
+		ct := typ.Child()
+		for i := range arr {
+			arr[i], err = tryReconnect(ct, arr[i], resource)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return arr, nil
+	}
+
+	if typ.IsMap() {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("failed to reconnect map type")
+		}
+		ct := typ.Child()
+		for i := range m {
+			m[i], err = tryReconnect(ct, m[i], resource)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return m, nil
+	}
+
+	if !typ.IsResource() || v == nil {
+		return v, nil
+	}
+
+	return reconnectResource(v, resource)
+}
+
+func reconnectResource(v interface{}, resource *resourceRecording) (interface{}, error) {
+	vals, ok := v.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect reference")
+	}
+	name, ok := vals["Name"].(string)
+	if !ok {
+		return nil, errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect type in Name field")
+	}
+	id, ok := vals["ID"].(string)
+	if !ok {
+		return nil, errors.New("error in recording: resource '" + resource.Resource + "' (ID:" + resource.ID + ") has incorrect type in ID field")
+	}
+
+	// TODO: Not sure yet if we need to check the recording for the reference.
+	// Unless it is used by the code, we may get away with it.
+	// if _, ok = asset.resources[name+"\x00"+id]; !ok {
+	// 	return errors.New("cannot find resource '" + resource.Resource + "' (ID:" + resource.ID + ") in recording")
+	// }
+
+	return &llx.MockResource{Name: name, ID: id}, nil
 }
 
 func (r *recording) finalize() {

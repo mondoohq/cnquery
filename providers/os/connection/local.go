@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -23,12 +24,14 @@ type LocalConnection struct {
 	Sudo    *shared.Sudo
 	runtime string
 	id      uint32
+	asset   *inventory.Asset
 }
 
-func NewLocalConnection(id uint32) *LocalConnection {
+func NewLocalConnection(id uint32, asset *inventory.Asset) *LocalConnection {
 	// expect unix shell by default
 	res := LocalConnection{
-		id: id,
+		id:    id,
+		asset: asset,
 	}
 
 	if runtime.GOOS == "windows" {
@@ -52,6 +55,10 @@ func (p *LocalConnection) Name() string {
 
 func (p *LocalConnection) Type() shared.ConnectionType {
 	return Local
+}
+
+func (p *LocalConnection) Asset() *inventory.Asset {
+	return p.asset
 }
 
 func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {

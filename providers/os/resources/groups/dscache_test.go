@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/groups"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/groups"
 )
 
 func TestParseDscacheutilResult(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
+	mock, err := mock.New("./testdata/osx.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
