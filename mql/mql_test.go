@@ -11,14 +11,17 @@ import (
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mql"
-	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers/mock"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
 var features cnquery.Features
 
 func init() {
 	features = getEnvFeatures()
+}
+
+func runtime() llx.Runtime {
+	return testutils.LinuxMock("../providers-sdk/v1/testutils")
 }
 
 func getEnvFeatures() cnquery.Features {
@@ -41,17 +44,6 @@ func getEnvFeatures() cnquery.Features {
 	return fts
 }
 
-func initRuntime() llx.Runtime {
-	m, err := mock.NewFromTomlFile("./testdata/arch.toml")
-	if err != nil {
-		panic(err.Error())
-	}
-	if err = m.LoadSchemas(providers.Coordinator.LoadSchema); err != nil {
-		panic(err.Error())
-	}
-	return m
-}
-
 func TestMqlSimple(t *testing.T) {
 	tests := []struct {
 		query     string
@@ -60,7 +52,7 @@ func TestMqlSimple(t *testing.T) {
 		{"asset.platform", "arch"},
 		{"asset { platform version }", map[string]interface{}{
 			"platform": "arch",
-			"version":  "",
+			"version":  "rolling",
 		}},
 		{"users { name uid }", []interface{}{
 			map[string]interface{}{"name": "root", "uid": int64(0)},
@@ -74,8 +66,7 @@ func TestMqlSimple(t *testing.T) {
 	for i := range tests {
 		one := tests[i]
 		t.Run(one.query, func(t *testing.T) {
-			runtime := initRuntime()
-			res, err := mql.Exec(one.query, runtime, features, nil)
+			res, err := mql.Exec(one.query, runtime(), features, nil)
 			assert.NoError(t, err)
 			assert.NoError(t, res.Error)
 			assert.Equal(t, one.assertion, res.Value)
@@ -86,8 +77,7 @@ func TestMqlSimple(t *testing.T) {
 func TestCustomData(t *testing.T) {
 	query := "{ \"a\": \"valuea\", \"b\": \"valueb\"}"
 
-	runtime := initRuntime()
-	value, err := mql.Exec(query, runtime, features, nil)
+	value, err := mql.Exec(query, runtime(), features, nil)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]interface{}{"a": "valuea", "b": "valueb"}, value.Value)
 }
@@ -99,14 +89,13 @@ func TestMqlProps(t *testing.T) {
 		"b": llx.IntPrimitive(2),
 	}
 
-	runtime := initRuntime()
-	value, err := mql.Exec(query, runtime, features, props)
+	value, err := mql.Exec(query, runtime(), features, props)
 	require.NoError(t, err)
 	assert.Equal(t, int64(4), value.Value)
 }
 
 func TestMqlIfElseProps(t *testing.T) {
-	me := mql.New(initRuntime(), cnquery.DefaultFeatures)
+	me := mql.New(runtime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} } return {\"a\": \"valueb\"}"
 
 	props := map[string]*llx.Primitive{
@@ -125,7 +114,7 @@ func TestMqlIfElseProps(t *testing.T) {
 }
 
 func TestMqlIfAndProps(t *testing.T) {
-	me := mql.New(initRuntime(), cnquery.DefaultFeatures)
+	me := mql.New(runtime(), cnquery.DefaultFeatures)
 	query := "if (props.a > 2) { return {\"a\": \"valuea\"} }"
 
 	props := map[string]*llx.Primitive{

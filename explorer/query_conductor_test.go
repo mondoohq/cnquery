@@ -5,12 +5,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	llx "go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers"
 )
 
 func TestMatchFilters(t *testing.T) {
-	panic("NO MORE SCHEMA cheating")
-	var schema llx.Schema
+	schema := providers.DefaultRuntime().Schema()
 
 	t.Run("one matching filter", func(t *testing.T) {
 		filters := NewFilters("true", "false")

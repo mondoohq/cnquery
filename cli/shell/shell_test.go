@@ -1,36 +1,17 @@
 package shell_test
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/cli/shell"
-	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/providers/core/provider"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/providers/mock"
 )
 
 func localShell() *shell.Shell {
-	runtime := providers.Coordinator.NewRuntime()
-	runtime.DeactivateProviderDiscovery()
-	schema, err := os.ReadFile("../../providers/core/resources/core.resources.json")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	runtime.AddSchema("core", providers.MustLoadSchema("core", schema))
-	conn, err := provider.Init().Connect(&plugin.ConnectReq{})
-	if err != nil {
-		panic(err.Error())
-	}
-
-	runtime.Provider = &providers.ConnectedProvider{
-		Connection: conn,
-	}
-
+	runtime := testutils.LinuxMock("../../providers-sdk/v1/testutils")
 	res, err := shell.New(runtime)
 	if err != nil {
 		panic(err.Error())

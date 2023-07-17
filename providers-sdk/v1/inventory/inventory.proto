@@ -74,6 +74,11 @@ message Asset {
 
 message Config {
   reserved 6, 7, 9, 10, 20;
+  // FIXME: DEPRECATED, remove in v10.0 (or later) vv
+  // This is replaced by type. We use a different number here so it doesn't
+  // conflict with the old "backend" while allowing us to load the field from yaml.
+  string backend = 28;
+  // ^^
 
   string host = 2;
   // Ports are not int by default, eg. docker://centos:latest parses a string as port

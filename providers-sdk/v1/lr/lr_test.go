@@ -240,13 +240,13 @@ func TestParse(t *testing.T) {
 
 func TestParseLR(t *testing.T) {
 	files := []string{
-		"core/core.lr",
-		"os/os.lr",
+		"core/resources/core.lr",
+		"os/resources/os.lr",
 	}
 
 	for i := range files {
 		lrPath := files[i]
-		absPath := "../../resources/packs/" + lrPath
+		absPath := "../../../providers/" + lrPath
 
 		t.Run(lrPath, func(t *testing.T) {
 			res, err := Resolve(absPath, func(path string) ([]byte, error) {
