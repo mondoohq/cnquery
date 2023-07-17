@@ -17,7 +17,7 @@ import (
 
 func TestCatFs(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/cat.toml")
-	p, err := mock.New(filepath)
+	p, err := mock.New(filepath, nil)
 	require.NoError(t, err)
 
 	cw := &CommandWrapper{

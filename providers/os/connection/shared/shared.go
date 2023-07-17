@@ -21,6 +21,7 @@ type Connection interface {
 	ID() uint32
 	Name() string
 	Type() ConnectionType
+	Asset() *inventory.Asset
 }
 
 type Command struct {

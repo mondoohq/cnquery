@@ -1,6 +1,19 @@
 option provider = "go.mondoo.com/cnquery/providers/os"
 option go_package = "go.mondoo.com/cnquery/providers/os/resources"
 
+// Results of running a command on the system
+command {
+  init(command string)
+  // Raw contents of the command
+  command string
+  // Standard output from running the command
+  stdout(command) string
+  // Standard error output from running the command
+  stderr(command) string
+  // Exit code the command returned
+  exitcode(command) int
+}
+
 // File on the system
 file @defaults("path size permissions.string") {
   init(path string)
@@ -18,10 +31,10 @@ file @defaults("path size permissions.string") {
   permissions(path) file.permissions
   // Size of this file on disk
   size(path) int
-  // // Ownership information about the user
-  // user() user
-  // // Ownership information about the group
-  // group() group
+  // Ownership information about the user
+  user() user
+  // Ownership information about the group
+  group() group
   // Denotes whether the path is empty
   empty(path) bool
 }
@@ -64,34 +77,34 @@ private file.permissions @defaults("string") {
   string() string
 }
 
-// // User on this system
-// user @defaults("name uid gid") {
-//   // User ID
-//   uid int
-//   // User's Group ID
-//   gid int
-//   // User's Security Identifier (Windows)
-//   sid string
-//   // Name of the user
-//   name string
-//   // Home folder
-//   home string
-//   // Default shell configured
-//   shell string
-//   // Indicates if the user is enabled
-//   enabled bool
-//   // List of authorized keys
-//   authorizedkeys() authorizedkeys
-//   // List of SSH keys
-//   sshkeys() []privatekey
-//   // Group that user is a member of
-//   group() group
-// }
+// User on this system
+user @defaults("name uid gid") {
+  // User ID
+  uid int
+  // User's Group ID
+  gid int
+  // User's Security Identifier (Windows)
+  sid string
+  // Name of the user
+  name string
+  // Home folder
+  home string
+  // Default shell configured
+  shell string
+  // Indicates if the user is enabled
+  enabled bool
+  // // List of authorized keys
+  // authorizedkeys() authorizedkeys
+  // // List of SSH keys
+  // sshkeys() []privatekey
+  // Group that user is a member of
+  group(gid) group
+}
 
-// // Users configured on this system
-// users {
-//   []user
-// }
+// Users configured on this system
+users {
+  []user
+}
 
 // // List of SSH Authorized Keys
 // authorizedkeys {
@@ -112,37 +125,20 @@ private file.permissions @defaults("string") {
 //   file file
 // }
 
-// // Group on this system
-// group @defaults("name gid") {
-//   init(id string)
-//   // Group ID
-//   gid int
-//   // Group's Security Identifier (Windows)
-//   sid string
-//   // Name of this group
-//   name string
-//   // Users who are members of this group
-//   members() []user
-// }
-
-// // Groups configured on this system
-// groups {
-//   []group
-// }
-
-
-
-
-// Results of running a command on the system
-command {
-  init(command string)
-  // Raw contents of the command
-  command string
-  // Standard output from running the command
-  stdout(command) string
-  // Standard error output from running the command
-  stderr(command) string
-  // Exit code the command returned
-  exitcode(command) int
+// Group on this system
+group @defaults("name gid") {
+  init(id string)
+  // Group ID
+  gid int
+  // Group's Security Identifier (Windows)
+  sid string
+  // Name of this group
+  name string
+  // Users who are members of this group
+  members() []user
 }
 
+// Groups configured on this system
+groups {
+  []group
+}

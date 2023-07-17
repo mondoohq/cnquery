@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/groups"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/groups"
 )
 
 func TestWindowsGroupsParserFromMock(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/windows.toml")
+	mock, err := mock.New("./testdata/windows.toml", nil)
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("powershell -c \"Get-LocalGroup | ConvertTo-Json\"")

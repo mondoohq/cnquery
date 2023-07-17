@@ -9,9 +9,13 @@ import (
 )
 
 var newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error){
+	"command": NewCommand,
 	"file": NewFile,
 	"file.permissions": NewFilePermissions,
-	"command": NewCommand,
+	"user": NewUser,
+	"users": NewUsers,
+	"group": NewGroup,
+	"groups": NewGroups,
 }
 
 // CreateResource is used by the runtime of this plugin
@@ -37,6 +41,18 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]interf
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"command.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCommand).GetCommand()).ToDataRes(types.String)
+	},
+	"command.stdout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCommand).GetStdout()).ToDataRes(types.String)
+	},
+	"command.stderr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCommand).GetStderr()).ToDataRes(types.String)
+	},
+	"command.exitcode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCommand).GetExitcode()).ToDataRes(types.Int)
+	},
 	"file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetPath()).ToDataRes(types.String)
 	},
@@ -57,6 +73,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"file.size": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetSize()).ToDataRes(types.Int)
+	},
+	"file.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetUser()).ToDataRes(types.Resource("user"))
+	},
+	"file.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetGroup()).ToDataRes(types.Resource("group"))
 	},
 	"file.empty": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetEmpty()).ToDataRes(types.Bool)
@@ -112,17 +134,47 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"file.permissions.string": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilePermissions).GetString()).ToDataRes(types.String)
 	},
-	"command.command": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCommand).GetCommand()).ToDataRes(types.String)
+	"user.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetUid()).ToDataRes(types.Int)
 	},
-	"command.stdout": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCommand).GetStdout()).ToDataRes(types.String)
+	"user.gid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetGid()).ToDataRes(types.Int)
 	},
-	"command.stderr": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCommand).GetStderr()).ToDataRes(types.String)
+	"user.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetSid()).ToDataRes(types.String)
 	},
-	"command.exitcode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlCommand).GetExitcode()).ToDataRes(types.Int)
+	"user.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetName()).ToDataRes(types.String)
+	},
+	"user.home": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetHome()).ToDataRes(types.String)
+	},
+	"user.shell": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetShell()).ToDataRes(types.String)
+	},
+	"user.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"user.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetGroup()).ToDataRes(types.Resource("group"))
+	},
+	"users.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUsers).GetList()).ToDataRes(types.Array(types.Resource("user")))
+	},
+	"group.gid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGroup).GetGid()).ToDataRes(types.Int)
+	},
+	"group.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGroup).GetSid()).ToDataRes(types.String)
+	},
+	"group.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGroup).GetName()).ToDataRes(types.String)
+	},
+	"group.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGroup).GetMembers()).ToDataRes(types.Array(types.Resource("user")))
+	},
+	"groups.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGroups).GetList()).ToDataRes(types.Array(types.Resource("group")))
 	},
 }
 
@@ -136,6 +188,26 @@ func GetData(resource plugin.Resource, field string, args map[string]interface{}
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
+	"command.command": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlCommand).Command, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"command.stdout": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlCommand).Stdout, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"command.stderr": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlCommand).Stderr, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"command.exitcode": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlCommand).Exitcode, ok = plugin.RawToTValue[int64](v)
+		return ok
+	},
 	"file.path": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlFile).Path, ok = plugin.RawToTValue[string](v)
@@ -169,6 +241,16 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 	"file.size": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlFile).Size, ok = plugin.RawToTValue[int64](v)
+		return ok
+	},
+	"file.user": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).User, ok = plugin.RawToTValue[*mqlUser](v)
+		return ok
+	},
+	"file.group": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlFile).Group, ok = plugin.RawToTValue[*mqlGroup](v)
 		return ok
 	},
 	"file.empty": func(r plugin.Resource, v interface{}) bool {
@@ -261,24 +343,74 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v)
 		return ok
 	},
-	"command.command": func(r plugin.Resource, v interface{}) bool {
+	"user.uid": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
-		r.(*mqlCommand).Command, ok = plugin.RawToTValue[string](v)
+		r.(*mqlUser).Uid, ok = plugin.RawToTValue[int64](v)
 		return ok
 	},
-	"command.stdout": func(r plugin.Resource, v interface{}) bool {
+	"user.gid": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
-		r.(*mqlCommand).Stdout, ok = plugin.RawToTValue[string](v)
+		r.(*mqlUser).Gid, ok = plugin.RawToTValue[int64](v)
 		return ok
 	},
-	"command.stderr": func(r plugin.Resource, v interface{}) bool {
+	"user.sid": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
-		r.(*mqlCommand).Stderr, ok = plugin.RawToTValue[string](v)
+		r.(*mqlUser).Sid, ok = plugin.RawToTValue[string](v)
 		return ok
 	},
-	"command.exitcode": func(r plugin.Resource, v interface{}) bool {
+	"user.name": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
-		r.(*mqlCommand).Exitcode, ok = plugin.RawToTValue[int64](v)
+		r.(*mqlUser).Name, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"user.home": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlUser).Home, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"user.shell": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlUser).Shell, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"user.enabled": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlUser).Enabled, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"user.group": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlUser).Group, ok = plugin.RawToTValue[*mqlGroup](v)
+		return ok
+	},
+	"users.list": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlUsers).List, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"group.gid": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlGroup).Gid, ok = plugin.RawToTValue[int64](v)
+		return ok
+	},
+	"group.sid": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlGroup).Sid, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"group.name": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlGroup).Name, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"group.members": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlGroup).Members, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"groups.list": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlGroups).List, ok = plugin.RawToTValue[[]interface{}](v)
 		return ok
 	},
 }
@@ -295,6 +427,79 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 	return nil
 }
 
+// mqlCommand for the command resource
+type mqlCommand struct {
+	MqlRuntime *plugin.Runtime
+	_id string
+	mqlCommandInternal
+
+	Command plugin.TValue[string]
+	Stdout plugin.TValue[string]
+	Stderr plugin.TValue[string]
+	Exitcode plugin.TValue[int64]
+}
+
+// NewCommand creates a new instance of this resource
+func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlCommand{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlCommand, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res._id, err = res.id()
+	return res, err
+}
+
+func (c *mqlCommand) MqlName() string {
+	return "command"
+}
+
+func (c *mqlCommand) MqlID() string {
+	return c._id
+}
+
+func (c *mqlCommand) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlCommand) GetStdout() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Stdout, func() (string, error) {
+		vargCommand := c.GetCommand()
+		if vargCommand.Error != nil {
+			return "", vargCommand.Error
+		}
+		return c.stdout(vargCommand.Data)
+	})
+}
+
+func (c *mqlCommand) GetStderr() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Stderr, func() (string, error) {
+		vargCommand := c.GetCommand()
+		if vargCommand.Error != nil {
+			return "", vargCommand.Error
+		}
+		return c.stderr(vargCommand.Data)
+	})
+}
+
+func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Exitcode, func() (int64, error) {
+		vargCommand := c.GetCommand()
+		if vargCommand.Error != nil {
+			return 0, vargCommand.Error
+		}
+		return c.exitcode(vargCommand.Data)
+	})
+}
+
 // mqlFile for the file resource
 type mqlFile struct {
 	MqlRuntime *plugin.Runtime
@@ -308,6 +513,8 @@ type mqlFile struct {
 	Exists plugin.TValue[bool]
 	Permissions plugin.TValue[*mqlFilePermissions]
 	Size plugin.TValue[int64]
+	User plugin.TValue[*mqlUser]
+	Group plugin.TValue[*mqlGroup]
 	Empty plugin.TValue[bool]
 }
 
@@ -404,6 +611,18 @@ func (c *mqlFile) GetSize() *plugin.TValue[int64] {
 			return 0, vargPath.Error
 		}
 		return c.size(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetUser() *plugin.TValue[*mqlUser] {
+	return plugin.GetOrCompute[*mqlUser](&c.User, func() (*mqlUser, error) {
+		return c.user()
+	})
+}
+
+func (c *mqlFile) GetGroup() *plugin.TValue[*mqlGroup] {
+	return plugin.GetOrCompute[*mqlGroup](&c.Group, func() (*mqlGroup, error) {
+		return c.group()
 	})
 }
 
@@ -539,26 +758,30 @@ func (c *mqlFilePermissions) GetString() *plugin.TValue[string] {
 	})
 }
 
-// mqlCommand for the command resource
-type mqlCommand struct {
+// mqlUser for the user resource
+type mqlUser struct {
 	MqlRuntime *plugin.Runtime
 	_id string
-	mqlCommandInternal
+	// optional: if you define mqlUserInternal it will be used here
 
-	Command plugin.TValue[string]
-	Stdout plugin.TValue[string]
-	Stderr plugin.TValue[string]
-	Exitcode plugin.TValue[int64]
+	Uid plugin.TValue[int64]
+	Gid plugin.TValue[int64]
+	Sid plugin.TValue[string]
+	Name plugin.TValue[string]
+	Home plugin.TValue[string]
+	Shell plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+	Group plugin.TValue[*mqlGroup]
 }
 
-// NewCommand creates a new instance of this resource
-func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
-	res := &mqlCommand{
+// NewUser creates a new instance of this resource
+func NewUser(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlUser{
 		MqlRuntime: runtime,
 	}
 
 	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlCommand, error)
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlUser, error)
 
 	for k, v := range args {
 		if err = SetData(res, k, v); err != nil {
@@ -570,44 +793,189 @@ func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Re
 	return res, err
 }
 
-func (c *mqlCommand) MqlName() string {
-	return "command"
+func (c *mqlUser) MqlName() string {
+	return "user"
 }
 
-func (c *mqlCommand) MqlID() string {
+func (c *mqlUser) MqlID() string {
 	return c._id
 }
 
-func (c *mqlCommand) GetCommand() *plugin.TValue[string] {
-	return &c.Command
+func (c *mqlUser) GetUid() *plugin.TValue[int64] {
+	return &c.Uid
 }
 
-func (c *mqlCommand) GetStdout() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Stdout, func() (string, error) {
-		vargCommand := c.GetCommand()
-		if vargCommand.Error != nil {
-			return "", vargCommand.Error
+func (c *mqlUser) GetGid() *plugin.TValue[int64] {
+	return &c.Gid
+}
+
+func (c *mqlUser) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
+func (c *mqlUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlUser) GetHome() *plugin.TValue[string] {
+	return &c.Home
+}
+
+func (c *mqlUser) GetShell() *plugin.TValue[string] {
+	return &c.Shell
+}
+
+func (c *mqlUser) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
+	return plugin.GetOrCompute[*mqlGroup](&c.Group, func() (*mqlGroup, error) {
+		vargGid := c.GetGid()
+		if vargGid.Error != nil {
+			return nil, vargGid.Error
 		}
-		return c.stdout(vargCommand.Data)
+		return c.group(vargGid.Data)
 	})
 }
 
-func (c *mqlCommand) GetStderr() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.Stderr, func() (string, error) {
-		vargCommand := c.GetCommand()
-		if vargCommand.Error != nil {
-			return "", vargCommand.Error
+// mqlUsers for the users resource
+type mqlUsers struct {
+	MqlRuntime *plugin.Runtime
+	_id string
+	mqlUsersInternal
+
+	List plugin.TValue[[]interface{}]
+}
+
+// NewUsers creates a new instance of this resource
+func NewUsers(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlUsers{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlUsers, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
 		}
-		return c.stderr(vargCommand.Data)
+	}
+
+	res._id = "" // to override implement: id() (string, error)
+	return res, err
+}
+
+func (c *mqlUsers) MqlName() string {
+	return "users"
+}
+
+func (c *mqlUsers) MqlID() string {
+	return c._id
+}
+
+func (c *mqlUsers) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		return c.list()
 	})
 }
 
-func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.Exitcode, func() (int64, error) {
-		vargCommand := c.GetCommand()
-		if vargCommand.Error != nil {
-			return 0, vargCommand.Error
+// mqlGroup for the group resource
+type mqlGroup struct {
+	MqlRuntime *plugin.Runtime
+	_id string
+	mqlGroupInternal
+
+	Gid plugin.TValue[int64]
+	Sid plugin.TValue[string]
+	Name plugin.TValue[string]
+	Members plugin.TValue[[]interface{}]
+}
+
+// NewGroup creates a new instance of this resource
+func NewGroup(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlGroup{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlGroup, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
 		}
-		return c.exitcode(vargCommand.Data)
+	}
+
+	res._id, err = res.id()
+	return res, err
+}
+
+func (c *mqlGroup) MqlName() string {
+	return "group"
+}
+
+func (c *mqlGroup) MqlID() string {
+	return c._id
+}
+
+func (c *mqlGroup) GetGid() *plugin.TValue[int64] {
+	return &c.Gid
+}
+
+func (c *mqlGroup) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
+func (c *mqlGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGroup) GetMembers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+		return c.members()
+	})
+}
+
+// mqlGroups for the groups resource
+type mqlGroups struct {
+	MqlRuntime *plugin.Runtime
+	_id string
+	mqlGroupsInternal
+
+	List plugin.TValue[[]interface{}]
+}
+
+// NewGroups creates a new instance of this resource
+func NewGroups(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlGroups{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlGroups, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res._id = "" // to override implement: id() (string, error)
+	return res, err
+}
+
+func (c *mqlGroups) MqlName() string {
+	return "groups"
+}
+
+func (c *mqlGroups) MqlID() string {
+	return c._id
+}
+
+func (c *mqlGroups) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		return c.list()
 	})
 }

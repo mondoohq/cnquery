@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/groups"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/groups"
 )
 
 func TestParseLinuxEtcGroups(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
+	mock, err := mock.New("./testdata/debian.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.FS().Open("/etc/group")
+	f, err := mock.FileSystem().Open("/etc/group")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,11 +38,11 @@ func TestParseLinuxEtcGroups(t *testing.T) {
 }
 
 func TestParseFreebsd12EtcGroups(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
+	mock, err := mock.New("./testdata/freebsd12.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.FS().Open("/etc/group")
+	f, err := mock.FileSystem().Open("/etc/group")
 	if err != nil {
 		t.Fatal(err)
 	}

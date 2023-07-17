@@ -7,9 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 var GROUP_OSX_DSCACHEUTIL_REGEX = regexp.MustCompile(`^(\S+):\s(.*?)$`)
@@ -78,7 +77,7 @@ func ParseDscacheutilResult(input io.Reader) ([]*Group, error) {
 }
 
 type OSXGroupManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *OSXGroupManager) Name() string {
@@ -95,7 +94,7 @@ func (s *OSXGroupManager) Group(id string) (*Group, error) {
 }
 
 func (s *OSXGroupManager) List() ([]*Group, error) {
-	c, err := s.provider.RunCommand("dscacheutil -q group")
+	c, err := s.conn.RunCommand("dscacheutil -q group")
 	if err != nil {
 		return nil, err
 	}
