@@ -46,6 +46,20 @@ func New(opts ...Option) *Inventory {
 func InventoryFromYAML(data []byte) (*Inventory, error) {
 	res := New()
 	err := yaml.Unmarshal(data, res)
+
+	// FIXME: DEPRECATED, remove in v10.0 (or later) vv
+	// This is only used to migrate the old "backend" field.
+	if err == nil && res.Spec != nil {
+		for _, asset := range res.Spec.Assets {
+			for _, conn := range asset.Connections {
+				if conn.Backend != "" && conn.Type == "" {
+					conn.Type = conn.Backend
+				}
+			}
+		}
+	}
+	// ^^
+
 	return res, err
 }
 
