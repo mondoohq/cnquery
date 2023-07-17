@@ -152,7 +152,7 @@ func (m *Mock) Unregister(watcherUID string) error {
 func (m *Mock) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {
 	resourceCache, ok := m.Inventory[name]
 	if !ok {
-		return nil, errors.Wrap(resources.NotFound, "resource '"+name+"' is not in recording")
+		return nil, errors.New("resource '" + name + "' is not in recording")
 	}
 
 	// FIXME: we currently have no way of generating the ID that we need to get the right resource,

@@ -428,6 +428,24 @@ func (r *recording) GetResource(connectionID uint32, resource string, id string)
 	return obj.Fields, true
 }
 
+func (a assetInfo) ToInventory() *inventory.Asset {
+	return &inventory.Asset{
+		Id:          a.ID,
+		PlatformIds: a.PlatformIDs,
+		Platform: &inventory.Platform{
+			Name:    a.Name,
+			Arch:    a.Arch,
+			Title:   a.Title,
+			Family:  a.Family,
+			Build:   a.Build,
+			Version: a.Version,
+			Kind:    a.Kind,
+			Runtime: a.Runtime,
+			Labels:  a.Labels,
+		},
+	}
+}
+
 func RawDataArgsToPrimitiveArgs(args map[string]*llx.RawData) (map[string]*llx.Primitive, error) {
 	all := make(map[string]*llx.Primitive, len(args))
 	var err error

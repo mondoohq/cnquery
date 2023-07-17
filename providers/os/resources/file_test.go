@@ -6,12 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	rr "go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/providers/os/resources"
 )
 
-var x = testutils.InitTester(testutils.LinuxMock())
+var x = testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
 
 const passwdContent = `root:x:0:0::/root:/bin/bash
 bin:x:1:1::/:/usr/bin/nologin
@@ -50,7 +49,7 @@ func TestResource_File(t *testing.T) {
 
 func TestResource_File_NotExist(t *testing.T) {
 	res := x.TestQuery(t, "file('Nope').content")
-	assert.ErrorIs(t, res[0].Data.Error, rr.NotFound)
+	assert.EqualError(t, res[0].Data.Error, "file 'Nope' not found")
 }
 
 func TestResource_File_Permissions(t *testing.T) {

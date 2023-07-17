@@ -1,12 +1,12 @@
 package resources
 
 import (
-	"errors"
 	"os"
 	"path"
 
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
@@ -16,7 +16,7 @@ func (s *mqlFile) id() (string, error) {
 
 func (s *mqlFile) content(path string, exists bool) (string, error) {
 	if !exists {
-		return "", errors.New("file not found: '" + path + "' does not exist")
+		return "", resources.NotFoundError{Resource: "file", ID: path}
 	}
 
 	conn := s.MqlRuntime.Connection.(shared.Connection)
