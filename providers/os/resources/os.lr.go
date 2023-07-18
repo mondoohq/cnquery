@@ -188,6 +188,11 @@ func GetData(resource plugin.Resource, field string, args map[string]interface{}
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
+	"command.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlCommand).__id, ok = v.(string)
+			return ok
+		},
 	"command.command": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlCommand).Command, ok = plugin.RawToTValue[string](v)
@@ -208,6 +213,11 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlCommand).Exitcode, ok = plugin.RawToTValue[int64](v)
 		return ok
 	},
+	"file.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlFile).__id, ok = v.(string)
+			return ok
+		},
 	"file.path": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlFile).Path, ok = plugin.RawToTValue[string](v)
@@ -258,6 +268,11 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v)
 		return ok
 	},
+	"file.permissions.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlFilePermissions).__id, ok = v.(string)
+			return ok
+		},
 	"file.permissions.mode": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlFilePermissions).Mode, ok = plugin.RawToTValue[int64](v)
@@ -343,6 +358,11 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v)
 		return ok
 	},
+	"user.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlUser).__id, ok = v.(string)
+			return ok
+		},
 	"user.uid": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlUser).Uid, ok = plugin.RawToTValue[int64](v)
@@ -383,11 +403,21 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlUser).Group, ok = plugin.RawToTValue[*mqlGroup](v)
 		return ok
 	},
+	"users.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlUsers).__id, ok = v.(string)
+			return ok
+		},
 	"users.list": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlUsers).List, ok = plugin.RawToTValue[[]interface{}](v)
 		return ok
 	},
+	"group.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlGroup).__id, ok = v.(string)
+			return ok
+		},
 	"group.gid": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlGroup).Gid, ok = plugin.RawToTValue[int64](v)
@@ -408,6 +438,11 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlGroup).Members, ok = plugin.RawToTValue[[]interface{}](v)
 		return ok
 	},
+	"groups.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlGroups).__id, ok = v.(string)
+			return ok
+		},
 	"groups.list": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlGroups).List, ok = plugin.RawToTValue[[]interface{}](v)
@@ -430,7 +465,7 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 // mqlCommand for the command resource
 type mqlCommand struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	mqlCommandInternal
 
 	Command plugin.TValue[string]
@@ -454,7 +489,7 @@ func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Re
 		}
 	}
 
-	res._id, err = res.id()
+	res.__id, err = res.id()
 	return res, err
 }
 
@@ -463,7 +498,7 @@ func (c *mqlCommand) MqlName() string {
 }
 
 func (c *mqlCommand) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlCommand) GetCommand() *plugin.TValue[string] {
@@ -503,7 +538,7 @@ func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
 // mqlFile for the file resource
 type mqlFile struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	// optional: if you define mqlFileInternal it will be used here
 
 	Path plugin.TValue[string]
@@ -533,7 +568,7 @@ func NewFile(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resou
 		}
 	}
 
-	res._id, err = res.id()
+	res.__id, err = res.id()
 	return res, err
 }
 
@@ -542,7 +577,7 @@ func (c *mqlFile) MqlName() string {
 }
 
 func (c *mqlFile) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlFile) GetPath() *plugin.TValue[string] {
@@ -639,7 +674,7 @@ func (c *mqlFile) GetEmpty() *plugin.TValue[bool] {
 // mqlFilePermissions for the file.permissions resource
 type mqlFilePermissions struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	// optional: if you define mqlFilePermissionsInternal it will be used here
 
 	Mode plugin.TValue[int64]
@@ -676,7 +711,7 @@ func NewFilePermissions(runtime *plugin.Runtime, args map[string]interface{}) (p
 		}
 	}
 
-	res._id, err = res.id()
+	res.__id, err = res.id()
 	return res, err
 }
 
@@ -685,7 +720,7 @@ func (c *mqlFilePermissions) MqlName() string {
 }
 
 func (c *mqlFilePermissions) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlFilePermissions) GetMode() *plugin.TValue[int64] {
@@ -761,7 +796,7 @@ func (c *mqlFilePermissions) GetString() *plugin.TValue[string] {
 // mqlUser for the user resource
 type mqlUser struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	// optional: if you define mqlUserInternal it will be used here
 
 	Uid plugin.TValue[int64]
@@ -789,7 +824,7 @@ func NewUser(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resou
 		}
 	}
 
-	res._id, err = res.id()
+	res.__id, err = res.id()
 	return res, err
 }
 
@@ -798,7 +833,7 @@ func (c *mqlUser) MqlName() string {
 }
 
 func (c *mqlUser) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlUser) GetUid() *plugin.TValue[int64] {
@@ -842,7 +877,7 @@ func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 // mqlUsers for the users resource
 type mqlUsers struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	mqlUsersInternal
 
 	List plugin.TValue[[]interface{}]
@@ -863,7 +898,7 @@ func NewUsers(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Reso
 		}
 	}
 
-	res._id = "" // to override implement: id() (string, error)
+	// to override __id implement: id() (string, error)
 	return res, err
 }
 
@@ -872,7 +907,7 @@ func (c *mqlUsers) MqlName() string {
 }
 
 func (c *mqlUsers) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlUsers) GetList() *plugin.TValue[[]interface{}] {
@@ -884,7 +919,7 @@ func (c *mqlUsers) GetList() *plugin.TValue[[]interface{}] {
 // mqlGroup for the group resource
 type mqlGroup struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	mqlGroupInternal
 
 	Gid plugin.TValue[int64]
@@ -908,7 +943,7 @@ func NewGroup(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Reso
 		}
 	}
 
-	res._id, err = res.id()
+	res.__id, err = res.id()
 	return res, err
 }
 
@@ -917,7 +952,7 @@ func (c *mqlGroup) MqlName() string {
 }
 
 func (c *mqlGroup) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlGroup) GetGid() *plugin.TValue[int64] {
@@ -941,7 +976,7 @@ func (c *mqlGroup) GetMembers() *plugin.TValue[[]interface{}] {
 // mqlGroups for the groups resource
 type mqlGroups struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	mqlGroupsInternal
 
 	List plugin.TValue[[]interface{}]
@@ -962,7 +997,7 @@ func NewGroups(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Res
 		}
 	}
 
-	res._id = "" // to override implement: id() (string, error)
+	// to override __id implement: id() (string, error)
 	return res, err
 }
 
@@ -971,7 +1006,7 @@ func (c *mqlGroups) MqlName() string {
 }
 
 func (c *mqlGroups) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlGroups) GetList() *plugin.TValue[[]interface{}] {

@@ -238,7 +238,26 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 }
 
 func (r *Runtime) CreateResourceWithID(name string, id string, args map[string]*llx.Primitive) (llx.Resource, error) {
-	panic("NOT YET")
+	provider, _, err := r.lookupResourceProvider(name)
+	if err != nil {
+		return nil, err
+	}
+
+	args["__id"] = llx.StringPrimitive(id)
+
+	_, err = provider.Instance.Plugin.StoreData(&plugin.StoreReq{
+		Connection: provider.Connection.Id,
+		Resources: []*plugin.ResourceData{{
+			Name:   name,
+			Id:     id,
+			Fields: args,
+		}},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &llx.MockResource{Name: name, ID: id}, nil
 }
 
 func (r *Runtime) Unregister(watcherUID string) error {

@@ -201,5 +201,5 @@ func (l *mqlFilePermissions) id() (string, error) {
 }
 
 func (l *mqlFilePermissions) string() (string, error) {
-	return l._id, nil
+	return l.__id, nil
 }

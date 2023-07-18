@@ -6,14 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/sortx"
 )
-
-var features cnquery.Features
 
 var x = testutils.InitTester(testutils.LinuxMock("../../providers-sdk/v1/testutils"))
 
@@ -168,10 +165,8 @@ func TestPrinter(t *testing.T) {
 			[]string{
 				"users.list: [\n" +
 					"  0: user name=\"root\" uid=0 gid=0\n" +
-					"  1: user name=\"chris\" uid=1000 gid=1001\n" +
-					"  2: user name=\"christopher\" uid=1000 gid=1001\n" +
-					"  3: user name=\"chris\" uid=1002 gid=1003\n" +
-					"  4: user name=\"bin\" uid=1 gid=1\n" +
+					"  1: user name=\"bin\" uid=1 gid=1\n" +
+					"  2: user name=\"chris\" uid=1000 gid=1000\n" +
 					"]",
 			},
 		},
@@ -195,13 +190,13 @@ func TestPrinter_Assessment(t *testing.T) {
 		},
 		{
 			// mixed use: assertion and working data field
-			"mondoo.build == 1; sshd.config",
+			"mondoo.build == 1; mondoo.version",
 			strings.Join([]string{
-				"[failed] mondoo.build == 1; sshd.config",
+				"[failed] mondoo.build == 1; mondoo.version",
 				"  [failed] mondoo.build == 1",
 				"    expected: == 1",
 				"    actual:   \"development\"",
-				"  [ok] value: sshd.config id = /etc/ssh/sshd_config",
+				"  [ok] value: \"unstable\"",
 				"",
 			}, "\n"),
 		},
@@ -218,7 +213,7 @@ func TestPrinter_Assessment(t *testing.T) {
 			"# @msg Expected ${$expected.length} users but got ${length}\n" +
 				"users.none( uid == 0 )",
 			strings.Join([]string{
-				"[failed] Expected 5 users but got 1",
+				"[failed] Expected 4 users but got 1",
 				"",
 			}, "\n"),
 		},
@@ -257,7 +252,7 @@ func TestPrinter_Assessment(t *testing.T) {
 				"}",
 			strings.Join([]string{
 				"if: {",
-				"  [failed] Expected 5 users but got 1",
+				"  [failed] Expected 4 users but got 1",
 				"  users.where.list: [",
 				"  0: user name=\"root\" uid=0 gid=0",
 				"  ]",
@@ -271,12 +266,12 @@ func TestPrinter_Assessment(t *testing.T) {
 				"  actual:   [",
 				"    0: user {",
 				"      name: \"christopher\"",
-				"      gid: 1001",
-				"      uid: 1000",
+				"      gid: 1000",
+				"      uid: 1001",
 				"    }",
 				"    1: user {",
 				"      name: \"chris\"",
-				"      gid: 1001",
+				"      gid: 1000",
 				"      uid: 1000",
 				"    }",
 				"  ]",
@@ -290,18 +285,13 @@ func TestPrinter_Assessment(t *testing.T) {
 				"  actual:   [",
 				"    0: user {",
 				"      uid: 1000",
-				"      gid: 1001",
+				"      gid: 1000",
 				"      name: \"chris\"",
 				"    }",
 				"    1: user {",
-				"      uid: 1000",
-				"      gid: 1001",
+				"      uid: 1001",
+				"      gid: 1000",
 				"      name: \"christopher\"",
-				"    }",
-				"    2: user {",
-				"      uid: 1002",
-				"      gid: 1003",
-				"      name: \"chris\"",
 				"    }",
 				"  ]",
 				"",
@@ -315,17 +305,12 @@ func TestPrinter_Assessment(t *testing.T) {
 				"    0: user {",
 				"      name: \"chris\"",
 				"      uid: 1000",
-				"      gid: 1001",
+				"      gid: 1000",
 				"    }",
 				"    1: user {",
 				"      name: \"christopher\"",
-				"      uid: 1000",
-				"      gid: 1001",
-				"    }",
-				"    2: user {",
-				"      name: \"chris\"",
-				"      uid: 1002",
-				"      gid: 1003",
+				"      uid: 1001",
+				"      gid: 1000",
 				"    }",
 				"  ]",
 				"",
@@ -343,27 +328,21 @@ func TestPrinter_Assessment(t *testing.T) {
 				"      enabled: false",
 				"    }",
 				"    1: user {",
-				"      gid: 1001",
-				"      name: \"chris\"",
-				"      uid: 1000",
+				"      gid: 1",
+				"      name: \"bin\"",
+				"      uid: 1",
 				"      enabled: false",
 				"    }",
 				"    2: user {",
-				"      gid: 1001",
-				"      name: \"christopher\"",
+				"      gid: 1000",
+				"      name: \"chris\"",
 				"      uid: 1000",
 				"      enabled: false",
 				"    }",
 				"    3: user {",
-				"      gid: 1003",
-				"      name: \"chris\"",
-				"      uid: 1002",
-				"      enabled: false",
-				"    }",
-				"    4: user {",
-				"      gid: 1",
-				"      name: \"bin\"",
-				"      uid: 1",
+				"      gid: 1000",
+				"      name: \"christopher\"",
+				"      uid: 1001",
 				"      enabled: false",
 				"    }",
 				"  ]",
@@ -397,161 +376,105 @@ func TestPrinter_Assessment(t *testing.T) {
 		},
 		{
 			"users.all(groups.none(gid==0))\n",
-			strings.Join([]string{
-				"[failed] users.all()",
-				"  actual:   [",
-				"    0: user {",
-				"      uid: 0",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      gid: 0",
-				"      groups: groups id = groups",
-				"      name: \"root\"",
-				"    }",
-				"    1: user {",
-				"      uid: 1000",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      gid: 1001",
-				"      groups: groups id = groups",
-				"      name: \"chris\"",
-				"    }",
-				"    2: user {",
-				"      uid: 1000",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      gid: 1001",
-				"      groups: groups id = groups",
-				"      name: \"christopher\"",
-				"    }",
-				"    3: user {",
-				"      uid: 1002",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      gid: 1003",
-				"      groups: groups id = groups",
-				"      name: \"chris\"",
-				"    }",
-				"    4: user {",
-				"      uid: 1",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      gid: 1",
-				"      groups: groups id = groups",
-				"      name: \"bin\"",
-				"    }",
-				"  ]",
-				"",
-			}, "\n"),
+			`[failed] users.all()
+  actual:   [
+    0: user {
+      uid: 0
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      gid: 0
+      groups: groups
+      name: "root"
+    }
+    1: user {
+      uid: 1
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      gid: 1
+      groups: groups
+      name: "bin"
+    }
+    2: user {
+      uid: 1000
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      gid: 1000
+      groups: groups
+      name: "chris"
+    }
+    3: user {
+      uid: 1001
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      gid: 1000
+      groups: groups
+      name: "christopher"
+    }
+  ]
+`,
 		},
 		{
 			"users.all(groups.all(name == 'root'))\n",
-			strings.Join([]string{
-				"[failed] users.all()",
-				"  actual:   [",
-				"    0: user {",
-				"      uid: 0",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      groups: groups id = groups",
-				"      gid: 0",
-				"      name: \"root\"",
-				"    }",
-				"    1: user {",
-				"      uid: 1000",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      groups: groups id = groups",
-				"      gid: 1001",
-				"      name: \"chris\"",
-				"    }",
-				"    2: user {",
-				"      uid: 1000",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      groups: groups id = groups",
-				"      gid: 1001",
-				"      name: \"christopher\"",
-				"    }",
-				"    3: user {",
-				"      uid: 1002",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      groups: groups id = groups",
-				"      gid: 1003",
-				"      name: \"chris\"",
-				"    }",
-				"    4: user {",
-				"      uid: 1",
-				"      groups.list: [",
-				"        0: user group id = group/0/root",
-				"        1: user group id = group/1001/chris",
-				"        2: user group id = group/90/network",
-				"        3: user group id = group/998/wheel",
-				"        4: user group id = group/5/tty",
-				"        5: user group id = group/2/daemon",
-				"      ]",
-				"      groups: groups id = groups",
-				"      gid: 1",
-				"      name: \"bin\"",
-				"    }",
-				"  ]",
-				"",
-			}, "\n"),
+			`[failed] users.all()
+  actual:   [
+    0: user {
+      uid: 0
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      groups: groups
+      gid: 0
+      name: "root"
+    }
+    1: user {
+      uid: 1
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      groups: groups
+      gid: 1
+      name: "bin"
+    }
+    2: user {
+      uid: 1000
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      groups: groups
+      gid: 1000
+      name: "chris"
+    }
+    3: user {
+      uid: 1001
+      groups.list: [
+        0: user group id = group/0/root
+        1: user group id = group/1/bin
+        2: user group id = group/1000/chris
+      ]
+      groups: groups
+      gid: 1000
+      name: "christopher"
+    }
+  ]
+`,
 		},
 		{
 			"users.all(sshkeys.length > 2)\n",

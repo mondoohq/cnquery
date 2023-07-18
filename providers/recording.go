@@ -3,6 +3,7 @@ package providers
 import (
 	"encoding/json"
 	"os"
+	"sort"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -345,6 +346,15 @@ func (r *recording) finalize() {
 			asset.Resources[i] = *v
 			i++
 		}
+
+		sort.Slice(asset.Resources, func(i, j int) bool {
+			a := asset.Resources[i]
+			b := asset.Resources[j]
+			if a.Resource == b.Resource {
+				return a.ID < b.ID
+			}
+			return a.Resource < b.Resource
+		})
 
 		i = 0
 		for _, v := range asset.connections {

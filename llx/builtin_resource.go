@@ -2,8 +2,10 @@ package llx
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/types"
 )
 
@@ -31,98 +33,97 @@ func (m *MockResource) MqlID() string {
 var resourceFunctionsV2 map[string]chunkHandlerV2
 
 func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, invert bool) (*RawData, uint64, error) {
-	panic("PLEASE HOLD")
-	// // where(resource.list, function)
-	// itemsRef := chunk.Function.Args[0]
-	// items, rref, err := e.resolveValue(itemsRef, ref)
-	// if err != nil || rref > 0 {
-	// 	return nil, rref, err
-	// }
-	// list := items.Value.([]interface{})
-	// if len(list) == 0 {
-	// 	return bind, 0, nil
-	// }
+	// where(resource.list, function)
+	itemsRef := chunk.Function.Args[0]
+	items, rref, err := e.resolveValue(itemsRef, ref)
+	if err != nil || rref > 0 {
+		return nil, rref, err
+	}
+	list := items.Value.([]interface{})
+	if len(list) == 0 {
+		return bind, 0, nil
+	}
 
-	// resource := bind.Value.(resources.ResourceType)
+	resource := bind.Value.(Resource)
 
-	// arg1 := chunk.Function.Args[1]
-	// blockRef, ok := arg1.RefV2()
-	// if !ok {
-	// 	return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
-	// }
+	arg1 := chunk.Function.Args[1]
+	blockRef, ok := arg1.RefV2()
+	if !ok {
+		return nil, 0, errors.New("Failed to retrieve function reference of 'where' call")
+	}
 
-	// dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
-	// if dref != 0 || err != nil {
-	// 	return nil, dref, err
-	// }
+	dref, err := e.ensureArgsResolved(chunk.Function.Args[2:], ref)
+	if dref != 0 || err != nil {
+		return nil, dref, err
+	}
 
-	// blockId := e.ctx.code.Id + strconv.FormatUint(blockRef>>32, 10)
+	blockId := e.ctx.code.Id + strconv.FormatUint(blockRef>>32, 10)
 
-	// ct := items.Type.Child()
+	ct := items.Type.Child()
 
-	// argsList := make([][]*RawData, len(list))
-	// for i := range list {
-	// 	argsList[i] = []*RawData{
-	// 		{
-	// 			Type:  ct,
-	// 			Value: list[i],
-	// 		},
-	// 	}
-	// }
+	argsList := make([][]*RawData, len(list))
+	for i := range list {
+		argsList[i] = []*RawData{
+			{
+				Type:  ct,
+				Value: list[i],
+			},
+		}
+	}
 
-	// err = e.runFunctionBlocks(argsList, blockRef, func(results []arrayBlockCallResult, errs []error) {
-	// 	resList := []interface{}{}
+	err = e.runFunctionBlocks(argsList, blockRef, func(results []arrayBlockCallResult, errs []error) {
+		resList := []*Primitive{}
+		for i, res := range results {
+			isTruthy := res.isTruthy()
+			if isTruthy == !invert {
+				prim := (&RawData{Value: list[i], Type: ct}).Result().Data
+				resList = append(resList, prim)
+			}
+		}
 
-	// 	for i, res := range results {
-	// 		isTruthy := res.isTruthy()
-	// 		if isTruthy == !invert {
-	// 			resList = append(resList, list[i])
-	// 		}
-	// 	}
+		// get all mandatory args
+		resourceInfo := e.ctx.runtime.Schema().Lookup(resource.MqlName())
+		args := map[string]*Primitive{
+			"list": ArrayPrimitive(resList, ct),
+		}
+		for k, v := range resourceInfo.Fields {
+			if k != "list" && v.IsMandatory {
+				log.Error().Msg("found a mandatory argument for list, which is not supported: " + k + " for list of " + resource.MqlName())
+				// e.ctx.runtime.WatchAndUpdate(resource, k, blockId, func(res interface{}, err error) {
+				// 	if err == nil {
+				// 		args[k] = v
+				// 	}
+				// })
+			}
+		}
 
-	// 	// get all mandatory args
-	// 	mqlResource := resource.MqlResource()
-	// 	resourceInfo := mqlResource.MqlRuntime.Registry.Resources[mqlResource.Name]
+		resResource, err := e.ctx.runtime.CreateResourceWithID(resource.MqlName(), blockId, args)
 
-	// 	args := map[string]*RawData{
-	// 		"list": resList,
-	// 		"__id": blockId,
-	// 	}
-	// 	for k, v := range resourceInfo.Fields {
-	// 		if k != "list" && v.IsMandatory {
-	// 			if v, err := resource.Field(k); err == nil {
-	// 				args = append(args, k, v)
-	// 			}
-	// 		}
-	// 	}
+		var data *RawData
+		if err != nil {
+			data = &RawData{
+				Error: errors.New("Failed to create filter result resource: " + err.Error()),
+			}
+			e.cache.Store(ref, &stepCache{
+				Result: data,
+			})
+		} else {
+			data = &RawData{
+				Type:  bind.Type,
+				Value: resResource,
+			}
+			e.cache.Store(ref, &stepCache{
+				Result:   data,
+				IsStatic: false,
+			})
+		}
 
-	// 	resResource, err := e.ctx.runtime.CreateResourceWithID(mqlResource.Name, blockId, args)
+		e.triggerChain(ref, data)
+	})
 
-	// 	var data *RawData
-	// 	if err != nil {
-	// 		data = &RawData{
-	// 			Error: errors.New("Failed to create filter result resource: " + err.Error()),
-	// 		}
-	// 		e.cache.Store(ref, &stepCache{
-	// 			Result: data,
-	// 		})
-	// 	} else {
-	// 		data = &RawData{
-	// 			Type:  bind.Type,
-	// 			Value: resResource,
-	// 		}
-	// 		e.cache.Store(ref, &stepCache{
-	// 			Result:   data,
-	// 			IsStatic: false,
-	// 		})
-	// 	}
-
-	// 	e.triggerChain(ref, data)
-	// })
-
-	// if err != nil {
-	// 	return nil, 0, err
-	// }
+	if err != nil {
+		return nil, 0, err
+	}
 
 	return nil, 0, nil
 }

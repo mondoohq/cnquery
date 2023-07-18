@@ -141,6 +141,17 @@ func (b *goBuilder) goSetData(r []*Resource) {
 	fields := []string{}
 	for i := range r {
 		resource := r[i]
+
+		x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*%s).__id, ok = v.(string)
+			return ok
+		},`,
+			resource.ID, "__id",
+			resource.structName(b),
+		)
+		fields = append(fields, x)
+
 		for j := range resource.Body.Fields {
 			field := resource.Body.Fields[j]
 			if field.Init != nil {
@@ -205,7 +216,7 @@ func (b *goBuilder) goStruct(r *Resource) {
 // %s for the %s resource
 type %s struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	%s
 
 	%s
@@ -239,9 +250,9 @@ func (b *goBuilder) goFactory(r *Resource) {
 
 	var idCode string
 	if b.collector.HasID(structName) {
-		idCode = "res._id, err = res.id()"
+		idCode = "res.__id, err = res.id()"
 	} else {
-		idCode = `res._id = "" // to override implement: id() (string, error)`
+		idCode = `// to override __id implement: id() (string, error)`
 	}
 
 	b.data += fmt.Sprintf(`
@@ -268,7 +279,7 @@ func (c *%s) MqlName() string {
 }
 
 func (c *%s) MqlID() string {
-	return c._id
+	return c.__id
 }
 `,
 		newName, newName, structName,
