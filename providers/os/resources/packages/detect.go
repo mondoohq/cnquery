@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
-func Detect(motor *motor.Motor) ([]Package, map[string]PackageUpdate, error) {
+func Detect(conn shared.Connection) ([]Package, map[string]PackageUpdate, error) {
 	// find suitable package manager
-	pm, err := ResolveSystemPkgManager(motor)
+	pm, err := ResolveSystemPkgManager(conn)
 	if pm == nil || err != nil {
 		return nil, nil, err
 	}

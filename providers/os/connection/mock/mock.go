@@ -122,6 +122,10 @@ func (c *Connection) Asset() *inventory.Asset {
 	return c.asset
 }
 
+func (c *Connection) Capabilities() shared.Capabilities {
+	return shared.Capability_File | shared.Capability_RunCommand
+}
+
 func hashCmd(message string) string {
 	hash := sha256.New()
 	hash.Write([]byte(message))

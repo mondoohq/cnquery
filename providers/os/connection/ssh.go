@@ -123,6 +123,10 @@ func (p *SshConnection) Asset() *inventory.Asset {
 	return p.asset
 }
 
+func (p *SshConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_File | shared.Capability_RunCommand
+}
+
 func (c *SshConnection) RunCommand(command string) (*shared.Command, error) {
 	if c.Sudo != nil {
 		command = c.Sudo.Build(command)

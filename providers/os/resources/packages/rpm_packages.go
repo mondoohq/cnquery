@@ -5,21 +5,18 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/cockroachdb/errors"
+	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/platform"
-
-	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
@@ -69,8 +66,8 @@ func ParseRpmPackages(input io.Reader) []Package {
 // filesystem to run a local rpm command to extract the data. The static analysis is always slower than using the running
 // one since more data need to copied. Therefore the runtime check should be preferred over the static analysis
 type RpmPkgManager struct {
-	provider      os_provider.OperatingSystemProvider
-	platform      *platform.Platform
+	conn          shared.Connection
+	platform      *inventory.Platform
 	staticChecked bool
 	static        bool
 }
@@ -86,14 +83,14 @@ func (rpm *RpmPkgManager) Format() string {
 // determine if we running against a static image, where we cannot execute the rpm command
 // once executed, it caches its result to prevent the execution of the checks many times
 func (rpm *RpmPkgManager) isStaticAnalysis() bool {
-	if rpm.staticChecked == true {
+	if rpm.staticChecked {
 		return rpm.static
 	}
 
 	rpm.static = false
 
 	// check if the rpm command exists, e.g it is not available on tar backend
-	c, err := rpm.provider.RunCommand("command -v rpm")
+	c, err := rpm.conn.RunCommand("command -v rpm")
 	if err != nil || c.ExitStatus != 0 {
 		log.Debug().Msg("mql[packages]> fallback to static rpm package manager")
 		rpm.static = true
@@ -104,7 +101,7 @@ func (rpm *RpmPkgManager) isStaticAnalysis() bool {
 	// we probably cannot fix this easily, see dockers approach:
 	// https://docs.docker.com/engine/reference/commandline/attach/#get-the-exit-code-of-the-containers-command
 	if c != nil {
-		rpmCmdPath, err := ioutil.ReadAll(c.Stdout)
+		rpmCmdPath, err := io.ReadAll(c.Stdout)
 		if err != nil || len(rpmCmdPath) == 0 {
 			rpm.static = true
 		}
@@ -148,7 +145,7 @@ func (rpm *RpmPkgManager) queryFormat() string {
 
 func (rpm *RpmPkgManager) runtimeList() ([]Package, error) {
 	command := fmt.Sprintf("rpm -qa --queryformat '%s'", rpm.queryFormat())
-	cmd, err := rpm.provider.RunCommand(command)
+	cmd, err := rpm.conn.RunCommand(command)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read package list")
 	}
@@ -162,7 +159,7 @@ func (rpm *RpmPkgManager) runtimeAvailable() (map[string]PackageUpdate, error) {
 	// print ''.join(["{\"name\":\""+x.name+"\", \"available\":\""+x.evr+"\",\"arch\":\""+x.arch+"\",\"repo\":\""+x.repo.id+"\"}\n" for x in list.updates]);
 	script := "python -c 'import sys;sys.path.insert(0, \"/usr/share/yum-cli\");import cli;list = cli.YumBaseCli().returnPkgLists([\"updates\"]);print \"\".join([ \"{\\\"name\\\":\\\"\"+x.name+\"\\\",\\\"available\\\":\\\"\"+x.evr+\"\\\",\\\"arch\\\":\\\"\"+x.arch+\"\\\",\\\"repo\\\":\\\"\"+x.repo.id+\"\\\"}\\n\" for x in list.updates]);'"
 
-	cmd, err := rpm.provider.RunCommand(script)
+	cmd, err := rpm.conn.RunCommand(script)
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, errors.Wrap(err, "could not read package update list")
@@ -178,7 +175,7 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	log.Debug().Str("path", rpmTmpDir).Msg("mql[packages]> cache rpm library locally")
 	defer os.RemoveAll(rpmTmpDir)
 
-	fs := rpm.provider.FS()
+	fs := rpm.conn.FileSystem()
 	afs := &afero.Afero{Fs: fs}
 
 	// fetch rpm database file and store it in local tmp file
@@ -257,7 +254,7 @@ func (spm *SusePkgManager) Available() (map[string]PackageUpdate, error) {
 	if spm.isStaticAnalysis() {
 		return spm.staticAvailable()
 	}
-	cmd, err := spm.provider.RunCommand("zypper --xmlout list-updates")
+	cmd, err := spm.conn.RunCommand("zypper --xmlout list-updates")
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")

@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
 
 func TestMacOsXPackageParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/packages_macos.toml")
+	mock, err := mock.New("./testdata/packages_macos.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

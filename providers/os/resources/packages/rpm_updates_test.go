@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 )
 
 func TestRpmUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/updates_rpm.toml")
+	mock, err := mock.New("./testdata/updates_rpm.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestRpmUpdateParser(t *testing.T) {
 }
 
 func TestZypperUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/updates_zypper.toml")
+	mock, err := mock.New("./testdata/updates_zypper.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

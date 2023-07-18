@@ -22,6 +22,7 @@ type Connection interface {
 	Name() string
 	Type() ConnectionType
 	Asset() *inventory.Asset
+	Capabilities() Capabilities
 }
 
 type Command struct {
@@ -30,6 +31,17 @@ type Command struct {
 	Stdout     io.ReadWriter
 	Stderr     io.ReadWriter
 	ExitStatus int
+}
+
+type Capabilities byte
+
+const (
+	Capability_RunCommand Capabilities = 1 << iota
+	Capability_File
+)
+
+func (c Capabilities) Has(other Capabilities) bool {
+	return c&other == other
 }
 
 type PerfStats struct {

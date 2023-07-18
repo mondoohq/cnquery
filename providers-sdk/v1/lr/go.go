@@ -72,8 +72,12 @@ func (b *goBuilder) goCreateResource(r []*Resource) {
 	}
 
 	b.data += `
-var newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error){
-	` + strings.Join(newCmds, "\n\t") + `
+var newResource map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error)
+
+func init() {
+	newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+		` + strings.Join(newCmds, "\n\t\t") + `
+	}
 }
 
 // CreateResource is used by the runtime of this plugin

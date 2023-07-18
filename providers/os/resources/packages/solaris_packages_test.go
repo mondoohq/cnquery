@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
 
 func TestFmriParser(t *testing.T) {
@@ -85,13 +85,14 @@ pkg://solaris/compress/p7zip@9.20.1,5.11-0.175.1.0.0.24.0:20120904T170605Z   i--
 
 func TestSolarisManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_solaris11.toml")
-	trans, err := mock.NewFromTomlFile(filepath)
+	conn, err := mock.New(filepath, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name: "solaris",
+		},
+	})
 	require.NoError(t, err)
 
-	m, err := motor.New(trans)
-	require.NoError(t, err)
-
-	pkgManager, err := packages.ResolveSystemPkgManager(m)
+	pkgManager, err := packages.ResolveSystemPkgManager(conn)
 	require.NoError(t, err)
 
 	pkgList, err := pkgManager.List()

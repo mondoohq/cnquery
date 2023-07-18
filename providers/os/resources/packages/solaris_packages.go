@@ -6,7 +6,7 @@ import (
 	"io"
 	"regexp"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
@@ -74,7 +74,7 @@ func ParseSolarisPackages(input io.Reader) []Package {
 }
 
 type SolarisPkgManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *SolarisPkgManager) Name() string {
@@ -86,7 +86,7 @@ func (script *SolarisPkgManager) Format() string {
 }
 
 func (s *SolarisPkgManager) List() ([]Package, error) {
-	cmd, err := s.provider.RunCommand("pkg list -v")
+	cmd, err := s.conn.RunCommand("pkg list -v")
 	if err != nil {
 		return nil, fmt.Errorf("could not read solaris package list")
 	}

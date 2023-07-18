@@ -6,9 +6,8 @@ import (
 	"io"
 	"regexp"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/cockroachdb/errors"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
@@ -36,7 +35,7 @@ func ParsePacmanPackages(input io.Reader) []Package {
 
 // Arch, Manjaro
 type PacmanPkgManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (ppm *PacmanPkgManager) Name() string {
@@ -48,7 +47,7 @@ func (ppm *PacmanPkgManager) Format() string {
 }
 
 func (ppm *PacmanPkgManager) List() ([]Package, error) {
-	cmd, err := ppm.provider.RunCommand("pacman -Q")
+	cmd, err := ppm.conn.RunCommand("pacman -Q")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}

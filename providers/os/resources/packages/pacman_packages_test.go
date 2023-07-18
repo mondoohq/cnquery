@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
 
 func TestPacmanParser(t *testing.T) {
@@ -55,8 +55,7 @@ argon2 20190702-2`
 	m := packages.ParsePacmanPackages(strings.NewReader(pkgList))
 
 	assert.Equal(t, 3, len(m), "detected the right amount of packages")
-	var p packages.Package
-	p = packages.Package{
+	p := packages.Package{
 		Name:    "acl",
 		Version: "2.2.53-2",
 		Format:  packages.PacmanPkgFormat,

@@ -8,9 +8,13 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-var newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error){
-	"mondoo": NewMondoo,
-	"asset": NewAsset,
+var newResource map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error)
+
+func init() {
+	newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+		"mondoo": NewMondoo,
+		"asset": NewAsset,
+	}
 }
 
 // CreateResource is used by the runtime of this plugin

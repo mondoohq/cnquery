@@ -4,9 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseFreeBSDPackages(t *testing.T) {
@@ -17,8 +16,7 @@ func TestParseFreeBSDPackages(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, 2, len(m), "detected the right amount of packages")
 
-	var p Package
-	p = Package{
+	p := Package{
 		Name:        "pkg",
 		Version:     "1.18.4",
 		Arch:        "freebsd:13:x86:64",

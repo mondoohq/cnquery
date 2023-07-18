@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
 
 func TestOpkgListCommandParser(t *testing.T) {
@@ -46,9 +46,9 @@ firewall - 2016-11-29-1`
 }
 
 func TestOpkgStatusParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/packages_opkg_statusfile.toml")
+	mock, err := mock.New("./testdata/packages_opkg_statusfile.toml", nil)
 	require.NoError(t, err)
-	f, err := mock.FS().Open("/usr/lib/opkg/status")
+	f, err := mock.FileSystem().Open("/usr/lib/opkg/status")
 	require.NoError(t, err)
 	defer f.Close()
 
@@ -56,8 +56,7 @@ func TestOpkgStatusParser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 8, len(m), "detected the right amount of packages")
 
-	var p packages.Package
-	p = packages.Package{
+	p := packages.Package{
 		Name:        "libuci20130104",
 		Version:     "2023-03-05-04d0c46c-1",
 		Arch:        "x86_64",
@@ -71,13 +70,14 @@ func TestOpkgStatusParser(t *testing.T) {
 
 func TestOpkgManager(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/packages_opkg.toml")
-	provider, err := mock.NewFromTomlFile(filepath)
+	conn, err := mock.New(filepath, &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name: "openwrt",
+		},
+	})
 	require.NoError(t, err)
 
-	m, err := motor.New(provider)
-	require.NoError(t, err)
-
-	pkgManager, err := packages.ResolveSystemPkgManager(m)
+	pkgManager, err := packages.ResolveSystemPkgManager(conn)
 	require.NoError(t, err)
 
 	pkgList, err := pkgManager.List()

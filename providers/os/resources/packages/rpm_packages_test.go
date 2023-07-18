@@ -11,12 +11,12 @@ import (
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
 
 func TestRedhat7Parser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/packages_redhat7.toml")
+	mock, err := mock.New("./testdata/packages_redhat7.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestRedhat7Parser(t *testing.T) {
 }
 
 func TestRedhat6Parser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/packages_redhat6.toml")
+	mock, err := mock.New("./testdata/packages_redhat6.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestRedhat6Parser(t *testing.T) {
 func TestPhoton4ImageParser(t *testing.T) {
 	// to create this test file, run the following command:
 	// mondoo scan docker image photon:4.0 --record
-	mock, err := mock.NewFromTomlFile("./testdata/packages_photon_image.toml")
+	mock, err := mock.New("./testdata/packages_photon_image.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func TestPhoton4ImageParser(t *testing.T) {
 	require.NoError(t, err)
 	defer fWriter.Close()
 
-	f, err := mock.FS().Open(filepath.Join("/var/lib/rpm", "rpmdb.sqlite"))
+	f, err := mock.FileSystem().Open(filepath.Join("/var/lib/rpm", "rpmdb.sqlite"))
 	require.NoError(t, err)
 	defer f.Close()
 

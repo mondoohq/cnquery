@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
 
 func TestAlpineApkdbParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/packages_apk.toml")
+	mock, err := mock.New("./testdata/packages_apk.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	f, err := mock.FS().Open("/lib/apk/db/installed")
+	f, err := mock.FileSystem().Open("/lib/apk/db/installed")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestAlpineApkdbParser(t *testing.T) {
 }
 
 func TestApkUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/updates_apk.toml")
+	mock, err := mock.New("./testdata/updates_apk.toml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

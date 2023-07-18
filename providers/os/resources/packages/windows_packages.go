@@ -8,10 +8,10 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/platform"
-	"go.mondoo.com/cnquery/motor/providers/os"
-	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/detector/windows"
+	"go.mondoo.com/cnquery/providers/os/resources/powershell"
 )
 
 // ProcessorArchitecture Enum
@@ -175,8 +175,8 @@ func HotFixesToPackages(hotfixes []PowershellWinHotFix) []Package {
 }
 
 type WinPkgManager struct {
-	provider os.OperatingSystemProvider
-	platform *platform.Platform
+	conn     shared.Connection
+	platform *inventory.Platform
 }
 
 func (w *WinPkgManager) Name() string {
@@ -206,7 +206,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 
 	pkgs := []Package{}
 
-	cmd, err := w.provider.RunCommand(powershell.Encode(installedAppsScript))
+	cmd, err := w.conn.RunCommand(powershell.Encode(installedAppsScript))
 	if err != nil {
 		return nil, fmt.Errorf("could not read app package list")
 	}
@@ -218,7 +218,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 
 	// only win 10+ are compatible with app x packages
 	if b.Build > 10240 {
-		cmd, err := w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
+		cmd, err := w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_APPX_PACKAGES))
 		if err != nil {
 			return nil, fmt.Errorf("could not read appx package list")
 		}
@@ -230,7 +230,7 @@ func (w *WinPkgManager) List() ([]Package, error) {
 	}
 
 	// hotfixes
-	cmd, err = w.provider.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
+	cmd, err = w.conn.RunCommand(powershell.Wrap(WINDOWS_QUERY_HOTFIXES))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not fetch hotfixes")
 	}
