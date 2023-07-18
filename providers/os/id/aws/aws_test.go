@@ -10,7 +10,7 @@ import (
 )
 
 func TestDetectInstance(t *testing.T) {
-	conn, err := mock.New("./testdata/instance.toml")
+	conn, err := mock.New("./testdata/instance.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -24,7 +24,7 @@ func TestDetectInstance(t *testing.T) {
 }
 
 func TestDetectInstanceArm(t *testing.T) {
-	conn, err := mock.New("./testdata/instancearm.toml")
+	conn, err := mock.New("./testdata/instancearm.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -38,7 +38,7 @@ func TestDetectInstanceArm(t *testing.T) {
 }
 
 func TestDetectNotInstance(t *testing.T) {
-	conn, err := mock.New("./testdata/notinstance.toml")
+	conn, err := mock.New("./testdata/notinstance.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -52,7 +52,7 @@ func TestDetectNotInstance(t *testing.T) {
 }
 
 func TestDetectConainer(t *testing.T) {
-	conn, err := mock.New("./testdata/container.toml")
+	conn, err := mock.New("./testdata/container.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

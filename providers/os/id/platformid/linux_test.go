@@ -11,7 +11,7 @@ import (
 
 func TestLinuxMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/linux_test.toml")
-	provider, err := mock.New(filepath)
+	provider, err := mock.New(filepath, nil)
 	require.NoError(t, err)
 
 	lid := LinuxIdProvider{connection: provider}

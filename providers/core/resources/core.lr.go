@@ -96,6 +96,11 @@ func GetData(resource plugin.Resource, field string, args map[string]interface{}
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
+	"mondoo.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlMondoo).__id, ok = v.(string)
+			return ok
+		},
 	"mondoo.version": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlMondoo).Version, ok = plugin.RawToTValue[string](v)
@@ -116,6 +121,11 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[interface{}](v)
 		return ok
 	},
+	"asset.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlAsset).__id, ok = v.(string)
+			return ok
+		},
 	"asset.name": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlAsset).Name, ok = plugin.RawToTValue[string](v)
@@ -193,7 +203,7 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 // mqlMondoo for the mondoo resource
 type mqlMondoo struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	// optional: if you define mqlMondooInternal it will be used here
 
 	Version plugin.TValue[string]
@@ -217,7 +227,7 @@ func NewMondoo(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Res
 		}
 	}
 
-	res._id = "" // to override implement: id() (string, error)
+	// to override __id implement: id() (string, error)
 	return res, err
 }
 
@@ -226,7 +236,7 @@ func (c *mqlMondoo) MqlName() string {
 }
 
 func (c *mqlMondoo) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlMondoo) GetVersion() *plugin.TValue[string] {
@@ -256,7 +266,7 @@ func (c *mqlMondoo) GetJobEnvironment() *plugin.TValue[interface{}] {
 // mqlAsset for the asset resource
 type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
-	_id string
+	__id string
 	// optional: if you define mqlAssetInternal it will be used here
 
 	Name plugin.TValue[string]
@@ -288,7 +298,7 @@ func NewAsset(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Reso
 		}
 	}
 
-	res._id = "" // to override implement: id() (string, error)
+	// to override __id implement: id() (string, error)
 	return res, err
 }
 
@@ -297,7 +307,7 @@ func (c *mqlAsset) MqlName() string {
 }
 
 func (c *mqlAsset) MqlID() string {
-	return c._id
+	return c.__id
 }
 
 func (c *mqlAsset) GetName() *plugin.TValue[string] {

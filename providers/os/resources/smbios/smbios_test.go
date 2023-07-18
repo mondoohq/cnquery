@@ -10,7 +10,7 @@ import (
 )
 
 func TestManagerCentos(t *testing.T) {
-	conn, err := mock.New("./testdata/centos.toml")
+	conn, err := mock.New("./testdata/centos.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -53,7 +53,7 @@ func TestManagerCentos(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	conn, err := mock.New("./testdata/macos.toml")
+	conn, err := mock.New("./testdata/macos.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -96,7 +96,7 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	conn, err := mock.New("./testdata/windows.toml")
+	conn, err := mock.New("./testdata/windows.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)

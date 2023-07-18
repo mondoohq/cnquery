@@ -28,66 +28,6 @@
       ],
       "resources": [
         {
-          "Resource": "group",
-          "ID": "group/1/bin",
-          "Fields": {
-            "gid": {
-              "type": "\u0005",
-              "value": 1
-            },
-            "name": {
-              "type": "\u0007",
-              "value": "bin"
-            }
-          }
-        },
-        {
-          "Resource": "user",
-          "ID": "user/1/bin",
-          "Fields": {
-            "gid": {
-              "type": "\u0005",
-              "value": 1
-            },
-            "name": {
-              "type": "\u0007",
-              "value": "bin"
-            },
-            "uid": {
-              "type": "\u0005",
-              "value": 1
-            }
-          }
-        },
-        {
-          "Resource": "group",
-          "ID": "group/998/wheel",
-          "Fields": {
-            "gid": {
-              "type": "\u0005",
-              "value": 998
-            },
-            "name": {
-              "type": "\u0007",
-              "value": "wheel"
-            }
-          }
-        },
-        {
-          "Resource": "group",
-          "ID": "group/1000/chris",
-          "Fields": {
-            "gid": {
-              "type": "\u0005",
-              "value": 1000
-            },
-            "name": {
-              "type": "\u0007",
-              "value": "chris"
-            }
-          }
-        },
-        {
           "Resource": "file",
           "ID": "/etc/passwd",
           "Fields": {
@@ -113,16 +53,12 @@
           }
         },
         {
-          "Resource": "group",
-          "ID": "group/0/root",
+          "Resource": "file.permissions",
+          "ID": "-rw-r--r--",
           "Fields": {
-            "gid": {
+            "mode": {
               "type": "\u0005",
-              "value": 0
-            },
-            "name": {
-              "type": "\u0007",
-              "value": "root"
+              "value": 420
             }
           }
         },
@@ -137,8 +73,36 @@
           }
         },
         {
-          "Resource": "user",
-          "ID": "user/1000/chris",
+          "Resource": "group",
+          "ID": "group/0/root",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 0
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "root"
+            }
+          }
+        },
+        {
+          "Resource": "group",
+          "ID": "group/1/bin",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "bin"
+            }
+          }
+        },
+        {
+          "Resource": "group",
+          "ID": "group/1000/chris",
           "Fields": {
             "gid": {
               "type": "\u0005",
@@ -147,10 +111,20 @@
             "name": {
               "type": "\u0007",
               "value": "chris"
-            },
-            "uid": {
+            }
+          }
+        },
+        {
+          "Resource": "group",
+          "ID": "group/998/wheel",
+          "Fields": {
+            "gid": {
               "type": "\u0005",
-              "value": 1000
+              "value": 998
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "wheel"
             }
           }
         },
@@ -178,39 +152,6 @@
           }
         },
         {
-          "Resource": "file.permissions",
-          "ID": "-rw-r--r--",
-          "Fields": {
-            "mode": {
-              "type": "\u0005",
-              "value": 420
-            }
-          }
-        },
-        {
-          "Resource": "users",
-          "ID": "",
-          "Fields": {
-            "list": {
-              "type": "\u0019\u001buser",
-              "value": [
-                {
-                  "ID": "user/0/root",
-                  "Name": "user"
-                },
-                {
-                  "ID": "user/1/bin",
-                  "Name": "user"
-                },
-                {
-                  "ID": "user/1000/chris",
-                  "Name": "user"
-                }
-              ]
-            }
-          }
-        },
-        {
           "Resource": "user",
           "ID": "user/0/root",
           "Fields": {
@@ -225,6 +166,135 @@
             "uid": {
               "type": "\u0005",
               "value": 0
+            },
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
+            "home": {
+              "type": "\u0007",
+              "value": "/root"
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/0/root"
+              }
+            }
+          }
+        },
+        {
+          "Resource": "user",
+          "ID": "user/1/bin",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "bin"
+            },
+            "uid": {
+              "type": "\u0005",
+              "value": 1
+            },
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/1/bin"
+              }
+            }
+          }
+        },
+        {
+          "Resource": "user",
+          "ID": "user/1000/chris",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1000
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "chris"
+            },
+            "uid": {
+              "type": "\u0005",
+              "value": 1000
+            },
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/1000/chris"
+              }
+            }
+          }
+        },
+        {
+          "Resource": "user",
+          "ID": "user/1001/christopher",
+          "Fields": {
+            "gid": {
+              "type": "\u0005",
+              "value": 1000
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "christopher"
+            },
+            "uid": {
+              "type": "\u0005",
+              "value": 1001
+            },
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/1000/chris"
+              }
+            }
+          }
+        },
+        {
+          "Resource": "users",
+          "ID": "",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001buser",
+              "value": [
+                {
+                  "Name": "user",
+                  "ID": "user/0/root"
+                },
+                {
+                  "Name": "user",
+                  "ID": "user/1/bin"
+                },
+                {
+                  "Name": "user",
+                  "ID": "user/1000/chris"
+                },
+                {
+                  "Name": "user",
+                  "ID": "user/1001/christopher"
+                }
+              ]
             }
           }
         }

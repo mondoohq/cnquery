@@ -148,7 +148,8 @@ func preprocessQueryPackFilters(filters []string) []string {
 
 func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig providers.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
-	im, err := manager.NewManager(manager.WithInventory(job.Inventory))
+	runtime := providers.DefaultRuntime()
+	im, err := manager.NewManager(manager.WithInventory(job.Inventory, runtime))
 	if err != nil {
 		return nil, false, errors.Wrap(err, "could not load asset information")
 	}
