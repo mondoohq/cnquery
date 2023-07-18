@@ -8,14 +8,20 @@ import (
 	"go.mondoo.com/cnquery/types"
 )
 
-var newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error){
-	"command": NewCommand,
-	"file": NewFile,
-	"file.permissions": NewFilePermissions,
-	"user": NewUser,
-	"users": NewUsers,
-	"group": NewGroup,
-	"groups": NewGroups,
+var newResource map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error)
+
+func init() {
+	newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+		"command": NewCommand,
+		"file": NewFile,
+		"file.permissions": NewFilePermissions,
+		"user": NewUser,
+		"users": NewUsers,
+		"group": NewGroup,
+		"groups": NewGroups,
+		"package": NewPackage,
+		"packages": NewPackages,
+	}
 }
 
 // CreateResource is used by the runtime of this plugin
@@ -175,6 +181,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"groups.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGroups).GetList()).ToDataRes(types.Array(types.Resource("group")))
+	},
+	"package.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetName()).ToDataRes(types.String)
+	},
+	"package.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetVersion()).ToDataRes(types.String)
+	},
+	"package.arch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetArch()).ToDataRes(types.String)
+	},
+	"package.epoch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetEpoch()).ToDataRes(types.String)
+	},
+	"package.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetFormat()).ToDataRes(types.String)
+	},
+	"package.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetStatus()).ToDataRes(types.String)
+	},
+	"package.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetDescription()).ToDataRes(types.String)
+	},
+	"package.origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetOrigin()).ToDataRes(types.String)
+	},
+	"package.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetAvailable()).ToDataRes(types.String)
+	},
+	"package.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"package.outdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackage).GetOutdated()).ToDataRes(types.Bool)
+	},
+	"packages.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPackages).GetList()).ToDataRes(types.Array(types.Resource("package")))
 	},
 }
 
@@ -446,6 +488,76 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 	"groups.list": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlGroups).List, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"package.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlPackage).__id, ok = v.(string)
+			return ok
+		},
+	"package.name": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Name, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.version": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Version, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.arch": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Arch, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.epoch": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Epoch, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.format": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Format, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.status": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Status, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.description": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Description, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.origin": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Origin, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.available": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Available, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"package.installed": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Installed, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"package.outdated": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackage).Outdated, ok = plugin.RawToTValue[bool](v)
+		return ok
+	},
+	"packages.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlPackages).__id, ok = v.(string)
+			return ok
+		},
+	"packages.list": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlPackages).List, ok = plugin.RawToTValue[[]interface{}](v)
 		return ok
 	},
 }
@@ -1010,6 +1122,151 @@ func (c *mqlGroups) MqlID() string {
 }
 
 func (c *mqlGroups) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		return c.list()
+	})
+}
+
+// mqlPackage for the package resource
+type mqlPackage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPackageInternal it will be used here
+
+	Name plugin.TValue[string]
+	Version plugin.TValue[string]
+	Arch plugin.TValue[string]
+	Epoch plugin.TValue[string]
+	Format plugin.TValue[string]
+	Status plugin.TValue[string]
+	Description plugin.TValue[string]
+	Origin plugin.TValue[string]
+	Available plugin.TValue[string]
+	Installed plugin.TValue[bool]
+	Outdated plugin.TValue[bool]
+}
+
+// NewPackage creates a new instance of this resource
+func NewPackage(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlPackage{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	var existing *mqlPackage
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res.__id, err = res.id()
+	return res, err
+}
+
+func (c *mqlPackage) MqlName() string {
+	return "package"
+}
+
+func (c *mqlPackage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPackage) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlPackage) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlPackage) GetArch() *plugin.TValue[string] {
+	return &c.Arch
+}
+
+func (c *mqlPackage) GetEpoch() *plugin.TValue[string] {
+	return &c.Epoch
+}
+
+func (c *mqlPackage) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+func (c *mqlPackage) GetStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Status, func() (string, error) {
+		return c.status()
+	})
+}
+
+func (c *mqlPackage) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlPackage) GetOrigin() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Origin, func() (string, error) {
+		return c.origin()
+	})
+}
+
+func (c *mqlPackage) GetAvailable() *plugin.TValue[string] {
+	return &c.Available
+}
+
+func (c *mqlPackage) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlPackage) GetOutdated() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Outdated, func() (bool, error) {
+		return c.outdated()
+	})
+}
+
+// mqlPackages for the packages resource
+type mqlPackages struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlPackagesInternal
+
+	List plugin.TValue[[]interface{}]
+}
+
+// NewPackages creates a new instance of this resource
+func NewPackages(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlPackages{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlPackages, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	// to override __id implement: id() (string, error)
+	return res, err
+}
+
+func (c *mqlPackages) MqlName() string {
+	return "packages"
+}
+
+func (c *mqlPackages) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPackages) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
 		return c.list()
 	})

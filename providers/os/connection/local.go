@@ -61,6 +61,10 @@ func (p *LocalConnection) Asset() *inventory.Asset {
 	return p.asset
 }
 
+func (p *LocalConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_File | shared.Capability_RunCommand
+}
+
 func (p *LocalConnection) RunCommand(command string) (*shared.Command, error) {
 	log.Debug().Msgf("local> run command %s", command)
 	if p.Sudo != nil {

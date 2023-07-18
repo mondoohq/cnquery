@@ -1,11 +1,9 @@
 package packages
 
-import (
-	"go.mondoo.com/cnquery/motor/providers/os"
-)
+import "go.mondoo.com/cnquery/providers/os/connection/shared"
 
 type ScratchPkgManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (dpm *ScratchPkgManager) Name() string {

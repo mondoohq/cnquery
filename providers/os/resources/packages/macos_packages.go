@@ -6,9 +6,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/cockroachdb/errors"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	plist "howett.net/plist"
 )
 
@@ -62,7 +61,7 @@ func ParseMacOSPackages(input io.Reader) ([]Package, error) {
 
 // MacOS
 type MacOSPkgManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (mpm *MacOSPkgManager) Name() string {
@@ -74,7 +73,7 @@ func (mpm *MacOSPkgManager) Format() string {
 }
 
 func (mpm *MacOSPkgManager) List() ([]Package, error) {
-	cmd, err := mpm.provider.RunCommand("system_profiler SPApplicationsDataType -xml")
+	cmd, err := mpm.conn.RunCommand("system_profiler SPApplicationsDataType -xml")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}

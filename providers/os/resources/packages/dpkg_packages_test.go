@@ -5,14 +5,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/core/packages"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
 
 func TestDpkgParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/packages_dpkg.toml")
+	mock, err := mock.New("./testdata/packages_dpkg.toml", nil)
 	require.NoError(t, err)
-	f, err := mock.FS().Open("/var/lib/dpkg/status")
+	f, err := mock.FileSystem().Open("/var/lib/dpkg/status")
 	require.NoError(t, err)
 	defer f.Close()
 
@@ -58,9 +58,9 @@ security related events.`,
 }
 
 func TestDpkgParserStatusD(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/packages_dpkg_statusd.toml")
+	mock, err := mock.New("./testdata/packages_dpkg_statusd.toml", nil)
 	require.NoError(t, err)
-	f, err := mock.FS().Open("/var/lib/dpkg/status.d/base")
+	f, err := mock.FileSystem().Open("/var/lib/dpkg/status.d/base")
 	require.NoError(t, err)
 	defer f.Close()
 
@@ -84,7 +84,7 @@ and the text of several common licenses in use on Debian systems.`,
 }
 
 func TestDpkgUpdateParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/updates_dpkg.toml")
+	mock, err := mock.New("./testdata/updates_dpkg.toml", nil)
 	require.NoError(t, err)
 	c, err := mock.RunCommand("DEBIAN_FRONTEND=noninteractive apt-get upgrade --dry-run")
 	require.NoError(t, err)

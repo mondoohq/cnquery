@@ -6,9 +6,8 @@ import (
 	"io"
 	"regexp"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
@@ -113,7 +112,7 @@ func ParseApkUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 
 // Arch, Manjaro
 type AlpinePkgManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (apm *AlpinePkgManager) Name() string {
@@ -125,7 +124,7 @@ func (apm *AlpinePkgManager) Format() string {
 }
 
 func (apm *AlpinePkgManager) List() ([]Package, error) {
-	fr, err := apm.provider.FS().Open("/lib/apk/db/installed")
+	fr, err := apm.conn.FileSystem().Open("/lib/apk/db/installed")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
@@ -136,10 +135,10 @@ func (apm *AlpinePkgManager) List() ([]Package, error) {
 
 func (apm *AlpinePkgManager) Available() (map[string]PackageUpdate, error) {
 	// it only works if apk is updated
-	apm.provider.RunCommand("apk update")
+	apm.conn.RunCommand("apk update")
 
 	// determine package updates
-	cmd, err := apm.provider.RunCommand("apk version -v -l '<'")
+	cmd, err := apm.conn.RunCommand("apk version -v -l '<'")
 	if err != nil {
 		log.Debug().Err(err).Msg("mql[packages]> could not read package updates")
 		return nil, fmt.Errorf("could not read package update list")

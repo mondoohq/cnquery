@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
@@ -58,7 +58,7 @@ func ParseFreeBSDPackages(r io.Reader) ([]Package, error) {
 }
 
 type FreeBSDPkgManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (f *FreeBSDPkgManager) Name() string {
@@ -70,7 +70,7 @@ func (f *FreeBSDPkgManager) Format() string {
 }
 
 func (f *FreeBSDPkgManager) List() ([]Package, error) {
-	cmd, err := f.provider.RunCommand("pkg info --raw --raw-format json-compact --all")
+	cmd, err := f.conn.RunCommand("pkg info --raw --raw-format json-compact --all")
 	if err != nil {
 		return nil, fmt.Errorf("could not read freebsd package list")
 	}

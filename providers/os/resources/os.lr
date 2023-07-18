@@ -142,3 +142,41 @@ group @defaults("name gid") {
 groups {
   []group
 }
+
+// Package on the platform or OS
+package @defaults("name version") {
+  // May be initialized with the name only, in which case it will look up
+  // the package with the given name on the system.
+  init(name string)
+
+  // Name of the package
+  name string
+  // Current version of the package
+  version string
+  // Architecture of this package
+  arch string
+  // Epoch of this package
+  epoch string
+
+  // Format of this package (e.g. rpm, deb)
+  format string
+  // Status of this package (e.g. if it is needed)
+  status() string
+  // Package description
+  description string
+
+  // Package origin (optional)
+  origin() string
+
+  // Available version
+  available string
+  // Indicates if this package is installed
+  installed bool
+  // Indicates if this package is outdated
+  outdated() bool
+}
+
+// List of packages on this system
+packages {
+  []package
+}

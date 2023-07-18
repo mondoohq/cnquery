@@ -1,6 +1,8 @@
 package llx
 
 import (
+	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +17,27 @@ type RawData struct {
 	Type  types.Type  `json:"type"`
 	Value interface{} `json:"value"`
 	Error error       `json:"error,omitempty"`
+}
+
+// a helper structure exclusively used for json unmarshaling of errors
+// TODO: find a better way of doing this, this workaround is annoying
+type errData struct {
+	Error string `json:"error"`
+}
+
+func (r *RawData) UnmarshalJSON(data []byte) error {
+	type tmp RawData
+	if err := json.Unmarshal(data, (*tmp)(r)); err == nil {
+		return nil
+	}
+
+	var e errData
+	if err := json.Unmarshal(data, &e); err != nil {
+		return err
+	}
+
+	r.Error = errors.New(e.Error)
+	return nil
 }
 
 func dictRawDataString(value interface{}) string {

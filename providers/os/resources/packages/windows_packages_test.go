@@ -7,21 +7,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/powershell"
 )
 
 func TestWindowsAppPackagesParser(t *testing.T) {
 	f, err := os.Open("./testdata/windows_packages.json")
-	defer f.Close()
 	require.NoError(t, err)
+	defer f.Close()
 
 	m, err := ParseWindowsAppPackages(f)
 	assert.Nil(t, err)
 	assert.Equal(t, 19, len(m), "detected the right amount of packages")
 
-	var p Package
-	p = Package{
+	p := Package{
 		Name:    "Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.28.29913",
 		Version: "14.28.29913.0",
 		Arch:    "",
@@ -36,7 +36,11 @@ func TestWindowsAppPackagesParser(t *testing.T) {
 }
 
 func TestWindowsAppxPackagesParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/windows_2019.toml")
+	mock, err := mock.New("./testdata/windows_2019.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Family: []string{"windows"},
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,8 +54,7 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 28, len(m), "detected the right amount of packages")
 
-	var p Package
-	p = Package{
+	p := Package{
 		Name:    "Microsoft.Windows.Cortana",
 		Version: "1.11.5.17763",
 		Arch:    "neutral",
@@ -66,7 +69,11 @@ func TestWindowsAppxPackagesParser(t *testing.T) {
 }
 
 func TestWindowsHotFixParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/windows_2019.toml")
+	mock, err := mock.New("./testdata/windows_2019.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Family: []string{"windows"},
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,8 +91,7 @@ func TestWindowsHotFixParser(t *testing.T) {
 	assert.NotNil(t, timestamp)
 
 	pkgs := HotFixesToPackages(hotfixes)
-	var p Package
-	p = Package{
+	p := Package{
 		Name:        "KB4486553",
 		Description: "Update",
 		Format:      "windows/hotfix",

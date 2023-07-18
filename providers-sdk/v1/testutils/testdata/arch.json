@@ -152,6 +152,49 @@
           }
         },
         {
+          "Resource": "package",
+          "ID": "package/acl",
+          "Fields": {
+            "name": {
+              "type": "\u0007",
+              "value": "acl"
+            },
+            "version": {
+              "type": "\u0007",
+              "value": "1.2.3"
+            },
+            "installed": {
+              "type": "\u0004",
+              "value": true
+            }
+          }
+        },
+        {
+          "Resource": "package",
+          "ID": "package/unknown",
+          "Fields": {
+            "installed": {
+              "type": "\u0004",
+              "error": "cannot find package unknown"
+            }
+          }
+        },
+        {
+          "Resource": "packages",
+          "ID": "",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bpackage",
+              "value": [
+                {
+                  "Name": "package",
+                  "ID": "package/acl"
+                }
+              ]
+            }
+          }
+        },
+        {
           "Resource": "user",
           "ID": "user/0/root",
           "Fields": {

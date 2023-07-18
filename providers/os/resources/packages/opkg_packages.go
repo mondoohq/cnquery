@@ -8,8 +8,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const (
@@ -109,7 +108,7 @@ func ParseOpkgPackages(input io.Reader) ([]Package, error) {
 }
 
 type OpkgPkgManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (opkg *OpkgPkgManager) Name() string {
@@ -122,8 +121,8 @@ func (opkg *OpkgPkgManager) Format() string {
 
 func (opkg *OpkgPkgManager) List() ([]Package, error) {
 	// if we can run commands, we can use `opkg list-installed`
-	if opkg.provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
-		cmd, err := opkg.provider.RunCommand("opkg list-installed")
+	if opkg.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		cmd, err := opkg.conn.RunCommand("opkg list-installed")
 		if err != nil {
 			return nil, fmt.Errorf("could not read package list")
 		}
@@ -135,7 +134,7 @@ func (opkg *OpkgPkgManager) List() ([]Package, error) {
 }
 
 func (opkg *OpkgPkgManager) ListFromFile() ([]Package, error) {
-	fs := opkg.provider.FS()
+	fs := opkg.conn.FileSystem()
 	opkgStatusFiles := []string{
 		"/usr/lib/opkg/status",
 		"/var/lib/opkg/status",
