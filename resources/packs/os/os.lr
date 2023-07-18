@@ -463,9 +463,12 @@ registrykey @defaults("path") {
   init(path string)
   // Registry key path
   path string
+  // Indicates if the property exists
   exists() bool
-  // Registry key properties
+  // deprecated: Registry key properties, use `items` instead
   properties() map[string]string
+  // Registry key items
+  items() []registrykey.property
   // Registry key children
   children() []string
 }
@@ -473,9 +476,17 @@ registrykey @defaults("path") {
 // Windows registry key property
 registrykey.property @defaults("path name") {
   init(path string, name string)
+  // Registry key path
   path string
+  // Registry key name
   name string
+  // deprecated: Registry key property value converted to string, use `data` instead
   value() string
+  // Registry key type
+  type() string
+  // Registry key data
+  data() dict
+  // Indicates if the property exists
   exists() bool
 }
 
