@@ -11,7 +11,7 @@ import (
 
 func TestMacOSMachineId(t *testing.T) {
 	filepath, _ := filepath.Abs("./testdata/osx_test.toml")
-	provider, err := mock.New(filepath)
+	provider, err := mock.New(filepath, nil)
 	require.NoError(t, err)
 
 	lid := MacOSIdProvider{connection: provider}

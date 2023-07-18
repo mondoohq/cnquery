@@ -10,7 +10,7 @@ import (
 )
 
 func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
-	conn, err := mock.New("./testdata/instance-identity_document_linux.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_linux.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -25,7 +25,7 @@ func TestEC2RoleProviderInstanceIdentityUnix(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityUnixNoName(t *testing.T) {
-	conn, err := mock.New("./testdata/instance-identity_document_linux_no_tags.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_linux_no_tags.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -40,7 +40,7 @@ func TestEC2RoleProviderInstanceIdentityUnixNoName(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityWindows(t *testing.T) {
-	conn, err := mock.New("./testdata/instance-identity_document_windows.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_windows.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
@@ -55,7 +55,7 @@ func TestEC2RoleProviderInstanceIdentityWindows(t *testing.T) {
 }
 
 func TestEC2RoleProviderInstanceIdentityWindowsNoName(t *testing.T) {
-	conn, err := mock.New("./testdata/instance-identity_document_windows_no_tags.toml")
+	conn, err := mock.New("./testdata/instance-identity_document_windows_no_tags.toml", nil)
 	require.NoError(t, err)
 	platform, ok := detector.DetectOS(conn)
 	require.True(t, ok)
