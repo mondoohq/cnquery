@@ -70,6 +70,9 @@ type mqlPackagesInternal struct {
 }
 
 func (x *mqlPackages) list() ([]interface{}, error) {
+	x.lock.Lock()
+	defer x.lock.Unlock()
+
 	conn := x.MqlRuntime.Connection.(shared.Connection)
 	pm, err := packages.ResolveSystemPkgManager(conn)
 	if pm == nil || err != nil {
