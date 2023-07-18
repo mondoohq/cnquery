@@ -1739,10 +1739,104 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 		ref = chunk.Function.Binding
 	}
 
+	type fieldTreeNode struct {
+		id       string
+		chunk    *llx.Chunk
+		chunkIdx int
+		children map[string]*fieldTreeNode
+	}
+
+	type fieldTree struct {
+		nodes []*fieldTreeNode
+	}
+
+	blockToFieldTree := func(block *llx.Block, filter func(chunkIdx int, chunk *llx.Chunk) bool) fieldTree {
+		// This function assumes the chunks are topologically sorted such
+		// that any dependency is always before the chunk that depends on it
+		nodes := make([]*fieldTreeNode, len(block.Chunks))
+		for i := range block.Chunks {
+			chunk := block.Chunks[i]
+			if !filter(i, chunk) {
+				continue
+			}
+			nodes[i] = &fieldTreeNode{
+				id:       chunk.Id,
+				chunk:    chunk,
+				chunkIdx: i + 1,
+				children: map[string]*fieldTreeNode{},
+			}
+
+			if chunk.Function != nil && chunk.Function.Binding != 0 {
+				chunkIdx := llx.ChunkIndex(chunk.Function.Binding)
+				parent := nodes[chunkIdx-1]
+				if parent != nil {
+					nodes[chunkIdx-1].children[chunk.Id] = nodes[i]
+				}
+			}
+		}
+
+		return fieldTree{
+			nodes: nodes,
+		}
+	}
+
+	addToTree := func(tree *fieldTree, parentPath []string, blockRef uint64, block *llx.Block, chunk *llx.Chunk) bool {
+		// add a chunk to the tree. If the path already exists, do nothing
+		// return true if the chunk was added, false if it already existed
+		if len(tree.nodes) != len(block.Chunks) {
+			panic("tree and block chunks do not match")
+		}
+
+		parent := tree.nodes[0]
+		for _, id := range parentPath[1:] {
+			child := parent.children[id]
+			parent = child
+		}
+
+		if parent.children[chunk.Id] != nil {
+			return false
+		}
+
+		newChunk := chunk
+		if chunk.Function != nil {
+			newChunk = &llx.Chunk{
+				Call: chunk.Call,
+				Id:   chunk.Id,
+				Function: &llx.Function{
+					Binding: (blockRef & 0xFFFFFFFF00000000) | uint64(parent.chunkIdx),
+					Type:    chunk.Function.Type,
+					Args:    chunk.Function.Args,
+				},
+			}
+		}
+
+		parent.children[chunk.Id] = &fieldTreeNode{
+			id:       chunk.Id,
+			chunk:    newChunk,
+			chunkIdx: len(tree.nodes) + 1,
+			children: map[string]*fieldTreeNode{},
+		}
+		tree.nodes = append(tree.nodes, parent.children[chunk.Id])
+		block.AddChunk(c.Result.CodeV2, blockRef, newChunk)
+
+		return true
+	}
+
+	var visitTreeNodes func(tree *fieldTree, node *fieldTreeNode, path []string, visit func(tree *fieldTree, node *fieldTreeNode, path []string))
+	visitTreeNodes = func(tree *fieldTree, node *fieldTreeNode, path []string, visit func(tree *fieldTree, node *fieldTreeNode, path []string)) {
+		if node == nil {
+			return
+		}
+		path = append(path, node.id)
+		for _, child := range node.children {
+			visit(tree, child, path)
+			visitTreeNodes(tree, child, path, visit)
+		}
+	}
+
 	// This block holds all the data and function chunks used
 	// for the predicate(s) of the .all()/.none()/... fucntion
 	var assessmentBlock *llx.Block
-	var assessmentBlockRef uint64
 	// find the referenced block for the where function
 	for i := len(whereChunk.Function.Args) - 1; i >= 0; i-- {
 		arg := whereChunk.Function.Args[i]
@@ -1750,80 +1844,41 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			raw := arg.RawData()
 			blockRef := raw.Value.(uint64)
 			assessmentBlock = c.Result.CodeV2.Block(blockRef)
-			assessmentBlockRef = blockRef
 			break
 		}
 	}
+	assessmentBlockTree := blockToFieldTree(assessmentBlock, func(chunkIdx int, chunk *llx.Chunk) bool {
+		if chunk.Id == "$whereNot" || chunk.Id == "where" {
+			return false
+		} else if _, compareable := llx.ComparableLabel(chunk.Id); compareable {
+			return false
+		} else if chunk.Function != nil && len(chunk.Function.Args) > 0 {
+			// filter out nested function block that require other blocks
+			// This at least makes https://github.com/mondoohq/cnquery/issues/1339
+			// not panic
+			for _, arg := range chunk.Function.Args {
+				if types.Type(arg.Type).Underlying() == types.Ref {
+					return false
+				}
+			}
+
+		}
+		return true
+	})
 
 	defaultFieldsBlock := c.Result.CodeV2.Blocks[len(c.Result.CodeV2.Blocks)-1]
 	defaultFieldsRef := defaultFieldsBlock.HeadRef(c.Result.CodeV2.LastBlockRef())
-	var resourceFieldsRef uint64
-	if assessmentBlock.Chunks[1].Function != nil {
-		resourceFieldsRef = assessmentBlock.HeadRef(assessmentBlockRef)
-	}
+	defaultFieldsBlockTree := blockToFieldTree(defaultFieldsBlock, func(chunkIdx int, chunk *llx.Chunk) bool {
+		return true
+	})
 
-	chunksToAdd := []*llx.Chunk{}
-	// Check whether the chunk is already present in the default fields block
-	// This can happen, when the assessment checks one of the default fields
-	// We can skip the first Chunk, as it is the resource binding
-	for i := 1; i < len(assessmentBlock.Chunks); i++ {
-		chunk := assessmentBlock.Chunks[i]
-		// filter out nested function block and only add fields for outer most resource
-		if chunk.Id == "$whereNot" || chunk.Id == "where" {
-			break
+	visitTreeNodes(&assessmentBlockTree, assessmentBlockTree.nodes[0], make([]string, 0, 16), func(tree *fieldTree, node *fieldTreeNode, path []string) {
+		// add the node to the assessment block tree
+		chunkAdded := addToTree(&defaultFieldsBlockTree, path, defaultFieldsRef, defaultFieldsBlock, node.chunk)
+		if chunkAdded && node.chunk.Function != nil {
+			defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, (defaultFieldsRef&0xFFFFFFFF00000000)|uint64(len(defaultFieldsBlock.Chunks)))
 		}
-		chunkAlreadyPresent := false
-		for j := range defaultFieldsBlock.Chunks {
-			if chunk.Id == defaultFieldsBlock.Chunks[j].Id {
-				chunkAlreadyPresent = true
-				break
-			}
-		}
-		if chunkAlreadyPresent {
-			continue
-		}
-		// We do not need the comparison chunks
-		if _, compareable := llx.ComparableLabel(chunk.Id); compareable {
-			continue
-		}
-		newChunk := &llx.Chunk{
-			Call: chunk.Call,
-			Id:   chunk.Id,
-		}
-		if chunk.Function != nil {
-			newChunk.Function = &llx.Function{
-				Binding: chunk.Function.Binding,
-				Type:    chunk.Function.Type,
-				Args:    chunk.Function.Args,
-			}
-		}
-		chunksToAdd = append(chunksToAdd, newChunk)
-	}
-	if len(chunksToAdd) == 0 {
-		// looks like all fields are already present, nothing to do
-		// this can happen, when the assessment checks one of the default fields
-		return
-	}
-	chunkRef := defaultFieldsRef
-	for i := range chunksToAdd {
-		newChunk := chunksToAdd[i]
-		if newChunk.Function != nil {
-			// check whether the chunk originially bound to the resource, then bind it again to the resource and not the previous chunk
-			if newChunk.Function.Binding == resourceFieldsRef {
-				newChunk.Function.Binding = defaultFieldsRef
-			} else {
-				newChunk.Function.Binding = chunkRef
-			}
-		}
-
-		defaultFieldsBlock.AddChunk(c.Result.CodeV2, chunkRef, newChunk)
-		chunkRef = defaultFieldsBlock.TailRef(chunkRef)
-
-		// FIXME: it would be nice to only have the "leaf" chunks as entrypoints
-		// Now we get a lot of data that we don't necessarily need
-		// e.g. for dict["key"] we get the entry and the whole dict
-		defaultFieldsBlock.Entrypoints = append(defaultFieldsBlock.Entrypoints, chunkRef)
-	}
+	})
 }
 
 func (c *compiler) expandListResource(chunk *llx.Chunk, ref uint64) (*llx.Chunk, types.Type, uint64) {
