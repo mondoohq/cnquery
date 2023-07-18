@@ -5,12 +5,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
 	"go.mondoo.com/cnquery/providers/os/resources/users"
 )
 
 func TestManagerDebian(t *testing.T) {
-	mock, err := mock.New("./testdata/debian.toml", nil)
+	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Family: []string{"unix", "linux", "debian"},
+		},
+	})
 	require.NoError(t, err)
 
 	mm, err := users.ResolveManager(mock)
@@ -30,7 +35,11 @@ func TestManagerDebian(t *testing.T) {
 }
 
 func TestManagerMacos(t *testing.T) {
-	mock, err := mock.New("./testdata/osx.toml", nil)
+	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Family: []string{"darwin"},
+		},
+	})
 	require.NoError(t, err)
 
 	mm, err := users.ResolveManager(mock)
@@ -50,7 +59,11 @@ func TestManagerMacos(t *testing.T) {
 }
 
 func TestManagerFreebsd(t *testing.T) {
-	mock, err := mock.New("./testdata/freebsd12.toml", nil)
+	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Family: []string{"unix", "bsd"},
+		},
+	})
 	require.NoError(t, err)
 
 	mm, err := users.ResolveManager(mock)
@@ -70,7 +83,11 @@ func TestManagerFreebsd(t *testing.T) {
 }
 
 func TestManagerWindows(t *testing.T) {
-	mock, err := mock.New("./testdata/windows.toml", nil)
+	mock, err := mock.New("./testdata/windows.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Family: []string{"windows"},
+		},
+	})
 	require.NoError(t, err)
 
 	mm, err := users.ResolveManager(mock)
