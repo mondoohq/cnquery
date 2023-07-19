@@ -1,32 +1,240 @@
 packs:
   - uid: mondoo-asset-count
     name: Asset Count Query Pack
+    groups:
+      - title: ESXi asset counts
+        filters: asset.platform == 'vmware-vsphere'
+        queries:
+          - uid: mondoo-asset-count-on-vsphere-cluster-esxi 
+          - uid: mondoo-asset-count-on-vsphere-cluster-vms
+      - title: Azure asset counts 
+        filters: asset.platform == 'azure' || asset.platform == 'microsoft365' 
+        queries: 
+          - uid: mondoo-asset-count-on-azure
+          - uid: mondoo-count-users-in-azure  
+      - title: AWS asset counts
+        filters: asset.platform == "aws" 
+        queries:
+          - uid: mondoo-asset-count-aws-acm-certificates
+          - uid: mondoo-asset-count-aws-api-gateways
+          - uid: mondoo-asset-count-aws-active-regions
+          - uid: mondoo-asset-count-aws-autoscaling-groups
+          - uid: mondoo-asset-count-aws-cloudtrails
+          - uid: mondoo-asset-count-aws-dynamodb-tables
+          - uid: mondoo-asset-count-aws-dynamodb-global-tables
+          - uid: mondoo-asset-count-aws-ec2-instances
+          - uid: mondoo-asset-count-aws-ecr-container-images
+          - uid: mondoo-asset-count-aws-ecs-clusters
+          - uid: mondoo-asset-count-aws-ecs-container-instances
+          - uid: mondoo-asset-count-aws-ecs-containers
+          - uid: mondoo-asset-count-aws-efs-filesysystems
+          - uid: mondoo-asset-count-aws-eks-clusters
+          - uid: mondoo-asset-count-aws-elasticache-cache-clusters
+          - uid: mondoo-asset-count-aws-elasticache-clusters
+          - uid: mondoo-asset-count-aws-elb-application
+          - uid: mondoo-asset-count-aws-elb-classic
+          - uid: mondoo-asset-count-aws-emr-clusters
+          - uid: mondoo-asset-count-aws-es-domains
+          - uid: mondoo-asset-count-aws-guardduty-detectors
+          - uid: mondoo-asset-count-aws-iam-groups
+          - uid: mondoo-asset-count-aws-iam-policies
+          - uid: mondoo-asset-count-aws-iam-users
+          - uid: mondoo-asset-count-aws-kms-keys
+          - uid: mondoo-asset-count-aws-private-ecr-container-registries
+          - uid: mondoo-asset-count-aws-public-ecr-container-registries
+          - uid: mondoo-asset-count-aws-rds-dbclusters
+          - uid: mondoo-asset-count-aws-redshift-clusters
+          - uid: mondoo-asset-count-aws-s3-buckets
+          - uid: mondoo-asset-count-aws-sagemaker-endpoints
+          - uid: mondoo-asset-count-aws-sagemaker-notebook-instances
+          - uid: mondoo-asset-count-aws-secrets-manager-secrets
+          - uid: mondoo-asset-count-aws-security-groups
+          - uid: mondoo-asset-count-aws-security-hub
+          - uid: mondoo-asset-count-aws-sns-topics
+          - uid: mondoo-asset-count-aws-vpcs
     queries:
       - uid: mondoo-asset-count-on-vsphere-cluster-esxi
         title: Retrieve all ESXi hosts
         filters: asset.platform == 'vmware-vsphere'
         query: |
           vsphere.datacenters { hosts.length }
+
       - uid: mondoo-asset-count-on-vsphere-cluster-vms
         title: Retrieve all VMs from vSphere cluster
         filters: asset.platform == 'vmware-vsphere'
         query: |
           vsphere.datacenters { vms.length }
+
       - uid: mondoo-asset-count-on-azure
+        filters: asset.platform == 'azure' || asset.platform == 'microsoft365' 
         title: Retrieve all VMs from Azure
-        filters: asset.platform == 'azure'
         query: |
           azure.compute.vms.length
+
       - uid: mondoo-count-users-in-azure
+        filters: asset.platform == 'azure' || asset.platform == 'microsoft365' 
         title: Retrieve all users from Azure
-        filters: asset.platform == 'azure' || asset.platform == 'microsoft365'
         query: |
           azuread.users.length
-      - uid: mondoo-asset-count-on-aws
-        title: Retrieve all instances from AWS
-        filters: asset.platform == 'aws'
-        query: |
-          aws.ec2.instances.length
+
+      - uid: mondoo-asset-count-aws-account-id
+        title: AWS account ID
+        mql: aws.account.id
+
+      - uid: mondoo-asset-count-aws-acm-certificates
+        title: AWS ACM Certificates
+        mql: aws.acm.certificates.length
+
+      - uid: mondoo-asset-count-aws-acm-certificates
+        title: AWS ACM Certificates
+        mql: aws.acm.certificates.length
+
+      - uid: mondoo-asset-count-aws-api-gateways
+        title: AWS API Gateways
+        mql: aws.apigateway.restApis.length
+
+      - uid: mondoo-asset-count-aws-autoscaling-groups
+        title: AWS Autoscaling Groups (not created by Mondoo)
+        mql: aws.autoscaling.groups.where( name != "mondoo-scanning-asg" ).length
+
+      - uid: mondoo-asset-count-aws-iam-users
+        title: AWS IAM users
+        mql: aws.iam.users.length
+
+      - uid: mondoo-asset-count-aws-iam-groups
+        title: AWS IAM groups
+        mql: aws.iam.groups.length
+
+      - uid: mondoo-asset-count-aws-iam-policies
+        title: AWS IAM custom policies
+        mql: |
+          aws_account = aws.account.id
+          aws.iam.policies.where( arn.contains(aws_account)).length
+
+      - uid: mondoo-asset-count-aws-active-regions
+        title: AWS Regions Active
+        mql: aws.regions.length
+
+      - uid: mondoo-asset-count-aws-ec2-instances
+        title: AWS EC2 Instances
+        mql: aws.ec2.instances.length
+
+      - uid: mondoo-asset-count-aws-s3-buckets
+        title: AWS S3 Buckets
+        mql: aws.s3.buckets.length
+
+      - uid: mondoo-asset-count-aws-vpcs
+        title: AWS VPCs
+        mql: aws.vpcs.length
+
+      - uid: mondoo-asset-count-aws-security-groups
+        title: AWS Security Groups
+        mql: aws.ec2.securityGroups.length
+
+      - uid: mondoo-asset-count-aws-eks-clusters
+        title: AWS Elastic Kubernetes Clusters (EKS)
+        mql: aws.eks.clusters.length
+
+      - uid: mondoo-asset-count-aws-private-ecr-container-registries
+        title: AWS Private Elastic Container Registries (ECR)
+        mql: aws.ecr.privateRepositories.length
+
+      - uid: mondoo-asset-count-aws-public-ecr-container-registries
+        title: AWS Public Elastic Container Registries (ECR)
+        mql: aws.ecr.publicRepositories.length
+
+      - uid: mondoo-asset-count-aws-ecr-container-images
+        title: AWS Elastic Container Images (ECR)
+        mql: aws.ecr.images.length
+
+      - uid: mondoo-asset-count-aws-rds-dbclusters
+        title: AWS RDS DB Clusters
+        mql: aws.rds.dbClusters.length
+
+      - uid: mondoo-asset-count-aws-cloudtrails
+        title: AWS CloudTrails
+        mql: aws.cloudtrail.trails.length
+
+      - uid: mondoo-asset-count-aws-dynamodb-tables
+        title: AWS Dynamo DB Tables
+        mql: aws.dynamodb.tables.length
+
+      - uid: mondoo-asset-count-aws-dynamodb-global-tables
+        title: AWS Dynamo DB Global Tables
+        mql: aws.dynamodb.globalTables.length
+
+      - uid: mondoo-asset-count-aws-ecs-clusters
+        title: AWS ECS Clusters
+        mql: aws.ecs.clusters.length
+
+      - uid: mondoo-asset-count-aws-ecs-container-instances
+        title: AWS ECS Container Instances
+        mql: aws.ecs.containerInstances.length
+
+      - uid: mondoo-asset-count-aws-ecs-containers
+        title: AWS ECS Containers
+        mql: aws.ecs.containers.length
+
+      - uid: mondoo-asset-count-aws-efs-filesysystems
+        title: AWS EFS Filesystems
+        mql: aws.efs.filesystems.length
+
+      - uid: mondoo-asset-count-aws-elasticache-clusters
+        title: AWS Elasticache Clusters
+        mql: aws.elasticache.clusters.length
+
+      - uid: mondoo-asset-count-aws-elasticache-cache-clusters
+        title: AWS Elasticache Cache Clusters
+        mql: aws.elasticache.cacheClusters.length
+
+      - uid: mondoo-asset-count-aws-elb-application
+        title: AWS Elastic Application Load Balancers
+        mql: aws.elb.loadBalancers.length
+
+      - uid: mondoo-asset-count-aws-elb-classic
+        title: AWS Elastic Classic Load Balancers
+        mql: aws.elb.classicLoadBalancers.length
+
+      - uid: mondoo-asset-count-aws-emr-clusters
+        title: AWS Elastic Map Reduce Clusters
+        mql: aws.emr.clusters.length
+
+      - uid: mondoo-asset-count-aws-es-domains
+        title: AWS Elasticsearch Service Domain
+        mql: aws.es.domains.length
+
+      - uid: mondoo-asset-count-aws-guardduty-detectors
+        title: AWS Guard Duty Detectors
+        mql: aws.guardduty.detectors.length
+
+      - uid: mondoo-asset-count-aws-kms-keys
+        title: AWS KMS Keys
+        mql: aws.kms.keys.length
+
+      - uid: mondoo-asset-count-aws-redshift-clusters
+        title: AWS RedShift Clusters
+        mql: aws.redshift.clusters.length
+
+      - uid: mondoo-asset-count-aws-sagemaker-endpoints
+        title: AWS Sagemaker Endpoints
+        mql: aws.sagemaker.endpoints.length
+
+      - uid: mondoo-asset-count-aws-sagemaker-notebook-instances
+        title: AWS Sagemaker Notebook Instances
+        mql: aws.sagemaker.notebookInstances.length
+
+      - uid: mondoo-asset-count-aws-secrets-manager-secrets
+        title: AWS Secrets Manager Secrets
+        mql: aws.secretsmanager.secrets.length
+
+      - uid: mondoo-asset-count-aws-security-hub
+        title: AWS Security Hub
+        mql: aws.securityhub.hubs.length
+
+      - uid: mondoo-asset-count-aws-sns-topics
+        title: AWS SNS Topics
+        mql: aws.sns.topics.length
+
       - uid: mondoo-asset-count-in-windows-domain
         title: Retrieve all computer object from the Windows domain
         filters: asset.platform == "windows" && windows.computerInfo['OsProductType'] == 2
