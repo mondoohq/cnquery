@@ -2,6 +2,7 @@ package resources
 
 import (
 	"errors"
+	"path"
 	"strconv"
 	"sync"
 
@@ -20,6 +21,61 @@ func (x *mqlUser) id() (string, error) {
 	return "user/" + id + "/" + x.Name.Data, nil
 }
 
+func (x *mqlUser) init(args map[string]interface{}) (map[string]interface{}, *mqlUser, error) {
+	if len(args) != 1 {
+		return args, nil, nil
+	}
+
+	// if user is only initialized with a name or uid, we will try to look it up
+	rawName, nameOk := args["name"]
+	rawUID, idOk := args["uid"]
+	if !nameOk && !idOk {
+		return args, nil, nil
+	}
+
+	raw, err := CreateResource(x.MqlRuntime, "users", nil)
+	if err != nil {
+		return nil, nil, errors.New("cannot get list of users: " + err.Error())
+	}
+	users := raw.(*mqlUsers)
+
+	list := users.GetList()
+	if list.Error != nil {
+		return nil, nil, list.Error
+	}
+
+	var f func(user interface{}) bool
+	if nameOk {
+		name, ok := rawName.(string)
+		if !ok {
+			return nil, nil, errors.New("cannot detect user, invalid type for name (expected string)")
+		}
+		f = func(user interface{}) bool {
+			return user.(*mqlUser).Name.Data == name
+		}
+	} else if idOk {
+		id, ok := rawUID.(int64)
+		if !ok {
+			return nil, nil, errors.New("cannot detect user, invalid type for name (expected int)")
+		}
+		f = func(user interface{}) bool {
+			return user.(*mqlUser).Uid.Data == id
+		}
+	}
+
+	for i := range list.Data {
+		if f(list.Data[i]) {
+			return nil, list.Data[i].(*mqlUser), nil
+		}
+	}
+
+	if nameOk {
+		return nil, nil, errors.New("cannot find user with name '" + rawName.(string) + "'")
+	} else {
+		return nil, nil, errors.New("cannot find user with uid '" + strconv.FormatInt(rawUID.(int64), 10) + "'")
+	}
+}
+
 func (x *mqlUser) group(gid int64) (*mqlGroup, error) {
 	raw, err := CreateResource(x.MqlRuntime, "groups", nil)
 	if err != nil {
@@ -27,6 +83,18 @@ func (x *mqlUser) group(gid int64) (*mqlGroup, error) {
 	}
 	groups := raw.(*mqlGroups)
 	return groups.findID(gid)
+}
+
+func (u *mqlUser) authorizedkeys(home string) (*mqlAuthorizedkeys, error) {
+	// TODO: we may need to handle ".ssh/authorized_keys2" too
+	authorizedKeysPath := path.Join(home, ".ssh", "authorized_keys")
+	ak, err := CreateResource(u.MqlRuntime, "authorizedkeys", map[string]interface{}{
+		"path": authorizedKeysPath,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ak.(*mqlAuthorizedkeys), nil
 }
 
 type mqlUsersInternal struct {

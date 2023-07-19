@@ -160,12 +160,10 @@ func mockRuntime(pathToTestutils string, testdata string) llx.Runtime {
 		panic("failed to load recording: " + err.Error())
 	}
 
-	_, err = runtime.SetMockConnection(runtime.Provider.Instance.ID)
+	err = runtime.SetRecording(recording, runtime.Provider.Instance.ID, true, true)
 	if err != nil {
-		panic("failed to set mock connection: " + err.Error())
+		panic("failed to set recording: " + err.Error())
 	}
-
-	runtime.SetRecording(recording, runtime.Provider.Instance.ID, true)
 
 	return runtime
 }

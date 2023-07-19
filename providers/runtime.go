@@ -309,33 +309,7 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 	return nil
 }
 
-func (r *Runtime) SetMockConnection(id string) (uint32, error) {
-	provider, ok := r.providers[id]
-	if !ok {
-		return 0, errors.New("cannot find provider to mock connection: " + id)
-	}
-
-	res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{
-		Asset: &inventory.Inventory{
-			Spec: &inventory.InventorySpec{
-				Assets: []*inventory.Asset{{
-					Id: "mock-asset",
-					Connections: []*inventory.Config{{
-						Type: "mock",
-					}},
-				}},
-			},
-		},
-	})
-	if err != nil {
-		return 0, errors.New("failed to set mock connection: " + err.Error())
-	}
-
-	provider.Connection = res
-	return res.Id, nil
-}
-
-func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly bool) error {
+func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly bool, mockConnection bool) error {
 	if readOnly {
 		r.Recording = &readOnlyRecording{recording}
 	} else {
@@ -347,9 +321,36 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 		return errors.New("cannot set recording, provider '" + providerID + "' not found")
 	}
 
-	asset := &recording.Assets[0]
-	recording.assets[provider.Connection.Id] = asset
-	r.asset = asset.Asset.ToInventory()
+	assetRecording := &recording.Assets[0]
+	asset := assetRecording.Asset.ToInventory()
+	r.asset = asset
+
+	if mockConnection {
+		// Dom: we may need to retain the original asset ID, not sure yet...
+		asset.Id = "mock-asset"
+		asset.Connections = []*inventory.Config{{
+			Type: "mock",
+		}}
+
+		res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{
+			Asset: &inventory.Inventory{
+				Spec: &inventory.InventorySpec{
+					Assets: []*inventory.Asset{asset},
+				},
+			},
+		})
+		if err != nil {
+			return errors.New("failed to set mock connection for recording: " + err.Error())
+		}
+		provider.Connection = res
+	}
+
+	if provider.Connection == nil {
+		// Dom: we may need to cancel the entire setup here, may need to be reconsidered...
+		log.Warn().Msg("recording cannot determine asset, no connection was set up!")
+	} else {
+		recording.assets[provider.Connection.Id] = assetRecording
+	}
 
 	return nil
 }
