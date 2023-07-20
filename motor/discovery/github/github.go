@@ -28,7 +28,7 @@ func (r *Resolver) Name() string {
 }
 
 func (r *Resolver) AvailableDiscoveryTargets() []string {
-	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryRepository, DiscoveryUser}
+	return []string{common.DiscoveryAuto, common.DiscoveryAll, DiscoveryRepository, DiscoveryUser, DiscoveryOrganization}
 }
 
 func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *providers.Config, credsResolver vault.Resolver, sfn common.QuerySecretFn, userIdDetectors ...providers.PlatformIdDetector) ([]*asset.Asset, error) {
