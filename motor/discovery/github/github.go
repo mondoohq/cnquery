@@ -119,13 +119,13 @@ func (r *Resolver) Resolve(ctx context.Context, root *asset.Asset, pCfg *provide
 				return nil, err
 			}
 
-			listOpts := &github.RepositoryListOptions{
+			listOpts := &github.RepositoryListByOrgOptions{
 				ListOptions: github.ListOptions{PerPage: 100},
 				Type:        "all",
 			}
 			allRepos := []*github.Repository{}
 			for {
-				repos, resp, err := p.Client().Repositories.List(context.Background(), org.GetLogin(), listOpts)
+				repos, resp, err := p.Client().Repositories.ListByOrg(context.Background(), org.GetLogin(), listOpts)
 				if err != nil {
 					if strings.Contains(err.Error(), "404") {
 						return nil, nil
