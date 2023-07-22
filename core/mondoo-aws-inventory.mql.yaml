@@ -78,7 +78,7 @@ packs:
       - uid: mondoo-asset-inventory-aws-s3-retrieve-all-data
         title: Retrieve the configuration for all S3 buckets
         mql: aws.s3.buckets
-      - uid: mondoo-asset-inventory-aws-eks-clusterss
+      - uid: mondoo-asset-inventory-aws-eks-clusters
         title: Retrieve the configuration for all AWS EKS clusters
         mql: aws.eks.clusters
       - uid: mondoo-asset-inventory-aws-lambda

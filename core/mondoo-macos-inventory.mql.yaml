@@ -33,15 +33,39 @@ packs:
     filters:
       - asset.platform.contains("macos")
     queries:
+      - uid: mondoo-macos-machine-model-identifier
+        title: Retrieve the machine model identifer
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_model']
+      - uid: mondoo-macos-machine-model-name
+        title: Retrieve the machine model name
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_name']
+      - uid: mondoo-macos-model-part-number
+        title: Retrieve the model part number
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['model_number']
+      - uid: mondoo-macos-serial-number
+        title: Retrieve the system serial number
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['serial_number']
+      - uid: mondoo-macos-cpu-type
+        title: Retrieve the type of CPU
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['chip_type']
+      - uid: mondoo-macos-physical-memory
+        title: Retrieve the amount of physical memory
+        mql: |
+          parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['physical_memory']
       - uid: mondoo-asset-info
         title: Retrieve asset information
-        mql: asset { kind title platform name arch runtime }
+        mql: asset { kind title platform name arch runtime version }
       - uid: mondoo-hostname
         title: Retrieve the hostname
         mql: os.hostname
       - uid: mondoo-macos-users 
         title: Retrieve regular users 
-        mql: users.where( name != /^_/ && shell != "/usr/bin/false" )
+        mql: users.where( name != /^_/ && shell != "/usr/bin/false" && name != "root")
       - uid: mondoo-macos-packages
         title: Retrieve macOS packages 
         mql: packages

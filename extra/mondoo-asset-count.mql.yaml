@@ -27,7 +27,7 @@ packs:
           - uid: mondoo-asset-count-aws-ecs-clusters
           - uid: mondoo-asset-count-aws-ecs-container-instances
           - uid: mondoo-asset-count-aws-ecs-containers
-          - uid: mondoo-asset-count-aws-efs-filesysystems
+          - uid: mondoo-asset-count-aws-efs-filesystems
           - uid: mondoo-asset-count-aws-eks-clusters
           - uid: mondoo-asset-count-aws-elasticache-cache-clusters
           - uid: mondoo-asset-count-aws-elasticache-clusters
@@ -148,7 +148,7 @@ packs:
         mql: aws.ecr.images.length
 
       - uid: mondoo-asset-count-aws-rds-dbclusters
-        title: AWS RDS DB Clusters
+        title: AWS RDS Database Clusters
         mql: aws.rds.dbClusters.length
 
       - uid: mondoo-asset-count-aws-cloudtrails
@@ -156,11 +156,11 @@ packs:
         mql: aws.cloudtrail.trails.length
 
       - uid: mondoo-asset-count-aws-dynamodb-tables
-        title: AWS Dynamo DB Tables
+        title: AWS DynamoDB Tables
         mql: aws.dynamodb.tables.length
 
       - uid: mondoo-asset-count-aws-dynamodb-global-tables
-        title: AWS Dynamo DB Global Tables
+        title: AWS DynamoDB Global Tables
         mql: aws.dynamodb.globalTables.length
 
       - uid: mondoo-asset-count-aws-ecs-clusters
@@ -175,16 +175,16 @@ packs:
         title: AWS ECS Containers
         mql: aws.ecs.containers.length
 
-      - uid: mondoo-asset-count-aws-efs-filesysystems
+      - uid: mondoo-asset-count-aws-efs-filesystems
         title: AWS EFS Filesystems
         mql: aws.efs.filesystems.length
 
       - uid: mondoo-asset-count-aws-elasticache-clusters
-        title: AWS Elasticache Clusters
+        title: AWS ElastiCache Clusters
         mql: aws.elasticache.clusters.length
 
       - uid: mondoo-asset-count-aws-elasticache-cache-clusters
-        title: AWS Elasticache Cache Clusters
+        title: AWS ElastiCache Cache Clusters
         mql: aws.elasticache.cacheClusters.length
 
       - uid: mondoo-asset-count-aws-elb-application
@@ -212,15 +212,15 @@ packs:
         mql: aws.kms.keys.length
 
       - uid: mondoo-asset-count-aws-redshift-clusters
-        title: AWS RedShift Clusters
+        title: AWS Redshift Clusters
         mql: aws.redshift.clusters.length
 
       - uid: mondoo-asset-count-aws-sagemaker-endpoints
-        title: AWS Sagemaker Endpoints
+        title: AWS SageMaker Endpoints
         mql: aws.sagemaker.endpoints.length
 
       - uid: mondoo-asset-count-aws-sagemaker-notebook-instances
-        title: AWS Sagemaker Notebook Instances
+        title: AWS SageMaker Notebook Instances
         mql: aws.sagemaker.notebookInstances.length
 
       - uid: mondoo-asset-count-aws-secrets-manager-secrets
