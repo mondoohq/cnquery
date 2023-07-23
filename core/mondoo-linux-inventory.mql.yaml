@@ -102,3 +102,23 @@ packs:
           if ( package('openssh-server').installed || package('openssh').installed ) {
             sshd.config.params
           }
+      - uid: mondoo-linux-system-manufacturer
+        title: Retrieve the system manufacturer
+        mql: |
+          machine.baseboard.manufacturer
+      - uid: mondoo-linux-system-product-name
+        title: Retrieve the system product name
+        mql: |
+          machine.baseboard.product
+      - uid: mondoo-linux-cpu-type
+        title: Retrieve the type of CPU
+        mql: |
+          command('cat /proc/cpuinfo | grep "model name" | sort -u | cut -d : -f 2-').stdout.trim
+      - uid: mondoo-linux-root-volume
+        title: Retrieve the size and filesystem type of the root volume
+        mql: |
+          command("df -TH / | grep '/dev' | awk '{ print $3 "+'" "'+" $2 }'").stdout.trim
+      - uid: mondoo-linux-physical-memory
+        title: Retrieve the amount of physical memory
+        mql: |
+          command("free --mega | grep Mem | awk '{ print $2}'").stdout.trim + "M"
