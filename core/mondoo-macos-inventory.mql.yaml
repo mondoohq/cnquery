@@ -34,7 +34,7 @@ packs:
       - asset.platform.contains("macos")
     queries:
       - uid: mondoo-macos-machine-model-identifier
-        title: Retrieve the machine model identifer
+        title: Retrieve the machine model identifier
         mql: |
           parse.json(content: command('system_profiler SPHardwareDataType -json').stdout).params['SPHardwareDataType'].first['machine_model']
       - uid: mondoo-macos-machine-model-name
