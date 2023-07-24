@@ -186,7 +186,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		return err
 	}
 
-	r.Recording.EnsureAsset(asset, r.Provider.Instance.Name, conn)
+	r.Recording.EnsureAsset(r.Provider.Connection.Asset, r.Provider.Instance.Name, r.Provider.Connection.Id, conn)
 	return nil
 }
 
@@ -205,7 +205,7 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		return nil, err
 	}
 
-	if _, ok := r.Recording.GetResource(provider.Connection.Id, name, string(res.Data.Value)); ok {
+	if _, ok := r.Recording.GetResource(provider.Connection.Id, name, string(res.Data.Value)); !ok {
 		r.Recording.AddData(provider.Connection.Id, name, string(res.Data.Value), "", nil)
 	}
 
