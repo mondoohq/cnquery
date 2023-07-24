@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/packages"
 )
@@ -112,17 +113,17 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 			log.Debug().Str("package", osPkg.Name).Str("available", update.Available).Msg("mql[packages]> found newer version")
 		}
 
-		pkg, err := CreateResource(x.MqlRuntime, "package", map[string]interface{}{
-			"name":      osPkg.Name,
-			"version":   osPkg.Version,
-			"available": available,
+		pkg, err := CreateResource(x.MqlRuntime, "package", map[string]*llx.RawData{
+			"name":        llx.StringData(osPkg.Name),
+			"version":     llx.StringData(osPkg.Version),
+			"available":   llx.StringData(available),
+			"arch":        llx.StringData(osPkg.Arch),
+			"status":      llx.StringData(osPkg.Status),
+			"description": llx.StringData(osPkg.Description),
+			"format":      llx.StringData(osPkg.Format),
+			"installed":   llx.BoolData(true),
+			"origin":      llx.StringData(osPkg.Origin),
 			// "epoch": "", // TODO: support Epoch
-			"arch":        osPkg.Arch,
-			"status":      osPkg.Status,
-			"description": osPkg.Description,
-			"format":      osPkg.Format,
-			"installed":   true,
-			"origin":      osPkg.Origin,
 		})
 		if err != nil {
 			return nil, err

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/providers/os/resources"
@@ -211,23 +212,23 @@ func TestResource_File_Permissions(t *testing.T) {
 		permRaw, err := resources.CreateResource(
 			runtime,
 			"file.permissions",
-			map[string]interface{}{
-				"mode":             int64(tc.mode),
-				"user_readable":    tc.userReadable,
-				"user_writeable":   tc.userWriteable,
-				"user_executable":  tc.userExecutable,
-				"group_readable":   tc.groupReadable,
-				"group_writeable":  tc.groupWriteable,
-				"group_executable": tc.groupExecutable,
-				"other_readable":   tc.otherReadable,
-				"other_writeable":  tc.otherWriteable,
-				"other_executable": tc.otherExecutable,
-				"suid":             tc.suid,
-				"sgid":             tc.sgid,
-				"sticky":           tc.sticky,
-				"isDirectory":      tc.isDir,
-				"isFile":           tc.isFile,
-				"isSymlink":        tc.isSymlink,
+			map[string]*llx.RawData{
+				"mode":             llx.IntData(int64(tc.mode)),
+				"user_readable":    llx.BoolData(tc.userReadable),
+				"user_writeable":   llx.BoolData(tc.userWriteable),
+				"user_executable":  llx.BoolData(tc.userExecutable),
+				"group_readable":   llx.BoolData(tc.groupReadable),
+				"group_writeable":  llx.BoolData(tc.groupWriteable),
+				"group_executable": llx.BoolData(tc.groupExecutable),
+				"other_readable":   llx.BoolData(tc.otherReadable),
+				"other_writeable":  llx.BoolData(tc.otherWriteable),
+				"other_executable": llx.BoolData(tc.otherExecutable),
+				"suid":             llx.BoolData(tc.suid),
+				"sgid":             llx.BoolData(tc.sgid),
+				"sticky":           llx.BoolData(tc.sticky),
+				"isDirectory":      llx.BoolData(tc.isDir),
+				"isFile":           llx.BoolData(tc.isFile),
+				"isSymlink":        llx.BoolData(tc.isSymlink),
 			},
 		)
 		require.NoError(t, err)

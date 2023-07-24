@@ -24,7 +24,6 @@ type Runtime struct {
 	Recording      Recording
 
 	features []byte
-	asset    *inventory.Asset
 	// coordinator is used to grab providers
 	coordinator *coordinator
 	// providers for with open connections
@@ -132,28 +131,23 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		return errors.New("cannot connect, please select a provider first")
 	}
 
-	if req.Asset == nil || req.Asset.Spec == nil || len(req.Asset.Spec.Assets) == 0 {
+	if req.Asset == nil {
 		return errors.New("cannot connect, no asset info provided")
 	}
 
-	asset := req.Asset.Spec.Assets[0]
+	asset := req.Asset
 	if len(asset.Connections) == 0 {
 		return errors.New("cannot connect to asset, no connection info provided")
 	}
 
-	r.asset = asset
 	r.features = req.Features
-
-	// if we already have a connection, which typically happens during CLI parsing
-	// when there is discovery of assets going on as well...
 	conn := asset.Connections[0]
-	if conn.Id != 0 {
-		r.Provider.Connection = &plugin.ConnectRes{Id: conn.Id, Name: conn.ToUrl()}
-		r.Recording.EnsureAsset(asset, r.Provider.Instance.Name, conn)
-		return nil
-	}
 
-	manager, err := manager.NewManager(manager.WithInventory(req.Asset, r))
+	manager, err := manager.NewManager(manager.WithInventory(&inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{asset},
+		},
+	}, r))
 	if err != nil {
 		return errors.New("failed to resolve inventory for connection: " + err.Error())
 	}
@@ -165,11 +159,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		inventoryAsset = protobuf.Clone(inventoryAsset).(*inventory.Asset)
 		req = &plugin.ConnectReq{
 			Features: req.Features,
-			Asset: &inventory.Inventory{
-				Spec: &inventory.InventorySpec{
-					Assets: []*inventory.Asset{inventoryAsset},
-				},
-			},
+			Asset:    inventoryAsset,
 		}
 
 		for j := range inventoryAsset.Connections {
@@ -191,7 +181,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		}
 	}
 
-	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req)
+	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, nil)
 	if err != nil {
 		return err
 	}
@@ -210,26 +200,12 @@ func (r *Runtime) CreateResource(name string, args map[string]*llx.Primitive) (l
 		Connection: provider.Connection.Id,
 		Resource:   name,
 		Args:       args,
-	}, nil)
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if cached, ok := r.Recording.GetResource(provider.Connection.Id, name, string(res.Data.Value)); ok {
-		fields, err := RawDataArgsToPrimitiveArgs(cached)
-		if err != nil {
-			log.Error().Str("resource", name).Str("id", string(res.Data.Value)).Msg("failed to load resource from recording")
-		} else {
-			provider.Instance.Plugin.StoreData(&plugin.StoreReq{
-				Connection: provider.Connection.Id,
-				Resources: []*plugin.ResourceData{{
-					Name:   name,
-					Id:     string(res.Data.Value),
-					Fields: fields,
-				}},
-			})
-		}
-	} else {
+	if _, ok := r.Recording.GetResource(provider.Connection.Id, name, string(res.Data.Value)); ok {
 		r.Recording.AddData(provider.Connection.Id, name, string(res.Data.Value), "", nil)
 	}
 
@@ -250,7 +226,7 @@ func (r *Runtime) CreateResourceWithID(name string, id string, args map[string]*
 		Resources: []*plugin.ResourceData{{
 			Name:   name,
 			Id:     id,
-			Fields: args,
+			Fields: PrimitiveArgsToResultArgs(args),
 		}},
 	})
 	if err != nil {
@@ -293,7 +269,7 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 		Resource:   name,
 		ResourceId: id,
 		Field:      field,
-	}, nil)
+	})
 	if err != nil {
 		return err
 	}
@@ -307,6 +283,32 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 
 	callback(raw.Value, err)
 	return nil
+}
+
+type providerCallbacks struct {
+	recording *assetRecording
+}
+
+func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceData, error) {
+	resource, ok := p.recording.resources[req.Resource+"\x00"+req.ResourceId]
+	if !ok {
+		return nil, nil
+	}
+
+	res := plugin.ResourceData{
+		Name:   req.Resource,
+		Id:     req.ResourceId,
+		Fields: make(map[string]*llx.Result, len(resource.Fields)),
+	}
+	for k, v := range resource.Fields {
+		res.Fields[k] = v.Result()
+	}
+
+	return &res, nil
+}
+
+func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
+	panic("NOT YET IMPLEMENTED")
 }
 
 func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly bool, mockConnection bool) error {
@@ -323,7 +325,6 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 
 	assetRecording := &recording.Assets[0]
 	asset := assetRecording.Asset.ToInventory()
-	r.asset = asset
 
 	if mockConnection {
 		// Dom: we may need to retain the original asset ID, not sure yet...
@@ -332,13 +333,13 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 			Type: "mock",
 		}}
 
+		callbacks := providerCallbacks{
+			recording: assetRecording,
+		}
+
 		res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{
-			Asset: &inventory.Inventory{
-				Spec: &inventory.InventorySpec{
-					Assets: []*inventory.Asset{asset},
-				},
-			},
-		})
+			Asset: asset,
+		}, &callbacks)
 		if err != nil {
 			return errors.New("failed to set mock connection for recording: " + err.Error())
 		}
@@ -372,8 +373,8 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 
 	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
 		Features: r.features,
-		Asset:    &inventory.Inventory{Spec: &inventory.InventorySpec{Assets: []*inventory.Asset{r.asset}}},
-	})
+		Asset:    r.Provider.Connection.Asset,
+	}, nil)
 	if err != nil {
 		return nil, nil, err
 	}

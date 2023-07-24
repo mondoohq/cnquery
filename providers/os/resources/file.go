@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/spf13/afero"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -34,23 +35,23 @@ func (s *mqlFile) stat() error {
 	}
 
 	mode := stat.Mode.UnixMode()
-	res, err := CreateResource(s.MqlRuntime, "file.permissions", map[string]interface{}{
-		"mode":             int64(uint32(mode) & 0o7777),
-		"user_readable":    stat.Mode.UserReadable(),
-		"user_writeable":   stat.Mode.UserWriteable(),
-		"user_executable":  stat.Mode.UserExecutable(),
-		"group_readable":   stat.Mode.GroupReadable(),
-		"group_writeable":  stat.Mode.GroupWriteable(),
-		"group_executable": stat.Mode.GroupExecutable(),
-		"other_readable":   stat.Mode.OtherReadable(),
-		"other_writeable":  stat.Mode.OtherWriteable(),
-		"other_executable": stat.Mode.OtherExecutable(),
-		"suid":             stat.Mode.Suid(),
-		"sgid":             stat.Mode.Sgid(),
-		"sticky":           stat.Mode.Sticky(),
-		"isDirectory":      stat.Mode.IsDir(),
-		"isFile":           stat.Mode.IsRegular(),
-		"isSymlink":        stat.Mode.FileMode&os.ModeSymlink != 0,
+	res, err := CreateResource(s.MqlRuntime, "file.permissions", map[string]*llx.RawData{
+		"mode":             llx.IntData(int64(uint32(mode) & 0o7777)),
+		"user_readable":    llx.BoolData(stat.Mode.UserReadable()),
+		"user_writeable":   llx.BoolData(stat.Mode.UserWriteable()),
+		"user_executable":  llx.BoolData(stat.Mode.UserExecutable()),
+		"group_readable":   llx.BoolData(stat.Mode.GroupReadable()),
+		"group_writeable":  llx.BoolData(stat.Mode.GroupWriteable()),
+		"group_executable": llx.BoolData(stat.Mode.GroupExecutable()),
+		"other_readable":   llx.BoolData(stat.Mode.OtherReadable()),
+		"other_writeable":  llx.BoolData(stat.Mode.OtherWriteable()),
+		"other_executable": llx.BoolData(stat.Mode.OtherExecutable()),
+		"suid":             llx.BoolData(stat.Mode.Suid()),
+		"sgid":             llx.BoolData(stat.Mode.Sgid()),
+		"sticky":           llx.BoolData(stat.Mode.Sticky()),
+		"isDirectory":      llx.BoolData(stat.Mode.IsDir()),
+		"isFile":           llx.BoolData(stat.Mode.IsRegular()),
+		"isSymlink":        llx.BoolData(stat.Mode.FileMode&os.ModeSymlink != 0),
 	})
 	if err != nil {
 		return err

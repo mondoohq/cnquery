@@ -8,6 +8,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/core/resources"
+	"go.mondoo.com/cnquery/types"
 )
 
 const defaultConnection uint32 = 1
@@ -27,41 +28,37 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	return nil, errors.New("core doesn't offer any connectors")
 }
 
-func (s *Service) Connect(req *plugin.ConnectReq) (*plugin.ConnectRes, error) {
-	if req == nil || req.Asset == nil || req.Asset.Spec == nil {
+func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	if req == nil || req.Asset == nil {
 		return nil, errors.New("no connection data provided")
-	}
-
-	assets := req.Asset.Spec.Assets
-	if len(assets) == 0 {
-		return nil, errors.New("no asset provided for connection")
 	}
 
 	s.lastConnectionID++
 	connID := s.lastConnectionID
 	runtime := &plugin.Runtime{
-		Resources: map[string]plugin.Resource{},
+		Resources:    map[string]plugin.Resource{},
+		Callback:     callback,
+		HasRecording: req.HasRecording,
 	}
 	s.runtimes[connID] = runtime
 
-	asset := req.Asset.Spec.Assets[0]
-	assetObj, err := resources.CreateResource(runtime, "asset", map[string]interface{}{
-		"ids":      llx.TArr2Raw(asset.PlatformIds),
-		"platform": asset.Platform.Name,
-		"kind":     asset.Platform.Kind,
-		"runtime":  asset.Platform.Runtime,
-		"version":  asset.Platform.Version,
-		"arch":     asset.Platform.Arch,
-		"title":    asset.Platform.Title,
-		"family":   llx.TArr2Raw(asset.Platform.Family),
-		"build":    asset.Platform.Build,
-		"labels":   llx.TMap2Raw(asset.Platform.Labels),
-		"fqdn":     "",
+	asset := req.Asset
+	_, err := resources.CreateResource(runtime, "asset", map[string]*llx.RawData{
+		"ids":      llx.ArrayData(llx.TArr2Raw(asset.PlatformIds), types.String),
+		"platform": llx.StringData(asset.Platform.Name),
+		"kind":     llx.StringData(asset.Platform.Kind),
+		"runtime":  llx.StringData(asset.Platform.Runtime),
+		"version":  llx.StringData(asset.Platform.Version),
+		"arch":     llx.StringData(asset.Platform.Arch),
+		"title":    llx.StringData(asset.Platform.Title),
+		"family":   llx.ArrayData(llx.TArr2Raw(asset.Platform.Family), types.String),
+		"build":    llx.StringData(asset.Platform.Build),
+		"labels":   llx.MapData(llx.TMap2Raw(asset.Platform.Labels), types.String),
+		"fqdn":     llx.StringData(""),
 	})
 	if err != nil {
 		return nil, errors.New("failed to init core, cannot set asset metadata")
 	}
-	runtime.Resources["asset\x00"] = assetObj
 
 	return &plugin.ConnectRes{
 		Id:   defaultConnection,
@@ -69,16 +66,13 @@ func (s *Service) Connect(req *plugin.ConnectReq) (*plugin.ConnectRes, error) {
 	}, nil
 }
 
-func (s *Service) GetData(req *plugin.DataReq, callback plugin.ProviderCallback) (*plugin.DataRes, error) {
+func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
 	}
 
-	args, err := plugin.ProtoArgsToRawArgs(req.Args)
-	if err != nil {
-		return nil, err
-	}
+	args := plugin.PrimitiveArgsToRawDataArgs(req.Args)
 
 	if req.ResourceId == "" && req.Field == "" {
 		res, err := resources.CreateResource(runtime, req.Resource, args)
@@ -86,15 +80,7 @@ func (s *Service) GetData(req *plugin.DataReq, callback plugin.ProviderCallback)
 			return nil, err
 		}
 
-		name := res.MqlName()
-		id := res.MqlID()
-		if x, ok := runtime.Resources[name+"\x00"+id]; ok {
-			res = x
-		} else {
-			runtime.Resources[name+"\x00"+id] = res
-		}
-
-		rd := llx.ResourceData(res, name).Result()
+		rd := llx.ResourceData(res, req.Resource).Result()
 		return &plugin.DataRes{
 			Data: rd.Data,
 		}, nil
@@ -118,7 +104,7 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	for i := range req.Resources {
 		info := req.Resources[i]
 
-		args, err := plugin.ProtoArgsToRawArgs(info.Fields)
+		args, err := plugin.ProtoArgsToRawDataArgs(info.Fields)
 		if err != nil {
 			errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), failed to parse arguments")
 			continue

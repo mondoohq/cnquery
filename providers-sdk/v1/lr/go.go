@@ -59,6 +59,7 @@ package resources
 import (
 	"errors"
 
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/types"%s
 )
@@ -68,37 +69,80 @@ func (b *goBuilder) goCreateResource(r []*Resource) {
 	newCmds := make([]string, len(r))
 	for i := range r {
 		resource := r[i]
-		newCmds[i] = "\"" + resource.ID + "\": New" + resource.interfaceName(b) + ","
+		iName := resource.interfaceName(b)
+		structName := resource.structName(b)
+
+		var parseArgs string
+		if b.collector.HasInit(iName) {
+			parseArgs = "Init: init" + iName + ","
+		} else {
+			parseArgs = "// to override args, implement: init" + iName + "(args map[string]interface{}) (map[string]interface{}, *" + structName + ", error)"
+		}
+
+		newCmds[i] = fmt.Sprintf("\"%s\": {\n\t\t\t%s\n\t\t\tCreate: create%s,\n\t\t},", resource.ID, parseArgs, iName)
 	}
 
 	b.data += `
-var newResource map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error)
+var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	resourceFactories = map[string]plugin.ResourceFactory {
 		` + strings.Join(newCmds, "\n\t\t") + `
 	}
 }
 
-// CreateResource is used by the runtime of this plugin
-func CreateResource(runtime *plugin.Runtime, name string, args map[string]interface{}) (plugin.Resource, error) {
-	f, ok := newResource[name]
+// NewResource is used by the runtime of this plugin to create new resources.
+// Its arguments may be provided by users. This function is generally not
+// used by initializing resources from recordings or from lists.
+func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+	f, ok := resourceFactories[name]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in os provider")
+		return nil, errors.New("cannot find resource " + name + " in this provider")
 	}
 
-	res, err := f(runtime, args)
+	if f.Init != nil {
+		var err error
+		var res plugin.Resource
+		args, res, err = f.Init(runtime, args)
+		if err != nil || res != nil {
+			return res, err
+		}
+	}
+
+	res, err := f.Create(runtime, args)
 	if err != nil {
 		return nil, err
 	}
 
-	id := res.MqlID()
-	if x, ok := runtime.Resources[name+"\x00"+id]; ok {
-		res = x
-	} else {
-		runtime.Resources[name+"\x00"+id] = res
+	id := name+"\x00"+res.MqlID()
+	if x, ok := runtime.Resources[id]; ok {
+		return x, nil
 	}
 
+	runtime.Resources[id] = res
+	return res, nil
+}
+
+// CreateResource is used by the runtime of this plugin to create resources.
+// Its arguments must be complete and pre-processed. This method is used
+// for initializing resources from recordings or from lists.
+func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+	f, ok := resourceFactories[name]
+	if !ok {
+		return nil, errors.New("cannot find resource " + name + " in this provider")
+	}
+
+	res, err := f.Create(runtime, args)
+	if err != nil {
+		return nil, err
+	}
+
+	id := name+"\x00"+res.MqlID()
+	if x, ok := runtime.Resources[id]; ok {
+		return x, nil
+	}
+
+	runtime.Resources[id] = res
 	return res, nil
 }
 `
@@ -130,7 +174,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	` + strings.Join(fields, "\n\t") + `
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]interface{}) *plugin.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
 		return &plugin.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
@@ -146,10 +190,9 @@ func (b *goBuilder) goSetData(r []*Resource) {
 	for i := range r {
 		resource := r[i]
 
-		x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*%s).__id, ok = v.(string)
-			return ok
+		x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*%s).__id, ok = v.Value.(string)
+			return
 		},`,
 			resource.ID, "__id",
 			resource.structName(b),
@@ -162,10 +205,9 @@ func (b *goBuilder) goSetData(r []*Resource) {
 				continue
 			}
 
-			x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*%s).%s, ok = plugin.RawToTValue[%s](v)
-		return ok
+			x := fmt.Sprintf(`"%s.%s": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*%s).%s, ok = plugin.RawToTValue[%s](v.Value, v.Error)
+		return
 	},`,
 				resource.ID, field.BasicField.ID,
 				resource.structName(b), field.BasicField.methodname(),
@@ -176,11 +218,11 @@ func (b *goBuilder) goSetData(r []*Resource) {
 	}
 
 	b.data += `
-var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	` + strings.Join(fields, "\n\t") + `
 }
 
-func SetData(resource plugin.Resource, field string, val interface{}) error {
+func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
 	f, ok := setDataFields[resource.MqlName() + "." + field]
 	if !ok {
 		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
@@ -188,6 +230,16 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 
 	if ok := f(resource, val); !ok {
 		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+	}
+	return nil
+}
+
+func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
+	var err error
+	for k, v := range args {
+		if err = SetData(resource, k, v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -233,24 +285,8 @@ type %s struct {
 }
 
 func (b *goBuilder) goFactory(r *Resource) {
-	newName := "New" + r.interfaceName(b)
+	createName := "create" + r.interfaceName(b)
 	structName := r.structName(b)
-
-	var initCode string
-	if b.collector.HasInit(structName) {
-		initCode = `var err error
-	var existing *` + structName + `
-	args, existing, err = res.init(args)
-	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}`
-	} else {
-		initCode = `var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *` + structName + `, error)`
-	}
 
 	var idCode string
 	if b.collector.HasID(structName) {
@@ -261,21 +297,27 @@ func (b *goBuilder) goFactory(r *Resource) {
 
 	b.data += fmt.Sprintf(`
 // %s creates a new instance of this resource
-func %s(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+func %s(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &%s{
 		MqlRuntime: runtime,
 	}
 
-	%s
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	%s
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording(%s, res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *%s) MqlName() string {
@@ -286,9 +328,10 @@ func (c *%s) MqlID() string {
 	return c.__id
 }
 `,
-		newName, newName, structName,
-		initCode,
+		createName, createName,
+		structName,
 		idCode,
+		strconv.Quote(r.ID),
 		structName, r.ID,
 		structName,
 	)

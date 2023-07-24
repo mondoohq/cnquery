@@ -4,47 +4,114 @@ package resources
 import (
 	"errors"
 
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/types"
 )
 
-var newResource map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error)
+var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
-		"command": NewCommand,
-		"file": NewFile,
-		"file.permissions": NewFilePermissions,
-		"user": NewUser,
-		"users": NewUsers,
-		"authorizedkeys": NewAuthorizedkeys,
-		"authorizedkeys.entry": NewAuthorizedkeysEntry,
-		"group": NewGroup,
-		"groups": NewGroups,
-		"package": NewPackage,
-		"packages": NewPackages,
+	resourceFactories = map[string]plugin.ResourceFactory {
+		"command": {
+			// to override args, implement: initCommand(args map[string]interface{}) (map[string]interface{}, *mqlCommand, error)
+			Create: createCommand,
+		},
+		"file": {
+			// to override args, implement: initFile(args map[string]interface{}) (map[string]interface{}, *mqlFile, error)
+			Create: createFile,
+		},
+		"file.permissions": {
+			// to override args, implement: initFilePermissions(args map[string]interface{}) (map[string]interface{}, *mqlFilePermissions, error)
+			Create: createFilePermissions,
+		},
+		"user": {
+			// to override args, implement: initUser(args map[string]interface{}) (map[string]interface{}, *mqlUser, error)
+			Create: createUser,
+		},
+		"users": {
+			// to override args, implement: initUsers(args map[string]interface{}) (map[string]interface{}, *mqlUsers, error)
+			Create: createUsers,
+		},
+		"authorizedkeys": {
+			// to override args, implement: initAuthorizedkeys(args map[string]interface{}) (map[string]interface{}, *mqlAuthorizedkeys, error)
+			Create: createAuthorizedkeys,
+		},
+		"authorizedkeys.entry": {
+			// to override args, implement: initAuthorizedkeysEntry(args map[string]interface{}) (map[string]interface{}, *mqlAuthorizedkeysEntry, error)
+			Create: createAuthorizedkeysEntry,
+		},
+		"group": {
+			// to override args, implement: initGroup(args map[string]interface{}) (map[string]interface{}, *mqlGroup, error)
+			Create: createGroup,
+		},
+		"groups": {
+			// to override args, implement: initGroups(args map[string]interface{}) (map[string]interface{}, *mqlGroups, error)
+			Create: createGroups,
+		},
+		"package": {
+			// to override args, implement: initPackage(args map[string]interface{}) (map[string]interface{}, *mqlPackage, error)
+			Create: createPackage,
+		},
+		"packages": {
+			// to override args, implement: initPackages(args map[string]interface{}) (map[string]interface{}, *mqlPackages, error)
+			Create: createPackages,
+		},
 	}
 }
 
-// CreateResource is used by the runtime of this plugin
-func CreateResource(runtime *plugin.Runtime, name string, args map[string]interface{}) (plugin.Resource, error) {
-	f, ok := newResource[name]
+// NewResource is used by the runtime of this plugin to create new resources.
+// Its arguments may be provided by users. This function is generally not
+// used by initializing resources from recordings or from lists.
+func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+	f, ok := resourceFactories[name]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in os provider")
+		return nil, errors.New("cannot find resource " + name + " in this provider")
 	}
 
-	res, err := f(runtime, args)
+	if f.Init != nil {
+		var err error
+		var res plugin.Resource
+		args, res, err = f.Init(runtime, args)
+		if err != nil || res != nil {
+			return res, err
+		}
+	}
+
+	res, err := f.Create(runtime, args)
 	if err != nil {
 		return nil, err
 	}
 
-	id := res.MqlID()
-	if x, ok := runtime.Resources[name+"\x00"+id]; ok {
-		res = x
-	} else {
-		runtime.Resources[name+"\x00"+id] = res
+	id := name+"\x00"+res.MqlID()
+	if x, ok := runtime.Resources[id]; ok {
+		return x, nil
 	}
 
+	runtime.Resources[id] = res
+	return res, nil
+}
+
+// CreateResource is used by the runtime of this plugin to create resources.
+// Its arguments must be complete and pre-processed. This method is used
+// for initializing resources from recordings or from lists.
+func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+	f, ok := resourceFactories[name]
+	if !ok {
+		return nil, errors.New("cannot find resource " + name + " in this provider")
+	}
+
+	res, err := f.Create(runtime, args)
+	if err != nil {
+		return nil, err
+	}
+
+	id := name+"\x00"+res.MqlID()
+	if x, ok := runtime.Resources[id]; ok {
+		return x, nil
+	}
+
+	runtime.Resources[id] = res
 	return res, nil
 }
 
@@ -255,7 +322,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]interface{}) *plugin.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
 		return &plugin.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
@@ -264,405 +331,326 @@ func GetData(resource plugin.Resource, field string, args map[string]interface{}
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
-	"command.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlCommand).__id, ok = v.(string)
-			return ok
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+	"command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlCommand).__id, ok = v.Value.(string)
+			return
 		},
-	"command.command": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlCommand).Command, ok = plugin.RawToTValue[string](v)
-		return ok
+	"command.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCommand).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"command.stdout": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlCommand).Stdout, ok = plugin.RawToTValue[string](v)
-		return ok
+	"command.stdout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCommand).Stdout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"command.stderr": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlCommand).Stderr, ok = plugin.RawToTValue[string](v)
-		return ok
+	"command.stderr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCommand).Stderr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"command.exitcode": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlCommand).Exitcode, ok = plugin.RawToTValue[int64](v)
-		return ok
+	"command.exitcode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCommand).Exitcode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
 	},
-	"file.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlFile).__id, ok = v.(string)
-			return ok
+	"file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFile).__id, ok = v.Value.(string)
+			return
 		},
-	"file.path": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Path, ok = plugin.RawToTValue[string](v)
-		return ok
+	"file.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"file.basename": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Basename, ok = plugin.RawToTValue[string](v)
-		return ok
+	"file.basename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Basename, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"file.dirname": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Dirname, ok = plugin.RawToTValue[string](v)
-		return ok
+	"file.dirname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Dirname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"file.content": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Content, ok = plugin.RawToTValue[string](v)
-		return ok
+	"file.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"file.exists": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Exists, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.exists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Exists, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Permissions, ok = plugin.RawToTValue[*mqlFilePermissions](v)
-		return ok
+	"file.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Permissions, ok = plugin.RawToTValue[*mqlFilePermissions](v.Value, v.Error)
+		return
 	},
-	"file.size": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Size, ok = plugin.RawToTValue[int64](v)
-		return ok
+	"file.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
 	},
-	"file.user": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).User, ok = plugin.RawToTValue[*mqlUser](v)
-		return ok
+	"file.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).User, ok = plugin.RawToTValue[*mqlUser](v.Value, v.Error)
+		return
 	},
-	"file.group": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Group, ok = plugin.RawToTValue[*mqlGroup](v)
-		return ok
+	"file.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Group, ok = plugin.RawToTValue[*mqlGroup](v.Value, v.Error)
+		return
 	},
-	"file.empty": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.empty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlFilePermissions).__id, ok = v.(string)
-			return ok
+	"file.permissions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFilePermissions).__id, ok = v.Value.(string)
+			return
 		},
-	"file.permissions.mode": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Mode, ok = plugin.RawToTValue[int64](v)
-		return ok
+	"file.permissions.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Mode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
 	},
-	"file.permissions.user_readable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).User_readable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.user_readable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).User_readable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.user_writeable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).User_writeable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.user_writeable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).User_writeable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.user_executable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).User_executable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.user_executable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).User_executable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.group_readable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Group_readable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.group_readable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Group_readable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.group_writeable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Group_writeable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.group_writeable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Group_writeable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.group_executable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Group_executable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.group_executable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Group_executable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.other_readable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Other_readable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.other_readable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Other_readable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.other_writeable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Other_writeable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.other_writeable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Other_writeable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.other_executable": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Other_executable, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.other_executable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Other_executable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.suid": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Suid, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.suid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Suid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.sgid": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Sgid, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.sgid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Sgid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.sticky": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).Sticky, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.sticky": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).Sticky, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.isDirectory": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).IsDirectory, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.isDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).IsDirectory, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.isFile": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).IsFile, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.isFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).IsFile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.isSymlink": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).IsSymlink, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"file.permissions.isSymlink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).IsSymlink, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"file.permissions.string": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v)
-		return ok
+	"file.permissions.string": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"user.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlUser).__id, ok = v.(string)
-			return ok
+	"user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUser).__id, ok = v.Value.(string)
+			return
 		},
-	"user.uid": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Uid, ok = plugin.RawToTValue[int64](v)
-		return ok
+	"user.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Uid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
 	},
-	"user.gid": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Gid, ok = plugin.RawToTValue[int64](v)
-		return ok
+	"user.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
 	},
-	"user.sid": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Sid, ok = plugin.RawToTValue[string](v)
-		return ok
+	"user.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"user.name": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Name, ok = plugin.RawToTValue[string](v)
-		return ok
+	"user.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"user.home": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Home, ok = plugin.RawToTValue[string](v)
-		return ok
+	"user.home": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Home, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"user.shell": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Shell, ok = plugin.RawToTValue[string](v)
-		return ok
+	"user.shell": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Shell, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"user.enabled": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Enabled, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"user.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"user.authorizedkeys": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Authorizedkeys, ok = plugin.RawToTValue[*mqlAuthorizedkeys](v)
-		return ok
+	"user.authorizedkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Authorizedkeys, ok = plugin.RawToTValue[*mqlAuthorizedkeys](v.Value, v.Error)
+		return
 	},
-	"user.group": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUser).Group, ok = plugin.RawToTValue[*mqlGroup](v)
-		return ok
+	"user.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Group, ok = plugin.RawToTValue[*mqlGroup](v.Value, v.Error)
+		return
 	},
-	"users.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlUsers).__id, ok = v.(string)
-			return ok
+	"users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUsers).__id, ok = v.Value.(string)
+			return
 		},
-	"users.list": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlUsers).List, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"users.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUsers).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlAuthorizedkeys).__id, ok = v.(string)
-			return ok
+	"authorizedkeys.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuthorizedkeys).__id, ok = v.Value.(string)
+			return
 		},
-	"authorizedkeys.path": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeys).Path, ok = plugin.RawToTValue[string](v)
-		return ok
+	"authorizedkeys.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeys).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.file": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeys).File, ok = plugin.RawToTValue[*mqlFile](v)
-		return ok
+	"authorizedkeys.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeys).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.content": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeys).Content, ok = plugin.RawToTValue[string](v)
-		return ok
+	"authorizedkeys.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeys).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.list": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeys).List, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"authorizedkeys.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeys).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.entry.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlAuthorizedkeysEntry).__id, ok = v.(string)
-			return ok
+	"authorizedkeys.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuthorizedkeysEntry).__id, ok = v.Value.(string)
+			return
 		},
-	"authorizedkeys.entry.line": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeysEntry).Line, ok = plugin.RawToTValue[int64](v)
-		return ok
+	"authorizedkeys.entry.line": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeysEntry).Line, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.entry.type": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeysEntry).Type, ok = plugin.RawToTValue[string](v)
-		return ok
+	"authorizedkeys.entry.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeysEntry).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.entry.key": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeysEntry).Key, ok = plugin.RawToTValue[string](v)
-		return ok
+	"authorizedkeys.entry.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeysEntry).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.entry.label": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeysEntry).Label, ok = plugin.RawToTValue[string](v)
-		return ok
+	"authorizedkeys.entry.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeysEntry).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.entry.options": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeysEntry).Options, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"authorizedkeys.entry.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeysEntry).Options, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
-	"authorizedkeys.entry.file": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAuthorizedkeysEntry).File, ok = plugin.RawToTValue[*mqlFile](v)
-		return ok
+	"authorizedkeys.entry.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuthorizedkeysEntry).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
 	},
-	"group.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlGroup).__id, ok = v.(string)
-			return ok
+	"group.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGroup).__id, ok = v.Value.(string)
+			return
 		},
-	"group.gid": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlGroup).Gid, ok = plugin.RawToTValue[int64](v)
-		return ok
+	"group.gid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGroup).Gid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
 	},
-	"group.sid": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlGroup).Sid, ok = plugin.RawToTValue[string](v)
-		return ok
+	"group.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGroup).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"group.name": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlGroup).Name, ok = plugin.RawToTValue[string](v)
-		return ok
+	"group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"group.members": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlGroup).Members, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGroup).Members, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
-	"groups.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlGroups).__id, ok = v.(string)
-			return ok
+	"groups.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlGroups).__id, ok = v.Value.(string)
+			return
 		},
-	"groups.list": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlGroups).List, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"groups.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGroups).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
-	"package.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlPackage).__id, ok = v.(string)
-			return ok
+	"package.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPackage).__id, ok = v.Value.(string)
+			return
 		},
-	"package.name": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Name, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.version": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Version, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.arch": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Arch, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.arch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Arch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.epoch": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Epoch, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.epoch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Epoch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.format": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Format, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.status": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Status, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.description": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Description, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.origin": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Origin, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Origin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.available": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Available, ok = plugin.RawToTValue[string](v)
-		return ok
+	"package.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Available, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"package.installed": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Installed, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"package.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"package.outdated": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackage).Outdated, ok = plugin.RawToTValue[bool](v)
-		return ok
+	"package.outdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackage).Outdated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
 	},
-	"packages.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlPackages).__id, ok = v.(string)
-			return ok
+	"packages.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPackages).__id, ok = v.Value.(string)
+			return
 		},
-	"packages.list": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlPackages).List, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPackages).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
 }
 
-func SetData(resource plugin.Resource, field string, val interface{}) error {
+func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
 	f, ok := setDataFields[resource.MqlName() + "." + field]
 	if !ok {
 		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
@@ -670,6 +658,16 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 
 	if ok := f(resource, val); !ok {
 		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+	}
+	return nil
+}
+
+func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
+	var err error
+	for k, v := range args {
+		if err = SetData(resource, k, v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -686,23 +684,28 @@ type mqlCommand struct {
 	Exitcode plugin.TValue[int64]
 }
 
-// NewCommand creates a new instance of this resource
-func NewCommand(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createCommand creates a new instance of this resource
+func createCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlCommand{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlCommand, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("command", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlCommand) MqlName() string {
@@ -765,23 +768,28 @@ type mqlFile struct {
 	Empty plugin.TValue[bool]
 }
 
-// NewFile creates a new instance of this resource
-func NewFile(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createFile creates a new instance of this resource
+func createFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlFile{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlFile, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("file", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlFile) MqlName() string {
@@ -908,23 +916,28 @@ type mqlFilePermissions struct {
 	String plugin.TValue[string]
 }
 
-// NewFilePermissions creates a new instance of this resource
-func NewFilePermissions(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createFilePermissions creates a new instance of this resource
+func createFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlFilePermissions{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlFilePermissions, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("file.permissions", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlFilePermissions) MqlName() string {
@@ -1022,30 +1035,28 @@ type mqlUser struct {
 	Group plugin.TValue[*mqlGroup]
 }
 
-// NewUser creates a new instance of this resource
-func NewUser(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createUser creates a new instance of this resource
+func createUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlUser{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	var existing *mqlUser
-	args, existing, err = res.init(args)
+	err := SetAllData(res, args)
 	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("user", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlUser) MqlName() string {
@@ -1113,23 +1124,28 @@ type mqlUsers struct {
 	List plugin.TValue[[]interface{}]
 }
 
-// NewUsers creates a new instance of this resource
-func NewUsers(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createUsers creates a new instance of this resource
+func createUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlUsers{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlUsers, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	// to override __id implement: id() (string, error)
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("users", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlUsers) MqlName() string {
@@ -1158,30 +1174,28 @@ type mqlAuthorizedkeys struct {
 	List plugin.TValue[[]interface{}]
 }
 
-// NewAuthorizedkeys creates a new instance of this resource
-func NewAuthorizedkeys(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createAuthorizedkeys creates a new instance of this resource
+func createAuthorizedkeys(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlAuthorizedkeys{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	var existing *mqlAuthorizedkeys
-	args, existing, err = res.init(args)
+	err := SetAllData(res, args)
 	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("authorizedkeys", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlAuthorizedkeys) MqlName() string {
@@ -1239,23 +1253,28 @@ type mqlAuthorizedkeysEntry struct {
 	File plugin.TValue[*mqlFile]
 }
 
-// NewAuthorizedkeysEntry creates a new instance of this resource
-func NewAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createAuthorizedkeysEntry creates a new instance of this resource
+func createAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlAuthorizedkeysEntry{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlAuthorizedkeysEntry, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("authorizedkeys.entry", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlAuthorizedkeysEntry) MqlName() string {
@@ -1302,23 +1321,28 @@ type mqlGroup struct {
 	Members plugin.TValue[[]interface{}]
 }
 
-// NewGroup creates a new instance of this resource
-func NewGroup(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createGroup creates a new instance of this resource
+func createGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlGroup{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlGroup, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("group", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlGroup) MqlName() string {
@@ -1356,23 +1380,28 @@ type mqlGroups struct {
 	List plugin.TValue[[]interface{}]
 }
 
-// NewGroups creates a new instance of this resource
-func NewGroups(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createGroups creates a new instance of this resource
+func createGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlGroups{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlGroups, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	// to override __id implement: id() (string, error)
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("groups", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlGroups) MqlName() string {
@@ -1408,30 +1437,28 @@ type mqlPackage struct {
 	Outdated plugin.TValue[bool]
 }
 
-// NewPackage creates a new instance of this resource
-func NewPackage(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createPackage creates a new instance of this resource
+func createPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlPackage{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	var existing *mqlPackage
-	args, existing, err = res.init(args)
+	err := SetAllData(res, args)
 	if err != nil {
-		return nil, err
-	}
-	if existing != nil {
-		return existing, nil
-	}
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+		return res, err
 	}
 
 	res.__id, err = res.id()
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("package", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlPackage) MqlName() string {
@@ -1501,23 +1528,28 @@ type mqlPackages struct {
 	List plugin.TValue[[]interface{}]
 }
 
-// NewPackages creates a new instance of this resource
-func NewPackages(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createPackages creates a new instance of this resource
+func createPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlPackages{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlPackages, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	// to override __id implement: id() (string, error)
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("packages", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlPackages) MqlName() string {

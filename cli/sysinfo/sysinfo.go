@@ -54,7 +54,7 @@ func GatherSystemInfo(opts ...SystemInfoOption) (*SystemInfo, error) {
 			return nil, err
 		}
 
-		if err = cfg.runtime.Connect(&plugin.ConnectReq{Asset: args.Inventory}); err != nil {
+		if err = cfg.runtime.Connect(&plugin.ConnectReq{Asset: args.Asset}); err != nil {
 			return nil, err
 		}
 	}

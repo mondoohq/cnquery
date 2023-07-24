@@ -89,11 +89,8 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conn.Credentials = append(conn.Credentials, vault.NewPasswordCredential(user, string(x.Value)))
 	}
 
-	assets, err := s.resolve(&inventory.Asset{
+	asset := &inventory.Asset{
 		Connections: []*inventory.Config{conn},
-	})
-	if err != nil {
-		return nil, errors.New("failed to resolve: " + err.Error())
 	}
 
 	idDetector := "hostname"
@@ -101,70 +98,51 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		idDetector = string(flag.Value)
 	}
 	if idDetector != "" {
-		for i := range assets {
-			assets[i].IdDetector = []string{idDetector}
-		}
+		asset.IdDetector = []string{idDetector}
 	}
 
 	res := plugin.ParseCLIRes{
-		Inventory: &inventory.Inventory{
-			Spec: &inventory.InventorySpec{
-				Assets: assets,
-			},
-		},
+		Asset: asset,
 	}
 
 	return &res, nil
 }
 
-func (s *Service) resolve(rootAsset *inventory.Asset) ([]*inventory.Asset, error) {
-	res := []*inventory.Asset{rootAsset}
-
-	if err := s.detect(rootAsset); err != nil {
-		return nil, err
-	}
-
-	// TODO: discovery of related assets
-
-	return res, nil
-}
-
 // LocalAssetReq ist a sample request to connect to the local OS.
 // Useful for test automation.
 var LocalAssetReq = &plugin.ConnectReq{
-	Asset: &inventory.Inventory{
-		Spec: &inventory.InventorySpec{
-			Assets: []*inventory.Asset{{
-				Connections: []*inventory.Config{{
-					Type: "local",
-				}},
-			}},
-		},
+	Asset: &inventory.Asset{
+		Connections: []*inventory.Config{{
+			Type: "local",
+		}},
 	},
 }
 
-func (s *Service) Connect(req *plugin.ConnectReq) (*plugin.ConnectRes, error) {
-	if req == nil || req.Asset == nil || req.Asset.Spec == nil {
+func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (*plugin.ConnectRes, error) {
+	if req == nil || req.Asset == nil {
 		return nil, errors.New("no connection data provided")
 	}
 
-	assets := req.Asset.Spec.Assets
-	if len(assets) != 1 {
-		return nil, errors.New("too many assets provided in connection")
-	}
-
-	conn, err := s.connect(assets[0])
+	conn, err := s.connect(req.Asset, req.HasRecording, callback)
 	if err != nil {
 		return nil, err
 	}
 
+	if err := s.detect(req.Asset, conn); err != nil {
+		return nil, err
+	}
+
+	// TODO: discovery of related assets and use them in the inventory below
+
 	return &plugin.ConnectRes{
-		Id:   uint32(conn.ID()),
-		Name: conn.Name(),
+		Id:        uint32(conn.ID()),
+		Name:      conn.Name(),
+		Asset:     req.Asset,
+		Inventory: nil,
 	}, nil
 }
 
-func (s *Service) connect(asset *inventory.Asset) (shared.Connection, error) {
+func (s *Service) connect(asset *inventory.Asset, hasRecording bool, callback plugin.ProviderCallback) (shared.Connection, error) {
 	if len(asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
@@ -196,23 +174,22 @@ func (s *Service) connect(asset *inventory.Asset) (shared.Connection, error) {
 
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
-		Connection: conn,
-		Resources:  map[string]plugin.Resource{},
+		Connection:   conn,
+		Resources:    map[string]plugin.Resource{},
+		Callback:     callback,
+		HasRecording: hasRecording,
 	}
 
 	return conn, err
 }
 
-func (s *Service) GetData(req *plugin.DataReq, callback plugin.ProviderCallback) (*plugin.DataRes, error) {
+func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 	runtime, ok := s.runtimes[req.Connection]
 	if !ok {
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
 	}
 
-	args, err := plugin.ProtoArgsToRawArgs(req.Args)
-	if err != nil {
-		return nil, err
-	}
+	args := plugin.PrimitiveArgsToRawDataArgs(req.Args)
 
 	if req.ResourceId == "" && req.Field == "" {
 		res, err := resources.CreateResource(runtime, req.Resource, args)
@@ -244,7 +221,7 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	for i := range req.Resources {
 		info := req.Resources[i]
 
-		args, err := plugin.ProtoArgsToRawArgs(info.Fields)
+		args, err := plugin.ProtoArgsToRawDataArgs(info.Fields)
 		if err != nil {
 			errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), failed to parse arguments")
 			continue

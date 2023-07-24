@@ -93,10 +93,6 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		filteredAssets = assetList
 	}
 
-	if conf.DoRecord {
-		log.Info().Msg("enable recording of platform calls")
-	}
-
 	if conf.Format == "json" {
 		out.WriteString("[")
 	}
@@ -124,11 +120,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		connectAsset := filteredAssets[i]
 		err := runtime.Connect(&pp.ConnectReq{
 			Features: config.Features,
-			Asset: &inventory.Inventory{
-				Spec: &inventory.InventorySpec{
-					Assets: []*inventory.Asset{connectAsset},
-				},
-			},
+			Asset:    connectAsset,
 		})
 		if err != nil {
 			return err

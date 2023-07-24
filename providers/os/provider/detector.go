@@ -5,6 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/detector"
 	"go.mondoo.com/cnquery/providers/os/id/aws"
 	"go.mondoo.com/cnquery/providers/os/id/azure"
@@ -55,12 +56,7 @@ func mapDetectors(raw []string) map[string]struct{} {
 	return res
 }
 
-func (s *Service) detect(asset *inventory.Asset) error {
-	conn, err := s.connect(asset)
-	if err != nil {
-		return err
-	}
-
+func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 	var ok bool
 	asset.Platform, ok = detector.DetectOS(conn)
 	if !ok {
@@ -107,7 +103,7 @@ func (s *Service) detect(asset *inventory.Asset) error {
 	if hasDetector(detectors, IdDetector_MachineID) {
 		id, hostErr := machineid.MachineId(conn, asset.Platform)
 		if hostErr != nil {
-			log.Warn().Err(err).Msg("failure in machineID detector")
+			log.Warn().Err(hostErr).Msg("failure in machineID detector")
 		} else if id != "" {
 			asset.PlatformIds = append(asset.PlatformIds, id)
 		}

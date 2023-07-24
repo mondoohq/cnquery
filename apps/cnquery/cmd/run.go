@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/shared"
 	"go.mondoo.com/cnquery/shared/proto"
@@ -42,7 +43,11 @@ var runcmdRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plu
 		conf.Format = "json"
 	}
 	conf.PlatformId, _ = cmd.Flags().GetString("platform-id")
-	conf.Inventory = cliRes.Inventory
+	conf.Inventory = &inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{cliRes.Asset},
+		},
+	}
 
 	x := cnqueryPlugin{}
 	w := shared.IOWriter{Writer: os.Stdout}

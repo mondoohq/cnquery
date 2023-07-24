@@ -500,17 +500,25 @@ func (a assetInfo) ToInventory() *inventory.Asset {
 	}
 }
 
-func RawDataArgsToPrimitiveArgs(args map[string]*llx.RawData) (map[string]*llx.Primitive, error) {
-	all := make(map[string]*llx.Primitive, len(args))
+func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Result, error) {
+	all := make(map[string]*llx.Result, len(args))
 	var err error
 	for k, v := range args {
 		res := v.Result()
 		if res.Error != "" {
 			err = multierror.Append(err, errors.New("failed to convert '"+k+"': "+res.Error))
 		} else {
-			all[k] = res.Data
+			all[k] = res
 		}
 	}
 
 	return all, err
+}
+
+func PrimitiveArgsToResultArgs(args map[string]*llx.Primitive) map[string]*llx.Result {
+	res := make(map[string]*llx.Result, len(args))
+	for k, v := range args {
+		res[k] = &llx.Result{Data: v}
+	}
+	return res
 }
