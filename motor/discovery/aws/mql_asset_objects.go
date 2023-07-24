@@ -380,10 +380,9 @@ func dynamodbTables(m *MqlDiscovery, account string, tc *providers.Config) ([]*a
 	}
 	type gdata struct {
 		Arn  string
-		Tags map[string]string
 		Name string
 	}
-	globaltables, err := GetList[gdata](m, "return aws.dynamodb.globalTables { arn name tags }")
+	globaltables, err := GetList[gdata](m, "return aws.dynamodb.globalTables { arn name }")
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +392,7 @@ func dynamodbTables(m *MqlDiscovery, account string, tc *providers.Config) ([]*a
 
 		assets = append(assets, MqlObjectToAsset(account,
 			mqlObject{
-				name: g.Name, labels: g.Tags,
+				name: g.Name, labels: map[string]string{},
 				awsObject: awsObject{
 					account: account, region: region, arn: g.Arn,
 					id: g.Name, service: "dynamodb", objectType: "table",
