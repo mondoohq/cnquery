@@ -3,7 +3,6 @@ package google
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/motor/providers/local"
@@ -32,7 +31,7 @@ func GetCurrentProject() (string, error) {
 func ParseGcloudConfig(r io.Reader) (GCloudConfig, error) {
 	var gcloudconfig GCloudConfig
 
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return gcloudconfig, err
 	}
