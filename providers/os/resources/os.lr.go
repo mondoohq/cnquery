@@ -17,6 +17,8 @@ func init() {
 		"file.permissions": NewFilePermissions,
 		"user": NewUser,
 		"users": NewUsers,
+		"authorizedkeys": NewAuthorizedkeys,
+		"authorizedkeys.entry": NewAuthorizedkeysEntry,
 		"group": NewGroup,
 		"groups": NewGroups,
 		"package": NewPackage,
@@ -161,11 +163,44 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"user.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetEnabled()).ToDataRes(types.Bool)
 	},
+	"user.authorizedkeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetAuthorizedkeys()).ToDataRes(types.Resource("authorizedkeys"))
+	},
 	"user.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetGroup()).ToDataRes(types.Resource("group"))
 	},
 	"users.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsers).GetList()).ToDataRes(types.Array(types.Resource("user")))
+	},
+	"authorizedkeys.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeys).GetPath()).ToDataRes(types.String)
+	},
+	"authorizedkeys.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeys).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"authorizedkeys.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeys).GetContent()).ToDataRes(types.String)
+	},
+	"authorizedkeys.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeys).GetList()).ToDataRes(types.Array(types.Resource("authorizedkeys.entry")))
+	},
+	"authorizedkeys.entry.line": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeysEntry).GetLine()).ToDataRes(types.Int)
+	},
+	"authorizedkeys.entry.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeysEntry).GetType()).ToDataRes(types.String)
+	},
+	"authorizedkeys.entry.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeysEntry).GetKey()).ToDataRes(types.String)
+	},
+	"authorizedkeys.entry.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeysEntry).GetLabel()).ToDataRes(types.String)
+	},
+	"authorizedkeys.entry.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeysEntry).GetOptions()).ToDataRes(types.Array(types.String))
+	},
+	"authorizedkeys.entry.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuthorizedkeysEntry).GetFile()).ToDataRes(types.Resource("file"))
 	},
 	"group.gid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGroup).GetGid()).ToDataRes(types.Int)
@@ -440,6 +475,11 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 		r.(*mqlUser).Enabled, ok = plugin.RawToTValue[bool](v)
 		return ok
 	},
+	"user.authorizedkeys": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlUser).Authorizedkeys, ok = plugin.RawToTValue[*mqlAuthorizedkeys](v)
+		return ok
+	},
 	"user.group": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlUser).Group, ok = plugin.RawToTValue[*mqlGroup](v)
@@ -453,6 +493,66 @@ var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
 	"users.list": func(r plugin.Resource, v interface{}) bool {
 		var ok bool
 		r.(*mqlUsers).List, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"authorizedkeys.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlAuthorizedkeys).__id, ok = v.(string)
+			return ok
+		},
+	"authorizedkeys.path": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeys).Path, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"authorizedkeys.file": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeys).File, ok = plugin.RawToTValue[*mqlFile](v)
+		return ok
+	},
+	"authorizedkeys.content": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeys).Content, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"authorizedkeys.list": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeys).List, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"authorizedkeys.entry.__id": func(r plugin.Resource, v interface{}) bool {
+			var ok bool
+			r.(*mqlAuthorizedkeysEntry).__id, ok = v.(string)
+			return ok
+		},
+	"authorizedkeys.entry.line": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeysEntry).Line, ok = plugin.RawToTValue[int64](v)
+		return ok
+	},
+	"authorizedkeys.entry.type": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeysEntry).Type, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"authorizedkeys.entry.key": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeysEntry).Key, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"authorizedkeys.entry.label": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeysEntry).Label, ok = plugin.RawToTValue[string](v)
+		return ok
+	},
+	"authorizedkeys.entry.options": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeysEntry).Options, ok = plugin.RawToTValue[[]interface{}](v)
+		return ok
+	},
+	"authorizedkeys.entry.file": func(r plugin.Resource, v interface{}) bool {
+		var ok bool
+		r.(*mqlAuthorizedkeysEntry).File, ok = plugin.RawToTValue[*mqlFile](v)
 		return ok
 	},
 	"group.__id": func(r plugin.Resource, v interface{}) bool {
@@ -918,6 +1018,7 @@ type mqlUser struct {
 	Home plugin.TValue[string]
 	Shell plugin.TValue[string]
 	Enabled plugin.TValue[bool]
+	Authorizedkeys plugin.TValue[*mqlAuthorizedkeys]
 	Group plugin.TValue[*mqlGroup]
 }
 
@@ -928,7 +1029,14 @@ func NewUser(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resou
 	}
 
 	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlUser, error)
+	var existing *mqlUser
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
 
 	for k, v := range args {
 		if err = SetData(res, k, v); err != nil {
@@ -974,6 +1082,16 @@ func (c *mqlUser) GetShell() *plugin.TValue[string] {
 
 func (c *mqlUser) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+func (c *mqlUser) GetAuthorizedkeys() *plugin.TValue[*mqlAuthorizedkeys] {
+	return plugin.GetOrCompute[*mqlAuthorizedkeys](&c.Authorizedkeys, func() (*mqlAuthorizedkeys, error) {
+		vargHome := c.GetHome()
+		if vargHome.Error != nil {
+			return nil, vargHome.Error
+		}
+		return c.authorizedkeys(vargHome.Data)
+	})
 }
 
 func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
@@ -1026,6 +1144,150 @@ func (c *mqlUsers) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
 		return c.list()
 	})
+}
+
+// mqlAuthorizedkeys for the authorizedkeys resource
+type mqlAuthorizedkeys struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuthorizedkeysInternal it will be used here
+
+	Path plugin.TValue[string]
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// NewAuthorizedkeys creates a new instance of this resource
+func NewAuthorizedkeys(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlAuthorizedkeys{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	var existing *mqlAuthorizedkeys
+	args, existing, err = res.init(args)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res.__id, err = res.id()
+	return res, err
+}
+
+func (c *mqlAuthorizedkeys) MqlName() string {
+	return "authorizedkeys"
+}
+
+func (c *mqlAuthorizedkeys) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuthorizedkeys) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAuthorizedkeys) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlAuthorizedkeys) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlAuthorizedkeys) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+		return c.list(vargFile.Data, vargContent.Data)
+	})
+}
+
+// mqlAuthorizedkeysEntry for the authorizedkeys.entry resource
+type mqlAuthorizedkeysEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuthorizedkeysEntryInternal it will be used here
+
+	Line plugin.TValue[int64]
+	Type plugin.TValue[string]
+	Key plugin.TValue[string]
+	Label plugin.TValue[string]
+	Options plugin.TValue[[]interface{}]
+	File plugin.TValue[*mqlFile]
+}
+
+// NewAuthorizedkeysEntry creates a new instance of this resource
+func NewAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+	res := &mqlAuthorizedkeysEntry{
+		MqlRuntime: runtime,
+	}
+
+	var err error
+	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlAuthorizedkeysEntry, error)
+
+	for k, v := range args {
+		if err = SetData(res, k, v); err != nil {
+			return res, err
+		}
+	}
+
+	res.__id, err = res.id()
+	return res, err
+}
+
+func (c *mqlAuthorizedkeysEntry) MqlName() string {
+	return "authorizedkeys.entry"
+}
+
+func (c *mqlAuthorizedkeysEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuthorizedkeysEntry) GetLine() *plugin.TValue[int64] {
+	return &c.Line
+}
+
+func (c *mqlAuthorizedkeysEntry) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAuthorizedkeysEntry) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAuthorizedkeysEntry) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlAuthorizedkeysEntry) GetOptions() *plugin.TValue[[]interface{}] {
+	return &c.Options
+}
+
+func (c *mqlAuthorizedkeysEntry) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
 }
 
 // mqlGroup for the group resource

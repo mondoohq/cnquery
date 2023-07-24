@@ -93,8 +93,8 @@ user @defaults("name uid gid") {
   shell string
   // Indicates if the user is enabled
   enabled bool
-  // // List of authorized keys
-  // authorizedkeys() authorizedkeys
+  // List of authorized keys
+  authorizedkeys(home) authorizedkeys
   // // List of SSH keys
   // sshkeys() []privatekey
   // Group that user is a member of
@@ -106,24 +106,24 @@ users {
   []user
 }
 
-// // List of SSH Authorized Keys
-// authorizedkeys {
-//   []authorizedkeys.entry(file, content)
-//   init(path string)
-//   path string
-//   file() file
-//   content(file) string
-// }
+// List of SSH Authorized Keys
+authorizedkeys {
+  []authorizedkeys.entry(file, content)
+  init(path string)
+  path string
+  file file
+  content(file) string
+}
 
-// // SSH authorized keys entry
-// authorizedkeys.entry @defaults("key") {
-//   line int
-//   type string
-//   key string
-//   label() string
-//   options() []string
-//   file file
-// }
+// SSH authorized keys entry
+authorizedkeys.entry @defaults("key") {
+  line int
+  type string
+  key string
+  label string
+  options []string
+  file file
+}
 
 // Group on this system
 group @defaults("name gid") {
