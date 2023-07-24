@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"errors"
+
 	plugin "github.com/hashicorp/go-plugin"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -21,11 +23,7 @@ func (m *GRPCClient) ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error) {
 	return m.client.ParseCLI(context.Background(), req)
 }
 
-func (m *GRPCClient) Connect(req *ConnectReq) (*ConnectRes, error) {
-	return m.client.Connect(context.Background(), req)
-}
-
-func (m *GRPCClient) GetData(req *DataReq, callback ProviderCallback) (*DataRes, error) {
+func (m *GRPCClient) Connect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error) {
 	helper := &GRPCProviderCallbackServer{Impl: callback}
 
 	var s *grpc.Server
@@ -40,10 +38,14 @@ func (m *GRPCClient) GetData(req *DataReq, callback ProviderCallback) (*DataRes,
 	req.CallbackServer = brokerID
 	go m.broker.AcceptAndServe(brokerID, serverFunc)
 
-	res, err := m.client.GetData(context.Background(), req)
+	res, err := m.client.Connect(context.Background(), req)
 
 	s.Stop()
 	return res, err
+}
+
+func (m *GRPCClient) GetData(req *DataReq) (*DataRes, error) {
+	return m.client.GetData(context.Background(), req)
 }
 
 func (m *GRPCClient) StoreData(req *StoreReq) (*StoreRes, error) {
@@ -63,10 +65,6 @@ func (m *GRPCServer) ParseCLI(ctx context.Context, req *ParseCLIReq) (*ParseCLIR
 }
 
 func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes, error) {
-	return m.Impl.Connect(req)
-}
-
-func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (*DataRes, error) {
 	conn, err := m.broker.Dial(req.CallbackServer)
 	if err != nil {
 		return nil, err
@@ -74,7 +72,11 @@ func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (*DataRes, error
 	defer conn.Close()
 
 	a := &GRPCProviderCallbackClient{NewProviderCallbackClient(conn)}
-	return m.Impl.GetData(req, a)
+	return m.Impl.Connect(req, a)
+}
+
+func (m *GRPCServer) GetData(ctx context.Context, req *DataReq) (*DataRes, error) {
+	return m.Impl.GetData(req)
 }
 
 func (m *GRPCServer) StoreData(ctx context.Context, req *StoreReq) (*StoreRes, error) {
@@ -85,16 +87,11 @@ func (m *GRPCServer) StoreData(ctx context.Context, req *StoreReq) (*StoreRes, e
 type GRPCProviderCallbackClient struct{ client ProviderCallbackClient }
 
 func (m *GRPCProviderCallbackClient) Collect(req *DataRes) error {
-	// _, err := m.client.Write(context.Background(), &String{
-	// 	Data: string(b),
-	// })
-	// if err != nil {
-	// 	hclog.Default().Info("out.Write", "client", "start", "err", err)
-	// 	return 0, err
-	// }
-	// return 0, nil
-	panic("COLLECT async")
-	return nil
+	return errors.New("collect data callback is not implemented for this provider")
+}
+
+func (m *GRPCProviderCallbackClient) GetRecording(req *DataReq) (*ResourceData, error) {
+	return nil, errors.New("get recording callback is not implemented for this provider")
 }
 
 // Here is the gRPC server that GRPCClient talks to.
@@ -108,4 +105,8 @@ var empty CollectRes
 
 func (m *GRPCProviderCallbackServer) Collect(ctx context.Context, req *DataRes) (resp *CollectRes, err error) {
 	return &empty, m.Impl.Collect(req)
+}
+
+func (m *GRPCProviderCallbackServer) GetRecording(ctx context.Context, req *DataReq) (resp *ResourceData, err error) {
+	return m.Impl.GetRecording(req)
 }

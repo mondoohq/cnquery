@@ -1,15 +1,15 @@
 package plugin
 
 import (
-	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/types"
 )
 
 type Runtime struct {
-	Connection Connection
-	Resources  map[string]Resource
+	Connection   Connection
+	Resources    map[string]Resource
+	Callback     ProviderCallback
+	HasRecording bool
 }
 
 type Connection interface{}
@@ -17,6 +17,18 @@ type Connection interface{}
 type Resource interface {
 	MqlID() string
 	MqlName() string
+}
+
+func (r *Runtime) ResourceFromRecording(name string, id string) (map[string]*llx.RawData, error) {
+	data, err := r.Callback.GetRecording(&DataReq{
+		Resource:   name,
+		ResourceId: id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ProtoArgsToRawDataArgs(data.Fields)
 }
 
 type TValue[T any] struct {
@@ -53,9 +65,9 @@ func PrimitiveToTValue[T any](p *llx.Primitive) TValue[T] {
 
 // RawToTValue converts a raw (interface{}) value into a typed value
 // and returns true if the type was correct.
-func RawToTValue[T any](value interface{}) (TValue[T], bool) {
+func RawToTValue[T any](value interface{}, err error) (TValue[T], bool) {
 	if value == nil {
-		return TValue[T]{State: StateIsNull}, true
+		return TValue[T]{State: StateIsNull | StateIsSet, Error: err}, true
 	}
 
 	tv, ok := value.(T)
@@ -63,7 +75,7 @@ func RawToTValue[T any](value interface{}) (TValue[T], bool) {
 		return TValue[T]{}, false
 	}
 
-	return TValue[T]{Data: tv, State: StateIsSet}, true
+	return TValue[T]{Data: tv, State: StateIsSet, Error: err}, true
 }
 
 type State byte
@@ -105,17 +117,35 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 	return cached
 }
 
-func ProtoArgsToRawArgs(pargs map[string]*llx.Primitive) (map[string]interface{}, error) {
-	res := make(map[string]interface{}, len(pargs))
+func PrimitiveArgsToRawDataArgs(pargs map[string]*llx.Primitive) map[string]*llx.RawData {
+	res := make(map[string]*llx.RawData, len(pargs))
+	for k, v := range pargs {
+		res[k] = v.RawData()
+	}
+	return res
+}
+
+func ProtoArgsToRawDataArgs(pargs map[string]*llx.Result) (map[string]*llx.RawData, error) {
+	res := make(map[string]*llx.RawData, len(pargs))
 	var err error
 	for k, v := range pargs {
-		raw := v.RawData()
-		if raw.Error != nil {
-			err = multierror.Append(err, errors.Wrap(raw.Error, "failed to convert '"+k+"'"))
-		} else {
-			res[k] = raw.Value
-		}
+		res[k] = v.RawData()
 	}
 
 	return res, err
+}
+
+func NonErrorArgs(pargs map[string]*llx.RawData) map[string]*llx.RawData {
+	if len(pargs) == 0 {
+		return map[string]*llx.RawData{}
+	}
+
+	res := map[string]*llx.RawData{}
+	for k, v := range pargs {
+		if v.Error != nil {
+			continue
+		}
+		res[k] = v
+	}
+	return res
 }

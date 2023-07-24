@@ -4,38 +4,78 @@ package resources
 import (
 	"errors"
 
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/types"
 )
 
-var newResource map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error)
+var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
-	newResource = map[string]func(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
-		"mondoo": NewMondoo,
-		"asset": NewAsset,
+	resourceFactories = map[string]plugin.ResourceFactory {
+		"mondoo": {
+			// to override args, implement: initMondoo(args map[string]interface{}) (map[string]interface{}, *mqlMondoo, error)
+			Create: createMondoo,
+		},
+		"asset": {
+			// to override args, implement: initAsset(args map[string]interface{}) (map[string]interface{}, *mqlAsset, error)
+			Create: createAsset,
+		},
 	}
 }
 
-// CreateResource is used by the runtime of this plugin
-func CreateResource(runtime *plugin.Runtime, name string, args map[string]interface{}) (plugin.Resource, error) {
-	f, ok := newResource[name]
+// NewResource is used by the runtime of this plugin to create new resources.
+// Its arguments may be provided by users. This function is generally not
+// used by initializing resources from recordings or from lists.
+func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+	f, ok := resourceFactories[name]
 	if !ok {
-		return nil, errors.New("cannot find resource " + name + " in os provider")
+		return nil, errors.New("cannot find resource " + name + " in this provider")
 	}
 
-	res, err := f(runtime, args)
+	if f.Init != nil {
+		var err error
+		var res plugin.Resource
+		args, res, err = f.Init(runtime, args)
+		if err != nil || res != nil {
+			return res, err
+		}
+	}
+
+	res, err := f.Create(runtime, args)
 	if err != nil {
 		return nil, err
 	}
 
-	id := res.MqlID()
-	if x, ok := runtime.Resources[name+"\x00"+id]; ok {
-		res = x
-	} else {
-		runtime.Resources[name+"\x00"+id] = res
+	id := name+"\x00"+res.MqlID()
+	if x, ok := runtime.Resources[id]; ok {
+		return x, nil
 	}
 
+	runtime.Resources[id] = res
+	return res, nil
+}
+
+// CreateResource is used by the runtime of this plugin to create resources.
+// Its arguments must be complete and pre-processed. This method is used
+// for initializing resources from recordings or from lists.
+func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawData) (plugin.Resource, error) {
+	f, ok := resourceFactories[name]
+	if !ok {
+		return nil, errors.New("cannot find resource " + name + " in this provider")
+	}
+
+	res, err := f.Create(runtime, args)
+	if err != nil {
+		return nil, err
+	}
+
+	id := name+"\x00"+res.MqlID()
+	if x, ok := runtime.Resources[id]; ok {
+		return x, nil
+	}
+
+	runtime.Resources[id] = res
 	return res, nil
 }
 
@@ -90,7 +130,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 }
 
-func GetData(resource plugin.Resource, field string, args map[string]interface{}) *plugin.DataRes {
+func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
 	f, ok := getDataFields[resource.MqlName()+"."+field]
 	if !ok {
 		return &plugin.DataRes{Error: "cannot find '" + field + "' in resource '" + resource.MqlName() + "'"}
@@ -99,100 +139,82 @@ func GetData(resource plugin.Resource, field string, args map[string]interface{}
 	return f(resource)
 }
 
-var setDataFields = map[string]func(r plugin.Resource, v interface{}) bool {
-	"mondoo.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlMondoo).__id, ok = v.(string)
-			return ok
+var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+	"mondoo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMondoo).__id, ok = v.Value.(string)
+			return
 		},
-	"mondoo.version": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlMondoo).Version, ok = plugin.RawToTValue[string](v)
-		return ok
+	"mondoo.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondoo).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"mondoo.build": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlMondoo).Build, ok = plugin.RawToTValue[string](v)
-		return ok
+	"mondoo.build": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondoo).Build, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"mondoo.arch": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlMondoo).Arch, ok = plugin.RawToTValue[string](v)
-		return ok
+	"mondoo.arch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondoo).Arch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"mondoo.jobEnvironment": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[interface{}](v)
-		return ok
+	"mondoo.jobEnvironment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
 	},
-	"asset.__id": func(r plugin.Resource, v interface{}) bool {
-			var ok bool
-			r.(*mqlAsset).__id, ok = v.(string)
-			return ok
+	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAsset).__id, ok = v.Value.(string)
+			return
 		},
-	"asset.name": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Name, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.ids": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Ids, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"asset.ids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Ids, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
-	"asset.platform": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Platform, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Platform, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.kind": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Kind, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.runtime": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Runtime, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.version": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Version, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.arch": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Arch, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.arch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Arch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.title": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Title, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.family": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Family, ok = plugin.RawToTValue[[]interface{}](v)
-		return ok
+	"asset.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Family, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
 	},
-	"asset.fqdn": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Fqdn, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.build": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Build, ok = plugin.RawToTValue[string](v)
-		return ok
+	"asset.build": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Build, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
 	},
-	"asset.labels": func(r plugin.Resource, v interface{}) bool {
-		var ok bool
-		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v)
-		return ok
+	"asset.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
 	},
 }
 
-func SetData(resource plugin.Resource, field string, val interface{}) error {
+func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
 	f, ok := setDataFields[resource.MqlName() + "." + field]
 	if !ok {
 		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
@@ -200,6 +222,16 @@ func SetData(resource plugin.Resource, field string, val interface{}) error {
 
 	if ok := f(resource, val); !ok {
 		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+	}
+	return nil
+}
+
+func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
+	var err error
+	for k, v := range args {
+		if err = SetData(resource, k, v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -216,23 +248,28 @@ type mqlMondoo struct {
 	JobEnvironment plugin.TValue[interface{}]
 }
 
-// NewMondoo creates a new instance of this resource
-func NewMondoo(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createMondoo creates a new instance of this resource
+func createMondoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlMondoo{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlMondoo, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	// to override __id implement: id() (string, error)
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mondoo", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlMondoo) MqlName() string {
@@ -287,23 +324,28 @@ type mqlAsset struct {
 	Labels plugin.TValue[map[string]interface{}]
 }
 
-// NewAsset creates a new instance of this resource
-func NewAsset(runtime *plugin.Runtime, args map[string]interface{}) (plugin.Resource, error) {
+// createAsset creates a new instance of this resource
+func createAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
 	res := &mqlAsset{
 		MqlRuntime: runtime,
 	}
 
-	var err error
-	// to override args, implement: init(args map[string]interface{}) (map[string]interface{}, *mqlAsset, error)
-
-	for k, v := range args {
-		if err = SetData(res, k, v); err != nil {
-			return res, err
-		}
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
 	}
 
 	// to override __id implement: id() (string, error)
-	return res, err
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("asset", res.__id)
+		if err != nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
 }
 
 func (c *mqlAsset) MqlName() string {

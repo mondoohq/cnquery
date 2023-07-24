@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"sync"
 
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/groups"
 )
@@ -70,10 +71,10 @@ func (x *mqlGroups) list() ([]interface{}, error) {
 	var res []interface{}
 	for i := range groups {
 		group := groups[i]
-		nu, err := CreateResource(x.MqlRuntime, "group", map[string]interface{}{
-			"name": group.Name,
-			"gid":  group.Gid,
-			"sid":  group.Sid,
+		nu, err := CreateResource(x.MqlRuntime, "group", map[string]*llx.RawData{
+			"name": llx.StringData(group.Name),
+			"gid":  llx.IntData(group.Gid),
+			"sid":  llx.StringData(group.Sid),
 		})
 		if err != nil {
 			return nil, err

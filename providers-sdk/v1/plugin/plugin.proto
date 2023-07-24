@@ -12,25 +12,29 @@ message ParseCLIReq {
 }
 
 message ParseCLIRes {
-  // full inventory of everything that was requested
-  Inventory inventory = 1;
-  uint32 connection = 2;
+  // inventory after parsing of CLI; no connection, no discovery, no resolution
+  Asset asset = 1;
 }
 
 message ConnectReq {
   bytes features = 2;
-  // Asset must be only one target asset
-  Inventory asset = 3;
+  // The one primary targeted asset for the connection
+  Asset asset = 3;
+  bool has_recording = 20;
+  uint32 callback_server = 21;
 }
 
 message ConnectRes {
   uint32 id = 1;
   string name = 2;
+  // the connected asset with additional information from this connection
+  Asset asset = 3;
+  // inventory of other discovered assets
+  Inventory inventory = 4;
 }
 
 message DataReq {
   uint32 connection = 1;
-  uint32 callback_server = 2;
   string resource = 3;
   string resource_id = 4;
   string field = 5; 
@@ -54,7 +58,7 @@ message StoreReq {
 message ResourceData {
   string name = 3;
   string id = 4;
-  map<string, cnquery.llx.Primitive> fields = 5;
+  map<string, cnquery.llx.Result> fields = 5;
 }
 
 message StoreRes {}
@@ -68,4 +72,5 @@ service ProviderPlugin {
 
 service ProviderCallback {
   rpc Collect(DataRes) returns (CollectRes);
+  rpc GetRecording(DataReq) returns (ResourceData);
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"sync"
 
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/users"
 )
@@ -21,7 +22,7 @@ func (x *mqlUser) id() (string, error) {
 	return "user/" + id + "/" + x.Name.Data, nil
 }
 
-func (x *mqlUser) init(args map[string]interface{}) (map[string]interface{}, *mqlUser, error) {
+func (x *mqlUser) init(args map[string]*llx.RawData) (map[string]*llx.RawData, *mqlUser, error) {
 	if len(args) != 1 {
 		return args, nil, nil
 	}
@@ -46,7 +47,7 @@ func (x *mqlUser) init(args map[string]interface{}) (map[string]interface{}, *mq
 
 	var f func(user interface{}) bool
 	if nameOk {
-		name, ok := rawName.(string)
+		name, ok := rawName.Value.(string)
 		if !ok {
 			return nil, nil, errors.New("cannot detect user, invalid type for name (expected string)")
 		}
@@ -54,7 +55,7 @@ func (x *mqlUser) init(args map[string]interface{}) (map[string]interface{}, *mq
 			return user.(*mqlUser).Name.Data == name
 		}
 	} else if idOk {
-		id, ok := rawUID.(int64)
+		id, ok := rawUID.Value.(int64)
 		if !ok {
 			return nil, nil, errors.New("cannot detect user, invalid type for name (expected int)")
 		}
@@ -70,9 +71,9 @@ func (x *mqlUser) init(args map[string]interface{}) (map[string]interface{}, *mq
 	}
 
 	if nameOk {
-		return nil, nil, errors.New("cannot find user with name '" + rawName.(string) + "'")
+		return nil, nil, errors.New("cannot find user with name '" + rawName.Value.(string) + "'")
 	} else {
-		return nil, nil, errors.New("cannot find user with uid '" + strconv.FormatInt(rawUID.(int64), 10) + "'")
+		return nil, nil, errors.New("cannot find user with uid '" + strconv.FormatInt(rawUID.Value.(int64), 10) + "'")
 	}
 }
 
@@ -88,8 +89,8 @@ func (x *mqlUser) group(gid int64) (*mqlGroup, error) {
 func (u *mqlUser) authorizedkeys(home string) (*mqlAuthorizedkeys, error) {
 	// TODO: we may need to handle ".ssh/authorized_keys2" too
 	authorizedKeysPath := path.Join(home, ".ssh", "authorized_keys")
-	ak, err := CreateResource(u.MqlRuntime, "authorizedkeys", map[string]interface{}{
-		"path": authorizedKeysPath,
+	ak, err := CreateResource(u.MqlRuntime, "authorizedkeys", map[string]*llx.RawData{
+		"path": llx.StringData(authorizedKeysPath),
 	})
 	if err != nil {
 		return nil, err
@@ -130,14 +131,14 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 	var res []interface{}
 	for i := range users {
 		user := users[i]
-		nu, err := CreateResource(x.MqlRuntime, "user", map[string]interface{}{
-			"name":    user.Name,
-			"uid":     user.Uid,
-			"gid":     user.Gid,
-			"sid":     user.Sid,
-			"home":    user.Home,
-			"shell":   user.Shell,
-			"enabled": user.Enabled,
+		nu, err := CreateResource(x.MqlRuntime, "user", map[string]*llx.RawData{
+			"name":    llx.StringData(user.Name),
+			"uid":     llx.IntData(user.Uid),
+			"gid":     llx.IntData(user.Gid),
+			"sid":     llx.StringData(user.Sid),
+			"home":    llx.StringData(user.Home),
+			"shell":   llx.StringData(user.Shell),
+			"enabled": llx.BoolData(user.Enabled),
 		})
 		if err != nil {
 			return nil, err

@@ -48,7 +48,7 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 	shellConf := ShellConfig{
 		Features:   config.Features,
 		PlatformID: viper.GetString("platform-id"),
-		Inventory:  cliRes.Inventory,
+		Asset:      cliRes.Asset,
 	}
 
 	shellConf.Command, _ = cmd.Flags().GetString("command")
@@ -92,7 +92,7 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 // TODO: the config is a shared structure, which should be moved to proto
 type ShellConfig struct {
 	Command        string
-	Inventory      *inventory.Inventory
+	Asset          *inventory.Asset
 	Features       cnquery.Features
 	PlatformID     string
 	WelcomeMessage string
@@ -102,7 +102,11 @@ type ShellConfig struct {
 
 // StartShell will start an interactive CLI shell
 func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
-	im, err := manager.NewManager(manager.WithInventory(conf.Inventory, runtime))
+	im, err := manager.NewManager(manager.WithInventory(&inventory.Inventory{
+		Spec: &inventory.InventorySpec{
+			Assets: []*inventory.Asset{conf.Asset},
+		},
+	}, runtime))
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not load asset information")
 	}
@@ -136,16 +140,15 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		log.Fatal().Msg("no asset selected")
 	}
 
-	pf := connectAsset.Platform
-	log.Info().Msgf("connected to %s", pf.Title)
-
 	err = runtime.Connect(&plugin.ConnectReq{
 		Features: conf.Features,
-		Asset:    conf.Inventory,
+		Asset:    conf.Asset,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to asset")
 	}
+
+	log.Info().Msgf("connected to %s", runtime.Provider.Connection.Asset.Platform.Title)
 
 	// when we close the shell, we need to close the backend and store the recording
 	onCloseHandler := func() {
