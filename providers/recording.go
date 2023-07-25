@@ -15,7 +15,7 @@ import (
 
 type Recording interface {
 	Save() error
-	EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config)
+	EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config)
 	AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData)
 	GetData(connectionID uint32, resource string, id string, field string) (*llx.RawData, bool)
 	GetResource(connectionID uint32, resource string, id string) (map[string]*llx.RawData, bool)
@@ -72,7 +72,8 @@ func (n nullRecording) Save() error {
 	return nil
 }
 
-func (n nullRecording) EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config) {}
+func (n nullRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
+}
 
 func (n nullRecording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 }
@@ -93,12 +94,12 @@ func (n *readOnlyRecording) Save() error {
 	return nil
 }
 
-func (n *readOnlyRecording) EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config) {
+func (n *readOnlyRecording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 	// For read-only recordings we are still loading from file, so that means
 	// we are severly lacking connection IDs.
 	found, _ := n.findAssetConnID(asset, conf)
 	if found != -1 {
-		n.assets[conf.Id] = &n.Assets[found]
+		n.assets[connectionID] = &n.Assets[found]
 	}
 }
 
@@ -385,7 +386,7 @@ func (r *recording) findAssetConnID(asset *inventory.Asset, conf *inventory.Conf
 	return found, id
 }
 
-func (r *recording) EnsureAsset(asset *inventory.Asset, provider string, conf *inventory.Config) {
+func (r *recording) EnsureAsset(asset *inventory.Asset, provider string, connectionID uint32, conf *inventory.Config) {
 	found, _ := r.findAssetConnID(asset, conf)
 
 	if found == -1 {
@@ -425,13 +426,14 @@ func (r *recording) EnsureAsset(asset *inventory.Asset, provider string, conf *i
 		Connector: conf.Type,
 		id:        conf.Id,
 	}
-	r.assets[conf.Id] = assetObj
+	r.assets[connectionID] = assetObj
 }
 
 func (r *recording) AddData(connectionID uint32, resource string, id string, field string, data *llx.RawData) {
 	asset, ok := r.assets[connectionID]
 	if !ok {
 		log.Error().Uint32("connectionID", connectionID).Msg("cannot store recording, cannot find connection ID")
+		return
 	}
 
 	obj, exist := asset.resources[resource+"\x00"+id]
