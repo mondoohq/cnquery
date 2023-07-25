@@ -1,6 +1,7 @@
 packs:
   - uid: mondoo-asset-count
     name: Asset Count Query Pack
+    version: 1.0.0
     groups:
       - title: ESXi asset counts
         filters: asset.platform == 'vmware-vsphere'
