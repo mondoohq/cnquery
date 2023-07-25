@@ -33,6 +33,7 @@ func (r *GcpOrgResolver) Resolve(ctx context.Context, tc *providers.Config, cred
 	if err != nil {
 		return nil, err
 	}
+	defer provider.Close()
 
 	orgId, err := provider.OrganizationID()
 	if err != nil {

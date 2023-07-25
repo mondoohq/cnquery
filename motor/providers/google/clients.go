@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/motor/vault"
 	"golang.org/x/oauth2"
 	googleoauth "golang.org/x/oauth2/google"
@@ -37,18 +38,33 @@ func (t *Provider) Credentials(scopes ...string) (*googleoauth.Credentials, erro
 func (t *Provider) Client(scope ...string) (*http.Client, error) {
 	ctx := context.Background()
 
+	var httpClient *http.Client
+	var err error
+
 	// use service account from secret if one is provided
 	if t.cred != nil {
 		data, err := credsServiceAccountData(t.cred)
 		if err != nil {
 			return nil, err
 		}
-		return serviceAccountAuth(ctx, t.serviceAccountSubject, data, scope...)
+		httpClient, err = serviceAccountAuth(ctx, t.serviceAccountSubject, data, scope...)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// otherwise fallback to default google sdk authentication
+		log.Debug().Msg("fallback to default google sdk authentication")
+		httpClient, err = defaultAuth(ctx, scope...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// otherwise fallback to default google sdk authentication
-	log.Debug().Msg("fallback to default google sdk authentication")
-	return defaultAuth(ctx, scope...)
+	if log.Trace().Enabled() {
+		logger.AttachLoggingTransport(httpClient)
+	}
+
+	return httpClient, nil
 }
 
 // defaultAuth implements the
