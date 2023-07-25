@@ -33,7 +33,7 @@ func NewCollector(lrFile string) *Collector {
 }
 
 var regexMaps = map[string]*regexp.Regexp{
-	"init":   regexp.MustCompile(`func init(\S+)\(\S+ [^)]+\) \([^,]+, \*\S+, error\) {`),
+	"init":   regexp.MustCompile(`func init(\S+)\([^)]+\) \([^,]+, \S+\.Resource, error\) {`),
 	"id":     regexp.MustCompile(`func \(\S+ \*(mql\S+)\) id\(\) \(string, error\)`),
 	"struct": regexp.MustCompile(`type (mql\S+Internal) struct `),
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/resources/authorizedkeys"
 )
 
@@ -23,21 +24,21 @@ func (x *mqlAuthorizedkeysEntry) id() (string, error) {
 	return path + ":" + strconv.FormatInt(x.Line.Data, 10), nil
 }
 
-func (x *mqlAuthorizedkeys) init(args map[string]*llx.RawData) (map[string]*llx.RawData, *mqlAuthorizedkeys, error) {
+func initAuthorizedkeys(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// users may supply only the file or the path. Until we deprecate path in this
 	// resource, we have to make sure it gets filled; if we receive a file,
 	// set it from the file (for consistency)
 	if v, ok := args["file"]; ok {
 		file, ok := v.Value.(*mqlFile)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'file' in authorizedkeys initialization, it must be a file")
+			return nil, nil, errors.New("wrong type for 'file' in authorizedkeys initialization, it must be a file")
 		}
 
 		args["path"] = llx.StringData(file.Path.Data)
 	}
 
 	if path, ok := args["path"]; ok {
-		f, err := CreateResource(x.MqlRuntime, "file", map[string]*llx.RawData{
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
 			"path": path,
 		})
 		if err != nil {

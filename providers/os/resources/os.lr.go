@@ -14,47 +14,47 @@ var resourceFactories map[string]plugin.ResourceFactory
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
 		"command": {
-			// to override args, implement: initCommand(args map[string]interface{}) (map[string]interface{}, *mqlCommand, error)
+			// to override args, implement: initCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createCommand,
 		},
 		"file": {
-			// to override args, implement: initFile(args map[string]interface{}) (map[string]interface{}, *mqlFile, error)
+			// to override args, implement: initFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createFile,
 		},
 		"file.permissions": {
-			// to override args, implement: initFilePermissions(args map[string]interface{}) (map[string]interface{}, *mqlFilePermissions, error)
+			// to override args, implement: initFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createFilePermissions,
 		},
 		"user": {
-			// to override args, implement: initUser(args map[string]interface{}) (map[string]interface{}, *mqlUser, error)
+			// to override args, implement: initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createUser,
 		},
 		"users": {
-			// to override args, implement: initUsers(args map[string]interface{}) (map[string]interface{}, *mqlUsers, error)
+			// to override args, implement: initUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createUsers,
 		},
 		"authorizedkeys": {
-			// to override args, implement: initAuthorizedkeys(args map[string]interface{}) (map[string]interface{}, *mqlAuthorizedkeys, error)
+			Init: initAuthorizedkeys,
 			Create: createAuthorizedkeys,
 		},
 		"authorizedkeys.entry": {
-			// to override args, implement: initAuthorizedkeysEntry(args map[string]interface{}) (map[string]interface{}, *mqlAuthorizedkeysEntry, error)
+			// to override args, implement: initAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createAuthorizedkeysEntry,
 		},
 		"group": {
-			// to override args, implement: initGroup(args map[string]interface{}) (map[string]interface{}, *mqlGroup, error)
+			// to override args, implement: initGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createGroup,
 		},
 		"groups": {
-			// to override args, implement: initGroups(args map[string]interface{}) (map[string]interface{}, *mqlGroups, error)
+			// to override args, implement: initGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createGroups,
 		},
 		"package": {
-			// to override args, implement: initPackage(args map[string]interface{}) (map[string]interface{}, *mqlPackage, error)
+			// to override args, implement: initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createPackage,
 		},
 		"packages": {
-			// to override args, implement: initPackages(args map[string]interface{}) (map[string]interface{}, *mqlPackages, error)
+			// to override args, implement: initPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
 			Create: createPackages,
 		},
 	}
@@ -653,16 +653,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
 	f, ok := setDataFields[resource.MqlName() + "." + field]
 	if !ok {
-		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[os] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[os] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
 	}
 	return nil
 }
 
-func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
+func setAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	var err error
 	for k, v := range args {
 		if err = SetData(resource, k, v); err != nil {
@@ -690,19 +690,22 @@ func createCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("command", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -774,19 +777,22 @@ func createFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("file", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -851,6 +857,13 @@ func (c *mqlFile) GetExists() *plugin.TValue[bool] {
 
 func (c *mqlFile) GetPermissions() *plugin.TValue[*mqlFilePermissions] {
 	return plugin.GetOrCompute[*mqlFilePermissions](&c.Permissions, func() (*mqlFilePermissions, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "permissions")
+			if err != nil || d != nil {
+				return d.Value.(*mqlFilePermissions), err
+			}
+		}
+
 		vargPath := c.GetPath()
 		if vargPath.Error != nil {
 			return nil, vargPath.Error
@@ -871,12 +884,26 @@ func (c *mqlFile) GetSize() *plugin.TValue[int64] {
 
 func (c *mqlFile) GetUser() *plugin.TValue[*mqlUser] {
 	return plugin.GetOrCompute[*mqlUser](&c.User, func() (*mqlUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "user")
+			if err != nil || d != nil {
+				return d.Value.(*mqlUser), err
+			}
+		}
+
 		return c.user()
 	})
 }
 
 func (c *mqlFile) GetGroup() *plugin.TValue[*mqlGroup] {
 	return plugin.GetOrCompute[*mqlGroup](&c.Group, func() (*mqlGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "group")
+			if err != nil || d != nil {
+				return d.Value.(*mqlGroup), err
+			}
+		}
+
 		return c.group()
 	})
 }
@@ -922,19 +949,22 @@ func createFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("file.permissions", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1041,19 +1071,22 @@ func createUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("user", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1097,6 +1130,13 @@ func (c *mqlUser) GetEnabled() *plugin.TValue[bool] {
 
 func (c *mqlUser) GetAuthorizedkeys() *plugin.TValue[*mqlAuthorizedkeys] {
 	return plugin.GetOrCompute[*mqlAuthorizedkeys](&c.Authorizedkeys, func() (*mqlAuthorizedkeys, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("user", c.__id, "authorizedkeys")
+			if err != nil || d != nil {
+				return d.Value.(*mqlAuthorizedkeys), err
+			}
+		}
+
 		vargHome := c.GetHome()
 		if vargHome.Error != nil {
 			return nil, vargHome.Error
@@ -1107,6 +1147,13 @@ func (c *mqlUser) GetAuthorizedkeys() *plugin.TValue[*mqlAuthorizedkeys] {
 
 func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 	return plugin.GetOrCompute[*mqlGroup](&c.Group, func() (*mqlGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("user", c.__id, "group")
+			if err != nil || d != nil {
+				return d.Value.(*mqlGroup), err
+			}
+		}
+
 		vargGid := c.GetGid()
 		if vargGid.Error != nil {
 			return nil, vargGid.Error
@@ -1130,7 +1177,7 @@ func createUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
@@ -1142,7 +1189,7 @@ func createUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1180,19 +1227,22 @@ func createAuthorizedkeys(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("authorizedkeys", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1259,19 +1309,22 @@ func createAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.Raw
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("authorizedkeys.entry", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1327,19 +1380,22 @@ func createGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("group", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1386,7 +1442,7 @@ func createGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
@@ -1398,7 +1454,7 @@ func createGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1443,19 +1499,22 @@ func createPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
 
 	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("package", res.__id)
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -1534,7 +1593,7 @@ func createPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
@@ -1546,7 +1605,7 @@ func createPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		if err != nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil

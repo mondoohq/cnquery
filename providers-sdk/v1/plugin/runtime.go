@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"errors"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/types"
 )
@@ -24,11 +26,42 @@ func (r *Runtime) ResourceFromRecording(name string, id string) (map[string]*llx
 		Resource:   name,
 		ResourceId: id,
 	})
+	if err != nil || data == nil {
+		return nil, err
+	}
+
+	// We don't want resources at this stage, because they have to be requested and
+	// initialized recursively. Instead callers can request these fields from the
+	// recording and initialize them.
+	// TODO: we could use the provided information for a later request.
+	for k, v := range data.Fields {
+		if types.Type(v.Data.Type).IsResource() {
+			delete(data.Fields, k)
+		}
+	}
+
+	return ProtoArgsToRawDataArgs(data.Fields)
+}
+
+func (r *Runtime) FieldResourceFromRecording(resource string, id string, field string) (*llx.RawData, error) {
+	data, err := r.Callback.GetRecording(&DataReq{
+		Resource:   resource,
+		ResourceId: id,
+		Field:      field,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	return ProtoArgsToRawDataArgs(data.Fields)
+	fieldObj, ok := data.Fields[field]
+	if !ok {
+		return nil, nil
+	}
+
+	// TODO: recursively load resource
+
+	_ = fieldObj
+	return nil, errors.New("cannot load field resource from recording yet")
 }
 
 type TValue[T any] struct {
