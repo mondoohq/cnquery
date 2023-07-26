@@ -1,6 +1,6 @@
 # See https://golangci-lint.run/usage/configuration/ for configuration options
 run:
-  timeout: 5m
+  timeout: 15m
   skip-dirs:
   skip-files:
     - ".*\\.pb\\.go$"

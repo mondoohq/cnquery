@@ -399,7 +399,9 @@ func (r *RawData) JSON(codeID string, bundle *CodeBundle) []byte {
 	}
 
 	var res bytes.Buffer
-	rawDataJSON(r.Type, r.Value, codeID, bundle, &res)
+	if err := rawDataJSON(r.Type, r.Value, codeID, bundle, &res); err != nil {
+		return JSONerror(err)
+	}
 	return res.Bytes()
 }
 
