@@ -11,6 +11,10 @@ linters:
   disable-all: true
   enable:
     - gofmt
+    - staticcheck
+    - errcheck
+    - gosimple
+    - ineffassign
 # deactivated for now since its slow in github actions
 #    - govet
 
