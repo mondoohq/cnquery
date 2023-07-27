@@ -109,6 +109,10 @@ private k8s.namespace @defaults("name created") {
   uid string
   // Kubernetes Object Name
   name string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
   // Kubernetes Object Creation Timestamp
   created time
   // Full resource manifest
