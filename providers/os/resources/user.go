@@ -44,41 +44,35 @@ func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string
 	}
 	users := raw.(*mqlUsers)
 
-	list := users.GetList()
-	if list.Error != nil {
-		return nil, nil, list.Error
+	if err := users.refreshCache(nil); err != nil {
+		return nil, nil, err
 	}
 
-	var f func(user interface{}) bool
 	if nameOk {
 		name, ok := rawName.Value.(string)
 		if !ok {
 			return nil, nil, errors.New("cannot detect user, invalid type for name (expected string)")
 		}
-		f = func(user interface{}) bool {
-			return user.(*mqlUser).Name.Data == name
+		user, ok := users.usersByName[name]
+		if !ok {
+			return nil, nil, errors.New("cannot find user with name '" + name + "'")
 		}
-	} else if idOk {
+		return nil, user, nil
+	}
+
+	if idOk {
 		id, ok := rawUID.Value.(int64)
 		if !ok {
 			return nil, nil, errors.New("cannot detect user, invalid type for name (expected int)")
 		}
-		f = func(user interface{}) bool {
-			return user.(*mqlUser).Uid.Data == id
+		user, ok := users.usersByID[id]
+		if !ok {
+			return nil, nil, errors.New("cannot find user with UID '" + strconv.Itoa(int(id)) + "'")
 		}
+		return nil, user, nil
 	}
 
-	for i := range list.Data {
-		if f(list.Data[i]) {
-			return nil, list.Data[i].(*mqlUser), nil
-		}
-	}
-
-	if nameOk {
-		return nil, nil, errors.New("cannot find user with name '" + rawName.Value.(string) + "'")
-	} else {
-		return nil, nil, errors.New("cannot find user with uid '" + strconv.FormatInt(rawUID.Value.(int64), 10) + "'")
-	}
+	return nil, nil, errors.New("cannot find user, no search criteria provided")
 }
 
 func (x *mqlUser) group(gid int64) (*mqlGroup, error) {
@@ -118,8 +112,6 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 	if x.usersByID != nil {
 		return nil, nil
 	}
-	x.usersByID = map[int64]*mqlUser{}
-	x.usersByName = map[string]*mqlUser{}
 
 	conn := x.MqlRuntime.Connection.(shared.Connection)
 	um, err := users.ResolveManager(conn)
@@ -149,13 +141,30 @@ func (x *mqlUsers) list() ([]interface{}, error) {
 		}
 
 		res = append(res, nu)
+	}
 
-		u := nu.(*mqlUser)
+	return res, x.refreshCache(res)
+}
+
+func (x *mqlUsers) refreshCache(all []interface{}) error {
+	if all == nil {
+		raw := x.GetList()
+		if raw.Error != nil {
+			return raw.Error
+		}
+		all = raw.Data
+	}
+
+	x.usersByID = map[int64]*mqlUser{}
+	x.usersByName = map[string]*mqlUser{}
+
+	for i := range all {
+		u := all[i].(*mqlUser)
 		x.usersByID[u.Uid.Data] = u
 		x.usersByName[u.Name.Data] = u
 	}
 
-	return res, nil
+	return nil
 }
 
 func (x *mqlUsers) findID(id int64) (*mqlUser, error) {

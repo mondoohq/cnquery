@@ -103,7 +103,6 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 
 	// create MQL package os for each package
 	pkgs := make([]interface{}, len(osPkgs))
-	namedMap := map[string]*mqlPackage{}
 	for i, osPkg := range osPkgs {
 		// check if we found a newer version
 		available := ""
@@ -130,10 +129,26 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 		}
 
 		pkgs[i] = pkg
-		namedMap[osPkg.Name] = pkg.(*mqlPackage)
 	}
 
-	x.packagesByName = namedMap
+	return pkgs, x.refreshCache(pkgs)
+}
 
-	return pkgs, nil
+func (x *mqlPackages) refreshCache(all []interface{}) error {
+	if all == nil {
+		raw := x.GetList()
+		if raw.Error != nil {
+			return raw.Error
+		}
+		all = raw.Data
+	}
+
+	x.packagesByName = map[string]*mqlPackage{}
+
+	for i := range all {
+		u := all[i].(*mqlPackage)
+		x.packagesByName[u.Name.Data] = u
+	}
+
+	return nil
 }
