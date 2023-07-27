@@ -59,26 +59,26 @@ func TomlMock(filepath string) llx.Runtime {
 }
 
 type tester struct {
-	runtime llx.Runtime
+	Runtime llx.Runtime
 }
 
 func InitTester(runtime llx.Runtime) *tester {
 	return &tester{
-		runtime: runtime,
+		Runtime: runtime,
 	}
 }
 
 func (ctx *tester) Compile(query string) (*llx.CodeBundle, error) {
-	return mqlc.Compile(query, nil, mqlc.NewConfig(ctx.runtime.Schema(), Features))
+	return mqlc.Compile(query, nil, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
 }
 
 func (ctx *tester) ExecuteCode(bundle *llx.CodeBundle, props map[string]*llx.Primitive) (map[string]*llx.RawResult, error) {
-	return mql.ExecuteCode(ctx.runtime, bundle, props, Features)
+	return mql.ExecuteCode(ctx.Runtime, bundle, props, Features)
 }
 
 func (ctx *tester) TestQueryP(t *testing.T, query string, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
-	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.runtime.Schema(), Features))
+	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(ctx.Runtime.Schema(), Features))
 	if err != nil {
 		t.Fatal("failed to compile code: " + err.Error())
 	}
@@ -94,7 +94,7 @@ func (ctx *tester) TestQuery(t *testing.T, query string) []*llx.RawResult {
 func (ctx *tester) TestMqlc(t *testing.T, bundle *llx.CodeBundle, props map[string]*llx.Primitive) []*llx.RawResult {
 	t.Helper()
 
-	resultMap, err := mql.ExecuteCode(ctx.runtime, bundle, props, Features)
+	resultMap, err := mql.ExecuteCode(ctx.Runtime, bundle, props, Features)
 	require.NoError(t, err)
 
 	lastQueryResult := &llx.RawResult{}
