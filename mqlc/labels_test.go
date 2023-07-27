@@ -88,19 +88,19 @@ func TestLabels(t *testing.T) {
 			}},
 		},
 		{
-			"platform.name platform.release",
+			"asset.name asset.version",
 			&llx.Labels{Labels: map[string]string{
-				"EpnHIF31KeNgY/3Z4KyBuKHQ0kk/i+MyYbTX+ZWiQIAvK6lv4P2Nlf9CKAIrn2KOfCWICteI96BN1e8GA6sNZA==": "platform.name",
-				"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": "platform.release",
+				"dfc6mvEo04hkhtJJiFc22KX6/AMf6Fy2kQhrtpTW4TxGWTtwNH19ATbrfbhWlXSxx0BBFCRU4emVM/LsxJdhhw==": "asset.name",
+				"5d4FZxbPkZu02MQaHp3C356NJ9TeVsJBw8Enu+TDyBGdWlZM/AE+J5UT/TQ72AmDViKZe97Hxz1Jt3MjcEH/9Q==": "asset.version",
 			}},
 		},
 		{
-			"platform { name release }",
+			"asset { name version }",
 			&llx.Labels{
 				Labels: map[string]string{
-					"58Saw3DjwlEPe8iFhCNbV6q79mHGW+2PVowCr/Zs2AD4Uis3PPPeEHAy5xw8sBGtsOLs8tJ5upaJDfuByaEbFw==": "platform",
-					"EpnHIF31KeNgY/3Z4KyBuKHQ0kk/i+MyYbTX+ZWiQIAvK6lv4P2Nlf9CKAIrn2KOfCWICteI96BN1e8GA6sNZA==": "name",
-					"yUHOZ/pJzgQ3FLcnKAPphE4TgWqFptqPWA8GYl4e5Dqg0/YzQWcDml2cbrTEj3nj1rm0azm9povOYMRjTgSvZg==": "release",
+					"5d4FZxbPkZu02MQaHp3C356NJ9TeVsJBw8Enu+TDyBGdWlZM/AE+J5UT/TQ72AmDViKZe97Hxz1Jt3MjcEH/9Q==": "version",
+					"HsQJ6Pn7MoZb1V80cTdxHFHZks9QCOBga68ug9JHSivLxNNlGNwGr7dzWVkZhAuVBLgloAWvLnpfr5SzFlG7KA==": "asset",
+					"dfc6mvEo04hkhtJJiFc22KX6/AMf6Fy2kQhrtpTW4TxGWTtwNH19ATbrfbhWlXSxx0BBFCRU4emVM/LsxJdhhw==": "name",
 				},
 			},
 		},

@@ -1,10 +1,10 @@
-package os_test
+package resources_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/resources/packs/testutils"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
 func TestResource_FilesFind(t *testing.T) {

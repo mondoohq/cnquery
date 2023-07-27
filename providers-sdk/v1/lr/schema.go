@@ -2,6 +2,7 @@ package lr
 
 import (
 	"errors"
+	"strings"
 
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
@@ -38,10 +39,28 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		res.Resources[defName] = x
 	}
 
-	for _, v := range res.Resources {
+	for name, v := range res.Resources {
 		v.Provider = provider
 		for _, field := range v.Fields {
 			field.Provider = provider
+		}
+
+		if !strings.Contains(name, ".") {
+			continue
+		}
+
+		rem := name
+		for {
+			last := strings.LastIndex(rem, ".")
+			if last == -1 {
+				break
+			}
+			rem = rem[:last]
+			if _, ok := res.Resources[rem]; !ok {
+				res.Resources[rem] = &resources.ResourceInfo{
+					Id: rem,
+				}
+			}
 		}
 	}
 

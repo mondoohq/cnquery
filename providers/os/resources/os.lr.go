@@ -25,6 +25,14 @@ func init() {
 			// to override args, implement: initFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFilePermissions,
 		},
+		"files": {
+			// to override args, implement: initFiles(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createFiles,
+		},
+		"files.find": {
+			Init: initFilesFind,
+			Create: createFilesFind,
+		},
 		"parse.ini": {
 			Init: initParseIni,
 			Create: createParseIni,
@@ -34,7 +42,7 @@ func init() {
 			Create: createParseJson,
 		},
 		"parse.plist": {
-			// to override args, implement: initParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initParsePlist,
 			Create: createParsePlist,
 		},
 		"parse.yaml": {
@@ -76,6 +84,14 @@ func init() {
 		"packages": {
 			// to override args, implement: initPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPackages,
+		},
+		"pam.conf": {
+			Init: initPamConf,
+			Create: createPamConf,
+		},
+		"pam.conf.serviceEntry": {
+			// to override args, implement: initPamConfServiceEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPamConfServiceEntry,
 		},
 		"sshd": {
 			// to override args, implement: initSshd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -245,6 +261,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"file.permissions.string": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilePermissions).GetString()).ToDataRes(types.String)
 	},
+	"files.find.from": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetFrom()).ToDataRes(types.String)
+	},
+	"files.find.xdev": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetXdev()).ToDataRes(types.Bool)
+	},
+	"files.find.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetType()).ToDataRes(types.String)
+	},
+	"files.find.regex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetRegex()).ToDataRes(types.String)
+	},
+	"files.find.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetPermissions()).ToDataRes(types.Int)
+	},
+	"files.find.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetName()).ToDataRes(types.String)
+	},
+	"files.find.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFilesFind).GetList()).ToDataRes(types.Array(types.Resource("file")))
+	},
 	"parse.ini.delimiter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseIni).GetDelimiter()).ToDataRes(types.String)
 	},
@@ -412,6 +449,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"packages.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackages).GetList()).ToDataRes(types.Array(types.Resource("package")))
+	},
+	"pam.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"pam.conf.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConf).GetContent()).ToDataRes(types.String)
+	},
+	"pam.conf.services": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConf).GetServices()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
+	"pam.conf.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConf).GetEntries()).ToDataRes(types.Map(types.String, types.Array(types.Resource("pam.conf.serviceEntry"))))
+	},
+	"pam.conf.serviceEntry.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConfServiceEntry).GetService()).ToDataRes(types.String)
+	},
+	"pam.conf.serviceEntry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConfServiceEntry).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"pam.conf.serviceEntry.pamType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConfServiceEntry).GetPamType()).ToDataRes(types.String)
+	},
+	"pam.conf.serviceEntry.control": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConfServiceEntry).GetControl()).ToDataRes(types.String)
+	},
+	"pam.conf.serviceEntry.module": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConfServiceEntry).GetModule()).ToDataRes(types.String)
+	},
+	"pam.conf.serviceEntry.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPamConfServiceEntry).GetOptions()).ToDataRes(types.Array(types.String))
 	},
 	"sshd.config.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetFile()).ToDataRes(types.Resource("file"))
@@ -607,6 +674,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"file.permissions.string": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"files.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFiles).__id, ok = v.Value.(string)
+			return
+		},
+	"files.find.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlFilesFind).__id, ok = v.Value.(string)
+			return
+		},
+	"files.find.from": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).From, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"files.find.xdev": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).Xdev, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"files.find.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"files.find.regex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).Regex, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"files.find.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).Permissions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"files.find.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"files.find.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFilesFind).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"parse.ini.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -883,6 +986,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackages).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"pam.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPamConf).__id, ok = v.Value.(string)
+			return
+		},
+	"pam.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConf).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"pam.conf.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConf).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pam.conf.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConf).Services, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"pam.conf.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConf).Entries, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"pam.conf.serviceEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPamConfServiceEntry).__id, ok = v.Value.(string)
+			return
+		},
+	"pam.conf.serviceEntry.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConfServiceEntry).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pam.conf.serviceEntry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConfServiceEntry).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"pam.conf.serviceEntry.pamType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConfServiceEntry).PamType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pam.conf.serviceEntry.control": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConfServiceEntry).Control, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pam.conf.serviceEntry.module": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConfServiceEntry).Module, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"pam.conf.serviceEntry.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPamConfServiceEntry).Options, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"sshd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1381,6 +1532,137 @@ func (c *mqlFilePermissions) GetIsSymlink() *plugin.TValue[bool] {
 func (c *mqlFilePermissions) GetString() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.String, func() (string, error) {
 		return c.string()
+	})
+}
+
+// mqlFiles for the files resource
+type mqlFiles struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlFilesInternal it will be used here
+
+
+}
+
+// createFiles creates a new instance of this resource
+func createFiles(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFiles{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("files", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFiles) MqlName() string {
+	return "files"
+}
+
+func (c *mqlFiles) MqlID() string {
+	return c.__id
+}
+
+// mqlFilesFind for the files.find resource
+type mqlFilesFind struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlFilesFindInternal it will be used here
+
+	From plugin.TValue[string]
+	Xdev plugin.TValue[bool]
+	Type plugin.TValue[string]
+	Regex plugin.TValue[string]
+	Permissions plugin.TValue[int64]
+	Name plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createFilesFind creates a new instance of this resource
+func createFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlFilesFind{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("files.find", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlFilesFind) MqlName() string {
+	return "files.find"
+}
+
+func (c *mqlFilesFind) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlFilesFind) GetFrom() *plugin.TValue[string] {
+	return &c.From
+}
+
+func (c *mqlFilesFind) GetXdev() *plugin.TValue[bool] {
+	return &c.Xdev
+}
+
+func (c *mqlFilesFind) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlFilesFind) GetRegex() *plugin.TValue[string] {
+	return &c.Regex
+}
+
+func (c *mqlFilesFind) GetPermissions() *plugin.TValue[int64] {
+	return &c.Permissions
+}
+
+func (c *mqlFilesFind) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlFilesFind) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("files.find", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }
 
@@ -2409,6 +2691,185 @@ func (c *mqlPackages) GetList() *plugin.TValue[[]interface{}] {
 
 		return c.list()
 	})
+}
+
+// mqlPamConf for the pam.conf resource
+type mqlPamConf struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPamConfInternal it will be used here
+
+	Files plugin.TValue[[]interface{}]
+	Content plugin.TValue[string]
+	Services plugin.TValue[map[string]interface{}]
+	Entries plugin.TValue[map[string]interface{}]
+}
+
+// createPamConf creates a new instance of this resource
+func createPamConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPamConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("pam.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPamConf) MqlName() string {
+	return "pam.conf"
+}
+
+func (c *mqlPamConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPamConf) GetFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("pam.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.files()
+	})
+}
+
+func (c *mqlPamConf) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return "", vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlPamConf) GetServices() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Services, func() (map[string]interface{}, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.services(vargFiles.Data)
+	})
+}
+
+func (c *mqlPamConf) GetEntries() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Entries, func() (map[string]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("pam.conf", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(map[string]interface{}), nil
+			}
+		}
+
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.entries(vargFiles.Data)
+	})
+}
+
+// mqlPamConfServiceEntry for the pam.conf.serviceEntry resource
+type mqlPamConfServiceEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPamConfServiceEntryInternal it will be used here
+
+	Service plugin.TValue[string]
+	LineNumber plugin.TValue[int64]
+	PamType plugin.TValue[string]
+	Control plugin.TValue[string]
+	Module plugin.TValue[string]
+	Options plugin.TValue[[]interface{}]
+}
+
+// createPamConfServiceEntry creates a new instance of this resource
+func createPamConfServiceEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPamConfServiceEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("pam.conf.serviceEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPamConfServiceEntry) MqlName() string {
+	return "pam.conf.serviceEntry"
+}
+
+func (c *mqlPamConfServiceEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPamConfServiceEntry) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlPamConfServiceEntry) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlPamConfServiceEntry) GetPamType() *plugin.TValue[string] {
+	return &c.PamType
+}
+
+func (c *mqlPamConfServiceEntry) GetControl() *plugin.TValue[string] {
+	return &c.Control
+}
+
+func (c *mqlPamConfServiceEntry) GetModule() *plugin.TValue[string] {
+	return &c.Module
+}
+
+func (c *mqlPamConfServiceEntry) GetOptions() *plugin.TValue[[]interface{}] {
+	return &c.Options
 }
 
 // mqlSshd for the sshd resource
