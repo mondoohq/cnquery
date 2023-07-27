@@ -1,64 +1,23 @@
 package reporter
 
 import (
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/mql"
-	"go.mondoo.com/cnquery/mqlc"
-	"go.mondoo.com/cnquery/providers/mock"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 	"go.mondoo.com/cnquery/shared"
 	"gotest.tools/assert"
 )
 
-var features cnquery.Features
-
-func init() {
-	logger.InitTestEnv()
-	features = getEnvFeatures()
-}
-
-func getEnvFeatures() cnquery.Features {
-	env := os.Getenv("FEATURES")
-	if env == "" {
-		return cnquery.Features{byte(cnquery.PiperCode)}
-	}
-
-	arr := strings.Split(env, ",")
-	var fts cnquery.Features
-	for i := range arr {
-		v, ok := cnquery.FeaturesValue[arr[i]]
-		if ok {
-			fmt.Println("--> activate feature: " + arr[i])
-			fts = append(features, byte(v))
-		} else {
-			panic("cannot find requested feature: " + arr[i])
-		}
-	}
-	return fts
-}
-
-func executionContext() (llx.Schema, llx.Runtime) {
-	runtime, err := mock.NewFromTomlFile("../../mql/testdata/arch.toml")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return runtime.Schema(), runtime
-}
+var x = testutils.InitTester(testutils.LinuxMock("../../providers-sdk/v1/testutils"))
 
 func testQuery(t *testing.T, query string) (*llx.CodeBundle, map[string]*llx.RawResult) {
-	schema, runtime := executionContext()
-	codeBundle, err := mqlc.Compile(query, nil, mqlc.NewConfig(schema, features))
+	codeBundle, err := x.Compile(query)
 	require.NoError(t, err)
 
-	results, err := mql.ExecuteCode(runtime, codeBundle, nil, features)
+	results, err := x.ExecuteCode(codeBundle, nil)
 	require.NoError(t, err)
 
 	return codeBundle, results

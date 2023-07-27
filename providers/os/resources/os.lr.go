@@ -57,6 +57,14 @@ func init() {
 			// to override args, implement: initPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPackages,
 		},
+		"sshd": {
+			// to override args, implement: initSshd(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSshd,
+		},
+		"sshd.config": {
+			Init: initSshdConfig,
+			Create: createSshdConfig,
+		},
 	}
 }
 
@@ -319,6 +327,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"packages.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPackages).GetList()).ToDataRes(types.Array(types.Resource("package")))
+	},
+	"sshd.config.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"sshd.config.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"sshd.config.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetContent()).ToDataRes(types.String)
+	},
+	"sshd.config.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"sshd.config.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.macs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetMacs()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.kexs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetKexs()).ToDataRes(types.Array(types.String))
+	},
+	"sshd.config.hostkeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSshdConfig).GetHostkeys()).ToDataRes(types.Array(types.String))
 	},
 }
 
@@ -646,6 +678,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"packages.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPackages).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlSshd).__id, ok = v.Value.(string)
+			return
+		},
+	"sshd.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlSshdConfig).__id, ok = v.Value.(string)
+			return
+		},
+	"sshd.config.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"sshd.config.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"sshd.config.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Ciphers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.macs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Macs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.kexs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Kexs, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"sshd.config.hostkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSshdConfig).Hostkeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -1701,5 +1773,200 @@ func (c *mqlPackages) GetList() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.list()
+	})
+}
+
+// mqlSshd for the sshd resource
+type mqlSshd struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlSshdInternal it will be used here
+
+
+}
+
+// createSshd creates a new instance of this resource
+func createSshd(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSshd{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sshd", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSshd) MqlName() string {
+	return "sshd"
+}
+
+func (c *mqlSshd) MqlID() string {
+	return c.__id
+}
+
+// mqlSshdConfig for the sshd.config resource
+type mqlSshdConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlSshdConfigInternal it will be used here
+
+	File plugin.TValue[*mqlFile]
+	Files plugin.TValue[[]interface{}]
+	Content plugin.TValue[string]
+	Params plugin.TValue[map[string]interface{}]
+	Ciphers plugin.TValue[[]interface{}]
+	Macs plugin.TValue[[]interface{}]
+	Kexs plugin.TValue[[]interface{}]
+	Hostkeys plugin.TValue[[]interface{}]
+}
+
+// createSshdConfig creates a new instance of this resource
+func createSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSshdConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("sshd.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSshdConfig) MqlName() string {
+	return "sshd.config"
+}
+
+func (c *mqlSshdConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSshdConfig) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sshd.config", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlSshdConfig) GetFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("sshd.config", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return nil, vargFile.Error
+		}
+
+		return c.files(vargFile.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return "", vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetParams() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Params, func() (map[string]interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetCiphers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Ciphers, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.ciphers(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetMacs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Macs, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.macs(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetKexs() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Kexs, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.kexs(vargParams.Data)
+	})
+}
+
+func (c *mqlSshdConfig) GetHostkeys() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Hostkeys, func() ([]interface{}, error) {
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.hostkeys(vargParams.Data)
 	})
 }
