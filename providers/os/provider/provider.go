@@ -128,8 +128,11 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, err
 	}
 
-	if err := s.detect(req.Asset, conn); err != nil {
-		return nil, err
+	// We only need to run the detection step when we don't have any asset information yet.
+	if req.Asset.Platform == nil {
+		if err := s.detect(req.Asset, conn); err != nil {
+			return nil, err
+		}
 	}
 
 	// TODO: discovery of related assets and use them in the inventory below
@@ -174,10 +177,11 @@ func (s *Service) connect(asset *inventory.Asset, hasRecording bool, callback pl
 
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
-		Connection:   conn,
-		Resources:    map[string]plugin.Resource{},
-		Callback:     callback,
-		HasRecording: hasRecording,
+		Connection:     conn,
+		Resources:      map[string]plugin.Resource{},
+		Callback:       callback,
+		HasRecording:   hasRecording,
+		CreateResource: resources.CreateResource,
 	}
 
 	return conn, err

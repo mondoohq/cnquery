@@ -185,7 +185,7 @@ func TestPrinter_Assessment(t *testing.T) {
 				"    expected: == 1",
 				"    actual:   \"development\"",
 				"  [failed] user.authorizedkeys.file",
-				"    error: failed to create resource 'user': user 'notthere' does not exist",
+				"    error: cannot find user with name 'notthere'",
 				"",
 			}, "\n"),
 		},
@@ -430,9 +430,9 @@ func TestPrinter_Assessment(t *testing.T) {
 		//   ]
 		// `,
 		// 		},
-		// 		{
-		// 			"users.all(groups.all(name == 'root'))\n",
-		// 			`[failed] users.all()
+		// {
+		// 	"users.all(groups.all(name == 'root'))\n",
+		// 	`[failed] users.all()
 		//   actual:   [
 		//     0: user {
 		//       uid: 0
@@ -480,7 +480,7 @@ func TestPrinter_Assessment(t *testing.T) {
 		//     }
 		//   ]
 		// `,
-		// 		},
+		// },
 		{
 			"users.all(sshkeys.length > 2)\n",
 			strings.Join([]string{

@@ -85,7 +85,7 @@ func (b *goBuilder) goCreateResource(r []*Resource) {
 		if b.collector.HasInit(iName) {
 			parseArgs = "Init: init" + iName + ","
 		} else {
-			parseArgs = "// to override args, implement: init" + iName + "(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)"
+			parseArgs = "// to override args, implement: init" + iName + "(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)"
 		}
 
 		newCmds[i] = fmt.Sprintf("\"%s\": {\n\t\t\t%s\n\t\t\tCreate: create%s,\n\t\t},", resource.ID, parseArgs, iName)
@@ -401,16 +401,20 @@ func (b *goBuilder) goField(r *Resource, field *Field) {
 
 	// resource types may be loaded from recordings
 	var fromRecording string
-	if strings.HasPrefix(goType, "*mql") {
+	if field.BasicField.Type.containsResource(b) {
 		fromRecording = fmt.Sprintf(`if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording(%s, c.__id, %s)
-			if err != nil || d != nil {
-				return d.Value.(%s), err
+			if err != nil {
+				return %s, err
+			}
+			if d != nil {
+				return d.Value.(%s), nil
 			}
 		}
 
 		`,
 			strconv.Quote(r.ID), strconv.Quote(field.BasicField.ID),
+			goZero,
 			goType,
 		)
 	}
@@ -617,6 +621,21 @@ func (t *SimpleType) mondooTypeItems() string {
 
 	// TODO: check that this type if a proper resource
 	// panic("Cannot convert type '" + t.Type + "' to mondoo type")
+}
+
+func (t *Type) containsResource(b *goBuilder) bool {
+	if t.ListType != nil {
+		return t.ListType.Type.containsResource(b)
+	}
+	if t.MapType != nil {
+		return t.MapType.Value.containsResource(b)
+	}
+	if t.SimpleType != nil {
+		if _, ok := primitiveTypes[t.SimpleType.Type]; !ok {
+			return true
+		}
+	}
+	return false
 }
 
 // The go type is the golang-equivalent code type, i.e. the type of the

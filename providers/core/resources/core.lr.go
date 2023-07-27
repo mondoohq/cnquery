@@ -14,11 +14,11 @@ var resourceFactories map[string]plugin.ResourceFactory
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
 		"mondoo": {
-			// to override args, implement: initMondoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initMondoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMondoo,
 		},
 		"asset": {
-			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
 		},
 	}

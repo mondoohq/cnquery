@@ -1,20 +1,21 @@
 package plugin
 
 import (
-	"errors"
-
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/types"
 )
 
 type Runtime struct {
-	Connection   Connection
-	Resources    map[string]Resource
-	Callback     ProviderCallback
-	HasRecording bool
+	Connection     Connection
+	Resources      map[string]Resource
+	Callback       ProviderCallback
+	HasRecording   bool
+	CreateResource CreateNamedResource
 }
 
 type Connection interface{}
+
+type CreateNamedResource func(runtime *Runtime, name string, args map[string]*llx.RawData) (Resource, error)
 
 type Resource interface {
 	MqlID() string
@@ -53,7 +54,7 @@ func (r *Runtime) FieldResourceFromRecording(resource string, id string, field s
 		ResourceId: id,
 		Field:      field,
 	})
-	if err != nil {
+	if err != nil || data == nil {
 		return nil, err
 	}
 
@@ -62,10 +63,52 @@ func (r *Runtime) FieldResourceFromRecording(resource string, id string, field s
 		return nil, nil
 	}
 
-	// TODO: recursively load resource
+	raw := fieldObj.RawData()
+	raw.Value, err = r.initResourcesFromRecording(raw.Value, raw.Type)
+	return raw, err
+}
 
-	_ = fieldObj
-	return nil, errors.New("cannot load field resource from recording yet")
+func (r *Runtime) initResourcesFromRecording(val interface{}, typ types.Type) (interface{}, error) {
+	switch {
+	case typ.IsArray():
+		arr := val.([]interface{})
+		ct := typ.Child()
+		var err error
+		for i := range arr {
+			arr[i], err = r.initResourcesFromRecording(arr[i], ct)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return arr, nil
+
+	case typ.IsMap():
+		m := val.(map[string]interface{})
+		ct := typ.Child()
+		var err error
+		for k, v := range m {
+			m[k], err = r.initResourcesFromRecording(v, ct)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return m, nil
+
+	case typ.IsResource():
+		// It has to be a mock resource if we loaded it from recording.
+		// We also do this as a kind of safety check (instead of using the interface)
+
+		resource := val.(*llx.MockResource)
+		args, err := r.ResourceFromRecording(resource.Name, resource.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		return r.CreateResource(r, resource.Name, args)
+
+	default:
+		return val, nil
+	}
 }
 
 type TValue[T any] struct {
