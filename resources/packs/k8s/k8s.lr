@@ -107,6 +107,10 @@ private k8s.namespace @defaults("name created") {
   id string
   // Kubernetes Object UID
   uid string
+  // Kubernetes Object Version
+  apiVersion string
+  // Kubernetes Object Type
+  kind string
   // Kubernetes Object Name
   name string
   // Kubernetes Labels
@@ -293,6 +297,7 @@ private k8s.deployment @defaults("namespace name created") {
   initContainers() []k8s.initContainer
   // Contained Containers
   containers() []k8s.container
+  test string
 }
 
 // Kubernetes DaemonSet

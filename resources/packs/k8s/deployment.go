@@ -39,6 +39,7 @@ func (k *mqlK8s) GetDeployments() ([]interface{}, error) {
 			"created", &ts.Time,
 			"manifest", manifest,
 			"podSpec", podSpecDict,
+			"test", "test",
 		)
 		if err != nil {
 			return nil, err

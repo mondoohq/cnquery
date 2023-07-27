@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"go.mondoo.com/cnquery/resources"
 	"go.mondoo.com/cnquery/resources/packs/core"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -18,6 +19,8 @@ func (k *mqlK8s) GetNamespaces() ([]interface{}, error) {
 		return k.MotorRuntime.CreateResource("k8s.namespace",
 			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
+			"apiVersion", objT.GetAPIVersion(),
+			"kind", objT.GetKind(),
 			"name", obj.GetName(),
 			"labels", core.StrMapToInterface(obj.GetLabels()),
 			"annotations", core.StrMapToInterface(obj.GetAnnotations()),
@@ -25,6 +28,10 @@ func (k *mqlK8s) GetNamespaces() ([]interface{}, error) {
 			"manifest", manifest,
 		)
 	})
+}
+
+func (p *mqlK8sNamespace) init(args *resources.Args) (*resources.Args, K8sNamespace, error) {
+	return initResource[K8sNamespace](args, p.MotorRuntime, func(k K8s) ([]interface{}, error) { return k.Namespaces() })
 }
 
 func (k *mqlK8sNamespace) GetAnnotations() (interface{}, error) {
