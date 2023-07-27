@@ -19,10 +19,20 @@ func (k *mqlK8s) GetNamespaces() ([]interface{}, error) {
 			"id", objIdFromK8sObj(obj, objT),
 			"uid", string(obj.GetUID()),
 			"name", obj.GetName(),
+			"labels", core.StrMapToInterface(obj.GetLabels()),
+			"annotations", core.StrMapToInterface(obj.GetAnnotations()),
 			"created", &ts.Time,
 			"manifest", manifest,
 		)
 	})
+}
+
+func (k *mqlK8sNamespace) GetAnnotations() (interface{}, error) {
+	return k8sAnnotations(k.MqlResource())
+}
+
+func (k *mqlK8sNamespace) GetLabels() (interface{}, error) {
+	return k8sLabels(k.MqlResource())
 }
 
 func (k *mqlK8sNamespace) id() (string, error) {
