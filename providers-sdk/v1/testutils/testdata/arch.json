@@ -180,6 +180,10 @@
           "Resource": "package",
           "ID": "package/acl",
           "Fields": {
+            "installed": {
+              "type": "\u0004",
+              "value": true
+            },
             "name": {
               "type": "\u0007",
               "value": "acl"
@@ -187,10 +191,6 @@
             "version": {
               "type": "\u0007",
               "value": "1.2.3"
-            },
-            "installed": {
-              "type": "\u0004",
-              "value": true
             }
           }
         },
@@ -199,8 +199,7 @@
           "ID": "package/unknown",
           "Fields": {
             "installed": {
-              "type": "\u0004",
-              "error": "cannot find package unknown"
+              "type": "\u0004"
             }
           }
         },
@@ -223,9 +222,24 @@
           "Resource": "user",
           "ID": "user/0/root",
           "Fields": {
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
             "gid": {
               "type": "\u0005",
               "value": 0
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/0/root"
+              }
+            },
+            "home": {
+              "type": "\u0007",
+              "value": "/root"
             },
             "name": {
               "type": "\u0007",
@@ -234,21 +248,6 @@
             "uid": {
               "type": "\u0005",
               "value": 0
-            },
-            "enabled": {
-              "type": "\u0004",
-              "value": false
-            },
-            "home": {
-              "type": "\u0007",
-              "value": "/root"
-            },
-            "group": {
-              "type": "\u001bgroup",
-              "value": {
-                "Name": "group",
-                "ID": "group/0/root"
-              }
             }
           }
         },
@@ -256,9 +255,20 @@
           "Resource": "user",
           "ID": "user/1/bin",
           "Fields": {
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
             "gid": {
               "type": "\u0005",
               "value": 1
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/1/bin"
+              }
             },
             "name": {
               "type": "\u0007",
@@ -267,17 +277,6 @@
             "uid": {
               "type": "\u0005",
               "value": 1
-            },
-            "enabled": {
-              "type": "\u0004",
-              "value": false
-            },
-            "group": {
-              "type": "\u001bgroup",
-              "value": {
-                "Name": "group",
-                "ID": "group/1/bin"
-              }
             }
           }
         },
@@ -285,9 +284,20 @@
           "Resource": "user",
           "ID": "user/1000/chris",
           "Fields": {
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
             "gid": {
               "type": "\u0005",
               "value": 1000
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/1000/chris"
+              }
             },
             "name": {
               "type": "\u0007",
@@ -296,17 +306,6 @@
             "uid": {
               "type": "\u0005",
               "value": 1000
-            },
-            "enabled": {
-              "type": "\u0004",
-              "value": false
-            },
-            "group": {
-              "type": "\u001bgroup",
-              "value": {
-                "Name": "group",
-                "ID": "group/1000/chris"
-              }
             }
           }
         },
@@ -314,9 +313,20 @@
           "Resource": "user",
           "ID": "user/1001/christopher",
           "Fields": {
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
             "gid": {
               "type": "\u0005",
               "value": 1000
+            },
+            "group": {
+              "type": "\u001bgroup",
+              "value": {
+                "Name": "group",
+                "ID": "group/1000/chris"
+              }
             },
             "name": {
               "type": "\u0007",
@@ -325,17 +335,6 @@
             "uid": {
               "type": "\u0005",
               "value": 1001
-            },
-            "enabled": {
-              "type": "\u0004",
-              "value": false
-            },
-            "group": {
-              "type": "\u001bgroup",
-              "value": {
-                "Name": "group",
-                "ID": "group/1000/chris"
-              }
             }
           }
         },

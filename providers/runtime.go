@@ -338,7 +338,8 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 		}
 
 		res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{
-			Asset: asset,
+			Asset:        asset,
+			HasRecording: true,
 		}, &callbacks)
 		if err != nil {
 			return errors.New("failed to set mock connection for recording: " + err.Error())

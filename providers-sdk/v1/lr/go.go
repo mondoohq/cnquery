@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,19 +14,28 @@ import (
 )
 
 type goBuilder struct {
-	data       string
-	collector  *Collector
-	ast        *LR
-	errors     error
-	packsInUse map[string]struct{}
+	data         string
+	collector    *Collector
+	ast          *LR
+	errors       error
+	name         string
+	providerName string
+	packsInUse   map[string]struct{}
 }
 
 // Go produced go code for the LR file
 func Go(packageName string, ast *LR, collector *Collector) (string, error) {
 	o := goBuilder{
-		collector:  collector,
-		ast:        ast,
-		packsInUse: map[string]struct{}{},
+		collector:    collector,
+		ast:          ast,
+		name:         packageName,
+		providerName: filepath.Base(ast.Options["provider"]),
+		packsInUse:   map[string]struct{}{},
+	}
+
+	// should generally not happen and is primarily used for logging
+	if o.providerName == "" {
+		o.providerName = "provider"
 	}
 
 	o.goCreateResource(ast.Resources)
@@ -70,13 +80,12 @@ func (b *goBuilder) goCreateResource(r []*Resource) {
 	for i := range r {
 		resource := r[i]
 		iName := resource.interfaceName(b)
-		structName := resource.structName(b)
 
 		var parseArgs string
 		if b.collector.HasInit(iName) {
 			parseArgs = "Init: init" + iName + ","
 		} else {
-			parseArgs = "// to override args, implement: init" + iName + "(args map[string]interface{}) (map[string]interface{}, *" + structName + ", error)"
+			parseArgs = "// to override args, implement: init" + iName + "(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)"
 		}
 
 		newCmds[i] = fmt.Sprintf("\"%s\": {\n\t\t\t%s\n\t\t\tCreate: create%s,\n\t\t},", resource.ID, parseArgs, iName)
@@ -217,24 +226,24 @@ func (b *goBuilder) goSetData(r []*Resource) {
 		}
 	}
 
-	b.data += `
+	b.data += fmt.Sprintf(`
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
-	` + strings.Join(fields, "\n\t") + `
+	%s
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
 	f, ok := setDataFields[resource.MqlName() + "." + field]
 	if !ok {
-		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
+		return errors.New("[%s] cannot set '"+field+"' in resource '"+resource.MqlName()+"', field not found")
 	}
 
 	if ok := f(resource, val); !ok {
-		return errors.New("cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
+		return errors.New("[%s] cannot set '"+field+"' in resource '"+resource.MqlName()+"', type does not match")
 	}
 	return nil
 }
 
-func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
+func setAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	var err error
 	for k, v := range args {
 		if err = SetData(resource, k, v); err != nil {
@@ -243,7 +252,10 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	}
 	return nil
 }
-`
+`,
+		strings.Join(fields, "\n\t"),
+		b.providerName, b.providerName,
+	)
 }
 
 func (b *goBuilder) goResource(r *Resource) error {
@@ -290,7 +302,7 @@ func (b *goBuilder) goFactory(r *Resource) {
 
 	var idCode string
 	if b.collector.HasID(structName) {
-		idCode = "res.__id, err = res.id()"
+		idCode = "res.__id, err = res.id()\n\tif err != nil {\n\t\treturn nil, err\n\t}"
 	} else {
 		idCode = `// to override __id implement: id() (string, error)`
 	}
@@ -302,7 +314,7 @@ func %s(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource,
 		MqlRuntime: runtime,
 	}
 
-	err := SetAllData(res, args)
+	err := setAllData(res, args)
 	if err != nil {
 		return res, err
 	}
@@ -311,10 +323,10 @@ func %s(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource,
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording(%s, res.__id)
-		if err != nil {
+		if err != nil || arsg == nil {
 			return res, err
 		}
-		return res, SetAllData(res, args)
+		return res, setAllData(res, args)
 	}
 
 	return res, nil
@@ -386,16 +398,32 @@ func (b *goBuilder) goField(r *Resource, field *Field) {
 		}
 	}
 
+	// resource types may be loaded from recordings
+	var fromRecording string
+	if strings.HasPrefix(goType, "*mql") {
+		fromRecording = fmt.Sprintf(`if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording(%s, c.__id, %s)
+			if err != nil || d != nil {
+				return d.Value.(%s), err
+			}
+		}
+
+		`,
+			strconv.Quote(r.ID), strconv.Quote(field.BasicField.ID),
+			goType,
+		)
+	}
+
 	b.data += fmt.Sprintf(`
 func (c *%s) Get%s() *plugin.TValue[%s] {
 	return plugin.GetOrCompute[%s](&c.%s, func() (%s, error) {
-		%sreturn c.%s(%s)
+		%s%sreturn c.%s(%s)
 	})
 }
 `,
 		r.structName(b), goName, goType,
 		goType, goName, goType,
-		strings.Join(argDefs, "\n\t\t"),
+		fromRecording, strings.Join(argDefs, "\n\t\t"),
 		field.BasicField.ID, strings.Join(argCall, ", "),
 	)
 }
