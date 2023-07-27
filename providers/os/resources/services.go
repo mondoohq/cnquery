@@ -32,8 +32,12 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	}
 	services := raw.(*mqlServices)
 
+	if err := services.refreshCache(nil); err != nil {
+		return nil, nil, err
+	}
+
 	srv := services.namedServices[name]
-	if srv != nil {
+	if srv == nil {
 		return nil, nil, errors.New("service '" + name + "' does not exist")
 	}
 
@@ -73,7 +77,7 @@ func (p *mqlServices) list() ([]interface{}, error) {
 
 	// convert to interface{}{}
 	mqlSrvs := []interface{}{}
-	namedMap := map[string]*mqlService{}
+
 	for i := range services {
 		srv := services[i]
 
@@ -91,10 +95,25 @@ func (p *mqlServices) list() ([]interface{}, error) {
 		}
 
 		mqlSrvs = append(mqlSrvs, mqlSrv.(*mqlService))
-		namedMap[srv.Name] = mqlSrv.(*mqlService)
 	}
 
-	p.namedServices = namedMap
+	return mqlSrvs, p.refreshCache(mqlSrvs)
+}
 
-	return mqlSrvs, nil
+func (p *mqlServices) refreshCache(all []interface{}) error {
+	if all == nil {
+		raw := p.GetList()
+		if raw.Error != nil {
+			return raw.Error
+		}
+		all = raw.Data
+	}
+
+	namedMap := map[string]*mqlService{}
+	for i := range all {
+		service := all[i].(*mqlService)
+		namedMap[service.Name.Data] = service
+	}
+	p.namedServices = namedMap
+	return nil
 }

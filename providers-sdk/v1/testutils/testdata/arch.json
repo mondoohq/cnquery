@@ -248,6 +248,73 @@
           }
         },
         {
+          "Resource": "service",
+          "ID": "acpid",
+          "Fields": {
+            "enabled": {
+              "type": "\u0004",
+              "value": false
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "acpid"
+            },
+            "running": {
+              "type": "\u0004",
+              "value": false
+            },
+            "type": {
+              "type": "\u0007",
+              "value": "systemd"
+            }
+          }
+        },
+        {
+          "Resource": "service",
+          "ID": "dbus",
+          "Fields": {
+            "enabled": {
+              "type": "\u0004",
+              "value": true
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "dbus"
+            },
+            "running": {
+              "type": "\u0004",
+              "value": true
+            },
+            "type": {
+              "type": "\u0007",
+              "value": "systemd"
+            }
+          }
+        },
+        {
+          "Resource": "services",
+          "ID": "",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bservice",
+              "value": [
+                {
+                  "Name": "service",
+                  "ID": "acpid"
+                },
+                {
+                  "Name": "service",
+                  "ID": "containerd"
+                },
+                {
+                  "Name": "service",
+                  "ID": "dbus"
+                }
+              ]
+            }
+          }
+        },
+        {
           "Resource": "sshd.config",
           "ID": "/etc/ssh/sshd_config",
           "Fields": {
