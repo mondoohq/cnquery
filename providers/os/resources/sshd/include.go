@@ -10,8 +10,7 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 var (
@@ -26,15 +25,15 @@ var (
 // GetAllSshdIncludedFiles will return the list of dependent files referenced in the sshd
 // configuration file's 'Include' statements starting from the provided filePath parameter as
 // the beginning of the sshd configuration.
-func GetAllSshdIncludedFiles(filePath string, osProvider os.OperatingSystemProvider) ([]string, error) {
-	allFiles, _, err := readSshdConfig(filePath, osProvider)
+func GetAllSshdIncludedFiles(filePath string, conn shared.Connection) ([]string, error) {
+	allFiles, _, err := readSshdConfig(filePath, conn)
 	return allFiles, err
 }
 
 // GetSshdUnifiedContent will return the unified sshd configuration content starting
 // from the provided filePath parameter as the beginning of the sshd configuration.
-func GetSshdUnifiedContent(filePath string, osProvider os.OperatingSystemProvider) (string, error) {
-	_, content, err := readSshdConfig(filePath, osProvider)
+func GetSshdUnifiedContent(filePath string, conn shared.Connection) (string, error) {
+	_, content, err := readSshdConfig(filePath, conn)
 	return content, err
 }
 
@@ -65,7 +64,7 @@ func getFullPath(filePath string) string {
 // sshd 'Include' statements, and the unified sshd configuration where all the
 // sshd 'Include' statements have been replaced with the referenced file's content
 // in place of the 'Include'.
-func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]string, string, error) {
+func readSshdConfig(filePath string, conn shared.Connection) ([]string, string, error) {
 	allFiles := []string{}
 	var allContent strings.Builder
 
@@ -77,7 +76,7 @@ func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]s
 		glob := filepath.Base(filePath)
 
 		// List all the files in lexical order and check whether any match the glob
-		afs := &afero.Afero{Fs: osProvider.FS()}
+		afs := &afero.Afero{Fs: conn.FileSystem()}
 
 		wErr := afs.Walk(baseDirectoryPath, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
@@ -98,7 +97,7 @@ func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]s
 			fullFilepath := filepath.Join(baseDirectoryPath, info.Name())
 
 			// Now search through that file for any more Include statements
-			files, content, err := readSshdConfig(fullFilepath, osProvider)
+			files, content, err := readSshdConfig(fullFilepath, conn)
 			if err != nil {
 				return err
 			}
@@ -117,7 +116,7 @@ func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]s
 
 	// Now see if we're dealing with a directory
 	fullFilePath := getFullPath(filePath)
-	f, err := osProvider.FS().Open(fullFilePath)
+	f, err := conn.FileSystem().Open(fullFilePath)
 	if err != nil {
 		return nil, "", err
 	}
@@ -128,7 +127,7 @@ func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]s
 	}
 	if fileInfo.IsDir() {
 		// Again list all files in lexical order
-		afs := &afero.Afero{Fs: osProvider.FS()}
+		afs := &afero.Afero{Fs: conn.FileSystem()}
 
 		wErr := afs.Walk(fullFilePath, func(path string, info fs.FileInfo, err error) error {
 			if err != nil {
@@ -141,7 +140,7 @@ func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]s
 			allFiles = append(allFiles, path)
 
 			// Now check this very file for any 'Include' statements
-			files, content, err := readSshdConfig(path, osProvider)
+			files, content, err := readSshdConfig(path, conn)
 			if err != nil {
 				return err
 			}
@@ -175,7 +174,7 @@ func readSshdConfig(filePath string, osProvider os.OperatingSystemProvider) ([]s
 		if m != nil {
 			includeList := strings.Split(m[1], " ") // TODO: what about files with actual spaces in their names?
 			for _, file := range includeList {
-				files, content, err := readSshdConfig(file, osProvider)
+				files, content, err := readSshdConfig(file, conn)
 				if err != nil {
 					return nil, "", err
 				}
