@@ -29,6 +29,10 @@ func init() {
 			Init: initUser,
 			Create: createUser,
 		},
+		"privatekey": {
+			Init: initPrivatekey,
+			Create: createPrivatekey,
+		},
 		"users": {
 			// to override args, implement: initUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUsers,
@@ -241,8 +245,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"user.authorizedkeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetAuthorizedkeys()).ToDataRes(types.Resource("authorizedkeys"))
 	},
+	"user.sshkeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUser).GetSshkeys()).ToDataRes(types.Array(types.Resource("privatekey")))
+	},
 	"user.group": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetGroup()).ToDataRes(types.Resource("group"))
+	},
+	"privatekey.pem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrivatekey).GetPem()).ToDataRes(types.String)
+	},
+	"privatekey.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrivatekey).GetPath()).ToDataRes(types.String)
+	},
+	"privatekey.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrivatekey).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"privatekey.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPrivatekey).GetEncrypted()).ToDataRes(types.Bool)
 	},
 	"users.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUsers).GetList()).ToDataRes(types.Array(types.Resource("user")))
@@ -536,8 +555,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlUser).Authorizedkeys, ok = plugin.RawToTValue[*mqlAuthorizedkeys](v.Value, v.Error)
 		return
 	},
+	"user.sshkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUser).Sshkeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"user.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlUser).Group, ok = plugin.RawToTValue[*mqlGroup](v.Value, v.Error)
+		return
+	},
+	"privatekey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPrivatekey).__id, ok = v.Value.(string)
+			return
+		},
+	"privatekey.pem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrivatekey).Pem, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"privatekey.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrivatekey).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"privatekey.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrivatekey).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"privatekey.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPrivatekey).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"users.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1153,6 +1196,7 @@ type mqlUser struct {
 	Shell plugin.TValue[string]
 	Enabled plugin.TValue[bool]
 	Authorizedkeys plugin.TValue[*mqlAuthorizedkeys]
+	Sshkeys plugin.TValue[[]interface{}]
 	Group plugin.TValue[*mqlGroup]
 }
 
@@ -1240,6 +1284,22 @@ func (c *mqlUser) GetAuthorizedkeys() *plugin.TValue[*mqlAuthorizedkeys] {
 	})
 }
 
+func (c *mqlUser) GetSshkeys() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Sshkeys, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("user", c.__id, "sshkeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.sshkeys()
+	})
+}
+
 func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 	return plugin.GetOrCompute[*mqlGroup](&c.Group, func() (*mqlGroup, error) {
 		if c.MqlRuntime.HasRecording {
@@ -1259,6 +1319,69 @@ func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 
 		return c.group(vargGid.Data)
 	})
+}
+
+// mqlPrivatekey for the privatekey resource
+type mqlPrivatekey struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPrivatekeyInternal it will be used here
+
+	Pem plugin.TValue[string]
+	Path plugin.TValue[string]
+	File plugin.TValue[*mqlFile]
+	Encrypted plugin.TValue[bool]
+}
+
+// createPrivatekey creates a new instance of this resource
+func createPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPrivatekey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("privatekey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPrivatekey) MqlName() string {
+	return "privatekey"
+}
+
+func (c *mqlPrivatekey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPrivatekey) GetPem() *plugin.TValue[string] {
+	return &c.Pem
+}
+
+func (c *mqlPrivatekey) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlPrivatekey) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlPrivatekey) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
 }
 
 // mqlUsers for the users resource

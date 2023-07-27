@@ -2,10 +2,13 @@ package resources
 
 import (
 	"errors"
+	"os"
 	"path"
 	"strconv"
+	"strings"
 	"sync"
 
+	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
@@ -164,5 +167,80 @@ func (x *mqlUsers) findID(id int64) (*mqlUser, error) {
 	if !ok {
 		return nil, errors.New("cannot find user for uid " + strconv.Itoa(int(id)))
 	}
+	return res, nil
+}
+
+func (u *mqlUser) sshkeys() ([]interface{}, error) {
+	res := []interface{}{}
+
+	userSshPath := path.Join(u.Home.Data, ".ssh")
+
+	conn := u.MqlRuntime.Connection.(shared.Connection)
+	afutil := afero.Afero{Fs: conn.FileSystem()}
+
+	// check if use ssh directory exists
+	exists, err := afutil.Exists(userSshPath)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return res, nil
+	}
+
+	filter := []string{"config"}
+
+	// walk dir and search for all private keys
+	potentialPrivateKeyFiles := []string{}
+	err = afutil.Walk(userSshPath, func(path string, f os.FileInfo, err error) error {
+		if f == nil || f.IsDir() {
+			return nil
+		}
+
+		// eg. matches google_compute_known_hosts and known_hosts
+		if strings.HasSuffix(f.Name(), ".pub") || strings.HasSuffix(f.Name(), "known_hosts") {
+			return nil
+		}
+
+		for i := range filter {
+			if f.Name() == filter[i] {
+				return nil
+			}
+		}
+
+		potentialPrivateKeyFiles = append(potentialPrivateKeyFiles, path)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// iterate over files and check if the content is there
+	for i := range potentialPrivateKeyFiles {
+		path := potentialPrivateKeyFiles[i]
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+
+		content := string(data)
+
+		// check if content contains PRIVATE KEY
+		isPrivateKey := strings.Contains(content, "PRIVATE KEY")
+		// check if the key is encrypted ENCRYPTED
+		isEncrypted := strings.Contains(content, "ENCRYPTED")
+
+		if isPrivateKey {
+			upk, err := CreateResource(u.MqlRuntime, "privatekey", map[string]*llx.RawData{
+				"pem":       llx.StringData(content),
+				"encrypted": llx.BoolData(isEncrypted),
+				"path":      llx.StringData(path),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, upk.(*mqlPrivatekey))
+		}
+	}
+
 	return res, nil
 }

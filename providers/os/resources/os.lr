@@ -95,10 +95,21 @@ user @defaults("name uid gid") {
   enabled bool
   // List of authorized keys
   authorizedkeys(home) authorizedkeys
-  // // List of SSH keys
-  // sshkeys() []privatekey
+  // List of SSH keys
+  sshkeys() []privatekey
   // Group that user is a member of
   group(gid) group
+}
+
+// Private Key Resource
+privatekey {
+  // PEM data
+  pem string
+  // Key path on disk (deprecated, use file instead)
+  path string
+  // File on disk for this private key
+  file file
+  encrypted bool
 }
 
 // Users configured on this system
