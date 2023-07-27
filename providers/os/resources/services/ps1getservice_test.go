@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/resources/packs/os/services"
+	"go.mondoo.com/cnquery/providers/os/resources/services"
 )
 
 func TestWindowsServiceParser(t *testing.T) {

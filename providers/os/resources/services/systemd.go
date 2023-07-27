@@ -14,8 +14,7 @@ import (
 
 	"github.com/coreos/go-systemd/unit"
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers"
-	os_provider "go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 var (
@@ -24,11 +23,11 @@ var (
 	errIgnored               = errors.New("ignored")
 )
 
-func ResolveSystemdServiceManager(provider os_provider.OperatingSystemProvider) OSServiceManager {
-	if !provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
-		return &SystemdFSServiceManager{Fs: provider.FS()}
+func ResolveSystemdServiceManager(conn shared.Connection) OSServiceManager {
+	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return &SystemdFSServiceManager{Fs: conn.FileSystem()}
 	}
-	return &SystemDServiceManager{provider: provider}
+	return &SystemDServiceManager{conn: conn}
 }
 
 // a line may be prefixed with nothing, whitespace or a dot
@@ -61,7 +60,7 @@ func ParseServiceSystemDUnitFiles(input io.Reader) ([]*Service, error) {
 
 // Newer linux systems use systemd as service manager
 type SystemDServiceManager struct {
-	provider os_provider.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *SystemDServiceManager) Name() string {
@@ -69,7 +68,7 @@ func (s *SystemDServiceManager) Name() string {
 }
 
 func (s *SystemDServiceManager) List() ([]*Service, error) {
-	c, err := s.provider.RunCommand("systemctl --all list-units --type service")
+	c, err := s.conn.RunCommand("systemctl --all list-units --type service")
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,15 @@
 option provider = "go.mondoo.com/cnquery/providers/os"
 option go_package = "go.mondoo.com/cnquery/providers/os/resources"
 
+alias os.base.command = command
+alias os.base.user = user
+alias os.base.group = group
+alias os.base.file = file
+alias os.base.packages = packages
+alias os.base.service = service
+alias os.base.services = services
+alias os.unix.sshd = sshd
+
 // Results of running a command on the system
 command {
   init(command string)
@@ -214,4 +223,28 @@ sshd.config {
   kexs(params) []string
   // Host Keys configured for this SSH server
   hostkeys(params) []string
+}
+
+// Service on this system
+service @defaults("name running enabled type") {
+  init(name string)
+  // Name of this service
+  name string
+  // Service description
+  description string
+  // Is it installed?
+  installed bool
+  // Is it running?
+  running bool
+  // Is it enabled? (start at boot)
+  enabled bool
+  // Type information
+  type string
+  // Is it masked?
+  masked bool
+}
+
+// Services configured on this system
+services {
+  []service
 }

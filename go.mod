@@ -25,6 +25,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/cockroachdb/errors v1.9.1
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible

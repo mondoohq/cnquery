@@ -1,4 +1,4 @@
-package find
+package fs
 
 import (
 	"errors"

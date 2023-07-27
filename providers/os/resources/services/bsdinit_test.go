@@ -4,12 +4,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/os/services"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/services"
 )
 
 func TestParseBsdInit(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
+	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "freebsd",
+			Family: []string{"unix"},
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

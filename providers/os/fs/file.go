@@ -1,8 +1,9 @@
 package fs
 
 import (
-	"github.com/spf13/afero"
 	"os"
+
+	"github.com/spf13/afero"
 )
 
 func NewMountedFile(path string, f afero.File) *FileWrapper {

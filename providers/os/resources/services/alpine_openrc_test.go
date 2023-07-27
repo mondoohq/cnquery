@@ -5,17 +5,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 )
 
 func TestManagerAlpineImage(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/alpine-image.toml")
-	require.NoError(t, err)
-	m, err := motor.New(mock)
+	mock, err := mock.New("./testdata/alpine-image.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name: "alpine",
+		},
+	})
 	require.NoError(t, err)
 
-	mm, err := ResolveManager(m)
+	mm, err := ResolveManager(mock)
 	require.NoError(t, err)
 	serviceList, err := mm.List()
 	require.NoError(t, err)
@@ -40,12 +42,14 @@ func TestManagerAlpineImage(t *testing.T) {
 }
 
 func TestManagerAlpineContainer(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/alpine-container.toml")
-	require.NoError(t, err)
-	m, err := motor.New(mock)
+	mock, err := mock.New("./testdata/alpine-container.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name: "alpine",
+		},
+	})
 	require.NoError(t, err)
 
-	mm, err := ResolveManager(m)
+	mm, err := ResolveManager(mock)
 	require.NoError(t, err)
 	serviceList, err := mm.List()
 	require.NoError(t, err)

@@ -5,12 +5,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/fs"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/fs"
 )
 
 func TestParseServiceSystemDUnitFiles(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
+	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "debian",
+			Family: []string{"debian", "linux"},
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
