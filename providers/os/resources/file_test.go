@@ -11,8 +11,6 @@ import (
 	"go.mondoo.com/cnquery/providers/os/resources"
 )
 
-var x = testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
-
 const passwdContent = `root:x:0:0::/root:/bin/bash
 bin:x:1:1::/:/usr/bin/nologin
 daemon:x:2:2::/:/usr/bin/nologin

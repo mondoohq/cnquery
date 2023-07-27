@@ -1,4 +1,4 @@
-package core
+package resources
 
 import (
 	"regexp"
@@ -71,5 +71,5 @@ func TestResource_RegexEmail(t *testing.T) {
 		"QA[icon]CHOCOLATE[icon]@test.com",
 	}
 
-	testRegex(t, lre.GetEmail, matches, fails)
+	testRegex(t, lre.email, matches, fails)
 }

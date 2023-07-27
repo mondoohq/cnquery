@@ -1,4 +1,4 @@
-package core
+package resources
 
 import (
 	"time"
@@ -6,11 +6,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 )
 
-func (p *mqlTime) id() (string, error) {
-	return "time", nil
-}
-
-func (p *mqlTime) GetNow() (*time.Time, error) {
+func (p *mqlTime) now() (*time.Time, error) {
 	// TODO: needs a ticking event where the time gets updated
 	res := time.Now()
 	return &res, nil
@@ -23,31 +19,31 @@ var (
 	day    = llx.DurationToTime(24 * 60 * 60)
 )
 
-func (p *mqlTime) GetSecond() (*time.Time, error) {
+func (x *mqlTime) second() (*time.Time, error) {
 	return &second, nil
 }
 
-func (p *mqlTime) GetMinute() (*time.Time, error) {
+func (x *mqlTime) minute() (*time.Time, error) {
 	return &minute, nil
 }
 
-func (p *mqlTime) GetHour() (*time.Time, error) {
+func (x *mqlTime) hour() (*time.Time, error) {
 	return &hour, nil
 }
 
-func (p *mqlTime) GetDay() (*time.Time, error) {
+func (x *mqlTime) day() (*time.Time, error) {
 	return &day, nil
 }
 
-func (p *mqlTime) GetToday() (*time.Time, error) {
+func (x *mqlTime) today() (*time.Time, error) {
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 	return &today, nil
 }
 
-func (p *mqlTime) GetTomorrow() (*time.Time, error) {
-	cur, _ := p.GetToday()
+func (x *mqlTime) tomorrow() (*time.Time, error) {
+	cur, _ := x.today()
 	res := cur.Add(24 * time.Hour)
 
 	return &res, nil
