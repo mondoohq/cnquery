@@ -13,8 +13,9 @@ import (
 func TestManagerDebian(t *testing.T) {
 	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
-			Name:   "debian",
-			Family: []string{"debian", "linux"},
+			Name:    "debian",
+			Version: "8.0",
+			Family:  []string{"debian", "linux"},
 		},
 	})
 	require.NoError(t, err)
@@ -31,8 +32,9 @@ func TestManagerAmzn1(t *testing.T) {
 	// tests fallback to upstart service
 	mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
-			Name:   "amazonlinux",
-			Family: []string{"linux"},
+			Name:    "amazonlinux",
+			Version: "2018.03",
+			Family:  []string{"linux"},
 		},
 	})
 	require.NoError(t, err)
@@ -49,8 +51,9 @@ func TestManagerCentos6(t *testing.T) {
 	// tests fallback to upstart service
 	mock, err := mock.New("./testdata/centos6.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
-			Name:   "centos",
-			Family: []string{"linux", "redhat"},
+			Name:    "centos",
+			Version: "6.10",
+			Family:  []string{"linux", "redhat"},
 		},
 	})
 	require.NoError(t, err)
@@ -67,8 +70,9 @@ func TestManagerUbuntu1404(t *testing.T) {
 	// tests fallback to upstart service
 	mock, err := mock.New("./testdata/ubuntu1404.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
-			Name:   "ubuntu",
-			Family: []string{"linux", "ubuntu"},
+			Name:    "ubuntu",
+			Version: "14.04",
+			Family:  []string{"linux", "ubuntu"},
 		},
 	})
 	require.NoError(t, err)
@@ -85,8 +89,9 @@ func TestManagerOpensuse13(t *testing.T) {
 	// tests fallback to upstart service
 	mock, err := mock.New("./testdata/opensuse13.toml", &inventory.Asset{
 		Platform: &inventory.Platform{
-			Name:   "suse",
-			Family: []string{"suse", "linux"},
+			Name:    "suse",
+			Version: "13",
+			Family:  []string{"suse", "linux"},
 		},
 	})
 	require.NoError(t, err)
