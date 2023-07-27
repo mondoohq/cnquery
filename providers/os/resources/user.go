@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/users"
 )
@@ -22,7 +23,7 @@ func (x *mqlUser) id() (string, error) {
 	return "user/" + id + "/" + x.Name.Data, nil
 }
 
-func (x *mqlUser) init(args map[string]*llx.RawData) (map[string]*llx.RawData, *mqlUser, error) {
+func initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) != 1 {
 		return args, nil, nil
 	}
@@ -34,7 +35,7 @@ func (x *mqlUser) init(args map[string]*llx.RawData) (map[string]*llx.RawData, *
 		return args, nil, nil
 	}
 
-	raw, err := CreateResource(x.MqlRuntime, "users", nil)
+	raw, err := CreateResource(runtime, "users", nil)
 	if err != nil {
 		return nil, nil, errors.New("cannot get list of users: " + err.Error())
 	}

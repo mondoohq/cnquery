@@ -14,23 +14,23 @@ var resourceFactories map[string]plugin.ResourceFactory
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
 		"command": {
-			// to override args, implement: initCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCommand,
 		},
 		"file": {
-			// to override args, implement: initFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFile,
 		},
 		"file.permissions": {
-			// to override args, implement: initFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFilePermissions,
 		},
 		"user": {
-			// to override args, implement: initUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			Init: initUser,
 			Create: createUser,
 		},
 		"users": {
-			// to override args, implement: initUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initUsers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createUsers,
 		},
 		"authorizedkeys": {
@@ -38,23 +38,23 @@ func init() {
 			Create: createAuthorizedkeys,
 		},
 		"authorizedkeys.entry": {
-			// to override args, implement: initAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAuthorizedkeysEntry,
 		},
 		"group": {
-			// to override args, implement: initGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGroup,
 		},
 		"groups": {
-			// to override args, implement: initGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initGroups(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGroups,
 		},
 		"package": {
-			// to override args, implement: initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPackage,
 		},
 		"packages": {
-			// to override args, implement: initPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]interface{}, plugin.Resource, error)
+			// to override args, implement: initPackages(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPackages,
 		},
 	}
@@ -866,8 +866,11 @@ func (c *mqlFile) GetPermissions() *plugin.TValue[*mqlFilePermissions] {
 	return plugin.GetOrCompute[*mqlFilePermissions](&c.Permissions, func() (*mqlFilePermissions, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "permissions")
-			if err != nil || d != nil {
-				return d.Value.(*mqlFilePermissions), err
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFilePermissions), nil
 			}
 		}
 
@@ -895,8 +898,11 @@ func (c *mqlFile) GetUser() *plugin.TValue[*mqlUser] {
 	return plugin.GetOrCompute[*mqlUser](&c.User, func() (*mqlUser, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "user")
-			if err != nil || d != nil {
-				return d.Value.(*mqlUser), err
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlUser), nil
 			}
 		}
 
@@ -908,8 +914,11 @@ func (c *mqlFile) GetGroup() *plugin.TValue[*mqlGroup] {
 	return plugin.GetOrCompute[*mqlGroup](&c.Group, func() (*mqlGroup, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "group")
-			if err != nil || d != nil {
-				return d.Value.(*mqlGroup), err
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGroup), nil
 			}
 		}
 
@@ -1142,8 +1151,11 @@ func (c *mqlUser) GetAuthorizedkeys() *plugin.TValue[*mqlAuthorizedkeys] {
 	return plugin.GetOrCompute[*mqlAuthorizedkeys](&c.Authorizedkeys, func() (*mqlAuthorizedkeys, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("user", c.__id, "authorizedkeys")
-			if err != nil || d != nil {
-				return d.Value.(*mqlAuthorizedkeys), err
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAuthorizedkeys), nil
 			}
 		}
 
@@ -1160,8 +1172,11 @@ func (c *mqlUser) GetGroup() *plugin.TValue[*mqlGroup] {
 	return plugin.GetOrCompute[*mqlGroup](&c.Group, func() (*mqlGroup, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("user", c.__id, "group")
-			if err != nil || d != nil {
-				return d.Value.(*mqlGroup), err
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGroup), nil
 			}
 		}
 
@@ -1217,6 +1232,16 @@ func (c *mqlUsers) MqlID() string {
 
 func (c *mqlUsers) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("users", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.list()
 	})
 }
@@ -1289,6 +1314,16 @@ func (c *mqlAuthorizedkeys) GetContent() *plugin.TValue[string] {
 
 func (c *mqlAuthorizedkeys) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("authorizedkeys", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		vargFile := c.GetFile()
 		if vargFile.Error != nil {
 			return nil, vargFile.Error
@@ -1437,6 +1472,16 @@ func (c *mqlGroup) GetName() *plugin.TValue[string] {
 
 func (c *mqlGroup) GetMembers() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.Members, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("group", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.members()
 	})
 }
@@ -1484,6 +1529,16 @@ func (c *mqlGroups) MqlID() string {
 
 func (c *mqlGroups) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("groups", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.list()
 	})
 }
@@ -1635,6 +1690,16 @@ func (c *mqlPackages) MqlID() string {
 
 func (c *mqlPackages) GetList() *plugin.TValue[[]interface{}] {
 	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("packages", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
 		return c.list()
 	})
 }
