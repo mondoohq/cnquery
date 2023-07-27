@@ -35,7 +35,7 @@ func (r *Runtime) ResourceFromRecording(name string, id string) (map[string]*llx
 	// recording and initialize them.
 	// TODO: we could use the provided information for a later request.
 	for k, v := range data.Fields {
-		if types.Type(v.Data.Type).IsResource() {
+		if types.Type(v.Data.Type).ContainsResource() {
 			delete(data.Fields, k)
 		}
 	}
@@ -43,6 +43,10 @@ func (r *Runtime) ResourceFromRecording(name string, id string) (map[string]*llx
 	return ProtoArgsToRawDataArgs(data.Fields)
 }
 
+// FieldResourceFromRecording loads a field which is a resource from a recording.
+// These are not immediately initialized when the recording is loaded, to avoid
+// having to recursively initialize too many things that won't be used. Once
+// it's time, this function is called to initialize the resource.
 func (r *Runtime) FieldResourceFromRecording(resource string, id string, field string) (*llx.RawData, error) {
 	data, err := r.Callback.GetRecording(&DataReq{
 		Resource:   resource,

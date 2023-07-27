@@ -299,6 +299,10 @@
                 "ID": "group/1000/chris"
               }
             },
+            "home": {
+              "type": "\u0007",
+              "value": "/home/chris"
+            },
             "name": {
               "type": "\u0007",
               "value": "chris"

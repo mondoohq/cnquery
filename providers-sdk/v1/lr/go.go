@@ -243,7 +243,7 @@ func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
 	return nil
 }
 
-func setAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
+func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	var err error
 	for k, v := range args {
 		if err = SetData(resource, k, v); err != nil {
@@ -314,7 +314,7 @@ func %s(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource,
 		MqlRuntime: runtime,
 	}
 
-	err := setAllData(res, args)
+	err := SetAllData(res, args)
 	if err != nil {
 		return res, err
 	}
@@ -323,10 +323,10 @@ func %s(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource,
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording(%s, res.__id)
-		if err != nil || arsg == nil {
+		if err != nil || args == nil {
 			return res, err
 		}
-		return res, setAllData(res, args)
+		return res, SetAllData(res, args)
 	}
 
 	return res, nil
@@ -393,6 +393,7 @@ func (b *goBuilder) goField(r *Resource, field *Field) {
 		if varg%s.Error != nil {
 			return %s, varg%s.Error
 		}
+
 		`, name, name, name, goZero, name))
 			argCall = append(argCall, "varg"+name+".Data")
 		}
@@ -423,7 +424,7 @@ func (c *%s) Get%s() *plugin.TValue[%s] {
 `,
 		r.structName(b), goName, goType,
 		goType, goName, goType,
-		fromRecording, strings.Join(argDefs, "\n\t\t"),
+		fromRecording, strings.Join(argDefs, ""),
 		field.BasicField.ID, strings.Join(argCall, ", "),
 	)
 }
