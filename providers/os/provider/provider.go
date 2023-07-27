@@ -205,7 +205,26 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 
 	resource, ok := runtime.Resources[req.Resource+"\x00"+req.ResourceId]
 	if !ok {
-		return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
+		// Note: Since resources are internally always created, there are only very
+		// few cases where we arrive here:
+		// 1. The caller is wrong. Possibly a mixup with IDs
+		// 2. The resource was loaded from a recording, but the field is not
+		// in the recording. Thus the resource was never created inside the
+		// plugin. We will attempt to create the resource and see if the field
+		// can be computed.
+		if !runtime.HasRecording {
+			return nil, errors.New("resource '" + req.Resource + "' (id: " + req.ResourceId + ") doesn't exist")
+		}
+
+		args, err := runtime.ResourceFromRecording(req.Resource, req.ResourceId)
+		if err != nil {
+			return nil, errors.New("attempted to load resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
+		}
+
+		resource, err = resources.CreateResource(runtime, req.Resource, args)
+		if err != nil {
+			return nil, errors.New("attempted to create resource '" + req.Resource + "' (id: " + req.ResourceId + ") from recording failed: " + err.Error())
+		}
 	}
 
 	return resources.GetData(resource, req.Field, args), nil
@@ -236,10 +255,8 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 			}
 
 			runtime.Resources[info.Name+"\x00"+info.Id] = resource
-		}
-
-		for k, v := range args {
-			if err := resources.SetData(resource, k, v); err != nil {
+		} else {
+			if err := resources.SetAllData(resource, args); err != nil {
 				errs = append(errs, "failed to add cached "+info.Name+" (id: "+info.Id+"), field error: "+err.Error())
 			}
 		}

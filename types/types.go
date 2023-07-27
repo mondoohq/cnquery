@@ -147,6 +147,21 @@ func (typ Type) IsResource() bool {
 	return typ[0] == byteResource
 }
 
+// ContainsResource checks if this or any child type has a resource
+func (typ Type) ContainsResource() bool {
+	for {
+		if typ.IsResource() {
+			return true
+		}
+
+		if !typ.IsArray() && !typ.IsMap() {
+			return false
+		}
+
+		typ = typ.Child()
+	}
+}
+
 // Function for creating a function type signature
 func Function(required rune, args []Type) Type {
 	var sig string

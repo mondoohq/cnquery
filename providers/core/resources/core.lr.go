@@ -226,7 +226,7 @@ func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
 	return nil
 }
 
-func setAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
+func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 	var err error
 	for k, v := range args {
 		if err = SetData(resource, k, v); err != nil {
@@ -254,7 +254,7 @@ func createMondoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		MqlRuntime: runtime,
 	}
 
-	err := setAllData(res, args)
+	err := SetAllData(res, args)
 	if err != nil {
 		return res, err
 	}
@@ -263,10 +263,10 @@ func createMondoo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("mondoo", res.__id)
-		if err != nil {
+		if err != nil || args == nil {
 			return res, err
 		}
-		return res, setAllData(res, args)
+		return res, SetAllData(res, args)
 	}
 
 	return res, nil
@@ -330,7 +330,7 @@ func createAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		MqlRuntime: runtime,
 	}
 
-	err := setAllData(res, args)
+	err := SetAllData(res, args)
 	if err != nil {
 		return res, err
 	}
@@ -339,10 +339,10 @@ func createAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("asset", res.__id)
-		if err != nil {
+		if err != nil || args == nil {
 			return res, err
 		}
-		return res, setAllData(res, args)
+		return res, SetAllData(res, args)
 	}
 
 	return res, nil

@@ -89,7 +89,7 @@ func (x *mqlUser) group(gid int64) (*mqlGroup, error) {
 func (u *mqlUser) authorizedkeys(home string) (*mqlAuthorizedkeys, error) {
 	// TODO: we may need to handle ".ssh/authorized_keys2" too
 	authorizedKeysPath := path.Join(home, ".ssh", "authorized_keys")
-	ak, err := CreateResource(u.MqlRuntime, "authorizedkeys", map[string]*llx.RawData{
+	ak, err := NewResource(u.MqlRuntime, "authorizedkeys", map[string]*llx.RawData{
 		"path": llx.StringData(authorizedKeysPath),
 	})
 	if err != nil {
