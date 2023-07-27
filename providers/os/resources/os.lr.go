@@ -69,6 +69,14 @@ func init() {
 			Init: initSshdConfig,
 			Create: createSshdConfig,
 		},
+		"service": {
+			Init: initService,
+			Create: createService,
+		},
+		"services": {
+			// to override args, implement: initServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createServices,
+		},
 	}
 }
 
@@ -370,6 +378,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"sshd.config.hostkeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSshdConfig).GetHostkeys()).ToDataRes(types.Array(types.String))
+	},
+	"service.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetName()).ToDataRes(types.String)
+	},
+	"service.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetDescription()).ToDataRes(types.String)
+	},
+	"service.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"service.running": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetRunning()).ToDataRes(types.Bool)
+	},
+	"service.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"service.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetType()).ToDataRes(types.String)
+	},
+	"service.masked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlService).GetMasked()).ToDataRes(types.Bool)
+	},
+	"services.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlServices).GetList()).ToDataRes(types.Array(types.Resource("service")))
 	},
 }
 
@@ -761,6 +793,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"sshd.config.hostkeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSshdConfig).Hostkeys, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlService).__id, ok = v.Value.(string)
+			return
+		},
+	"service.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"service.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"service.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"service.running": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Running, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"service.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"service.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"service.masked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlService).Masked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"services.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlServices).__id, ok = v.Value.(string)
+			return
+		},
+	"services.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlServices).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -2091,5 +2163,140 @@ func (c *mqlSshdConfig) GetHostkeys() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.hostkeys(vargParams.Data)
+	})
+}
+
+// mqlService for the service resource
+type mqlService struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlServiceInternal it will be used here
+
+	Name plugin.TValue[string]
+	Description plugin.TValue[string]
+	Installed plugin.TValue[bool]
+	Running plugin.TValue[bool]
+	Enabled plugin.TValue[bool]
+	Type plugin.TValue[string]
+	Masked plugin.TValue[bool]
+}
+
+// createService creates a new instance of this resource
+func createService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("service", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlService) MqlName() string {
+	return "service"
+}
+
+func (c *mqlService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlService) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlService) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlService) GetInstalled() *plugin.TValue[bool] {
+	return &c.Installed
+}
+
+func (c *mqlService) GetRunning() *plugin.TValue[bool] {
+	return &c.Running
+}
+
+func (c *mqlService) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlService) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlService) GetMasked() *plugin.TValue[bool] {
+	return &c.Masked
+}
+
+// mqlServices for the services resource
+type mqlServices struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlServicesInternal
+
+	List plugin.TValue[[]interface{}]
+}
+
+// createServices creates a new instance of this resource
+func createServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlServices{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("services", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlServices) MqlName() string {
+	return "services"
+}
+
+func (c *mqlServices) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlServices) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("services", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
 	})
 }

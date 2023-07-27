@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 func ParseBsdInit(input io.Reader) ([]*Service, error) {
@@ -25,7 +25,7 @@ func ParseBsdInit(input io.Reader) ([]*Service, error) {
 }
 
 type BsdInitServiceManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *BsdInitServiceManager) Name() string {
@@ -33,7 +33,7 @@ func (s *BsdInitServiceManager) Name() string {
 }
 
 func (s *BsdInitServiceManager) List() ([]*Service, error) {
-	c, err := s.provider.RunCommand("service -e")
+	c, err := s.conn.RunCommand("service -e")
 	if err != nil {
 		return nil, err
 	}

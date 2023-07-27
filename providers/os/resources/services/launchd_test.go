@@ -4,12 +4,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/os/services"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/services"
 )
 
 func TestParseServiceLaunchD(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
+	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "macos",
+			Family: []string{"unix", "darwin"},
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

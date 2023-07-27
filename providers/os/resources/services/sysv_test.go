@@ -5,24 +5,35 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 )
 
 func TestParseSysvServices(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/amzn1.toml")
+	mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "amazonlinux",
+			Family: []string{"linux"},
+		},
+	})
 	require.NoError(t, err)
 
-	sysv := SysVServiceManager{provider: mock}
+	sysv := SysVServiceManager{conn: mock}
 	services, err := sysv.services()
 	require.NoError(t, err)
 	assert.Equal(t, 4, len(services), "detected the right amount of services")
 }
 
 func TestParseSysvServicesRunlevel(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/amzn1.toml")
+	mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "amazonlinux",
+			Family: []string{"linux"},
+		},
+	})
 	require.NoError(t, err)
 
-	sysv := SysVServiceManager{provider: mock}
+	sysv := SysVServiceManager{conn: mock}
 	level, err := sysv.serviceRunLevel()
 	require.NoError(t, err)
 	assert.Equal(t, 3, len(level), "detected the right amount of services")
@@ -30,10 +41,15 @@ func TestParseSysvServicesRunlevel(t *testing.T) {
 }
 
 func TestParseSysvServicesRunning(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/amzn1.toml")
+	mock, err := mock.New("./testdata/amzn1.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "amazonlinux",
+			Family: []string{"linux"},
+		},
+	})
 	require.NoError(t, err)
 
-	sysv := SysVServiceManager{provider: mock}
+	sysv := SysVServiceManager{conn: mock}
 	// iterate over services and check if they are running
 	running, err := sysv.running([]string{"sshd", "ntpd", "acpid"})
 	require.NoError(t, err)

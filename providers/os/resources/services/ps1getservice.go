@@ -5,9 +5,8 @@ import (
 	"io"
 	"io/ioutil"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
-
-	"go.mondoo.com/cnquery/motor/providers/os/powershell"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/resources/powershell"
 )
 
 // WindowsService calls powershell Get-Service
@@ -121,7 +120,7 @@ func ParseWindowsService(r io.Reader) ([]*Service, error) {
 }
 
 type WindowsServiceManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *WindowsServiceManager) Name() string {
@@ -129,7 +128,7 @@ func (s *WindowsServiceManager) Name() string {
 }
 
 func (s *WindowsServiceManager) List() ([]*Service, error) {
-	c, err := s.provider.RunCommand(powershell.Wrap("Get-Service | Select-Object -Property Status, Name, DisplayName, StartType | ConvertTo-Json"))
+	c, err := s.conn.RunCommand(powershell.Wrap("Get-Service | Select-Object -Property Status, Name, DisplayName, StartType | ConvertTo-Json"))
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package explorer
+package explorer_test
 
 import (
 	"context"
@@ -6,20 +6,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/explorer"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
 func TestNewFilters(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		f := NewFilters()
+		f := explorer.NewFilters()
 		require.NotNil(t, f)
 		require.Empty(t, f.Items)
 	})
 
 	t.Run("two filters", func(t *testing.T) {
-		f := NewFilters("true", "false")
+		f := explorer.NewFilters("true", "false")
 		require.NotNil(t, f)
-		assert.Equal(t, map[string]*Mquery{
+		assert.Equal(t, map[string]*explorer.Mquery{
 			"0": {Mql: "true"},
 			"1": {Mql: "false"},
 		}, f.Items)
@@ -28,13 +29,13 @@ func TestNewFilters(t *testing.T) {
 
 func TestSummarize(t *testing.T) {
 	t.Run("with NewFilters initialization", func(t *testing.T) {
-		f := NewFilters("true", "asset.platform != ''")
+		f := explorer.NewFilters("true", "asset.platform != ''")
 		assert.Equal(t, "asset.platform != '', true", f.Summarize())
 	})
 
 	t.Run("with mixed filters", func(t *testing.T) {
-		f := &Filters{
-			Items: map[string]*Mquery{
+		f := &explorer.Filters{
+			Items: map[string]*explorer.Mquery{
 				"one": {Mql: "asset.name"},
 				"two": {Title: "filter 2"},
 			},
@@ -46,14 +47,15 @@ func TestSummarize(t *testing.T) {
 
 func TestBundleAssetFilter(t *testing.T) {
 	// load the raw bundle
-	bundle, err := BundleFromPaths("../examples/os.mql.yaml")
+	tester := testutils.InitTester(testutils.LinuxMock("../providers-sdk/v1/testutils"))
+	bundle, err := explorer.BundleFromPaths("../examples/os.mql.yaml")
 	require.NoError(t, err)
 	assert.Equal(t, 1, len(bundle.Packs))
 	assert.Equal(t, "asset.family.contains(\"unix\")", bundle.Packs[0].Filters.Items["0"].Mql)
-	assert.Equal(t, (*Filters)(nil), bundle.Packs[0].ComputedFilters)
+	assert.Equal(t, (*explorer.Filters)(nil), bundle.Packs[0].ComputedFilters)
 
 	// check that the computed asset filters are set
-	pbm, err := bundle.Compile(context.Background(), providers.DefaultRuntime().Schema())
+	pbm, err := bundle.Compile(context.Background(), tester.Runtime.Schema())
 	require.NoError(t, err)
 	assert.Equal(t, "asset.family.contains(\"unix\")", pbm.Packs["//local.cnquery.io/run/local-execution/querypacks/linux-mixed-queries"].ComputedFilters.Summarize())
 }

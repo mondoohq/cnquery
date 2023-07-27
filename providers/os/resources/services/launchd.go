@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"regexp"
 
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 var LAUNCHD_REGEX = regexp.MustCompile(`(?m)^\s*([\d-]*)\s+(\d)\s+(.*)$`)
@@ -36,7 +36,7 @@ func ParseServiceLaunchD(input io.Reader) ([]*Service, error) {
 
 // MacOS is using launchd as default service manager
 type LaunchDServiceManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *LaunchDServiceManager) Name() string {
@@ -44,7 +44,7 @@ func (s *LaunchDServiceManager) Name() string {
 }
 
 func (s *LaunchDServiceManager) List() ([]*Service, error) {
-	c, err := s.provider.RunCommand("launchctl list")
+	c, err := s.conn.RunCommand("launchctl list")
 	if err != nil {
 		return nil, err
 	}

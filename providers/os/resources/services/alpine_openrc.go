@@ -8,12 +8,11 @@ import (
 	"regexp"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/motor/providers/os"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 type AlpineOpenrcServiceManager struct {
-	provider os.OperatingSystemProvider
+	conn shared.Connection
 }
 
 func (s *AlpineOpenrcServiceManager) Name() string {
@@ -24,7 +23,7 @@ func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
 	// retrieve service list by retrieving all files
 	var services []*Service
 
-	f, err := s.provider.FS().Open("/etc/init.d")
+	f, err := s.conn.FileSystem().Open("/etc/init.d")
 	if err != nil {
 		return nil, err
 	}
@@ -37,9 +36,9 @@ func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
 
 	// retrieve service status from running systems
 	serviceStatusMap := map[string]bool{}
-	if s.provider.Capabilities().HasCapability(providers.Capability_RunCommand) {
+	if s.conn.Capabilities().Has(shared.Capability_RunCommand) {
 		// check if the rc-status command exits, if not no service is running
-		cmd, err := s.provider.RunCommand("which rc-status")
+		cmd, err := s.conn.RunCommand("which rc-status")
 		if err != nil {
 			return nil, err
 		}
@@ -47,7 +46,7 @@ func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
 		// if the rc-status command is installed
 		cmdOut, _ := ioutil.ReadAll(cmd.Stdout)
 		if string(cmdOut) != "" {
-			cmd, err := s.provider.RunCommand("rc-status -s")
+			cmd, err := s.conn.RunCommand("rc-status -s")
 			if err != nil {
 				return nil, err
 			}
@@ -60,7 +59,7 @@ func (s *AlpineOpenrcServiceManager) List() ([]*Service, error) {
 	}
 
 	// check for services in runlevel
-	runlevel, err := determineOpenRcRunlevel(s.provider.FS())
+	runlevel, err := determineOpenRcRunlevel(s.conn.FileSystem())
 	if err != nil {
 		return nil, err
 	}

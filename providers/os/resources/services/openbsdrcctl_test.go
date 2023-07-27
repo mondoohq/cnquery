@@ -3,17 +3,21 @@ package services
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/cnquery/motor/providers/mock"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
 )
 
 func TestParseOpenbsdServicesRunning(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/openbsd6.toml")
+	mock, err := mock.New("./testdata/openbsd6.toml", &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name: "openbsd",
+		},
+	})
 	require.NoError(t, err)
 
-	openbsd := OpenBsdRcctlServiceManager{provider: mock}
+	openbsd := OpenBsdRcctlServiceManager{conn: mock}
 	// iterate over services and check if they are running
 	services, err := openbsd.List()
 	require.NoError(t, err)
