@@ -25,6 +25,22 @@ func init() {
 			// to override args, implement: initFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createFilePermissions,
 		},
+		"parse.ini": {
+			Init: initParseIni,
+			Create: createParseIni,
+		},
+		"parse.json": {
+			Init: initParseJson,
+			Create: createParseJson,
+		},
+		"parse.plist": {
+			// to override args, implement: initParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createParsePlist,
+		},
+		"parse.yaml": {
+			Init: initParseYaml,
+			Create: createParseYaml,
+		},
 		"user": {
 			Init: initUser,
 			Create: createUser,
@@ -228,6 +244,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"file.permissions.string": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFilePermissions).GetString()).ToDataRes(types.String)
+	},
+	"parse.ini.delimiter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseIni).GetDelimiter()).ToDataRes(types.String)
+	},
+	"parse.ini.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseIni).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.ini.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseIni).GetContent()).ToDataRes(types.String)
+	},
+	"parse.ini.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseIni).GetSections()).ToDataRes(types.Map(types.String, types.Map(types.String, types.String)))
+	},
+	"parse.ini.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseIni).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"parse.json.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseJson).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.json.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseJson).GetContent()).ToDataRes(types.String)
+	},
+	"parse.json.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseJson).GetParams()).ToDataRes(types.Dict)
+	},
+	"parse.plist.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParsePlist).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.plist.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParsePlist).GetContent()).ToDataRes(types.String)
+	},
+	"parse.plist.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParsePlist).GetParams()).ToDataRes(types.Dict)
+	},
+	"parse.yaml.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseYaml).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.yaml.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseYaml).GetContent()).ToDataRes(types.String)
+	},
+	"parse.yaml.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseYaml).GetParams()).ToDataRes(types.Dict)
 	},
 	"user.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetUid()).ToDataRes(types.Int)
@@ -549,6 +607,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"file.permissions.string": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFilePermissions).String, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.ini.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParseIni).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.ini.delimiter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseIni).Delimiter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.ini.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseIni).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.ini.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseIni).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.ini.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseIni).Sections, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"parse.ini.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseIni).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"parse.json.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParseJson).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.json.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseJson).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.json.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseJson).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.json.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseJson).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"parse.plist.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParsePlist).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.plist.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParsePlist).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.plist.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParsePlist).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.plist.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParsePlist).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"parse.yaml.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParseYaml).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.yaml.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseYaml).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.yaml.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseYaml).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.yaml.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseYaml).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
 	"user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1251,6 +1381,316 @@ func (c *mqlFilePermissions) GetIsSymlink() *plugin.TValue[bool] {
 func (c *mqlFilePermissions) GetString() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.String, func() (string, error) {
 		return c.string()
+	})
+}
+
+// mqlParseIni for the parse.ini resource
+type mqlParseIni struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseIniInternal it will be used here
+
+	Delimiter plugin.TValue[string]
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Sections plugin.TValue[map[string]interface{}]
+	Params plugin.TValue[map[string]interface{}]
+}
+
+// createParseIni creates a new instance of this resource
+func createParseIni(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParseIni{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.ini", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParseIni) MqlName() string {
+	return "parse.ini"
+}
+
+func (c *mqlParseIni) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParseIni) GetDelimiter() *plugin.TValue[string] {
+	return &c.Delimiter
+}
+
+func (c *mqlParseIni) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlParseIni) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParseIni) GetSections() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Sections, func() (map[string]interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		vargDelimiter := c.GetDelimiter()
+		if vargDelimiter.Error != nil {
+			return nil, vargDelimiter.Error
+		}
+
+		return c.sections(vargContent.Data, vargDelimiter.Data)
+	})
+}
+
+func (c *mqlParseIni) GetParams() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Params, func() (map[string]interface{}, error) {
+		vargSections := c.GetSections()
+		if vargSections.Error != nil {
+			return nil, vargSections.Error
+		}
+
+		return c.params(vargSections.Data)
+	})
+}
+
+// mqlParseJson for the parse.json resource
+type mqlParseJson struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseJsonInternal it will be used here
+
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Params plugin.TValue[interface{}]
+}
+
+// createParseJson creates a new instance of this resource
+func createParseJson(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParseJson{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.json", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParseJson) MqlName() string {
+	return "parse.json"
+}
+
+func (c *mqlParseJson) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParseJson) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlParseJson) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParseJson) GetParams() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+// mqlParsePlist for the parse.plist resource
+type mqlParsePlist struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParsePlistInternal it will be used here
+
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Params plugin.TValue[interface{}]
+}
+
+// createParsePlist creates a new instance of this resource
+func createParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParsePlist{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.plist", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParsePlist) MqlName() string {
+	return "parse.plist"
+}
+
+func (c *mqlParsePlist) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParsePlist) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlParsePlist) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParsePlist) GetParams() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+// mqlParseYaml for the parse.yaml resource
+type mqlParseYaml struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseYamlInternal it will be used here
+
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Params plugin.TValue[interface{}]
+}
+
+// createParseYaml creates a new instance of this resource
+func createParseYaml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParseYaml{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.yaml", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParseYaml) MqlName() string {
+	return "parse.yaml"
+}
+
+func (c *mqlParseYaml) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParseYaml) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlParseYaml) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParseYaml) GetParams() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
 	})
 }
 

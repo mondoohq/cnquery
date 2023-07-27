@@ -3,6 +3,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -20,6 +21,18 @@ func init() {
 		"asset": {
 			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
+		},
+		"time": {
+			// to override args, implement: initTime(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createTime,
+		},
+		"regex": {
+			// to override args, implement: initRegex(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRegex,
+		},
+		"parse": {
+			// to override args, implement: initParse(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createParse,
 		},
 	}
 }
@@ -128,6 +141,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.labels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"time.now": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTime).GetNow()).ToDataRes(types.Time)
+	},
+	"time.second": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTime).GetSecond()).ToDataRes(types.Time)
+	},
+	"time.minute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTime).GetMinute()).ToDataRes(types.Time)
+	},
+	"time.hour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTime).GetHour()).ToDataRes(types.Time)
+	},
+	"time.day": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTime).GetDay()).ToDataRes(types.Time)
+	},
+	"time.today": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTime).GetToday()).ToDataRes(types.Time)
+	},
+	"time.tomorrow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTime).GetTomorrow()).ToDataRes(types.Time)
+	},
+	"regex.ipv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetIpv4()).ToDataRes(types.Regex)
+	},
+	"regex.ipv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetIpv6()).ToDataRes(types.Regex)
+	},
+	"regex.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetUrl()).ToDataRes(types.Regex)
+	},
+	"regex.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetEmail()).ToDataRes(types.Regex)
+	},
+	"regex.mac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetMac()).ToDataRes(types.Regex)
+	},
+	"regex.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetUuid()).ToDataRes(types.Regex)
+	},
+	"regex.emoji": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetEmoji()).ToDataRes(types.Regex)
+	},
+	"regex.semver": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetSemver()).ToDataRes(types.Regex)
+	},
+	"regex.creditCard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRegex).GetCreditCard()).ToDataRes(types.Regex)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -212,6 +273,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlAsset).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
+	"time.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlTime).__id, ok = v.Value.(string)
+			return
+		},
+	"time.now": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTime).Now, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"time.second": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTime).Second, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"time.minute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTime).Minute, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"time.hour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTime).Hour, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"time.day": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTime).Day, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"time.today": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTime).Today, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"time.tomorrow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTime).Tomorrow, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"regex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlRegex).__id, ok = v.Value.(string)
+			return
+		},
+	"regex.ipv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Ipv4, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.ipv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Ipv6, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.mac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Mac, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.emoji": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Emoji, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.semver": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).Semver, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"regex.creditCard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRegex).CreditCard, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParse).__id, ok = v.Value.(string)
+			return
+		},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -402,4 +539,240 @@ func (c *mqlAsset) GetBuild() *plugin.TValue[string] {
 
 func (c *mqlAsset) GetLabels() *plugin.TValue[map[string]interface{}] {
 	return &c.Labels
+}
+
+// mqlTime for the time resource
+type mqlTime struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlTimeInternal it will be used here
+
+	Now plugin.TValue[*time.Time]
+	Second plugin.TValue[*time.Time]
+	Minute plugin.TValue[*time.Time]
+	Hour plugin.TValue[*time.Time]
+	Day plugin.TValue[*time.Time]
+	Today plugin.TValue[*time.Time]
+	Tomorrow plugin.TValue[*time.Time]
+}
+
+// createTime creates a new instance of this resource
+func createTime(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlTime{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("time", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlTime) MqlName() string {
+	return "time"
+}
+
+func (c *mqlTime) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlTime) GetNow() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Now, func() (*time.Time, error) {
+		return c.now()
+	})
+}
+
+func (c *mqlTime) GetSecond() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Second, func() (*time.Time, error) {
+		return c.second()
+	})
+}
+
+func (c *mqlTime) GetMinute() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Minute, func() (*time.Time, error) {
+		return c.minute()
+	})
+}
+
+func (c *mqlTime) GetHour() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Hour, func() (*time.Time, error) {
+		return c.hour()
+	})
+}
+
+func (c *mqlTime) GetDay() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Day, func() (*time.Time, error) {
+		return c.day()
+	})
+}
+
+func (c *mqlTime) GetToday() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Today, func() (*time.Time, error) {
+		return c.today()
+	})
+}
+
+func (c *mqlTime) GetTomorrow() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Tomorrow, func() (*time.Time, error) {
+		return c.tomorrow()
+	})
+}
+
+// mqlRegex for the regex resource
+type mqlRegex struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlRegexInternal it will be used here
+
+	Ipv4 plugin.TValue[string]
+	Ipv6 plugin.TValue[string]
+	Url plugin.TValue[string]
+	Email plugin.TValue[string]
+	Mac plugin.TValue[string]
+	Uuid plugin.TValue[string]
+	Emoji plugin.TValue[string]
+	Semver plugin.TValue[string]
+	CreditCard plugin.TValue[string]
+}
+
+// createRegex creates a new instance of this resource
+func createRegex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRegex{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("regex", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRegex) MqlName() string {
+	return "regex"
+}
+
+func (c *mqlRegex) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRegex) GetIpv4() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Ipv4, func() (string, error) {
+		return c.ipv4()
+	})
+}
+
+func (c *mqlRegex) GetIpv6() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Ipv6, func() (string, error) {
+		return c.ipv6()
+	})
+}
+
+func (c *mqlRegex) GetUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Url, func() (string, error) {
+		return c.url()
+	})
+}
+
+func (c *mqlRegex) GetEmail() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Email, func() (string, error) {
+		return c.email()
+	})
+}
+
+func (c *mqlRegex) GetMac() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Mac, func() (string, error) {
+		return c.mac()
+	})
+}
+
+func (c *mqlRegex) GetUuid() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Uuid, func() (string, error) {
+		return c.uuid()
+	})
+}
+
+func (c *mqlRegex) GetEmoji() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Emoji, func() (string, error) {
+		return c.emoji()
+	})
+}
+
+func (c *mqlRegex) GetSemver() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Semver, func() (string, error) {
+		return c.semver()
+	})
+}
+
+func (c *mqlRegex) GetCreditCard() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CreditCard, func() (string, error) {
+		return c.creditCard()
+	})
+}
+
+// mqlParse for the parse resource
+type mqlParse struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseInternal it will be used here
+
+
+}
+
+// createParse creates a new instance of this resource
+func createParse(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParse{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParse) MqlName() string {
+	return "parse"
+}
+
+func (c *mqlParse) MqlID() string {
+	return c.__id
 }

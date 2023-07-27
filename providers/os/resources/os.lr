@@ -86,6 +86,54 @@ private file.permissions @defaults("string") {
   string() string
 }
 
+// Parse INI files
+parse.ini {
+  init(path string, delimiter string)
+  // Symbol that is separating keys and values
+  delimiter string
+  // File that is being parsed
+  file file
+  // Raw content of the file that is parsed
+  content(file) string
+  // A map of sections and key-value pairs
+  sections(content, delimiter) map[string]map[string]string
+  // A map of parameters that don't belong to sections
+  params(sections) map[string]string
+}
+
+// Parse JSON files
+parse.json {
+  init(path string)
+  // File that is being parsed
+  file file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters that are defined in this file
+  params(content) dict
+}
+
+// Parse plist files
+parse.plist {
+  init(path string)
+  // File that is being parsed
+  file file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters that are defined in this file
+  params(content) dict
+}
+
+// Parse YAML files
+parse.yaml {
+  init(path string)
+  // File that is being parsed
+  file file
+  // Raw content of the file that is parsed
+  content(file) string
+  // The parsed parameters that are defined in this file
+  params(content) dict
+}
+
 // User on this system
 user @defaults("name uid gid") {
   // User ID

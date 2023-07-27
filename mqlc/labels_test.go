@@ -1,14 +1,15 @@
-package mqlc
+package mqlc_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/mqlc"
 )
 
 func label(t *testing.T, s string, f func(res *llx.Labels)) {
-	res, err := Compile(s, nil, conf)
+	res, err := mqlc.Compile(s, nil, conf)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	if res == nil {

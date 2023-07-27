@@ -1,9 +1,10 @@
-package mqlc
+package mqlc_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/mqlc"
 )
 
 func TestIfChecksumming(t *testing.T) {
@@ -81,7 +82,7 @@ func TestIfChecksumming(t *testing.T) {
 	checksums := map[string]struct{}{}
 
 	for _, q := range queries {
-		res, err := Compile(q, nil, conf)
+		res, err := mqlc.Compile(q, nil, conf)
 		require.Nil(t, err)
 		require.NotNil(t, res)
 		if res == nil {
@@ -140,7 +141,7 @@ func TestSwitchChecksumming(t *testing.T) {
 	checksums := map[string]struct{}{}
 
 	for _, q := range queries {
-		res, err := Compile(q, nil, conf)
+		res, err := mqlc.Compile(q, nil, conf)
 		require.Nil(t, err)
 		require.NotNil(t, res)
 		if res == nil {

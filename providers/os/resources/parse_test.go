@@ -1,10 +1,10 @@
-package core_test
+package resources_test
 
 import (
 	"testing"
 	"time"
 
-	"go.mondoo.com/cnquery/resources/packs/testutils"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
 func TestParse_Date(t *testing.T) {

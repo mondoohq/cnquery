@@ -42,3 +42,49 @@ asset @defaults("name platform version") {
   // Optional platform information
   labels map[string]string
 }
+
+// Date and time functions
+time {
+  // The current time on the local system
+  now() time
+  // One second, used for durations
+  second() time
+  // One minute, used for durations
+  minute() time
+  // One hour, used for durations
+  hour() time
+  // One day, used for durations
+  day() time
+  // The current day starting at midnight
+  today() time
+  // The next day starting at midnight
+  tomorrow() time
+}
+
+// Builtin regular expression functions
+regex {
+  // Matches IPv4 addresses
+  ipv4() regex
+  // Matches IPv6 addresses
+  ipv6() regex
+  // Matches URL addresses (HTTP/HTTPS)
+  url() regex
+  // Matches email addresses
+  email() regex
+  // Matches MAC addresses
+  mac() regex
+  // Matches hyphen-deliminated UUIDs
+  uuid() regex
+  // Matches emojis
+  emoji() regex
+  // Matches semantic version numbers
+  semver() regex
+  // Matches credit card numbers
+  creditCard() regex
+}
+
+// Parse provides common parsers (json, ini, certs, etc)
+parse {
+  // Builtin functions:
+  // date(value, format) time
+}
