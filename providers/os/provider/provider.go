@@ -167,6 +167,14 @@ func (s *Service) connect(asset *inventory.Asset, hasRecording bool, callback pl
 		s.lastConnectionID++
 		conn, err = mock.New("", asset)
 
+	case "tar":
+		s.lastConnectionID++
+		conn, err = connection.NewTarConnection(s.lastConnectionID, conf, asset)
+
+	case "docker-snapshot":
+		s.lastConnectionID++
+		conn, err = connection.NewDockerSnapshotConnection(s.lastConnectionID, conf, asset)
+
 	default:
 		return nil, errors.New("cannot find connection type " + conf.Type)
 	}

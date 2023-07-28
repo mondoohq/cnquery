@@ -10,6 +10,132 @@ alias os.base.service = service
 alias os.base.services = services
 alias os.unix.sshd = sshd
 
+machine {}
+
+// SMBIOS BIOS information
+machine.bios {
+  // BIOS vendor
+  vendor string
+  // BIOS version
+  version string
+  // BIOS release date
+  releaseDate string
+}
+
+// SMBIOS system information
+machine.system {
+  // Manufacturer
+  manufacturer string
+  // Product Name
+  product string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // UUID
+  uuid string
+  // SKU Number
+  sku string
+  // Family
+  family string
+}
+
+// SMBIOS baseboard (or module) information
+machine.baseboard {
+  // Manufacturer
+  manufacturer string
+  // Product
+  product string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // Asset Tag
+  assetTag string
+}
+
+// SMBIOS system enclosure or chassis
+machine.chassis {
+  // Manufacturer
+  manufacturer string
+  // Version
+  version string
+  // Serial Number
+  serial string
+  // Asset Tag Number
+  assetTag string
+}
+
+// Operating system information
+os {
+  // Pretty hostname on macOS/Linux or device name on Windows
+  name() string
+  // ENV variable contents
+  env() map[string]string
+  // PATH variable contents
+  path(env) []string
+  // Current uptime
+  uptime() time
+  // List of available OS updates
+  updates() []os.update
+  // Indicates if a reboot is pending
+  rebootpending() bool
+  // Hostname for this OS
+  hostname() string
+  // Machine ID for this OS
+  machineid() string
+}
+
+// Operating system update information
+os.update @defaults("name")  {
+  // Name of the update
+  name string
+  // Category of the update
+  category string
+  // Severity of the update
+  severity string
+  // Indicates if a restart is required
+  restart bool
+  // Package format for this update
+  format string
+}
+
+os.base {
+  embed machine
+
+  // Pretty Hostname on macOS/Linux or device name on Windows
+  name() string
+  // ENV variable contents
+  env() map[string]string
+  // PATH variable contents
+  path(env) []string
+  // Current uptime
+  uptime() time
+  // List of available OS updates
+  updates() []os.update
+  // Indicates if a reboot is pending
+  rebootpending() bool
+  // Hostname for this OS
+  hostname() string
+  // User groups
+  groups() groups
+  // Users
+  users() users
+}
+
+os.unix {
+  embed os.base as base
+}
+
+os.linux {
+  embed os.unix as unix
+
+  // iptables firewall for IPv4
+  iptables() iptables
+  // iptables firewall for IPv6
+  ip6tables() ip6tables
+}
+
 // Results of running a command on the system
 command {
   init(command string)
@@ -21,6 +147,19 @@ command {
   stderr(command) string
   // Exit code the command returned
   exitcode(command) int
+}
+
+// Results of running a PowerShell script on the system
+powershell {
+  init(script string)
+  // Raw contents of the script
+  script string
+  // Standard output from running the script
+  stdout() string
+  // Standard error output from running the script
+  stderr() string
+  // Exit code the script returned
+  exitcode() int
 }
 
 // File on the system
@@ -342,4 +481,116 @@ service @defaults("name running enabled type") {
 // Services configured on this system
 services {
   []service
+}
+
+// System kernel information
+kernel @defaults("info") {
+  // Active kernel information
+  info() dict
+  // Kernel parameters map
+  parameters() map[string]string
+  // List of kernel modules
+  modules() []kernel.module
+  // Installed Versions
+  installed() []dict
+}
+
+// System kernel module information
+kernel.module @defaults("name loaded") {
+  init(name string)
+
+  // Name of the kernel module
+  name string
+  // Size of the kernel module
+  size string
+  // Indicates if this module is loaded
+  loaded bool
+}
+
+// Docker host resource
+docker {
+  // List all Docker images
+  images() []docker.image
+  // List all Docker containers
+  containers() []docker.container
+}
+
+// Docker image
+docker.image {
+  // Image ID
+  id string
+  // Image size in kilobytes
+  size int
+  // Virtual image size in kilobytes
+  virtualsize int
+  // Tag key value pairs
+  tags []string
+  // Labels key value pairs
+  labels map[string]string
+}
+
+// Docker container
+docker.container {
+  embed os.linux as os
+
+  // Container ID
+  id string
+  // Container command
+  command string
+  // Container image
+  image string
+  // Image ID
+  imageid string
+  // Container names
+  names []string
+  // Container state
+  state string
+  // Status message
+  status string
+  // Label key value pairs
+  labels map[string]string
+}
+
+// IPv4 tables
+iptables {
+  // IPv4 input chain stats
+  input() []iptables.entry
+  // IPv4 output chain stats
+  output() []iptables.entry
+}
+
+// IPv6 tables
+ip6tables {
+  // IPv6 input chain stats
+  input() []iptables.entry
+  // IPv6 output chain stats
+  output() []iptables.entry
+}
+
+iptables.entry {
+  //Line number of statistic - used to create id
+  lineNumber int
+  //packets from iptable
+  packets int
+  //This field tells us how large the packet is in octets, including headers and everything.
+  bytes int
+  //If a packet matches the rule, the target specifies what should be done with it.
+  target string
+  //protocol of the next level layer. For example, this may be TCP, UDP or ICMP among others.
+  protocol string
+  //indicates IP options
+  opt string
+  //input
+  in string
+  //output
+  out string
+  //source address field that lets the receiver know where the packet came from.
+  source string
+  //The destination IP address or subnet of the traffic, or anywhere
+  destination string
+  //The options field contains different optional settings within the header,
+  //such as Internet timestamps, SACK or record route options.
+  options string
+  //input or output - used to create id
+  chain string
 }
