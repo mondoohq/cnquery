@@ -39,6 +39,10 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		res.Resources[defName] = x
 	}
 
+	// In this block we finalize the schema. This means:
+	// 1: make sure every resource and field has the provider set
+	// 2: create implicit resources (eg: sshd.config => create sshd)
+	// 3: create implicit fields (eg: sshd.config => sshd { config: {..} })
 	for name, v := range res.Resources {
 		v.Provider = provider
 		for _, field := range v.Fields {
@@ -50,16 +54,40 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		}
 
 		rem := name
+		isPrivate := v.Private
 		for {
 			last := strings.LastIndex(rem, ".")
 			if last == -1 {
 				break
 			}
+
+			resource := rem
+			basename := rem[last+1:]
 			rem = rem[:last]
-			if _, ok := res.Resources[rem]; !ok {
-				res.Resources[rem] = &resources.ResourceInfo{
-					Id: rem,
+
+			child, ok := res.Resources[rem]
+			if !ok {
+				child = &resources.ResourceInfo{
+					Id:     rem,
+					Fields: map[string]*resources.Field{},
 				}
+				res.Resources[rem] = child
+			}
+
+			if _, ok := child.Fields[basename]; !ok {
+				child.Fields[basename] = &resources.Field{
+					Name:        basename,
+					Type:        string(types.Resource(resource)),
+					IsMandatory: false, // it cannot be mandatory if we create it here
+					IsPrivate:   isPrivate,
+				}
+			}
+
+			// Some of the call-chain might have been created by other resources.
+			// If this resource, however, is not private, then it must be accessible
+			// through the callchain.
+			if !isPrivate {
+				child.Fields[basename].IsPrivate = false
 			}
 		}
 	}
