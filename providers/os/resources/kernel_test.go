@@ -26,7 +26,7 @@ func TestResource_KernelModules(t *testing.T) {
 		assert.NotEmpty(t, res)
 	})
 
-	t.Run("grab one kernel module", func(t *testing.T) {
+	t.Run("grab a kernel module", func(t *testing.T) {
 		res := x.TestQuery(t, "kernel.modules[0].name")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
