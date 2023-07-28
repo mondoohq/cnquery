@@ -251,37 +251,36 @@ var defaultTimeFormatsOrder = []string{
 }
 
 func resourceDateV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	panic("NO DATE PARSING YET")
-	// args, rref, err := args2resourceargsV2(e, ref, chunk.Function.Args)
-	// if err != nil || rref != 0 {
-	// 	return nil, rref, err
-	// }
+	args, rref, err := primitive2array(e, ref, chunk.Function.Args)
+	if err != nil || rref != 0 {
+		return nil, rref, err
+	}
 
-	// var format string
-	// if len(args) >= 2 {
-	// 	format = args[1].(string)
-	// 	if f, ok := timeFormats[format]; ok {
-	// 		format = f
-	// 	}
-	// }
+	var format string
+	if len(args) >= 2 {
+		format = args[1].(string)
+		if f, ok := timeFormats[format]; ok {
+			format = f
+		}
+	}
 
-	// if format != "" {
-	// 	parsed, err := time.Parse(format, args[0].(string))
-	// 	if err != nil {
-	// 		return nil, 0, errors.New("failed to parse time: " + err.Error())
-	// 	}
-	// 	return TimeData(parsed), 0, nil
-	// }
+	if format != "" {
+		parsed, err := time.Parse(format, args[0].(string))
+		if err != nil {
+			return nil, 0, errors.New("failed to parse time: " + err.Error())
+		}
+		return TimeData(parsed), 0, nil
+	}
 
-	// // Note: Yes, this approach is much slower than giving us a hint
-	// // about which time format is used.
-	// for _, format := range defaultTimeFormatsOrder {
-	// 	parsed, err := time.Parse(format, args[0].(string))
-	// 	if err != nil {
-	// 		continue
-	// 	}
-	// 	return TimeData(parsed), 0, nil
-	// }
+	// Note: Yes, this approach is much slower than giving us a hint
+	// about which time format is used.
+	for _, format := range defaultTimeFormatsOrder {
+		parsed, err := time.Parse(format, args[0].(string))
+		if err != nil {
+			continue
+		}
+		return TimeData(parsed), 0, nil
+	}
 
 	return nil, 0, errors.New("failed to parse time")
 }
