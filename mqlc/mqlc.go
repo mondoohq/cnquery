@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
@@ -956,7 +957,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
 			}
 
-			c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, typ.ResourceName(), id)
+			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, typ.ResourceName(), id)
 
 			// this only happens when we call a field of a bridging resource,
 			// in which case we don't call the field (since there is nothing to do)
@@ -1053,7 +1054,7 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 				return true, types.Nil, fmt.Errorf("field '%s' on '%s' requires the MQLAssetContext feature", id, typ.Label())
 			}
 
-			c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, typ.ResourceName(), id)
+			c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, typ.ResourceName(), id)
 
 			// this only happens when we call a field of a bridging resource,
 			// in which case we don't call the field (since there is nothing to do)
@@ -1119,7 +1120,7 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 		calls = calls[1:]
 	}
 
-	c.Result.MinMondooVersion = getMinMondooVersion(c.Result.MinMondooVersion, id, "")
+	c.Result.MinMondooVersion = getMinMondooVersion(c.Schema, c.Result.MinMondooVersion, id, "")
 
 	typ, err := c.addResource(id, resource, call)
 	return true, calls, typ, err
@@ -1860,7 +1861,6 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 					return false
 				}
 			}
-
 		}
 		return true
 	})
@@ -2079,29 +2079,33 @@ func (c *compiler) CompileParsed(ast *parser.AST) error {
 	return nil
 }
 
-func getMinMondooVersion(current string, resource string, field string) string {
-	// rd := info.ResourceDocs.Resources[resource]
-	// var minverDocs string
-	// if rd != nil {
-	// 	minverDocs = rd.MinMondooVersion
-	// 	if field != "" {
-	// 		f := rd.Fields[field]
-	// 		if f != nil && f.MinMondooVersion != "" {
-	// 			minverDocs = f.MinMondooVersion
-	// 		}
-	// 	}
-	// 	if current != "" {
-	// 		// If the field has a newer version requirement than the current code bundle
-	// 		// then update the version requirement to the newest version required.
-	// 		docMin, err := vrs.NewVersion(minverDocs)
-	// 		curMin, err1 := vrs.NewVersion(current)
-	// 		if docMin != nil && err == nil && err1 == nil && docMin.LessThan(curMin) {
-	// 			return current
-	// 		}
-	// 	}
-	// }
-	// TODO: this needs migration
-	return current
+func getMinMondooVersion(schema llx.Schema, current string, resource string, field string) string {
+	info := schema.Lookup(resource)
+	if info == nil {
+		return current
+	}
+
+	min := info.MinMondooVersion
+	if field != "" {
+		if finfo, ok := info.Fields[field]; ok && finfo.MinMondooVersion != "" {
+			min = finfo.MinMondooVersion
+		}
+	}
+
+	if current == "" {
+		return min
+	} else if min == "" {
+		return current
+	}
+
+	vMin, err1 := version.NewVersion(min)
+	vCur, err2 := version.NewVersion(current)
+	// if the current version requirement is higher than docs, we keep it,
+	// otherwise docs wins
+	if err1 == nil && err2 == nil && vMin.LessThan(vCur) {
+		return current
+	}
+	return min
 }
 
 // CompileAST with a schema into a chunky code

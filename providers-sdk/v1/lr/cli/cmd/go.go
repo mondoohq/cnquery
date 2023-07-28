@@ -9,6 +9,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/providers-sdk/v1/lr"
+	"go.mondoo.com/cnquery/providers-sdk/v1/lr/docs"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"sigs.k8s.io/yaml"
 )
 
 var goCmd = &cobra.Command{
@@ -49,6 +52,24 @@ var goCmd = &cobra.Command{
 			log.Fatal().Err(err).Msg("failed to generate schema")
 		}
 
+		// we will attempt to auto-detect the manifest to inject some metadata
+		// into the schema
+		manifestPath := file + ".manifest.yaml"
+		raw, err := os.ReadFile(manifestPath)
+		if err == nil {
+			var lrDocsData docs.LrDocs
+			err = yaml.Unmarshal(raw, &lrDocsData)
+			if err != nil {
+				log.Fatal().Err(err).Msg("could not load yaml data")
+			}
+
+			injectMetadata(schema, &lrDocsData)
+		} else if os.IsNotExist(err) {
+			log.Info().Str("path", manifestPath).Msg("no manifest found, ignoring")
+		} else {
+			log.Fatal().Err(err).Str("path", manifestPath).Msg("failed to read manifest")
+		}
+
 		schemaData, err := json.Marshal(schema)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to generate schema json")
@@ -79,4 +100,24 @@ var goCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(goCmd)
 	goCmd.Flags().String("dist", "", "folder for output json generation")
+}
+
+func injectMetadata(schema *resources.Schema, docs *docs.LrDocs) {
+	for resource, rdoc := range docs.Resources {
+		info, ok := schema.Resources[resource]
+		if !ok {
+			continue
+		}
+
+		info.MinMondooVersion = rdoc.MinMondooVersion
+
+		for field, fdoc := range rdoc.Fields {
+			finfo, ok := info.Fields[field]
+			if !ok {
+				continue
+			}
+
+			finfo.MinMondooVersion = fdoc.MinMondooVersion
+		}
+	}
 }

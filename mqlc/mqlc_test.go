@@ -18,8 +18,8 @@ import (
 
 var (
 	features    = cnquery.Features{}
-	os_schema   = providers.MustLoadSchemaFromFile("os", "../providers/os/dist/os.resources.json")
-	core_schema = providers.MustLoadSchemaFromFile("core", "../providers/core/dist/core.resources.json")
+	os_schema   = providers.MustLoadSchemaFromFile("os", "../providers/os/resources/os.resources.json")
+	core_schema = providers.MustLoadSchemaFromFile("core", "../providers/core/resources/core.resources.json")
 	conf        = mqlc.NewConfig(
 		core_schema.Add(os_schema),
 		features,
