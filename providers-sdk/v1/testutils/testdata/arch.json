@@ -29,6 +29,31 @@
       "resources": [
         {
           "Resource": "file",
+          "ID": "/dummy.plist",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\n\u003cdict\u003e\n\t\u003ckey\u003eallowdownloadsignedenabled\u003c/key\u003e\n\t\u003cinteger\u003e1\u003c/integer\u003e\n\t\u003ckey\u003eallowsignedenabled\u003c/key\u003e\n\t\u003cinteger\u003e1\u003c/integer\u003e\n\t\u003ckey\u003eapplications\u003c/key\u003e\n\t\u003carray/\u003e\n\t\u003ckey\u003eexceptions\u003c/key\u003e\n\t\u003carray\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003epath\u003c/key\u003e\n\t\t\t\u003cstring\u003e/usr/libexec/configd\u003c/string\u003e\n\t\t\t\u003ckey\u003estate\u003c/key\u003e\n\t\t\t\u003cinteger\u003e3\u003c/integer\u003e\n\t\t\u003c/dict\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003ebundleid\u003c/key\u003e\n\t\t\t\u003cstring\u003ecom.apple.EmbeddedOSInstallService\u003c/string\u003e\n\t\t\t\u003ckey\u003epath\u003c/key\u003e\n\t\t\t\u003cstring\u003e/System/Library/PrivateFrameworks/EmbeddedOSInstall.framework/Versions/A/XPCServices/EmbeddedOSInstallService.xpc/\u003c/string\u003e\n\t\t\t\u003ckey\u003estate\u003c/key\u003e\n\t\t\t\u003cinteger\u003e3\u003c/integer\u003e\n\t\t\u003c/dict\u003e\n\t\u003c/array\u003e\n\t\u003ckey\u003eexplicitauths\u003c/key\u003e\n\t\u003carray\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003eid\u003c/key\u003e\n\t\t\t\u003cstring\u003eorg.python.python.app\u003c/string\u003e\n\t\t\u003c/dict\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003eid\u003c/key\u003e\n\t\t\t\u003cstring\u003ecom.apple.ksh\u003c/string\u003e\n\t\t\u003c/dict\u003e\n\t\u003c/array\u003e\n\t\u003ckey\u003efirewall\u003c/key\u003e\n\t\u003cdict\u003e\n\t\t\u003ckey\u003eApple Remote Desktop\u003c/key\u003e\n\t\t\u003cdict\u003e\n\t\t\t\u003ckey\u003eproc\u003c/key\u003e\n\t\t\t\u003cstring\u003eAppleVNCServer\u003c/string\u003e\n\t\t\t\u003ckey\u003estate\u003c/key\u003e\n\t\t\t\u003cinteger\u003e0\u003c/integer\u003e\n\t\t\u003c/dict\u003e\n\t\u003c/dict\u003e\n\t\u003ckey\u003eloggingenabled\u003c/key\u003e\n\t\u003cinteger\u003e1\u003c/integer\u003e\n\t\u003ckey\u003eversion\u003c/key\u003e\n\t\u003cstring\u003e1.6\u003c/string\u003e\n\u003c/dict\u003e\n\u003c/plist\u003e\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.plist"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 1270
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/etc/ssh/sshd_config",
           "Fields": {
             "content":{

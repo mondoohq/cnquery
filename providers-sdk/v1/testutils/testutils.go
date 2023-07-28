@@ -136,12 +136,19 @@ func Local(pathToTestutils string) llx.Runtime {
 	if err != nil {
 		panic("failed to load os resources for testing: " + err.Error())
 	}
+	osSchema := providers.MustLoadSchema("os", raw)
+
+	raw, err = os.ReadFile(filepath.Join(pathToTestutils, "../../../providers/core/resources/core.resources.json"))
+	if err != nil {
+		panic("failed to load os resources for testing: " + err.Error())
+	}
+	coreSchema := providers.MustLoadSchema("core", raw)
 
 	provider := &providers.RunningProvider{
 		Name:   osconf.Config.Name,
 		ID:     osconf.Config.ID,
 		Plugin: osprovider.Init(),
-		Schema: providers.MustLoadSchema("os", raw),
+		Schema: osSchema.Add(coreSchema),
 	}
 
 	runtime := providers.DefaultRuntime()
