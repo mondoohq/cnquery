@@ -11,5 +11,5 @@ func TestResource_FilesFind(t *testing.T) {
 	res := x.TestQuery(t, "files.find(from: '/etc').list")
 	assert.NotEmpty(t, res)
 	testutils.TestNoResultErrors(t, res)
-	assert.Equal(t, 2, len(res[0].Data.Value.([]interface{})))
+	assert.Equal(t, 5, len(res[0].Data.Value.([]interface{})))
 }
