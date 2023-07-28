@@ -132,6 +132,142 @@
           }
         },
         {
+          "Resource": "file",
+          "ID": "/etc",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "/etc"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "drwxr-xr-x"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 12288
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/UPower",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/UPower"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "drwxr-xr-x"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 4096
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/UPower/UPower.conf",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/UPower/UPower.conf"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 2847
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/X11",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/X11"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "drwxr-xr-x"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 4096
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/X11/xinit",
+          "Fields": {
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/X11/xinit"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "drwxr-xr-x"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 4096
+            }
+          }
+        },
+        {
+          "Resource": "files.find",
+          "ID": "/etc -xdev",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bfile",
+              "value": [
+                {
+                  "Name": "file",
+                  "ID": "/etc"
+                },
+                {
+                  "Name": "file",
+                  "ID": "/etc/UPower"
+                },
+                {
+                  "Name": "file",
+                  "ID": "/etc/UPower/UPower.conf"
+                },
+                {
+                  "Name": "file",
+                  "ID": "/etc/X11"
+                },
+                {
+                  "Name": "file",
+                  "ID": "/etc/X11/xinit"
+                }
+              ]
+            }
+          }
+        },
+        {
           "Resource": "file.permissions",
           "ID": "-rw-r--r--",
           "Fields": {
