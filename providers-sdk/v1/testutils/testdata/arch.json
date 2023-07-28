@@ -370,11 +370,38 @@
           "Resource": "kernel",
           "ID": "",
           "Fields": {
+            "modules": {
+              "type": "\u0019\u001bkernel.module",
+              "value": [
+                {
+                  "Name": "kernel.module",
+                  "ID": "xfrm_user"
+                }
+              ]
+            },
             "parameters": {
               "type": "\u001a\u0007\u0007",
               "value": {
                 "net.ipv4.ip_forward": "1"
               }
+            }
+          }
+        },
+        {
+          "Resource": "kernel.module",
+          "ID": "xfrm_user",
+          "Fields": {
+            "loaded": {
+              "type": "\u0004",
+              "value": true
+            },
+            "name": {
+              "type": "\u0007",
+              "value": "xfrm_user"
+            },
+            "size": {
+              "type": "\u0007",
+              "value": "36864"
             }
           }
         },
