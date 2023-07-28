@@ -54,6 +54,7 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		}
 
 		rem := name
+		fieldInfo := v
 		isPrivate := v.Private
 		for {
 			last := strings.LastIndex(rem, ".")
@@ -80,6 +81,8 @@ func Schema(ast *LR) (*resources.Schema, error) {
 					Type:        string(types.Resource(resource)),
 					IsMandatory: false, // it cannot be mandatory if we create it here
 					IsPrivate:   isPrivate,
+					Title:       fieldInfo.Title,
+					Desc:        fieldInfo.Desc,
 				}
 			}
 
@@ -89,6 +92,8 @@ func Schema(ast *LR) (*resources.Schema, error) {
 			if !isPrivate {
 				child.Fields[basename].IsPrivate = false
 			}
+
+			fieldInfo = child
 		}
 	}
 

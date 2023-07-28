@@ -3,6 +3,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -13,9 +14,53 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
+		"machine": {
+			// to override args, implement: initMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMachine,
+		},
+		"machine.bios": {
+			// to override args, implement: initMachineBios(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMachineBios,
+		},
+		"machine.system": {
+			// to override args, implement: initMachineSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMachineSystem,
+		},
+		"machine.baseboard": {
+			// to override args, implement: initMachineBaseboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMachineBaseboard,
+		},
+		"machine.chassis": {
+			// to override args, implement: initMachineChassis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMachineChassis,
+		},
+		"os": {
+			// to override args, implement: initOs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOs,
+		},
+		"os.update": {
+			// to override args, implement: initOsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsUpdate,
+		},
+		"os.base": {
+			// to override args, implement: initOsBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsBase,
+		},
+		"os.unix": {
+			// to override args, implement: initOsUnix(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsUnix,
+		},
+		"os.linux": {
+			// to override args, implement: initOsLinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOsLinux,
+		},
 		"command": {
 			// to override args, implement: initCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCommand,
+		},
+		"powershell": {
+			// to override args, implement: initPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPowershell,
 		},
 		"file": {
 			// to override args, implement: initFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -109,6 +154,38 @@ func init() {
 			// to override args, implement: initServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createServices,
 		},
+		"kernel": {
+			Init: initKernel,
+			Create: createKernel,
+		},
+		"kernel.module": {
+			Init: initKernelModule,
+			Create: createKernelModule,
+		},
+		"docker": {
+			// to override args, implement: initDocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDocker,
+		},
+		"docker.image": {
+			// to override args, implement: initDockerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerImage,
+		},
+		"docker.container": {
+			// to override args, implement: initDockerContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDockerContainer,
+		},
+		"iptables": {
+			// to override args, implement: initIptables(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIptables,
+		},
+		"ip6tables": {
+			// to override args, implement: initIp6tables(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIp6tables,
+		},
+		"iptables.entry": {
+			// to override args, implement: initIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIptablesEntry,
+		},
 	}
 }
 
@@ -168,6 +245,144 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"machine.bios.vendor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBios).GetVendor()).ToDataRes(types.String)
+	},
+	"machine.bios.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBios).GetVersion()).ToDataRes(types.String)
+	},
+	"machine.bios.releaseDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBios).GetReleaseDate()).ToDataRes(types.String)
+	},
+	"machine.system.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSystem).GetManufacturer()).ToDataRes(types.String)
+	},
+	"machine.system.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSystem).GetProduct()).ToDataRes(types.String)
+	},
+	"machine.system.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSystem).GetVersion()).ToDataRes(types.String)
+	},
+	"machine.system.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSystem).GetSerial()).ToDataRes(types.String)
+	},
+	"machine.system.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSystem).GetUuid()).ToDataRes(types.String)
+	},
+	"machine.system.sku": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSystem).GetSku()).ToDataRes(types.String)
+	},
+	"machine.system.family": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineSystem).GetFamily()).ToDataRes(types.String)
+	},
+	"machine.baseboard.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBaseboard).GetManufacturer()).ToDataRes(types.String)
+	},
+	"machine.baseboard.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBaseboard).GetProduct()).ToDataRes(types.String)
+	},
+	"machine.baseboard.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBaseboard).GetVersion()).ToDataRes(types.String)
+	},
+	"machine.baseboard.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBaseboard).GetSerial()).ToDataRes(types.String)
+	},
+	"machine.baseboard.assetTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineBaseboard).GetAssetTag()).ToDataRes(types.String)
+	},
+	"machine.chassis.manufacturer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineChassis).GetManufacturer()).ToDataRes(types.String)
+	},
+	"machine.chassis.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineChassis).GetVersion()).ToDataRes(types.String)
+	},
+	"machine.chassis.serial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineChassis).GetSerial()).ToDataRes(types.String)
+	},
+	"machine.chassis.assetTag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMachineChassis).GetAssetTag()).ToDataRes(types.String)
+	},
+	"os.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetName()).ToDataRes(types.String)
+	},
+	"os.env": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetEnv()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"os.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetPath()).ToDataRes(types.Array(types.String))
+	},
+	"os.uptime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetUptime()).ToDataRes(types.Time)
+	},
+	"os.updates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetUpdates()).ToDataRes(types.Array(types.Resource("os.update")))
+	},
+	"os.rebootpending": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetRebootpending()).ToDataRes(types.Bool)
+	},
+	"os.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetHostname()).ToDataRes(types.String)
+	},
+	"os.machineid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOs).GetMachineid()).ToDataRes(types.String)
+	},
+	"os.update.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsUpdate).GetName()).ToDataRes(types.String)
+	},
+	"os.update.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsUpdate).GetCategory()).ToDataRes(types.String)
+	},
+	"os.update.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsUpdate).GetSeverity()).ToDataRes(types.String)
+	},
+	"os.update.restart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsUpdate).GetRestart()).ToDataRes(types.Bool)
+	},
+	"os.update.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsUpdate).GetFormat()).ToDataRes(types.String)
+	},
+	"os.base.machine": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetMachine()).ToDataRes(types.Resource("machine"))
+	},
+	"os.base.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetName()).ToDataRes(types.String)
+	},
+	"os.base.env": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetEnv()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"os.base.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetPath()).ToDataRes(types.Array(types.String))
+	},
+	"os.base.uptime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetUptime()).ToDataRes(types.Time)
+	},
+	"os.base.updates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetUpdates()).ToDataRes(types.Array(types.Resource("os.update")))
+	},
+	"os.base.rebootpending": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetRebootpending()).ToDataRes(types.Bool)
+	},
+	"os.base.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetHostname()).ToDataRes(types.String)
+	},
+	"os.base.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetGroups()).ToDataRes(types.Resource("groups"))
+	},
+	"os.base.users": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsBase).GetUsers()).ToDataRes(types.Resource("users"))
+	},
+	"os.unix.base": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsUnix).GetBase()).ToDataRes(types.Resource("os.base"))
+	},
+	"os.linux.unix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetUnix()).ToDataRes(types.Resource("os.unix"))
+	},
+	"os.linux.iptables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetIptables()).ToDataRes(types.Resource("iptables"))
+	},
+	"os.linux.ip6tables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsLinux).GetIp6tables()).ToDataRes(types.Resource("ip6tables"))
+	},
 	"command.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetCommand()).ToDataRes(types.String)
 	},
@@ -179,6 +394,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"command.exitcode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetExitcode()).ToDataRes(types.Int)
+	},
+	"powershell.script": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPowershell).GetScript()).ToDataRes(types.String)
+	},
+	"powershell.stdout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPowershell).GetStdout()).ToDataRes(types.String)
+	},
+	"powershell.stderr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPowershell).GetStderr()).ToDataRes(types.String)
+	},
+	"powershell.exitcode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPowershell).GetExitcode()).ToDataRes(types.Int)
 	},
 	"file.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetPath()).ToDataRes(types.String)
@@ -528,6 +755,123 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"services.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlServices).GetList()).ToDataRes(types.Array(types.Resource("service")))
 	},
+	"kernel.info": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetInfo()).ToDataRes(types.Dict)
+	},
+	"kernel.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"kernel.modules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetModules()).ToDataRes(types.Array(types.Resource("kernel.module")))
+	},
+	"kernel.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernel).GetInstalled()).ToDataRes(types.Array(types.Dict))
+	},
+	"kernel.module.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetName()).ToDataRes(types.String)
+	},
+	"kernel.module.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetSize()).ToDataRes(types.String)
+	},
+	"kernel.module.loaded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKernelModule).GetLoaded()).ToDataRes(types.Bool)
+	},
+	"docker.images": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDocker).GetImages()).ToDataRes(types.Array(types.Resource("docker.image")))
+	},
+	"docker.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDocker).GetContainers()).ToDataRes(types.Array(types.Resource("docker.container")))
+	},
+	"docker.image.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerImage).GetId()).ToDataRes(types.String)
+	},
+	"docker.image.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerImage).GetSize()).ToDataRes(types.Int)
+	},
+	"docker.image.virtualsize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerImage).GetVirtualsize()).ToDataRes(types.Int)
+	},
+	"docker.image.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerImage).GetTags()).ToDataRes(types.Array(types.String))
+	},
+	"docker.image.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerImage).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"docker.container.os": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetOs()).ToDataRes(types.Resource("os.linux"))
+	},
+	"docker.container.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetId()).ToDataRes(types.String)
+	},
+	"docker.container.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetCommand()).ToDataRes(types.String)
+	},
+	"docker.container.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetImage()).ToDataRes(types.String)
+	},
+	"docker.container.imageid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetImageid()).ToDataRes(types.String)
+	},
+	"docker.container.names": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetNames()).ToDataRes(types.Array(types.String))
+	},
+	"docker.container.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetState()).ToDataRes(types.String)
+	},
+	"docker.container.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetStatus()).ToDataRes(types.String)
+	},
+	"docker.container.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDockerContainer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"iptables.input": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
+	},
+	"iptables.output": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptables).GetOutput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
+	},
+	"ip6tables.input": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetInput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
+	},
+	"ip6tables.output": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIp6tables).GetOutput()).ToDataRes(types.Array(types.Resource("iptables.entry")))
+	},
+	"iptables.entry.lineNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetLineNumber()).ToDataRes(types.Int)
+	},
+	"iptables.entry.packets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetPackets()).ToDataRes(types.Int)
+	},
+	"iptables.entry.bytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetBytes()).ToDataRes(types.Int)
+	},
+	"iptables.entry.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetTarget()).ToDataRes(types.String)
+	},
+	"iptables.entry.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetProtocol()).ToDataRes(types.String)
+	},
+	"iptables.entry.opt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetOpt()).ToDataRes(types.String)
+	},
+	"iptables.entry.in": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetIn()).ToDataRes(types.String)
+	},
+	"iptables.entry.out": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetOut()).ToDataRes(types.String)
+	},
+	"iptables.entry.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetSource()).ToDataRes(types.String)
+	},
+	"iptables.entry.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetDestination()).ToDataRes(types.String)
+	},
+	"iptables.entry.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetOptions()).ToDataRes(types.String)
+	},
+	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -540,6 +884,230 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+	"machine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMachine).__id, ok = v.Value.(string)
+			return
+		},
+	"machine.bios.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMachineBios).__id, ok = v.Value.(string)
+			return
+		},
+	"machine.bios.vendor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBios).Vendor, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.bios.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBios).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.bios.releaseDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBios).ReleaseDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.system.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMachineSystem).__id, ok = v.Value.(string)
+			return
+		},
+	"machine.system.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSystem).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.system.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSystem).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.system.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSystem).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.system.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSystem).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.system.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSystem).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.system.sku": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSystem).Sku, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.system.family": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineSystem).Family, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.baseboard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMachineBaseboard).__id, ok = v.Value.(string)
+			return
+		},
+	"machine.baseboard.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBaseboard).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.baseboard.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBaseboard).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.baseboard.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBaseboard).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.baseboard.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBaseboard).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.baseboard.assetTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineBaseboard).AssetTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.chassis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMachineChassis).__id, ok = v.Value.(string)
+			return
+		},
+	"machine.chassis.manufacturer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineChassis).Manufacturer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.chassis.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineChassis).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.chassis.serial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineChassis).Serial, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"machine.chassis.assetTag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMachineChassis).AssetTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOs).__id, ok = v.Value.(string)
+			return
+		},
+	"os.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Env, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Path, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.uptime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Uptime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"os.updates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Updates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.rebootpending": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Rebootpending, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"os.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.machineid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOs).Machineid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.update.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOsUpdate).__id, ok = v.Value.(string)
+			return
+		},
+	"os.update.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsUpdate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.update.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsUpdate).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.update.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsUpdate).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.update.restart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsUpdate).Restart, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"os.update.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsUpdate).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.base.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOsBase).__id, ok = v.Value.(string)
+			return
+		},
+	"os.base.machine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Machine, ok = plugin.RawToTValue[*mqlMachine](v.Value, v.Error)
+		return
+	},
+	"os.base.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.base.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Env, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.base.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Path, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.base.uptime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Uptime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"os.base.updates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Updates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.base.rebootpending": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Rebootpending, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"os.base.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"os.base.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Groups, ok = plugin.RawToTValue[*mqlGroups](v.Value, v.Error)
+		return
+	},
+	"os.base.users": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsBase).Users, ok = plugin.RawToTValue[*mqlUsers](v.Value, v.Error)
+		return
+	},
+	"os.unix.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOsUnix).__id, ok = v.Value.(string)
+			return
+		},
+	"os.unix.base": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsUnix).Base, ok = plugin.RawToTValue[*mqlOsBase](v.Value, v.Error)
+		return
+	},
+	"os.linux.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOsLinux).__id, ok = v.Value.(string)
+			return
+		},
+	"os.linux.unix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Unix, ok = plugin.RawToTValue[*mqlOsUnix](v.Value, v.Error)
+		return
+	},
+	"os.linux.iptables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Iptables, ok = plugin.RawToTValue[*mqlIptables](v.Value, v.Error)
+		return
+	},
+	"os.linux.ip6tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsLinux).Ip6tables, ok = plugin.RawToTValue[*mqlIp6tables](v.Value, v.Error)
+		return
+	},
 	"command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlCommand).__id, ok = v.Value.(string)
 			return
@@ -558,6 +1126,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"command.exitcode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCommand).Exitcode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"powershell.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPowershell).__id, ok = v.Value.(string)
+			return
+		},
+	"powershell.script": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPowershell).Script, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"powershell.stdout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPowershell).Stdout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"powershell.stderr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPowershell).Stderr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"powershell.exitcode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPowershell).Exitcode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"file.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1116,6 +1704,194 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlServices).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"kernel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlKernel).__id, ok = v.Value.(string)
+			return
+		},
+	"kernel.info": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Info, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"kernel.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Parameters, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"kernel.modules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Modules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"kernel.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernel).Installed, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"kernel.module.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlKernelModule).__id, ok = v.Value.(string)
+			return
+		},
+	"kernel.module.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.module.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Size, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kernel.module.loaded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKernelModule).Loaded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"docker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDocker).__id, ok = v.Value.(string)
+			return
+		},
+	"docker.images": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDocker).Images, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDocker).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDockerImage).__id, ok = v.Value.(string)
+			return
+		},
+	"docker.image.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerImage).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.image.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerImage).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.image.virtualsize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerImage).Virtualsize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"docker.image.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerImage).Tags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.image.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerImage).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDockerContainer).__id, ok = v.Value.(string)
+			return
+		},
+	"docker.container.os": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Os, ok = plugin.RawToTValue[*mqlOsLinux](v.Value, v.Error)
+		return
+	},
+	"docker.container.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.container.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.container.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.container.imageid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Imageid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.container.names": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Names, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"docker.container.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.container.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"docker.container.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDockerContainer).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"iptables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlIptables).__id, ok = v.Value.(string)
+			return
+		},
+	"iptables.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).Input, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"iptables.output": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptables).Output, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ip6tables.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlIp6tables).__id, ok = v.Value.(string)
+			return
+		},
+	"ip6tables.input": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).Input, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ip6tables.output": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIp6tables).Output, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlIptablesEntry).__id, ok = v.Value.(string)
+			return
+		},
+	"iptables.entry.lineNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).LineNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.packets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Packets, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.bytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Bytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.opt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Opt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.in": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).In, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.out": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Out, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Options, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iptables.entry.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIptablesEntry).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1138,6 +1914,793 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 		}
 	}
 	return nil
+}
+
+// mqlMachine for the machine resource
+type mqlMachine struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMachineInternal it will be used here
+
+
+}
+
+// createMachine creates a new instance of this resource
+func createMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMachine{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("machine", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMachine) MqlName() string {
+	return "machine"
+}
+
+func (c *mqlMachine) MqlID() string {
+	return c.__id
+}
+
+// mqlMachineBios for the machine.bios resource
+type mqlMachineBios struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMachineBiosInternal it will be used here
+
+	Vendor plugin.TValue[string]
+	Version plugin.TValue[string]
+	ReleaseDate plugin.TValue[string]
+}
+
+// createMachineBios creates a new instance of this resource
+func createMachineBios(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMachineBios{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("machine.bios", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMachineBios) MqlName() string {
+	return "machine.bios"
+}
+
+func (c *mqlMachineBios) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMachineBios) GetVendor() *plugin.TValue[string] {
+	return &c.Vendor
+}
+
+func (c *mqlMachineBios) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMachineBios) GetReleaseDate() *plugin.TValue[string] {
+	return &c.ReleaseDate
+}
+
+// mqlMachineSystem for the machine.system resource
+type mqlMachineSystem struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMachineSystemInternal it will be used here
+
+	Manufacturer plugin.TValue[string]
+	Product plugin.TValue[string]
+	Version plugin.TValue[string]
+	Serial plugin.TValue[string]
+	Uuid plugin.TValue[string]
+	Sku plugin.TValue[string]
+	Family plugin.TValue[string]
+}
+
+// createMachineSystem creates a new instance of this resource
+func createMachineSystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMachineSystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("machine.system", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMachineSystem) MqlName() string {
+	return "machine.system"
+}
+
+func (c *mqlMachineSystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMachineSystem) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlMachineSystem) GetProduct() *plugin.TValue[string] {
+	return &c.Product
+}
+
+func (c *mqlMachineSystem) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMachineSystem) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlMachineSystem) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlMachineSystem) GetSku() *plugin.TValue[string] {
+	return &c.Sku
+}
+
+func (c *mqlMachineSystem) GetFamily() *plugin.TValue[string] {
+	return &c.Family
+}
+
+// mqlMachineBaseboard for the machine.baseboard resource
+type mqlMachineBaseboard struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMachineBaseboardInternal it will be used here
+
+	Manufacturer plugin.TValue[string]
+	Product plugin.TValue[string]
+	Version plugin.TValue[string]
+	Serial plugin.TValue[string]
+	AssetTag plugin.TValue[string]
+}
+
+// createMachineBaseboard creates a new instance of this resource
+func createMachineBaseboard(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMachineBaseboard{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("machine.baseboard", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMachineBaseboard) MqlName() string {
+	return "machine.baseboard"
+}
+
+func (c *mqlMachineBaseboard) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMachineBaseboard) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlMachineBaseboard) GetProduct() *plugin.TValue[string] {
+	return &c.Product
+}
+
+func (c *mqlMachineBaseboard) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMachineBaseboard) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlMachineBaseboard) GetAssetTag() *plugin.TValue[string] {
+	return &c.AssetTag
+}
+
+// mqlMachineChassis for the machine.chassis resource
+type mqlMachineChassis struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMachineChassisInternal it will be used here
+
+	Manufacturer plugin.TValue[string]
+	Version plugin.TValue[string]
+	Serial plugin.TValue[string]
+	AssetTag plugin.TValue[string]
+}
+
+// createMachineChassis creates a new instance of this resource
+func createMachineChassis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMachineChassis{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("machine.chassis", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMachineChassis) MqlName() string {
+	return "machine.chassis"
+}
+
+func (c *mqlMachineChassis) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMachineChassis) GetManufacturer() *plugin.TValue[string] {
+	return &c.Manufacturer
+}
+
+func (c *mqlMachineChassis) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMachineChassis) GetSerial() *plugin.TValue[string] {
+	return &c.Serial
+}
+
+func (c *mqlMachineChassis) GetAssetTag() *plugin.TValue[string] {
+	return &c.AssetTag
+}
+
+// mqlOs for the os resource
+type mqlOs struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOsInternal it will be used here
+
+	Name plugin.TValue[string]
+	Env plugin.TValue[map[string]interface{}]
+	Path plugin.TValue[[]interface{}]
+	Uptime plugin.TValue[*time.Time]
+	Updates plugin.TValue[[]interface{}]
+	Rebootpending plugin.TValue[bool]
+	Hostname plugin.TValue[string]
+	Machineid plugin.TValue[string]
+}
+
+// createOs creates a new instance of this resource
+func createOs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOs) MqlName() string {
+	return "os"
+}
+
+func (c *mqlOs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOs) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlOs) GetEnv() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Env, func() (map[string]interface{}, error) {
+		return c.env()
+	})
+}
+
+func (c *mqlOs) GetPath() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Path, func() ([]interface{}, error) {
+		vargEnv := c.GetEnv()
+		if vargEnv.Error != nil {
+			return nil, vargEnv.Error
+		}
+
+		return c.path(vargEnv.Data)
+	})
+}
+
+func (c *mqlOs) GetUptime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Uptime, func() (*time.Time, error) {
+		return c.uptime()
+	})
+}
+
+func (c *mqlOs) GetUpdates() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Updates, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os", c.__id, "updates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.updates()
+	})
+}
+
+func (c *mqlOs) GetRebootpending() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Rebootpending, func() (bool, error) {
+		return c.rebootpending()
+	})
+}
+
+func (c *mqlOs) GetHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Hostname, func() (string, error) {
+		return c.hostname()
+	})
+}
+
+func (c *mqlOs) GetMachineid() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Machineid, func() (string, error) {
+		return c.machineid()
+	})
+}
+
+// mqlOsUpdate for the os.update resource
+type mqlOsUpdate struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOsUpdateInternal it will be used here
+
+	Name plugin.TValue[string]
+	Category plugin.TValue[string]
+	Severity plugin.TValue[string]
+	Restart plugin.TValue[bool]
+	Format plugin.TValue[string]
+}
+
+// createOsUpdate creates a new instance of this resource
+func createOsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsUpdate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.update", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsUpdate) MqlName() string {
+	return "os.update"
+}
+
+func (c *mqlOsUpdate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsUpdate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOsUpdate) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlOsUpdate) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlOsUpdate) GetRestart() *plugin.TValue[bool] {
+	return &c.Restart
+}
+
+func (c *mqlOsUpdate) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+// mqlOsBase for the os.base resource
+type mqlOsBase struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOsBaseInternal it will be used here
+
+	Machine plugin.TValue[*mqlMachine]
+	Name plugin.TValue[string]
+	Env plugin.TValue[map[string]interface{}]
+	Path plugin.TValue[[]interface{}]
+	Uptime plugin.TValue[*time.Time]
+	Updates plugin.TValue[[]interface{}]
+	Rebootpending plugin.TValue[bool]
+	Hostname plugin.TValue[string]
+	Groups plugin.TValue[*mqlGroups]
+	Users plugin.TValue[*mqlUsers]
+}
+
+// createOsBase creates a new instance of this resource
+func createOsBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsBase{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.base", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsBase) MqlName() string {
+	return "os.base"
+}
+
+func (c *mqlOsBase) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsBase) GetMachine() *plugin.TValue[*mqlMachine] {
+	return plugin.GetOrCompute[*mqlMachine](&c.Machine, func() (*mqlMachine, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.base", c.__id, "machine")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMachine), nil
+			}
+		}
+
+		return c.machine()
+	})
+}
+
+func (c *mqlOsBase) GetName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Name, func() (string, error) {
+		return c.name()
+	})
+}
+
+func (c *mqlOsBase) GetEnv() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Env, func() (map[string]interface{}, error) {
+		return c.env()
+	})
+}
+
+func (c *mqlOsBase) GetPath() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Path, func() ([]interface{}, error) {
+		vargEnv := c.GetEnv()
+		if vargEnv.Error != nil {
+			return nil, vargEnv.Error
+		}
+
+		return c.path(vargEnv.Data)
+	})
+}
+
+func (c *mqlOsBase) GetUptime() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Uptime, func() (*time.Time, error) {
+		return c.uptime()
+	})
+}
+
+func (c *mqlOsBase) GetUpdates() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Updates, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.base", c.__id, "updates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.updates()
+	})
+}
+
+func (c *mqlOsBase) GetRebootpending() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Rebootpending, func() (bool, error) {
+		return c.rebootpending()
+	})
+}
+
+func (c *mqlOsBase) GetHostname() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Hostname, func() (string, error) {
+		return c.hostname()
+	})
+}
+
+func (c *mqlOsBase) GetGroups() *plugin.TValue[*mqlGroups] {
+	return plugin.GetOrCompute[*mqlGroups](&c.Groups, func() (*mqlGroups, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.base", c.__id, "groups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGroups), nil
+			}
+		}
+
+		return c.groups()
+	})
+}
+
+func (c *mqlOsBase) GetUsers() *plugin.TValue[*mqlUsers] {
+	return plugin.GetOrCompute[*mqlUsers](&c.Users, func() (*mqlUsers, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.base", c.__id, "users")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlUsers), nil
+			}
+		}
+
+		return c.users()
+	})
+}
+
+// mqlOsUnix for the os.unix resource
+type mqlOsUnix struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOsUnixInternal it will be used here
+
+	Base plugin.TValue[*mqlOsBase]
+}
+
+// createOsUnix creates a new instance of this resource
+func createOsUnix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsUnix{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.unix", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsUnix) MqlName() string {
+	return "os.unix"
+}
+
+func (c *mqlOsUnix) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsUnix) GetBase() *plugin.TValue[*mqlOsBase] {
+	return plugin.GetOrCompute[*mqlOsBase](&c.Base, func() (*mqlOsBase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.unix", c.__id, "base")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsBase), nil
+			}
+		}
+
+		return c.base()
+	})
+}
+
+// mqlOsLinux for the os.linux resource
+type mqlOsLinux struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOsLinuxInternal it will be used here
+
+	Unix plugin.TValue[*mqlOsUnix]
+	Iptables plugin.TValue[*mqlIptables]
+	Ip6tables plugin.TValue[*mqlIp6tables]
+}
+
+// createOsLinux creates a new instance of this resource
+func createOsLinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsLinux{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.linux", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsLinux) MqlName() string {
+	return "os.linux"
+}
+
+func (c *mqlOsLinux) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsLinux) GetUnix() *plugin.TValue[*mqlOsUnix] {
+	return plugin.GetOrCompute[*mqlOsUnix](&c.Unix, func() (*mqlOsUnix, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "unix")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsUnix), nil
+			}
+		}
+
+		return c.unix()
+	})
+}
+
+func (c *mqlOsLinux) GetIptables() *plugin.TValue[*mqlIptables] {
+	return plugin.GetOrCompute[*mqlIptables](&c.Iptables, func() (*mqlIptables, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "iptables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIptables), nil
+			}
+		}
+
+		return c.iptables()
+	})
+}
+
+func (c *mqlOsLinux) GetIp6tables() *plugin.TValue[*mqlIp6tables] {
+	return plugin.GetOrCompute[*mqlIp6tables](&c.Ip6tables, func() (*mqlIp6tables, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.linux", c.__id, "ip6tables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIp6tables), nil
+			}
+		}
+
+		return c.ip6tables()
+	})
 }
 
 // mqlCommand for the command resource
@@ -1221,6 +2784,75 @@ func (c *mqlCommand) GetExitcode() *plugin.TValue[int64] {
 		}
 
 		return c.exitcode(vargCommand.Data)
+	})
+}
+
+// mqlPowershell for the powershell resource
+type mqlPowershell struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlPowershellInternal
+
+	Script plugin.TValue[string]
+	Stdout plugin.TValue[string]
+	Stderr plugin.TValue[string]
+	Exitcode plugin.TValue[int64]
+}
+
+// createPowershell creates a new instance of this resource
+func createPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPowershell{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("powershell", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPowershell) MqlName() string {
+	return "powershell"
+}
+
+func (c *mqlPowershell) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPowershell) GetScript() *plugin.TValue[string] {
+	return &c.Script
+}
+
+func (c *mqlPowershell) GetStdout() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Stdout, func() (string, error) {
+		return c.stdout()
+	})
+}
+
+func (c *mqlPowershell) GetStderr() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Stderr, func() (string, error) {
+		return c.stderr()
+	})
+}
+
+func (c *mqlPowershell) GetExitcode() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Exitcode, func() (int64, error) {
+		return c.exitcode()
 	})
 }
 
@@ -3200,4 +4832,633 @@ func (c *mqlServices) GetList() *plugin.TValue[[]interface{}] {
 
 		return c.list()
 	})
+}
+
+// mqlKernel for the kernel resource
+type mqlKernel struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlKernelInternal
+
+	Info plugin.TValue[interface{}]
+	Parameters plugin.TValue[map[string]interface{}]
+	Modules plugin.TValue[[]interface{}]
+	Installed plugin.TValue[[]interface{}]
+}
+
+// createKernel creates a new instance of this resource
+func createKernel(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKernel{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kernel", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKernel) MqlName() string {
+	return "kernel"
+}
+
+func (c *mqlKernel) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKernel) GetInfo() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Info, func() (interface{}, error) {
+		return c.info()
+	})
+}
+
+func (c *mqlKernel) GetParameters() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Parameters, func() (map[string]interface{}, error) {
+		return c.parameters()
+	})
+}
+
+func (c *mqlKernel) GetModules() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Modules, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("kernel", c.__id, "modules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.modules()
+	})
+}
+
+func (c *mqlKernel) GetInstalled() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Installed, func() ([]interface{}, error) {
+		return c.installed()
+	})
+}
+
+// mqlKernelModule for the kernel.module resource
+type mqlKernelModule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlKernelModuleInternal it will be used here
+
+	Name plugin.TValue[string]
+	Size plugin.TValue[string]
+	Loaded plugin.TValue[bool]
+}
+
+// createKernelModule creates a new instance of this resource
+func createKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlKernelModule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("kernel.module", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlKernelModule) MqlName() string {
+	return "kernel.module"
+}
+
+func (c *mqlKernelModule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlKernelModule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlKernelModule) GetSize() *plugin.TValue[string] {
+	return &c.Size
+}
+
+func (c *mqlKernelModule) GetLoaded() *plugin.TValue[bool] {
+	return &c.Loaded
+}
+
+// mqlDocker for the docker resource
+type mqlDocker struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDockerInternal it will be used here
+
+	Images plugin.TValue[[]interface{}]
+	Containers plugin.TValue[[]interface{}]
+}
+
+// createDocker creates a new instance of this resource
+func createDocker(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDocker{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDocker) MqlName() string {
+	return "docker"
+}
+
+func (c *mqlDocker) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDocker) GetImages() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Images, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("docker", c.__id, "images")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.images()
+	})
+}
+
+func (c *mqlDocker) GetContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("docker", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+// mqlDockerImage for the docker.image resource
+type mqlDockerImage struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDockerImageInternal it will be used here
+
+	Id plugin.TValue[string]
+	Size plugin.TValue[int64]
+	Virtualsize plugin.TValue[int64]
+	Tags plugin.TValue[[]interface{}]
+	Labels plugin.TValue[map[string]interface{}]
+}
+
+// createDockerImage creates a new instance of this resource
+func createDockerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerImage{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.image", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerImage) MqlName() string {
+	return "docker.image"
+}
+
+func (c *mqlDockerImage) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerImage) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDockerImage) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlDockerImage) GetVirtualsize() *plugin.TValue[int64] {
+	return &c.Virtualsize
+}
+
+func (c *mqlDockerImage) GetTags() *plugin.TValue[[]interface{}] {
+	return &c.Tags
+}
+
+func (c *mqlDockerImage) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
+}
+
+// mqlDockerContainer for the docker.container resource
+type mqlDockerContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDockerContainerInternal it will be used here
+
+	Os plugin.TValue[*mqlOsLinux]
+	Id plugin.TValue[string]
+	Command plugin.TValue[string]
+	Image plugin.TValue[string]
+	Imageid plugin.TValue[string]
+	Names plugin.TValue[[]interface{}]
+	State plugin.TValue[string]
+	Status plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+}
+
+// createDockerContainer creates a new instance of this resource
+func createDockerContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDockerContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("docker.container", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDockerContainer) MqlName() string {
+	return "docker.container"
+}
+
+func (c *mqlDockerContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDockerContainer) GetOs() *plugin.TValue[*mqlOsLinux] {
+	return plugin.GetOrCompute[*mqlOsLinux](&c.Os, func() (*mqlOsLinux, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("docker.container", c.__id, "os")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOsLinux), nil
+			}
+		}
+
+		return c.os()
+	})
+}
+
+func (c *mqlDockerContainer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDockerContainer) GetCommand() *plugin.TValue[string] {
+	return &c.Command
+}
+
+func (c *mqlDockerContainer) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlDockerContainer) GetImageid() *plugin.TValue[string] {
+	return &c.Imageid
+}
+
+func (c *mqlDockerContainer) GetNames() *plugin.TValue[[]interface{}] {
+	return &c.Names
+}
+
+func (c *mqlDockerContainer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlDockerContainer) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDockerContainer) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return &c.Labels
+}
+
+// mqlIptables for the iptables resource
+type mqlIptables struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlIptablesInternal it will be used here
+
+	Input plugin.TValue[[]interface{}]
+	Output plugin.TValue[[]interface{}]
+}
+
+// createIptables creates a new instance of this resource
+func createIptables(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIptables{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iptables", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIptables) MqlName() string {
+	return "iptables"
+}
+
+func (c *mqlIptables) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIptables) GetInput() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Input, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iptables", c.__id, "input")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.input()
+	})
+}
+
+func (c *mqlIptables) GetOutput() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Output, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iptables", c.__id, "output")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.output()
+	})
+}
+
+// mqlIp6tables for the ip6tables resource
+type mqlIp6tables struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlIp6tablesInternal it will be used here
+
+	Input plugin.TValue[[]interface{}]
+	Output plugin.TValue[[]interface{}]
+}
+
+// createIp6tables creates a new instance of this resource
+func createIp6tables(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIp6tables{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ip6tables", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIp6tables) MqlName() string {
+	return "ip6tables"
+}
+
+func (c *mqlIp6tables) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIp6tables) GetInput() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Input, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ip6tables", c.__id, "input")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.input()
+	})
+}
+
+func (c *mqlIp6tables) GetOutput() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Output, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ip6tables", c.__id, "output")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.output()
+	})
+}
+
+// mqlIptablesEntry for the iptables.entry resource
+type mqlIptablesEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlIptablesEntryInternal it will be used here
+
+	LineNumber plugin.TValue[int64]
+	Packets plugin.TValue[int64]
+	Bytes plugin.TValue[int64]
+	Target plugin.TValue[string]
+	Protocol plugin.TValue[string]
+	Opt plugin.TValue[string]
+	In plugin.TValue[string]
+	Out plugin.TValue[string]
+	Source plugin.TValue[string]
+	Destination plugin.TValue[string]
+	Options plugin.TValue[string]
+	Chain plugin.TValue[string]
+}
+
+// createIptablesEntry creates a new instance of this resource
+func createIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIptablesEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iptables.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIptablesEntry) MqlName() string {
+	return "iptables.entry"
+}
+
+func (c *mqlIptablesEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIptablesEntry) GetLineNumber() *plugin.TValue[int64] {
+	return &c.LineNumber
+}
+
+func (c *mqlIptablesEntry) GetPackets() *plugin.TValue[int64] {
+	return &c.Packets
+}
+
+func (c *mqlIptablesEntry) GetBytes() *plugin.TValue[int64] {
+	return &c.Bytes
+}
+
+func (c *mqlIptablesEntry) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlIptablesEntry) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlIptablesEntry) GetOpt() *plugin.TValue[string] {
+	return &c.Opt
+}
+
+func (c *mqlIptablesEntry) GetIn() *plugin.TValue[string] {
+	return &c.In
+}
+
+func (c *mqlIptablesEntry) GetOut() *plugin.TValue[string] {
+	return &c.Out
+}
+
+func (c *mqlIptablesEntry) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlIptablesEntry) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlIptablesEntry) GetOptions() *plugin.TValue[string] {
+	return &c.Options
+}
+
+func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
+	return &c.Chain
 }
