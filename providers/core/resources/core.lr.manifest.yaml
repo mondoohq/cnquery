@@ -141,82 +141,6 @@ resources:
       tld: {}
       tldIcannManaged: {}
     min_mondoo_version: 5.15.0
-  file:
-    fields:
-      basename: {}
-      content: {}
-      dirname: {}
-      empty:
-        min_mondoo_version: 5.18.0
-      exists: {}
-      group: {}
-      path: {}
-      permissions: {}
-      size: {}
-      user: {}
-    min_mondoo_version: 5.0.0
-    snippets:
-    - query: |
-        file('/etc') {
-          exists
-          permissions.isDirectory
-        }
-      title: Test if a directory exists
-  file.permissions:
-    fields:
-      group_executable: {}
-      group_readable: {}
-      group_writeable: {}
-      isDirectory: {}
-      isFile: {}
-      isSymlink: {}
-      mode: {}
-      other_executable: {}
-      other_readable: {}
-      other_writeable: {}
-      sgid: {}
-      sticky: {}
-      suid: {}
-      user_executable: {}
-      user_readable: {}
-      user_writeable: {}
-    is_private: true
-    min_mondoo_version: 5.15.0
-  group:
-    fields:
-      gid: {}
-      members: {}
-      name: {}
-      sid: {}
-    min_mondoo_version: 5.15.0
-  groups:
-    fields: {}
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: groups.where(name == 'wheel').list { members.all( name != 'username') }
-      title: Ensure the user is not part of group
-  kernel:
-    fields:
-      info: {}
-      installed: {}
-      modules: {}
-      parameters: {}
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: kernel.modules { name loaded size }
-      title: List all kernel modules
-    - query: kernel.modules.where( loaded == true ) { name }
-      title: List all loaded kernel modules
-    - query: kernel { info }
-      title: List all information from running kernel
-    - query: kernel { info['version'] }
-      title: List version from running kernel
-  kernel.module:
-    fields:
-      loaded: {}
-      name: {}
-      size: {}
-    min_mondoo_version: 5.15.0
   mondoo:
     fields:
       build: {}
@@ -268,70 +192,8 @@ resources:
       restart: {}
       severity: {}
     min_mondoo_version: 5.15.0
-  package:
-    fields:
-      arch: {}
-      available: {}
-      description: {}
-      epoch: {}
-      format: {}
-      installed: {}
-      name: {}
-      origin: {}
-      outdated: {}
-      status: {}
-      version: {}
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: package('git').installed
-      title: Check if a package is installed
-  packages:
-    fields: {}
-    min_mondoo_version: 5.15.0
   parse:
     fields: {}
-    min_mondoo_version: 5.15.0
-  parse.certificates:
-    fields:
-      content: {}
-      file: {}
-      path: {}
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: parse.certificates('/etc/ssl/cert.pem').list { issuer.dn }
-      title: Parse Certificates from target file system
-    - query: 'parse.certificates(content: ''PEM CONTENT'').list { issuer.dn }'
-      title: Parse Certificates from content
-  parse.ini:
-    fields:
-      content: {}
-      delimiter: {}
-      file: {}
-      params: {}
-      sections: {}
-    min_mondoo_version: 5.15.0
-  parse.json:
-    fields:
-      content: {}
-      file: {}
-      params: {}
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: 'parse.json(content: ''{ "a": "b"  }'').params'
-      title: Parse JSON from string content
-    - query: parse.json("/path/to/test.json").params
-      title: Parse JSON from file
-  parse.plist:
-    fields:
-      content: {}
-      file: {}
-      params: {}
-    min_mondoo_version: 5.15.0
-  parse.yaml:
-    fields:
-      content: {}
-      file: {}
-      params: {}
     min_mondoo_version: 5.15.0
   pkix.extension:
     fields:
@@ -430,17 +292,6 @@ resources:
       path: {}
       pem: {}
     min_mondoo_version: 5.15.0
-  process:
-    fields:
-      command: {}
-      executable: {}
-      flags: {}
-      pid: {}
-      state: {}
-    min_mondoo_version: 5.15.0
-  processes:
-    fields: {}
-    min_mondoo_version: 5.15.0
   regex:
     fields:
       creditCard: {}
@@ -463,22 +314,6 @@ resources:
     fields:
       openPorts: {}
     min_mondoo_version: 5.15.0
-  sshd:
-    fields: {}
-    min_mondoo_version: 5.15.0
-  sshd.config:
-    fields:
-      ciphers: {}
-      content: {}
-      file: {}
-      hostkeys: {}
-      kexs: {}
-      macs: {}
-      params: {}
-    min_mondoo_version: 5.15.0
-    snippets:
-    - query: sshd.config.params['Banner'] == '/etc/ssh/sshd-banner'
-      title: Check that the SSH banner is sourced from /etc/ssh/sshd-banner
   time:
     fields:
       day: {}
