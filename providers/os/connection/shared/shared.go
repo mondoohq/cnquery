@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -38,10 +39,15 @@ type Capabilities byte
 const (
 	Capability_RunCommand Capabilities = 1 << iota
 	Capability_File
+	Capability_FindFile
 )
 
 func (c Capabilities) Has(other Capabilities) bool {
 	return c&other == other
+}
+
+type FileSearch interface {
+	Find(from string, r *regexp.Regexp, typ string) ([]string, error)
 }
 
 type PerfStats struct {

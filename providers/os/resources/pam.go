@@ -1,15 +1,17 @@
-package os
+package resources
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"strconv"
 	"strings"
 
 	"go.mondoo.com/cnquery/checksums"
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
-	"go.mondoo.com/cnquery/resources/packs/os/pam"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
+	"go.mondoo.com/cnquery/providers/os/resources/pam"
+	"go.mondoo.com/cnquery/types"
 )
 
 const (
@@ -17,61 +19,41 @@ const (
 	defaultPamDir  = "/etc/pam.d"
 )
 
-func (s *mqlPamConf) init(args *resources.Args) (*resources.Args, PamConf, error) {
-	if x, ok := (*args)["path"]; ok {
-		path, ok := x.(string)
+func initPamConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if x, ok := args["path"]; ok {
+		path, ok := x.Value.(string)
 		if !ok {
-			return nil, nil, errors.New("Wrong type for 'path' in initialization, it must be a string")
+			return nil, nil, errors.New("wrong type for 'path' it must be a string")
 		}
 
-		files, err := s.getFiles(path)
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(path),
+		})
 		if err != nil {
 			return nil, nil, err
 		}
-
-		(*args)["files"] = files
-		delete(*args, "path")
+		args["file"] = llx.ResourceData(f, "file")
+		delete(args, "path")
 	}
 
 	return args, nil, nil
 }
 
 func (s *mqlPamConf) id() (string, error) {
-	files, err := s.Files()
-	if err != nil {
-		return "", err
-	}
-
 	checksum := checksums.New
-	for i := range files {
-		c, err := files[i].(core.File).Path()
-		if err != nil {
-			return "", err
-		}
-		checksum = checksum.Add(c)
+	for i := range s.Files.Data {
+		path := s.Files.Data[i].(*mqlFile).Path.Data
+		checksum = checksum.Add(path)
 	}
 
 	return checksum.String(), nil
 }
 
 func (se *mqlPamConfServiceEntry) id() (string, error) {
-	ptype, err := se.PamType()
-	if err != nil {
-		return "", err
-	}
-	mod, err := se.Module()
-	if err != nil {
-		return "", err
-	}
-	s, err := se.Service()
-	if err != nil {
-		return "", err
-	}
-	ln, err := se.LineNumber()
-	if err != nil {
-		return "", err
-	}
-
+	ptype := se.PamType.Data
+	mod := se.Module.Data
+	s := se.Service.Data
+	ln := se.LineNumber.Data
 	lnstr := strconv.FormatInt(ln, 10)
 
 	id := s + "/" + lnstr + "/" + ptype
@@ -86,93 +68,87 @@ func (se *mqlPamConfServiceEntry) id() (string, error) {
 
 func (s *mqlPamConf) getFiles(confPath string) ([]interface{}, error) {
 	// check if the pam.d directory or pam config file exists
-	mqlFile, err := s.MotorRuntime.CreateResource("file", "path", confPath)
+	raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(confPath),
+	})
 	if err != nil {
 		return nil, err
 	}
-	f := mqlFile.(core.File)
-	exists, err := f.Exists()
-	if err != nil {
-		return nil, err
+	f := raw.(*mqlFile)
+	exists := f.GetExists()
+	if exists.Error != nil {
+		return nil, exists.Error
 	}
 
-	if !exists {
+	if !exists.Data {
 		return nil, errors.New(" could not load pam configuration: " + confPath)
 	}
 
-	fp, err := f.Permissions()
-	if err != nil {
-		return nil, err
+	perm := f.GetPermissions()
+	if perm.Error != nil {
+		return nil, perm.Error
 	}
-	isDir, err := fp.IsDirectory()
-	if err != nil {
-		return nil, err
-	}
-	if isDir {
+
+	if perm.Data.IsDirectory.Data {
 		return s.getConfDFiles(confPath)
 	} else {
-		return []interface{}{f.(core.File)}, nil
+		return []interface{}{f}, nil
 	}
 }
 
 func (s *mqlPamConf) getConfDFiles(confD string) ([]interface{}, error) {
-	files, err := s.MotorRuntime.CreateResource("files.find", "from", confD, "type", "file")
+	files, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
+		"from": llx.StringData(confD),
+		"type": llx.StringData("file"),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	list, err := files.(FilesFind).List()
-	if err != nil {
-		return nil, err
-	}
-	return list, nil
+	res := files.(*mqlFilesFind).GetList()
+	return res.Data, res.Error
 }
 
 // GetFiles is called when the user has not provided a custom path. Otherwise files are set in the init
 // method and this function is never called then since the data is already cached.
-func (s *mqlPamConf) GetFiles() ([]interface{}, error) {
+func (s *mqlPamConf) files() ([]interface{}, error) {
 	// check if the pam.d directory exists and is a directory
 	// according to the pam spec, pam prefers the directory if it  exists over the single file config
 	// see http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html
-	mqlFile, err := s.MotorRuntime.CreateResource("file", "path", defaultPamDir)
+	raw, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(defaultPamDir),
+	})
 	if err != nil {
 		return nil, err
 	}
-	f := mqlFile.(core.File)
-	exists, err := f.Exists()
-	if err != nil {
-		return nil, err
+	f := raw.(*mqlFile)
+	exist := f.GetExists()
+	if exist.Error != nil {
+		return nil, exist.Error
 	}
 
-	if exists {
+	if exist.Data {
 		return s.getFiles(defaultPamDir)
 	} else {
 		return s.getFiles(defaultPamConf)
 	}
 }
 
-func (s *mqlPamConf) GetContent(files []interface{}) (string, error) {
-	osProvider, err := osProvider(s.MotorRuntime.Motor)
-	if err != nil {
-		return "", err
-	}
+func (s *mqlPamConf) content(files []interface{}) (string, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	var res strings.Builder
 	var notReadyError error = nil
 
 	for i := range files {
-		file := files[i].(core.File)
+		file := files[i].(*mqlFile)
 
-		path, err := file.Path()
-		if err != nil {
-			return "", err
-		}
-		f, err := osProvider.FS().Open(path)
+		f, err := conn.FileSystem().Open(file.Path.Data)
 		if err != nil {
 			return "", err
 		}
 
-		raw, err := ioutil.ReadAll(f)
+		raw, err := io.ReadAll(f)
 		f.Close()
 		if err != nil {
 			return "", err
@@ -189,34 +165,27 @@ func (s *mqlPamConf) GetContent(files []interface{}) (string, error) {
 	return res.String(), nil
 }
 
-func (s *mqlPamConf) GetServices(files []interface{}) (map[string]interface{}, error) {
-	osProvider, err := osProvider(s.MotorRuntime.Motor)
-	if err != nil {
-		return nil, err
-	}
+func (s *mqlPamConf) services(files []interface{}) (map[string]interface{}, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	contents := map[string]string{}
 	var notReadyError error = nil
 
 	for i := range files {
-		file := files[i].(core.File)
+		file := files[i].(*mqlFile)
 
-		path, err := file.Path()
-		if err != nil {
-			return nil, err
-		}
-		f, err := osProvider.FS().Open(path)
+		f, err := conn.FileSystem().Open(file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := ioutil.ReadAll(f)
+		raw, err := io.ReadAll(f)
 		f.Close()
 		if err != nil {
 			return nil, err
 		}
 
-		contents[path] = string(raw)
+		contents[file.Path.Data] = string(raw)
 	}
 
 	if notReadyError != nil {
@@ -246,34 +215,27 @@ func (s *mqlPamConf) GetServices(files []interface{}) (map[string]interface{}, e
 	return services, nil
 }
 
-func (s *mqlPamConf) GetEntries(files []interface{}) (map[string]interface{}, error) {
-	osProvider, err := osProvider(s.MotorRuntime.Motor)
-	if err != nil {
-		return nil, err
-	}
+func (s *mqlPamConf) entries(files []interface{}) (map[string]interface{}, error) {
+	conn := s.MqlRuntime.Connection.(shared.Connection)
 
 	contents := map[string]string{}
 	var notReadyError error = nil
 
 	for i := range files {
-		file := files[i].(core.File)
+		file := files[i].(*mqlFile)
 
-		path, err := file.Path()
-		if err != nil {
-			return nil, err
-		}
-		f, err := osProvider.FS().Open(path)
+		f, err := conn.FileSystem().Open(file.Path.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		raw, err := ioutil.ReadAll(f)
+		raw, err := io.ReadAll(f)
 		f.Close()
 		if err != nil {
 			return nil, err
 		}
 
-		contents[path] = string(raw)
+		contents[file.Path.Data] = string(raw)
 	}
 
 	if notReadyError != nil {
@@ -298,18 +260,18 @@ func (s *mqlPamConf) GetEntries(files []interface{}) (map[string]interface{}, er
 				continue
 			}
 
-			pamEntry, err := s.MotorRuntime.CreateResource("pam.conf.serviceEntry",
-				"service", basename,
-				"lineNumber", int64(i), // Used for ID
-				"pamType", entry.PamType,
-				"control", entry.Control,
-				"module", entry.Module,
-				"options", entry.Options,
-			)
+			pamEntry, err := CreateResource(s.MqlRuntime, "pam.conf.serviceEntry", map[string]*llx.RawData{
+				"service":    llx.StringData(basename),
+				"lineNumber": llx.IntData(int64(i)), // Used for ID
+				"pamType":    llx.StringData(entry.PamType),
+				"control":    llx.StringData(entry.Control),
+				"module":     llx.StringData(entry.Module),
+				"options":    llx.ArrayData(entry.Options, types.String),
+			})
 			if err != nil {
 				return nil, err
 			}
-			settings = append(settings, pamEntry.(PamConfServiceEntry))
+			settings = append(settings, pamEntry.(*mqlPamConfServiceEntry))
 
 		}
 
