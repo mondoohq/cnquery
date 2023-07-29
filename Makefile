@@ -66,16 +66,32 @@ define genProvider
 	$(eval $@_DIST = "${$@_HOME}"/dist)
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
 	echo "--> [${$@_NAME}] generate CLI json"
-	go run "${$@_HOME}"/gen/main.go "${$@_HOME}"
+	go run ${$@_HOME}/gen/main.go ${$@_HOME}
 	echo "--> [${$@_NAME}] process resources"
-	./lr go "${$@_HOME}"/resources/${$@_NAME}.lr --dist "${$@_DIST}"
-	./lr docs json "${$@_HOME}"/resources/${$@_NAME}.lr.manifest.yaml --dist "${$@_DIST}"
+	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
+	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml --dist ${$@_DIST}
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
-	go build -o "${$@_BIN}" "${$@_HOME}"/main.go
+	go build -o ${$@_BIN} ${$@_HOME}/main.go
+endef
+
+define installProvider
+	$(eval $@_HOME = $(1))
+	$(eval $@_NAME = $(shell basename ${$@_HOME}))
+	$(eval $@_DIST = "${$@_HOME}"/dist)
+	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
+	$(eval $@_DST = "$(HOME)/.config/mondoo/providers/${$@_NAME}")
+	echo "--> install ${$@_NAME}"
+	install -d "${$@_DST}"
+	install -m 644 ./${$@_DIST}/${$@_NAME} ${$@_DST}/
+	install -m 644 ./${$@_DIST}/${$@_NAME}.json ${$@_DST}/
+	install -m 644 ./${$@_DIST}/${$@_NAME}.resources.json ${$@_DST}/
 endef
 
 .PHONY: providers
-providers:
+providers: providers/build
+
+.PHONY: providers/build
+providers/build:
 	go generate .
 	go generate ./providers-sdk/v1/vault
 	go generate ./providers-sdk/v1/resources
@@ -85,6 +101,10 @@ providers:
 	@$(call genProvider, providers/core)
 	@$(call genProvider, providers/os)
 # add more providers...
+
+providers/install:
+	@$(call installProvider, providers/core)
+	@$(call installProvider, providers/os)
 
 motor/generate:
 	go generate .
