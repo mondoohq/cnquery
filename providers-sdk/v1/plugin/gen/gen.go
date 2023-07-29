@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Masterminds/semver"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 )
@@ -20,6 +21,17 @@ import (
 func CLI(conf *plugin.Provider) {
 	if len(os.Args) < 2 {
 		fmt.Fprintln(os.Stderr, "You have to provide the path of the plugin")
+		os.Exit(1)
+	}
+
+	if conf.Version == "" {
+		fmt.Fprintln(os.Stderr, "You must specify a version for the '"+conf.Name+"' provider (semver required)")
+		os.Exit(1)
+	}
+
+	_, err := semver.NewVersion(conf.Version)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Version must be a semver for '"+conf.Name+"' provider (was: '"+conf.Version+"')")
 		os.Exit(1)
 	}
 
