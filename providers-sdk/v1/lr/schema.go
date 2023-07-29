@@ -39,16 +39,18 @@ func Schema(ast *LR) (*resources.Schema, error) {
 		res.Resources[defName] = x
 	}
 
-	// In this block we finalize the schema. This means:
-	// 1: make sure every resource and field has the provider set
-	// 2: create implicit resources (eg: sshd.config => create sshd)
-	// 3: create implicit fields (eg: sshd.config => sshd { config: {..} })
-	for name, v := range res.Resources {
+	// make sure every resource and field has the provider set
+	for _, v := range res.Resources {
 		v.Provider = provider
 		for _, field := range v.Fields {
 			field.Provider = provider
 		}
+	}
 
+	// In this block we finalize the schema. This means:
+	// 1: create implicit resources (eg: sshd.config => create sshd)
+	// 2: create implicit fields (eg: sshd.config => sshd { config: {..} })
+	for name, v := range res.Resources {
 		if !strings.Contains(name, ".") {
 			continue
 		}
@@ -83,6 +85,7 @@ func Schema(ast *LR) (*resources.Schema, error) {
 					IsPrivate:   isPrivate,
 					Title:       fieldInfo.Title,
 					Desc:        fieldInfo.Desc,
+					Provider:    provider,
 				}
 			}
 
