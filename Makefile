@@ -82,7 +82,7 @@ define installProvider
 	$(eval $@_DST = "$(HOME)/.config/mondoo/providers/${$@_NAME}")
 	echo "--> install ${$@_NAME}"
 	install -d "${$@_DST}"
-	install -m 644 ./${$@_DIST}/${$@_NAME} ${$@_DST}/
+	install -m 755 ./${$@_DIST}/${$@_NAME} ${$@_DST}/
 	install -m 644 ./${$@_DIST}/${$@_NAME}.json ${$@_DST}/
 	install -m 644 ./${$@_DIST}/${$@_NAME}.resources.json ${$@_DST}/
 endef

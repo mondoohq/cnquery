@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -38,7 +37,7 @@ func List() (Providers, error) {
 	local := listPaths()
 	var res Providers = make(map[string]*Provider, len(local))
 	for _, v := range local {
-		if err := v.LoadJson(); err != nil {
+		if err := v.LoadJSON(); err != nil {
 			return nil, err
 		}
 		res[v.ID] = v
@@ -126,29 +125,37 @@ func findProviders(path string, res map[string]*Provider) error {
 	}
 
 	candidates := map[string]struct{}{}
-	otherFiles := map[string]struct{}{}
 	for i := range files {
 		file := files[i]
-		if !file.Mode().IsRegular() {
-			continue
-		}
-
-		name := file.Name()
-		if strings.IndexByte(name, '.') == -1 {
-			candidates[name] = struct{}{}
-			continue
-		}
-		if strings.HasSuffix(name, ".json") {
-			otherFiles[name] = struct{}{}
+		if file.Mode().IsDir() {
+			candidates[file.Name()] = struct{}{}
 		}
 	}
 
 	for name := range candidates {
-		if _, ok := otherFiles[name+".json"]; !ok {
+		pdir := filepath.Join(path, name)
+
+		bin := filepath.Join(pdir, name)
+		conf := filepath.Join(pdir, name+".json")
+		resources := filepath.Join(pdir, name+".resources.json")
+
+		if !config.ProbeFile(bin) {
+			log.Debug().Str("path", bin).Msg("ignoring provider because can't access the plugin")
+			continue
+		}
+		if !config.ProbeFile(conf) {
+			log.Debug().Str("path", bin).Msg("ignoring provider because can't access the plugin config")
+			continue
+		}
+		if !config.ProbeFile(resources) {
+			log.Debug().Str("path", bin).Msg("ignoring provider because can't access the plugin schema")
 			continue
 		}
 
 		res[name] = &Provider{
+			Provider: &plugin.Provider{
+				Name: name,
+			},
 			Path: filepath.Join(path, name),
 		}
 	}
@@ -163,8 +170,8 @@ func Install(name string) (*Provider, error) {
 	panic("INSTALL")
 }
 
-func (p *Provider) LoadJson() error {
-	path := p.Path + ".json"
+func (p *Provider) LoadJSON() error {
+	path := filepath.Join(p.Path, p.Name+".json")
 	res, err := afero.ReadFile(config.AppFs, path)
 	if err != nil {
 		return errors.New("failed to read provider json from " + path + ": " + err.Error())
@@ -177,7 +184,7 @@ func (p *Provider) LoadJson() error {
 }
 
 func (p *Provider) LoadResources() error {
-	path := p.Path + ".resources.json"
+	path := filepath.Join(p.Path, p.Name+".resources.json")
 	res, err := afero.ReadFile(config.AppFs, path)
 	if err != nil {
 		return errors.New("failed to read provider resources json from " + path + ": " + err.Error())
@@ -187,6 +194,10 @@ func (p *Provider) LoadResources() error {
 		return errors.New("failed to parse provider resources json from " + path + ": " + err.Error())
 	}
 	return nil
+}
+
+func (p *Provider) binPath() string {
+	return filepath.Join(p.Path, p.Name)
 }
 
 func (p Providers) ForConnection(name string) *Provider {
