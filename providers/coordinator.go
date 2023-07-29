@@ -62,7 +62,7 @@ func (c *coordinator) Start(id string) (*RunningProvider, error) {
 		}
 	}
 
-	pluginCmd := exec.Command(provider.Path, "run_as_plugin")
+	pluginCmd := exec.Command(provider.binPath(), "run_as_plugin")
 	log.Debug().Str("path", pluginCmd.Path).Msg("running provider plugin")
 
 	addColorConfig(pluginCmd)
