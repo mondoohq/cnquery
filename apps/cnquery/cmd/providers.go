@@ -86,6 +86,10 @@ func printProvider(p *providers.Provider) {
 	}
 
 	name := theme.DefaultTheme.Primary(p.Name)
-	ps := strings.Join(conns, ", ")
-	fmt.Println("  " + name + " provides: " + ps)
+	supports := ""
+	if len(conns) != 0 {
+		supports = " with connectors: " + strings.Join(conns, ", ")
+	}
+
+	fmt.Println("  " + name + " " + p.Version + supports)
 }

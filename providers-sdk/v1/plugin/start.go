@@ -12,6 +12,7 @@ import (
 type Provider struct {
 	Name       string
 	ID         string
+	Version    string
 	Connectors []Connector
 }
 

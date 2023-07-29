@@ -65,11 +65,12 @@ define genProvider
 	$(eval $@_NAME = $(shell basename ${$@_HOME}))
 	$(eval $@_DIST = "${$@_HOME}"/dist)
 	$(eval $@_BIN = "${$@_DIST}"/"${$@_NAME}")
+	echo "--> [${$@_NAME}] generate CLI json"
 	go run "${$@_HOME}"/gen/main.go "${$@_HOME}"
-	echo "--> process resources for ${$@_NAME}"
+	echo "--> [${$@_NAME}] process resources"
 	./lr go "${$@_HOME}"/resources/${$@_NAME}.lr --dist "${$@_DIST}"
 	./lr docs json "${$@_HOME}"/resources/${$@_NAME}.lr.manifest.yaml --dist "${$@_DIST}"
-	echo "--> creating ${$@_BIN}"
+	echo "--> [${$@_NAME}] creating ${$@_BIN}"
 	go build -o "${$@_BIN}" "${$@_HOME}"/main.go
 endef
 
