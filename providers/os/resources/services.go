@@ -44,8 +44,8 @@ func initService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[str
 	return nil, srv, nil
 }
 
-func (p *mqlService) id() (string, error) {
-	return p.Name.Data, nil
+func (x *mqlService) id() (string, error) {
+	return x.Name.Data, nil
 }
 
 type mqlServicesInternal struct {
@@ -53,12 +53,12 @@ type mqlServicesInternal struct {
 	namedServices map[string]*mqlService
 }
 
-func (p *mqlServices) list() ([]interface{}, error) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
+func (x *mqlServices) list() ([]interface{}, error) {
+	x.lock.Lock()
+	defer x.lock.Unlock()
 
 	// find suitable service manager
-	conn := p.MqlRuntime.Connection.(shared.Connection)
+	conn := x.MqlRuntime.Connection.(shared.Connection)
 	osm, err := services.ResolveManager(conn)
 	if osm == nil || err != nil {
 		// there are valid cases where this error is happening, eg. you run a service query in
@@ -81,7 +81,7 @@ func (p *mqlServices) list() ([]interface{}, error) {
 	for i := range services {
 		srv := services[i]
 
-		mqlSrv, err := CreateResource(p.MqlRuntime, "service", map[string]*llx.RawData{
+		mqlSrv, err := CreateResource(x.MqlRuntime, "service", map[string]*llx.RawData{
 			"name":        llx.StringData(srv.Name),
 			"description": llx.StringData(srv.Description),
 			"installed":   llx.BoolData(srv.Installed),
@@ -97,23 +97,23 @@ func (p *mqlServices) list() ([]interface{}, error) {
 		mqlSrvs = append(mqlSrvs, mqlSrv.(*mqlService))
 	}
 
-	return mqlSrvs, p.refreshCache(mqlSrvs)
+	return mqlSrvs, x.refreshCache(mqlSrvs)
 }
 
-func (p *mqlServices) refreshCache(all []interface{}) error {
+func (x *mqlServices) refreshCache(all []interface{}) error {
 	if all == nil {
-		raw := p.GetList()
+		raw := x.GetList()
 		if raw.Error != nil {
 			return raw.Error
 		}
 		all = raw.Data
 	}
 
-	namedMap := map[string]*mqlService{}
+	x.namedServices = map[string]*mqlService{}
 	for i := range all {
 		service := all[i].(*mqlService)
-		namedMap[service.Name.Data] = service
+		x.namedServices[service.Name.Data] = service
 	}
-	p.namedServices = namedMap
+
 	return nil
 }
