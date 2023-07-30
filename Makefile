@@ -58,7 +58,7 @@ prep/tools:
 
 #   🌙 MQL/MOTOR   #
 
-cnquery/generate: clean/proto motor/generate resources/generate llx/generate shared/generate explorer/generate
+cnquery/generate: clean/proto llx/generate shared/generate providers explorer/generate
 
 define genProvider
 	$(eval $@_HOME = $(1))
@@ -69,7 +69,7 @@ define genProvider
 	go run ${$@_HOME}/gen/main.go ${$@_HOME}
 	echo "--> [${$@_NAME}] process resources"
 	./lr go ${$@_HOME}/resources/${$@_NAME}.lr --dist ${$@_DIST}
-	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml --dist ${$@_DIST}
+	./lr docs json ${$@_HOME}/resources/${$@_NAME}.lr.manifest.yaml
 	echo "--> [${$@_NAME}] creating ${$@_BIN}"
 	go build -o ${$@_BIN} ${$@_HOME}/main.go
 endef
@@ -85,6 +85,19 @@ define installProvider
 	install -m 755 ./${$@_DIST}/${$@_NAME} ${$@_DST}/
 	install -m 644 ./${$@_DIST}/${$@_NAME}.json ${$@_DST}/
 	install -m 644 ./${$@_DIST}/${$@_NAME}.resources.json ${$@_DST}/
+endef
+
+define bundleProvider
+	$(eval $@_HOME = $(1))
+	$(eval $@_NAME = $(shell basename ${$@_HOME}))
+	$(eval $@_DIST = "${$@_HOME}"/dist)
+	$(eval $@_DST = "${$@_DIST}/${$@_NAME}.tar.xz")
+	echo "--> bundle ${$@_NAME} to ${$@_DST} (this may take a while)"
+	tar -cf ${$@_DST} --owner=0 --group=0 --no-same-owner \
+		--use-compress-program='xz -9v' \
+		-C ${$@_DIST} \
+		${$@_NAME} ${$@_NAME}.json ${$@_NAME}.resources.json
+	ls -lha ${$@_DST}
 endef
 
 .PHONY: providers
@@ -103,8 +116,11 @@ providers/build:
 # add more providers...
 
 providers/install:
-	@$(call installProvider, providers/core)
+#	@$(call installProvider, providers/core)
 	@$(call installProvider, providers/os)
+
+providers/bundle:
+	@$(call bundleProvider, providers/os)
 
 motor/generate:
 	go generate .
@@ -221,18 +237,6 @@ lr/docs/markdown: lr/build
 		--description "The OPC-UA resource pack lets you use MQL to query and assess the security of your OPC-UA servers." \
 		--docs-file resources/packs/opcua/opcua.lr.manifest.yaml \
 		--output ../docs/docs/mql/resources/opcua-pack
-
-.PHONY: resources
-resources: | lr resources/generate resources/test
-
-resources/generate:
-	go generate ./resources
-	go generate ./resources/service
-	go generate ./resources/packs/core/vadvisor
-	go generate ./resources/packs/core/vadvisor/cvss
-
-resources/test:
-	go test -timeout 5s $(shell go list ./resources/... | grep -v '/vendor/')
 
 llx/generate:
 	go generate ./llx

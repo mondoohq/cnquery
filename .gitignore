@@ -9,5 +9,12 @@ id_rsa.pub
 mondoo-test-secret-key
 gha-creds-*.json
 /tools
+# primarily used to ignore all dist files built for providers
 /dist
+# we want to track core + os, despite being generate JSON files
+# because we use them for testing in a lot of places.
+# TODO: solve this for other provider types on the fly
+!providers/core/dist/core.resources.json
+!providers/os/dist/os.resources.json
 providers/*/resources/*.resources.json
+providers/*/resources/*.manifest.json

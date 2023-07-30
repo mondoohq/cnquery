@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -222,15 +223,21 @@ var docsJSONCmd = &cobra.Command{
 	Long:  `convert a yaml-based docs manifest into its json description, ready for loading`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		file := args[0]
+
 		dist, err := cmd.Flags().GetString("dist")
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to get dist flag")
 		}
-		if dist == "" {
-			log.Fatal().Err(err).Msg("please provide a dist folder where generated json will go")
-		}
 
-		file := args[0]
+		// without dist we want the file to be put alongside the original
+		if dist == "" {
+			src, err := filepath.Abs(file)
+			if err != nil {
+				log.Fatal().Err(err).Msg("cannot figure out the absolute path for the source file")
+			}
+			dist = filepath.Dir(src)
+		}
 
 		raw, err := os.ReadFile(file)
 		if err != nil {
