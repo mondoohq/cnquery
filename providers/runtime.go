@@ -416,7 +416,7 @@ func (x *extensibleSchema) loadAllSchemas() {
 	}
 	x.allLoaded = true
 
-	providers, err := List()
+	providers, err := ListActive()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to list all providers, can't load additional schemas")
 		return

@@ -25,7 +25,7 @@ type Command struct {
 // AttachCLIs will attempt to parse the current commandline and look for providers.
 // This step is done before cobra ever takes effect
 func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
-	existing, err := providers.List()
+	existing, err := providers.ListActive()
 	if err != nil {
 		return err
 	}

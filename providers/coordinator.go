@@ -45,7 +45,7 @@ func (c *coordinator) Start(id string) (*RunningProvider, error) {
 
 	if c.Providers == nil {
 		var err error
-		c.Providers, err = List()
+		c.Providers, err = ListActive()
 		if err != nil {
 			return nil, err
 		}
