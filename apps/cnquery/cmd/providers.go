@@ -16,6 +16,10 @@ import (
 
 func init() {
 	rootCmd.AddCommand(providersCmd)
+	providersCmd.AddCommand(listProvidersCmd)
+	providersCmd.AddCommand(installProviderCmd)
+
+	installProviderCmd.Flags().StringP("file", "f", "", "install a provider via a file")
 }
 
 var providersCmd = &cobra.Command{
@@ -26,6 +30,51 @@ var providersCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		list()
 	},
+}
+
+var listProvidersCmd = &cobra.Command{
+	Use:    "list",
+	Short:  "List all providers on the system.",
+	Long:   "",
+	PreRun: func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		list()
+	},
+}
+
+var installProviderCmd = &cobra.Command{
+	Use:    "install <NAME>",
+	Short:  "Install or update a provider.",
+	Long:   "",
+	PreRun: func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		// Explicit installs of files will ignore version recommendations.
+		// So we just take them and roll with it.
+		path, _ := cmd.Flags().GetString("file")
+		if path != "" {
+			installProviderFile(path)
+			return
+		}
+
+		log.Fatal().Msg("cannot install providers by name yet")
+	},
+}
+
+func installProviderFile(path string) {
+	providers, err := providers.InstallFile(path, providers.InstallConf{
+		Dst: providers.HomePath,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to install")
+	}
+
+	for i := range providers {
+		provider := providers[i]
+		log.Info().
+			Str("version", provider.Version).
+			Str("path", provider.Path).
+			Msg("successfully installed " + provider.Name + " provider")
+	}
 }
 
 func list() {
