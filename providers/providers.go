@@ -16,6 +16,9 @@ import (
 var (
 	SystemPath string
 	HomePath   string
+	// CachedProviders contains all providers that have been loaded the last time
+	// ListActive or ListAll have been called
+	CachedProviders []*Provider
 )
 
 func init() {
@@ -65,8 +68,18 @@ func ListActive() (Providers, error) {
 
 // ListAll available providers, including duplicates between builtin, user,
 // and system providers. We only return errors when the things we are trying
-// to load don't work. Note that the providers are not loaded yet.
+// to load don't work.
+// Note: That the providers are not loaded yet.
+// Note: We load providers from cache so these expensive calls don't have
+// to be repeated. If you want to force a refresh, you can nil out the cache.
 func ListAll() ([]*Provider, error) {
+	if CachedProviders != nil {
+		return CachedProviders, nil
+	}
+
+	res := []*Provider{}
+	CachedProviders = res
+
 	// This really shouldn't happen, but just in case it does...
 	if SystemPath == "" && HomePath == "" {
 		log.Warn().Msg("can't find any paths for providers, none are configured")
@@ -83,11 +96,9 @@ func ListAll() ([]*Provider, error) {
 		if HomePath != "" {
 			msg = msg.Str("home-path", HomePath)
 		}
-		msg.Msg("no provider paths exist")
-		return nil, nil
+		msg.Msg("no provider paths exist, only reporting builtin providers")
 	}
 
-	var res []*Provider
 	if sysOk {
 		cur, err := findProviders(SystemPath)
 		if err != nil {
@@ -110,6 +121,7 @@ func ListAll() ([]*Provider, error) {
 		})
 	}
 
+	CachedProviders = res
 	return res, nil
 }
 
