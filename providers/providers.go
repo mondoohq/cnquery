@@ -1,13 +1,17 @@
 package providers
 
 import (
+	"archive/tar"
 	"encoding/json"
-	"errors"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
+	"github.com/ulikunitz/xz"
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
@@ -96,7 +100,6 @@ func ListAll() ([]*Provider, error) {
 		if HomePath != "" {
 			msg = msg.Str("home-path", HomePath)
 		}
-		msg.Msg("no provider paths exist, only reporting builtin providers")
 	}
 
 	if sysOk {
@@ -123,6 +126,157 @@ func ListAll() ([]*Provider, error) {
 
 	CachedProviders = res
 	return res, nil
+}
+
+func Install(name string) (*Provider, error) {
+	panic("INSTALL")
+}
+
+type InstallConf struct {
+	// Dst specify which path to install into.
+	Dst string
+}
+
+func InstallFile(path string, conf InstallConf) ([]*Provider, error) {
+	if !config.ProbeFile(path) {
+		return nil, errors.New("please provide a regular file when installing providers")
+	}
+
+	if conf.Dst == "" {
+		conf.Dst = HomePath
+	}
+	if !config.ProbeDir(conf.Dst) {
+		if err := os.MkdirAll(conf.Dst, 0o755); err != nil {
+			return nil, errors.New("failed to create " + conf.Dst)
+		}
+		if !config.ProbeDir(conf.Dst) {
+			return nil, errors.New("cannot write to " + conf.Dst)
+		}
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	tmpdir, err := os.MkdirTemp(conf.Dst, ".providers-unpack")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create temporary directory to unpack files")
+	}
+
+	files := map[string]struct{}{}
+	err = walkTarXz(f, func(reader *tar.Reader, header *tar.Header) error {
+		files[header.Name] = struct{}{}
+		dst := filepath.Join(tmpdir, header.Name)
+		writer, err := os.Create(dst)
+		if err != nil {
+			return err
+		}
+		defer writer.Close()
+
+		_, err = io.Copy(writer, reader)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// If for any reason we drop here, it's best to clean up all temporary files
+	// so we don't spam the system with unnecessary data. Optionally we could
+	// keep them and re-use them, so they don't have to download again.
+	defer func() {
+		if err = os.RemoveAll(tmpdir); err != nil {
+			log.Error().Err(err).Msg("failed to remove temporary folder for unpacked provider")
+		}
+	}()
+
+	providerDirs := []string{}
+	for name := range files {
+		// we only want to identify the binary and then all associated files from it
+		if strings.Contains(name, ".") {
+			continue
+		}
+
+		if _, ok := files[name+".json"]; !ok {
+			return nil, errors.New("cannot find " + name + ".json in the archive")
+		}
+		if _, ok := files[name+".resources.json"]; !ok {
+			return nil, errors.New("cannot find " + name + ".resources.json in the archive")
+		}
+
+		dstPath := filepath.Join(conf.Dst, name)
+		if err = os.Mkdir(dstPath, 0o755); err != nil {
+			return nil, err
+		}
+
+		srcBin := filepath.Join(tmpdir, name)
+		dstBin := filepath.Join(dstPath, name)
+		if err = os.Rename(srcBin, dstBin); err != nil {
+			return nil, err
+		}
+		if err = os.Rename(srcBin+".json", dstBin+".json"); err != nil {
+			return nil, err
+		}
+		if err = os.Rename(srcBin+".resources.json", dstBin+".resources.json"); err != nil {
+			return nil, err
+		}
+
+		providerDirs = append(providerDirs, dstPath)
+	}
+
+	res := []*Provider{}
+	for i := range providerDirs {
+		pdir := providerDirs[i]
+		provider, err := readProviderDir(pdir)
+		if err != nil {
+			return nil, err
+		}
+
+		if provider == nil {
+			log.Error().Err(err).Str("path", pdir).Msg("failed to read provider, please remove or fix it")
+			continue
+		}
+
+		if err := provider.LoadJSON(); err != nil {
+			log.Error().Err(err).Str("path", pdir).Msg("failed to read provider metadata, please remove or fix it")
+			continue
+		}
+
+		res = append(res, provider)
+	}
+
+	return res, nil
+}
+
+func walkTarXz(f *os.File, callback func(reader *tar.Reader, header *tar.Header) error) error {
+	r, err := xz.NewReader(f)
+	if err != nil {
+		return errors.Wrap(err, "failed to read xz")
+	}
+
+	tarReader := tar.NewReader(r)
+	for {
+		header, err := tarReader.Next()
+		// end of archive
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return errors.Wrap(err, "failed to read tar")
+		}
+
+		switch header.Typeflag {
+		case tar.TypeReg:
+			if err = callback(tarReader, header); err != nil {
+				return err
+			}
+
+		default:
+			log.Warn().Str("name", header.Name).Msg("encounter a file in archive that is not supported, skipping it")
+		}
+	}
+	return nil
 }
 
 func isOverlyPermissive(path string) (bool, error) {
@@ -165,41 +319,47 @@ func findProviders(path string) ([]*Provider, error) {
 	var res []*Provider
 	for name := range candidates {
 		pdir := filepath.Join(path, name)
-
-		bin := filepath.Join(pdir, name)
-		conf := filepath.Join(pdir, name+".json")
-		resources := filepath.Join(pdir, name+".resources.json")
-
-		if !config.ProbeFile(bin) {
-			log.Debug().Str("path", bin).Msg("ignoring provider because can't access the plugin")
-			continue
+		provider, err := readProviderDir(pdir)
+		if err != nil {
+			return nil, err
 		}
-		if !config.ProbeFile(conf) {
-			log.Debug().Str("path", bin).Msg("ignoring provider because can't access the plugin config")
-			continue
+		if provider != nil {
+			res = append(res, provider)
 		}
-		if !config.ProbeFile(resources) {
-			log.Debug().Str("path", bin).Msg("ignoring provider because can't access the plugin schema")
-			continue
-		}
-
-		res = append(res, &Provider{
-			Provider: &plugin.Provider{
-				Name: name,
-			},
-			Path: filepath.Join(path, name),
-		})
 	}
 
 	return res, nil
 }
 
+func readProviderDir(pdir string) (*Provider, error) {
+	name := filepath.Base(pdir)
+	bin := filepath.Join(pdir, name)
+	conf := filepath.Join(pdir, name+".json")
+	resources := filepath.Join(pdir, name+".resources.json")
+
+	if !config.ProbeFile(bin) {
+		log.Debug().Str("path", bin).Msg("ignoring provider, can't access the plugin")
+		return nil, nil
+	}
+	if !config.ProbeFile(conf) {
+		log.Debug().Str("path", bin).Msg("ignoring provider, can't access the plugin config")
+		return nil, nil
+	}
+	if !config.ProbeFile(resources) {
+		log.Debug().Str("path", bin).Msg("ignoring provider, can't access the plugin schema")
+		return nil, nil
+	}
+
+	return &Provider{
+		Provider: &plugin.Provider{
+			Name: name,
+		},
+		Path: pdir,
+	}, nil
+}
+
 // This is the default installation source for core providers.
 const upstreamURL = "https://releases.mondoo.com/providers/{NAME}/{VERSION}/{NAME}_{VERSION}_{BUILD}.tar.xz"
-
-func Install(name string) (*Provider, error) {
-	panic("INSTALL")
-}
 
 func (p *Provider) LoadJSON() error {
 	path := filepath.Join(p.Path, p.Name+".json")

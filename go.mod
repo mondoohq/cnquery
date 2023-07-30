@@ -68,6 +68,7 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	github.com/toravir/csd v0.0.0-20200911003203-13ae77ad849c
+	github.com/ulikunitz/xz v0.5.11
 	go.mondoo.com/ranger-rpc v0.0.0-20230328135530-12135c17095f
 	go.opentelemetry.io/otel v1.14.0
 	golang.org/x/crypto v0.9.0
