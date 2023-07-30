@@ -378,7 +378,6 @@ type mqlMondoo struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMondooInternal it will be used here
-
 	Version plugin.TValue[string]
 	Build plugin.TValue[string]
 	Arch plugin.TValue[string]
@@ -446,7 +445,6 @@ type mqlAsset struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAssetInternal it will be used here
-
 	Name plugin.TValue[string]
 	Ids plugin.TValue[[]interface{}]
 	Platform plugin.TValue[string]
@@ -546,7 +544,6 @@ type mqlTime struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlTimeInternal it will be used here
-
 	Now plugin.TValue[*time.Time]
 	Second plugin.TValue[*time.Time]
 	Minute plugin.TValue[*time.Time]
@@ -635,7 +632,6 @@ type mqlRegex struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlRegexInternal it will be used here
-
 	Ipv4 plugin.TValue[string]
 	Ipv6 plugin.TValue[string]
 	Url plugin.TValue[string]
@@ -741,8 +737,6 @@ type mqlParse struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlParseInternal it will be used here
-
-
 }
 
 // createParse creates a new instance of this resource

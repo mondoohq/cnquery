@@ -1921,8 +1921,6 @@ type mqlMachine struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMachineInternal it will be used here
-
-
 }
 
 // createMachine creates a new instance of this resource
@@ -1962,7 +1960,6 @@ type mqlMachineBios struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMachineBiosInternal it will be used here
-
 	Vendor plugin.TValue[string]
 	Version plugin.TValue[string]
 	ReleaseDate plugin.TValue[string]
@@ -2017,7 +2014,6 @@ type mqlMachineSystem struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMachineSystemInternal it will be used here
-
 	Manufacturer plugin.TValue[string]
 	Product plugin.TValue[string]
 	Version plugin.TValue[string]
@@ -2092,7 +2088,6 @@ type mqlMachineBaseboard struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMachineBaseboardInternal it will be used here
-
 	Manufacturer plugin.TValue[string]
 	Product plugin.TValue[string]
 	Version plugin.TValue[string]
@@ -2157,7 +2152,6 @@ type mqlMachineChassis struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlMachineChassisInternal it will be used here
-
 	Manufacturer plugin.TValue[string]
 	Version plugin.TValue[string]
 	Serial plugin.TValue[string]
@@ -2217,7 +2211,6 @@ type mqlOs struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOsInternal it will be used here
-
 	Name plugin.TValue[string]
 	Env plugin.TValue[map[string]interface{}]
 	Path plugin.TValue[[]interface{}]
@@ -2328,7 +2321,6 @@ type mqlOsUpdate struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOsUpdateInternal it will be used here
-
 	Name plugin.TValue[string]
 	Category plugin.TValue[string]
 	Severity plugin.TValue[string]
@@ -2396,7 +2388,6 @@ type mqlOsBase struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOsBaseInternal it will be used here
-
 	Machine plugin.TValue[*mqlMachine]
 	Name plugin.TValue[string]
 	Env plugin.TValue[map[string]interface{}]
@@ -2554,7 +2545,6 @@ type mqlOsUnix struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOsUnixInternal it will be used here
-
 	Base plugin.TValue[*mqlOsBase]
 }
 
@@ -2614,7 +2604,6 @@ type mqlOsLinux struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlOsLinuxInternal it will be used here
-
 	Unix plugin.TValue[*mqlOsUnix]
 	Iptables plugin.TValue[*mqlIptables]
 	Ip6tables plugin.TValue[*mqlIp6tables]
@@ -2708,7 +2697,6 @@ type mqlCommand struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlCommandInternal
-
 	Command plugin.TValue[string]
 	Stdout plugin.TValue[string]
 	Stderr plugin.TValue[string]
@@ -2792,7 +2780,6 @@ type mqlPowershell struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlPowershellInternal
-
 	Script plugin.TValue[string]
 	Stdout plugin.TValue[string]
 	Stderr plugin.TValue[string]
@@ -2861,7 +2848,6 @@ type mqlFile struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlFileInternal it will be used here
-
 	Path plugin.TValue[string]
 	Basename plugin.TValue[string]
 	Dirname plugin.TValue[string]
@@ -3042,7 +3028,6 @@ type mqlFilePermissions struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlFilePermissionsInternal it will be used here
-
 	Mode plugin.TValue[int64]
 	User_readable plugin.TValue[bool]
 	User_writeable plugin.TValue[bool]
@@ -3172,8 +3157,6 @@ type mqlFiles struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlFilesInternal it will be used here
-
-
 }
 
 // createFiles creates a new instance of this resource
@@ -3213,7 +3196,6 @@ type mqlFilesFind struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlFilesFindInternal it will be used here
-
 	From plugin.TValue[string]
 	Xdev plugin.TValue[bool]
 	Type plugin.TValue[string]
@@ -3303,7 +3285,6 @@ type mqlParseIni struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlParseIniInternal it will be used here
-
 	Delimiter plugin.TValue[string]
 	File plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
@@ -3397,7 +3378,6 @@ type mqlParseJson struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlParseJsonInternal it will be used here
-
 	File plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
 	Params plugin.TValue[interface{}]
@@ -3469,7 +3449,6 @@ type mqlParsePlist struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlParsePlistInternal it will be used here
-
 	File plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
 	Params plugin.TValue[interface{}]
@@ -3541,7 +3520,6 @@ type mqlParseYaml struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlParseYamlInternal it will be used here
-
 	File plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
 	Params plugin.TValue[interface{}]
@@ -3613,7 +3591,6 @@ type mqlUser struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlUserInternal it will be used here
-
 	Uid plugin.TValue[int64]
 	Gid plugin.TValue[int64]
 	Sid plugin.TValue[string]
@@ -3752,7 +3729,6 @@ type mqlPrivatekey struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlPrivatekeyInternal it will be used here
-
 	Pem plugin.TValue[string]
 	Path plugin.TValue[string]
 	File plugin.TValue[*mqlFile]
@@ -3815,7 +3791,6 @@ type mqlUsers struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlUsersInternal
-
 	List plugin.TValue[[]interface{}]
 }
 
@@ -3872,7 +3847,6 @@ type mqlAuthorizedkeys struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAuthorizedkeysInternal it will be used here
-
 	Path plugin.TValue[string]
 	File plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
@@ -3964,7 +3938,6 @@ type mqlAuthorizedkeysEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlAuthorizedkeysEntryInternal it will be used here
-
 	Line plugin.TValue[int64]
 	Type plugin.TValue[string]
 	Key plugin.TValue[string]
@@ -4037,7 +4010,6 @@ type mqlGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlGroupInternal
-
 	Gid plugin.TValue[int64]
 	Sid plugin.TValue[string]
 	Name plugin.TValue[string]
@@ -4112,7 +4084,6 @@ type mqlGroups struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlGroupsInternal
-
 	List plugin.TValue[[]interface{}]
 }
 
@@ -4169,7 +4140,6 @@ type mqlPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlPackageInternal it will be used here
-
 	Name plugin.TValue[string]
 	Version plugin.TValue[string]
 	Arch plugin.TValue[string]
@@ -4273,7 +4243,6 @@ type mqlPackages struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlPackagesInternal
-
 	List plugin.TValue[[]interface{}]
 }
 
@@ -4330,7 +4299,6 @@ type mqlPamConf struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlPamConfInternal it will be used here
-
 	Files plugin.TValue[[]interface{}]
 	Content plugin.TValue[string]
 	Services plugin.TValue[map[string]interface{}]
@@ -4436,7 +4404,6 @@ type mqlPamConfServiceEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlPamConfServiceEntryInternal it will be used here
-
 	Service plugin.TValue[string]
 	LineNumber plugin.TValue[int64]
 	PamType plugin.TValue[string]
@@ -4509,8 +4476,6 @@ type mqlSshd struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlSshdInternal it will be used here
-
-
 }
 
 // createSshd creates a new instance of this resource
@@ -4550,7 +4515,6 @@ type mqlSshdConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlSshdConfigInternal it will be used here
-
 	File plugin.TValue[*mqlFile]
 	Files plugin.TValue[[]interface{}]
 	Content plugin.TValue[string]
@@ -4704,7 +4668,6 @@ type mqlService struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlServiceInternal it will be used here
-
 	Name plugin.TValue[string]
 	Description plugin.TValue[string]
 	Installed plugin.TValue[bool]
@@ -4782,7 +4745,6 @@ type mqlServices struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlServicesInternal
-
 	List plugin.TValue[[]interface{}]
 }
 
@@ -4839,7 +4801,6 @@ type mqlKernel struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	mqlKernelInternal
-
 	Info plugin.TValue[interface{}]
 	Parameters plugin.TValue[map[string]interface{}]
 	Modules plugin.TValue[[]interface{}]
@@ -4917,7 +4878,6 @@ type mqlKernelModule struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlKernelModuleInternal it will be used here
-
 	Name plugin.TValue[string]
 	Size plugin.TValue[string]
 	Loaded plugin.TValue[bool]
@@ -4975,7 +4935,6 @@ type mqlDocker struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlDockerInternal it will be used here
-
 	Images plugin.TValue[[]interface{}]
 	Containers plugin.TValue[[]interface{}]
 }
@@ -5049,7 +5008,6 @@ type mqlDockerImage struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlDockerImageInternal it will be used here
-
 	Id plugin.TValue[string]
 	Size plugin.TValue[int64]
 	Virtualsize plugin.TValue[int64]
@@ -5117,7 +5075,6 @@ type mqlDockerContainer struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlDockerContainerInternal it will be used here
-
 	Os plugin.TValue[*mqlOsLinux]
 	Id plugin.TValue[string]
 	Command plugin.TValue[string]
@@ -5217,7 +5174,6 @@ type mqlIptables struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlIptablesInternal it will be used here
-
 	Input plugin.TValue[[]interface{}]
 	Output plugin.TValue[[]interface{}]
 }
@@ -5291,7 +5247,6 @@ type mqlIp6tables struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlIp6tablesInternal it will be used here
-
 	Input plugin.TValue[[]interface{}]
 	Output plugin.TValue[[]interface{}]
 }
@@ -5365,7 +5320,6 @@ type mqlIptablesEntry struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlIptablesEntryInternal it will be used here
-
 	LineNumber plugin.TValue[int64]
 	Packets plugin.TValue[int64]
 	Bytes plugin.TValue[int64]

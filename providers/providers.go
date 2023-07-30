@@ -142,6 +142,16 @@ func InstallFile(path string, conf InstallConf) ([]*Provider, error) {
 		return nil, errors.New("please provide a regular file when installing providers")
 	}
 
+	reader, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	return InstallIO(reader, conf)
+}
+
+func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 	if conf.Dst == "" {
 		conf.Dst = HomePath
 	}
@@ -154,19 +164,13 @@ func InstallFile(path string, conf InstallConf) ([]*Provider, error) {
 		}
 	}
 
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
 	tmpdir, err := os.MkdirTemp(conf.Dst, ".providers-unpack")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temporary directory to unpack files")
 	}
 
 	files := map[string]struct{}{}
-	err = walkTarXz(f, func(reader *tar.Reader, header *tar.Header) error {
+	err = walkTarXz(reader, func(reader *tar.Reader, header *tar.Header) error {
 		files[header.Name] = struct{}{}
 		dst := filepath.Join(tmpdir, header.Name)
 		writer, err := os.Create(dst)
@@ -249,8 +253,8 @@ func InstallFile(path string, conf InstallConf) ([]*Provider, error) {
 	return res, nil
 }
 
-func walkTarXz(f *os.File, callback func(reader *tar.Reader, header *tar.Header) error) error {
-	r, err := xz.NewReader(f)
+func walkTarXz(reader io.Reader, callback func(reader *tar.Reader, header *tar.Header) error) error {
+	r, err := xz.NewReader(reader)
 	if err != nil {
 		return errors.Wrap(err, "failed to read xz")
 	}

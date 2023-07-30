@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -20,6 +22,7 @@ func init() {
 	providersCmd.AddCommand(installProviderCmd)
 
 	installProviderCmd.Flags().StringP("file", "f", "", "install a provider via a file")
+	installProviderCmd.Flags().String("url", "", "install a provider via URL")
 }
 
 var providersCmd = &cobra.Command{
@@ -56,14 +59,44 @@ var installProviderCmd = &cobra.Command{
 			return
 		}
 
+		url, _ := cmd.Flags().GetString("url")
+		if url != "" {
+			installProviderUrl(url)
+			return
+		}
+
 		log.Fatal().Msg("cannot install providers by name yet")
 	},
+}
+
+func installProviderUrl(u string) {
+	if i := strings.Index(u, "://"); i == -1 {
+		u = "http://" + u
+	}
+	uUrl, err := url.Parse(u)
+	if err != nil {
+		log.Fatal().Err(err).Msg("invalid url")
+	}
+
+	res, err := http.Get(uUrl.String())
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to install")
+	}
+
+	providers, err := providers.InstallIO(res.Body, providers.InstallConf{
+		Dst: providers.HomePath,
+	})
+	finalizeProviderInstall(providers, err)
 }
 
 func installProviderFile(path string) {
 	providers, err := providers.InstallFile(path, providers.InstallConf{
 		Dst: providers.HomePath,
 	})
+	finalizeProviderInstall(providers, err)
+}
+
+func finalizeProviderInstall(providers []*providers.Provider, err error) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to install")
 	}

@@ -324,19 +324,22 @@ func (b *goBuilder) goStruct(r *Resource) {
 		fields = append(fields, field.BasicField.goName()+" plugin.TValue["+field.BasicField.Type.goType(b)+"]")
 	}
 
+	sFields := strings.Join(fields, "\n\t")
+	if len(fields) != 0 {
+		sFields = "\n\t" + sFields
+	}
+
 	b.data += fmt.Sprintf(`
 // %s for the %s resource
 type %s struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	%s
-
-	%s
+	%s%s
 }
 `,
 		r.structName(b), r.ID, r.structName(b),
 		internalStruct,
-		strings.Join(fields, "\n\t"),
+		sFields,
 	)
 }
 
