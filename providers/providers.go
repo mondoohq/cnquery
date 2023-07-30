@@ -16,6 +16,9 @@ import (
 var (
 	SystemPath string
 	HomePath   string
+	// CachedProviders contains all providers that have been loaded the last time
+	// ListActive or ListAll have been called
+	CachedProviders []*Provider
 )
 
 func init() {
@@ -33,20 +36,28 @@ type Provider struct {
 	Path   string
 }
 
-func List() (Providers, error) {
-	local := listPaths()
-	var res Providers = make(map[string]*Provider, len(local))
-	for _, v := range local {
-		if err := v.LoadJSON(); err != nil {
-			return nil, err
-		}
+// List providers that are going to be used in their default order:
+// builtin > user > system. The providers are also loaded and provider their
+// metadata/configuration.
+func ListActive() (Providers, error) {
+	all, err := ListAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var res Providers = make(map[string]*Provider, len(all))
+	for _, v := range all {
 		res[v.ID] = v
 	}
 
-	// we add builtin ones here, possibly overriding providers in paths
-	for name, x := range builtinProviders {
-		res[name] = &Provider{
-			Provider: x.Config,
+	for _, v := range res {
+		// only happens for builtin providers
+		if v.Path == "" {
+			continue
+		}
+
+		if err := v.LoadJSON(); err != nil {
+			return nil, err
 		}
 	}
 
@@ -55,11 +66,24 @@ func List() (Providers, error) {
 	return res, nil
 }
 
-func listPaths() Providers {
+// ListAll available providers, including duplicates between builtin, user,
+// and system providers. We only return errors when the things we are trying
+// to load don't work.
+// Note: That the providers are not loaded yet.
+// Note: We load providers from cache so these expensive calls don't have
+// to be repeated. If you want to force a refresh, you can nil out the cache.
+func ListAll() ([]*Provider, error) {
+	if CachedProviders != nil {
+		return CachedProviders, nil
+	}
+
+	res := []*Provider{}
+	CachedProviders = res
+
 	// This really shouldn't happen, but just in case it does...
 	if SystemPath == "" && HomePath == "" {
-		log.Error().Msg("can't find any paths for providers, none are configured")
-		return nil
+		log.Warn().Msg("can't find any paths for providers, none are configured")
+		return nil, nil
 	}
 
 	sysOk := config.ProbeDir(SystemPath)
@@ -72,27 +96,33 @@ func listPaths() Providers {
 		if HomePath != "" {
 			msg = msg.Str("home-path", HomePath)
 		}
-		msg.Msg("no provider paths exist")
-		return nil
+		msg.Msg("no provider paths exist, only reporting builtin providers")
 	}
 
-	providers := map[string]*Provider{}
-
 	if sysOk {
-		err := findProviders(SystemPath, providers)
+		cur, err := findProviders(SystemPath)
 		if err != nil {
 			log.Warn().Str("path", SystemPath).Msg("failed to get providers from system path")
 		}
+		res = append(res, cur...)
 	}
 
 	if homeOk {
-		err := findProviders(HomePath, providers)
+		cur, err := findProviders(HomePath)
 		if err != nil {
 			log.Warn().Str("path", HomePath).Msg("failed to get providers from home path")
 		}
+		res = append(res, cur...)
 	}
 
-	return providers
+	for _, x := range builtinProviders {
+		res = append(res, &Provider{
+			Provider: x.Config,
+		})
+	}
+
+	CachedProviders = res
+	return res, nil
 }
 
 func isOverlyPermissive(path string) (bool, error) {
@@ -109,19 +139,19 @@ func isOverlyPermissive(path string) (bool, error) {
 	return false, nil
 }
 
-func findProviders(path string, res map[string]*Provider) error {
+func findProviders(path string) ([]*Provider, error) {
 	overlyPermissive, err := isOverlyPermissive(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if overlyPermissive {
-		return errors.New("path is overly permissive, make sure it is not writable to others or the group: " + path)
+		return nil, errors.New("path is overly permissive, make sure it is not writable to others or the group: " + path)
 	}
 
 	log.Debug().Str("path", path).Msg("searching providers in path")
 	files, err := afero.ReadDir(config.AppFs, path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	candidates := map[string]struct{}{}
@@ -132,6 +162,7 @@ func findProviders(path string, res map[string]*Provider) error {
 		}
 	}
 
+	var res []*Provider
 	for name := range candidates {
 		pdir := filepath.Join(path, name)
 
@@ -152,15 +183,15 @@ func findProviders(path string, res map[string]*Provider) error {
 			continue
 		}
 
-		res[name] = &Provider{
+		res = append(res, &Provider{
 			Provider: &plugin.Provider{
 				Name: name,
 			},
 			Path: filepath.Join(path, name),
-		}
+		})
 	}
 
-	return nil
+	return res, nil
 }
 
 // This is the default installation source for core providers.
