@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"net/http"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -12,7 +11,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/ranger-rpc"
 	protobuf "google.golang.org/protobuf/proto"
 )
 
@@ -20,7 +18,7 @@ import (
 // and open connections for that asset.
 type Runtime struct {
 	Provider       *ConnectedProvider
-	UpstreamConfig *UpstreamConfig
+	UpstreamConfig *plugin.UpstreamConfig
 	Recording      Recording
 
 	features []byte
@@ -36,20 +34,6 @@ type Runtime struct {
 type ConnectedProvider struct {
 	Instance   *RunningProvider
 	Connection *plugin.ConnectRes
-}
-
-// mondoo platform config so that resource scan talk upstream
-// TODO: this configuration struct does not belong into the MQL package
-// nevertheless the MQL runtime needs to have something that allows users
-// to store additional credentials so that resource can use those for
-// their resources.
-type UpstreamConfig struct {
-	AssetMrn    string
-	SpaceMrn    string
-	ApiEndpoint string
-	Plugins     []ranger.ClientPlugin
-	Incognito   bool
-	HttpClient  *http.Client
 }
 
 func (c *coordinator) NewRuntime() *Runtime {

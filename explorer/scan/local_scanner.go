@@ -25,6 +25,7 @@ import (
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -80,11 +81,13 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	upstreamConfig := providers.UpstreamConfig{
-		SpaceMrn:    s.spaceMrn,
-		ApiEndpoint: s.apiEndpoint,
-		Incognito:   false,
-		Plugins:     s.plugins,
+	upstreamConfig := plugin.UpstreamClient{
+		UpstreamConfig: plugin.UpstreamConfig{
+			SpaceMrn:    s.spaceMrn,
+			ApiEndpoint: s.apiEndpoint,
+			Incognito:   false,
+		},
+		Plugins: s.plugins,
 	}
 
 	reports, _, err := s.distributeJob(job, ctx, upstreamConfig)
@@ -113,8 +116,10 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	upstreamConfig := providers.UpstreamConfig{
-		Incognito: true,
+	upstreamConfig := plugin.UpstreamClient{
+		UpstreamConfig: plugin.UpstreamConfig{
+			Incognito: true,
+		},
 	}
 
 	reports, _, err := s.distributeJob(job, ctx, upstreamConfig)
@@ -146,7 +151,7 @@ func preprocessQueryPackFilters(filters []string) []string {
 	return res
 }
 
-func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig providers.UpstreamConfig) (*explorer.ReportCollection, bool, error) {
+func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig plugin.UpstreamClient) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 	runtime := providers.DefaultRuntime()
 	im, err := manager.NewManager(manager.WithInventory(job.Inventory, runtime))
@@ -263,7 +268,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConf
 			p := &progress.MultiProgressAdapter{Key: asset.PlatformIds[0], Multi: multiprogress}
 			s.RunAssetJob(&AssetJob{
 				DoRecord:         job.DoRecord,
-				UpstreamConfig:   upstreamConfig,
+				UpstreamConfig:   upstreamConfig.UpstreamConfig,
 				Asset:            asset,
 				Bundle:           job.Bundle,
 				Props:            job.Props,

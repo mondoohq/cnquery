@@ -61,12 +61,14 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 			os.Exit(ConfigurationErrorCode)
 		}
 
-		shellConf.UpstreamConfig = &providers.UpstreamConfig{
-			SpaceMrn:    conf.GetParentMrn(),
-			ApiEndpoint: conf.UpstreamApiEndpoint(),
-			Plugins:     []ranger.ClientPlugin{certAuth},
-			// we do not use opts here since we want to ensure the result is not stored when users use the shell
-			Incognito: true,
+		shellConf.Upstream = &plugin.UpstreamClient{
+			UpstreamConfig: plugin.UpstreamConfig{
+				SpaceMrn:    conf.GetParentMrn(),
+				ApiEndpoint: conf.UpstreamApiEndpoint(),
+				// we do not use opts here since we want to ensure the result is not stored when users use the shell
+				Incognito: true,
+			},
+			Plugins: []ranger.ClientPlugin{certAuth},
 		}
 	}
 
@@ -76,10 +78,10 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 		log.Error().Err(err).Msg("error while setting up httpclient")
 		os.Exit(ConfigurationErrorCode)
 	}
-	if shellConf.UpstreamConfig == nil {
-		shellConf.UpstreamConfig = &providers.UpstreamConfig{}
+	if shellConf.Upstream == nil {
+		shellConf.Upstream = &plugin.UpstreamClient{}
 	}
-	shellConf.UpstreamConfig.HttpClient = httpClient
+	shellConf.Upstream.HttpClient = httpClient
 
 	err = StartShell(runtime, &shellConf)
 	if err != nil {
@@ -97,7 +99,7 @@ type ShellConfig struct {
 	PlatformID     string
 	WelcomeMessage string
 
-	UpstreamConfig *providers.UpstreamConfig
+	Upstream *plugin.UpstreamClient
 }
 
 // StartShell will start an interactive CLI shell
@@ -159,8 +161,8 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
 	shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
 
-	if conf.UpstreamConfig != nil {
-		shellOptions = append(shellOptions, shell.WithUpstreamConfig(conf.UpstreamConfig))
+	if conf.Upstream != nil {
+		shellOptions = append(shellOptions, shell.WithUpstreamConfig(&conf.Upstream.UpstreamConfig))
 	}
 
 	sh, err := shell.New(runtime, shellOptions...)

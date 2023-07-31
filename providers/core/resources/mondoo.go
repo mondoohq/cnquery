@@ -5,6 +5,8 @@ import (
 
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/execruntime"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 func (m *mqlMondoo) version() (string, error) {
@@ -27,4 +29,10 @@ func (m *mqlMondoo) jobEnvironment() (map[string]interface{}, error) {
 		"id":   ciEnv.Namespace,
 		"name": ciEnv.Name,
 	}, nil
+}
+
+func (m *mqlMondoo) capabilities() ([]interface{}, error) {
+	conn := m.MqlRuntime.Connection.(shared.Connection)
+	caps := conn.Capabilities().String()
+	return llx.TArr2Raw(caps), nil
 }

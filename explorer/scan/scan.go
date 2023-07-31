@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 )
 
@@ -20,7 +21,7 @@ func init() {
 
 type AssetJob struct {
 	DoRecord         bool
-	UpstreamConfig   providers.UpstreamConfig
+	UpstreamConfig   plugin.UpstreamConfig
 	Asset            *inventory.Asset
 	Bundle           *explorer.Bundle
 	QueryPackFilters []string

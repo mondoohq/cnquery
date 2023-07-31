@@ -22,6 +22,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/stringx"
@@ -36,7 +37,7 @@ func WithOnCloseListener(onCloseHandler func()) ShellOption {
 	}
 }
 
-func WithUpstreamConfig(c *providers.UpstreamConfig) ShellOption {
+func WithUpstreamConfig(c *plugin.UpstreamConfig) ShellOption {
 	return func(t *Shell) {
 		if x, ok := t.Runtime.(*providers.Runtime); ok {
 			x.UpstreamConfig = c

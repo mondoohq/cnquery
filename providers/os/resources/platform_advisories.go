@@ -1,29 +1,31 @@
-package core
+package resources
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/motor/providers"
-	"go.mondoo.com/cnquery/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/upstream/mvd"
 	"go.mondoo.com/cnquery/upstream/mvd/cvss"
 	"go.mondoo.com/ranger-rpc"
 )
 
 // TODO: generalize this kind of function
-func getKernelVersion(kernel Kernel) string {
-	raw, err := kernel.Info()
-	if err != nil {
+func getKernelVersion(kernel *mqlKernel) string {
+	raw := kernel.GetInfo()
+	if raw.Error != nil {
 		return ""
 	}
 
-	info, ok := raw.(map[string]interface{})
+	info, ok := raw.Data.(map[string]interface{})
 	if !ok {
 		return ""
 	}
@@ -49,29 +51,10 @@ func newAdvisoryScannerHttpClient(mondooapi string, plugins []ranger.ClientPlugi
 }
 
 // fetches the vulnerability report and returns the full report
-func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
-	r := p.MotorRuntime
-	mcc := r.UpstreamConfig
+func (p *mqlAsset) vulnerabilityReport() (interface{}, error) {
+	mcc := p.MqlRuntime.Upstream
 	if mcc == nil || mcc.ApiEndpoint == "" {
-		return nil, errors.New(MissingUpstreamErr)
-	}
-
-	// get platform information
-	obj, err := r.CreateResource("platform")
-	if err != nil {
-		return nil, err
-	}
-
-	mqlPlatform := obj.(Platform)
-	platformObj := convertMqlPlatform2ApiPlatform(mqlPlatform)
-
-	// check if the data is cached
-	// NOTE: we cache it in the platform resource, so that platform.advisories, platform.cves and
-	// platform.exploits can all share the results
-	cachedReport, ok := mqlPlatform.MqlResource().Cache.Load("_report")
-	if ok {
-		report := cachedReport.Data.(*mvd.VulnReport)
-		return report, nil
+		return nil, resources.MissingUpstreamError{}
 	}
 
 	// get new advisory report
@@ -81,50 +64,46 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 		return nil, err
 	}
 
+	conn := p.MqlRuntime.Connection.(shared.Connection)
 	apiPackages := []*mvd.Package{}
 	kernelVersion := ""
 
 	// collect pacakges if the platform supports gathering files
-	if r.Motor.Provider.Capabilities().HasCapability(providers.Capability_File) {
-		obj, err = r.CreateResource("packages")
+	if conn.Capabilities().Has(shared.Capability_File) {
+		obj, err := CreateResource(p.MqlRuntime, "packages", map[string]*llx.RawData{})
 		if err != nil {
 			return nil, err
 		}
-		packages := obj.(Packages)
+		packages := obj.(*mqlPackages)
 
-		mqlPkgs, err := packages.List()
-		if err != nil {
-			return nil, err
+		r := packages.GetList()
+		if r.Error != nil {
+			return nil, r.Error
 		}
 
-		for i := range mqlPkgs {
-			mqlPkg := mqlPkgs[i]
-			pkg := mqlPkg.(Package)
-			name, _ := pkg.Name()
-			version, _ := pkg.Version()
-			arch, _ := pkg.Arch()
-			format, _ := pkg.Format()
-			origin, _ := pkg.Origin()
+		for i := range r.Data {
+			mqlPkg := r.Data[i]
+			pkg := mqlPkg.(*mqlPackage)
 
 			apiPackages = append(apiPackages, &mvd.Package{
-				Name:    name,
-				Version: version,
-				Arch:    arch,
-				Format:  format,
-				Origin:  origin,
+				Name:    pkg.Name.Data,
+				Version: pkg.Version.Data,
+				Arch:    pkg.Arch.Data,
+				Format:  pkg.Format.Data,
+				Origin:  pkg.Origin.Data,
 			})
 		}
 
 		// determine the kernel version if possible (just needed for linux at this point)
 		// therefore we ignore the error because its not important, worst case the user sees to many advisories
-		objKernel, err := r.CreateResource("kernel")
+		objKernel, err := CreateResource(p.MqlRuntime, "kernel", map[string]*llx.RawData{})
 		if err == nil {
-			kernelVersion = getKernelVersion(objKernel.(Kernel))
+			kernelVersion = getKernelVersion(objKernel.(*mqlKernel))
 		}
 	}
 
 	scanjob := &mvd.AnalyseAssetRequest{
-		Platform:      convertPlatform2VulnPlatform(platformObj),
+		Platform:      convertPlatform2VulnPlatform(conn.Asset().Platform),
 		Packages:      apiPackages,
 		KernelVersion: kernelVersion,
 	}
@@ -136,20 +115,21 @@ func (p *mqlPlatform) GetVulnerabilityReport() (interface{}, error) {
 		return nil, err
 	}
 
-	return JsonToDict(report)
+	return convert.JsonToDict(report)
 }
 
-func getAdvisoryReport(r *resources.Runtime) (*mvd.VulnReport, error) {
-	obj, err := r.CreateResource("platform")
+func getAdvisoryReport(runtime *plugin.Runtime) (*mvd.VulnReport, error) {
+	obj, err := CreateResource(runtime, "asset", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
-	platform := obj.(Platform)
+	asset := obj.(*mqlAsset)
 
-	rawReport, err := platform.VulnerabilityReport()
-	if err != nil {
-		return nil, err
+	r := asset.GetVulnerabilityReport()
+	if r.Error != nil {
+		return nil, r.Error
 	}
+	rawReport := r.Data
 
 	var vulnReport mvd.VulnReport
 	cfg := &mapstructure.DecoderConfig{
@@ -170,25 +150,25 @@ func (a *mqlPlatformAdvisories) id() (string, error) {
 	return "platform.advisories", nil
 }
 
-func (a *mqlPlatformAdvisories) GetCvss() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
+func (a *mqlPlatformAdvisories) cvss() (*mqlAuditCvss, error) {
+	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	obj, err := a.MotorRuntime.CreateResource("audit.cvss",
-		"score", float64(report.Stats.Score)/10,
-		"vector", "", // TODO: we need to extend the report to include the vector in the report
-	)
+	obj, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+		"score":  llx.FloatData(float64(report.Stats.Score) / 10),
+		"vector": llx.StringData(""), // TODO: we need to extend the report to include the vector in the report
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	return obj, nil
+	return obj.(*mqlAuditCvss), nil
 }
 
-func (a *mqlPlatformAdvisories) GetList() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
+func (a *mqlPlatformAdvisories) list() ([]interface{}, error) {
+	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -204,10 +184,10 @@ func (a *mqlPlatformAdvisories) GetList() ([]interface{}, error) {
 			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
 		}
 
-		cvssScore, err := a.MotorRuntime.CreateResource("audit.cvss",
-			"score", float64(worstScore.Score),
-			"vector", worstScore.Vector,
-		)
+		cvssScore, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"score":  llx.FloatData(float64(worstScore.Score)),
+			"vector": llx.StringData(worstScore.Vector),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -224,15 +204,15 @@ func (a *mqlPlatformAdvisories) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		mqlAdvisory, err := a.MotorRuntime.CreateResource("audit.advisory",
-			"id", advisory.ID,
-			"mrn", advisory.Mrn,
-			"title", advisory.Title,
-			"description", advisory.Description,
-			"published", published,
-			"modified", modified,
-			"worstScore", cvssScore,
-		)
+		mqlAdvisory, err := CreateResource(a.MqlRuntime, "audit.advisory", map[string]*llx.RawData{
+			"id":          llx.StringData(advisory.ID),
+			"mrn":         llx.StringData(advisory.Mrn),
+			"title":       llx.StringData(advisory.Title),
+			"description": llx.StringData(advisory.Description),
+			"published":   llx.TimeData(*published),
+			"modified":    llx.TimeData(*modified),
+			"worstScore":  llx.ResourceData(cvssScore, "audit.cvss"),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -243,13 +223,13 @@ func (a *mqlPlatformAdvisories) GetList() ([]interface{}, error) {
 	return mqlAdvisories, nil
 }
 
-func (a *mqlPlatformAdvisories) GetStats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
+func (a *mqlPlatformAdvisories) stats() (interface{}, error) {
+	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	dict, err := JsonToDict(report.Stats.Advisories)
+	dict, err := convert.JsonToDict(report.Stats.Advisories)
 	if err != nil {
 		return nil, err
 	}
@@ -261,8 +241,8 @@ func (a *mqlPlatformCves) id() (string, error) {
 	return "platform.cves", nil
 }
 
-func (a *mqlPlatformCves) GetList() ([]interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
+func (a *mqlPlatformCves) list() ([]interface{}, error) {
+	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -280,10 +260,10 @@ func (a *mqlPlatformCves) GetList() ([]interface{}, error) {
 			worstScore = &cvss.Cvss{Score: 0.0, Vector: ""}
 		}
 
-		cvssScore, err := a.MotorRuntime.CreateResource("audit.cvss",
-			"score", float64(worstScore.Score),
-			"vector", worstScore.Vector,
-		)
+		cvssScore, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+			"score":  llx.FloatData(float64(worstScore.Score)),
+			"vector": llx.StringData(worstScore.Vector),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -300,16 +280,16 @@ func (a *mqlPlatformCves) GetList() ([]interface{}, error) {
 			modified = &parsedTime
 		}
 
-		mqlCve, err := a.MotorRuntime.CreateResource("audit.cve",
-			"id", cve.ID,
-			"mrn", cve.Mrn,
-			"state", cve.State.String(),
-			"summary", cve.Summary,
-			"unscored", cve.Unscored,
-			"published", published,
-			"modified", modified,
-			"worstScore", cvssScore,
-		)
+		mqlCve, err := CreateResource(a.MqlRuntime, "audit.cve", map[string]*llx.RawData{
+			"id":         llx.StringData(cve.ID),
+			"mrn":        llx.StringData(cve.Mrn),
+			"state":      llx.StringData(cve.State.String()),
+			"summary":    llx.StringData(cve.Summary),
+			"unscored":   llx.BoolData(cve.Unscored),
+			"published":  llx.TimeData(*published),
+			"modified":   llx.TimeData(*modified),
+			"worstScore": llx.ResourceData(cvssScore, "audit.cvss"),
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -320,8 +300,8 @@ func (a *mqlPlatformCves) GetList() ([]interface{}, error) {
 	return mqlCves, nil
 }
 
-func (a *mqlPlatformCves) GetCvss() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
+func (a *mqlPlatformCves) cvss() (*mqlAuditCvss, error) {
+	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
@@ -337,24 +317,24 @@ func (a *mqlPlatformCves) GetCvss() (interface{}, error) {
 		}
 	}
 
-	obj, err := a.MotorRuntime.CreateResource("audit.cvss",
-		"score", float64(int(score*10))/10,
-		"vector", "",
-	)
+	obj, err := CreateResource(a.MqlRuntime, "audit.cvss", map[string]*llx.RawData{
+		"score":  llx.FloatData(float64(int(score*10)) / 10),
+		"vector": llx.StringData(""),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	return obj, nil
+	return obj.(*mqlAuditCvss), nil
 }
 
-func (a *mqlPlatformCves) GetStats() (interface{}, error) {
-	report, err := getAdvisoryReport(a.MotorRuntime)
+func (a *mqlPlatformCves) stats() (interface{}, error) {
+	report, err := getAdvisoryReport(a.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	dict, err := JsonToDict(report.Stats.Cves)
+	dict, err := convert.JsonToDict(report.Stats.Cves)
 	if err != nil {
 		return nil, err
 	}

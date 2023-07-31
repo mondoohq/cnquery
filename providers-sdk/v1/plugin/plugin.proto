@@ -22,6 +22,14 @@ message ConnectReq {
   Asset asset = 3;
   bool has_recording = 20;
   uint32 callback_server = 21;
+  UpstreamConfig upstream = 22;
+}
+
+message UpstreamConfig {
+  string asset_mrn = 1;
+  string space_mrn = 2;
+  string api_endpoint = 3;
+  bool incognito = 4;
 }
 
 message ConnectRes {

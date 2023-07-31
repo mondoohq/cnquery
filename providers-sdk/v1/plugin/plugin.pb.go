@@ -143,6 +143,7 @@ type ConnectReq struct {
 	Asset          *inventory.Asset `protobuf:"bytes,3,opt,name=asset,proto3" json:"asset,omitempty"`
 	HasRecording   bool             `protobuf:"varint,20,opt,name=has_recording,json=hasRecording,proto3" json:"has_recording,omitempty"`
 	CallbackServer uint32           `protobuf:"varint,21,opt,name=callback_server,json=callbackServer,proto3" json:"callback_server,omitempty"`
+	Upstream       *UpstreamConfig  `protobuf:"bytes,22,opt,name=upstream,proto3" json:"upstream,omitempty"`
 }
 
 func (x *ConnectReq) Reset() {
@@ -205,6 +206,84 @@ func (x *ConnectReq) GetCallbackServer() uint32 {
 	return 0
 }
 
+func (x *ConnectReq) GetUpstream() *UpstreamConfig {
+	if x != nil {
+		return x.Upstream
+	}
+	return nil
+}
+
+type UpstreamConfig struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AssetMrn    string `protobuf:"bytes,1,opt,name=asset_mrn,json=assetMrn,proto3" json:"asset_mrn,omitempty"`
+	SpaceMrn    string `protobuf:"bytes,2,opt,name=space_mrn,json=spaceMrn,proto3" json:"space_mrn,omitempty"`
+	ApiEndpoint string `protobuf:"bytes,3,opt,name=api_endpoint,json=apiEndpoint,proto3" json:"api_endpoint,omitempty"`
+	Incognito   bool   `protobuf:"varint,4,opt,name=incognito,proto3" json:"incognito,omitempty"`
+}
+
+func (x *UpstreamConfig) Reset() {
+	*x = UpstreamConfig{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_plugin_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpstreamConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpstreamConfig) ProtoMessage() {}
+
+func (x *UpstreamConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpstreamConfig.ProtoReflect.Descriptor instead.
+func (*UpstreamConfig) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UpstreamConfig) GetAssetMrn() string {
+	if x != nil {
+		return x.AssetMrn
+	}
+	return ""
+}
+
+func (x *UpstreamConfig) GetSpaceMrn() string {
+	if x != nil {
+		return x.SpaceMrn
+	}
+	return ""
+}
+
+func (x *UpstreamConfig) GetApiEndpoint() string {
+	if x != nil {
+		return x.ApiEndpoint
+	}
+	return ""
+}
+
+func (x *UpstreamConfig) GetIncognito() bool {
+	if x != nil {
+		return x.Incognito
+	}
+	return false
+}
+
 type ConnectRes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -221,7 +300,7 @@ type ConnectRes struct {
 func (x *ConnectRes) Reset() {
 	*x = ConnectRes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[3]
+		mi := &file_plugin_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -234,7 +313,7 @@ func (x *ConnectRes) String() string {
 func (*ConnectRes) ProtoMessage() {}
 
 func (x *ConnectRes) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[3]
+	mi := &file_plugin_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -247,7 +326,7 @@ func (x *ConnectRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectRes.ProtoReflect.Descriptor instead.
 func (*ConnectRes) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{3}
+	return file_plugin_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ConnectRes) GetId() uint32 {
@@ -293,7 +372,7 @@ type DataReq struct {
 func (x *DataReq) Reset() {
 	*x = DataReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[4]
+		mi := &file_plugin_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -306,7 +385,7 @@ func (x *DataReq) String() string {
 func (*DataReq) ProtoMessage() {}
 
 func (x *DataReq) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[4]
+	mi := &file_plugin_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -319,7 +398,7 @@ func (x *DataReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataReq.ProtoReflect.Descriptor instead.
 func (*DataReq) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{4}
+	return file_plugin_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *DataReq) GetConnection() uint32 {
@@ -371,7 +450,7 @@ type DataRes struct {
 func (x *DataRes) Reset() {
 	*x = DataRes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[5]
+		mi := &file_plugin_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -384,7 +463,7 @@ func (x *DataRes) String() string {
 func (*DataRes) ProtoMessage() {}
 
 func (x *DataRes) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[5]
+	mi := &file_plugin_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -397,7 +476,7 @@ func (x *DataRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataRes.ProtoReflect.Descriptor instead.
 func (*DataRes) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{5}
+	return file_plugin_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DataRes) GetData() *llx.Primitive {
@@ -430,7 +509,7 @@ type CollectRes struct {
 func (x *CollectRes) Reset() {
 	*x = CollectRes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[6]
+		mi := &file_plugin_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -443,7 +522,7 @@ func (x *CollectRes) String() string {
 func (*CollectRes) ProtoMessage() {}
 
 func (x *CollectRes) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[6]
+	mi := &file_plugin_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -456,7 +535,7 @@ func (x *CollectRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CollectRes.ProtoReflect.Descriptor instead.
 func (*CollectRes) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{6}
+	return file_plugin_proto_rawDescGZIP(), []int{7}
 }
 
 type StoreReq struct {
@@ -471,7 +550,7 @@ type StoreReq struct {
 func (x *StoreReq) Reset() {
 	*x = StoreReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[7]
+		mi := &file_plugin_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -484,7 +563,7 @@ func (x *StoreReq) String() string {
 func (*StoreReq) ProtoMessage() {}
 
 func (x *StoreReq) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[7]
+	mi := &file_plugin_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -497,7 +576,7 @@ func (x *StoreReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StoreReq.ProtoReflect.Descriptor instead.
 func (*StoreReq) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{7}
+	return file_plugin_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *StoreReq) GetConnection() uint32 {
@@ -527,7 +606,7 @@ type ResourceData struct {
 func (x *ResourceData) Reset() {
 	*x = ResourceData{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[8]
+		mi := &file_plugin_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -540,7 +619,7 @@ func (x *ResourceData) String() string {
 func (*ResourceData) ProtoMessage() {}
 
 func (x *ResourceData) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[8]
+	mi := &file_plugin_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -553,7 +632,7 @@ func (x *ResourceData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceData.ProtoReflect.Descriptor instead.
 func (*ResourceData) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{8}
+	return file_plugin_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ResourceData) GetName() string {
@@ -586,7 +665,7 @@ type StoreRes struct {
 func (x *StoreRes) Reset() {
 	*x = StoreRes{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[9]
+		mi := &file_plugin_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -599,7 +678,7 @@ func (x *StoreRes) String() string {
 func (*StoreRes) ProtoMessage() {}
 
 func (x *StoreRes) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[9]
+	mi := &file_plugin_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -612,7 +691,7 @@ func (x *StoreRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StoreRes.ProtoReflect.Descriptor instead.
 func (*StoreRes) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{9}
+	return file_plugin_proto_rawDescGZIP(), []int{10}
 }
 
 var File_plugin_proto protoreflect.FileDescriptor
@@ -641,7 +720,7 @@ var file_plugin_proto_rawDesc = []byte{
 	0x43, 0x4c, 0x49, 0x52, 0x65, 0x73, 0x12, 0x31, 0x0a, 0x05, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
 	0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x73, 0x73,
-	0x65, 0x74, 0x52, 0x05, 0x61, 0x73, 0x73, 0x65, 0x74, 0x22, 0xa9, 0x01, 0x0a, 0x0a, 0x43, 0x6f,
+	0x65, 0x74, 0x52, 0x05, 0x61, 0x73, 0x73, 0x65, 0x74, 0x22, 0xeb, 0x01, 0x0a, 0x0a, 0x43, 0x6f,
 	0x6e, 0x6e, 0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x12, 0x1a, 0x0a, 0x08, 0x66, 0x65, 0x61, 0x74,
 	0x75, 0x72, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x66, 0x65, 0x61, 0x74,
 	0x75, 0x72, 0x65, 0x73, 0x12, 0x31, 0x0a, 0x05, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20,
@@ -652,7 +731,20 @@ var file_plugin_proto_rawDesc = []byte{
 	0x68, 0x61, 0x73, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x27, 0x0a, 0x0f,
 	0x63, 0x61, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x18,
 	0x15, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0e, 0x63, 0x61, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x53,
-	0x65, 0x72, 0x76, 0x65, 0x72, 0x22, 0xa2, 0x01, 0x0a, 0x0a, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63,
+	0x65, 0x72, 0x76, 0x65, 0x72, 0x12, 0x40, 0x0a, 0x08, 0x75, 0x70, 0x73, 0x74, 0x72, 0x65, 0x61,
+	0x6d, 0x18, 0x16, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x63, 0x6e, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x55,
+	0x70, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x08, 0x75,
+	0x70, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x22, 0x8b, 0x01, 0x0a, 0x0e, 0x55, 0x70, 0x73, 0x74,
+	0x72, 0x65, 0x61, 0x6d, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x1b, 0x0a, 0x09, 0x61, 0x73,
+	0x73, 0x65, 0x74, 0x5f, 0x6d, 0x72, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61,
+	0x73, 0x73, 0x65, 0x74, 0x4d, 0x72, 0x6e, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x70, 0x61, 0x63, 0x65,
+	0x5f, 0x6d, 0x72, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x4d, 0x72, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x61, 0x70, 0x69, 0x5f, 0x65, 0x6e, 0x64, 0x70,
+	0x6f, 0x69, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x61, 0x70, 0x69, 0x45,
+	0x6e, 0x64, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x6e, 0x63, 0x6f, 0x67,
+	0x6e, 0x69, 0x74, 0x6f, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x69, 0x6e, 0x63, 0x6f,
+	0x67, 0x6e, 0x69, 0x74, 0x6f, 0x22, 0xa2, 0x01, 0x0a, 0x0a, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63,
 	0x74, 0x52, 0x65, 0x73, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
 	0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x31, 0x0a, 0x05, 0x61, 0x73, 0x73, 0x65,
@@ -756,56 +848,58 @@ func file_plugin_proto_rawDescGZIP() []byte {
 	return file_plugin_proto_rawDescData
 }
 
-var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_plugin_proto_goTypes = []interface{}{
 	(*ParseCLIReq)(nil),         // 0: cnquery.providers.v1.ParseCLIReq
 	(*ParseCLIRes)(nil),         // 1: cnquery.providers.v1.ParseCLIRes
 	(*ConnectReq)(nil),          // 2: cnquery.providers.v1.ConnectReq
-	(*ConnectRes)(nil),          // 3: cnquery.providers.v1.ConnectRes
-	(*DataReq)(nil),             // 4: cnquery.providers.v1.DataReq
-	(*DataRes)(nil),             // 5: cnquery.providers.v1.DataRes
-	(*CollectRes)(nil),          // 6: cnquery.providers.v1.CollectRes
-	(*StoreReq)(nil),            // 7: cnquery.providers.v1.StoreReq
-	(*ResourceData)(nil),        // 8: cnquery.providers.v1.ResourceData
-	(*StoreRes)(nil),            // 9: cnquery.providers.v1.StoreRes
-	nil,                         // 10: cnquery.providers.v1.ParseCLIReq.FlagsEntry
-	nil,                         // 11: cnquery.providers.v1.DataReq.ArgsEntry
-	nil,                         // 12: cnquery.providers.v1.ResourceData.FieldsEntry
-	(*inventory.Asset)(nil),     // 13: cnquery.providers.v1.Asset
-	(*inventory.Inventory)(nil), // 14: cnquery.providers.v1.Inventory
-	(*llx.Primitive)(nil),       // 15: cnquery.llx.Primitive
-	(*llx.Result)(nil),          // 16: cnquery.llx.Result
+	(*UpstreamConfig)(nil),      // 3: cnquery.providers.v1.UpstreamConfig
+	(*ConnectRes)(nil),          // 4: cnquery.providers.v1.ConnectRes
+	(*DataReq)(nil),             // 5: cnquery.providers.v1.DataReq
+	(*DataRes)(nil),             // 6: cnquery.providers.v1.DataRes
+	(*CollectRes)(nil),          // 7: cnquery.providers.v1.CollectRes
+	(*StoreReq)(nil),            // 8: cnquery.providers.v1.StoreReq
+	(*ResourceData)(nil),        // 9: cnquery.providers.v1.ResourceData
+	(*StoreRes)(nil),            // 10: cnquery.providers.v1.StoreRes
+	nil,                         // 11: cnquery.providers.v1.ParseCLIReq.FlagsEntry
+	nil,                         // 12: cnquery.providers.v1.DataReq.ArgsEntry
+	nil,                         // 13: cnquery.providers.v1.ResourceData.FieldsEntry
+	(*inventory.Asset)(nil),     // 14: cnquery.providers.v1.Asset
+	(*inventory.Inventory)(nil), // 15: cnquery.providers.v1.Inventory
+	(*llx.Primitive)(nil),       // 16: cnquery.llx.Primitive
+	(*llx.Result)(nil),          // 17: cnquery.llx.Result
 }
 var file_plugin_proto_depIdxs = []int32{
-	10, // 0: cnquery.providers.v1.ParseCLIReq.flags:type_name -> cnquery.providers.v1.ParseCLIReq.FlagsEntry
-	13, // 1: cnquery.providers.v1.ParseCLIRes.asset:type_name -> cnquery.providers.v1.Asset
-	13, // 2: cnquery.providers.v1.ConnectReq.asset:type_name -> cnquery.providers.v1.Asset
-	13, // 3: cnquery.providers.v1.ConnectRes.asset:type_name -> cnquery.providers.v1.Asset
-	14, // 4: cnquery.providers.v1.ConnectRes.inventory:type_name -> cnquery.providers.v1.Inventory
-	11, // 5: cnquery.providers.v1.DataReq.args:type_name -> cnquery.providers.v1.DataReq.ArgsEntry
-	15, // 6: cnquery.providers.v1.DataRes.data:type_name -> cnquery.llx.Primitive
-	8,  // 7: cnquery.providers.v1.StoreReq.resources:type_name -> cnquery.providers.v1.ResourceData
-	12, // 8: cnquery.providers.v1.ResourceData.fields:type_name -> cnquery.providers.v1.ResourceData.FieldsEntry
-	15, // 9: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> cnquery.llx.Primitive
-	15, // 10: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> cnquery.llx.Primitive
-	16, // 11: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> cnquery.llx.Result
-	0,  // 12: cnquery.providers.v1.ProviderPlugin.ParseCLI:input_type -> cnquery.providers.v1.ParseCLIReq
-	2,  // 13: cnquery.providers.v1.ProviderPlugin.Connect:input_type -> cnquery.providers.v1.ConnectReq
-	4,  // 14: cnquery.providers.v1.ProviderPlugin.GetData:input_type -> cnquery.providers.v1.DataReq
-	7,  // 15: cnquery.providers.v1.ProviderPlugin.StoreData:input_type -> cnquery.providers.v1.StoreReq
-	5,  // 16: cnquery.providers.v1.ProviderCallback.Collect:input_type -> cnquery.providers.v1.DataRes
-	4,  // 17: cnquery.providers.v1.ProviderCallback.GetRecording:input_type -> cnquery.providers.v1.DataReq
-	1,  // 18: cnquery.providers.v1.ProviderPlugin.ParseCLI:output_type -> cnquery.providers.v1.ParseCLIRes
-	3,  // 19: cnquery.providers.v1.ProviderPlugin.Connect:output_type -> cnquery.providers.v1.ConnectRes
-	5,  // 20: cnquery.providers.v1.ProviderPlugin.GetData:output_type -> cnquery.providers.v1.DataRes
-	9,  // 21: cnquery.providers.v1.ProviderPlugin.StoreData:output_type -> cnquery.providers.v1.StoreRes
-	6,  // 22: cnquery.providers.v1.ProviderCallback.Collect:output_type -> cnquery.providers.v1.CollectRes
-	8,  // 23: cnquery.providers.v1.ProviderCallback.GetRecording:output_type -> cnquery.providers.v1.ResourceData
-	18, // [18:24] is the sub-list for method output_type
-	12, // [12:18] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	11, // 0: cnquery.providers.v1.ParseCLIReq.flags:type_name -> cnquery.providers.v1.ParseCLIReq.FlagsEntry
+	14, // 1: cnquery.providers.v1.ParseCLIRes.asset:type_name -> cnquery.providers.v1.Asset
+	14, // 2: cnquery.providers.v1.ConnectReq.asset:type_name -> cnquery.providers.v1.Asset
+	3,  // 3: cnquery.providers.v1.ConnectReq.upstream:type_name -> cnquery.providers.v1.UpstreamConfig
+	14, // 4: cnquery.providers.v1.ConnectRes.asset:type_name -> cnquery.providers.v1.Asset
+	15, // 5: cnquery.providers.v1.ConnectRes.inventory:type_name -> cnquery.providers.v1.Inventory
+	12, // 6: cnquery.providers.v1.DataReq.args:type_name -> cnquery.providers.v1.DataReq.ArgsEntry
+	16, // 7: cnquery.providers.v1.DataRes.data:type_name -> cnquery.llx.Primitive
+	9,  // 8: cnquery.providers.v1.StoreReq.resources:type_name -> cnquery.providers.v1.ResourceData
+	13, // 9: cnquery.providers.v1.ResourceData.fields:type_name -> cnquery.providers.v1.ResourceData.FieldsEntry
+	16, // 10: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> cnquery.llx.Primitive
+	16, // 11: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> cnquery.llx.Primitive
+	17, // 12: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> cnquery.llx.Result
+	0,  // 13: cnquery.providers.v1.ProviderPlugin.ParseCLI:input_type -> cnquery.providers.v1.ParseCLIReq
+	2,  // 14: cnquery.providers.v1.ProviderPlugin.Connect:input_type -> cnquery.providers.v1.ConnectReq
+	5,  // 15: cnquery.providers.v1.ProviderPlugin.GetData:input_type -> cnquery.providers.v1.DataReq
+	8,  // 16: cnquery.providers.v1.ProviderPlugin.StoreData:input_type -> cnquery.providers.v1.StoreReq
+	6,  // 17: cnquery.providers.v1.ProviderCallback.Collect:input_type -> cnquery.providers.v1.DataRes
+	5,  // 18: cnquery.providers.v1.ProviderCallback.GetRecording:input_type -> cnquery.providers.v1.DataReq
+	1,  // 19: cnquery.providers.v1.ProviderPlugin.ParseCLI:output_type -> cnquery.providers.v1.ParseCLIRes
+	4,  // 20: cnquery.providers.v1.ProviderPlugin.Connect:output_type -> cnquery.providers.v1.ConnectRes
+	6,  // 21: cnquery.providers.v1.ProviderPlugin.GetData:output_type -> cnquery.providers.v1.DataRes
+	10, // 22: cnquery.providers.v1.ProviderPlugin.StoreData:output_type -> cnquery.providers.v1.StoreRes
+	7,  // 23: cnquery.providers.v1.ProviderCallback.Collect:output_type -> cnquery.providers.v1.CollectRes
+	9,  // 24: cnquery.providers.v1.ProviderCallback.GetRecording:output_type -> cnquery.providers.v1.ResourceData
+	19, // [19:25] is the sub-list for method output_type
+	13, // [13:19] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_plugin_proto_init() }
@@ -851,7 +945,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConnectRes); i {
+			switch v := v.(*UpstreamConfig); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -863,7 +957,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DataReq); i {
+			switch v := v.(*ConnectRes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -875,7 +969,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DataRes); i {
+			switch v := v.(*DataReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -887,7 +981,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CollectRes); i {
+			switch v := v.(*DataRes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -899,7 +993,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StoreReq); i {
+			switch v := v.(*CollectRes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -911,7 +1005,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ResourceData); i {
+			switch v := v.(*StoreReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -923,6 +1017,18 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ResourceData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_plugin_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StoreRes); i {
 			case 0:
 				return &v.state
@@ -941,7 +1047,7 @@ func file_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

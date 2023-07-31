@@ -1,4 +1,4 @@
-package core
+package resources
 
 import (
 	"context"
@@ -6,29 +6,26 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/upstream/mvd"
 )
 
 func (s *mqlMondooEol) id() (string, error) {
-	name, _ := s.Product()
-	version, _ := s.Version()
-
-	return "product:" + name + ":" + version, nil
+	return "product:" + s.Product.Data + ":" + s.Version.Data, nil
 }
 
-func (p *mqlMondooEol) GetDate() (*time.Time, error) {
-	name, _ := p.Product()
-	version, _ := p.Version()
+func (s *mqlMondooEol) date() (*time.Time, error) {
+	name := s.Product.Data
+	version := s.Version.Data
 
-	r := p.MotorRuntime
-	mcc := r.UpstreamConfig
-	if mcc == nil || mcc.ApiEndpoint == "" {
-		return nil, errors.New(MissingUpstreamErr)
+	upstream := s.MqlRuntime.Upstream
+	if upstream == nil || upstream.ApiEndpoint == "" {
+		return nil, resources.MissingUpstreamError{}
 	}
 
 	// get new advisory report
 	// start scanner client
-	scannerClient, err := newAdvisoryScannerHttpClient(mcc.ApiEndpoint, mcc.Plugins, mcc.HttpClient)
+	scannerClient, err := newAdvisoryScannerHttpClient(upstream.ApiEndpoint, upstream.Plugins, upstream.HttpClient)
 	if err != nil {
 		return nil, err
 	}

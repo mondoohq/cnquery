@@ -10,6 +10,95 @@ alias os.base.service = service
 alias os.base.services = services
 alias os.unix.sshd = sshd
 
+asset {
+  vulnerabilityReport() dict
+}
+
+// Returns platform EOL date information.
+private mondoo.eol {
+  // Product Name
+  product string
+  // Product Version
+  version string
+  // End-of-Life date for the product
+  date() time
+}
+
+// Information about the platform end-of-life. Deprecated, will be removed in v10.
+// Please use asset.eol instead.
+platform.eol @defaults("date") {
+  // Documentation URL
+  docsUrl string
+  // Product URL
+  productUrl string
+  // End-of-Life date
+  date time
+}
+
+// Returns all platform/package advisories
+platform.advisories {
+  []audit.advisory
+  // Worst CVSS score for all advisories
+  cvss() audit.cvss
+  // Statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Returns all platform/package cves
+platform.cves {
+  []audit.cve
+  // Worst CVSS score for all cves
+  cvss() audit.cvss
+  // Statistical information: total, critical, high, medium, low, none, unknown
+  stats() dict
+}
+
+// Common Vulnerability Scoring System (CVSS) Score
+private audit.cvss {
+  // CVSS Score ranging from 0.0 to 10.0
+  score   float
+  // CVSS score is also represented as a vector string
+  vector  string
+}
+
+// Platform/package advisory
+private audit.advisory {
+  // Advisory ID
+  id          string
+  // Mondoo Advisory Identifier
+  mrn         string
+  // Advisory Title
+  title       string
+  // Advisory Description
+  description string
+  // Advisory publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs
+  worstScore    audit.cvss
+}
+
+// Common Vulnerabilities and Exposures (CVE)
+private audit.cve {
+  // CVE ID
+  id        string
+  // Mondoo CVE Identifier
+  mrn       string
+  // CVE state
+  state     string
+  // Summary Description
+  summary   string
+  // Indicates if the CVE has a CVSS score
+  unscored  bool
+  // publication date
+  published   time
+  // Last modification date
+  modified    time
+  // Worst CVSS Score of all assigned CVEs
+  worstScore    audit.cvss
+}
+
 machine {}
 
 // SMBIOS BIOS information

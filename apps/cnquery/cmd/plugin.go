@@ -97,7 +97,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		out.WriteString("[")
 	}
 
-	var upstreamConfig *providers.UpstreamConfig
+	var upstreamConfig *pp.UpstreamClient
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount != nil {
 		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
@@ -106,13 +106,15 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 			os.Exit(ConfigurationErrorCode)
 		}
 
-		upstreamConfig = &providers.UpstreamConfig{
+		upstreamConfig = &pp.UpstreamClient{
 			// we currently do not expose incognito to the plugin/run command
-			Incognito:   true,
-			SpaceMrn:    opts.GetParentMrn(),
-			ApiEndpoint: opts.UpstreamApiEndpoint(),
-			Plugins:     []ranger.ClientPlugin{certAuth},
-			HttpClient:  ranger.DefaultHttpClient(),
+			UpstreamConfig: pp.UpstreamConfig{
+				Incognito:   true,
+				SpaceMrn:    opts.GetParentMrn(),
+				ApiEndpoint: opts.UpstreamApiEndpoint(),
+			},
+			Plugins:    []ranger.ClientPlugin{certAuth},
+			HttpClient: ranger.DefaultHttpClient(),
 		}
 	}
 
@@ -138,7 +140,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		shellOptions = append(shellOptions, shell.WithOutput(out))
 
 		if upstreamConfig != nil {
-			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
+			shellOptions = append(shellOptions, shell.WithUpstreamConfig(&upstreamConfig.UpstreamConfig))
 		}
 
 		sh, err := shell.New(runtime, shellOptions...)
