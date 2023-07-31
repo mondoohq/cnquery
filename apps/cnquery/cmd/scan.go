@@ -142,7 +142,7 @@ type scanConfig struct {
 	IsIncognito bool
 	DoRecord    bool
 
-	UpstreamConfig *providers.UpstreamConfig
+	UpstreamConfig *plugin.UpstreamConfig
 }
 
 func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {

@@ -17,3 +17,11 @@ type NotFoundError struct {
 func (n NotFoundError) Error() string {
 	return n.Resource + " '" + n.ID + "' not found"
 }
+
+type MissingUpstreamError struct{}
+
+func (m MissingUpstreamError) Error() string {
+	return `To use this resource, you must authenticate with Mondoo Platform.
+To learn how, read:
+https://mondoo.com/docs/cnspec/cnspec-adv-install/registration/`
+}

@@ -105,6 +105,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mondoo.jobEnvironment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondoo).GetJobEnvironment()).ToDataRes(types.Dict)
 	},
+	"mondoo.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondoo).GetCapabilities()).ToDataRes(types.Array(types.String))
+	},
 	"asset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetName()).ToDataRes(types.String)
 	},
@@ -219,6 +222,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"mondoo.jobEnvironment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMondoo).JobEnvironment, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"mondoo.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondoo).Capabilities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -382,6 +389,7 @@ type mqlMondoo struct {
 	Build plugin.TValue[string]
 	Arch plugin.TValue[string]
 	JobEnvironment plugin.TValue[interface{}]
+	Capabilities plugin.TValue[[]interface{}]
 }
 
 // createMondoo creates a new instance of this resource
@@ -437,6 +445,12 @@ func (c *mqlMondoo) GetArch() *plugin.TValue[string] {
 func (c *mqlMondoo) GetJobEnvironment() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.JobEnvironment, func() (interface{}, error) {
 		return c.jobEnvironment()
+	})
+}
+
+func (c *mqlMondoo) GetCapabilities() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Capabilities, func() ([]interface{}, error) {
+		return c.capabilities()
 	})
 }
 

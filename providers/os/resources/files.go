@@ -128,7 +128,7 @@ func (l *mqlFilesFind) list() ([]interface{}, error) {
 		cmd := rawCmd.(*mqlCommand)
 		out := cmd.GetStdout()
 		if out.Error != nil {
-			return nil, err
+			return nil, out.Error
 		}
 
 		foundFiles = strings.Split(strings.Trim(out.Data, " \t\n"), "\n")

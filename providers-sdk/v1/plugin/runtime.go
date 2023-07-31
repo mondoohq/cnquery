@@ -1,8 +1,11 @@
 package plugin
 
 import (
+	"net/http"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/ranger-rpc"
 )
 
 type Runtime struct {
@@ -11,6 +14,18 @@ type Runtime struct {
 	Callback       ProviderCallback
 	HasRecording   bool
 	CreateResource CreateNamedResource
+	Upstream       *UpstreamClient
+}
+
+// mondoo platform config so that resource scan talk upstream
+// TODO: this configuration struct does not belong into the MQL package
+// nevertheless the MQL runtime needs to have something that allows users
+// to store additional credentials so that resource can use those for
+// their resources.
+type UpstreamClient struct {
+	UpstreamConfig
+	Plugins    []ranger.ClientPlugin
+	HttpClient *http.Client
 }
 
 type Connection interface{}

@@ -39,7 +39,7 @@ func (x *mqlPackage) init(args map[string]interface{}) (map[string]interface{}, 
 
 	list := packages.GetList()
 	if list.Error != nil {
-		return nil, nil, err
+		return nil, nil, list.Error
 	}
 
 	x, found := packages.packagesByName[name]

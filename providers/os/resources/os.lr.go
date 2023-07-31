@@ -14,6 +14,38 @@ var resourceFactories map[string]plugin.ResourceFactory
 
 func init() {
 	resourceFactories = map[string]plugin.ResourceFactory {
+		"asset": {
+			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAsset,
+		},
+		"mondoo.eol": {
+			// to override args, implement: initMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMondooEol,
+		},
+		"platform.eol": {
+			Init: initPlatformEol,
+			Create: createPlatformEol,
+		},
+		"platform.advisories": {
+			// to override args, implement: initPlatformAdvisories(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPlatformAdvisories,
+		},
+		"platform.cves": {
+			// to override args, implement: initPlatformCves(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPlatformCves,
+		},
+		"audit.cvss": {
+			// to override args, implement: initAuditCvss(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditCvss,
+		},
+		"audit.advisory": {
+			// to override args, implement: initAuditAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditAdvisory,
+		},
+		"audit.cve": {
+			// to override args, implement: initAuditCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditCve,
+		},
 		"machine": {
 			// to override args, implement: initMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMachine,
@@ -245,6 +277,96 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 }
 
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
+	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
+	},
+	"mondoo.eol.product": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooEol).GetProduct()).ToDataRes(types.String)
+	},
+	"mondoo.eol.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooEol).GetVersion()).ToDataRes(types.String)
+	},
+	"mondoo.eol.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMondooEol).GetDate()).ToDataRes(types.Time)
+	},
+	"platform.eol.docsUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformEol).GetDocsUrl()).ToDataRes(types.String)
+	},
+	"platform.eol.productUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformEol).GetProductUrl()).ToDataRes(types.String)
+	},
+	"platform.eol.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformEol).GetDate()).ToDataRes(types.Time)
+	},
+	"platform.advisories.cvss": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformAdvisories).GetCvss()).ToDataRes(types.Resource("audit.cvss"))
+	},
+	"platform.advisories.stats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformAdvisories).GetStats()).ToDataRes(types.Dict)
+	},
+	"platform.advisories.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformAdvisories).GetList()).ToDataRes(types.Array(types.Resource("audit.advisory")))
+	},
+	"platform.cves.cvss": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformCves).GetCvss()).ToDataRes(types.Resource("audit.cvss"))
+	},
+	"platform.cves.stats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformCves).GetStats()).ToDataRes(types.Dict)
+	},
+	"platform.cves.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPlatformCves).GetList()).ToDataRes(types.Array(types.Resource("audit.cve")))
+	},
+	"audit.cvss.score": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCvss).GetScore()).ToDataRes(types.Float)
+	},
+	"audit.cvss.vector": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCvss).GetVector()).ToDataRes(types.String)
+	},
+	"audit.advisory.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditAdvisory).GetId()).ToDataRes(types.String)
+	},
+	"audit.advisory.mrn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditAdvisory).GetMrn()).ToDataRes(types.String)
+	},
+	"audit.advisory.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditAdvisory).GetTitle()).ToDataRes(types.String)
+	},
+	"audit.advisory.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditAdvisory).GetDescription()).ToDataRes(types.String)
+	},
+	"audit.advisory.published": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditAdvisory).GetPublished()).ToDataRes(types.Time)
+	},
+	"audit.advisory.modified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditAdvisory).GetModified()).ToDataRes(types.Time)
+	},
+	"audit.advisory.worstScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditAdvisory).GetWorstScore()).ToDataRes(types.Resource("audit.cvss"))
+	},
+	"audit.cve.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetId()).ToDataRes(types.String)
+	},
+	"audit.cve.mrn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetMrn()).ToDataRes(types.String)
+	},
+	"audit.cve.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetState()).ToDataRes(types.String)
+	},
+	"audit.cve.summary": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetSummary()).ToDataRes(types.String)
+	},
+	"audit.cve.unscored": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetUnscored()).ToDataRes(types.Bool)
+	},
+	"audit.cve.published": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetPublished()).ToDataRes(types.Time)
+	},
+	"audit.cve.modified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetModified()).ToDataRes(types.Time)
+	},
+	"audit.cve.worstScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditCve).GetWorstScore()).ToDataRes(types.Resource("audit.cvss"))
+	},
 	"machine.bios.vendor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMachineBios).GetVendor()).ToDataRes(types.String)
 	},
@@ -884,6 +1006,158 @@ func GetData(resource plugin.Resource, field string, args map[string]*llx.RawDat
 }
 
 var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
+	"asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAsset).__id, ok = v.Value.(string)
+			return
+		},
+	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"mondoo.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMondooEol).__id, ok = v.Value.(string)
+			return
+		},
+	"mondoo.eol.product": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooEol).Product, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mondoo.eol.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooEol).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mondoo.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMondooEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"platform.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPlatformEol).__id, ok = v.Value.(string)
+			return
+		},
+	"platform.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"platform.eol.productUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformEol).ProductUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"platform.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"platform.advisories.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPlatformAdvisories).__id, ok = v.Value.(string)
+			return
+		},
+	"platform.advisories.cvss": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformAdvisories).Cvss, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
+		return
+	},
+	"platform.advisories.stats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformAdvisories).Stats, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"platform.advisories.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformAdvisories).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"platform.cves.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPlatformCves).__id, ok = v.Value.(string)
+			return
+		},
+	"platform.cves.cvss": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformCves).Cvss, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
+		return
+	},
+	"platform.cves.stats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformCves).Stats, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"platform.cves.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPlatformCves).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"audit.cvss.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditCvss).__id, ok = v.Value.(string)
+			return
+		},
+	"audit.cvss.score": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCvss).Score, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"audit.cvss.vector": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCvss).Vector, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.advisory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditAdvisory).__id, ok = v.Value.(string)
+			return
+		},
+	"audit.advisory.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditAdvisory).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.advisory.mrn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditAdvisory).Mrn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.advisory.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditAdvisory).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.advisory.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditAdvisory).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.advisory.published": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditAdvisory).Published, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"audit.advisory.modified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditAdvisory).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"audit.advisory.worstScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditAdvisory).WorstScore, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
+		return
+	},
+	"audit.cve.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditCve).__id, ok = v.Value.(string)
+			return
+		},
+	"audit.cve.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.cve.mrn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).Mrn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.cve.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.cve.summary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).Summary, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"audit.cve.unscored": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).Unscored, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"audit.cve.published": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).Published, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"audit.cve.modified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).Modified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"audit.cve.worstScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditCve).WorstScore, ok = plugin.RawToTValue[*mqlAuditCvss](v.Value, v.Error)
+		return
+	},
 	"machine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlMachine).__id, ok = v.Value.(string)
 			return
@@ -1914,6 +2188,533 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 		}
 	}
 	return nil
+}
+
+// mqlAsset for the asset resource
+type mqlAsset struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAssetInternal it will be used here
+	VulnerabilityReport plugin.TValue[interface{}]
+}
+
+// createAsset creates a new instance of this resource
+func createAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAsset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("asset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAsset) MqlName() string {
+	return "asset"
+}
+
+func (c *mqlAsset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
+		return c.vulnerabilityReport()
+	})
+}
+
+// mqlMondooEol for the mondoo.eol resource
+type mqlMondooEol struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMondooEolInternal it will be used here
+	Product plugin.TValue[string]
+	Version plugin.TValue[string]
+	Date plugin.TValue[*time.Time]
+}
+
+// createMondooEol creates a new instance of this resource
+func createMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMondooEol{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mondoo.eol", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMondooEol) MqlName() string {
+	return "mondoo.eol"
+}
+
+func (c *mqlMondooEol) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMondooEol) GetProduct() *plugin.TValue[string] {
+	return &c.Product
+}
+
+func (c *mqlMondooEol) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlMondooEol) GetDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.Date, func() (*time.Time, error) {
+		return c.date()
+	})
+}
+
+// mqlPlatformEol for the platform.eol resource
+type mqlPlatformEol struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPlatformEolInternal it will be used here
+	DocsUrl plugin.TValue[string]
+	ProductUrl plugin.TValue[string]
+	Date plugin.TValue[*time.Time]
+}
+
+// createPlatformEol creates a new instance of this resource
+func createPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPlatformEol{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("platform.eol", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPlatformEol) MqlName() string {
+	return "platform.eol"
+}
+
+func (c *mqlPlatformEol) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPlatformEol) GetDocsUrl() *plugin.TValue[string] {
+	return &c.DocsUrl
+}
+
+func (c *mqlPlatformEol) GetProductUrl() *plugin.TValue[string] {
+	return &c.ProductUrl
+}
+
+func (c *mqlPlatformEol) GetDate() *plugin.TValue[*time.Time] {
+	return &c.Date
+}
+
+// mqlPlatformAdvisories for the platform.advisories resource
+type mqlPlatformAdvisories struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPlatformAdvisoriesInternal it will be used here
+	Cvss plugin.TValue[*mqlAuditCvss]
+	Stats plugin.TValue[interface{}]
+	List plugin.TValue[[]interface{}]
+}
+
+// createPlatformAdvisories creates a new instance of this resource
+func createPlatformAdvisories(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPlatformAdvisories{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("platform.advisories", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPlatformAdvisories) MqlName() string {
+	return "platform.advisories"
+}
+
+func (c *mqlPlatformAdvisories) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPlatformAdvisories) GetCvss() *plugin.TValue[*mqlAuditCvss] {
+	return plugin.GetOrCompute[*mqlAuditCvss](&c.Cvss, func() (*mqlAuditCvss, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("platform.advisories", c.__id, "cvss")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAuditCvss), nil
+			}
+		}
+
+		return c.cvss()
+	})
+}
+
+func (c *mqlPlatformAdvisories) GetStats() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Stats, func() (interface{}, error) {
+		return c.stats()
+	})
+}
+
+func (c *mqlPlatformAdvisories) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("platform.advisories", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlPlatformCves for the platform.cves resource
+type mqlPlatformCves struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPlatformCvesInternal it will be used here
+	Cvss plugin.TValue[*mqlAuditCvss]
+	Stats plugin.TValue[interface{}]
+	List plugin.TValue[[]interface{}]
+}
+
+// createPlatformCves creates a new instance of this resource
+func createPlatformCves(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPlatformCves{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("platform.cves", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPlatformCves) MqlName() string {
+	return "platform.cves"
+}
+
+func (c *mqlPlatformCves) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPlatformCves) GetCvss() *plugin.TValue[*mqlAuditCvss] {
+	return plugin.GetOrCompute[*mqlAuditCvss](&c.Cvss, func() (*mqlAuditCvss, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("platform.cves", c.__id, "cvss")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAuditCvss), nil
+			}
+		}
+
+		return c.cvss()
+	})
+}
+
+func (c *mqlPlatformCves) GetStats() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Stats, func() (interface{}, error) {
+		return c.stats()
+	})
+}
+
+func (c *mqlPlatformCves) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("platform.cves", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlAuditCvss for the audit.cvss resource
+type mqlAuditCvss struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditCvssInternal it will be used here
+	Score plugin.TValue[float64]
+	Vector plugin.TValue[string]
+}
+
+// createAuditCvss creates a new instance of this resource
+func createAuditCvss(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditCvss{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("audit.cvss", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditCvss) MqlName() string {
+	return "audit.cvss"
+}
+
+func (c *mqlAuditCvss) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditCvss) GetScore() *plugin.TValue[float64] {
+	return &c.Score
+}
+
+func (c *mqlAuditCvss) GetVector() *plugin.TValue[string] {
+	return &c.Vector
+}
+
+// mqlAuditAdvisory for the audit.advisory resource
+type mqlAuditAdvisory struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditAdvisoryInternal it will be used here
+	Id plugin.TValue[string]
+	Mrn plugin.TValue[string]
+	Title plugin.TValue[string]
+	Description plugin.TValue[string]
+	Published plugin.TValue[*time.Time]
+	Modified plugin.TValue[*time.Time]
+	WorstScore plugin.TValue[*mqlAuditCvss]
+}
+
+// createAuditAdvisory creates a new instance of this resource
+func createAuditAdvisory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditAdvisory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("audit.advisory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditAdvisory) MqlName() string {
+	return "audit.advisory"
+}
+
+func (c *mqlAuditAdvisory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditAdvisory) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAuditAdvisory) GetMrn() *plugin.TValue[string] {
+	return &c.Mrn
+}
+
+func (c *mqlAuditAdvisory) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlAuditAdvisory) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAuditAdvisory) GetPublished() *plugin.TValue[*time.Time] {
+	return &c.Published
+}
+
+func (c *mqlAuditAdvisory) GetModified() *plugin.TValue[*time.Time] {
+	return &c.Modified
+}
+
+func (c *mqlAuditAdvisory) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
+	return &c.WorstScore
+}
+
+// mqlAuditCve for the audit.cve resource
+type mqlAuditCve struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditCveInternal it will be used here
+	Id plugin.TValue[string]
+	Mrn plugin.TValue[string]
+	State plugin.TValue[string]
+	Summary plugin.TValue[string]
+	Unscored plugin.TValue[bool]
+	Published plugin.TValue[*time.Time]
+	Modified plugin.TValue[*time.Time]
+	WorstScore plugin.TValue[*mqlAuditCvss]
+}
+
+// createAuditCve creates a new instance of this resource
+func createAuditCve(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditCve{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("audit.cve", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditCve) MqlName() string {
+	return "audit.cve"
+}
+
+func (c *mqlAuditCve) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditCve) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAuditCve) GetMrn() *plugin.TValue[string] {
+	return &c.Mrn
+}
+
+func (c *mqlAuditCve) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAuditCve) GetSummary() *plugin.TValue[string] {
+	return &c.Summary
+}
+
+func (c *mqlAuditCve) GetUnscored() *plugin.TValue[bool] {
+	return &c.Unscored
+}
+
+func (c *mqlAuditCve) GetPublished() *plugin.TValue[*time.Time] {
+	return &c.Published
+}
+
+func (c *mqlAuditCve) GetModified() *plugin.TValue[*time.Time] {
+	return &c.Modified
+}
+
+func (c *mqlAuditCve) GetWorstScore() *plugin.TValue[*mqlAuditCvss] {
+	return &c.WorstScore
 }
 
 // mqlMachine for the machine resource

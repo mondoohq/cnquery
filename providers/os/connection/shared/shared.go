@@ -46,6 +46,20 @@ func (c Capabilities) Has(other Capabilities) bool {
 	return c&other == other
 }
 
+func (c Capabilities) String() []string {
+	res := []string{}
+	if c.Has(Capability_RunCommand) {
+		res = append(res, "run-command")
+	}
+	if c.Has(Capability_File) {
+		res = append(res, "file")
+	}
+	if c.Has(Capability_FindFile) {
+		res = append(res, "find-file")
+	}
+	return res
+}
+
 type FileSearch interface {
 	Find(from string, r *regexp.Regexp, typ string) ([]string, error)
 }
