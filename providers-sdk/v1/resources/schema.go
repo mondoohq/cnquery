@@ -6,7 +6,34 @@ func (s *Schema) Add(other *Schema) *Schema {
 	}
 
 	for k, v := range other.Resources {
-		s.Resources[k] = v
+		if existing, ok := s.Resources[k]; ok {
+			if v.Title != "" {
+				existing.Title = v.Title
+			}
+			if v.Desc != "" {
+				existing.Desc = v.Desc
+			}
+			if !v.Private {
+				existing.Private = false
+			}
+			if v.Init != nil {
+				existing.Init = v.Init
+				existing.Provider = v.Provider
+			}
+			if v.Defaults != "" {
+				existing.Defaults = v.Defaults
+			}
+
+			if existing.Fields == nil {
+				existing.Fields = v.Fields
+			} else {
+				for fk, fv := range v.Fields {
+					existing.Fields[fk] = fv
+				}
+			}
+		} else {
+			s.Resources[k] = v
+		}
 	}
 
 	return s
