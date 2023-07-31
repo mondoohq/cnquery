@@ -31,7 +31,27 @@ func convertPlatform2VulnPlatform(pf *inventory.Platform) *mvd.Platform {
 	}
 }
 
+// FIXME: DEPRECATED, update in v10.0 vv
 func initPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	res, cache, err := initAssetEol(runtime, args)
+	if err != nil || res != nil || cache == nil {
+		return res, nil, err
+	}
+
+	acache := cache.(*mqlAssetEol)
+	cres := mqlPlatformEol{
+		MqlRuntime: acache.MqlRuntime,
+		DocsUrl:    acache.DocsUrl,
+		ProductUrl: acache.ProductUrl,
+		Date:       acache.Date,
+	}
+
+	return nil, &cres, nil
+}
+
+// ^^
+
+func initAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	conn := runtime.Connection.(shared.Connection)
 	platform := conn.Asset().Platform
 	eolPlatform := convertPlatform2VulnPlatform(platform)
@@ -49,31 +69,31 @@ func initPlatformEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, err
 	}
 
-	platformEolInfo, err := scannerClient.IsEol(context.Background(), eolPlatform)
+	eolInfo, err := scannerClient.IsEol(context.Background(), eolPlatform)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	log.Debug().Str("name", eolPlatform.Name).Str("release", eolPlatform.Release).Str("title", eolPlatform.Title).Msg("search for eol information")
-	if platformEolInfo == nil {
+	if eolInfo == nil {
 		return nil, nil, errors.New("no platform eol information available")
 	}
 
 	var eolDate *time.Time
-	if platformEolInfo.EolDate != "" {
-		parsedEolDate, err := time.Parse(time.RFC3339, platformEolInfo.EolDate)
+	if eolInfo.EolDate != "" {
+		parsedEolDate, err := time.Parse(time.RFC3339, eolInfo.EolDate)
 		if err != nil {
-			return nil, nil, errors.New("could not parse eol date: " + platformEolInfo.EolDate)
+			return nil, nil, errors.New("could not parse eol date: " + eolInfo.EolDate)
 		}
 		eolDate = &parsedEolDate
 	} else {
 		eolDate = &llx.NeverFutureTime
 	}
 
-	res := mqlPlatformEol{
+	res := mqlAssetEol{
 		MqlRuntime: runtime,
-		DocsUrl:    plugin.TValue[string]{Data: platformEolInfo.DocsUrl, State: plugin.StateIsSet},
-		ProductUrl: plugin.TValue[string]{Data: platformEolInfo.ProductUrl, State: plugin.StateIsSet},
+		DocsUrl:    plugin.TValue[string]{Data: eolInfo.DocsUrl, State: plugin.StateIsSet},
+		ProductUrl: plugin.TValue[string]{Data: eolInfo.ProductUrl, State: plugin.StateIsSet},
 		Date:       plugin.TValue[*time.Time]{Data: eolDate, State: plugin.StateIsSet},
 	}
 
