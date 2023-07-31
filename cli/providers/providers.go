@@ -185,18 +185,18 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		},
 		{
 			Long: "record",
-			Type: plugin.FlagType_Bool,
-			Desc: "Enable the recording of all resources and fields",
-		},
-		{
-			Long: "recording",
 			Type: plugin.FlagType_String,
-			Desc: "Use a recording for caching or create a new recording (with --record)",
+			Desc: "Record all resouce calls and use resouces in the recording",
 		},
 		{
-			Long:   "prettyjson",
+			Long: "use-recording",
+			Type: plugin.FlagType_String,
+			Desc: "Use a recording to inject resouces data (read-only)",
+		},
+		{
+			Long:   "pretty",
 			Type:   plugin.FlagType_Bool,
-			Desc:   "Pretty-print json in recording",
+			Desc:   "Pretty-print JSON",
 			Option: plugin.FlagOption_Hidden,
 		},
 	}
@@ -246,25 +246,25 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 		// ^^
 
-		recording, err := cc.Flags().GetString("recording")
+		useRecording, err := cc.Flags().GetString("use-recording")
 		if err != nil {
 			log.Warn().Msg("failed to get flag --recording")
 		}
-		doRecord, err := cc.Flags().GetBool("record")
+		record, err := cc.Flags().GetString("record")
 		if err != nil {
 			log.Warn().Msg("failed to get flag --record")
 		}
-		prettyJSON, err := cc.Flags().GetBool("prettyjson")
+		pretty, err := cc.Flags().GetBool("pretty")
 		if err != nil {
-			log.Warn().Msg("failed to get flag --prettyjson")
+			log.Warn().Msg("failed to get flag --pretty")
 		}
 
 		// the following flags are not processed by the provider; we handle them
 		// here instead
 		skipFlags := map[string]struct{}{
-			"ask-pass":  {},
-			"record":    {},
-			"recording": {},
+			"ask-pass":      {},
+			"record":        {},
+			"use-recording": {},
 		}
 
 		flagVals := map[string]*llx.Primitive{}
@@ -306,9 +306,17 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)
 		}
 
-		runtime.Recording, err = providers.NewRecording(recording, providers.RecordingOptions{
-			DoRecord:        doRecord,
-			PrettyPrintJSON: prettyJSON,
+		if record != "" && useRecording != "" {
+			log.Fatal().Msg("please only use --record or --use-recording, but not both at the same time")
+		}
+		recordingPath := record
+		if recordingPath == "" {
+			recordingPath = useRecording
+		}
+
+		runtime.Recording, err = providers.NewRecording(recordingPath, providers.RecordingOptions{
+			DoRecord:        record != "",
+			PrettyPrintJSON: pretty,
 		})
 		if err != nil {
 			log.Fatal().Msg(err.Error())
