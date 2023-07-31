@@ -116,18 +116,6 @@ func list() {
 		log.Error().Err(err).Msg("failed to list providers")
 	}
 
-	for _, v := range list {
-		if v.Path == "" {
-			continue
-		}
-		if err := v.LoadJSON(); err != nil {
-			log.Error().Err(err).
-				Str("provider", v.Name).
-				Str("path", v.Path).
-				Msg("failed to load provider")
-		}
-	}
-
 	printProviders(list)
 }
 

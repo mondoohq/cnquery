@@ -54,17 +54,6 @@ func ListActive() (Providers, error) {
 		res[v.ID] = v
 	}
 
-	for _, v := range res {
-		// only happens for builtin providers
-		if v.Path == "" {
-			continue
-		}
-
-		if err := v.LoadJSON(); err != nil {
-			return nil, err
-		}
-	}
-
 	// useful for caching; even if the structure gets updated with new providers
 	Coordinator.Providers = res
 	return res, nil
@@ -73,7 +62,6 @@ func ListActive() (Providers, error) {
 // ListAll available providers, including duplicates between builtin, user,
 // and system providers. We only return errors when the things we are trying
 // to load don't work.
-// Note: That the providers are not loaded yet.
 // Note: We load providers from cache so these expensive calls don't have
 // to be repeated. If you want to force a refresh, you can nil out the cache.
 func ListAll() ([]*Provider, error) {
@@ -81,8 +69,8 @@ func ListAll() ([]*Provider, error) {
 		return CachedProviders, nil
 	}
 
-	res := []*Provider{}
-	CachedProviders = res
+	all := []*Provider{}
+	CachedProviders = all
 
 	// This really shouldn't happen, but just in case it does...
 	if SystemPath == "" && HomePath == "" {
@@ -107,7 +95,7 @@ func ListAll() ([]*Provider, error) {
 		if err != nil {
 			log.Warn().Str("path", SystemPath).Msg("failed to get providers from system path")
 		}
-		res = append(res, cur...)
+		all = append(all, cur...)
 	}
 
 	if homeOk {
@@ -115,17 +103,39 @@ func ListAll() ([]*Provider, error) {
 		if err != nil {
 			log.Warn().Str("path", HomePath).Msg("failed to get providers from home path")
 		}
-		res = append(res, cur...)
+		all = append(all, cur...)
 	}
 
 	for _, x := range builtinProviders {
-		res = append(res, &Provider{
+		all = append(all, &Provider{
 			Provider: x.Config,
 		})
 	}
 
-	CachedProviders = res
-	return res, nil
+	var res []*Provider
+	for i := range all {
+		provider := all[i]
+
+		// builtin providers don't need to be loaded, so they ok to be returned
+		if provider.Path == "" {
+			res = append(res, provider)
+			continue
+		}
+
+		// we only add a provider if we can load it, otherwise it has bad
+		// consequences for other mechanisms (like attaching shell, listing etc)
+		if err := provider.LoadJSON(); err != nil {
+			log.Error().Err(err).
+				Str("provider", provider.Name).
+				Str("path", provider.Path).
+				Msg("failed to load provider")
+		} else {
+			res = append(res, provider)
+		}
+	}
+
+	CachedProviders = all
+	return all, nil
 }
 
 func Install(name string) (*Provider, error) {
