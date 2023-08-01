@@ -3,7 +3,7 @@ package cnquery.providers.v1;
 option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/plugin";
 
 import "providers-sdk/v1/inventory/inventory.proto";
-import "upstream/upstream.proto";
+import "providers-sdk/v1/upstream/upstream.proto";
 import "llx/llx.proto";
 
 message ParseCLIReq {

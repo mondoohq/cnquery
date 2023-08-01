@@ -286,10 +286,10 @@ cnquery/dist/goreleaser/edge:
 
 shared/generate:
 	go generate ./shared/proto/.
-	go generate ./upstream/
-	go generate ./upstream/health
-	go generate ./upstream/mvd/cvss
-	go generate ./upstream/mvd
+	go generate ./providers-sdk/v1/upstream/
+	go generate ./providers-sdk/v1/upstream/health
+	go generate ./providers-sdk/v1/upstream/mvd/cvss
+	go generate ./providers-sdk/v1/upstream/mvd
 
 #   ⛹🏽‍ Testing   #
 

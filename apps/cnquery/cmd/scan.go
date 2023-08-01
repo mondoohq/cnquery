@@ -19,7 +19,7 @@ import (
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
 
 func init() {
@@ -260,7 +260,7 @@ func (c *scanConfig) loadBundles() error {
 
 func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 	// opts := []scan.ScannerOption{}
-	// if config.UpstreamConfig != nil {
+	// if config.runtime.UpstreamConfig != nil {
 	// 	opts = append(opts, scan.WithUpstream(config.UpstreamConfig.ApiEndpoint, config.UpstreamConfig.SpaceMrn, config.UpstreamConfig.Plugins, config.UpstreamConfig.HttpClient))
 	// }
 

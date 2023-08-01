@@ -17,7 +17,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
 
 func init() {

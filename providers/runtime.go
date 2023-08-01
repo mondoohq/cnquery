@@ -10,8 +10,8 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/cnquery/upstream"
 	protobuf "google.golang.org/protobuf/proto"
 )
 

@@ -15,9 +15,9 @@ import (
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/shared"
 	run "go.mondoo.com/cnquery/shared/proto"
-	"go.mondoo.com/cnquery/upstream"
 )
 
 // pluginCmd represents the version command

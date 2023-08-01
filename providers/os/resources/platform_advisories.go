@@ -11,10 +11,10 @@ import (
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvd"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvd/cvss"
 	"go.mondoo.com/cnquery/providers-sdk/v1/util/convert"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
-	"go.mondoo.com/cnquery/upstream/mvd"
-	"go.mondoo.com/cnquery/upstream/mvd/cvss"
 	"go.mondoo.com/ranger-rpc"
 )
 

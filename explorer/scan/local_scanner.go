@@ -25,7 +25,7 @@ import (
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
-	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/ranger-rpc"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -81,8 +81,8 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	upstreamConfig := plugin.UpstreamClient{
-		UpstreamConfig: plugin.UpstreamConfig{
+	upstreamConfig := upstream.UpstreamClient{
+		UpstreamConfig: upstream.UpstreamConfig{
 			SpaceMrn:    s.spaceMrn,
 			ApiEndpoint: s.apiEndpoint,
 			Incognito:   false,
@@ -116,8 +116,8 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	upstreamConfig := plugin.UpstreamClient{
-		UpstreamConfig: plugin.UpstreamConfig{
+	upstreamConfig := upstream.UpstreamClient{
+		UpstreamConfig: upstream.UpstreamConfig{
 			Incognito: true,
 		},
 	}
@@ -151,7 +151,7 @@ func preprocessQueryPackFilters(filters []string) []string {
 	return res
 }
 
-func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig plugin.UpstreamClient) (*explorer.ReportCollection, bool, error) {
+func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstreamConfig upstream.UpstreamClient) (*explorer.ReportCollection, bool, error) {
 	log.Info().Msgf("discover related assets for %d asset(s)", len(job.Inventory.Spec.Assets))
 	runtime := providers.DefaultRuntime()
 	im, err := manager.NewManager(manager.WithInventory(job.Inventory, runtime))

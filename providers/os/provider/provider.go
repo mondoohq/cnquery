@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
@@ -184,9 +185,12 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, err
 	}
 
-	upstream, err := req.Upstream.InitClient()
-	if err != nil {
-		return nil, err
+	var upstream *upstream.UpstreamClient
+	if req.Upstream != nil {
+		upstream, err = req.Upstream.InitClient()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	asset.Connections[0].Id = conn.ID()

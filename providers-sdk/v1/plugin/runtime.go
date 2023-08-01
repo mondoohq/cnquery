@@ -2,8 +2,8 @@ package plugin
 
 import (
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
-	upstream "go.mondoo.com/cnquery/upstream"
 )
 
 type Runtime struct {

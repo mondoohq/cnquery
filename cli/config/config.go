@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/logger"
-	"go.mondoo.com/cnquery/upstream"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
 
 /*

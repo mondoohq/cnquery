@@ -23,10 +23,10 @@ import (
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/stringx"
 	"go.mondoo.com/cnquery/types"
-	"go.mondoo.com/cnquery/upstream"
 )
 
 type ShellOption func(c *Shell)
