@@ -102,6 +102,9 @@ func New(runtime llx.Runtime, opts ...ShellOption) (*Shell, error) {
 		res.Theme = theme.DefaultTheme
 	}
 
+	schema := runtime.Schema()
+	res.Theme.PolicyPrinter.SetSchema(&schema)
+
 	res.completer = NewCompleter(runtime.Schema(), res.features, func() string {
 		return res.query
 	})
