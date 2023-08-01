@@ -3,6 +3,7 @@ package detector
 import (
 	"errors"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -45,4 +46,33 @@ func ParseRhelVersion(releaseDescription string) (string, string, error) {
 	release := n[1]
 
 	return name, release, nil
+}
+
+var (
+	suseTitle        = regexp.MustCompile(`^([\w\d\s\.]+)\(([\w\d\s\.]+)\)`)
+	suseVersion      = regexp.MustCompile(`VERSION\s*=\s*"?([\d\.]+)"?`)
+	susePatchVersion = regexp.MustCompile(`VERSION = (\d+)\nPATCHLEVEL = (\d+)`)
+)
+
+func ParseSuseTitle(v string) (string, string) {
+	m := suseTitle.FindStringSubmatch(v)
+	if len(m) == 0 {
+		return "", ""
+	}
+
+	return strings.TrimSpace(m[1]), strings.TrimSpace(m[2])
+}
+
+func ParseSuseVersion(v string) string {
+	m := susePatchVersion.FindStringSubmatch(v)
+	if len(m) == 3 {
+		return m[1] + "." + m[2]
+	}
+
+	m = suseVersion.FindStringSubmatch(v)
+	if len(m) == 0 {
+		return ""
+	}
+
+	return m[1]
 }
