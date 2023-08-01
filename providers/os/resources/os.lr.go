@@ -18,6 +18,10 @@ func init() {
 			// to override args, implement: initAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAsset,
 		},
+		"asset.eol": {
+			Init: initAssetEol,
+			Create: createAssetEol,
+		},
 		"mondoo.eol": {
 			// to override args, implement: initMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMondooEol,
@@ -279,6 +283,15 @@ func CreateResource(runtime *plugin.Runtime, name string, args map[string]*llx.R
 var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"asset.vulnerabilityReport": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAsset).GetVulnerabilityReport()).ToDataRes(types.Dict)
+	},
+	"asset.eol.docsUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAssetEol).GetDocsUrl()).ToDataRes(types.String)
+	},
+	"asset.eol.productUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAssetEol).GetProductUrl()).ToDataRes(types.String)
+	},
+	"asset.eol.date": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAssetEol).GetDate()).ToDataRes(types.Time)
 	},
 	"mondoo.eol.product": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMondooEol).GetProduct()).ToDataRes(types.String)
@@ -1012,6 +1025,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"asset.vulnerabilityReport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAsset).VulnerabilityReport, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"asset.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAssetEol).__id, ok = v.Value.(string)
+			return
+		},
+	"asset.eol.docsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAssetEol).DocsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"asset.eol.productUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAssetEol).ProductUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"asset.eol.date": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAssetEol).Date, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"mondoo.eol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2234,6 +2263,60 @@ func (c *mqlAsset) GetVulnerabilityReport() *plugin.TValue[interface{}] {
 	return plugin.GetOrCompute[interface{}](&c.VulnerabilityReport, func() (interface{}, error) {
 		return c.vulnerabilityReport()
 	})
+}
+
+// mqlAssetEol for the asset.eol resource
+type mqlAssetEol struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAssetEolInternal it will be used here
+	DocsUrl plugin.TValue[string]
+	ProductUrl plugin.TValue[string]
+	Date plugin.TValue[*time.Time]
+}
+
+// createAssetEol creates a new instance of this resource
+func createAssetEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAssetEol{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("asset.eol", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAssetEol) MqlName() string {
+	return "asset.eol"
+}
+
+func (c *mqlAssetEol) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAssetEol) GetDocsUrl() *plugin.TValue[string] {
+	return &c.DocsUrl
+}
+
+func (c *mqlAssetEol) GetProductUrl() *plugin.TValue[string] {
+	return &c.ProductUrl
+}
+
+func (c *mqlAssetEol) GetDate() *plugin.TValue[*time.Time] {
+	return &c.Date
 }
 
 // mqlMondooEol for the mondoo.eol resource
