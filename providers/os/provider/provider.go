@@ -123,7 +123,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, errors.New("no connection data provided")
 	}
 
-	conn, err := s.connect(req.Asset, req.HasRecording, callback)
+	conn, err := s.connect(req, callback)
 	if err != nil {
 		return nil, err
 	}
@@ -145,11 +145,12 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
-func (s *Service) connect(asset *inventory.Asset, hasRecording bool, callback plugin.ProviderCallback) (shared.Connection, error) {
-	if len(asset.Connections) == 0 {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (shared.Connection, error) {
+	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 
+	asset := req.Asset
 	conf := asset.Connections[0]
 	var conn shared.Connection
 	var err error
@@ -183,13 +184,19 @@ func (s *Service) connect(asset *inventory.Asset, hasRecording bool, callback pl
 		return nil, err
 	}
 
+	upstream, err := req.Upstream.InitClient()
+	if err != nil {
+		return nil, err
+	}
+
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection:     conn,
 		Resources:      map[string]plugin.Resource{},
 		Callback:       callback,
-		HasRecording:   hasRecording,
+		HasRecording:   req.HasRecording,
 		CreateResource: resources.CreateResource,
+		Upstream:       upstream,
 	}
 
 	return conn, err
