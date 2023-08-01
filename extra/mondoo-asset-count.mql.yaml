@@ -12,7 +12,11 @@ packs:
         filters: asset.platform == 'azure' || asset.platform == 'microsoft365' 
         queries: 
           - uid: mondoo-asset-count-on-azure
-          - uid: mondoo-count-users-in-azure  
+          - uid: mondoo-count-users-in-azure
+      - title: Windows Active Directory asset counts
+        filters: asset.platform == "windows"
+        queries:
+          - uid: mondoo-asset-count-in-windows-domain
       - title: AWS asset counts
         filters: asset.platform == "aws" 
         queries:
@@ -56,24 +60,20 @@ packs:
     queries:
       - uid: mondoo-asset-count-on-vsphere-cluster-esxi
         title: Retrieve all ESXi hosts
-        filters: asset.platform == 'vmware-vsphere'
         query: |
           vsphere.datacenters { hosts.length }
 
       - uid: mondoo-asset-count-on-vsphere-cluster-vms
         title: Retrieve all VMs from vSphere cluster
-        filters: asset.platform == 'vmware-vsphere'
         query: |
           vsphere.datacenters { vms.length }
 
       - uid: mondoo-asset-count-on-azure
-        filters: asset.platform == 'azure' || asset.platform == 'microsoft365' 
         title: Retrieve all VMs from Azure
         query: |
           azure.compute.vms.length
 
       - uid: mondoo-count-users-in-azure
-        filters: asset.platform == 'azure' || asset.platform == 'microsoft365' 
         title: Retrieve all users from Azure
         query: |
           azuread.users.length
@@ -238,6 +238,5 @@ packs:
 
       - uid: mondoo-asset-count-in-windows-domain
         title: Retrieve all computer object from the Windows domain
-        filters: asset.platform == "windows" && windows.computerInfo['OsProductType'] == 2
         query: |
-          parse.json(content: powershell('Get-ADComputer -Filter * -properties * | select Name, Enabled,Operatingsystem,OperatingSystemVersion | ConvertTo-Json').stdout).params
+          parse.json(content: powershell('$time = (Get-Date).Adddays(-(180));Get-ADComputer -Filter {LastLogonTimeStamp -ge $time} -properties * | select Name,Enabled,OperatingSystem,OperatingSystemVersion,LastLogonDate | ConvertTo-Json').stdout).params
