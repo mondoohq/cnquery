@@ -1,0 +1,15 @@
+[commands."uname -s"]
+stdout = "Linux"
+
+[commands."uname -m"]
+stdout = "x86_64"
+
+[commands."uname -r"]
+stdout = "2.6.37.6-24-desktop"
+
+[files."/etc/SuSE-release"]
+content = """
+SUSE Linux Enterprise Server 11 (x86_64)
+VERSION = 11
+PATCHLEVEL = 3
+"""

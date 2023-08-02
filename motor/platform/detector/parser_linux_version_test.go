@@ -98,3 +98,23 @@ func TestRedhatRelease(t *testing.T) {
 	assert.Equal(t, "Oracle Linux Server", name, "parse os name")
 	assert.Equal(t, "7.4", release, "parse release version")
 }
+
+func TestSuseParser(t *testing.T) {
+	data := `openSUSE 11.4 (x86_64)
+VERSION = 11.4
+CODENAME = Celadon`
+	title, arch := detector.ParseSuseTitle(data)
+	assert.Equal(t, "openSUSE 11.4", title)
+	assert.Equal(t, "x86_64", arch)
+	v := detector.ParseSuseVersion(data)
+	assert.Equal(t, "11.4", v)
+
+	data = `SUSE Linux Enterprise Server 12 (x86_64)
+VERSION = 12
+PATCHLEVEL = 0`
+	title, arch = detector.ParseSuseTitle(data)
+	assert.Equal(t, "SUSE Linux Enterprise Server 12", title)
+	assert.Equal(t, "x86_64", arch)
+	v = detector.ParseSuseVersion(data)
+	assert.Equal(t, "12.0", v)
+}

@@ -538,6 +538,45 @@ func TestOpenSuseTumbleweedDetector(t *testing.T) {
 	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
 }
 
+func TestSuse10Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-suse-sles-10.toml")
+	assert.Nil(t, err, "was able to create the provider")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "sles", di.Name, "os name should be identified")
+	assert.Equal(t, "SUSE Linux Enterprise Server 10", di.Title, "os title should be identified")
+	assert.Equal(t, "10.4", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
+func TestSuse11Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-suse-sles-11.toml")
+	assert.Nil(t, err, "was able to create the provider")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "sles", di.Name, "os name should be identified")
+	assert.Equal(t, "SUSE Linux Enterprise Server 11", di.Title, "os title should be identified")
+	assert.Equal(t, "11.3", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
+func TestOpenSuse11Detector(t *testing.T) {
+	detector, err := newDetector("./testdata/detect-opensuse-11.toml")
+	assert.Nil(t, err, "was able to create the provider")
+	di, err := detector.Platform()
+	require.NoError(t, err)
+
+	assert.Equal(t, "opensuse", di.Name, "os name should be identified")
+	assert.Equal(t, "openSUSE 11.4", di.Title, "os title should be identified")
+	assert.Equal(t, "11.4", di.Version, "os version should be identified")
+	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"suse", "linux", "unix", "os"}, di.Family)
+}
+
 func TestSuse12Detector(t *testing.T) {
 	detector, err := newDetector("./testdata/detect-suse-sles-12.toml")
 	assert.Nil(t, err, "was able to create the provider")
