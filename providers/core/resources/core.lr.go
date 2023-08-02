@@ -47,12 +47,21 @@ func NewResource(runtime *plugin.Runtime, name string, args map[string]*llx.RawD
 	}
 
 	if f.Init != nil {
-		var err error
-		var res plugin.Resource
-		args, res, err = f.Init(runtime, args)
-		if err != nil || res != nil {
+		cargs, res, err := f.Init(runtime, args)
+		if err != nil {
 			return res, err
 		}
+
+		if res != nil {
+			id := name+"\x00"+res.MqlID()
+			if x, ok := runtime.Resources[id]; ok {
+				return x, nil
+			}
+			runtime.Resources[id] = res
+			return res, nil
+		}
+
+		args = cargs
 	}
 
 	res, err := f.Create(runtime, args)

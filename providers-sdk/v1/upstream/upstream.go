@@ -1,8 +1,9 @@
 package upstream
 
 import (
-	"errors"
+	"net/http"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/ranger-rpc"
 	guard_cert_auth "go.mondoo.com/ranger-rpc/plugins/authentication/cert"
@@ -33,4 +34,30 @@ func NewServiceAccountRangerPlugin(credentials *ServiceAccountCredentials) (rang
 		Kid:        credentials.Mrn,
 		Subject:    credentials.Mrn,
 	})
+}
+
+// mondoo platform config so that resource scan talk upstream
+// TODO: this configuration struct does not belong into the MQL package
+// nevertheless the MQL runtime needs to have something that allows users
+// to store additional credentials so that resource can use those for
+// their resources.
+type UpstreamClient struct {
+	UpstreamConfig
+	Plugins    []ranger.ClientPlugin
+	HttpClient *http.Client
+}
+
+func (c *UpstreamConfig) InitClient() (*UpstreamClient, error) {
+	certAuth, err := NewServiceAccountRangerPlugin(c.Creds)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not initialize client authentication")
+	}
+
+	res := UpstreamClient{
+		UpstreamConfig: *c,
+		Plugins:        []ranger.ClientPlugin{certAuth},
+		HttpClient:     ranger.DefaultHttpClient(),
+	}
+
+	return &res, nil
 }

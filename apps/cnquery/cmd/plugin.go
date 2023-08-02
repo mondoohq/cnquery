@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
@@ -17,10 +15,9 @@ import (
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/shared"
 	run "go.mondoo.com/cnquery/shared/proto"
-	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/ranger-rpc"
 )
 
 // pluginCmd represents the version command
@@ -97,24 +94,14 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		out.WriteString("[")
 	}
 
-	var upstreamConfig *pp.UpstreamClient
+	var upstreamConfig *upstream.UpstreamConfig
 	serviceAccount := opts.GetServiceCredential()
 	if serviceAccount != nil {
-		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
-		if err != nil {
-			log.Error().Err(err).Msg("could not initialize client authentication")
-			os.Exit(ConfigurationErrorCode)
-		}
-
-		upstreamConfig = &pp.UpstreamClient{
-			// we currently do not expose incognito to the plugin/run command
-			UpstreamConfig: pp.UpstreamConfig{
-				Incognito:   true,
-				SpaceMrn:    opts.GetParentMrn(),
-				ApiEndpoint: opts.UpstreamApiEndpoint(),
-			},
-			Plugins:    []ranger.ClientPlugin{certAuth},
-			HttpClient: ranger.DefaultHttpClient(),
+		upstreamConfig = &upstream.UpstreamConfig{
+			SpaceMrn:    opts.GetParentMrn(),
+			ApiEndpoint: opts.UpstreamApiEndpoint(),
+			Incognito:   true,
+			Creds:       serviceAccount,
 		}
 	}
 
@@ -123,6 +110,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		err := runtime.Connect(&pp.ConnectReq{
 			Features: config.Features,
 			Asset:    connectAsset,
+			Upstream: upstreamConfig,
 		})
 		if err != nil {
 			return err
@@ -140,7 +128,7 @@ func (c *cnqueryPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Ru
 		shellOptions = append(shellOptions, shell.WithOutput(out))
 
 		if upstreamConfig != nil {
-			shellOptions = append(shellOptions, shell.WithUpstreamConfig(&upstreamConfig.UpstreamConfig))
+			shellOptions = append(shellOptions, shell.WithUpstreamConfig(upstreamConfig))
 		}
 
 		sh, err := shell.New(runtime, shellOptions...)

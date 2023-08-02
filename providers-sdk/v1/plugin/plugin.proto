@@ -3,6 +3,7 @@ package cnquery.providers.v1;
 option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/plugin";
 
 import "providers-sdk/v1/inventory/inventory.proto";
+import "providers-sdk/v1/upstream/upstream.proto";
 import "llx/llx.proto";
 
 message ParseCLIReq {
@@ -22,14 +23,7 @@ message ConnectReq {
   Asset asset = 3;
   bool has_recording = 20;
   uint32 callback_server = 21;
-  UpstreamConfig upstream = 22;
-}
-
-message UpstreamConfig {
-  string asset_mrn = 1;
-  string space_mrn = 2;
-  string api_endpoint = 3;
-  bool incognito = 4;
+  mondoo.cnquery.upstream.v1.UpstreamConfig upstream = 22;
 }
 
 message ConnectRes {

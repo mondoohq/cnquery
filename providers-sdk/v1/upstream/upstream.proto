@@ -1,7 +1,15 @@
 syntax = "proto3";
 
 package mondoo.cnquery.upstream.v1;
-option go_package = "go.mondoo.com/cnquery/upstream";
+option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/upstream";
+
+message UpstreamConfig {
+  string asset_mrn = 1;
+  string space_mrn = 2;
+  string api_endpoint = 3;
+  bool incognito = 4;
+  ServiceAccountCredentials creds = 5;
+}
 
 message ServiceAccountCredentials {
   string mrn = 1;

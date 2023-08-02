@@ -13,8 +13,8 @@ import (
 	"go.mondoo.com/cnquery/cli/config"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/providers"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/stringx"
-	"go.mondoo.com/cnquery/upstream"
 )
 
 func init() {

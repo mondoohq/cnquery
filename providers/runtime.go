@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
 	protobuf "google.golang.org/protobuf/proto"
 )
@@ -18,7 +19,7 @@ import (
 // and open connections for that asset.
 type Runtime struct {
 	Provider       *ConnectedProvider
-	UpstreamConfig *plugin.UpstreamConfig
+	UpstreamConfig *upstream.UpstreamConfig
 	Recording      Recording
 
 	features []byte
@@ -142,8 +143,10 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 	if creds != nil {
 		inventoryAsset = protobuf.Clone(inventoryAsset).(*inventory.Asset)
 		req = &plugin.ConnectReq{
-			Features: req.Features,
-			Asset:    inventoryAsset,
+			Features:     req.Features,
+			Asset:        inventoryAsset,
+			HasRecording: req.HasRecording,
+			Upstream:     req.Upstream,
 		}
 
 		for j := range inventoryAsset.Connections {

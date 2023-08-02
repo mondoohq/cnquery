@@ -9,6 +9,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
 	"go.mondoo.com/cnquery/providers/os/connection"
 	"go.mondoo.com/cnquery/providers/os/connection/mock"
@@ -123,7 +124,7 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 		return nil, errors.New("no connection data provided")
 	}
 
-	conn, err := s.connect(req.Asset, req.HasRecording, callback)
+	conn, err := s.connect(req, callback)
 	if err != nil {
 		return nil, err
 	}
@@ -145,11 +146,12 @@ func (s *Service) Connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	}, nil
 }
 
-func (s *Service) connect(asset *inventory.Asset, hasRecording bool, callback plugin.ProviderCallback) (shared.Connection, error) {
-	if len(asset.Connections) == 0 {
+func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallback) (shared.Connection, error) {
+	if len(req.Asset.Connections) == 0 {
 		return nil, errors.New("no connection options for asset")
 	}
 
+	asset := req.Asset
 	conf := asset.Connections[0]
 	var conn shared.Connection
 	var err error
@@ -183,13 +185,22 @@ func (s *Service) connect(asset *inventory.Asset, hasRecording bool, callback pl
 		return nil, err
 	}
 
+	var upstream *upstream.UpstreamClient
+	if req.Upstream != nil {
+		upstream, err = req.Upstream.InitClient()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	asset.Connections[0].Id = conn.ID()
 	s.runtimes[conn.ID()] = &plugin.Runtime{
 		Connection:     conn,
 		Resources:      map[string]plugin.Resource{},
 		Callback:       callback,
-		HasRecording:   hasRecording,
+		HasRecording:   req.HasRecording,
 		CreateResource: resources.CreateResource,
+		Upstream:       upstream,
 	}
 
 	return conn, err

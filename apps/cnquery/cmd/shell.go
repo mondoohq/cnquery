@@ -17,8 +17,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory/manager"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
-	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/ranger-rpc"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
 
 func init() {
@@ -49,40 +48,16 @@ var shellRun = func(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plug
 		Features:   config.Features,
 		PlatformID: viper.GetString("platform-id"),
 		Asset:      cliRes.Asset,
+		UpstreamConfig: &upstream.UpstreamConfig{
+			// AssetMrn: not necessary right now, especially since incognito
+			SpaceMrn:    conf.GetParentMrn(),
+			ApiEndpoint: conf.UpstreamApiEndpoint(),
+			Incognito:   true,
+			Creds:       conf.GetServiceCredential(),
+		},
 	}
 
 	shellConf.Command, _ = cmd.Flags().GetString("command")
-
-	serviceAccount := conf.GetServiceCredential()
-	if serviceAccount != nil {
-		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
-		if err != nil {
-			log.Error().Err(err).Msg("could not initialize client authentication")
-			os.Exit(ConfigurationErrorCode)
-		}
-
-		shellConf.Upstream = &plugin.UpstreamClient{
-			UpstreamConfig: plugin.UpstreamConfig{
-				SpaceMrn:    conf.GetParentMrn(),
-				ApiEndpoint: conf.UpstreamApiEndpoint(),
-				// we do not use opts here since we want to ensure the result is not stored when users use the shell
-				Incognito: true,
-			},
-			Plugins: []ranger.ClientPlugin{certAuth},
-		}
-	}
-
-	// set up the http client to include proxy config
-	httpClient, err := conf.GetHttpClient()
-	if err != nil {
-		log.Error().Err(err).Msg("error while setting up httpclient")
-		os.Exit(ConfigurationErrorCode)
-	}
-	if shellConf.Upstream == nil {
-		shellConf.Upstream = &plugin.UpstreamClient{}
-	}
-	shellConf.Upstream.HttpClient = httpClient
-
 	err = StartShell(runtime, &shellConf)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run query")
@@ -98,8 +73,7 @@ type ShellConfig struct {
 	Features       cnquery.Features
 	PlatformID     string
 	WelcomeMessage string
-
-	Upstream *plugin.UpstreamClient
+	UpstreamConfig *upstream.UpstreamConfig
 }
 
 // StartShell will start an interactive CLI shell
@@ -145,6 +119,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	err = runtime.Connect(&plugin.ConnectReq{
 		Features: conf.Features,
 		Asset:    conf.Asset,
+		Upstream: conf.UpstreamConfig,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to connect to asset")
@@ -160,10 +135,6 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 	shellOptions := []shell.ShellOption{}
 	shellOptions = append(shellOptions, shell.WithOnCloseListener(onCloseHandler))
 	shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
-
-	if conf.Upstream != nil {
-		shellOptions = append(shellOptions, shell.WithUpstreamConfig(&conf.Upstream.UpstreamConfig))
-	}
 
 	sh, err := shell.New(runtime, shellOptions...)
 	if err != nil {

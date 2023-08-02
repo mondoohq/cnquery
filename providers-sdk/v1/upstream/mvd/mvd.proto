@@ -3,7 +3,7 @@ syntax = "proto3";
 import "cvss/cvss.proto";
 
 package mondoo.mvd.v1;
-option go_package = "go.mondoo.com/cnquery/upstream/mvde/mvd";
+option go_package = "go.mondoo.com/cnquery/providers-sdk/v1/upstream/mvde/mvd";
 
 message Platform {
   string name = 1;

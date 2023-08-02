@@ -15,8 +15,8 @@ import (
 	"go.mondoo.com/cnquery/cli/sysinfo"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
-	"go.mondoo.com/cnquery/upstream"
-	"go.mondoo.com/cnquery/upstream/health"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream/health"
 	"go.mondoo.com/ranger-rpc"
 	"sigs.k8s.io/yaml"
 )

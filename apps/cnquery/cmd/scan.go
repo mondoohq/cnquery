@@ -19,6 +19,7 @@ import (
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
+	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 )
 
 func init() {
@@ -141,8 +142,6 @@ type scanConfig struct {
 
 	IsIncognito bool
 	DoRecord    bool
-
-	UpstreamConfig *plugin.UpstreamConfig
 }
 
 func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
@@ -195,47 +194,35 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		conf.Inventory.ApplyCategory(inventory.AssetCategory_CATEGORY_CICD)
 	}
 
-	panic("todo: service account credentials cleanup")
-	// var serviceAccount *upstream.ServiceAccountCredentials
-	// if !conf.IsIncognito {
-	// 	serviceAccount = opts.GetServiceCredential()
-	// 	if serviceAccount != nil {
-	// 		httpClient, err := opts.GetHttpClient()
-	// 		if err != nil {
-	// 			log.Error().Err(err).Msg("error while setting up httpclient")
-	// 			os.Exit(ConfigurationErrorCode)
-	// 		}
-	// 		certAuth, err := upstream.NewServiceAccountRangerPlugin(serviceAccount)
-	// 		if err != nil {
-	// 			log.Error().Err(err).Msg("could not initialize client authentication")
-	// 			os.Exit(ConfigurationErrorCode)
-	// 		}
-	// 		plugins := []ranger.ClientPlugin{certAuth}
-	// 		// determine information about the client
-	// 		sysInfo, err := sysinfo.GatherSystemInfo()
-	// 		if err != nil {
-	// 			log.Warn().Err(err).Msg("could not gather client information")
-	// 		}
-	// 		plugins = append(plugins, defaultRangerPlugins(sysInfo, opts.GetFeatures())...)
-	// 		log.Info().Msg("using service account credentials")
-	// 		conf.UpstreamConfig = &resources.UpstreamConfig{
-	// 			SpaceMrn:    opts.GetParentMrn(),
-	// 			ApiEndpoint: opts.UpstreamApiEndpoint(),
-	// 			Plugins:     plugins,
-	// 			HttpClient:  httpClient,
-	// 		}
-	// 	}
-	// }
+	var serviceAccount *upstream.ServiceAccountCredentials
+	if !conf.IsIncognito {
+		serviceAccount = opts.GetServiceCredential()
+		if serviceAccount != nil {
+			// TODO: determine if this needs migrating
+			// // determine information about the client
+			// sysInfo, err := sysinfo.GatherSystemInfo()
+			// if err != nil {
+			// 	log.Warn().Err(err).Msg("could not gather client information")
+			// }
+			// plugins = append(plugins, defaultRangerPlugins(sysInfo, opts.GetFeatures())...)
+
+			log.Info().Msg("using service account credentials")
+			conf.runtime.UpstreamConfig = &upstream.UpstreamConfig{
+				SpaceMrn:    opts.GetParentMrn(),
+				ApiEndpoint: opts.UpstreamApiEndpoint(),
+				Incognito:   conf.IsIncognito,
+				Creds:       serviceAccount,
+			}
+		} else {
+			log.Warn().Msg("No credentials provided. Switching to --incognito mode.")
+			conf.IsIncognito = true
+		}
+	}
 
 	if len(conf.QueryPackPaths) > 0 && !conf.IsIncognito {
 		log.Warn().Msg("Scanning with local bundles will switch into --incognito mode by default. Your results will not be sent upstream.")
 		conf.IsIncognito = true
 	}
-
-	// if serviceAccount == nil && !conf.IsIncognito {
-	// 	log.Warn().Msg("No credentials provided. Switching to --incognito mode.")
-	// 	conf.IsIncognito = true
-	// }
 
 	// print headline when its not printed to yaml
 	if output == "" {
@@ -273,7 +260,7 @@ func (c *scanConfig) loadBundles() error {
 
 func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
 	// opts := []scan.ScannerOption{}
-	// if config.UpstreamConfig != nil {
+	// if config.runtime.UpstreamConfig != nil {
 	// 	opts = append(opts, scan.WithUpstream(config.UpstreamConfig.ApiEndpoint, config.UpstreamConfig.SpaceMrn, config.UpstreamConfig.Plugins, config.UpstreamConfig.HttpClient))
 	// }
 
