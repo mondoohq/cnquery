@@ -95,9 +95,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: amd64
     dockerfile: Dockerfile-ubi
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-amd64"
-      - "mondoo/{{ .ProjectName }}:latest-ubi-amd64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-amd64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-amd64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-ubi-amd64"
     build_flag_templates:
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -110,9 +110,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm64
     dockerfile: Dockerfile-ubi
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64"
-      - "mondoo/{{ .ProjectName }}:latest-ubi-arm64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-arm64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-arm64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-ubi-arm64"
     build_flag_templates:
       - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -125,9 +125,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goos: linux
     goarch: amd64
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-amd64"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-amd64"
-      - "mondoo/{{ .ProjectName }}:latest-amd64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-amd64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-amd64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-amd64"
     build_flag_templates:
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -139,9 +139,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goos: linux
     goarch: arm64
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-arm64v8"
-      - "mondoo/{{ .ProjectName }}:latest-arm64v8"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-arm64v8"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-arm64v8"
     build_flag_templates:
       - "--platform=linux/arm64/v8"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -154,9 +154,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm
     goarm: 6
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv6"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-armv6"
-      - "mondoo/{{ .ProjectName }}:latest-armv6"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv6"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv6"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv6"
     build_flag_templates:
       - "--platform=linux/arm/v6"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -169,9 +169,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm
     goarm: 7
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv7"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-armv7"
-      - "mondoo/{{ .ProjectName }}:latest-armv7"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv7"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv7"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv7"
     build_flag_templates:
       - "--platform=linux/arm/v7"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -186,9 +186,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: amd64
     dockerfile: Dockerfile-ubi
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-amd64-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-ubi-amd64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-amd64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-ubi-amd64-rootless"
     build_flag_templates:
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -201,9 +201,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm64
     dockerfile: Dockerfile-ubi
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-ubi-arm64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-arm64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-ubi-arm64-rootless"
     build_flag_templates:
       - "--platform=linux/arm64/v8"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -216,9 +216,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goos: linux
     goarch: amd64
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-amd64-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-amd64-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-amd64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-amd64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-amd64-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-amd64-rootless"
     build_flag_templates:
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -230,9 +230,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goos: linux
     goarch: arm64
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-arm64v8-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-arm64v8-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-arm64v8-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-arm64v8-rootless"
     build_flag_templates:
       - "--platform=linux/arm64/v8"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -245,9 +245,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm
     goarm: 6
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv6-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-armv6-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-armv6-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv6-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv6-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv6-rootless"
     build_flag_templates:
       - "--platform=linux/arm/v6"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -260,9 +260,9 @@ dockers: # https://goreleaser.com/customization/docker/
     goarch: arm
     goarm: 7
     image_templates:
-      - "mondoo/{{ .ProjectName }}:{{ .Version }}-armv7-rootless"
-      - "mondoo/{{ .ProjectName }}:{{ .Major }}-armv7-rootless"
-      - "mondoo/{{ .ProjectName }}:latest-armv7-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv7-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv7-rootless"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv7-rootless"
     build_flag_templates:
       - "--platform=linux/arm/v7"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -272,69 +272,69 @@ dockers: # https://goreleaser.com/customization/docker/
       - "--target=rootless"
 docker_manifests:  # https://goreleaser.com/customization/docker_manifest/
     # UBI containers
-  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-ubi
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-amd64
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-arm64
   - name_template: mondoo/{{ .ProjectName }}:{{ .Major }}-ubi
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-amd64
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64
-  - name_template: mondoo/{{ .ProjectName }}:latest
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-amd64
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-arm64
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:latest
     image_templates:
-      - mondoo/{{ .ProjectName }}:latest-amd64
-      - mondoo/{{ .ProjectName }}:latest-arm64v8
-      - mondoo/{{ .ProjectName }}:latest-armv6
-      - mondoo/{{ .ProjectName }}:latest-armv7
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-amd64
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-arm64v8
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv6
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv7
     # Standard containers
-  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-amd64
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv6
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv7
-  - name_template: mondoo/{{ .ProjectName }}:{{ .Major }}
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-amd64
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-arm64v8
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv6
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv7
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-amd64
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-arm64v8
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-armv6
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-armv7
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-amd64
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-arm64v8
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv6
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv7
   - name_template: mondoo/{{ .ProjectName }}:latest
     image_templates:
-      - mondoo/{{ .ProjectName }}:latest-amd64
-      - mondoo/{{ .ProjectName }}:latest-arm64v8
-      - mondoo/{{ .ProjectName }}:latest-armv6
-      - mondoo/{{ .ProjectName }}:latest-armv7
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-amd64
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-arm64v8
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv6
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv7
   # Rootless
     # UBI containers
-  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-rootless
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-rootless
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless
-  - name_template: mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-amd64-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-ubi-arm64-rootless
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-rootless
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-amd64-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-ubi-arm64-rootless
-  - name_template: mondoo/{{ .ProjectName }}:latest-ubi-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-amd64-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-ubi-arm64-rootless
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:latest-ubi-rootless
     image_templates:
-      - mondoo/{{ .ProjectName }}:latest-ubi-amd64-rootless
-      - mondoo/{{ .ProjectName }}:latest-ubi-arm64-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-ubi-amd64-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-ubi-arm64-rootless
     # Standard containers
-  - name_template: mondoo/{{ .ProjectName }}:{{ .Version }}-rootless
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-rootless
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-amd64-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv6-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Version }}-armv7-rootless
-  - name_template: mondoo/{{ .ProjectName }}:{{ .Major }}-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-amd64-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-arm64v8-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv6-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Version }}-armv7-rootless
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-rootless
     image_templates:
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-amd64-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-arm64v8-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-armv6-rootless
-      - mondoo/{{ .ProjectName }}:{{ .Major }}-armv7-rootless
-  - name_template: mondoo/{{ .ProjectName }}:latest-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-amd64-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-arm64v8-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv6-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:{{ .Major }}-armv7-rootless
+  - name_template: ghcr.io/mondoohq/{{ .ProjectName }}:latest-rootless
     image_templates:
-      - mondoo/{{ .ProjectName }}:latest-amd64-rootless
-      - mondoo/{{ .ProjectName }}:latest-arm64v8-rootless
-      - mondoo/{{ .ProjectName }}:latest-armv6-rootless
-      - mondoo/{{ .ProjectName }}:latest-armv7-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-amd64-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-arm64v8-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv6-rootless
+      - ghcr.io/mondoohq/{{ .ProjectName }}:latest-armv7-rootless
