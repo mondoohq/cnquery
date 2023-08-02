@@ -25,7 +25,7 @@ func (sum *SuseUpdateManager) Format() string {
 }
 
 func (sum *SuseUpdateManager) List() ([]OperatingSystemUpdate, error) {
-	cmd, err := sum.conn.RunCommand("zypper --xmlout list-updates -t patch")
+	cmd, err := sum.conn.RunCommand("zypper -n --xmlout list-updates -t patch")
 	if err != nil {
 		return nil, fmt.Errorf("could not read package list")
 	}
