@@ -263,6 +263,10 @@ func (e emptySchema) Lookup(resource string) *resources.ResourceInfo {
 	return nil
 }
 
+func (e emptySchema) LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field) {
+	return nil, nil
+}
+
 func (e emptySchema) AllResources() map[string]*resources.ResourceInfo {
 	return nil
 }
