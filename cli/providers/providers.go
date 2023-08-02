@@ -35,7 +35,7 @@ func AttachCLIs(rootCmd *cobra.Command, commands ...*Command) error {
 		return nil
 	}
 
-	if _, err := ensureProvider(existing, connectorName); err != nil {
+	if _, err := providers.EnsureProvider(existing, connectorName); err != nil {
 		return err
 	}
 
@@ -96,23 +96,6 @@ func detectConnector(args []string, rootCmd *cobra.Command, commands []*Command)
 	// If we arrive here, we can safely assume that the command was called
 	// with no provider at all. This means that we default to local.
 	return "local"
-}
-
-func ensureProvider(existing providers.Providers, connectorName string) (*providers.Provider, error) {
-	provider := existing.ForConnection(connectorName)
-	if provider != nil {
-		return provider, nil
-	}
-
-	upstream := providers.DefaultProviders.ForConnection(connectorName)
-	if upstream == nil {
-		// we can't find any provider for this connector in our default set
-		return nil, nil
-	}
-
-	nu, err := providers.Install(upstream.Name)
-	existing.Add(nu)
-	return nu, err
 }
 
 func attacheProviders(existing providers.Providers, commands []*Command) {

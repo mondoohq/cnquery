@@ -26,6 +26,7 @@ type Mock struct {
 	Inventory map[string]Resources
 	Providers []string
 	schema    llx.Schema
+	AssetMrn  string
 }
 
 type Resources map[string]Resource
@@ -147,6 +148,10 @@ func NewFromToml(raw []byte) (*Mock, error) {
 func (m *Mock) Unregister(watcherUID string) error {
 	// nothing will change, so nothing to watch or unregister
 	return nil
+}
+
+func (m *Mock) AssetMRN() string {
+	return m.AssetMrn
 }
 
 func (m *Mock) CreateResource(name string, args map[string]*llx.Primitive) (llx.Resource, error) {

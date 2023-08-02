@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -71,6 +72,13 @@ func (r *Runtime) DeactivateProviderDiscovery() {
 	r.schema.allLoaded = true
 }
 
+func (r *Runtime) AssetMRN() string {
+	if r.Provider != nil && r.Provider.Connection != nil && r.Provider.Connection.Asset != nil {
+		return r.Provider.Connection.Asset.Mrn
+	}
+	return ""
+}
+
 // UseProvider sets the main provider for this runtime.
 func (r *Runtime) UseProvider(id string) error {
 	res, err := r.addProvider(id)
@@ -108,6 +116,37 @@ func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 	r.AddConnectedProvider(res)
 
 	return res, nil
+}
+
+// DetectProvider will try to detect and start the right provider for this
+// runtime. Generally recommended when you receive an asset to be scanned,
+// but haven't initialized any provider. It will also try to install providers
+// if necessary (and enabled)
+func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
+	if asset == nil {
+		return errors.New("please provide an asset to detect the provider")
+	}
+	if len(asset.Connections) == 0 {
+		return errors.New("asset has no connections, can't detect provider")
+	}
+
+	var errs []string
+	for i := range asset.Connections {
+		conn := asset.Connections[i]
+		if conn.Type == "" {
+			continue
+		}
+
+		provider, err := EnsureProvider(r.coordinator.Providers, conn.Type)
+		if err != nil {
+			errs = append(errs, err.Error())
+			continue
+		}
+
+		return r.UseProvider(provider.ID)
+	}
+
+	return errors.New("cannot find provider for this asset (" + strings.Join(errs, ",") + ")")
 }
 
 // Connect to an asset using the main provider

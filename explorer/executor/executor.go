@@ -11,7 +11,6 @@ import (
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers"
 )
 
 func RunExecutionJob(
@@ -36,7 +35,7 @@ func RunFilterQueries(runtime llx.Runtime, queries []*explorer.Mquery, timeout t
 	mqueries := map[string]*explorer.Mquery{}
 	for i := range queries {
 		query := queries[i]
-		code, err := query.Compile(nil, providers.DefaultRuntime().Schema())
+		code, err := query.Compile(nil, runtime.Schema())
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -176,7 +175,6 @@ func newInstance(runtime llx.Runtime, progressReporter progress.Progress) *insta
 		progressReporter = progress.Noop{}
 	}
 
-	panic("PORT: ASSET MRN")
 	return &instance{
 		runtime:          runtime,
 		datapointTracker: map[string][]*explorer.ExecutionQuery{},
@@ -187,7 +185,7 @@ func newInstance(runtime llx.Runtime, progressReporter progress.Progress) *insta
 		isDone:           false,
 		done:             make(chan struct{}),
 		progressReporter: progressReporter,
-		// assetMrn:         runtime.Motor.GetAsset().Mrn,
+		assetMrn:         runtime.AssetMRN(),
 	}
 }
 

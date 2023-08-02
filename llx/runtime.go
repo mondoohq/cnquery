@@ -3,6 +3,7 @@ package llx
 import "go.mondoo.com/cnquery/providers-sdk/v1/resources"
 
 type Runtime interface {
+	AssetMRN() string
 	Unregister(watcherUID string) error
 	CreateResource(name string, args map[string]*Primitive) (Resource, error)
 	CreateResourceWithID(name string, id string, args map[string]*Primitive) (Resource, error)
