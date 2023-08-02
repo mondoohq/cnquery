@@ -26,7 +26,7 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		}
 	case "rds":
 		if awsObject.objectType == "dbinstance" {
-			return awsObjectPlatformInfo{title: "AWS RDS DBInstance", platform: "aws-rds-dbinstance"}, nil
+			return awsObjectPlatformInfo{title: "AWS RDS DB Instance", platform: "aws-rds-dbinstance"}, nil
 		}
 	case "dynamodb":
 		if awsObject.objectType == "table" {
@@ -61,7 +61,7 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		}
 	case "cloudwatch":
 		if awsObject.objectType == "loggroup" {
-			return awsObjectPlatformInfo{title: "AWS CloudWatch LogGroup", platform: "aws-cloudwatch-loggroup"}, nil
+			return awsObjectPlatformInfo{title: "AWS CloudWatch Log Group", platform: "aws-cloudwatch-loggroup"}, nil
 		}
 	case "lambda":
 		if awsObject.objectType == "function" {
@@ -96,7 +96,7 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		}
 	case "sagemaker":
 		if awsObject.objectType == "notebookinstance" {
-			return awsObjectPlatformInfo{title: "AWS SageMaker NotebookInstance", platform: "aws-sagemaker-notebookinstance"}, nil
+			return awsObjectPlatformInfo{title: "AWS SageMaker Notebook Instance", platform: "aws-sagemaker-notebookinstance"}, nil
 		}
 	case "ssm":
 		if awsObject.objectType == "instance" {

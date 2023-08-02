@@ -272,7 +272,7 @@ func getTitleForPlatformName(name string) string {
 	case "aws-iam-group":
 		return "AWS IAM Group"
 	case "aws-cloudwatch-loggroup":
-		return "AWS CloudWatch LogGroup"
+		return "AWS CloudWatch Log Group"
 	case "aws-lambda-function":
 		return "AWS Lambda Function"
 	case "aws-ecs-container":
