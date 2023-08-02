@@ -22,7 +22,7 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		}
 	case "cloudtrail":
 		if awsObject.objectType == "trail" {
-			return awsObjectPlatformInfo{title: "AWS Cloudtrail Trail", platform: "aws-cloudtrail-trail"}, nil
+			return awsObjectPlatformInfo{title: "AWS CloudTrail Trail", platform: "aws-cloudtrail-trail"}, nil
 		}
 	case "rds":
 		if awsObject.objectType == "dbinstance" {
@@ -61,7 +61,7 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		}
 	case "cloudwatch":
 		if awsObject.objectType == "loggroup" {
-			return awsObjectPlatformInfo{title: "AWS Cloudwatch LogGroup", platform: "aws-cloudwatch-loggroup"}, nil
+			return awsObjectPlatformInfo{title: "AWS CloudWatch LogGroup", platform: "aws-cloudwatch-loggroup"}, nil
 		}
 	case "lambda":
 		if awsObject.objectType == "function" {
@@ -80,11 +80,11 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		}
 	case "gateway":
 		if awsObject.objectType == "restapi" {
-			return awsObjectPlatformInfo{title: "AWS Gateway RESTAPI", platform: "aws-gateway-restapi"}, nil
+			return awsObjectPlatformInfo{title: "AWS Gateway REST API", platform: "aws-gateway-restapi"}, nil
 		}
 	case "elb":
 		if awsObject.objectType == "loadbalancer" {
-			return awsObjectPlatformInfo{title: "AWS ELB LoadBalancer", platform: "aws-elb-loadbalancer"}, nil
+			return awsObjectPlatformInfo{title: "AWS ELB Load Balancer", platform: "aws-elb-loadbalancer"}, nil
 		}
 	case "es":
 		if awsObject.objectType == "domain" {
@@ -96,7 +96,7 @@ func getTitleFamily(awsObject awsObject) (awsObjectPlatformInfo, error) {
 		}
 	case "sagemaker":
 		if awsObject.objectType == "notebookinstance" {
-			return awsObjectPlatformInfo{title: "AWS Sagemaker NotebookInstance", platform: "aws-sagemaker-notebookinstance"}, nil
+			return awsObjectPlatformInfo{title: "AWS SageMaker NotebookInstance", platform: "aws-sagemaker-notebookinstance"}, nil
 		}
 	case "ssm":
 		if awsObject.objectType == "instance" {
