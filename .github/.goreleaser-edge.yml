@@ -39,7 +39,7 @@ dockers: # https://goreleaser.com/customization/docker/
     dockerfile: Dockerfile-ubi
     image_templates:
       - "ghcr.io/mondoohq/{{ .ProjectName }}:edge-{{ .Version }}-ubi-amd64"
-      - "mondoo/{{ .ProjectName }}:edge-latest-ubi-amd64"
+      - "ghcr.io/mondoohq/{{ .ProjectName }}:edge-latest-ubi-amd64"
     build_flag_templates:
       - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"

@@ -126,4 +126,7 @@ jobs:
         run: |
           for tag in ${DOCKER_METADATA_OUTPUT_TAGS}; do
             skopeo copy docker://$tag docker://mondoo/cnquery:${tag#"$GHCR_REGISTRY"} --multi-arch all
+            skopeo copy docker://$tag docker://mondoo/cnquery:${tag#"$GHCR_REGISTRY"}-rootless --multi-arch all
+            skopeo copy docker://$tag docker://mondoo/cnquery:${tag#"$GHCR_REGISTRY"}-ubi --multi-arch all
+            skopeo copy docker://$tag docker://mondoo/cnquery:${tag#"$GHCR_REGISTRY"}-ubi-rootless --multi-arch all
           done
