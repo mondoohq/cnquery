@@ -410,7 +410,7 @@ func (t *mqlAwsCloudwatchMetric) GetStatistics() (interface{}, error) {
 	// no pagination required
 	statsResp, err := svc.GetMetricStatistics(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws cloudwatch stats")
+		return nil, errors.Wrap(err, "could not gather AWS CloudWatch stats")
 	}
 	datapoints := []interface{}{}
 	for _, datapoint := range statsResp.Datapoints {
@@ -484,7 +484,7 @@ func (t *mqlAwsCloudwatchMetric) GetAlarms() ([]interface{}, error) {
 	// no pagination required
 	alarmsResp, err := svc.DescribeAlarmsForMetric(ctx, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not gather aws cloudwatch alarms")
+		return nil, errors.Wrap(err, "could not gather AWS CloudWatch alarms")
 	}
 	res := []interface{}{}
 	for _, alarm := range alarmsResp.MetricAlarms {
@@ -697,7 +697,7 @@ func (t *mqlAwsCloudwatch) getLogGroups(provider *aws_provider.Provider) []*jobp
 						log.Warn().Str("region", regionVal).Msg("error accessing region for AWS API")
 						return res, nil
 					}
-					return nil, errors.Wrap(err, "could not gather aws cloudwatch log groups")
+					return nil, errors.Wrap(err, "could not gather AWS CloudWatch log groups")
 				}
 				nextToken = logGroups.NextToken
 				if logGroups.NextToken != nil {
@@ -875,7 +875,7 @@ func (t *mqlAwsCloudwatchMetricsalarm) init(args *resources.Args) (*resources.Ar
 	}
 
 	if (*args)["arn"] == nil {
-		return nil, nil, errors.New("arn required to fetch aws cloudwatch metrics alarm")
+		return nil, nil, errors.New("arn required to fetch AWS CloudWatch metrics alarm")
 	}
 
 	// load all cloudwatch metrics alarm
