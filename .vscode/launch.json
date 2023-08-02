@@ -29,7 +29,7 @@
         "run",
         "local",
         "-c",
-        "platform.eol"
+        "asset.eol"
       ],
     },
     {
@@ -92,9 +92,9 @@
       "cwd": "${workspaceRoot}/",
       "args": [
         "scan",
-        "local",
+        // "local",
         "-f",
-        "./examples/example-os.mql.yaml"
+        "./examples/os.mql.yaml"
       ],
     },
     // gcp.project.kms.keyrings

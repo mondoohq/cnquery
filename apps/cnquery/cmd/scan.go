@@ -16,6 +16,7 @@ import (
 	"go.mondoo.com/cnquery/cli/reporter"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/explorer"
+	"go.mondoo.com/cnquery/explorer/scan"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -141,7 +142,6 @@ type scanConfig struct {
 	runtime        *providers.Runtime
 
 	IsIncognito bool
-	DoRecord    bool
 }
 
 func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *plugin.ParseCLIRes) (*scanConfig, error) {
@@ -158,9 +158,13 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 	}
 
 	conf := scanConfig{
-		Features:       opts.GetFeatures(),
-		IsIncognito:    viper.GetBool("incognito"),
-		DoRecord:       viper.GetBool("record"),
+		Features:    opts.GetFeatures(),
+		IsIncognito: viper.GetBool("incognito"),
+		Inventory: &inventory.Inventory{
+			Spec: &inventory.InventorySpec{
+				Assets: []*inventory.Asset{cliRes.Asset},
+			},
+		},
 		QueryPackPaths: viper.GetStringSlice("querypack-bundle"),
 		QueryPackNames: viper.GetStringSlice("querypacks"),
 		Props:          props,
@@ -229,9 +233,6 @@ func getCobraScanConfig(cmd *cobra.Command, runtime *providers.Runtime, cliRes *
 		fmt.Fprintln(os.Stdout, theme.DefaultTheme.Welcome)
 	}
 
-	if conf.DoRecord {
-		log.Info().Msg("enable recording of platform calls")
-	}
 	return &conf, nil
 }
 
@@ -259,36 +260,35 @@ func (c *scanConfig) loadBundles() error {
 }
 
 func RunScan(config *scanConfig) (*explorer.ReportCollection, error) {
-	// opts := []scan.ScannerOption{}
-	// if config.runtime.UpstreamConfig != nil {
-	// 	opts = append(opts, scan.WithUpstream(config.UpstreamConfig.ApiEndpoint, config.UpstreamConfig.SpaceMrn, config.UpstreamConfig.Plugins, config.UpstreamConfig.HttpClient))
-	// }
+	opts := []scan.ScannerOption{}
+	if config.runtime.UpstreamConfig != nil {
+		opts = append(opts, scan.WithUpstream(config.runtime.UpstreamConfig))
+	}
+	if config.runtime.Recording != nil {
+		opts = append(opts, scan.WithRecording(config.runtime.Recording))
+	}
 
-	// scanner := scan.NewLocalScanner(opts...)
-	// ctx := cnquery.SetFeatures(context.Background(), config.Features)
+	scanner := scan.NewLocalScanner(opts...)
+	ctx := cnquery.SetFeatures(context.Background(), config.Features)
 
-	// if config.IsIncognito {
-	// 	return scanner.RunIncognito(
-	// 		ctx,
-	// 		&scan.Job{
-	// 			DoRecord:         config.DoRecord,
-	// 			Inventory:        config.Inventory,
-	// 			Bundle:           config.Bundle,
-	// 			QueryPackFilters: config.QueryPackNames,
-	// 			Props:            config.Props,
-	// 		})
-	// }
-	// return scanner.Run(
-	// 	ctx,
-	// 	&scan.Job{
-	// 		DoRecord:         config.DoRecord,
-	// 		Inventory:        config.Inventory,
-	// 		Bundle:           config.Bundle,
-	// 		QueryPackFilters: config.QueryPackNames,
-	// 		Props:            config.Props,
-	// 	})
-	panic("run scan cleanup")
-	return nil, nil
+	if config.IsIncognito {
+		return scanner.RunIncognito(
+			ctx,
+			&scan.Job{
+				Inventory:        config.Inventory,
+				Bundle:           config.Bundle,
+				QueryPackFilters: config.QueryPackNames,
+				Props:            config.Props,
+			})
+	}
+	return scanner.Run(
+		ctx,
+		&scan.Job{
+			Inventory:        config.Inventory,
+			Bundle:           config.Bundle,
+			QueryPackFilters: config.QueryPackNames,
+			Props:            config.Props,
+		})
 }
 
 func printReports(report *explorer.ReportCollection, conf *scanConfig, cmd *cobra.Command) {
