@@ -43,6 +43,14 @@ func (s *Schema) Lookup(name string) *ResourceInfo {
 	return s.Resources[name]
 }
 
+func (s *Schema) LookupField(resource string, field string) (*ResourceInfo, *Field) {
+	res := s.Lookup(resource)
+	if res == nil || res.Fields == nil {
+		return res, nil
+	}
+	return res, res.Fields[field]
+}
+
 func (s *Schema) AllResources() map[string]*ResourceInfo {
 	return s.Resources
 }

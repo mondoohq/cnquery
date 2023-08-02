@@ -14,5 +14,6 @@ type Runtime interface {
 
 type Schema interface {
 	Lookup(resource string) *resources.ResourceInfo
+	LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field)
 	AllResources() map[string]*resources.ResourceInfo
 }

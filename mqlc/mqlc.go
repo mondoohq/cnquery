@@ -897,6 +897,7 @@ func filterEmptyExpressions(expressions []*parser.Expression) []*parser.Expressi
 
 type fieldPath []string
 
+// TODO: embed this into the Schema LookupField call!
 func (c *compiler) findField(resource *resources.ResourceInfo, fieldName string) (fieldPath, []*resources.Field, bool) {
 	fieldInfo, ok := resource.Fields[fieldName]
 	if ok {
@@ -944,7 +945,7 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 	typ := binding.typ
 
 	if typ.IsResource() {
-		resource := c.Schema.Lookup(typ.ResourceName())
+		resource, _ := c.Schema.LookupField(typ.ResourceName(), id)
 		if resource == nil {
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
@@ -1039,13 +1040,12 @@ func (c *compiler) compileBoundIdentifierWithoutMqlCtx(id string, binding *varia
 	typ := binding.typ
 
 	if typ.IsResource() {
-		resource := c.Schema.Lookup(typ.ResourceName())
+		resource, fieldinfo := c.Schema.LookupField(typ.ResourceName(), id)
 		if resource == nil {
 			return true, types.Nil, errors.New("cannot find resource that is called by '" + id + "' of type " + typ.Label())
 		}
 
-		fieldinfo, ok := resource.Fields[id]
-		if ok {
+		if fieldinfo != nil {
 			if call != nil && len(call.Function) > 0 {
 				return true, types.Nil, errors.New("cannot call resource field with arguments yet")
 			}

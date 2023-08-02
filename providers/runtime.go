@@ -51,6 +51,9 @@ func (c *coordinator) NewRuntime() *Runtime {
 		Recording: nullRecording{},
 	}
 	res.schema.runtime = res
+
+	// TODO: do this dynamically in the future
+	res.schema.loadAllSchemas()
 	return res
 }
 
@@ -276,13 +279,27 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 	name := resource.MqlName()
 	id := resource.MqlID()
 
-	provider, info, err := r.lookupResourceProvider(name)
+	provider, info, fieldInfo, err := r.lookupFieldProvider(name, field)
 	if err != nil {
 		return err
 	}
-
-	if _, ok := info.Fields[field]; !ok {
+	if fieldInfo == nil {
 		return errors.New("cannot get field '" + field + "' for resource '" + name + "'")
+	}
+
+	if info.Provider != fieldInfo.Provider {
+		// technically we don't need to look up the resource provider, since
+		// it had to have been called beforehand to get here
+		_, err := provider.Instance.Plugin.StoreData(&plugin.StoreReq{
+			Connection: provider.Connection.Id,
+			Resources: []*plugin.ResourceData{{
+				Name: name,
+				Id:   id,
+			}},
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to create reference resource "+name+" in provider "+provider.Instance.Name)
+		}
 	}
 
 	if cached, ok := r.Recording.GetData(provider.Connection.Id, name, id, field); ok {
@@ -411,6 +428,37 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 	return res, info, nil
 }
 
+func (r *Runtime) lookupFieldProvider(resource string, field string) (*ConnectedProvider, *resources.ResourceInfo, *resources.Field, error) {
+	resourceInfo, fieldInfo := r.schema.LookupField(resource, field)
+	if resourceInfo == nil {
+		return nil, nil, nil, errors.New("cannot find resource '" + resource + "' in schema")
+	}
+	if fieldInfo == nil {
+		return nil, nil, nil, errors.New("cannot find field '" + field + "' in resource '" + resource + "'")
+	}
+
+	if provider := r.providers[fieldInfo.Provider]; provider != nil {
+		return provider, resourceInfo, fieldInfo, nil
+	}
+
+	res, err := r.addProvider(fieldInfo.Provider)
+	if err != nil {
+		return nil, nil, nil, errors.New("failed to start provider '" + fieldInfo.Provider + "': " + err.Error())
+	}
+
+	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
+		Features: r.features,
+		Asset:    r.Provider.Connection.Asset,
+	}, nil)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	res.Connection = conn
+
+	return res, resourceInfo, fieldInfo, nil
+}
+
 func (r *Runtime) Schema() llx.Schema {
 	return &r.schema
 }
@@ -471,6 +519,34 @@ func (x *extensibleSchema) Lookup(name string) *resources.ResourceInfo {
 	return x.Resources[name]
 }
 
+func (x *extensibleSchema) LookupField(resource string, field string) (*resources.ResourceInfo, *resources.Field) {
+	found, ok := x.Resources[resource]
+	if !ok {
+		if x.allLoaded {
+			return nil, nil
+		}
+
+		x.loadAllSchemas()
+
+		found, ok = x.Resources[resource]
+		if !ok {
+			return nil, nil
+		}
+		return found, found.Fields[field]
+	}
+
+	fieldObj, ok := found.Fields[field]
+	if ok {
+		return found, fieldObj
+	}
+	if x.allLoaded {
+		return found, nil
+	}
+
+	x.loadAllSchemas()
+	return found, found.Fields[field]
+}
+
 func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
 	if schema == nil {
 		return
@@ -488,9 +564,7 @@ func (x *extensibleSchema) Add(name string, schema *resources.Schema) {
 	}
 
 	x.loaded[name] = struct{}{}
-	for k, v := range schema.Resources {
-		x.Schema.Resources[k] = v
-	}
+	x.Schema.Add(schema)
 }
 
 func (x *extensibleSchema) AllResources() map[string]*resources.ResourceInfo {
