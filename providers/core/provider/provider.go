@@ -131,5 +131,5 @@ func (s *Service) StoreData(req *plugin.StoreReq) (*plugin.StoreRes, error) {
 	if len(errs) != 0 {
 		return nil, errors.New(strings.Join(errs, ", "))
 	}
-	return nil, nil
+	return &plugin.StoreRes{}, nil
 }
