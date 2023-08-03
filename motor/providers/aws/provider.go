@@ -286,9 +286,9 @@ func getTitleForPlatformName(name string) string {
 	case "aws-s3-bucket":
 		return "AWS S3 Bucket"
 	case "aws-cloudtrail-trail":
-		return "AWS Cloudtrail Trail"
+		return "AWS CloudTrail Trail"
 	case "aws-rds-dbinstance":
-		return "AWS RDS DBInstance"
+		return "AWS RDS DB Instance"
 	case "aws-dynamodb-table":
 		return "AWS DynamoDB Table"
 	case "aws-redshift-cluster":
@@ -306,7 +306,7 @@ func getTitleForPlatformName(name string) string {
 	case "aws-iam-group":
 		return "AWS IAM Group"
 	case "aws-cloudwatch-loggroup":
-		return "AWS Cloudwatch Loggroup"
+		return "AWS CloudWatch Log Group"
 	case "aws-lambda-function":
 		return "AWS Lambda Function"
 	case "aws-ecs-container":
@@ -314,7 +314,7 @@ func getTitleForPlatformName(name string) string {
 	case "aws-efs-filesystem":
 		return "AWS EFS Filesystem"
 	case "aws-gateway-restapi":
-		return "AWS Gateway RESTAPI"
+		return "AWS Gateway REST API"
 	case "aws-elb-loadbalancer":
 		return "AWS ELB Load Balancer"
 	case "aws-es-domain":
@@ -322,7 +322,7 @@ func getTitleForPlatformName(name string) string {
 	case "aws-kms-key":
 		return "AWS KMS Key"
 	case "aws-sagemaker-notebookinstance":
-		return "AWS Sagemaker Notebook Instance"
+		return "AWS SageMaker Notebook Instance"
 	case "aws-ec2-instance":
 		return "AWS EC2 Instance"
 	case "aws-ssm-instance":
