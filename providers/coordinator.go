@@ -94,7 +94,7 @@ func (c *coordinator) Start(id string) (*RunningProvider, error) {
 	}
 
 	res := &RunningProvider{
-		Name:   id,
+		Name:   provider.Name,
 		ID:     provider.ID,
 		Plugin: raw.(pp.ProviderPlugin),
 		Client: client,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.mondoo.com/cnquery/explorer"
+	"go.mondoo.com/cnquery/llx"
 )
 
 // Db is the database backend, it allows the interaction with the underlying data.
@@ -16,7 +17,7 @@ type Db struct {
 }
 
 // NewServices creates a new set of backend services
-func NewServices() (*Db, *explorer.LocalServices, error) {
+func NewServices(runtime llx.Runtime) (*Db, *explorer.LocalServices, error) {
 	var cache kvStore = newKissDb()
 
 	db := &Db{
@@ -25,15 +26,15 @@ func NewServices() (*Db, *explorer.LocalServices, error) {
 		nowProvider: time.Now,
 	}
 
-	services := explorer.NewLocalServices(db, db.uuid)
+	services := explorer.NewLocalServices(db, db.uuid, runtime)
 	db.services = services // close the connection between db and services
 
 	return db, services, nil
 }
 
 // WithDb creates a new set of backend services and closes everything out once the function is done
-func WithDb(f func(*Db, *explorer.LocalServices) error) error {
-	db, ls, err := NewServices()
+func WithDb(runtime llx.Runtime, f func(*Db, *explorer.LocalServices) error) error {
+	db, ls, err := NewServices(runtime)
 	if err != nil {
 		return err
 	}

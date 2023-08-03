@@ -314,7 +314,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 	var res *AssetReport
 	var scanErr error
 
-	runtimeErr := inmemory.WithDb(func(db *inmemory.Db, services *explorer.LocalServices) error {
+	runtimeErr := inmemory.WithDb(job.runtime, func(db *inmemory.Db, services *explorer.LocalServices) error {
 		if job.UpstreamConfig.ApiEndpoint != "" && !job.UpstreamConfig.Incognito {
 			log.Debug().Msg("using API endpoint " + s.upstream.ApiEndpoint)
 			client, err := s.upstream.InitClient()
