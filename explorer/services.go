@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	llx "go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/sync/semaphore"
 )
@@ -34,12 +33,12 @@ type LocalServices struct {
 }
 
 // NewLocalServices initializes a reasonably configured local services struct
-func NewLocalServices(datalake DataLake, uuid string) *LocalServices {
+func NewLocalServices(datalake DataLake, uuid string, runtime llx.Runtime) *LocalServices {
 	return &LocalServices{
 		DataLake:  datalake,
 		Upstream:  nil,
 		Incognito: false,
-		runtime:   providers.DefaultRuntime(),
+		runtime:   runtime,
 	}
 }
 
