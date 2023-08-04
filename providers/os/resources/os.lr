@@ -1,3 +1,6 @@
+import "../../core/resources/core.lr"
+import "../../network/resources/network.lr"
+
 option provider = "go.mondoo.com/cnquery/providers/os"
 option go_package = "go.mondoo.com/cnquery/providers/os/resources"
 
@@ -390,6 +393,18 @@ parse.yaml {
   params(content) dict
 }
 
+// Parse Certificates from files
+parse.certificates {
+  []network.certificate(content, path)
+  init(path string)
+  // Certificate file path
+  path string
+  // Certificate file
+  file() file
+  // Certificate file content
+  content(file) string
+}
+
 // User on this system
 user @defaults("name uid gid") {
   // User ID
@@ -691,4 +706,53 @@ iptables.entry {
   options string
   //input or output - used to create id
   chain string
+}
+
+// Process on this system
+process @defaults("executable pid state") {
+  init(pid int)
+  // PID (process ID)
+  pid int
+  // State of the process (sleeping, running, etc)
+  state() string
+  // Executable that is running this process
+  executable() string
+  // Full command used to run this process
+  command() string
+  // Map of additional flags
+  flags() map[string]string
+}
+
+// Processes available on this system
+processes {
+  []process
+}
+
+// TCP/IP port on the system
+port @defaults("port protocol address process.executable") {
+  // Protocol of this port
+  protocol string
+  // Port number
+  port int
+  // Local address of this port
+  address string
+  // User configured for this port
+  user user
+  // Process that is connected to this port
+  process process
+  // State of this open port
+  state string
+  // Remote address connected to this port
+  remoteAddress string
+  // Remote port connected to this port
+  remotePort int
+  // TLS on this port, if it is available
+  tls(address, port, protocol) network.tls
+}
+
+// TCP/IP ports on the system
+ports {
+  []port
+  // All listening ports
+  listening() []port
 }

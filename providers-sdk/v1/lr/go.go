@@ -225,7 +225,7 @@ func (b *goBuilder) goGetData(r []*Resource) {
 	},`,
 				resource.ID, field.BasicField.ID,
 				resource.structName(b), field.BasicField.methodname(),
-				field.BasicField.Type.mondooType(),
+				field.BasicField.Type.mondooType(b),
 			)
 			fields = append(fields, x)
 		}
@@ -491,6 +491,18 @@ func (c *%s) Get%s() *plugin.TValue[%s] {
 
 // GO METHODS FOR AST
 
+func (b *goBuilder) importName(symbol string) (string, bool) {
+	parts := strings.SplitN(symbol, ".", 2)
+	if len(parts) >= 2 {
+		if ref, ok := b.ast.imports[parts[0]]; ok {
+			if _, ok := ref[parts[1]]; ok {
+				return parts[1], true
+			}
+		}
+	}
+	return "", false
+}
+
 func indent(s string, depth int) string {
 	space := ""
 	for i := 0; i < depth; i++ {
@@ -626,36 +638,36 @@ func resourceType(name string, ast *LR) types.Type {
 
 // Retrieve the mondoo equivalent of the type. This is a stringified type
 // i.e. it can be compiled with the MQL imports
-func (t *Type) mondooType() string {
-	i := t.mondooTypeItems()
+func (t *Type) mondooType(b *goBuilder) string {
+	i := t.mondooTypeItems(b)
 	if i == "" {
 		return "NO_TYPE_DETECTED"
 	}
 	return i
 }
 
-func (t *Type) mondooTypeItems() string {
+func (t *Type) mondooTypeItems(b *goBuilder) string {
 	if t.SimpleType != nil {
-		return t.SimpleType.mondooTypeItems()
+		return t.SimpleType.mondooTypeItems(b)
 	}
 	if t.ListType != nil {
-		return t.ListType.mondooTypeItems()
+		return t.ListType.mondooTypeItems(b)
 	}
 	if t.MapType != nil {
-		return t.MapType.mondooTypeItems()
+		return t.MapType.mondooTypeItems(b)
 	}
 	return ""
 }
 
-func (t *MapType) mondooTypeItems() string {
-	return "types.Map(" + t.Key.mondooTypeItems() + ", " + t.Value.mondooTypeItems() + ")"
+func (t *MapType) mondooTypeItems(b *goBuilder) string {
+	return "types.Map(" + t.Key.mondooTypeItems(b) + ", " + t.Value.mondooTypeItems(b) + ")"
 }
 
-func (t *ListType) mondooTypeItems() string {
-	return "types.Array(" + t.Type.mondooTypeItems() + ")"
+func (t *ListType) mondooTypeItems(b *goBuilder) string {
+	return "types.Array(" + t.Type.mondooTypeItems(b) + ")"
 }
 
-func (t *SimpleType) mondooTypeItems() string {
+func (t *SimpleType) mondooTypeItems(b *goBuilder) string {
 	switch t.Type {
 	case "bool":
 		return "types.Bool"
@@ -672,6 +684,9 @@ func (t *SimpleType) mondooTypeItems() string {
 	case "dict":
 		return "types.Dict"
 	default:
+		if name, ok := b.importName(t.Type); ok {
+			return "types.Resource(\"" + name + "\")"
+		}
 		return "types.Resource(\"" + t.Type + "\")"
 	}
 
@@ -736,6 +751,10 @@ func (t *SimpleType) goType(b *goBuilder) string {
 	pt, ok := primitiveTypes[t.Type]
 	if ok {
 		return pt
+	}
+
+	if _, ok := b.importName(t.Type); ok {
+		return "plugin.Resource"
 	}
 
 	return "*mql" + resource2goname(t.Type, b)

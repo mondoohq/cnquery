@@ -222,6 +222,7 @@ var ProviderPlugin_ServiceDesc = grpc.ServiceDesc{
 const (
 	ProviderCallback_Collect_FullMethodName      = "/cnquery.providers.v1.ProviderCallback/Collect"
 	ProviderCallback_GetRecording_FullMethodName = "/cnquery.providers.v1.ProviderCallback/GetRecording"
+	ProviderCallback_GetData_FullMethodName      = "/cnquery.providers.v1.ProviderCallback/GetData"
 )
 
 // ProviderCallbackClient is the client API for ProviderCallback service.
@@ -230,6 +231,7 @@ const (
 type ProviderCallbackClient interface {
 	Collect(ctx context.Context, in *DataRes, opts ...grpc.CallOption) (*CollectRes, error)
 	GetRecording(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*ResourceData, error)
+	GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error)
 }
 
 type providerCallbackClient struct {
@@ -258,12 +260,22 @@ func (c *providerCallbackClient) GetRecording(ctx context.Context, in *DataReq, 
 	return out, nil
 }
 
+func (c *providerCallbackClient) GetData(ctx context.Context, in *DataReq, opts ...grpc.CallOption) (*DataRes, error) {
+	out := new(DataRes)
+	err := c.cc.Invoke(ctx, ProviderCallback_GetData_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProviderCallbackServer is the server API for ProviderCallback service.
 // All implementations must embed UnimplementedProviderCallbackServer
 // for forward compatibility
 type ProviderCallbackServer interface {
 	Collect(context.Context, *DataRes) (*CollectRes, error)
 	GetRecording(context.Context, *DataReq) (*ResourceData, error)
+	GetData(context.Context, *DataReq) (*DataRes, error)
 	mustEmbedUnimplementedProviderCallbackServer()
 }
 
@@ -276,6 +288,9 @@ func (UnimplementedProviderCallbackServer) Collect(context.Context, *DataRes) (*
 }
 func (UnimplementedProviderCallbackServer) GetRecording(context.Context, *DataReq) (*ResourceData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRecording not implemented")
+}
+func (UnimplementedProviderCallbackServer) GetData(context.Context, *DataReq) (*DataRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetData not implemented")
 }
 func (UnimplementedProviderCallbackServer) mustEmbedUnimplementedProviderCallbackServer() {}
 
@@ -326,6 +341,24 @@ func _ProviderCallback_GetRecording_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProviderCallback_GetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DataReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderCallbackServer).GetData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProviderCallback_GetData_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderCallbackServer).GetData(ctx, req.(*DataReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProviderCallback_ServiceDesc is the grpc.ServiceDesc for ProviderCallback service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -340,6 +373,10 @@ var ProviderCallback_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRecording",
 			Handler:    _ProviderCallback_GetRecording_Handler,
+		},
+		{
+			MethodName: "GetData",
+			Handler:    _ProviderCallback_GetData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

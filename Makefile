@@ -112,14 +112,17 @@ providers/build:
 	go generate ./providers-sdk/v1/plugin
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 	@$(call genProvider, providers/core)
+	@$(call genProvider, providers/network)
 	@$(call genProvider, providers/os)
 # add more providers...
 
 providers/install:
 #	@$(call installProvider, providers/core)
+	@$(call installProvider, providers/network)
 	@$(call installProvider, providers/os)
 
 providers/bundle:
+	@$(call installProvider, providers/network)
 	@$(call bundleProvider, providers/os)
 
 motor/generate:

@@ -22,6 +22,7 @@ var PluginMap = map[string]plugin.Plugin{
 type ProviderCallback interface {
 	Collect(req *DataRes) error
 	GetRecording(req *DataReq) (*ResourceData, error)
+	GetData(req *DataReq) (*DataRes, error)
 }
 
 // ProviderPlugin is the interface that we're exposing as a plugin.

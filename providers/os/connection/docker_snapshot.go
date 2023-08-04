@@ -9,6 +9,8 @@ const (
 	DockerSnapshot shared.ConnectionType = "docker-snapshot"
 )
 
+var _ shared.Connection = &DockerSnapshotConnection{}
+
 type DockerSnapshotConnection struct {
 	TarConnection
 }

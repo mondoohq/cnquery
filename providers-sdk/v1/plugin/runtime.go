@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"errors"
+
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
@@ -113,6 +115,46 @@ func (r *Runtime) initResourcesFromRecording(val interface{}, typ types.Type) (i
 	}
 }
 
+func (r *Runtime) CreateSharedResource(resource string, args map[string]*llx.RawData) (Resource, error) {
+	pargs, err := RawDataArgsToPrimitiveArgs(args)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := r.Callback.GetData(&DataReq{
+		Resource: resource,
+		Args:     pargs,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if res.Error != "" {
+		return nil, errors.New(res.Error)
+	}
+	raw := res.Data.RawData()
+	if !raw.Type.IsResource() {
+		return nil, errors.New("failed to create shared resource '" + resource + "' (non-resource return)")
+	}
+	return raw.Value.(Resource), nil
+}
+
+func (r *Runtime) GetSharedData(resource string, resourceID string, field string) (*llx.RawData, error) {
+	res, err := r.Callback.GetData(&DataReq{
+		Resource:   resource,
+		ResourceId: resourceID,
+		Field:      field,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if res.Error != "" {
+		return nil, errors.New(res.Error)
+	}
+	return res.Data.RawData(), nil
+}
+
 type TValue[T any] struct {
 	Data  T
 	State State
@@ -199,12 +241,39 @@ func GetOrCompute[T any](cached *TValue[T], compute func() (T, error)) *TValue[T
 	return cached
 }
 
-func PrimitiveArgsToRawDataArgs(pargs map[string]*llx.Primitive) map[string]*llx.RawData {
+func PrimitiveArgsToRawDataArgs(pargs map[string]*llx.Primitive, runtime *Runtime) map[string]*llx.RawData {
 	res := make(map[string]*llx.RawData, len(pargs))
 	for k, v := range pargs {
+		// If it's an internal resource to this runtime, we need to look it up,
+		// since we are only handed references to resources, never the native
+		// resources themselves. Resources must exist before referencing them.
+		if typ := types.Type(v.Type); typ.IsResource() {
+			name := typ.ResourceName()
+			id := string(v.Value)
+			resource := runtime.Resources[name+"\x00"+id]
+			if resource != nil {
+				res[k] = llx.ResourceData(resource, name)
+				continue
+			}
+			// If it's not an internal resource, we can only reference it vv
+		}
+
 		res[k] = v.RawData()
 	}
 	return res
+}
+
+func RawDataArgsToPrimitiveArgs(pargs map[string]*llx.RawData) (map[string]*llx.Primitive, error) {
+	res := make(map[string]*llx.Primitive, len(pargs))
+	for k, v := range pargs {
+		vr := v.Result()
+		if vr.Error != "" {
+			return nil, errors.New("failed to serialize, error in raw data '" + k + "'")
+		}
+
+		res[k] = vr.Data
+	}
+	return res, nil
 }
 
 func ProtoArgsToRawDataArgs(pargs map[string]*llx.Result) (map[string]*llx.RawData, error) {

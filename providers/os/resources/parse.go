@@ -191,3 +191,83 @@ func (s *mqlParsePlist) content(file *mqlFile) (string, error) {
 func (s *mqlParsePlist) params(content string) (map[string]interface{}, error) {
 	return plist.Decode(strings.NewReader(content))
 }
+
+func initParseCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// resolve path to file
+	if x, ok := args["path"]; ok {
+		path, ok := x.Value.(string)
+		if !ok {
+			return nil, nil, errors.New("Wrong type for 'path' in certificates initialization, it must be a string")
+		}
+
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(path),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		args["file"] = llx.ResourceData(f, "file")
+
+	} else if x, ok := args["content"]; ok {
+		content := x.Value.(string)
+		virtualPath := "in-memory://" + checksums.New.Add(content).String()
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path":    llx.StringData(virtualPath),
+			"content": llx.StringData(content),
+			"exists":  llx.BoolTrue,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		args["file"] = llx.ResourceData(f, "file")
+		args["path"] = llx.StringData(virtualPath)
+	} else {
+		return nil, nil, errors.New("missing 'path' or 'content' for parse.json initialization")
+	}
+
+	return args, nil, nil
+}
+
+func certificatesid(path string) string {
+	return "certificates:" + path
+}
+
+func (a *mqlParseCertificates) id() (string, error) {
+	f := a.File.Data
+	if f == nil {
+		return "", errors.New("missing file in parse certificate")
+	}
+
+	return certificatesid(f.Path.Data), nil
+}
+
+func (a *mqlParseCertificates) file() (*mqlFile, error) {
+	f, err := CreateResource(a.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(a.Path.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return f.(*mqlFile), nil
+}
+
+func (a *mqlParseCertificates) content(file *mqlFile) (string, error) {
+	res := file.GetContent()
+	return res.Data, res.Error
+}
+
+func (p *mqlParseCertificates) list(content string, path string) ([]interface{}, error) {
+	certificates, err := p.MqlRuntime.CreateSharedResource("certificates", map[string]*llx.RawData{
+		"pem": llx.StringData(content),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := p.MqlRuntime.GetSharedData("certificates", certificates.MqlID(), "list")
+	if err != nil {
+		return nil, err
+	}
+
+	return list.Value.([]interface{}), nil
+}

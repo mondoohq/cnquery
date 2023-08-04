@@ -1,0 +1,129 @@
+option provider = "go.mondoo.com/cnquery/providers/network"
+option go_package = "go.mondoo.com/cnquery/providers/network/resources"
+
+// Socket
+socket @defaults("protocol port address") {
+  // Protocol for this socket
+  protocol string
+  // Port number
+  port int
+  // Target address
+  address string
+}
+
+// TLS
+tls @defaults("socket domainName") {
+  init(target string)
+  // Socket of this connection
+  socket socket
+  // An optional domain name which will be tested
+  domainName string
+  // Params is a list of all parameters for this TLS/SSL connection
+  params(socket, domainName) dict
+  // Version of TLS/SSL that is being used
+  versions(params) []string
+  // Ciphers supported by a given TLS/SSL connection
+  ciphers(params) []string
+  // Extensions supported by this TLS/SSL connection
+  extensions(params) []string
+  // Certificates provided in this TLS/SSL connection
+  certificates(params) []certificate
+  // Certificates provided without server name indication (SNI)
+  nonSniCertificates(params) []certificate
+}
+
+// x509 certificates resource
+certificates {
+  []certificate
+  // PEM content
+  pem string
+}
+
+// x509 certificate resource
+certificate @defaults("serial subject.commonName subject.dn") {
+  // PEM content
+  pem string
+  // Certificate Fingerprints
+  fingerprints() map[string]string
+  // Serial Number
+  serial() string
+  // Subject Unique Identifier
+  subjectKeyID() string
+  // Authority Key Identifier
+  authorityKeyID() string
+  // Subject
+  subject() pkix.name
+  // Issuer
+  issuer() pkix.name
+  // Version Number
+  version() int
+  // Validity period Validity period
+  notBefore() time
+  // Validity period Not After
+  notAfter() time
+  // Expiration Duration
+  expiresIn() time
+  // Signature
+  signature() string
+  // Signature Algorithm ID
+  signingAlgorithm() string
+  // Flag if Certificate Authority
+  isCA() bool
+  // Key Usage
+  keyUsage() []string
+  // Extended Key Usage
+  extendedKeyUsage() []string
+  // Extensions
+  extensions() []pkix.extension
+  // Policy Identifier
+  policyIdentifier() []string
+  // CRL Distribution Points
+  crlDistributionPoints() []string
+  // OCSP
+  ocspServer() []string
+  // Issuing Certificate Url
+  issuingCertificateUrl() []string
+  // Identifies if this certificate has been revoked
+  isRevoked() bool
+  // The time at which this certificate was revoked
+  revokedAt() time
+  // Indicates if the certificate is valid by checking its chain
+  isVerified() bool
+}
+
+// x509 certificate PKIX name
+pkix.name @defaults("id dn commonName") {
+  // ID
+  id string
+  // Distinguished Name Qualifier
+  dn string
+  // Serial Number
+  serialNumber string
+  // Common Name
+  commonName string
+  // Country
+  country []string
+  // Organization
+  organization []string
+  // Organizational Unit
+  organizationalUnit []string
+  locality []string
+  // State or Province
+  province []string
+  // Street Address
+  streetAddress []string
+  // Postal Code
+  postalCode []string
+  names      map[string]string
+  extraNames map[string]string
+}
+
+// x509 certificate PKIX extension
+pkix.extension {
+  // Extension Identifier
+  identifier string
+  // Flag for Critical Extension
+  critical bool
+  // Extension Value
+  value string
+}

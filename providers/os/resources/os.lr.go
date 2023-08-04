@@ -130,6 +130,10 @@ func init() {
 			Init: initParseYaml,
 			Create: createParseYaml,
 		},
+		"parse.certificates": {
+			Init: initParseCertificates,
+			Create: createParseCertificates,
+		},
 		"user": {
 			Init: initUser,
 			Create: createUser,
@@ -221,6 +225,22 @@ func init() {
 		"iptables.entry": {
 			// to override args, implement: initIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createIptablesEntry,
+		},
+		"process": {
+			Init: initProcess,
+			Create: createProcess,
+		},
+		"processes": {
+			// to override args, implement: initProcesses(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createProcesses,
+		},
+		"port": {
+			// to override args, implement: initPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPort,
+		},
+		"ports": {
+			// to override args, implement: initPorts(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createPorts,
 		},
 	}
 }
@@ -695,6 +715,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"parse.yaml.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseYaml).GetParams()).ToDataRes(types.Dict)
 	},
+	"parse.certificates.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseCertificates).GetPath()).ToDataRes(types.String)
+	},
+	"parse.certificates.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseCertificates).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.certificates.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseCertificates).GetContent()).ToDataRes(types.String)
+	},
+	"parse.certificates.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseCertificates).GetList()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
 	"user.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetUid()).ToDataRes(types.Int)
 	},
@@ -1015,6 +1047,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"iptables.entry.chain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIptablesEntry).GetChain()).ToDataRes(types.String)
+	},
+	"process.pid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProcess).GetPid()).ToDataRes(types.Int)
+	},
+	"process.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProcess).GetState()).ToDataRes(types.String)
+	},
+	"process.executable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProcess).GetExecutable()).ToDataRes(types.String)
+	},
+	"process.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProcess).GetCommand()).ToDataRes(types.String)
+	},
+	"process.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProcess).GetFlags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"processes.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlProcesses).GetList()).ToDataRes(types.Array(types.Resource("process")))
+	},
+	"port.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetProtocol()).ToDataRes(types.String)
+	},
+	"port.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetPort()).ToDataRes(types.Int)
+	},
+	"port.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetAddress()).ToDataRes(types.String)
+	},
+	"port.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetUser()).ToDataRes(types.Resource("user"))
+	},
+	"port.process": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetProcess()).ToDataRes(types.Resource("process"))
+	},
+	"port.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetState()).ToDataRes(types.String)
+	},
+	"port.remoteAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetRemoteAddress()).ToDataRes(types.String)
+	},
+	"port.remotePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetRemotePort()).ToDataRes(types.Int)
+	},
+	"port.tls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPort).GetTls()).ToDataRes(types.Resource("tls"))
+	},
+	"ports.listening": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPorts).GetListening()).ToDataRes(types.Array(types.Resource("port")))
+	},
+	"ports.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPorts).GetList()).ToDataRes(types.Array(types.Resource("port")))
 	},
 }
 
@@ -1684,6 +1767,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlParseYaml).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"parse.certificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParseCertificates).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.certificates.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseCertificates).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.certificates.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseCertificates).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.certificates.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseCertificates).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.certificates.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseCertificates).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlUser).__id, ok = v.Value.(string)
 			return
@@ -2202,6 +2305,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"iptables.entry.chain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIptablesEntry).Chain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"process.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlProcess).__id, ok = v.Value.(string)
+			return
+		},
+	"process.pid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProcess).Pid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"process.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProcess).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"process.executable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProcess).Executable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"process.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProcess).Command, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"process.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProcess).Flags, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"processes.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlProcesses).__id, ok = v.Value.(string)
+			return
+		},
+	"processes.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlProcesses).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"port.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPort).__id, ok = v.Value.(string)
+			return
+		},
+	"port.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"port.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"port.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"port.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).User, ok = plugin.RawToTValue[*mqlUser](v.Value, v.Error)
+		return
+	},
+	"port.process": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).Process, ok = plugin.RawToTValue[*mqlProcess](v.Value, v.Error)
+		return
+	},
+	"port.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"port.remoteAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).RemoteAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"port.remotePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).RemotePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"port.tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPort).Tls, ok = plugin.RawToTValue[plugin.Resource](v.Value, v.Error)
+		return
+	},
+	"ports.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlPorts).__id, ok = v.Value.(string)
+			return
+		},
+	"ports.listening": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPorts).Listening, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ports.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPorts).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -4479,6 +4666,109 @@ func (c *mqlParseYaml) GetParams() *plugin.TValue[interface{}] {
 	})
 }
 
+// mqlParseCertificates for the parse.certificates resource
+type mqlParseCertificates struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseCertificatesInternal it will be used here
+	Path plugin.TValue[string]
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createParseCertificates creates a new instance of this resource
+func createParseCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParseCertificates{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.certificates", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParseCertificates) MqlName() string {
+	return "parse.certificates"
+}
+
+func (c *mqlParseCertificates) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParseCertificates) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlParseCertificates) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("parse.certificates", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlParseCertificates) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParseCertificates) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("parse.certificates", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+
+		return c.list(vargContent.Data, vargPath.Data)
+	})
+}
+
 // mqlUser for the user resource
 type mqlUser struct {
 	MqlRuntime *plugin.Runtime
@@ -6308,4 +6598,325 @@ func (c *mqlIptablesEntry) GetOptions() *plugin.TValue[string] {
 
 func (c *mqlIptablesEntry) GetChain() *plugin.TValue[string] {
 	return &c.Chain
+}
+
+// mqlProcess for the process resource
+type mqlProcess struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlProcessInternal
+	Pid plugin.TValue[int64]
+	State plugin.TValue[string]
+	Executable plugin.TValue[string]
+	Command plugin.TValue[string]
+	Flags plugin.TValue[map[string]interface{}]
+}
+
+// createProcess creates a new instance of this resource
+func createProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProcess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("process", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProcess) MqlName() string {
+	return "process"
+}
+
+func (c *mqlProcess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProcess) GetPid() *plugin.TValue[int64] {
+	return &c.Pid
+}
+
+func (c *mqlProcess) GetState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
+}
+
+func (c *mqlProcess) GetExecutable() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Executable, func() (string, error) {
+		return c.executable()
+	})
+}
+
+func (c *mqlProcess) GetCommand() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Command, func() (string, error) {
+		return c.command()
+	})
+}
+
+func (c *mqlProcess) GetFlags() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Flags, func() (map[string]interface{}, error) {
+		return c.flags()
+	})
+}
+
+// mqlProcesses for the processes resource
+type mqlProcesses struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlProcessesInternal
+	List plugin.TValue[[]interface{}]
+}
+
+// createProcesses creates a new instance of this resource
+func createProcesses(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlProcesses{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("processes", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlProcesses) MqlName() string {
+	return "processes"
+}
+
+func (c *mqlProcesses) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlProcesses) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("processes", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlPort for the port resource
+type mqlPort struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPortInternal it will be used here
+	Protocol plugin.TValue[string]
+	Port plugin.TValue[int64]
+	Address plugin.TValue[string]
+	User plugin.TValue[*mqlUser]
+	Process plugin.TValue[*mqlProcess]
+	State plugin.TValue[string]
+	RemoteAddress plugin.TValue[string]
+	RemotePort plugin.TValue[int64]
+	Tls plugin.TValue[plugin.Resource]
+}
+
+// createPort creates a new instance of this resource
+func createPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPort{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("port", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPort) MqlName() string {
+	return "port"
+}
+
+func (c *mqlPort) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPort) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlPort) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlPort) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlPort) GetUser() *plugin.TValue[*mqlUser] {
+	return &c.User
+}
+
+func (c *mqlPort) GetProcess() *plugin.TValue[*mqlProcess] {
+	return &c.Process
+}
+
+func (c *mqlPort) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlPort) GetRemoteAddress() *plugin.TValue[string] {
+	return &c.RemoteAddress
+}
+
+func (c *mqlPort) GetRemotePort() *plugin.TValue[int64] {
+	return &c.RemotePort
+}
+
+func (c *mqlPort) GetTls() *plugin.TValue[plugin.Resource] {
+	return plugin.GetOrCompute[plugin.Resource](&c.Tls, func() (plugin.Resource, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("port", c.__id, "tls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(plugin.Resource), nil
+			}
+		}
+
+		vargAddress := c.GetAddress()
+		if vargAddress.Error != nil {
+			return nil, vargAddress.Error
+		}
+
+		vargPort := c.GetPort()
+		if vargPort.Error != nil {
+			return nil, vargPort.Error
+		}
+
+		vargProtocol := c.GetProtocol()
+		if vargProtocol.Error != nil {
+			return nil, vargProtocol.Error
+		}
+
+		return c.tls(vargAddress.Data, vargPort.Data, vargProtocol.Data)
+	})
+}
+
+// mqlPorts for the ports resource
+type mqlPorts struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlPortsInternal it will be used here
+	Listening plugin.TValue[[]interface{}]
+	List plugin.TValue[[]interface{}]
+}
+
+// createPorts creates a new instance of this resource
+func createPorts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlPorts{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	res.__id, err = res.id()
+	if err != nil {
+		return nil, err
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ports", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlPorts) MqlName() string {
+	return "ports"
+}
+
+func (c *mqlPorts) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlPorts) GetListening() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Listening, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ports", c.__id, "listening")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.listening()
+	})
+}
+
+func (c *mqlPorts) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ports", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
 }
