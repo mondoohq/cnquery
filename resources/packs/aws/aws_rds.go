@@ -108,6 +108,7 @@ func (d *mqlAwsRds) getDbInstances(provider *aws_provider.Provider) []*jobpool.J
 						"engine", core.ToString(dbInstance.Engine),
 						"securityGroups", sgs,
 						"status", core.ToString(dbInstance.DBInstanceStatus),
+						"autoMinorVersionUpgrade", dbInstance.AutoMinorVersionUpgrade,
 					)
 					if err != nil {
 						return nil, err

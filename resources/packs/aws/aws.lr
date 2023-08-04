@@ -1179,6 +1179,8 @@ private aws.rds.dbinstance @defaults("arn") {
   securityGroups []aws.ec2.securitygroup
   // Current state of this database
   status string
+  // Indicates whether minor version patches are applied automatically
+  autoMinorVersionUpgrade bool
 }
 
 // Amazon ElastiCache
