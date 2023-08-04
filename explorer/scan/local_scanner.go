@@ -103,9 +103,13 @@ func (s *LocalScanner) RunIncognito(ctx context.Context, job *Job) (*explorer.Re
 		return nil, errors.New("no context provided to run job with local scanner")
 	}
 
-	upstream := proto.Clone(s.upstream).(*upstream.UpstreamConfig)
-	upstream.Incognito = true
-	reports, _, err := s.distributeJob(job, ctx, upstream)
+	var upstreamConf *upstream.UpstreamConfig
+	if s.upstream != nil {
+		upstreamConf = proto.Clone(s.upstream).(*upstream.UpstreamConfig)
+		upstreamConf.Incognito = true
+	}
+
+	reports, _, err := s.distributeJob(job, ctx, upstreamConf)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +168,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 	}
 
 	// sync assets
-	if upstream.ApiEndpoint != "" && !upstream.Incognito {
+	if upstream != nil && upstream.ApiEndpoint != "" && !upstream.Incognito {
 		log.Info().Msg("synchronize assets")
 		client, err := upstream.InitClient()
 		if err != nil {
@@ -315,7 +319,7 @@ func (s *LocalScanner) runMotorizedAsset(job *AssetJob) (*AssetReport, error) {
 	var scanErr error
 
 	runtimeErr := inmemory.WithDb(job.runtime, func(db *inmemory.Db, services *explorer.LocalServices) error {
-		if job.UpstreamConfig.ApiEndpoint != "" && !job.UpstreamConfig.Incognito {
+		if job.UpstreamConfig != nil && job.UpstreamConfig.ApiEndpoint != "" && !job.UpstreamConfig.Incognito {
 			log.Debug().Msg("using API endpoint " + s.upstream.ApiEndpoint)
 			client, err := s.upstream.InitClient()
 			if err != nil {
@@ -371,7 +375,7 @@ func (s *localAssetScanner) prepareAsset() error {
 	var conductor explorer.QueryConductor = s.services
 
 	// if we are using upstream we get the bundle from there
-	if !s.job.UpstreamConfig.Incognito {
+	if s.job.UpstreamConfig != nil && !s.job.UpstreamConfig.Incognito {
 		return nil
 	}
 
@@ -474,7 +478,7 @@ func (s *localAssetScanner) ensureBundle() error {
 		return errors.New("cannot find any default policies for this asset (" + platform + ")")
 	}
 
-	s.job.Bundle, err = s.fetcher.fetchBundles(s.job.Ctx, urls.Urls...)
+	s.job.Bundle, err = s.fetcher.fetchBundles(s.job.Ctx, s.Runtime.Schema(), urls.Urls...)
 	if err != nil {
 		return err
 	}
