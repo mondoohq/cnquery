@@ -11,6 +11,9 @@ jobs:
   build:
     runs-on: self-hosted
     timeout-minutes: 30
+    permissions:
+      # Add "id-token" for google-github-actions/auth
+      id-token: 'write'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
