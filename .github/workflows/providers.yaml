@@ -26,15 +26,15 @@ jobs:
       - name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v1'
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIP }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          credentials_json: ${{ secrets.GCP_RELEASE_SERVICE_ACCOUNT}}
 
       - name: 'Set up gcloud CLI'
-        uses: 'google-github-actions/setup-gcloud@v0.4.0'
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-          export_default_credentials: true
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: 'Build dependencies'
+        run: |
+          make providers/proto
+          go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
       - name: 'Build Providers'
         run: |
