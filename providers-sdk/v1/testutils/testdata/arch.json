@@ -240,6 +240,31 @@
         },
         {
           "Resource": "file",
+          "ID": "/expires.asc",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGPC11oBEAC6FUrqcr5tfFNXQb3+Mkdv9aRY/F+jSRzKRQZ0RwZsQuay0qhZ\nh24YuNnv07e9AL36PCVnb86HcGHR3Td/TQEIEQYsd2J5rIKtte67dN8dHsfuA29M\n0a0tTzYty2f6dEuzEATbcIU5ZOI3OkMK41FJHzF5WDEt2lMuUAzmkePVTdEkQqGU\nxTBHMFupIe6rw2ks6okc6QZ9tvVOhctW/jeXAu0Qhg3Dj7CxX4YRy9vpaWG2FIWu\n9LNS83EymODPzZpz/gOBKi8jCtmgPvSncxP+KdRHRQA50d98UeUdKwekEtNqgNRr\n032qdfnDeIu9yXlMFztvUsO6MKzwUNeXJWek9u+36SAkIQ2fD+I1ht/4O8iFKuxZ\nayK6LLu9Iqoi0NSAq2PGxPx8/aHf12pgta/0O3jekneTPcNhYfMEkVI9cXftRP5F\nNmxj5w7fZXg4AdDkiIvLaM2OFzt0aEAJgPbXo361TfLcHcDgVj74fx3HprThCmu7\n8Cc3YtTNzY39X91/ZlklYzmXN42imu9U17TxMcNI3wXfe4zwFqAn+NSCEZWQrrze\nzGqjGpj+BKfU7YaF8w8bY3mvRw5CLpaTST1kY2Ev/6k/f8S/GrxgvxSMEMJqGka4\nh438T+og9lleoe69G5QajBxVNE1DgRhdNvR8XD8XgAPScTjRj27r7d8gUQARAQAB\ntCNUZXN0IEV4cGlyYXRpb24gPHRlc3QyQGV4YW1wbGUuY29tPokCVAQTAQgAPhYh\nBAekU/iuokjh6bjq4nMS+jVufbE/BQJjwtdaAhsDBQkB3+HgBQsJCAcCBhUKCQgL\nAgQWAgMBAh4BAheAAAoJEHMS+jVufbE/GBsP/1ZMEb4cZMyk6NllYVPvgxZibz9Z\nyqWX7+TNmVijQDF3Z/ZU4aSaVMU6D4zXApu75CF8A0lbYDQRXn6nPXWgXNLapeUc\nMH5qi3EnbTm4Rr1DqNaGBTx4Ysu1zzfGxlcL/L2Bb7f5UbKMxHHcZ1GtlKPA5jVp\nD4phh0GyXEmFwAN1w2Ak5plgzItaIJ/mvzJlPR5erR/piw/Yq716VD1BGCYRJpyi\nO9gz4hTksmG8cHppwuvaFKb3bf40cjHijxQ/JAgc2ym9s9n747e05lCwocLWPsNR\nacJSCJSwMwen+krFqkvJu9cTuQBWti4exVO4QU+PJkAhqJEvXtg6iN8utvKPs3Ux\nB+msQ7UDjooEHmYGuoPOzbypQl0bEHPO3Ywoyi9TjZsl6GIhIzCYsG0SQ7Fak1po\nYIETuy/Di4sZlzRdgOHkZLVnhWM0OQ+XWFymlO2tRG3FAYnKKVjd4Yyr3GDAygul\nj9VvVB386D2U+qTga/6FQ+3qsvYZYu/9InCy2QfHkfZlpFSveLnzBQ86CQJuJ6EO\niSgCy3fxwRzbvfjrtIL9NnW2kg71fKT0PMHLFd7sEKdU7v8xm0+IkH2qqmpgVzQp\nrox3/DqhU28vy9RHSNqJirQXcLaniQR7Rnuchze+nHv93qVWWXzGqO1cKQ4agtLH\nMnWZT6UXVS3HHs0auQINBGPC11oBEADNZxSyJjD7l+VfPSxBmeKD6mB7DyqHbAXy\nQQs69VXH4xMI2hE5n8gFd1uc0M240J1I2drLvvt5pXH+Dr4l4nC9rXa6UtCh7wQ1\ncx/vxxqb4CMGT38Nix7UkO2bdfptnbpV+86JDf2pjRnjbUr/+ROpWhM1SGiNQDfn\n+vZaevhS7bUhMWb24trig/YcFnB/WWIJsRJhORS1Vxq1Gp/me3slIuNa1lcHH2O5\njxw5WIlWaHJRMysgj5cB/LTfHYWFjFxus7hC14VQaAfvG10PS3oiqYDF8UWCDD4f\np+vQxmxMBSug0Cau0uFFusTgZqDNRaGSVP9wlYQr7jdwRbVpsSO/+cvlmmFVielc\nL4yqpHn66lWaOS9ZuLUx9w4X4XSrV8YvdSpU1TgfJxGgLWX7bHiaupJJIrc3sMYD\nCjgyS8HUh4iIHTUd6ZCPEYhrnPquyriBzxvs+Axayte8ZPOIFbbm0cAUQAbeQjXO\npaN1utoP5RfmkgJ8Jt+aPUIr8tK7jSE1nwWepmenPPa7PoWXs0qW05kDWDjVR4QU\nPhdPr/owhtz04st4MXjq9Rl3uvp3zLooFn9tNo5fTgHSPYy71xpbDl55EkK+jqkt\n+VuxYWKSZp/xXQj2gKUf7eW9FRFuRT/I+AiPk9o5/b+gLr2xfBEgISoGdmWFMxZY\nW2rGiEMZkwARAQABiQI8BBgBCAAmFiEEB6RT+K6iSOHpuOricxL6NW59sT8FAmPC\n11oCGwwFCQHf4eAACgkQcxL6NW59sT/erg//ca5wQT4Dyk0lXyZ3HxH+Urx7wE0o\nmd5ZY+fwr0GlPNJYho+fUJTz4urVE4aw0yjrrhbJLDDG1sg7ZV7cIJt1sF1/8AGG\n+mGBUn1RE0u7LF5K8LaUg7viyp3IgwEV7JdjKK9qyHxR476ARPXYcWAc+a9TIhsC\nn3fxq22qM7abZwRf7dd1S/lxBZCfewdE+ZX3yFfGOOA6ZXGnBIc1aKAsAI5+Cypt\nqHWsbEaMIo7JHFESDMSUwYOTqlSUbWag1elUpAtK6xPQ33Yc+FdkJnNcSBeA7ian\n1SabPg+zWVjaB9SeOmo3PKkssS81StByLcaUiRht1LSdLo7MoSxRlRHjTfCSCrk/\nhmKDXDGu35OW597ZLPfN9kyS4j9GWBt2OMAEsd8tBscQCowNDrtTeYxonxp8RMo5\npQ2izYcayQmE0p/9voLSUu0wooyIs0DTuvzBPUwOlDSfHADRSWfVUE7mLjowOv/C\nG6qdvKYp9DbKd71yE45sCkdqSmWGw4dQGwXAvY20cgJlaZL+RU+YfgmfYoTBnqCr\nOOYteJ7bQ5o+hBF2as8HYKviRmnuXY0wH3jj5c070KqD3ubf9gfCoThETa1Cbqlk\nDRSVgV/uog3Rgbxfv5oh4gq67q3zjEEZIbCJtzyEQ0xvad5cur2Lz4acbTj9FoM3\nxh6s/uUjdqWcuew=\n=E8MR\n-----END PGP PUBLIC KEY BLOCK-----\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "expires.asc"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 3151
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/home/chris/.ssh/authorized_keys",
           "Fields": {
             "content": {

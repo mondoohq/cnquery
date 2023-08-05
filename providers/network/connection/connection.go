@@ -1,6 +1,8 @@
 package connection
 
-import "go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+import (
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+)
 
 type HostConnection struct {
 	id    uint32
@@ -26,4 +28,11 @@ func (h *HostConnection) ID() uint32 {
 
 func (p *HostConnection) Asset() *inventory.Asset {
 	return p.asset
+}
+
+func (p *HostConnection) FQDN() string {
+	if p.Conf == nil {
+		return ""
+	}
+	return p.Conf.Host
 }

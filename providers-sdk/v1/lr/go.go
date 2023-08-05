@@ -358,7 +358,12 @@ func (b *goBuilder) goFactory(r *Resource) {
 
 	var idCode string
 	if b.collector.HasID(structName) {
-		idCode = "res.__id, err = res.id()\n\tif err != nil {\n\t\treturn nil, err\n\t}"
+		idCode = `if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}`
 	} else {
 		idCode = `// to override __id implement: id() (string, error)`
 	}

@@ -34,6 +34,10 @@ func init() {
 			// to override args, implement: initParse(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createParse,
 		},
+		"uuid": {
+			Init: initUuid,
+			Create: createUuid,
+		},
 	}
 }
 
@@ -201,6 +205,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"regex.creditCard": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRegex).GetCreditCard()).ToDataRes(types.Regex)
 	},
+	"uuid.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUuid).GetValue()).ToDataRes(types.String)
+	},
+	"uuid.urn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUuid).GetUrn()).ToDataRes(types.String)
+	},
+	"uuid.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUuid).GetVersion()).ToDataRes(types.Int)
+	},
+	"uuid.variant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlUuid).GetVariant()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -365,6 +381,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlParse).__id, ok = v.Value.(string)
 			return
 		},
+	"uuid.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlUuid).__id, ok = v.Value.(string)
+			return
+		},
+	"uuid.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUuid).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"uuid.urn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUuid).Urn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"uuid.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUuid).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"uuid.variant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlUuid).Variant, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -677,9 +713,11 @@ func createRegex(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -792,4 +830,74 @@ func (c *mqlParse) MqlName() string {
 
 func (c *mqlParse) MqlID() string {
 	return c.__id
+}
+
+// mqlUuid for the uuid resource
+type mqlUuid struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlUuidInternal it will be used here
+	Value plugin.TValue[string]
+	Urn plugin.TValue[string]
+	Version plugin.TValue[int64]
+	Variant plugin.TValue[string]
+}
+
+// createUuid creates a new instance of this resource
+func createUuid(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlUuid{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("uuid", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlUuid) MqlName() string {
+	return "uuid"
+}
+
+func (c *mqlUuid) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlUuid) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlUuid) GetUrn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Urn, func() (string, error) {
+		return c.urn()
+	})
+}
+
+func (c *mqlUuid) GetVersion() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.Version, func() (int64, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlUuid) GetVariant() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Variant, func() (string, error) {
+		return c.variant()
+	})
 }

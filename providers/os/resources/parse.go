@@ -271,3 +271,64 @@ func (p *mqlParseCertificates) list(content string, path string) ([]interface{},
 
 	return list.Value.([]interface{}), nil
 }
+
+func initParseOpenpgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// resolve path to file
+	if x, ok := args["path"]; ok {
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path": x,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		args["file"] = llx.ResourceData(f, "file")
+
+	} else if x, ok := args["content"]; ok {
+		content := x.Value.(string)
+		virtualPath := "in-memory://" + checksums.New.Add(content).String()
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path":    llx.StringData(virtualPath),
+			"content": llx.StringData(content),
+			"exists":  llx.BoolTrue,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+		args["file"] = llx.ResourceData(f, "file")
+		args["path"] = llx.StringData(virtualPath)
+
+	} else {
+		return nil, nil, errors.New("missing 'path' or 'content' for parse.json initialization")
+	}
+
+	return args, nil, nil
+}
+
+func (a *mqlParseOpenpgp) id() (string, error) {
+	if a.File.Error != nil {
+		return "", a.File.Error
+	}
+
+	return a.File.Data.Path.Data, nil
+}
+
+func (a *mqlParseOpenpgp) content(file plugin.Resource) (string, error) {
+	res := file.(*mqlFile).GetContent()
+	return res.Data, res.Error
+}
+
+func (p *mqlParseOpenpgp) list(content string) ([]interface{}, error) {
+	certificates, err := p.MqlRuntime.CreateSharedResource("openpgp.entities", map[string]*llx.RawData{
+		"content": llx.StringData(content),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := p.MqlRuntime.GetSharedData("openpgp.entities", certificates.MqlID(), "list")
+	if err != nil {
+		return nil, err
+	}
+
+	return list.Value.([]interface{}), nil
+}

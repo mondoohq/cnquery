@@ -9,8 +9,10 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/GoogleCloudPlatform/berglas v1.0.1
 	github.com/Masterminds/semver v1.5.0
+	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/StackExchange/wmi v1.2.1
 	github.com/alecthomas/participle v0.3.0
+	github.com/alecthomas/participle/v2 v2.0.0
 	github.com/aws/aws-sdk-go v1.44.137
 	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
@@ -48,6 +50,7 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.5
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-isatty v0.0.18
+	github.com/miekg/dns v1.1.55
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/muesli/ansi v0.0.0-20221106050444-61f0cd9a192a
@@ -141,6 +144,7 @@ require (
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/charmbracelet/harmonica v0.2.0 // indirect
 	github.com/chavacava/garif v0.0.0-20230227094218-b8c73b2037b8 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect

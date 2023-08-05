@@ -134,6 +134,10 @@ func init() {
 			Init: initParseCertificates,
 			Create: createParseCertificates,
 		},
+		"parse.openpgp": {
+			Init: initParseOpenpgp,
+			Create: createParseOpenpgp,
+		},
 		"user": {
 			Init: initUser,
 			Create: createUser,
@@ -726,6 +730,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"parse.certificates.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseCertificates).GetList()).ToDataRes(types.Array(types.Resource("certificate")))
+	},
+	"parse.openpgp.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseOpenpgp).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"parse.openpgp.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseOpenpgp).GetContent()).ToDataRes(types.String)
+	},
+	"parse.openpgp.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseOpenpgp).GetList()).ToDataRes(types.Array(types.Resource("openpgp.entity")))
 	},
 	"user.uid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlUser).GetUid()).ToDataRes(types.Int)
@@ -1787,6 +1800,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlParseCertificates).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
+	"parse.openpgp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlParseOpenpgp).__id, ok = v.Value.(string)
+			return
+		},
+	"parse.openpgp.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseOpenpgp).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"parse.openpgp.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseOpenpgp).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"parse.openpgp.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseOpenpgp).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 	"user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 			r.(*mqlUser).__id, ok = v.Value.(string)
 			return
@@ -2536,9 +2565,11 @@ func createMondooEol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -2649,9 +2680,11 @@ func createPlatformAdvisories(runtime *plugin.Runtime, args map[string]*llx.RawD
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -2732,9 +2765,11 @@ func createPlatformCves(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -3419,9 +3454,11 @@ func createOsUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -3491,9 +3528,11 @@ func createOsBase(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -3639,9 +3678,11 @@ func createOsUnix(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -3700,9 +3741,11 @@ func createOsLinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -3794,9 +3837,11 @@ func createCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -3877,9 +3922,11 @@ func createPowershell(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -3951,9 +3998,11 @@ func createFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4138,9 +4187,11 @@ func createFilePermissions(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4296,9 +4347,11 @@ func createFilesFind(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4383,9 +4436,11 @@ func createParseIni(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4474,9 +4529,11 @@ func createParseJson(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4545,9 +4602,11 @@ func createParsePlist(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4616,9 +4675,11 @@ func createParseYaml(runtime *plugin.Runtime, args map[string]*llx.RawData) (plu
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4688,9 +4749,11 @@ func createParseCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4769,6 +4832,89 @@ func (c *mqlParseCertificates) GetList() *plugin.TValue[[]interface{}] {
 	})
 }
 
+// mqlParseOpenpgp for the parse.openpgp resource
+type mqlParseOpenpgp struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlParseOpenpgpInternal it will be used here
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createParseOpenpgp creates a new instance of this resource
+func createParseOpenpgp(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlParseOpenpgp{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("parse.openpgp", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlParseOpenpgp) MqlName() string {
+	return "parse.openpgp"
+}
+
+func (c *mqlParseOpenpgp) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlParseOpenpgp) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlParseOpenpgp) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlParseOpenpgp) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("parse.openpgp", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.list(vargContent.Data)
+	})
+}
+
 // mqlUser for the user resource
 type mqlUser struct {
 	MqlRuntime *plugin.Runtime
@@ -4797,9 +4943,11 @@ func createUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -4929,9 +5077,11 @@ func createPrivatekey(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5047,9 +5197,11 @@ func createAuthorizedkeys(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5140,9 +5292,11 @@ func createAuthorizedkeysEntry(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5210,9 +5364,11 @@ func createGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5347,9 +5503,11 @@ func createPackage(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5499,9 +5657,11 @@ func createPamConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5606,9 +5766,11 @@ func createPamConfServiceEntry(runtime *plugin.Runtime, args map[string]*llx.Raw
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5719,9 +5881,11 @@ func createSshdConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (pl
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -5871,9 +6035,11 @@ func createService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -6077,9 +6243,11 @@ func createKernelModule(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -6209,9 +6377,11 @@ func createDockerImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -6280,9 +6450,11 @@ func createDockerContainer(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -6528,9 +6700,11 @@ func createIptablesEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -6623,9 +6797,11 @@ func createProcess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugi
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -6758,9 +6934,11 @@ func createPort(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.R
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -6865,9 +7043,11 @@ func createPorts(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
