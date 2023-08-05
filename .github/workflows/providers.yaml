@@ -39,6 +39,12 @@ jobs:
           service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           export_default_credentials: true
 
+
+      - name: 'Build dependencies'
+        run: |
+          make providers/proto
+          go build -o lr ./providers-sdk/v1/lr/cli/main.go
+
       - name: 'Build Providers'
         run: |
           rm -rf ./dist
