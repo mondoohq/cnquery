@@ -15,7 +15,6 @@ import (
 func TestRemoteCertificates(t *testing.T) {
 	certChain, err := Fetch("www.google.com:443")
 	require.NoError(t, err)
-
 	assert.True(t, len(certChain) >= 2)
 
 	for i := range certChain {

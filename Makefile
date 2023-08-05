@@ -101,15 +101,18 @@ define bundleProvider
 endef
 
 .PHONY: providers
-providers: providers/build
+providers: providers/proto providers/build
 
-.PHONY: providers/build
-providers/build:
+.PHONY: providers/proto
+providers/proto:
 	go generate .
 	go generate ./providers-sdk/v1/vault
 	go generate ./providers-sdk/v1/resources
 	go generate ./providers-sdk/v1/inventory
 	go generate ./providers-sdk/v1/plugin
+
+.PHONY: providers/build
+providers/build:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 	@$(call genProvider, providers/core)
 	@$(call genProvider, providers/network)
@@ -124,14 +127,6 @@ providers/install:
 providers/bundle:
 	@$(call installProvider, providers/network)
 	@$(call bundleProvider, providers/os)
-
-motor/generate:
-	go generate .
-	go generate ./motor/providers/k8s
-	go generate ./motor/platform
-
-motor/test:
-	gotestsum -f short-verbose $(shell go list ./motor/...)
 
 lr/test:
 	go test ./resources/lr/...
@@ -306,7 +301,7 @@ test/go/plain:
 	# TODO /motor/docker/docker_engine cannot be executed inside of docker
 	go test -cover $(shell go list ./... | grep -v '/motor/discovery/docker_engine')
 
-test/go/plain-ci: prep/tools
+test/go/plain-ci: prep/tools providers/build
 	gotestsum --junitfile report.xml --format pkgname -- -cover $(shell go list ./... | grep -v '/vendor/' | grep -v '/motor/discovery/docker_engine')
 
 .PHONY: test/lint/staticcheck
