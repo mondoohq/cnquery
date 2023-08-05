@@ -13,7 +13,6 @@ import (
 )
 
 func TestRemoteCertificates(t *testing.T) {
-
 	certChain, err := Fetch("www.google.com:443")
 	require.NoError(t, err)
 
@@ -27,7 +26,6 @@ func TestRemoteCertificates(t *testing.T) {
 
 	assert.Equal(t, "www.google.com", certChain[0].Subject.CommonName)
 	// assert.Equal(t, "GTS CA 1C3", certChain[1].Subject.CommonName)
-
 }
 
 func TestParseCertificates(t *testing.T) {
@@ -36,7 +34,7 @@ func TestParseCertificates(t *testing.T) {
 	f, err := os.Open(file)
 	require.NoError(t, err)
 
-	certChain, err := ParseCertFromPEM(f)
+	certChain, err := ParseCertsFromPEM(f)
 	require.NoError(t, err)
 
 	// root certificate is GlobalSign

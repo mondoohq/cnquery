@@ -14,7 +14,7 @@ func TestCertificates(t *testing.T) {
 	f, err := os.Open(file)
 	require.NoError(t, err)
 
-	certs, err := ParseCertFromPEM(f)
+	certs, err := ParseCertsFromPEM(f)
 	require.NoError(t, err)
 
 	assert.Equal(t, 17, len(certs))
