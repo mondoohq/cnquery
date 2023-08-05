@@ -84,6 +84,11 @@ build_bundle linux ppc64le
 build_bundle windows amd64
 build_bundle windows arm64
 
+# Generate SHA256 checksums
+echo "Generating SHA256 checksums..."
+cd $BUNDLE_DIST
+shasum -a 256 ${PROVIDER_NAME}_${PROVIDER_VERSION}_*.xz > ${PROVIDER_NAME}_${PROVIDER_VERSION}_SHA256SUMS
+
 printf "\n\n"
 echo "The ${PROVIDER_NAME} provider has been built and bundled successfully."
 echo "The bundles can be found in ${BUNDLE_DIST}."
