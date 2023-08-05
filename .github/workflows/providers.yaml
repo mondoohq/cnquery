@@ -5,7 +5,7 @@ on:
 
 env:
   BUCKET: releases-us.mondoo.io
-  PROVIDERS: "os"
+  PROVIDERS: "os network"
 
 jobs:
   build:
