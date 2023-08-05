@@ -38,6 +38,46 @@ func init() {
 			// to override args, implement: initPkixExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPkixExtension,
 		},
+		"openpgp.entities": {
+			// to override args, implement: initOpenpgpEntities(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenpgpEntities,
+		},
+		"openpgp.entity": {
+			// to override args, implement: initOpenpgpEntity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenpgpEntity,
+		},
+		"openpgp.publicKey": {
+			// to override args, implement: initOpenpgpPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenpgpPublicKey,
+		},
+		"openpgp.identity": {
+			// to override args, implement: initOpenpgpIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenpgpIdentity,
+		},
+		"openpgp.signature": {
+			// to override args, implement: initOpenpgpSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOpenpgpSignature,
+		},
+		"domainName": {
+			Init: initDomainName,
+			Create: createDomainName,
+		},
+		"dns": {
+			Init: initDns,
+			Create: createDns,
+		},
+		"dns.record": {
+			// to override args, implement: initDnsRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDnsRecord,
+		},
+		"dns.mxRecord": {
+			// to override args, implement: initDnsMxRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDnsMxRecord,
+		},
+		"dns.dkimRecord": {
+			// to override args, implement: initDnsDkimRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDnsDkimRecord,
+		},
 	}
 }
 
@@ -264,6 +304,171 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"pkix.extension.value": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPkixExtension).GetValue()).ToDataRes(types.String)
+	},
+	"openpgp.entities.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpEntities).GetContent()).ToDataRes(types.String)
+	},
+	"openpgp.entities.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpEntities).GetList()).ToDataRes(types.Array(types.Resource("openpgp.entity")))
+	},
+	"openpgp.entity.primaryPublicKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpEntity).GetPrimaryPublicKey()).ToDataRes(types.Resource("openpgp.publicKey"))
+	},
+	"openpgp.entity.identities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpEntity).GetIdentities()).ToDataRes(types.Array(types.Resource("openpgp.identity")))
+	},
+	"openpgp.publicKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpPublicKey).GetId()).ToDataRes(types.String)
+	},
+	"openpgp.publicKey.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpPublicKey).GetVersion()).ToDataRes(types.Int)
+	},
+	"openpgp.publicKey.fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpPublicKey).GetFingerprint()).ToDataRes(types.String)
+	},
+	"openpgp.publicKey.keyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpPublicKey).GetKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"openpgp.publicKey.bitLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpPublicKey).GetBitLength()).ToDataRes(types.Int)
+	},
+	"openpgp.publicKey.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpPublicKey).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"openpgp.identity.fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpIdentity).GetFingerprint()).ToDataRes(types.String)
+	},
+	"openpgp.identity.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpIdentity).GetId()).ToDataRes(types.String)
+	},
+	"openpgp.identity.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpIdentity).GetName()).ToDataRes(types.String)
+	},
+	"openpgp.identity.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpIdentity).GetEmail()).ToDataRes(types.String)
+	},
+	"openpgp.identity.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpIdentity).GetComment()).ToDataRes(types.String)
+	},
+	"openpgp.identity.signatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpIdentity).GetSignatures()).ToDataRes(types.Array(types.Resource("openpgp.signature")))
+	},
+	"openpgp.signature.fingerprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetFingerprint()).ToDataRes(types.String)
+	},
+	"openpgp.signature.identityName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetIdentityName()).ToDataRes(types.String)
+	},
+	"openpgp.signature.hash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetHash()).ToDataRes(types.String)
+	},
+	"openpgp.signature.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetVersion()).ToDataRes(types.Int)
+	},
+	"openpgp.signature.signatureType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetSignatureType()).ToDataRes(types.String)
+	},
+	"openpgp.signature.keyAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetKeyAlgorithm()).ToDataRes(types.String)
+	},
+	"openpgp.signature.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"openpgp.signature.lifetimeSecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetLifetimeSecs()).ToDataRes(types.Int)
+	},
+	"openpgp.signature.expiresIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetExpiresIn()).ToDataRes(types.Time)
+	},
+	"openpgp.signature.keyLifetimeSecs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetKeyLifetimeSecs()).ToDataRes(types.Int)
+	},
+	"openpgp.signature.keyExpiresIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenpgpSignature).GetKeyExpiresIn()).ToDataRes(types.Time)
+	},
+	"domainName.fqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDomainName).GetFqdn()).ToDataRes(types.String)
+	},
+	"domainName.effectiveTLDPlusOne": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDomainName).GetEffectiveTLDPlusOne()).ToDataRes(types.String)
+	},
+	"domainName.tld": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDomainName).GetTld()).ToDataRes(types.String)
+	},
+	"domainName.tldIcannManaged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDomainName).GetTldIcannManaged()).ToDataRes(types.Bool)
+	},
+	"domainName.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDomainName).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"dns.fqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetFqdn()).ToDataRes(types.String)
+	},
+	"dns.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetParams()).ToDataRes(types.Dict)
+	},
+	"dns.records": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetRecords()).ToDataRes(types.Array(types.Resource("dns.record")))
+	},
+	"dns.mx": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetMx()).ToDataRes(types.Array(types.Resource("dns.mxRecord")))
+	},
+	"dns.dkim": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetDkim()).ToDataRes(types.Array(types.Resource("dns.dkimRecord")))
+	},
+	"dns.record.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsRecord).GetName()).ToDataRes(types.String)
+	},
+	"dns.record.ttl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsRecord).GetTtl()).ToDataRes(types.Int)
+	},
+	"dns.record.class": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsRecord).GetClass()).ToDataRes(types.String)
+	},
+	"dns.record.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsRecord).GetType()).ToDataRes(types.String)
+	},
+	"dns.record.rdata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsRecord).GetRdata()).ToDataRes(types.Array(types.String))
+	},
+	"dns.mxRecord.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsMxRecord).GetName()).ToDataRes(types.String)
+	},
+	"dns.mxRecord.preference": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsMxRecord).GetPreference()).ToDataRes(types.Int)
+	},
+	"dns.mxRecord.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsMxRecord).GetDomainName()).ToDataRes(types.String)
+	},
+	"dns.dkimRecord.dnsTxt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetDnsTxt()).ToDataRes(types.String)
+	},
+	"dns.dkimRecord.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetDomain()).ToDataRes(types.String)
+	},
+	"dns.dkimRecord.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetVersion()).ToDataRes(types.String)
+	},
+	"dns.dkimRecord.hashAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetHashAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"dns.dkimRecord.keyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetKeyType()).ToDataRes(types.String)
+	},
+	"dns.dkimRecord.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetNotes()).ToDataRes(types.String)
+	},
+	"dns.dkimRecord.publicKeyData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetPublicKeyData()).ToDataRes(types.String)
+	},
+	"dns.dkimRecord.serviceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetServiceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"dns.dkimRecord.flags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetFlags()).ToDataRes(types.Array(types.String))
+	},
+	"dns.dkimRecord.valid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDnsDkimRecord).GetValid()).ToDataRes(types.Bool)
 	},
 }
 
@@ -513,6 +718,266 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlPkixExtension).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openpgp.entities.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOpenpgpEntities).__id, ok = v.Value.(string)
+			return
+		},
+	"openpgp.entities.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpEntities).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.entities.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpEntities).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"openpgp.entity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOpenpgpEntity).__id, ok = v.Value.(string)
+			return
+		},
+	"openpgp.entity.primaryPublicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpEntity).PrimaryPublicKey, ok = plugin.RawToTValue[*mqlOpenpgpPublicKey](v.Value, v.Error)
+		return
+	},
+	"openpgp.entity.identities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpEntity).Identities, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"openpgp.publicKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOpenpgpPublicKey).__id, ok = v.Value.(string)
+			return
+		},
+	"openpgp.publicKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpPublicKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.publicKey.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpPublicKey).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openpgp.publicKey.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpPublicKey).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.publicKey.keyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpPublicKey).KeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.publicKey.bitLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpPublicKey).BitLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openpgp.publicKey.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpPublicKey).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openpgp.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOpenpgpIdentity).__id, ok = v.Value.(string)
+			return
+		},
+	"openpgp.identity.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpIdentity).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.identity.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpIdentity).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.identity.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpIdentity).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.identity.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpIdentity).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.identity.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpIdentity).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.identity.signatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpIdentity).Signatures, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOpenpgpSignature).__id, ok = v.Value.(string)
+			return
+		},
+	"openpgp.signature.fingerprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).Fingerprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.identityName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).IdentityName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.hash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).Hash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.signatureType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).SignatureType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.keyAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).KeyAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.lifetimeSecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).LifetimeSecs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.expiresIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).ExpiresIn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.keyLifetimeSecs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).KeyLifetimeSecs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"openpgp.signature.keyExpiresIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenpgpSignature).KeyExpiresIn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"domainName.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDomainName).__id, ok = v.Value.(string)
+			return
+		},
+	"domainName.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDomainName).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"domainName.effectiveTLDPlusOne": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDomainName).EffectiveTLDPlusOne, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"domainName.tld": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDomainName).Tld, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"domainName.tldIcannManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDomainName).TldIcannManaged, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"domainName.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDomainName).Labels, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDns).__id, ok = v.Value.(string)
+			return
+		},
+	"dns.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Params, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.records": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Records, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.mx": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Mx, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.dkim": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Dkim, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.record.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDnsRecord).__id, ok = v.Value.(string)
+			return
+		},
+	"dns.record.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsRecord).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.record.ttl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsRecord).Ttl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"dns.record.class": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsRecord).Class, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.record.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsRecord).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.record.rdata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsRecord).Rdata, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.mxRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDnsMxRecord).__id, ok = v.Value.(string)
+			return
+		},
+	"dns.mxRecord.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsMxRecord).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.mxRecord.preference": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsMxRecord).Preference, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"dns.mxRecord.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsMxRecord).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlDnsDkimRecord).__id, ok = v.Value.(string)
+			return
+		},
+	"dns.dkimRecord.dnsTxt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).DnsTxt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.hashAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).HashAlgorithms, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.keyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).KeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.publicKeyData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).PublicKeyData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.serviceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).ServiceTypes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.flags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).Flags, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"dns.dkimRecord.valid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDnsDkimRecord).Valid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -558,9 +1023,11 @@ func createSocket(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -620,9 +1087,11 @@ func createTls(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Re
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -763,9 +1232,11 @@ func createCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -849,9 +1320,11 @@ func createCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (p
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -1076,9 +1549,11 @@ func createPkixName(runtime *plugin.Runtime, args map[string]*llx.RawData) (plug
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -1173,9 +1648,11 @@ func createPkixExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
+	if res.__id == "" {
 	res.__id, err = res.id()
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if runtime.HasRecording {
@@ -1207,4 +1684,815 @@ func (c *mqlPkixExtension) GetCritical() *plugin.TValue[bool] {
 
 func (c *mqlPkixExtension) GetValue() *plugin.TValue[string] {
 	return &c.Value
+}
+
+// mqlOpenpgpEntities for the openpgp.entities resource
+type mqlOpenpgpEntities struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOpenpgpEntitiesInternal it will be used here
+	Content plugin.TValue[string]
+	List plugin.TValue[[]interface{}]
+}
+
+// createOpenpgpEntities creates a new instance of this resource
+func createOpenpgpEntities(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenpgpEntities{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openpgp.entities", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenpgpEntities) MqlName() string {
+	return "openpgp.entities"
+}
+
+func (c *mqlOpenpgpEntities) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenpgpEntities) GetContent() *plugin.TValue[string] {
+	return &c.Content
+}
+
+func (c *mqlOpenpgpEntities) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openpgp.entities", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.list(vargContent.Data)
+	})
+}
+
+// mqlOpenpgpEntity for the openpgp.entity resource
+type mqlOpenpgpEntity struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlOpenpgpEntityInternal
+	PrimaryPublicKey plugin.TValue[*mqlOpenpgpPublicKey]
+	Identities plugin.TValue[[]interface{}]
+}
+
+// createOpenpgpEntity creates a new instance of this resource
+func createOpenpgpEntity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenpgpEntity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openpgp.entity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenpgpEntity) MqlName() string {
+	return "openpgp.entity"
+}
+
+func (c *mqlOpenpgpEntity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenpgpEntity) GetPrimaryPublicKey() *plugin.TValue[*mqlOpenpgpPublicKey] {
+	return &c.PrimaryPublicKey
+}
+
+func (c *mqlOpenpgpEntity) GetIdentities() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Identities, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openpgp.entity", c.__id, "identities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.identities()
+	})
+}
+
+// mqlOpenpgpPublicKey for the openpgp.publicKey resource
+type mqlOpenpgpPublicKey struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOpenpgpPublicKeyInternal it will be used here
+	Id plugin.TValue[string]
+	Version plugin.TValue[int64]
+	Fingerprint plugin.TValue[string]
+	KeyAlgorithm plugin.TValue[string]
+	BitLength plugin.TValue[int64]
+	CreationTime plugin.TValue[*time.Time]
+}
+
+// createOpenpgpPublicKey creates a new instance of this resource
+func createOpenpgpPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenpgpPublicKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openpgp.publicKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenpgpPublicKey) MqlName() string {
+	return "openpgp.publicKey"
+}
+
+func (c *mqlOpenpgpPublicKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenpgpPublicKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenpgpPublicKey) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlOpenpgpPublicKey) GetFingerprint() *plugin.TValue[string] {
+	return &c.Fingerprint
+}
+
+func (c *mqlOpenpgpPublicKey) GetKeyAlgorithm() *plugin.TValue[string] {
+	return &c.KeyAlgorithm
+}
+
+func (c *mqlOpenpgpPublicKey) GetBitLength() *plugin.TValue[int64] {
+	return &c.BitLength
+}
+
+func (c *mqlOpenpgpPublicKey) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+// mqlOpenpgpIdentity for the openpgp.identity resource
+type mqlOpenpgpIdentity struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlOpenpgpIdentityInternal
+	Fingerprint plugin.TValue[string]
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Email plugin.TValue[string]
+	Comment plugin.TValue[string]
+	Signatures plugin.TValue[[]interface{}]
+}
+
+// createOpenpgpIdentity creates a new instance of this resource
+func createOpenpgpIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenpgpIdentity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openpgp.identity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenpgpIdentity) MqlName() string {
+	return "openpgp.identity"
+}
+
+func (c *mqlOpenpgpIdentity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenpgpIdentity) GetFingerprint() *plugin.TValue[string] {
+	return &c.Fingerprint
+}
+
+func (c *mqlOpenpgpIdentity) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOpenpgpIdentity) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOpenpgpIdentity) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlOpenpgpIdentity) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlOpenpgpIdentity) GetSignatures() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Signatures, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("openpgp.identity", c.__id, "signatures")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.signatures()
+	})
+}
+
+// mqlOpenpgpSignature for the openpgp.signature resource
+type mqlOpenpgpSignature struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOpenpgpSignatureInternal it will be used here
+	Fingerprint plugin.TValue[string]
+	IdentityName plugin.TValue[string]
+	Hash plugin.TValue[string]
+	Version plugin.TValue[int64]
+	SignatureType plugin.TValue[string]
+	KeyAlgorithm plugin.TValue[string]
+	CreationTime plugin.TValue[*time.Time]
+	LifetimeSecs plugin.TValue[int64]
+	ExpiresIn plugin.TValue[*time.Time]
+	KeyLifetimeSecs plugin.TValue[int64]
+	KeyExpiresIn plugin.TValue[*time.Time]
+}
+
+// createOpenpgpSignature creates a new instance of this resource
+func createOpenpgpSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOpenpgpSignature{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("openpgp.signature", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOpenpgpSignature) MqlName() string {
+	return "openpgp.signature"
+}
+
+func (c *mqlOpenpgpSignature) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOpenpgpSignature) GetFingerprint() *plugin.TValue[string] {
+	return &c.Fingerprint
+}
+
+func (c *mqlOpenpgpSignature) GetIdentityName() *plugin.TValue[string] {
+	return &c.IdentityName
+}
+
+func (c *mqlOpenpgpSignature) GetHash() *plugin.TValue[string] {
+	return &c.Hash
+}
+
+func (c *mqlOpenpgpSignature) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlOpenpgpSignature) GetSignatureType() *plugin.TValue[string] {
+	return &c.SignatureType
+}
+
+func (c *mqlOpenpgpSignature) GetKeyAlgorithm() *plugin.TValue[string] {
+	return &c.KeyAlgorithm
+}
+
+func (c *mqlOpenpgpSignature) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlOpenpgpSignature) GetLifetimeSecs() *plugin.TValue[int64] {
+	return &c.LifetimeSecs
+}
+
+func (c *mqlOpenpgpSignature) GetExpiresIn() *plugin.TValue[*time.Time] {
+	return &c.ExpiresIn
+}
+
+func (c *mqlOpenpgpSignature) GetKeyLifetimeSecs() *plugin.TValue[int64] {
+	return &c.KeyLifetimeSecs
+}
+
+func (c *mqlOpenpgpSignature) GetKeyExpiresIn() *plugin.TValue[*time.Time] {
+	return &c.KeyExpiresIn
+}
+
+// mqlDomainName for the domainName resource
+type mqlDomainName struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDomainNameInternal it will be used here
+	Fqdn plugin.TValue[string]
+	EffectiveTLDPlusOne plugin.TValue[string]
+	Tld plugin.TValue[string]
+	TldIcannManaged plugin.TValue[bool]
+	Labels plugin.TValue[[]interface{}]
+}
+
+// createDomainName creates a new instance of this resource
+func createDomainName(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDomainName{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("domainName", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDomainName) MqlName() string {
+	return "domainName"
+}
+
+func (c *mqlDomainName) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDomainName) GetFqdn() *plugin.TValue[string] {
+	return &c.Fqdn
+}
+
+func (c *mqlDomainName) GetEffectiveTLDPlusOne() *plugin.TValue[string] {
+	return &c.EffectiveTLDPlusOne
+}
+
+func (c *mqlDomainName) GetTld() *plugin.TValue[string] {
+	return &c.Tld
+}
+
+func (c *mqlDomainName) GetTldIcannManaged() *plugin.TValue[bool] {
+	return &c.TldIcannManaged
+}
+
+func (c *mqlDomainName) GetLabels() *plugin.TValue[[]interface{}] {
+	return &c.Labels
+}
+
+// mqlDns for the dns resource
+type mqlDns struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDnsInternal it will be used here
+	Fqdn plugin.TValue[string]
+	Params plugin.TValue[interface{}]
+	Records plugin.TValue[[]interface{}]
+	Mx plugin.TValue[[]interface{}]
+	Dkim plugin.TValue[[]interface{}]
+}
+
+// createDns creates a new instance of this resource
+func createDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDns{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dns", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDns) MqlName() string {
+	return "dns"
+}
+
+func (c *mqlDns) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDns) GetFqdn() *plugin.TValue[string] {
+	return &c.Fqdn
+}
+
+func (c *mqlDns) GetParams() *plugin.TValue[interface{}] {
+	return plugin.GetOrCompute[interface{}](&c.Params, func() (interface{}, error) {
+		vargFqdn := c.GetFqdn()
+		if vargFqdn.Error != nil {
+			return nil, vargFqdn.Error
+		}
+
+		return c.params(vargFqdn.Data)
+	})
+}
+
+func (c *mqlDns) GetRecords() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Records, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "records")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.records(vargParams.Data)
+	})
+}
+
+func (c *mqlDns) GetMx() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Mx, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "mx")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.mx(vargParams.Data)
+	})
+}
+
+func (c *mqlDns) GetDkim() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Dkim, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "dkim")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargParams := c.GetParams()
+		if vargParams.Error != nil {
+			return nil, vargParams.Error
+		}
+
+		return c.dkim(vargParams.Data)
+	})
+}
+
+// mqlDnsRecord for the dns.record resource
+type mqlDnsRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDnsRecordInternal it will be used here
+	Name plugin.TValue[string]
+	Ttl plugin.TValue[int64]
+	Class plugin.TValue[string]
+	Type plugin.TValue[string]
+	Rdata plugin.TValue[[]interface{}]
+}
+
+// createDnsRecord creates a new instance of this resource
+func createDnsRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDnsRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dns.record", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDnsRecord) MqlName() string {
+	return "dns.record"
+}
+
+func (c *mqlDnsRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDnsRecord) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDnsRecord) GetTtl() *plugin.TValue[int64] {
+	return &c.Ttl
+}
+
+func (c *mqlDnsRecord) GetClass() *plugin.TValue[string] {
+	return &c.Class
+}
+
+func (c *mqlDnsRecord) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlDnsRecord) GetRdata() *plugin.TValue[[]interface{}] {
+	return &c.Rdata
+}
+
+// mqlDnsMxRecord for the dns.mxRecord resource
+type mqlDnsMxRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlDnsMxRecordInternal it will be used here
+	Name plugin.TValue[string]
+	Preference plugin.TValue[int64]
+	DomainName plugin.TValue[string]
+}
+
+// createDnsMxRecord creates a new instance of this resource
+func createDnsMxRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDnsMxRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dns.mxRecord", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDnsMxRecord) MqlName() string {
+	return "dns.mxRecord"
+}
+
+func (c *mqlDnsMxRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDnsMxRecord) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDnsMxRecord) GetPreference() *plugin.TValue[int64] {
+	return &c.Preference
+}
+
+func (c *mqlDnsMxRecord) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+// mqlDnsDkimRecord for the dns.dkimRecord resource
+type mqlDnsDkimRecord struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlDnsDkimRecordInternal
+	DnsTxt plugin.TValue[string]
+	Domain plugin.TValue[string]
+	Version plugin.TValue[string]
+	HashAlgorithms plugin.TValue[[]interface{}]
+	KeyType plugin.TValue[string]
+	Notes plugin.TValue[string]
+	PublicKeyData plugin.TValue[string]
+	ServiceTypes plugin.TValue[[]interface{}]
+	Flags plugin.TValue[[]interface{}]
+	Valid plugin.TValue[bool]
+}
+
+// createDnsDkimRecord creates a new instance of this resource
+func createDnsDkimRecord(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDnsDkimRecord{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("dns.dkimRecord", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDnsDkimRecord) MqlName() string {
+	return "dns.dkimRecord"
+}
+
+func (c *mqlDnsDkimRecord) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDnsDkimRecord) GetDnsTxt() *plugin.TValue[string] {
+	return &c.DnsTxt
+}
+
+func (c *mqlDnsDkimRecord) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlDnsDkimRecord) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlDnsDkimRecord) GetHashAlgorithms() *plugin.TValue[[]interface{}] {
+	return &c.HashAlgorithms
+}
+
+func (c *mqlDnsDkimRecord) GetKeyType() *plugin.TValue[string] {
+	return &c.KeyType
+}
+
+func (c *mqlDnsDkimRecord) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlDnsDkimRecord) GetPublicKeyData() *plugin.TValue[string] {
+	return &c.PublicKeyData
+}
+
+func (c *mqlDnsDkimRecord) GetServiceTypes() *plugin.TValue[[]interface{}] {
+	return &c.ServiceTypes
+}
+
+func (c *mqlDnsDkimRecord) GetFlags() *plugin.TValue[[]interface{}] {
+	return &c.Flags
+}
+
+func (c *mqlDnsDkimRecord) GetValid() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Valid, func() (bool, error) {
+		return c.valid()
+	})
 }

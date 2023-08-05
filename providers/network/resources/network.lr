@@ -127,3 +127,149 @@ pkix.extension {
   // Extension Value
   value string
 }
+
+private openpgp.entities {
+  []openpgp.entity(content)
+  content string
+}
+
+// OpenPGP Entity
+private openpgp.entity {
+  // primary public key, which must be a signing key
+  primaryPublicKey openpgp.publicKey
+  // Entity's Identities
+  identities() []openpgp.identity
+}
+
+// OpenPGP Public Key
+private openpgp.publicKey {
+  // Key ID
+  id string
+  // Key Version
+  version int
+  // Key Fingerprint
+  fingerprint string
+  // Key Algorithm
+  keyAlgorithm string
+  // Key Bit Length
+  bitLength int
+  // Key creation time
+  creationTime time
+}
+
+// OpenPGP Identity
+private openpgp.identity {
+  // Primary Key Fingerprint
+  fingerprint string
+  // Full name in form of "Full Name (comment) <email@example.com>"
+  id string
+  // Name
+  name string
+  // Email
+  email string
+  // Comment
+  comment string
+  // Identity Signatures
+  signatures() []openpgp.signature
+}
+
+// OpenPGP Signature
+private openpgp.signature {
+  // Primary Key Fingerprint
+  fingerprint string
+  // Identity Name
+  identityName string
+  // Signature Hash
+  hash string
+  // Signature Version
+  version int
+  // Signature Type
+  signatureType string
+  // Hash Algorithm
+  keyAlgorithm string
+  // Creation Time
+  creationTime time
+  // Signature Lifetime in Seconds
+  lifetimeSecs int
+  // Expiration Duration
+  expiresIn time
+  // Key Lifetime in Seconds
+  keyLifetimeSecs int
+  // Key Expiration Duration
+  keyExpiresIn time
+}
+
+// Domain name
+domainName @defaults("fqdn") {
+  init(fqdn string)
+  // Fully qualified domain name (FQDN)
+  fqdn string
+  // effectiveTLDPlusOne returns the effective top level domain plus one more label
+  effectiveTLDPlusOne string
+  // Top-Level Domain
+  tld string
+  // Flag indicates if the TLD is ICANN managed
+  tldIcannManaged bool
+  // Domain Labels
+  labels []string
+}
+
+// DNS resource
+dns @defaults("fqdn") {
+  init(fqdn string)
+  // Fully qualified domain name (FQDN)
+  fqdn string
+  // Params is a list of all parameters for DNS FQDN
+  params(fqdn) dict
+  // Successful DNS records
+  records(params) []dns.record
+  // Successful DNS MX records
+  mx(params) []dns.mxRecord
+  // DKIM TXT records
+  dkim(params) []dns.dkimRecord
+}
+
+// DNS record
+dns.record @defaults("name type") {
+  // DNS name
+  name string
+  // Time-To-Live (TTL) in seconds
+  ttl int
+  // DNS class
+  class string
+  // DNS type
+  type string
+  // Resource Data
+  rdata []string
+}
+
+// DNS MX record
+dns.mxRecord @defaults("domainName") {
+  name string
+  preference int
+  domainName string
+}
+
+// DKIM public key representation as defined in RFC 6376
+dns.dkimRecord @defaults("dnsTxt") {
+  // DNS Text Representation
+  dnsTxt string
+  // DKIM Selector Domain
+  domain string
+  // Version
+  version string
+  // Acceptable Hash Algorithms
+  hashAlgorithms []string
+  // Key Type
+  keyType string
+  // Notes
+  notes string
+  // Public Key Data base64-Encoded
+  publicKeyData string
+  // Service Types
+  serviceTypes []string
+  // Flags
+  flags []string
+  // Verifies if the DKIM entry and public key is valid
+  valid() bool
+}

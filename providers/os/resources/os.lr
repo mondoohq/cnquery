@@ -405,6 +405,18 @@ parse.certificates {
   content(file) string
 }
 
+// Parse OpenPGP from files
+parse.openpgp {
+  []network.openpgp.entity(content)
+  init(path string)
+  // Path of the OpenPGP file. Deprecated: Please use file.path instead
+  path string
+  // OpenPGP file
+  file file
+  // OpenPGP file content
+  content(file) string
+}
+
 // User on this system
 user @defaults("name uid gid") {
   // User ID
