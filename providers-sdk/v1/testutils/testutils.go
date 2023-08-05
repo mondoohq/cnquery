@@ -140,15 +140,21 @@ func Local(pathToTestutils string) llx.Runtime {
 
 	raw, err = os.ReadFile(filepath.Join(pathToTestutils, "../../../providers/core/resources/core.resources.json"))
 	if err != nil {
-		panic("failed to load os resources for testing: " + err.Error())
+		panic("failed to load core resources for testing: " + err.Error())
 	}
 	coreSchema := providers.MustLoadSchema("core", raw)
+
+	raw, err = os.ReadFile(filepath.Join(pathToTestutils, "../../../providers/network/resources/network.resources.json"))
+	if err != nil {
+		panic("failed to load network resources for testing: " + err.Error())
+	}
+	networkSchema := providers.MustLoadSchema("network", raw)
 
 	provider := &providers.RunningProvider{
 		Name:   osconf.Config.Name,
 		ID:     osconf.Config.ID,
 		Plugin: osprovider.Init(),
-		Schema: osSchema.Add(coreSchema),
+		Schema: osSchema.Add(coreSchema).Add(networkSchema),
 	}
 
 	runtime := providers.DefaultRuntime()

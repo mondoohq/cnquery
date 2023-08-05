@@ -8,7 +8,7 @@ import (
 )
 
 func TestDomainName(t *testing.T) {
-	tests := map[string]*Name{
+	tests := map[string]Name{
 		"https://google.com": {
 			Host:                "google.com",
 			EffectiveTLDPlusOne: "google.com",
