@@ -275,7 +275,7 @@ func getPlatformForObject(platformName string) *platform.Platform {
 	}
 	return &platform.Platform{
 		Name:    "aws",
-		Title:   "Amazon Web Services",
+		Title:   "AWS Account",
 		Kind:    providers.Kind_KIND_API,
 		Runtime: providers.RUNTIME_AWS,
 	}
