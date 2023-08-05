@@ -75,4 +75,5 @@ service ProviderPlugin {
 service ProviderCallback {
   rpc Collect(DataRes) returns (CollectRes);
   rpc GetRecording(DataReq) returns (ResourceData);
+  rpc GetData(DataReq) returns (DataRes);
 }

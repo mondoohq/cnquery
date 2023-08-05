@@ -14,6 +14,8 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	core "go.mondoo.com/cnquery/providers/core/provider"
+	// networkconf "go.mondoo.com/cnquery/providers/network/config"
+	// network "go.mondoo.com/cnquery/providers/network/provider"
 	// osconf "go.mondoo.com/cnquery/providers/os/config"
 	// os "go.mondoo.com/cnquery/providers/os/provider"
 )
@@ -25,6 +27,9 @@ var coreInfo []byte
 
 // //go:embed os/resources/os.resources.json
 // var osInfo []byte
+
+// //go:embed network/resources/network.resources.json
+// var networkInfo []byte
 
 var builtinProviders = map[string]*builtinProvider{
 	coreconf.Config.ID: {
@@ -46,6 +51,16 @@ var builtinProviders = map[string]*builtinProvider{
 	// 		isClosed: false,
 	// 	},
 	// 	Config: &osconf.Config,
+	// },
+	// networkconf.Config.ID: {
+	// 	Runtime: &RunningProvider{
+	// 		Name:     networkconf.Config.Name,
+	// 		ID:       networkconf.Config.ID,
+	// 		Plugin:   network.Init(),
+	// 		Schema:   MustLoadSchema("network", networkInfo),
+	// 		isClosed: false,
+	// 	},
+	// 	Config: &networkconf.Config,
 	// },
 }
 

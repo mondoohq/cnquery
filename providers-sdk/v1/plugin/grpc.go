@@ -94,6 +94,10 @@ func (m *GRPCProviderCallbackClient) GetRecording(req *DataReq) (*ResourceData, 
 	return nil, errors.New("get recording callback is not implemented for this provider")
 }
 
+func (m *GRPCProviderCallbackClient) GetData(req *DataReq) (*DataRes, error) {
+	return nil, errors.New("get data callback is not implemented for this provider")
+}
+
 // Here is the gRPC server that GRPCClient talks to.
 type GRPCProviderCallbackServer struct {
 	// This is the real implementation
@@ -109,4 +113,8 @@ func (m *GRPCProviderCallbackServer) Collect(ctx context.Context, req *DataRes) 
 
 func (m *GRPCProviderCallbackServer) GetRecording(ctx context.Context, req *DataReq) (resp *ResourceData, err error) {
 	return m.Impl.GetRecording(req)
+}
+
+func (m *GRPCProviderCallbackServer) GetData(ctx context.Context, req *DataReq) (resp *DataRes, err error) {
+	return m.Impl.GetData(req)
 }

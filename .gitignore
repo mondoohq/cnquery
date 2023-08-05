@@ -11,10 +11,5 @@ gha-creds-*.json
 /tools
 # primarily used to ignore all dist files built for providers
 /dist
-# we want to track core + os, despite being generate JSON files
-# because we use them for testing in a lot of places.
-# TODO: solve this for other provider types on the fly
-!providers/core/resources/core.resources.json
-!providers/os/resources/os.resources.json
 providers/*/resources/*.resources.json
 providers/*/resources/*.manifest.json

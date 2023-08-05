@@ -210,7 +210,11 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		}
 	}
 
-	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, nil)
+	callbacks := providerCallbacks{
+		runtime: r,
+	}
+
+	r.Provider.Connection, err = r.Provider.Instance.Plugin.Connect(req, &callbacks)
 	if err != nil {
 		return err
 	}
@@ -276,15 +280,20 @@ func fieldUID(resource string, id string, field string) string {
 
 // WatchAndUpdate a resource field and call the function if it changes with its current value
 func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID string, callback func(res interface{}, err error)) error {
-	name := resource.MqlName()
-	id := resource.MqlID()
+	raw, err := r.watchAndUpdate(resource.MqlName(), resource.MqlID(), field, watcherUID)
+	if raw != nil {
+		callback(raw.Value, raw.Error)
+	}
+	return err
+}
 
-	provider, info, fieldInfo, err := r.lookupFieldProvider(name, field)
+func (r *Runtime) watchAndUpdate(resource string, resourceID string, field string, watcherUID string) (*llx.RawData, error) {
+	provider, info, fieldInfo, err := r.lookupFieldProvider(resource, field)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if fieldInfo == nil {
-		return errors.New("cannot get field '" + field + "' for resource '" + name + "'")
+		return nil, errors.New("cannot get field '" + field + "' for resource '" + resource + "'")
 	}
 
 	if info.Provider != fieldInfo.Provider {
@@ -293,43 +302,43 @@ func (r *Runtime) WatchAndUpdate(resource llx.Resource, field string, watcherUID
 		_, err := provider.Instance.Plugin.StoreData(&plugin.StoreReq{
 			Connection: provider.Connection.Id,
 			Resources: []*plugin.ResourceData{{
-				Name: name,
-				Id:   id,
+				Name: resource,
+				Id:   resourceID,
 			}},
 		})
 		if err != nil {
-			return errors.Wrap(err, "failed to create reference resource "+name+" in provider "+provider.Instance.Name)
+			return nil, errors.Wrap(err, "failed to create reference resource "+resource+" in provider "+provider.Instance.Name)
 		}
 	}
 
-	if cached, ok := r.Recording.GetData(provider.Connection.Id, name, id, field); ok {
-		callback(cached.Value, cached.Error)
-		return nil
+	if cached, ok := r.Recording.GetData(provider.Connection.Id, resource, resourceID, field); ok {
+		return cached, nil
 	}
 
 	data, err := provider.Instance.Plugin.GetData(&plugin.DataReq{
 		Connection: provider.Connection.Id,
-		Resource:   name,
-		ResourceId: id,
+		Resource:   resource,
+		ResourceId: resourceID,
 		Field:      field,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	var raw *llx.RawData
 	if data.Error != "" {
-		err = errors.New(data.Error)
+		raw = &llx.RawData{Error: errors.New(data.Error)}
+	} else {
+		raw = data.Data.RawData()
 	}
-	raw := data.Data.RawData()
 
-	r.Recording.AddData(provider.Connection.Id, name, id, field, raw)
-
-	callback(raw.Value, err)
-	return nil
+	r.Recording.AddData(provider.Connection.Id, resource, resourceID, field, raw)
+	return raw, nil
 }
 
 type providerCallbacks struct {
 	recording *assetRecording
+	runtime   *Runtime
 }
 
 func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceData, error) {
@@ -350,8 +359,35 @@ func (p *providerCallbacks) GetRecording(req *plugin.DataReq) (*plugin.ResourceD
 	return &res, nil
 }
 
+func (p *providerCallbacks) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
+	if req.Field == "" {
+		res, err := p.runtime.CreateResource(req.Resource, req.Args)
+		if err != nil {
+			return nil, err
+		}
+
+		return &plugin.DataRes{
+			Data: &llx.Primitive{
+				Type:  string(types.Resource(res.MqlName())),
+				Value: []byte(res.MqlID()),
+			},
+		}, nil
+	}
+
+	raw, err := p.runtime.watchAndUpdate(req.Resource, req.ResourceId, req.Field, "")
+	if raw == nil {
+		return nil, err
+	}
+	res := raw.Result()
+	return &plugin.DataRes{
+		Data:  res.Data,
+		Error: res.Error,
+	}, err
+}
+
 func (p *providerCallbacks) Collect(req *plugin.DataRes) error {
 	panic("NOT YET IMPLEMENTED")
+	return nil
 }
 
 func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly bool, mockConnection bool) error {
@@ -378,6 +414,7 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 
 		callbacks := providerCallbacks{
 			recording: assetRecording,
+			runtime:   r,
 		}
 
 		res, err := provider.Instance.Plugin.Connect(&plugin.ConnectReq{

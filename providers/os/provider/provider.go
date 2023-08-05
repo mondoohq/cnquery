@@ -212,7 +212,7 @@ func (s *Service) GetData(req *plugin.DataReq) (*plugin.DataRes, error) {
 		return nil, errors.New("connection " + strconv.FormatUint(uint64(req.Connection), 10) + " not found")
 	}
 
-	args := plugin.PrimitiveArgsToRawDataArgs(req.Args)
+	args := plugin.PrimitiveArgsToRawDataArgs(req.Args, runtime)
 
 	if req.ResourceId == "" && req.Field == "" {
 		res, err := resources.NewResource(runtime, req.Resource, args)
