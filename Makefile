@@ -111,13 +111,21 @@ providers/proto:
 	go generate ./providers-sdk/v1/inventory
 	go generate ./providers-sdk/v1/plugin
 
-.PHONY: providers/build
-providers/build:
+.PHONY: providers/lr
+providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
+
+.PHONY: providers/build
+providers/build: providers/build/core providers/build/network providers/build/os
+
+providers/build/core: providers/lr
 	@$(call genProvider, providers/core)
+
+providers/build/network: providers/lr
 	@$(call genProvider, providers/network)
+
+providers/build/os: providers/lr
 	@$(call genProvider, providers/os)
-# add more providers...
 
 providers/install:
 #	@$(call installProvider, providers/core)

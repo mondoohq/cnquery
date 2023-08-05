@@ -731,6 +731,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"parse.certificates.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseCertificates).GetList()).ToDataRes(types.Array(types.Resource("certificate")))
 	},
+	"parse.openpgp.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlParseOpenpgp).GetPath()).ToDataRes(types.String)
+	},
 	"parse.openpgp.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlParseOpenpgp).GetFile()).ToDataRes(types.Resource("file"))
 	},
@@ -1804,6 +1807,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 			r.(*mqlParseOpenpgp).__id, ok = v.Value.(string)
 			return
 		},
+	"parse.openpgp.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlParseOpenpgp).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"parse.openpgp.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlParseOpenpgp).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
 		return
@@ -4837,6 +4844,7 @@ type mqlParseOpenpgp struct {
 	MqlRuntime *plugin.Runtime
 	__id string
 	// optional: if you define mqlParseOpenpgpInternal it will be used here
+	Path plugin.TValue[string]
 	File plugin.TValue[*mqlFile]
 	Content plugin.TValue[string]
 	List plugin.TValue[[]interface{}]
@@ -4877,6 +4885,10 @@ func (c *mqlParseOpenpgp) MqlName() string {
 
 func (c *mqlParseOpenpgp) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlParseOpenpgp) GetPath() *plugin.TValue[string] {
+	return &c.Path
 }
 
 func (c *mqlParseOpenpgp) GetFile() *plugin.TValue[*mqlFile] {
