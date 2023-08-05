@@ -18,6 +18,8 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers/mock"
+	networkconf "go.mondoo.com/cnquery/providers/network/config"
+	networkprovider "go.mondoo.com/cnquery/providers/network/provider"
 	osconf "go.mondoo.com/cnquery/providers/os/config"
 	osprovider "go.mondoo.com/cnquery/providers/os/provider"
 )
@@ -150,16 +152,24 @@ func Local(pathToTestutils string) llx.Runtime {
 	}
 	networkSchema := providers.MustLoadSchema("network", raw)
 
+	runtime := providers.DefaultRuntime()
+
 	provider := &providers.RunningProvider{
 		Name:   osconf.Config.Name,
 		ID:     osconf.Config.ID,
 		Plugin: osprovider.Init(),
-		Schema: osSchema.Add(coreSchema).Add(networkSchema),
+		Schema: osSchema.Add(coreSchema),
 	}
-
-	runtime := providers.DefaultRuntime()
 	runtime.Provider = &providers.ConnectedProvider{Instance: provider}
 	runtime.AddConnectedProvider(runtime.Provider)
+
+	provider = &providers.RunningProvider{
+		Name:   networkconf.Config.Name,
+		ID:     networkconf.Config.ID,
+		Plugin: networkprovider.Init(),
+		Schema: networkSchema,
+	}
+	runtime.AddConnectedProvider(&providers.ConnectedProvider{Instance: provider})
 
 	return runtime
 }
@@ -174,6 +184,10 @@ func mockRuntime(pathToTestutils string, testdata string) llx.Runtime {
 	}
 
 	err = runtime.SetRecording(recording, runtime.Provider.Instance.ID, true, true)
+	if err != nil {
+		panic("failed to set recording: " + err.Error())
+	}
+	err = runtime.SetRecording(recording, networkconf.Config.ID, true, true)
 	if err != nil {
 		panic("failed to set recording: " + err.Error())
 	}
