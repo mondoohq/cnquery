@@ -152,7 +152,7 @@ func Local(pathToTestutils string) llx.Runtime {
 	}
 	networkSchema := providers.MustLoadSchema("network", raw)
 
-	runtime := providers.DefaultRuntime()
+	runtime := providers.Coordinator.NewRuntime()
 
 	provider := &providers.RunningProvider{
 		Name:   osconf.Config.Name,
