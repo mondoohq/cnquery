@@ -1,0 +1,654 @@
+package resources_test
+
+import (
+	"strconv"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
+)
+
+// Core Language constructs
+// ------------------------
+// These tests are more generic MQL and resource tests. They have no dependency
+// on any other resources and test important MQL constructs.
+
+func TestCore_Props(t *testing.T) {
+	tests := []struct {
+		code        string
+		props       map[string]*llx.Primitive
+		resultIndex int
+		expectation interface{}
+		err         error
+	}{
+		{
+			`props.name`,
+			map[string]*llx.Primitive{"name": llx.StringPrimitive("bob")},
+			0, "bob", nil,
+		},
+		{
+			`props.name == 'bob'`,
+			map[string]*llx.Primitive{"name": llx.StringPrimitive("bob")},
+			1, true, nil,
+		},
+	}
+
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.code, func(t *testing.T) {
+			res := x.TestQueryP(t, cur.code, cur.props)
+			require.NotEmpty(t, res)
+
+			if len(res) <= cur.resultIndex {
+				t.Error("insufficient results, looking for result idx " + strconv.Itoa(cur.resultIndex))
+				return
+			}
+
+			assert.NotNil(t, res[cur.resultIndex].Result().Error)
+			assert.Equal(t, cur.expectation, res[cur.resultIndex].Data.Value)
+		})
+	}
+}
+
+func TestCore_If(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "if ( mondoo.version == null ) { 123 }",
+			ResultIndex: 1,
+			Expectation: nil,
+		},
+		{
+			Code:        "if (true) { return 123 } return 456",
+			Expectation: int64(123),
+		},
+		{
+			Code:        "if (true) { return [1] } return [2,3]",
+			Expectation: []interface{}{int64(1)},
+		},
+		{
+			Code:        "if (false) { return 123 } return 456",
+			Expectation: int64(456),
+		},
+		{
+			Code:        "if (false) { return 123 } if (true) { return 456 } return 789",
+			Expectation: int64(456),
+		},
+		{
+			Code:        "if (false) { return 123 } if (false) { return 456 } return 789",
+			Expectation: int64(789),
+		},
+		{
+			// This test comes out from an issue we had where return was not
+			// generating a single entrypoint, causing the first reported
+			// value to be used as the return value.
+			Code: `
+				if (true) {
+					a = asset.platform != ''
+					b = false
+					return a || b
+				}
+			`, Expectation: true,
+		},
+		{
+			Code:        "if ( mondoo.version != null ) { 123 }",
+			ResultIndex: 1,
+			Expectation: map[string]interface{}{
+				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
+		},
+		{
+			Code:        "if ( mondoo.version != null ) { 123 } else { 456 }",
+			ResultIndex: 1,
+			Expectation: map[string]interface{}{
+				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
+				"NmGComMxT/GJkwpf/IcA+qceUmwZCEzHKGt+8GEh+f8Y0579FxuDO+4FJf0/q2vWRE4dN2STPMZ+3xG3Mdm1fA==": llx.IntData(123),
+			},
+		},
+		{
+			Code:        "if ( mondoo.version == null ) { 123 } else { 456 }",
+			ResultIndex: 1,
+			Expectation: map[string]interface{}{
+				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
+		{
+			Code: "if (false) { 123 } else if (true) { 456 } else { 789 }",
+			Expectation: map[string]interface{}{
+				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
+				"3ZDJLpfu1OBftQi3eANcQSCltQum8mPyR9+fI7XAY9ZUMRpyERirCqag9CFMforO/u0zJolHNyg+2gE9hSTyGQ==": llx.IntData(456),
+			},
+		},
+		{
+			Code: "if (false) { 123 } else if (false) { 456 } else { 789 }",
+			Expectation: map[string]interface{}{
+				"__t": llx.BoolData(true),
+				"__s": llx.NilData,
+				"Oy5SF8NbUtxaBwvZPpsnd0K21CY+fvC44FSd2QpgvIL689658Na52udy7qF2+hHjczk35TAstDtFZq7JIHNCmg==": llx.IntData(789),
+			},
+		},
+	})
+
+	x.TestSimpleErrors(t, []testutils.SimpleTest{
+		// if-conditions need to be called with a bloc
+		{
+			Code:        "if(asset.family.contains('arch'))",
+			ResultIndex: 1, Expectation: "Called if with 1 arguments, expected at least 3",
+		},
+	})
+}
+
+func TestCore_Switch(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "switch { case 3 > 2: 123; default: 321 }",
+			Expectation: int64(123),
+		},
+		{
+			Code:        "switch { case 1 > 2: 123; default: 321 }",
+			Expectation: int64(321),
+		},
+		{
+			Code:        "switch { case 3 > 2: return 123; default: return 321 }",
+			Expectation: int64(123),
+		},
+		{
+			Code:        "switch { case 1 > 2: return 123; default: return 321 }",
+			Expectation: int64(321),
+		},
+		{
+			Code:        "switch ( 3 ) { case _ > 2: return 123; default: return 321 }",
+			Expectation: int64(123),
+		},
+		{
+			Code:        "switch ( 1 ) { case _ > 2: true; default: false }",
+			Expectation: false,
+		},
+	})
+}
+
+func TestCore_Vars(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "a = [1,2,3]; return a",
+			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "a = 1; b = [a]; return b",
+			Expectation: []interface{}{int64(1)},
+		},
+		{
+			Code:        "a = 1; b = a + 2; return b",
+			Expectation: int64(3),
+		},
+		{
+			Code:        "a = 1; b = [a + 2]; return b",
+			Expectation: []interface{}{int64(3)},
+		},
+	})
+}
+
+// Base types and operations
+// -------------------------
+
+func TestBooleans(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "true || false || false",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "false || true || false",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "false || false || true",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+	})
+}
+
+func TestOperations_Equality(t *testing.T) {
+	vals := []string{
+		"null",
+		"true", "false",
+		"0", "1",
+		"1.0", "1.5",
+		"'1'", "'1.0'", "'a'",
+		"/1/", "/a/", "/nope/",
+		"[1]", "[null]",
+	}
+
+	extraEquality := map[string]map[string]struct{}{
+		"1": {
+			"1.0":   struct{}{},
+			"'1'":   struct{}{},
+			"/1/":   struct{}{},
+			"[1]":   struct{}{},
+			"[1.0]": struct{}{},
+		},
+		"1.0": {
+			"[1]": struct{}{},
+		},
+		"'a'": {
+			"/a/": struct{}{},
+		},
+		"'1'": {
+			"1.0": struct{}{},
+			"[1]": struct{}{},
+		},
+		"/1/": {
+			"1.0":   struct{}{},
+			"'1'":   struct{}{},
+			"'1.0'": struct{}{},
+			"[1]":   struct{}{},
+			"1.5":   struct{}{},
+		},
+	}
+
+	simpleTests := []testutils.SimpleTest{}
+
+	for i := 0; i < len(vals); i++ {
+		for j := i; j < len(vals); j++ {
+			a := vals[i]
+			b := vals[j]
+			res := a == b
+
+			if sub, ok := extraEquality[a]; ok {
+				if _, ok := sub[b]; ok {
+					res = true
+				}
+			}
+			if sub, ok := extraEquality[b]; ok {
+				if _, ok := sub[a]; ok {
+					res = true
+				}
+			}
+
+			simpleTests = append(simpleTests, []testutils.SimpleTest{
+				{Code: a + " == " + b, Expectation: res},
+				{Code: a + " != " + b, Expectation: !res},
+				{Code: "a = " + a + "  a == " + b, ResultIndex: 1, Expectation: res},
+				{Code: "a = " + a + "  a != " + b, ResultIndex: 1, Expectation: !res},
+				{Code: "b = " + b + "; " + a + " == b", ResultIndex: 1, Expectation: res},
+				{Code: "b = " + b + "; " + a + " != b", ResultIndex: 1, Expectation: !res},
+				{Code: "a = " + a + "; b = " + b + "; a == b", ResultIndex: 2, Expectation: res},
+				{Code: "a = " + a + "; b = " + b + "; a != b", ResultIndex: 2, Expectation: !res},
+			}...)
+		}
+	}
+
+	x.TestSimple(t, simpleTests)
+}
+
+func TestNumber_Methods(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code: "1 + 2", Expectation: int64(3),
+		},
+		{
+			Code: "1 - 2", Expectation: int64(-1),
+		},
+		{
+			Code: "1 * 2", Expectation: int64(2),
+		},
+		{
+			Code: "4 / 2", Expectation: int64(2),
+		},
+		{
+			Code: "1.0 + 2.0", Expectation: float64(3),
+		},
+		{
+			Code: "1 - 2.0", Expectation: float64(-1),
+		},
+		{
+			Code: "1.0 * 2", Expectation: float64(2),
+		},
+		{
+			Code: "4.0 / 2.0", Expectation: float64(2),
+		},
+		{
+			Code: "1 < Infinity", Expectation: true,
+		},
+		{
+			Code: "1 == NaN", Expectation: false,
+		},
+	})
+}
+
+func TestString_Methods(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "'hello'.contains('ll')",
+			Expectation: true,
+		},
+		{
+			Code:        "'hello'.contains('lloo')",
+			Expectation: false,
+		},
+		{
+			Code:        "'hello'.contains(['lo', 'la'])",
+			Expectation: true,
+		},
+		{
+			Code:        "'hello'.contains(['lu', 'la'])",
+			Expectation: false,
+		},
+		{
+			Code:        "'hello'.contains(23)",
+			Expectation: false,
+		},
+		{
+			Code:        "'hello123'.contains(23)",
+			Expectation: true,
+		},
+		{
+			Code:        "'hello123'.contains([5,6,7])",
+			Expectation: false,
+		},
+		{
+			Code:        "'hello123'.contains([5,1,7])",
+			Expectation: true,
+		},
+		{
+			Code:        "'hello'.contains(/l+/)",
+			Expectation: true,
+		},
+		{
+			Code:        "'hello'.contains(/l$/)",
+			Expectation: false,
+		},
+		{
+			Code:        "'hello'.contains([/^l/, /l$/])",
+			Expectation: false,
+		},
+		{
+			Code:        "'hello'.contains([/z/, /ll/])",
+			Expectation: true,
+		},
+		{
+			Code:        "'oh-hello-world!'.camelcase",
+			Expectation: "ohHelloWorld!",
+		},
+		{
+			Code:        "'HeLlO'.downcase",
+			Expectation: "hello",
+		},
+		{
+			Code:        "'hello'.length",
+			Expectation: int64(5),
+		},
+		{
+			Code:        "'hello world'.split(' ')",
+			Expectation: []interface{}{"hello", "world"},
+		},
+		{
+			Code:        "'he\nll\no'.lines",
+			Expectation: []interface{}{"he", "ll", "o"},
+		},
+		{
+			Code:        "' \n\t yo \t \n   '.trim",
+			Expectation: "yo",
+		},
+		{
+			Code:        "'  \tyo  \n   '.trim(' \n')",
+			Expectation: "\tyo",
+		},
+		{
+			Code:        "'hello ' + 'world'",
+			Expectation: "hello world",
+		},
+	})
+}
+
+func TestScore_Methods(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "score(100)",
+			Expectation: []byte{0x00, byte(100)},
+		},
+		{
+			Code:        "score(\"CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:H\")",
+			Expectation: []byte{0x01, 0x03, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00},
+		},
+	})
+}
+
+func TestTypeof_Methods(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "typeof(null)",
+			Expectation: "null",
+		},
+		{
+			Code:        "typeof(123)",
+			Expectation: "int",
+		},
+		{
+			Code:        "typeof([1,2,3])",
+			Expectation: "[]int",
+		},
+		{
+			Code:        "a = 123; typeof(a)",
+			Expectation: "int",
+		},
+	})
+}
+
+func TestArray_Access(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x.TestSimpleErrors(t, []testutils.SimpleTest{
+		{
+			Code:        "[0,1,2][100000]",
+			Expectation: "array index out of bound (trying to access element 100000, max: 2)",
+		},
+	})
+
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "[1,2,3][-1]",
+			Expectation: int64(3),
+		},
+		{
+			Code:        "[1,2,3][-3]",
+			Expectation: int64(1),
+		},
+		{
+			Code:        "[1,2,3].first",
+			Expectation: int64(1),
+		},
+		{
+			Code:        "[1,2,3].last",
+			Expectation: int64(3),
+		},
+		{
+			Code:        "[].first",
+			Expectation: nil,
+		},
+		{
+			Code:        "[].last",
+			Expectation: nil,
+		},
+	})
+}
+
+func TestArray(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "[1,2,3]",
+			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "return [1,2,3]",
+			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code: "[1,2,3] { _ == 2 }",
+			Expectation: []interface{}{
+				map[string]interface{}{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.BoolTrue, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolTrue},
+				map[string]interface{}{"__t": llx.BoolFalse, "__s": llx.BoolFalse, "OPhfwvbw0iVuMErS9tKL5qNj1lqTg3PEE1LITWEwW7a70nH8z8eZLi4x/aZqZQlyrQK13GAlUMY1w8g131EPog==": llx.BoolFalse},
+			},
+		},
+		{
+			Code: "[1,2,3] { a = _ }",
+			Expectation: []interface{}{
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
+				map[string]interface{}{"__t": llx.BoolTrue, "__s": llx.NilData},
+			},
+		},
+		{
+			Code:        "[1,2,3].where()",
+			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[true, true, false].where(true)",
+			Expectation: []interface{}{true, true},
+		},
+		{
+			Code:        "[false, true, false].where(false)",
+			Expectation: []interface{}{false, false},
+		},
+		{
+			Code:        "[1,2,3].where(2)",
+			Expectation: []interface{}{int64(2)},
+		},
+		{
+			Code:        "[1,2,3].where(_ > 2)",
+			Expectation: []interface{}{int64(3)},
+		},
+		{
+			Code:        "[1,2,3].where(_ >= 2)",
+			Expectation: []interface{}{int64(2), int64(3)},
+		},
+		{
+			Code:        "['yo','ho','ho'].where( /y.$/ )",
+			Expectation: []interface{}{"yo"},
+		},
+		{
+			Code:        "x = ['a','b']; y = 'c'; x.contains(y)",
+			ResultIndex: 1,
+			Expectation: false,
+		},
+		{
+			Code:        "[1,2,3].contains(_ >= 2)",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "[1,2,3].all(_ < 9)",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "[1,2,3].any(_ > 1)",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "[1,2,3].one(_ == 2)",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "[1,2,3].none(_ == 4)",
+			ResultIndex: 1,
+			Expectation: true,
+		},
+		{
+			Code:        "[[0,1],[1,2]].map(_[1])",
+			Expectation: []interface{}{int64(1), int64(2)},
+		},
+		{
+			Code:        "[[0],[[1, 2]], 3].flat",
+			Expectation: []interface{}{int64(0), int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[0].where(_ > 0).where(_ > 0)",
+			Expectation: []interface{}{},
+		},
+		{
+			Code:        "[1,2,2,2,3].unique()",
+			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[1,1,2,2,2,3].duplicates()",
+			Expectation: []interface{}{int64(1), int64(2)},
+		},
+		{
+			Code:        "[2,1,2,2].containsOnly([2])",
+			Expectation: []interface{}{int64(1)},
+		},
+		{
+			Code:        "[2,1,2,1].containsOnly([1,2])",
+			ResultIndex: 0, Expectation: []interface{}(nil),
+		},
+		{
+			Code:        "a = [1]; [2,1,2,1].containsOnly(a)",
+			Expectation: []interface{}{int64(2), int64(2)},
+		},
+		{
+			Code:        "[2,1,2,2].containsNone([1])",
+			Expectation: []interface{}{int64(1)},
+		},
+		{
+			Code:        "[2,1,2,1].containsNone([3,4])",
+			ResultIndex: 0, Expectation: []interface{}(nil),
+		},
+		{
+			Code:        "a = [1]; [2,1,2,1].containsNone(a)",
+			Expectation: []interface{}{int64(1), int64(1)},
+		},
+		{
+			Code:        "['a','b'] != /c/",
+			ResultIndex: 0, Expectation: true,
+		},
+		{
+			Code:        "[1,2] + [3]",
+			Expectation: []interface{}{int64(1), int64(2), int64(3)},
+		},
+		{
+			Code:        "[3,1,3,4,2] - [3,4,5]",
+			Expectation: []interface{}{int64(1), int64(2)},
+		},
+	})
+}
+
+func TestResource_Default(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	res := x.TestQuery(t, "mondoo")
+	require.NotEmpty(t, res)
+	vals := res[0].Data.Value.(map[string]interface{})
+	require.NotNil(t, vals)
+	require.Equal(t, llx.StringData("unstable"), vals["J4anmJ+mXJX380Qslh563U7Bs5d6fiD2ghVxV9knAU0iy/P+IVNZsDhBbCmbpJch3Tm0NliAMiaY47lmw887Jw=="])
+}
+
+func TestBrokenQueryExecution(t *testing.T) {
+	x := testutils.InitTester(testutils.LinuxMock("../../../providers-sdk/v1/testutils"))
+	bundle, err := x.Compile("'asdf'.contains('asdf') == true")
+	require.NoError(t, err)
+	bundle.CodeV2.Blocks[0].Chunks[1].Id = "fakecontains"
+
+	results := x.TestMqlc(t, bundle, nil)
+	require.Len(t, results, 3)
+	require.Error(t, results[0].Data.Error)
+	require.Error(t, results[1].Data.Error)
+	require.Error(t, results[2].Data.Error)
+}

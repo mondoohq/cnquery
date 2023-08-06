@@ -20,19 +20,69 @@
       },
       "connections": [
         {
-          "url": "local://",
-          "provider": "os",
-          "connector": "local",
-          "version": ""
-        },
-        {
           "url": "host://",
           "provider": "network",
           "connector": "",
           "version": ""
+        },
+        {
+          "url": "local://",
+          "provider": "os",
+          "connector": "local",
+          "version": ""
         }
       ],
       "resources": [
+        {
+          "Resource": "file",
+          "ID": "/dummy.array.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "[1,\"hi\",{\"ll\": 0},\"z\"]\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.array.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 23
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "{\n  \"_\": null,\n  \"true\": true,\n  \"1\": 1,\n  \"1.0\": 1.0,\n  \"int-array\": [1,2,3],\n  \"dict\": {\n    \"ee\": 3,\n    \"ej\": 4,\n    \"ek\": 5\n  },\n  \"f\": [{\"ff\": 3}],\n  \"string-array\": [\"a\", \"b\", \"c\"],\n  \"hello\": \"hello\",\n  \"date\": \"2016-01-28T23:02:24Z\",\n  \"aoa\": [[1, 2], 3]\n}\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 266
+            }
+          }
+        },
         {
           "Resource": "file",
           "ID": "/dummy.plist",
@@ -289,12 +339,141 @@
           }
         },
         {
+          "Resource": "file",
+          "ID": "/dummy.false.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "false\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.false.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 6
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.null.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "null\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.null.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.number.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "1.23\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.number.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.string.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "\"hi\"\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.string.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.true.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "true\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.true.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
+            }
+          }
+        },
+        {
           "Resource": "file.permissions",
           "ID": "-rw-r--r--",
           "Fields": {
             "mode": {
               "type": "\u0005",
               "value": 420
+            },
+            "string": {
+              "type": "\u0007",
+              "value": "-rw-r--r--"
             }
           }
         },

@@ -1,75 +1,78 @@
-package resources
+package resources_test
 
 import (
-	"regexp"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
 )
 
-// Adding unit tests for regex
+var emojiTestString = []rune("☀⛺➿🌀🎂👍🔒😀🙈🚵🛼🤌🤣🥳🧡🧿🩰🫖")
 
-var lre = mqlRegex{}
-
-func testRegex(t *testing.T, f func() (string, error), matches, fails []string) {
-	r, err := f()
-	require.NoError(t, err)
-
-	re, err := regexp.Compile("^" + r + "$")
-	require.NoError(t, err)
-
-	for i := range matches {
-		s := matches[i]
-		t.Run("matches "+s, func(t *testing.T) {
-			assert.True(t, re.MatchString(s))
-		})
-	}
-
-	for i := range fails {
-		s := fails[i]
-		t.Run("fails "+s, func(t *testing.T) {
-			assert.False(t, re.MatchString(s))
-		})
-	}
-}
-
-func TestResource_RegexEmail(t *testing.T) {
-	// The following tests are copied from:
-	//   https://en.wikipedia.org/wiki/Email_address
-	//   Example section
-	matches := []string{
-		"simple@example.com",
-		"very.common@example.com",
-		"disposable.style.email.with+symbol@example.com",
-		"other.email-with-hyphen@example.com",
-		"fully-qualified-domain@example.com",
-		"user.name+tag+sorting@example.com",
-		"x@example.com",
-		"example-indeed@strange-example.com",
-		"test/test@test.com",
-		"admin@mailserver1", // local domain name with no TLD, although ICANN highly discourages dotless email addresses
-		"example@s.example",
-		"\" \"@example.org",
-		"\"john..doe\"@example.org",
-		"mailhost!username@example.org",
-		"user%example.com@example.org",
-		"user-@example.org",
-		"jsmith@[192.168.2.1]",
-		"jsmith@[IPv6:2001:db8::1]",
-	}
-
-	fails := []string{
-		"Abc.example.com",
-		"A@b@c@example.com",
-		"a\"b(c)d,e:f;g<h>i[j\\k]l@example.com",
-		"just\"not\"right@example.com",
-		"this is\"not\\allowed@example.com",
-		"this\\ still\\\"not\\\\allowed@example.com",
-		"1234567890123456789012345678901234567890123456789012345678901234+x@example.com",
-		"i_like_underscore@but_its_not_allowed_in_this_part.example.com",
-		"QA[icon]CHOCOLATE[icon]@test.com",
-	}
-
-	testRegex(t, lre.email, matches, fails)
+func TestRegex_Methods(t *testing.T) {
+	x.TestSimple(t, []testutils.SimpleTest{
+		{
+			Code:        "'hello bob'.find(/he\\w*\\s?[bo]+/)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"hello bob"},
+		},
+		{
+			Code:        "'HellO'.find(/hello/i)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"HellO"},
+		},
+		{
+			Code:        "'hello\nworld'.find(/hello.world/s)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"hello\nworld"},
+		},
+		{
+			Code:        "'yo! hello\nto the world'.find(/\\w+$/m)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"hello", "world"},
+		},
+		{
+			Code:        "'IPv4: 0.0.0.0, 255.255.255.255, 1.50.120.230, 256.0.0.0 '.find(regex.ipv4)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"0.0.0.0", "255.255.255.255", "1.50.120.230"},
+		},
+		{
+			Code:        "'IPv6: 2001:0db8:85a3:0000:0000:8a2e:0370:7334'.find(regex.ipv6)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"2001:0db8:85a3:0000:0000:8a2e:0370:7334"},
+		},
+		{
+			Code:        "'Sarah Summers <sarah@summe.rs>'.find( regex.email )",
+			ResultIndex: 0,
+			Expectation: []interface{}{"sarah@summe.rs"},
+		},
+		{
+			Code:        "'one+1@sum.me.rs:'.find( regex.email )",
+			ResultIndex: 0,
+			Expectation: []interface{}{"one+1@sum.me.rs"},
+		},
+		{
+			Code:        "'Urls: http://mondoo.com/welcome'.find( regex.url )",
+			ResultIndex: 0,
+			Expectation: []interface{}{"http://mondoo.com/welcome"},
+		},
+		{
+			Code:        "'mac 01:23:45:67:89:ab attack'.find(regex.mac)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"01:23:45:67:89:ab"},
+		},
+		{
+			Code:        "'uuid: b7f99555-5bca-48f4-b86f-a953a4883383.'.find(regex.uuid)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"b7f99555-5bca-48f4-b86f-a953a4883383"},
+		},
+		{
+			Code:        "'some ⮆" + string(emojiTestString) + " ⮄ emojis'.find(regex.emoji).length",
+			ResultIndex: 0, Expectation: int64(len(emojiTestString)),
+		},
+		{
+			Code:        "'semvers: 1, 1.2, 1.2.3, 1.2.3-4'.find(regex.semver)",
+			ResultIndex: 0,
+			Expectation: []interface{}{"1.2.3", "1.2.3-4"},
+		},
+	})
 }

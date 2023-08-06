@@ -241,6 +241,17 @@ func (ctx *tester) TestSimple(t *testing.T, tests []SimpleTest) {
 	}
 }
 
+func (ctx *tester) TestNoErrorsNonEmpty(t *testing.T, tests []SimpleTest) {
+	t.Helper()
+	for i := range tests {
+		cur := tests[i]
+		t.Run(cur.Code, func(t *testing.T) {
+			res := ctx.TestQuery(t, cur.Code)
+			assert.NotEmpty(t, res)
+		})
+	}
+}
+
 func (ctx *tester) TestSimpleErrors(t *testing.T, tests []SimpleTest) {
 	for i := range tests {
 		cur := tests[i]
