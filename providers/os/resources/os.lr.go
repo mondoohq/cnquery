@@ -246,6 +246,18 @@ func init() {
 			// to override args, implement: initPorts(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createPorts,
 		},
+		"auditpol": {
+			// to override args, implement: initAuditpol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditpol,
+		},
+		"auditpol.entry": {
+			// to override args, implement: initAuditpolEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAuditpolEntry,
+		},
+		"secpol": {
+			// to override args, implement: initSecpol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createSecpol,
+		},
 	}
 }
 
@@ -1114,6 +1126,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ports.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPorts).GetList()).ToDataRes(types.Array(types.Resource("port")))
+	},
+	"auditpol.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditpol).GetList()).ToDataRes(types.Array(types.Resource("auditpol.entry")))
+	},
+	"auditpol.entry.machinename": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditpolEntry).GetMachinename()).ToDataRes(types.String)
+	},
+	"auditpol.entry.policytarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditpolEntry).GetPolicytarget()).ToDataRes(types.String)
+	},
+	"auditpol.entry.subcategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditpolEntry).GetSubcategory()).ToDataRes(types.String)
+	},
+	"auditpol.entry.subcategoryguid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditpolEntry).GetSubcategoryguid()).ToDataRes(types.String)
+	},
+	"auditpol.entry.inclusionsetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditpolEntry).GetInclusionsetting()).ToDataRes(types.String)
+	},
+	"auditpol.entry.exclusionsetting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuditpolEntry).GetExclusionsetting()).ToDataRes(types.String)
+	},
+	"secpol.systemaccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSecpol).GetSystemaccess()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"secpol.eventaudit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSecpol).GetEventaudit()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"secpol.registryvalues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSecpol).GetRegistryvalues()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"secpol.privilegerights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSecpol).GetPrivilegerights()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
 }
 
@@ -2425,6 +2470,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"ports.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPorts).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditpol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditpol).__id, ok = v.Value.(string)
+			return
+		},
+	"auditpol.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditpol).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"auditpol.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlAuditpolEntry).__id, ok = v.Value.(string)
+			return
+		},
+	"auditpol.entry.machinename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditpolEntry).Machinename, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditpol.entry.policytarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditpolEntry).Policytarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditpol.entry.subcategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditpolEntry).Subcategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditpol.entry.subcategoryguid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditpolEntry).Subcategoryguid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditpol.entry.inclusionsetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditpolEntry).Inclusionsetting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auditpol.entry.exclusionsetting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuditpolEntry).Exclusionsetting, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"secpol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlSecpol).__id, ok = v.Value.(string)
+			return
+		},
+	"secpol.systemaccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSecpol).Systemaccess, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"secpol.eventaudit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSecpol).Eventaudit, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"secpol.registryvalues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSecpol).Registryvalues, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"secpol.privilegerights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSecpol).Privilegerights, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
 		return
 	},
 }
@@ -7110,5 +7211,202 @@ func (c *mqlPorts) GetList() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.list()
+	})
+}
+
+// mqlAuditpol for the auditpol resource
+type mqlAuditpol struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditpolInternal it will be used here
+	List plugin.TValue[[]interface{}]
+}
+
+// createAuditpol creates a new instance of this resource
+func createAuditpol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditpol{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditpol", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditpol) MqlName() string {
+	return "auditpol"
+}
+
+func (c *mqlAuditpol) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditpol) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("auditpol", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlAuditpolEntry for the auditpol.entry resource
+type mqlAuditpolEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlAuditpolEntryInternal it will be used here
+	Machinename plugin.TValue[string]
+	Policytarget plugin.TValue[string]
+	Subcategory plugin.TValue[string]
+	Subcategoryguid plugin.TValue[string]
+	Inclusionsetting plugin.TValue[string]
+	Exclusionsetting plugin.TValue[string]
+}
+
+// createAuditpolEntry creates a new instance of this resource
+func createAuditpolEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAuditpolEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("auditpol.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAuditpolEntry) MqlName() string {
+	return "auditpol.entry"
+}
+
+func (c *mqlAuditpolEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAuditpolEntry) GetMachinename() *plugin.TValue[string] {
+	return &c.Machinename
+}
+
+func (c *mqlAuditpolEntry) GetPolicytarget() *plugin.TValue[string] {
+	return &c.Policytarget
+}
+
+func (c *mqlAuditpolEntry) GetSubcategory() *plugin.TValue[string] {
+	return &c.Subcategory
+}
+
+func (c *mqlAuditpolEntry) GetSubcategoryguid() *plugin.TValue[string] {
+	return &c.Subcategoryguid
+}
+
+func (c *mqlAuditpolEntry) GetInclusionsetting() *plugin.TValue[string] {
+	return &c.Inclusionsetting
+}
+
+func (c *mqlAuditpolEntry) GetExclusionsetting() *plugin.TValue[string] {
+	return &c.Exclusionsetting
+}
+
+// mqlSecpol for the secpol resource
+type mqlSecpol struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlSecpolInternal
+	Systemaccess plugin.TValue[map[string]interface{}]
+	Eventaudit plugin.TValue[map[string]interface{}]
+	Registryvalues plugin.TValue[map[string]interface{}]
+	Privilegerights plugin.TValue[map[string]interface{}]
+}
+
+// createSecpol creates a new instance of this resource
+func createSecpol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlSecpol{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("secpol", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlSecpol) MqlName() string {
+	return "secpol"
+}
+
+func (c *mqlSecpol) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlSecpol) GetSystemaccess() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Systemaccess, func() (map[string]interface{}, error) {
+		return c.systemaccess()
+	})
+}
+
+func (c *mqlSecpol) GetEventaudit() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Eventaudit, func() (map[string]interface{}, error) {
+		return c.eventaudit()
+	})
+}
+
+func (c *mqlSecpol) GetRegistryvalues() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Registryvalues, func() (map[string]interface{}, error) {
+		return c.registryvalues()
+	})
+}
+
+func (c *mqlSecpol) GetPrivilegerights() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Privilegerights, func() (map[string]interface{}, error) {
+		return c.privilegerights()
 	})
 }

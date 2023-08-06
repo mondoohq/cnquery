@@ -199,16 +199,16 @@ func LinuxMock(pathToTestutils string) llx.Runtime {
 	return mockRuntime(pathToTestutils, "testdata/arch.json")
 }
 
-func KubeletMock() llx.Runtime {
-	return TomlMock("./k8s/testdata/kubelet.toml")
+func KubeletMock(pathToTestutils string) llx.Runtime {
+	return mockRuntime(pathToTestutils, "testdata/kubelet.json")
 }
 
-func KubeletAKSMock() llx.Runtime {
-	return TomlMock("./k8s/testdata/kubelet-aks.toml")
+func KubeletAKSMock(pathToTestutils string) llx.Runtime {
+	return mockRuntime(pathToTestutils, "testdata/kubelet-aks.json")
 }
 
-func WindowsMock() llx.Runtime {
-	return TomlMock("./testdata/windows.toml")
+func WindowsMock(pathToTestutils string) llx.Runtime {
+	return mockRuntime(pathToTestutils, "testdata/windows.json")
 }
 
 func CustomMock(path string) llx.Runtime {
