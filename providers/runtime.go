@@ -535,8 +535,12 @@ func (x *extensibleSchema) loadAllSchemas() {
 	}
 
 	for name := range providers {
-		schema := x.runtime.coordinator.LoadSchema(name)
-		x.Add(name, schema)
+		schema, err := x.runtime.coordinator.LoadSchema(name)
+		if err != nil {
+			log.Error().Err(err).Msg("load schema failed")
+		} else {
+			x.Add(name, schema)
+		}
 	}
 }
 
