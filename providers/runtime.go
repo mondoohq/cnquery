@@ -22,6 +22,7 @@ type Runtime struct {
 	Provider       *ConnectedProvider
 	UpstreamConfig *upstream.UpstreamConfig
 	Recording      Recording
+	AutoUpdate     UpdateProvidersConfig
 
 	features []byte
 	// coordinator is used to grab providers
@@ -109,7 +110,7 @@ func (r *Runtime) addProvider(id string) (*ConnectedProvider, error) {
 
 	if running == nil {
 		var err error
-		running, err = r.coordinator.Start(id)
+		running, err = r.coordinator.Start(id, r.AutoUpdate)
 		if err != nil {
 			return nil, err
 		}

@@ -83,31 +83,23 @@ func installProviderUrl(u string) {
 		log.Fatal().Err(err).Msg("failed to install")
 	}
 
-	providers, err := providers.InstallIO(res.Body, providers.InstallConf{
+	installed, err := providers.InstallIO(res.Body, providers.InstallConf{
 		Dst: providers.HomePath,
 	})
-	finalizeProviderInstall(providers, err)
-}
-
-func installProviderFile(path string) {
-	providers, err := providers.InstallFile(path, providers.InstallConf{
-		Dst: providers.HomePath,
-	})
-	finalizeProviderInstall(providers, err)
-}
-
-func finalizeProviderInstall(providers []*providers.Provider, err error) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to install")
 	}
+	providers.PrintInstallResults(installed)
+}
 
-	for i := range providers {
-		provider := providers[i]
-		log.Info().
-			Str("version", provider.Version).
-			Str("path", provider.Path).
-			Msg("successfully installed " + provider.Name + " provider")
+func installProviderFile(path string) {
+	installed, err := providers.InstallFile(path, providers.InstallConf{
+		Dst: providers.HomePath,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to install")
 	}
+	providers.PrintInstallResults(installed)
 }
 
 func list() {
