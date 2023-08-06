@@ -70,13 +70,6 @@ func RegexPrimitive(r string) *Primitive {
 	}
 }
 
-// borrowed from time library.
-// these will help with representing everything
-const (
-	nsecMask  = 1<<30 - 1
-	nsecShift = 30
-)
-
 // TimePrimitive creates a primitive from a time value
 func TimePrimitive(t *time.Time) *Primitive {
 	if t == nil {
@@ -84,7 +77,7 @@ func TimePrimitive(t *time.Time) *Primitive {
 	}
 
 	seconds := t.Unix()
-	nanos := int32(t.UnixNano() % 1e9)
+	nanos := t.Nanosecond()
 
 	v := make([]byte, 12)
 	binary.LittleEndian.PutUint64(v, uint64(seconds))
