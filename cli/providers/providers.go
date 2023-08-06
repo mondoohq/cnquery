@@ -285,6 +285,13 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 		}
 
 		runtime := providers.Coordinator.NewRuntime()
+
+		// TODO: read from config
+		runtime.AutoUpdate = providers.UpdateProvidersConfig{
+			Enabled:         true,
+			RefreshInterval: 60 * 60,
+		}
+
 		if err := runtime.UseProvider(provider.ID); err != nil {
 			providers.Coordinator.Shutdown()
 			log.Fatal().Err(err).Msg("failed to start provider " + provider.Name)

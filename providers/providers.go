@@ -4,9 +4,12 @@ import (
 	"archive/tar"
 	"encoding/json"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
@@ -161,6 +164,89 @@ func Install(name string) (*Provider, error) {
 	panic("INSTALL")
 }
 
+// This is the default installation source for core providers.
+const upstreamURL = "https://releases.mondoo.com/providers/{NAME}/{VERSION}/{NAME}_{VERSION}_{OS}_{ARCH}.tar.xz"
+
+func InstallVersion(name string, version string) (*Provider, error) {
+	url := upstreamURL
+	url = strings.ReplaceAll(url, "{NAME}", name)
+	url = strings.ReplaceAll(url, "{VERSION}", version)
+	url = strings.ReplaceAll(url, "{OS}", runtime.GOOS)
+	url = strings.ReplaceAll(url, "{ARCH}", runtime.GOARCH)
+
+	res, err := http.Get(url)
+	if err != nil {
+		log.Debug().Str("url", url).Msg("failed to install form URL (get request)")
+		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
+	}
+
+	installed, err := InstallIO(res.Body, InstallConf{
+		Dst: HomePath,
+	})
+	if err != nil {
+		log.Debug().Str("url", url).Msg("failed to install form URL (download)")
+		return nil, errors.Wrap(err, "failed to install "+name+"-"+version)
+	}
+
+	if len(installed) == 0 {
+		return nil, errors.New("couldn't find installed provider")
+	}
+	if len(installed) > 1 {
+		log.Warn().Msg("too many providers were installed")
+	}
+	if installed[0].Version != version {
+		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + installed[0].Version)
+	}
+
+	PrintInstallResults(installed)
+	return installed[0], nil
+}
+
+func LatestVersion(name string) (string, error) {
+	client := http.Client{
+		Timeout: time.Duration(5 * time.Second),
+	}
+	res, err := client.Get("https://releases.mondoo.com/providers/latest.json")
+	if err != nil {
+		return "", err
+	}
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Debug().Err(err).Msg("reading latest.json failed")
+		return "", errors.New("failed to read response from upstream provider versions")
+	}
+
+	var upstreamVersions ProviderVersions
+	err = json.Unmarshal(data, &upstreamVersions)
+	if err != nil {
+		log.Debug().Err(err).Msg("parsing latest.json failed")
+		return "", errors.New("failed to parse response from upstream provider versions")
+	}
+
+	var latestVersion string
+	for i := range upstreamVersions.Providers {
+		if upstreamVersions.Providers[i].Name == name {
+			latestVersion = upstreamVersions.Providers[i].Version
+			break
+		}
+	}
+
+	if latestVersion == "" {
+		return "", errors.New("cannot find '" + name + "' in available upstream providers")
+	}
+	return latestVersion, nil
+}
+
+func PrintInstallResults(providers []*Provider) {
+	for i := range providers {
+		provider := providers[i]
+		log.Info().
+			Str("version", provider.Version).
+			Str("path", provider.Path).
+			Msg("successfully installed " + provider.Name + " provider")
+	}
+}
+
 type InstallConf struct {
 	// Dst specify which path to install into.
 	Dst string
@@ -239,13 +325,16 @@ func InstallIO(reader io.ReadCloser, conf InstallConf) ([]*Provider, error) {
 		}
 
 		dstPath := filepath.Join(conf.Dst, name)
-		if err = os.Mkdir(dstPath, 0o755); err != nil {
+		if err = os.MkdirAll(dstPath, 0o755); err != nil {
 			return nil, err
 		}
 
 		srcBin := filepath.Join(tmpdir, name)
 		dstBin := filepath.Join(dstPath, name)
 		if err = os.Rename(srcBin, dstBin); err != nil {
+			return nil, err
+		}
+		if err = os.Chmod(dstBin, 0o755); err != nil {
 			return nil, err
 		}
 		if err = os.Rename(srcBin+".json", dstBin+".json"); err != nil {
@@ -390,9 +479,6 @@ func readProviderDir(pdir string) (*Provider, error) {
 		Path: pdir,
 	}, nil
 }
-
-// This is the default installation source for core providers.
-const upstreamURL = "https://releases.mondoo.com/providers/{NAME}/{VERSION}/{NAME}_{VERSION}_{BUILD}.tar.xz"
 
 func (p *Provider) LoadJSON() error {
 	path := filepath.Join(p.Path, p.Name+".json")

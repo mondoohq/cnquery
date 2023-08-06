@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-plugin"
@@ -11,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	pp "go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
+	"go.mondoo.com/cnquery/providers/core/resources/versions/semver"
 )
 
 var Coordinator = coordinator{
@@ -33,7 +35,14 @@ type RunningProvider struct {
 	isClosed bool
 }
 
-func (c *coordinator) Start(id string) (*RunningProvider, error) {
+type UpdateProvidersConfig struct {
+	// if true, will try to update providers when new versions are available
+	Enabled bool
+	// seconds until we try to refresh the providers version again
+	RefreshInterval int
+}
+
+func (c *coordinator) Start(id string, update UpdateProvidersConfig) (*RunningProvider, error) {
 	if x, ok := builtinProviders[id]; ok {
 		// We don't warn for the core provider, which is the only provider expected
 		// to be built into the binary for now.
@@ -54,6 +63,21 @@ func (c *coordinator) Start(id string) (*RunningProvider, error) {
 	provider, ok := c.Providers[id]
 	if !ok {
 		return nil, errors.New("cannot find provider " + id)
+	}
+
+	if update.Enabled {
+		// We do not stop on failed updates. Up until some other errors happens,
+		// things are still functional. We want to consider failure, possibly
+		// with a config entry in the futuer.
+		updated, err := c.tryProviderUpdate(provider, update)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("provider", provider.Name).
+				Msg("failed to update provider")
+		} else {
+			provider = updated
+		}
 	}
 
 	if provider.Schema == nil {
@@ -106,6 +130,72 @@ func (c *coordinator) Start(id string) (*RunningProvider, error) {
 	c.mutex.Unlock()
 
 	return res, nil
+}
+
+type ProviderVersions struct {
+	Providers []ProviderVersion `json:"providers"`
+}
+
+type ProviderVersion struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provider, error) {
+	if provider.Path == "" {
+		return nil, errors.New("cannot determine installation path for provider")
+	}
+
+	binPath := provider.binPath()
+	stat, err := os.Stat(binPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if update.RefreshInterval > 0 {
+		mtime := stat.ModTime()
+		secs := time.Since(mtime).Seconds()
+		if secs < float64(update.RefreshInterval) {
+			lastRefresh := time.Since(mtime).String()
+			log.Debug().
+				Str("last-refresh", lastRefresh).
+				Str("provider", provider.Name).
+				Msg("no need to update provider")
+			return provider, nil
+		}
+	}
+
+	latest, err := LatestVersion(provider.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	semver := semver.Parser{}
+	diff, err := semver.Compare(provider.Version, latest)
+	if err != nil {
+		return nil, err
+	}
+	if diff >= 0 {
+		return provider, nil
+	}
+
+	log.Info().
+		Str("installed", provider.Version).
+		Str("latest", latest).
+		Msg("found a new version for '" + provider.Name + "' provider")
+	provider, err = InstallVersion(provider.Name, latest)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	if err := os.Chtimes(binPath, now, now); err != nil {
+		log.Warn().
+			Str("provider", provider.Name).
+			Msg("failed to update refresh time on provider")
+	}
+
+	return provider, nil
 }
 
 func (c *coordinator) Close(p *RunningProvider) {
