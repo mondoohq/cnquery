@@ -161,13 +161,21 @@ func EnsureProvider(existing Providers, connectorName string) (*Provider, error)
 }
 
 func Install(name string) (*Provider, error) {
-	panic("INSTALL")
+	version, err := LatestVersion(name)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info().
+		Str("version", version).
+		Msg("installing provider '" + name + "'")
+	return installVersion(name, version)
 }
 
 // This is the default installation source for core providers.
 const upstreamURL = "https://releases.mondoo.com/providers/{NAME}/{VERSION}/{NAME}_{VERSION}_{OS}_{ARCH}.tar.xz"
 
-func InstallVersion(name string, version string) (*Provider, error) {
+func installVersion(name string, version string) (*Provider, error) {
 	url := upstreamURL
 	url = strings.ReplaceAll(url, "{NAME}", name)
 	url = strings.ReplaceAll(url, "{VERSION}", version)
@@ -197,6 +205,10 @@ func InstallVersion(name string, version string) (*Provider, error) {
 	if installed[0].Version != version {
 		return nil, errors.New("version for provider didn't match expected install version: expected " + version + ", installed: " + installed[0].Version)
 	}
+
+	// we need to clear out the cache now, because we installed something new,
+	// otherwise it will load old data
+	CachedProviders = nil
 
 	PrintInstallResults(installed)
 	return installed[0], nil
@@ -525,6 +537,6 @@ func (p Providers) ForConnection(name string) *Provider {
 
 func (p Providers) Add(nu *Provider) {
 	if nu != nil {
-		p[nu.Name] = nu
+		p[nu.ID] = nu
 	}
 }

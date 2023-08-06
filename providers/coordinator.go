@@ -183,7 +183,7 @@ func (c *coordinator) tryProviderUpdate(provider *Provider, update UpdateProvide
 		Str("installed", provider.Version).
 		Str("latest", latest).
 		Msg("found a new version for '" + provider.Name + "' provider")
-	provider, err = InstallVersion(provider.Name, latest)
+	provider, err = installVersion(provider.Name, latest)
 	if err != nil {
 		return nil, err
 	}
