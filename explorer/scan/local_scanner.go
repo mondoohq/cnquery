@@ -433,7 +433,16 @@ func (s *localAssetScanner) prepareAsset() error {
 	return nil
 }
 
-var assetDetectBundle = executor.MustCompile("asset { kind platform runtime version family }")
+var _assetDetectBundle *llx.CodeBundle
+
+func assetDetectBundle() *llx.CodeBundle {
+	if _assetDetectBundle == nil {
+		// NOTE: we need to make sure this is loaded after the logger has been
+		// initialized, otherwise the provider detection will print annoying logs
+		_assetDetectBundle = executor.MustCompile("asset { kind platform runtime version family }")
+	}
+	return _assetDetectBundle
+}
 
 func (s *localAssetScanner) ensureBundle() error {
 	if s.job.Bundle != nil {
@@ -441,7 +450,7 @@ func (s *localAssetScanner) ensureBundle() error {
 	}
 
 	features := cnquery.GetFeatures(s.job.Ctx)
-	res, err := mql.ExecuteCode(s.Runtime, assetDetectBundle, nil, features)
+	res, err := mql.ExecuteCode(s.Runtime, assetDetectBundle(), nil, features)
 	if err != nil {
 		panic(err)
 	}
