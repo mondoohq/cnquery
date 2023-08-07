@@ -1,11 +1,13 @@
 name: 'Build & Release Providers'
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
   BUCKET: releases-us.mondoo.io
-  PROVIDERS: "os network"
+  PROVIDERS: "os network "
 
 jobs:
   build:
