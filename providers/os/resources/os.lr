@@ -768,3 +768,36 @@ ports {
   // All listening ports
   listening() []port
 }
+
+// Windows audit policies
+auditpol {
+  []auditpol.entry
+}
+
+// Windows audit policy
+auditpol.entry  @defaults("subcategory inclusionsetting exclusionsetting") {
+  // Machine name
+  machinename string
+  // Policy Target
+  policytarget string
+  // Subcategory
+  subcategory string
+  // Subcategory GUID
+  subcategoryguid string
+  // Inclusive setting
+  inclusionsetting string
+  // Exclusive settings
+  exclusionsetting string
+}
+
+// Windows local security policy
+secpol {
+  // System Access
+  systemaccess() map[string]string
+  // Event Audit
+  eventaudit() map[string]string
+  // Registry Values
+  registryvalues() map[string]string
+  // Privilege Rights
+  privilegerights() map[string][]string
+}
