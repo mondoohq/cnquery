@@ -90,6 +90,10 @@ func init() {
 			// to override args, implement: initOsLinux(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOsLinux,
 		},
+		"os.rootCertificates": {
+			Init: initOsRootCertificates,
+			Create: createOsRootCertificates,
+		},
 		"command": {
 			// to override args, implement: initCommand(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCommand,
@@ -257,6 +261,50 @@ func init() {
 		"secpol": {
 			// to override args, implement: initSecpol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createSecpol,
+		},
+		"ntp.conf": {
+			Init: initNtpConf,
+			Create: createNtpConf,
+		},
+		"rsyslog.conf": {
+			// to override args, implement: initRsyslogConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRsyslogConf,
+		},
+		"logindefs": {
+			Init: initLogindefs,
+			Create: createLogindefs,
+		},
+		"lsblk": {
+			// to override args, implement: initLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLsblk,
+		},
+		"lsblk.entry": {
+			// to override args, implement: initLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createLsblkEntry,
+		},
+		"mount": {
+			// to override args, implement: initMount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMount,
+		},
+		"mount.point": {
+			Init: initMountPoint,
+			Create: createMountPoint,
+		},
+		"shadow": {
+			// to override args, implement: initShadow(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createShadow,
+		},
+		"shadow.entry": {
+			// to override args, implement: initShadowEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createShadowEntry,
+		},
+		"yum": {
+			// to override args, implement: initYum(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createYum,
+		},
+		"yum.repo": {
+			Init: initYumRepo,
+			Create: createYumRepo,
 		},
 	}
 }
@@ -562,6 +610,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"os.linux.ip6tables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOsLinux).GetIp6tables()).ToDataRes(types.Resource("ip6tables"))
+	},
+	"os.rootCertificates.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsRootCertificates).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"os.rootCertificates.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsRootCertificates).GetContent()).ToDataRes(types.Array(types.String))
+	},
+	"os.rootCertificates.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOsRootCertificates).GetList()).ToDataRes(types.Array(types.Resource("certificate")))
 	},
 	"command.command": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCommand).GetCommand()).ToDataRes(types.String)
@@ -1160,6 +1217,153 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"secpol.privilegerights": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSecpol).GetPrivilegerights()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
+	"ntp.conf.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNtpConf).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"ntp.conf.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNtpConf).GetContent()).ToDataRes(types.String)
+	},
+	"ntp.conf.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNtpConf).GetSettings()).ToDataRes(types.Array(types.String))
+	},
+	"ntp.conf.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNtpConf).GetServers()).ToDataRes(types.Array(types.String))
+	},
+	"ntp.conf.restrict": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNtpConf).GetRestrict()).ToDataRes(types.Array(types.String))
+	},
+	"ntp.conf.fudge": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNtpConf).GetFudge()).ToDataRes(types.Array(types.String))
+	},
+	"rsyslog.conf.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRsyslogConf).GetPath()).ToDataRes(types.String)
+	},
+	"rsyslog.conf.files": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRsyslogConf).GetFiles()).ToDataRes(types.Array(types.Resource("file")))
+	},
+	"rsyslog.conf.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRsyslogConf).GetContent()).ToDataRes(types.String)
+	},
+	"rsyslog.conf.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRsyslogConf).GetSettings()).ToDataRes(types.Array(types.String))
+	},
+	"logindefs.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogindefs).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"logindefs.content": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogindefs).GetContent()).ToDataRes(types.String)
+	},
+	"logindefs.params": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLogindefs).GetParams()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"lsblk.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblk).GetList()).ToDataRes(types.Array(types.Resource("lsblk.entry")))
+	},
+	"lsblk.entry.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetName()).ToDataRes(types.String)
+	},
+	"lsblk.entry.fstype": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetFstype()).ToDataRes(types.String)
+	},
+	"lsblk.entry.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetLabel()).ToDataRes(types.String)
+	},
+	"lsblk.entry.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetUuid()).ToDataRes(types.String)
+	},
+	"lsblk.entry.mountpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlLsblkEntry).GetMountpoints()).ToDataRes(types.Array(types.String))
+	},
+	"mount.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMount).GetList()).ToDataRes(types.Array(types.Resource("mount.point")))
+	},
+	"mount.point.device": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetDevice()).ToDataRes(types.String)
+	},
+	"mount.point.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetPath()).ToDataRes(types.String)
+	},
+	"mount.point.fstype": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetFstype()).ToDataRes(types.String)
+	},
+	"mount.point.options": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetOptions()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"mount.point.mounted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMountPoint).GetMounted()).ToDataRes(types.Bool)
+	},
+	"shadow.list": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadow).GetList()).ToDataRes(types.Array(types.Resource("shadow.entry")))
+	},
+	"shadow.entry.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetUser()).ToDataRes(types.String)
+	},
+	"shadow.entry.password": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetPassword()).ToDataRes(types.String)
+	},
+	"shadow.entry.lastchanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetLastchanged()).ToDataRes(types.Time)
+	},
+	"shadow.entry.mindays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetMindays()).ToDataRes(types.Int)
+	},
+	"shadow.entry.maxdays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetMaxdays()).ToDataRes(types.Int)
+	},
+	"shadow.entry.warndays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetWarndays()).ToDataRes(types.Int)
+	},
+	"shadow.entry.inactivedays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetInactivedays()).ToDataRes(types.Int)
+	},
+	"shadow.entry.expirydates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetExpirydates()).ToDataRes(types.String)
+	},
+	"shadow.entry.reserved": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlShadowEntry).GetReserved()).ToDataRes(types.String)
+	},
+	"yum.vars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYum).GetVars()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"yum.repos": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYum).GetRepos()).ToDataRes(types.Array(types.Resource("yum.repo")))
+	},
+	"yum.repo.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetId()).ToDataRes(types.String)
+	},
+	"yum.repo.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetName()).ToDataRes(types.String)
+	},
+	"yum.repo.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetStatus()).ToDataRes(types.String)
+	},
+	"yum.repo.baseurl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetBaseurl()).ToDataRes(types.Array(types.String))
+	},
+	"yum.repo.expire": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetExpire()).ToDataRes(types.String)
+	},
+	"yum.repo.filename": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetFilename()).ToDataRes(types.String)
+	},
+	"yum.repo.file": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetFile()).ToDataRes(types.Resource("file"))
+	},
+	"yum.repo.revision": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetRevision()).ToDataRes(types.String)
+	},
+	"yum.repo.pkgs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetPkgs()).ToDataRes(types.String)
+	},
+	"yum.repo.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetSize()).ToDataRes(types.String)
+	},
+	"yum.repo.mirrors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetMirrors()).ToDataRes(types.String)
+	},
+	"yum.repo.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlYumRepo).GetEnabled()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1562,6 +1766,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"os.linux.ip6tables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOsLinux).Ip6tables, ok = plugin.RawToTValue[*mqlIp6tables](v.Value, v.Error)
+		return
+	},
+	"os.rootCertificates.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlOsRootCertificates).__id, ok = v.Value.(string)
+			return
+		},
+	"os.rootCertificates.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsRootCertificates).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.rootCertificates.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsRootCertificates).Content, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"os.rootCertificates.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOsRootCertificates).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"command.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2526,6 +2746,246 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"secpol.privilegerights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSecpol).Privilegerights, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"ntp.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlNtpConf).__id, ok = v.Value.(string)
+			return
+		},
+	"ntp.conf.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNtpConf).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"ntp.conf.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNtpConf).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ntp.conf.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNtpConf).Settings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ntp.conf.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNtpConf).Servers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ntp.conf.restrict": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNtpConf).Restrict, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"ntp.conf.fudge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNtpConf).Fudge, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"rsyslog.conf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlRsyslogConf).__id, ok = v.Value.(string)
+			return
+		},
+	"rsyslog.conf.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRsyslogConf).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"rsyslog.conf.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRsyslogConf).Files, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"rsyslog.conf.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRsyslogConf).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"rsyslog.conf.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRsyslogConf).Settings, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"logindefs.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlLogindefs).__id, ok = v.Value.(string)
+			return
+		},
+	"logindefs.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogindefs).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"logindefs.content": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogindefs).Content, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"logindefs.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLogindefs).Params, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"lsblk.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlLsblk).__id, ok = v.Value.(string)
+			return
+		},
+	"lsblk.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblk).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlLsblkEntry).__id, ok = v.Value.(string)
+			return
+		},
+	"lsblk.entry.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.fstype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Fstype, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"lsblk.entry.mountpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlLsblkEntry).Mountpoints, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"mount.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMount).__id, ok = v.Value.(string)
+			return
+		},
+	"mount.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMount).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"mount.point.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlMountPoint).__id, ok = v.Value.(string)
+			return
+		},
+	"mount.point.device": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Device, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mount.point.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mount.point.fstype": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Fstype, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mount.point.options": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Options, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"mount.point.mounted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMountPoint).Mounted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"shadow.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlShadow).__id, ok = v.Value.(string)
+			return
+		},
+	"shadow.list": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadow).List, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlShadowEntry).__id, ok = v.Value.(string)
+			return
+		},
+	"shadow.entry.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).User, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.password": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Password, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.lastchanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Lastchanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.mindays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Mindays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.maxdays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Maxdays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.warndays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Warndays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.inactivedays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Inactivedays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.expirydates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Expirydates, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"shadow.entry.reserved": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlShadowEntry).Reserved, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlYum).__id, ok = v.Value.(string)
+			return
+		},
+	"yum.vars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYum).Vars, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"yum.repos": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYum).Repos, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"yum.repo.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlYumRepo).__id, ok = v.Value.(string)
+			return
+		},
+	"yum.repo.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.baseurl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Baseurl, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"yum.repo.expire": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Expire, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.filename": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Filename, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.file": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).File, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"yum.repo.revision": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Revision, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.pkgs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Pkgs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Size, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.mirrors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Mirrors, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"yum.repo.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlYumRepo).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -3920,6 +4380,89 @@ func (c *mqlOsLinux) GetIp6tables() *plugin.TValue[*mqlIp6tables] {
 		}
 
 		return c.ip6tables()
+	})
+}
+
+// mqlOsRootCertificates for the os.rootCertificates resource
+type mqlOsRootCertificates struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlOsRootCertificatesInternal it will be used here
+	Files plugin.TValue[[]interface{}]
+	Content plugin.TValue[[]interface{}]
+	List plugin.TValue[[]interface{}]
+}
+
+// createOsRootCertificates creates a new instance of this resource
+func createOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOsRootCertificates{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("os.rootCertificates", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOsRootCertificates) MqlName() string {
+	return "os.rootCertificates"
+}
+
+func (c *mqlOsRootCertificates) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOsRootCertificates) GetFiles() *plugin.TValue[[]interface{}] {
+	return &c.Files
+}
+
+func (c *mqlOsRootCertificates) GetContent() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Content, func() ([]interface{}, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return nil, vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlOsRootCertificates) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("os.rootCertificates", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.list(vargContent.Data)
 	})
 }
 
@@ -7408,5 +7951,892 @@ func (c *mqlSecpol) GetRegistryvalues() *plugin.TValue[map[string]interface{}] {
 func (c *mqlSecpol) GetPrivilegerights() *plugin.TValue[map[string]interface{}] {
 	return plugin.GetOrCompute[map[string]interface{}](&c.Privilegerights, func() (map[string]interface{}, error) {
 		return c.privilegerights()
+	})
+}
+
+// mqlNtpConf for the ntp.conf resource
+type mqlNtpConf struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlNtpConfInternal it will be used here
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Settings plugin.TValue[[]interface{}]
+	Servers plugin.TValue[[]interface{}]
+	Restrict plugin.TValue[[]interface{}]
+	Fudge plugin.TValue[[]interface{}]
+}
+
+// createNtpConf creates a new instance of this resource
+func createNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNtpConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ntp.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNtpConf) MqlName() string {
+	return "ntp.conf"
+}
+
+func (c *mqlNtpConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNtpConf) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ntp.conf", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlNtpConf) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlNtpConf) GetSettings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Settings, func() ([]interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.settings(vargContent.Data)
+	})
+}
+
+func (c *mqlNtpConf) GetServers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Servers, func() ([]interface{}, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.servers(vargSettings.Data)
+	})
+}
+
+func (c *mqlNtpConf) GetRestrict() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Restrict, func() ([]interface{}, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.restrict(vargSettings.Data)
+	})
+}
+
+func (c *mqlNtpConf) GetFudge() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Fudge, func() ([]interface{}, error) {
+		vargSettings := c.GetSettings()
+		if vargSettings.Error != nil {
+			return nil, vargSettings.Error
+		}
+
+		return c.fudge(vargSettings.Data)
+	})
+}
+
+// mqlRsyslogConf for the rsyslog.conf resource
+type mqlRsyslogConf struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlRsyslogConfInternal it will be used here
+	Path plugin.TValue[string]
+	Files plugin.TValue[[]interface{}]
+	Content plugin.TValue[string]
+	Settings plugin.TValue[[]interface{}]
+}
+
+// createRsyslogConf creates a new instance of this resource
+func createRsyslogConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRsyslogConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("rsyslog.conf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRsyslogConf) MqlName() string {
+	return "rsyslog.conf"
+}
+
+func (c *mqlRsyslogConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRsyslogConf) GetPath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Path, func() (string, error) {
+		return c.path()
+	})
+}
+
+func (c *mqlRsyslogConf) GetFiles() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Files, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("rsyslog.conf", c.__id, "files")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+
+		return c.files(vargPath.Data)
+	})
+}
+
+func (c *mqlRsyslogConf) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFiles := c.GetFiles()
+		if vargFiles.Error != nil {
+			return "", vargFiles.Error
+		}
+
+		return c.content(vargFiles.Data)
+	})
+}
+
+func (c *mqlRsyslogConf) GetSettings() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Settings, func() ([]interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.settings(vargContent.Data)
+	})
+}
+
+// mqlLogindefs for the logindefs resource
+type mqlLogindefs struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlLogindefsInternal it will be used here
+	File plugin.TValue[*mqlFile]
+	Content plugin.TValue[string]
+	Params plugin.TValue[map[string]interface{}]
+}
+
+// createLogindefs creates a new instance of this resource
+func createLogindefs(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLogindefs{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("logindefs", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLogindefs) MqlName() string {
+	return "logindefs"
+}
+
+func (c *mqlLogindefs) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLogindefs) GetFile() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.File, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("logindefs", c.__id, "file")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.file()
+	})
+}
+
+func (c *mqlLogindefs) GetContent() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Content, func() (string, error) {
+		vargFile := c.GetFile()
+		if vargFile.Error != nil {
+			return "", vargFile.Error
+		}
+
+		return c.content(vargFile.Data)
+	})
+}
+
+func (c *mqlLogindefs) GetParams() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Params, func() (map[string]interface{}, error) {
+		vargContent := c.GetContent()
+		if vargContent.Error != nil {
+			return nil, vargContent.Error
+		}
+
+		return c.params(vargContent.Data)
+	})
+}
+
+// mqlLsblk for the lsblk resource
+type mqlLsblk struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlLsblkInternal it will be used here
+	List plugin.TValue[[]interface{}]
+}
+
+// createLsblk creates a new instance of this resource
+func createLsblk(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLsblk{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lsblk", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLsblk) MqlName() string {
+	return "lsblk"
+}
+
+func (c *mqlLsblk) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLsblk) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("lsblk", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlLsblkEntry for the lsblk.entry resource
+type mqlLsblkEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlLsblkEntryInternal it will be used here
+	Name plugin.TValue[string]
+	Fstype plugin.TValue[string]
+	Label plugin.TValue[string]
+	Uuid plugin.TValue[string]
+	Mountpoints plugin.TValue[[]interface{}]
+}
+
+// createLsblkEntry creates a new instance of this resource
+func createLsblkEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlLsblkEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("lsblk.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlLsblkEntry) MqlName() string {
+	return "lsblk.entry"
+}
+
+func (c *mqlLsblkEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlLsblkEntry) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlLsblkEntry) GetFstype() *plugin.TValue[string] {
+	return &c.Fstype
+}
+
+func (c *mqlLsblkEntry) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlLsblkEntry) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlLsblkEntry) GetMountpoints() *plugin.TValue[[]interface{}] {
+	return &c.Mountpoints
+}
+
+// mqlMount for the mount resource
+type mqlMount struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMountInternal it will be used here
+	List plugin.TValue[[]interface{}]
+}
+
+// createMount creates a new instance of this resource
+func createMount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mount", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMount) MqlName() string {
+	return "mount"
+}
+
+func (c *mqlMount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMount) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mount", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlMountPoint for the mount.point resource
+type mqlMountPoint struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlMountPointInternal it will be used here
+	Device plugin.TValue[string]
+	Path plugin.TValue[string]
+	Fstype plugin.TValue[string]
+	Options plugin.TValue[map[string]interface{}]
+	Mounted plugin.TValue[bool]
+}
+
+// createMountPoint creates a new instance of this resource
+func createMountPoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMountPoint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mount.point", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMountPoint) MqlName() string {
+	return "mount.point"
+}
+
+func (c *mqlMountPoint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMountPoint) GetDevice() *plugin.TValue[string] {
+	return &c.Device
+}
+
+func (c *mqlMountPoint) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlMountPoint) GetFstype() *plugin.TValue[string] {
+	return &c.Fstype
+}
+
+func (c *mqlMountPoint) GetOptions() *plugin.TValue[map[string]interface{}] {
+	return &c.Options
+}
+
+func (c *mqlMountPoint) GetMounted() *plugin.TValue[bool] {
+	return &c.Mounted
+}
+
+// mqlShadow for the shadow resource
+type mqlShadow struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlShadowInternal it will be used here
+	List plugin.TValue[[]interface{}]
+}
+
+// createShadow creates a new instance of this resource
+func createShadow(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlShadow{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("shadow", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlShadow) MqlName() string {
+	return "shadow"
+}
+
+func (c *mqlShadow) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlShadow) GetList() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.List, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("shadow", c.__id, "list")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.list()
+	})
+}
+
+// mqlShadowEntry for the shadow.entry resource
+type mqlShadowEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlShadowEntryInternal it will be used here
+	User plugin.TValue[string]
+	Password plugin.TValue[string]
+	Lastchanged plugin.TValue[*time.Time]
+	Mindays plugin.TValue[int64]
+	Maxdays plugin.TValue[int64]
+	Warndays plugin.TValue[int64]
+	Inactivedays plugin.TValue[int64]
+	Expirydates plugin.TValue[string]
+	Reserved plugin.TValue[string]
+}
+
+// createShadowEntry creates a new instance of this resource
+func createShadowEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlShadowEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("shadow.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlShadowEntry) MqlName() string {
+	return "shadow.entry"
+}
+
+func (c *mqlShadowEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlShadowEntry) GetUser() *plugin.TValue[string] {
+	return &c.User
+}
+
+func (c *mqlShadowEntry) GetPassword() *plugin.TValue[string] {
+	return &c.Password
+}
+
+func (c *mqlShadowEntry) GetLastchanged() *plugin.TValue[*time.Time] {
+	return &c.Lastchanged
+}
+
+func (c *mqlShadowEntry) GetMindays() *plugin.TValue[int64] {
+	return &c.Mindays
+}
+
+func (c *mqlShadowEntry) GetMaxdays() *plugin.TValue[int64] {
+	return &c.Maxdays
+}
+
+func (c *mqlShadowEntry) GetWarndays() *plugin.TValue[int64] {
+	return &c.Warndays
+}
+
+func (c *mqlShadowEntry) GetInactivedays() *plugin.TValue[int64] {
+	return &c.Inactivedays
+}
+
+func (c *mqlShadowEntry) GetExpirydates() *plugin.TValue[string] {
+	return &c.Expirydates
+}
+
+func (c *mqlShadowEntry) GetReserved() *plugin.TValue[string] {
+	return &c.Reserved
+}
+
+// mqlYum for the yum resource
+type mqlYum struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlYumInternal it will be used here
+	Vars plugin.TValue[map[string]interface{}]
+	Repos plugin.TValue[[]interface{}]
+}
+
+// createYum creates a new instance of this resource
+func createYum(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlYum{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("yum", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlYum) MqlName() string {
+	return "yum"
+}
+
+func (c *mqlYum) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlYum) GetVars() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Vars, func() (map[string]interface{}, error) {
+		return c.vars()
+	})
+}
+
+func (c *mqlYum) GetRepos() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Repos, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("yum", c.__id, "repos")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.repos()
+	})
+}
+
+// mqlYumRepo for the yum.repo resource
+type mqlYumRepo struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlYumRepoInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	Status plugin.TValue[string]
+	Baseurl plugin.TValue[[]interface{}]
+	Expire plugin.TValue[string]
+	Filename plugin.TValue[string]
+	File plugin.TValue[*mqlFile]
+	Revision plugin.TValue[string]
+	Pkgs plugin.TValue[string]
+	Size plugin.TValue[string]
+	Mirrors plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+}
+
+// createYumRepo creates a new instance of this resource
+func createYumRepo(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlYumRepo{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("yum.repo", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlYumRepo) MqlName() string {
+	return "yum.repo"
+}
+
+func (c *mqlYumRepo) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlYumRepo) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlYumRepo) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlYumRepo) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlYumRepo) GetBaseurl() *plugin.TValue[[]interface{}] {
+	return &c.Baseurl
+}
+
+func (c *mqlYumRepo) GetExpire() *plugin.TValue[string] {
+	return &c.Expire
+}
+
+func (c *mqlYumRepo) GetFilename() *plugin.TValue[string] {
+	return &c.Filename
+}
+
+func (c *mqlYumRepo) GetFile() *plugin.TValue[*mqlFile] {
+	return &c.File
+}
+
+func (c *mqlYumRepo) GetRevision() *plugin.TValue[string] {
+	return &c.Revision
+}
+
+func (c *mqlYumRepo) GetPkgs() *plugin.TValue[string] {
+	return &c.Pkgs
+}
+
+func (c *mqlYumRepo) GetSize() *plugin.TValue[string] {
+	return &c.Size
+}
+
+func (c *mqlYumRepo) GetMirrors() *plugin.TValue[string] {
+	return &c.Mirrors
+}
+
+func (c *mqlYumRepo) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
 	})
 }

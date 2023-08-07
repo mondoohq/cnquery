@@ -1,26 +1,28 @@
-package os
+package resources
 
 import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/resources"
-	"go.mondoo.com/cnquery/resources/packs/core"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 )
 
-func (s *mqlNtpConf) init(args *resources.Args) (*resources.Args, NtpConf, error) {
-	if x, ok := (*args)["path"]; ok {
-		path, ok := x.(string)
+func initNtpConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if x, ok := args["path"]; ok {
+		path, ok := x.Value.(string)
 		if !ok {
 			return nil, nil, errors.New("Wrong type for 'path' in ntp.conf initialization, it must be a string")
 		}
 
-		f, err := s.MotorRuntime.CreateResource("file", "path", path)
+		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+			"path": llx.StringData(path),
+		})
 		if err != nil {
 			return nil, nil, err
 		}
-		(*args)["file"] = f
-		delete(*args, "path")
+		args["file"] = llx.ResourceData(f, "file")
+		delete(args, "path")
 	}
 
 	return args, nil, nil
@@ -29,33 +31,32 @@ func (s *mqlNtpConf) init(args *resources.Args) (*resources.Args, NtpConf, error
 const defaultNtpConf = "/etc/ntp.conf"
 
 func (s *mqlNtpConf) id() (string, error) {
-	r, err := s.File()
-	if err != nil {
-		return "", err
+	file := s.GetFile()
+	if file.Error != nil {
+		return "", file.Error
 	}
-	return r.Path()
+	if file.Data == nil {
+		return "", errors.New("cannot get file for ntp.conf")
+	}
+	return file.Data.Path.Data, nil
 }
 
-func (s *mqlNtpConf) GetFile() (core.File, error) {
-	f, err := s.MotorRuntime.CreateResource("file", "path", defaultNtpConf)
+func (s *mqlNtpConf) file() (*mqlFile, error) {
+	f, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(defaultNtpConf),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return f.(core.File), nil
+	return f.(*mqlFile), nil
 }
 
-func (s *mqlNtpConf) GetContent(file core.File) (string, error) {
-	// TODO: this can be heavily improved once we do it right, since this is constantly
-	// re-registered as the file changes
-	err := s.MotorRuntime.WatchAndCompute(file, "content", s, "content")
-	if err != nil {
-		return "", err
-	}
-
-	return file.Content()
+func (s *mqlNtpConf) content(file *mqlFile) (string, error) {
+	content := file.GetContent()
+	return content.Data, content.Error
 }
 
-func (s *mqlNtpConf) GetSettings(content string) ([]interface{}, error) {
+func (s *mqlNtpConf) settings(content string) ([]interface{}, error) {
 	lines := strings.Split(content, "\n")
 
 	settings := []interface{}{}
@@ -75,7 +76,7 @@ func (s *mqlNtpConf) GetSettings(content string) ([]interface{}, error) {
 	return settings, nil
 }
 
-func (s *mqlNtpConf) GetServers(settings []interface{}) ([]interface{}, error) {
+func (s *mqlNtpConf) servers(settings []interface{}) ([]interface{}, error) {
 	res := []interface{}{}
 	var line string
 	for i := range settings {
@@ -88,7 +89,7 @@ func (s *mqlNtpConf) GetServers(settings []interface{}) ([]interface{}, error) {
 	return res, nil
 }
 
-func (s *mqlNtpConf) GetRestrict(settings []interface{}) ([]interface{}, error) {
+func (s *mqlNtpConf) restrict(settings []interface{}) ([]interface{}, error) {
 	res := []interface{}{}
 	var line string
 	for i := range settings {
@@ -101,7 +102,7 @@ func (s *mqlNtpConf) GetRestrict(settings []interface{}) ([]interface{}, error) 
 	return res, nil
 }
 
-func (s *mqlNtpConf) GetFudge(settings []interface{}) ([]interface{}, error) {
+func (s *mqlNtpConf) fudge(settings []interface{}) ([]interface{}, error) {
 	res := []interface{}{}
 	var line string
 	for i := range settings {

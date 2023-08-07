@@ -237,6 +237,14 @@ os.linux {
   ip6tables() ip6tables
 }
 
+// Operating system root certificates
+os.rootCertificates {
+  []certificate(content)
+  // List of files that define these certificates
+  files []file
+  content(files) []string
+}
+
 // Results of running a command on the system
 command {
   init(command string)
@@ -800,4 +808,148 @@ secpol {
   registryvalues() map[string]string
   // Privilege Rights
   privilegerights() map[string][]string
+}
+
+// NTP service configuration
+ntp.conf {
+  init(path string)
+  // File of this NTP service configuration
+  file() file
+  // Raw contents of this NTP service configuration
+  content(file) string
+  // List of settings for this NTP service
+  settings(content) []string
+  // List of servers for this NTP service
+  servers(settings) []string
+  // List of access control restrictions for this NTP service
+  restrict(settings) []string
+  // Additional information for clock drivers
+  fudge(settings) []string
+}
+
+// Rsyslog service configuration
+rsyslog.conf {
+  init(path string)
+  // Path for the main rsyslog file and search
+  path() string
+  // Files that make up this Rsyslog service configuration
+  files(path) []file
+  // Raw contents of this Rsyslog service configuration
+  content(files) string
+  // List of settings for this Rsyslog service
+  settings(content) []string
+}
+
+// Shadow password suite configuration
+logindefs {
+  init(path string)
+  // Current configuration file for resource
+  file() file
+  // Content of the configuration file
+  content(file) string
+  // Parsed logindef parameter
+  params(content) map[string]string
+}
+
+// Unix list block devices
+lsblk {
+  []lsblk.entry
+}
+
+// Unix block device
+lsblk.entry {
+  // Device name
+  name string
+  // Filesystem Type
+  fstype string
+  // label for the fs
+  label string
+  // uuid for the fs
+  uuid string
+  // mountpoints for the device
+  mountpoints []string
+}
+
+// Unix Mounted Filesystem
+mount {
+  []mount.point
+}
+
+// Unix mount point
+mount.point @defaults("device path fstype") {
+  init(path string)
+  // Device
+  device string
+  // Path
+  path string
+  // Filesystem Type
+  fstype string
+  // Mount Options
+  options map[string]string
+  // Flag whether the mount point is mounted
+  mounted bool
+}
+
+// Shadowed Password File
+shadow {
+  []shadow.entry
+}
+
+// Shadowed password file entry
+shadow.entry {
+  // User
+  user string
+  // Password
+  password string
+  // Date of last password change
+  lastchanged time
+  // Minimum password age
+  mindays int
+  // Maximum password age
+  maxdays int
+  // Password warning period
+  warndays int
+  // Password inactivity period
+  inactivedays int
+  // Account expiration date
+  expirydates string
+  // Reserved field
+  reserved string
+}
+
+// Yum package manager resource
+yum {
+  // variables defined built-in in Yum configuration files (/etc/yum.conf and all .repo files in the /etc/yum.repos.d/)
+  vars() map[string]string
+  // List of all configured yum repositories
+  repos() []yum.repo
+}
+
+// Yum repository resource
+yum.repo {
+  init(id string)
+  // Repository ID
+  id string
+  // Human-readable repository name
+  name string
+  // Repository status
+  status string
+  // URL where the repodata directory of a repository is located
+  baseurl []string
+  // Indicator when the repository will expire
+  expire string
+  // Deprecated: location of the repo configuration file, use file.path
+  filename string
+  // Repository configuration file path
+  file file
+  // Repository revision
+  revision string
+  // Packages in repository
+  pkgs string
+  // File size of this repository
+  size string
+  // Mirrors for this repository
+  mirrors string
+  // Indicates if this repository is used as package source
+  enabled() bool
 }

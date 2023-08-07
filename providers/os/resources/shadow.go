@@ -1,12 +1,14 @@
-package os
+package resources
 
 import (
 	"errors"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/cnquery/resources/packs/os/shadow"
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/providers/os/resources/shadow"
 )
 
 const defaultShadowConfig = "/etc/shadow"
@@ -27,19 +29,22 @@ func parseInt(s string, dflt int64, msg string) (int64, error) {
 	return res, nil
 }
 
-func (s *mqlShadow) GetList() ([]interface{}, error) {
-	osProvider, err := osProvider(s.MotorRuntime.Motor)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *mqlShadow) list() ([]interface{}, error) {
 	// TODO: we may want to create a real mondoo file resource
-	f, err := osProvider.FS().Open(defaultShadowConfig)
+	o, err := CreateResource(s.MqlRuntime, "file", map[string]*llx.RawData{
+		"path": llx.StringData(defaultShadowConfig),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	entries, err := shadow.ParseShadow(f)
+	file := o.(*mqlFile)
+	content := file.GetContent()
+	if content.Error != nil {
+		return nil, content.Error
+	}
+
+	entries, err := shadow.ParseShadow(strings.NewReader(content.Data))
 	if err != nil {
 		return nil, err
 	}
@@ -68,28 +73,32 @@ func (s *mqlShadow) GetList() ([]interface{}, error) {
 			return nil, err
 		}
 
-		shadowEntry, err := s.MotorRuntime.CreateResource("shadow.entry",
-			"user", entry.User,
-			"password", entry.Password,
-			"lastchanged", entry.LastChanged,
-			"mindays", mindays,
-			"maxdays", maxdays,
-			"warndays", warndays,
-			"inactivedays", inactivedays,
-			"expirydates", entry.ExpiryDates,
-			"reserved", entry.Reserved,
-		)
+		lastChanged := llx.NilData
+		if entry.LastChanged != nil {
+			lastChanged = llx.TimeData(*entry.LastChanged)
+		}
+
+		o, err := CreateResource(s.MqlRuntime, "shadow.entry", map[string]*llx.RawData{
+			"user":         llx.StringData(entry.User),
+			"password":     llx.StringData(entry.Password),
+			"lastchanged":  lastChanged,
+			"mindays":      llx.IntData(mindays),
+			"maxdays":      llx.IntData(maxdays),
+			"warndays":     llx.IntData(warndays),
+			"inactivedays": llx.IntData(inactivedays),
+			"expirydates":  llx.StringData(entry.ExpiryDates),
+			"reserved":     llx.StringData(entry.Reserved),
+		})
 		if err != nil {
 			log.Error().Err(err).Str("shadow_entry", entry.User).Msg("mql[shadow_entry]> could not create shadow entry resource")
 			return nil, err
 		}
-		shadowEntryResources[i] = shadowEntry.(ShadowEntry)
+		shadowEntryResources[i] = o.(*mqlShadowEntry)
 	}
 
 	return shadowEntryResources, nil
 }
 
 func (se *mqlShadowEntry) id() (string, error) {
-	id, _ := se.User()
-	return id, nil
+	return se.User.Data, nil
 }

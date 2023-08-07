@@ -6,15 +6,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/os/shadow"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/shadow"
 )
 
 func TestParseShadow(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
+	mock, err := mock.New("./testdata/debian.toml", nil)
 	require.NoError(t, err)
 
-	f, err := mock.FS().Open("/etc/shadow")
+	f, err := mock.FileSystem().Open("/etc/shadow")
 	require.NoError(t, err)
 	defer f.Close()
 
