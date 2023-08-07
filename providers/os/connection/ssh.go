@@ -3,6 +3,7 @@ package connection
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net"
 	"os"
@@ -14,7 +15,6 @@ import (
 	awsconf "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/kevinburke/ssh_config"
 	"github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
 	rawsftp "github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -25,6 +25,7 @@ import (
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/awsssmsession"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/sftp"
 	"go.mondoo.com/cnquery/providers/os/connection/ssh/signers"
+	"go.mondoo.com/cnquery/utils/multierr"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/crypto/ssh/knownhosts"
@@ -159,7 +160,7 @@ func (c *SshConnection) runRawCommand(command string) (*shared.Command, error) {
 
 		c.Close()
 		if err = c.Connect(); err != nil {
-			return nil, errors.Wrap(err, "failed to open SSH session (reconnect failed)")
+			return nil, multierr.Wrap(err, "failed to open SSH session (reconnect failed)")
 		}
 
 		session, err = c.SSHClient.NewSession()
@@ -282,7 +283,7 @@ func (c *SshConnection) Connect() error {
 	// load known hosts and track the fingerprint of the ssh server for later identification
 	knownHostsCallback, err := knownHostsCallback()
 	if err != nil {
-		return errors.Wrap(err, "could not read hostkey file")
+		return multierr.Wrap(err, "could not read hostkey file")
 	}
 
 	var hostkey ssh.PublicKey
@@ -596,7 +597,7 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 			// use the generated ssh credentials for authentication
 			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "could not read generated private key")
+				return nil, nil, multierr.Wrap(err, "could not read generated private key")
 			}
 			sshSigners = append(sshSigners, priv)
 			closer = append(closer, ssmConn)
@@ -627,7 +628,7 @@ func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, e
 
 			priv, err := signers.GetSignerFromPrivateKeyWithPassphrase(creds.KeyPair.PrivateKey, creds.KeyPair.Passphrase)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "could not read generated private key")
+				return nil, nil, multierr.Wrap(err, "could not read generated private key")
 			}
 			sshSigners = append(sshSigners, priv)
 

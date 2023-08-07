@@ -1,7 +1,8 @@
 package connection
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"

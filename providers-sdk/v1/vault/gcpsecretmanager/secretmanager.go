@@ -2,12 +2,13 @@ package gcpsecretmanager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/utils/multierr"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
@@ -33,7 +34,7 @@ func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
 func (v *Vault) client(ctx context.Context) (*secretmanager.Client, error) {
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to setup gcp secret manager client")
+		return nil, multierr.Wrap(err, "failed to setup gcp secret manager client")
 	}
 	return client, nil
 }

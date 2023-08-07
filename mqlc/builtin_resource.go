@@ -1,13 +1,14 @@
 package mqlc
 
 import (
+	"errors"
 	"strconv"
 
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
@@ -95,7 +96,7 @@ func (f *FunctionSignature) Validate(args []*llx.Primitive, c *compiler) error {
 		if argT == types.Ref {
 			argT, err = c.dereferenceType(args[i])
 			if err != nil {
-				return errors.Wrap(err, "failed to dereference argument in validating function signature")
+				return multierr.Wrap(err, "failed to dereference argument in validating function signature")
 			}
 		}
 
@@ -124,7 +125,7 @@ func listResource(c *compiler, typ types.Type) (*resources.ResourceInfo, error) 
 func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	resource, err := listResource(c, typ)
 	if err != nil {
-		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
+		return types.Nil, multierr.Wrap(err, "failed to compile "+id)
 	}
 
 	if call == nil {
@@ -188,7 +189,7 @@ func compileResourceWhere(c *compiler, typ types.Type, ref uint64, id string, ca
 func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {
 	resource, err := listResource(c, typ)
 	if err != nil {
-		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
+		return types.Nil, multierr.Wrap(err, "failed to compile "+id)
 	}
 
 	if call == nil {
@@ -220,7 +221,7 @@ func compileResourceMap(c *compiler, typ types.Type, ref uint64, id string, call
 
 	mappedType, err := c.blockType(refs.block)
 	if err != nil {
-		return types.Nil, errors.New("called '" + id + "' with a bad function block, types don't match: " + err.Error())
+		return types.Nil, multierr.Wrap(err, "called '"+id+"' with a bad function block, types don't match")
 	}
 
 	resourceRef := c.tailRef()
@@ -438,7 +439,7 @@ func compileResourceLength(c *compiler, typ types.Type, ref uint64, id string, c
 
 	_, err := listResource(c, typ)
 	if err != nil {
-		return types.Nil, errors.New("failed to compile " + id + ": " + err.Error())
+		return types.Nil, multierr.Wrap(err, "failed to compile "+id)
 	}
 
 	resourceRef := c.tailRef()

@@ -2,11 +2,11 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"

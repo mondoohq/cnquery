@@ -2,12 +2,13 @@ package explorer
 
 import (
 	"context"
+	"errors"
 	"sort"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/checksums"
-	"go.mondoo.com/cnquery/sortx"
+	"go.mondoo.com/cnquery/utils/multierr"
+	"go.mondoo.com/cnquery/utils/sortx"
 )
 
 func (p *QueryPack) InvalidateAllChecksums() {
@@ -21,7 +22,7 @@ func (p *QueryPack) RefreshMRN(ownerMRN string) error {
 	nu, err := RefreshMRN(ownerMRN, p.Mrn, MRN_RESOURCE_QUERYPACK, p.Uid)
 	if err != nil {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
-		return errors.Wrap(err, "failed to refresh mrn for query "+p.Name)
+		return multierr.Wrap(err, "failed to refresh mrn for query "+p.Name)
 	}
 
 	p.Mrn = nu

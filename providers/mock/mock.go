@@ -1,10 +1,10 @@
 package mock
 
 import (
+	"errors"
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"

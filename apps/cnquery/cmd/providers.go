@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.mondoo.com/cnquery/cli/theme"
 	"go.mondoo.com/cnquery/providers"
-	"go.mondoo.com/cnquery/sortx"
+	"go.mondoo.com/cnquery/utils/sortx"
 )
 
 func init() {

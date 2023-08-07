@@ -2,8 +2,8 @@ package explorer
 
 import (
 	"encoding/json"
+	"errors"
 
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/checksums"
 	"gopkg.in/yaml.v3"
 )

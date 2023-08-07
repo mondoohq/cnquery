@@ -1,10 +1,11 @@
 package upstream
 
 import (
+	"errors"
 	"net/http"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/cnquery/utils/multierr"
 	"go.mondoo.com/ranger-rpc"
 	guard_cert_auth "go.mondoo.com/ranger-rpc/plugins/authentication/cert"
 	"go.mondoo.com/ranger-rpc/plugins/rangerguard/crypto"
@@ -50,7 +51,7 @@ type UpstreamClient struct {
 func (c *UpstreamConfig) InitClient() (*UpstreamClient, error) {
 	certAuth, err := NewServiceAccountRangerPlugin(c.Creds)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize client authentication")
+		return nil, multierr.Wrap(err, "could not initialize client authentication")
 	}
 
 	res := UpstreamClient{

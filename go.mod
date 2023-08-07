@@ -59,7 +59,6 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/pierrec/lz4/v4 v4.1.17
-	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
 	github.com/pkg/term v1.2.0-beta.2
 	github.com/rs/zerolog v1.30.0
@@ -267,6 +266,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polyfloyd/go-errorlint v1.4.2 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect

@@ -10,8 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-isatty"
 	"github.com/muesli/termenv"
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/logger"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 type Progress interface {
@@ -85,7 +85,7 @@ func (p *progressbar) Open() error {
 	var err error
 	p.bar, err = newRenderer()
 	if err != nil {
-		return errors.Wrap(err, "failed to initialize progressbar renderer")
+		return multierr.Wrap(err, "failed to initialize progressbar renderer")
 	}
 
 	p.wg.Add(1)

@@ -2,12 +2,11 @@ package gce
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/powershell"
@@ -36,7 +35,7 @@ func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier
 	if pf.IsFamily(inventory.FAMILY_UNIX) || pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		return NewCommandInstanceMetadata(conn, pf), nil
 	}
-	return nil, errors.New(fmt.Sprintf("gce id detector is not supported for your asset: %s %s", pf.Name, pf.Version))
+	return nil, errors.New("gce id detector is not supported for your asset: " + pf.Name + " " + pf.Version)
 }
 
 const (

@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"io"
 	"math/rand"
 	"net"
@@ -16,8 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
+	"go.mondoo.com/cnquery/utils/multierr"
 	"golang.org/x/crypto/ocsp"
 )
 
@@ -99,7 +99,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 	}
 
 	workers := sync.WaitGroup{}
-	var errs error
+	var errs multierr.MultiError
 
 	remainingCiphers := func(cipher string) bool {
 		s.sync.Lock()
@@ -136,7 +136,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 				remaining, err := s.testTLS(s.proto, s.target, curConf)
 				if err != nil {
 					s.sync.Lock()
-					errs = multierror.Append(errs, err)
+					errs.Add(err)
 					s.sync.Unlock()
 					return
 				}
@@ -171,7 +171,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 
 	workers.Wait()
 
-	return errs
+	return errs.Deduplicate()
 }
 
 // Attempts to connect to an endpoint with a given version and records
@@ -181,7 +181,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, error) {
 	conn, err := net.Dial(proto, target)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to connect to target")
+		return 0, multierr.Wrap(err, "failed to connect to target")
 	}
 	defer conn.Close()
 
@@ -192,7 +192,7 @@ func (s *Tester) testTLS(proto string, target string, conf *ScanConfig) (int, er
 
 	_, err = conn.Write(msg)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to send TLS hello")
+		return 0, multierr.Wrap(err, "failed to send TLS hello")
 	}
 
 	success, err := s.parseHello(conn, conf)
@@ -343,7 +343,7 @@ func (s *Tester) parseCertificate(data []byte, conf *ScanConfig) error {
 		cert, err := x509.ParseCertificate(rawCert)
 		if err != nil {
 			s.addError(
-				errors.Wrap(err, "failed to parse certificate (x509 parser error)").Error(),
+				multierr.Wrap(err, "failed to parse certificate (x509 parser error)").Error(),
 			)
 		} else {
 			certs = append(certs, cert)
@@ -449,7 +449,7 @@ func (s *Tester) parseHello(conn net.Conn, conf *ScanConfig) (bool, error) {
 		msg := make([]byte, msgLen)
 		_, err = io.ReadFull(reader, msg)
 		if err != nil {
-			return false, errors.Wrap(err, "Failed to read full TLS/SSL response body (type: '"+typ+"')")
+			return false, multierr.Wrap(err, "Failed to read full TLS/SSL response body (type: '"+typ+"')")
 		}
 
 		switch header[0] {
@@ -646,13 +646,13 @@ func (s *Tester) ocspRequest(cert *x509.Certificate, issuer *x509.Certificate) e
 
 	req, err := ocsp.CreateRequest(cert, issuer, &ocsp.RequestOptions{})
 	if err != nil {
-		return errors.Wrap(err, "failed to create OCSP request")
+		return multierr.Wrap(err, "failed to create OCSP request")
 	}
 
 	reqBody := bytes.NewBuffer(req)
 	res, err := http.Post(server, "application/ocsp-request", reqBody)
 	if err != nil {
-		return errors.Wrap(err, "failed to post OCSP request")
+		return multierr.Wrap(err, "failed to post OCSP request")
 	}
 
 	if res.StatusCode != 200 {
@@ -660,11 +660,11 @@ func (s *Tester) ocspRequest(cert *x509.Certificate, issuer *x509.Certificate) e
 	}
 	resp, err := io.ReadAll(res.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to read OCSP response")
+		return multierr.Wrap(err, "failed to read OCSP response")
 	}
 	ocspRes, err := ocsp.ParseResponseForCert(resp, cert, issuer)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse OCSP response")
+		return multierr.Wrap(err, "failed to parse OCSP response")
 	}
 
 	s.sync.Lock()

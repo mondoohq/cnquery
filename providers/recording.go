@@ -2,15 +2,16 @@ package providers
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"sort"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 type Recording interface {
@@ -130,7 +131,7 @@ func NewRecording(path string, opts RecordingOptions) (Recording, error) {
 	if _, err := os.Stat(path); err == nil {
 		res, err := LoadRecordingFile(path)
 		if err != nil {
-			return nil, errors.New("failed to load recording: " + err.Error())
+			return nil, multierr.Wrap(err, "failed to load recording")
 		}
 		res.Path = path
 
@@ -153,7 +154,7 @@ func NewRecording(path string, opts RecordingOptions) (Recording, error) {
 
 	} else {
 		// Schrodinger's file, may be permissions or something else...
-		return nil, errors.New("failed to access recording in '" + path + "': " + err.Error())
+		return nil, multierr.Wrap(err, "failed to access recording in '"+path+"'")
 	}
 }
 
@@ -191,11 +192,11 @@ func (r *recording) Save() error {
 		raw, err = json.Marshal(r)
 	}
 	if err != nil {
-		return errors.New("failed to marshal json for recording: " + err.Error())
+		return multierr.Wrap(err, "failed to marshal json for recording")
 	}
 
 	if err := os.WriteFile(r.Path, raw, 0o644); err != nil {
-		return errors.New("failed to store recording: " + err.Error())
+		return multierr.Wrap(err, "failed to store recording")
 	}
 
 	log.Info().Msg("stored recording in " + r.Path)

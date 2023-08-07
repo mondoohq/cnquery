@@ -9,7 +9,7 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/cnquery/sortx"
+	"go.mondoo.com/cnquery/utils/sortx"
 	"go.mondoo.com/cnquery/types"
 )
 

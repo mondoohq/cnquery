@@ -3,9 +3,8 @@ package stringx_test
 import (
 	"testing"
 
-	"go.mondoo.com/cnquery/stringx"
-
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/utils/stringx"
 )
 
 func TestDedupStringArray(t *testing.T) {

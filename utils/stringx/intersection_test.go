@@ -1,16 +1,17 @@
-package stringx
+package stringx_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/cnquery/utils/stringx"
 )
 
 func TestIntersection(t *testing.T) {
 	a := []string{"a", "b", "c"}
 	b := []string{"b", "c", "d", "f"}
 
-	actual := Intersection(a, b)
+	actual := stringx.Intersection(a, b)
 	expected := []string{"b", "c"}
 	assert.ElementsMatch(t, actual, expected)
 }
@@ -19,6 +20,6 @@ func TestIntersectionNoOverlap(t *testing.T) {
 	a := []string{"a", "b", "c"}
 	b := []string{"d", "f"}
 
-	actual := Intersection(a, b)
+	actual := stringx.Intersection(a, b)
 	assert.Empty(t, actual)
 }
