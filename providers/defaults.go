@@ -36,4 +36,15 @@ var DefaultProviders Providers = map[string]*Provider{
 			},
 		},
 	},
+	"network": {
+		Provider: &plugin.Provider{
+			Name: "network",
+			Connectors: []plugin.Connector{
+				{
+					Name:  "host",
+					Short: "your local system",
+				},
+			},
+		},
+	},
 }
