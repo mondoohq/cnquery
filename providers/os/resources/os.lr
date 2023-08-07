@@ -957,6 +957,27 @@ yum.repo {
   enabled() bool
 }
 
+// Windows registry key
+registrykey @defaults("path") {
+  init(path string)
+  // Registry key path
+  path string
+  exists() bool
+  // Registry key properties
+  properties() map[string]string
+  // Registry key children
+  children() []string
+}
+
+// Windows registry key property
+registrykey.property @defaults("path name") {
+  init(path string, name string)
+  path string
+  name string
+  exists() bool
+  value(exists) string
+}
+
 // Container Image
 container.image {
   // Image reference
