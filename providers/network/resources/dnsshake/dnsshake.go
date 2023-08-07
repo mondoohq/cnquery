@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
-	"github.com/hashicorp/go-multierror"
 	"github.com/miekg/dns"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 type DnsClient struct {
@@ -158,7 +158,7 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 	}
 
 	workers := sync.WaitGroup{}
-	var errs error
+	var errs multierr.Errors
 
 	res := map[string]DnsRecord{}
 	for i := range dnsTypes {
@@ -171,7 +171,7 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 			records, err := d.queryDnsType(d.fqdn, dnsType)
 			if err != nil {
 				d.sync.Lock()
-				errs = multierror.Append(errs, err)
+				errs.Add(err)
 				d.sync.Unlock()
 				return
 			}
@@ -185,7 +185,7 @@ func (d *DnsClient) Query(dnsTypes ...string) (map[string]DnsRecord, error) {
 	}
 
 	workers.Wait()
-	return res, errs
+	return res, errs.Deduplicate()
 }
 
 func (d *DnsClient) queryDnsType(fqdn string, t string) (map[string]DnsRecord, error) {

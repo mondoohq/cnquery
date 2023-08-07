@@ -1,9 +1,9 @@
 package scan
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 type Reporter interface {
@@ -70,10 +70,9 @@ func (r *AggregateReporter) Reports() *explorer.ReportCollection {
 }
 
 func (r *AggregateReporter) Error() error {
-	var err error
-
+	var err multierr.Errors
 	for _, curError := range r.assetErrors {
-		err = multierror.Append(err, curError)
+		err.Add(curError)
 	}
-	return err
+	return err.Deduplicate()
 }

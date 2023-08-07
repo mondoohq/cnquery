@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/sortx"
 )
 
 func intKeys(m map[int]interface{}) []int {

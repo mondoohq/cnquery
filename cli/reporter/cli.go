@@ -10,7 +10,7 @@ import (
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mrn"
-	"go.mondoo.com/cnquery/stringx"
+	"go.mondoo.com/cnquery/utils/stringx"
 )
 
 type cliReporter struct {

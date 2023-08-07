@@ -2,13 +2,14 @@ package scan
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 type fetcher struct {
@@ -38,11 +39,11 @@ func (f *fetcher) fetchBundles(ctx context.Context, schema llx.Schema, urls ...s
 
 		// need to generate MRNs for everything
 		if _, err := cur.Compile(ctx, schema); err != nil {
-			return nil, errors.Wrap(err, "failed to compile fetched bundle")
+			return nil, multierr.Wrap(err, "failed to compile fetched bundle")
 		}
 
 		if err = res.AddBundle(cur); err != nil {
-			return nil, errors.Wrap(err, "failed to add fetched bundle")
+			return nil, multierr.Wrap(err, "failed to add fetched bundle")
 		}
 	}
 
@@ -59,7 +60,7 @@ func (f *fetcher) fetchBundle(url string) (*explorer.Bundle, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to set up request to fetch bundle")
+		return nil, multierr.Wrap(err, "failed to set up request to fetch bundle")
 	}
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; cnquery/"+cnquery.Version+"; +http://www.mondoo.com)")

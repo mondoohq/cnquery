@@ -1,10 +1,9 @@
 package providers
 
 import (
-	"strings"
+	"errors"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -13,6 +12,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 	protobuf "google.golang.org/protobuf/proto"
 )
 
@@ -134,7 +134,7 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 		return errors.New("asset has no connections, can't detect provider")
 	}
 
-	var errs []string
+	var errs multierr.Errors
 	for i := range asset.Connections {
 		conn := asset.Connections[i]
 		if conn.Type == "" {
@@ -143,14 +143,14 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 
 		provider, err := EnsureProvider(r.coordinator.Providers, conn.Type)
 		if err != nil {
-			errs = append(errs, err.Error())
+			errs.Add(err)
 			continue
 		}
 
 		return r.UseProvider(provider.ID)
 	}
 
-	return errors.New("cannot find provider for this asset (" + strings.Join(errs, ",") + ")")
+	return multierr.Wrap(errs.Deduplicate(), "cannot find provider for this asset")
 }
 
 // Connect to an asset using the main provider
@@ -177,7 +177,7 @@ func (r *Runtime) Connect(req *plugin.ConnectReq) error {
 		},
 	}, r))
 	if err != nil {
-		return errors.New("failed to resolve inventory for connection: " + err.Error())
+		return multierr.Wrap(err, "failed to resolve inventory for connection")
 	}
 
 	inventoryAsset := manager.GetAssets()[0]
@@ -308,7 +308,7 @@ func (r *Runtime) watchAndUpdate(resource string, resourceID string, field strin
 			}},
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to create reference resource "+resource+" in provider "+provider.Instance.Name)
+			return nil, multierr.Wrap(err, "failed to create reference resource "+resource+" in provider "+provider.Instance.Name)
 		}
 	}
 
@@ -423,7 +423,7 @@ func (r *Runtime) SetRecording(recording *recording, providerID string, readOnly
 			HasRecording: true,
 		}, &callbacks)
 		if err != nil {
-			return errors.New("failed to set mock connection for recording: " + err.Error())
+			return multierr.Wrap(err, "failed to set mock connection for recording")
 		}
 		provider.Connection = res
 	}
@@ -450,7 +450,7 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 
 	res, err := r.addProvider(info.Provider)
 	if err != nil {
-		return nil, nil, errors.New("failed to start provider '" + info.Provider + "': " + err.Error())
+		return nil, nil, multierr.Wrap(err, "failed to start provider '"+info.Provider+"'")
 	}
 
 	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{
@@ -481,7 +481,7 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 	res, err := r.addProvider(fieldInfo.Provider)
 	if err != nil {
-		return nil, nil, nil, errors.New("failed to start provider '" + fieldInfo.Provider + "': " + err.Error())
+		return nil, nil, nil, multierr.Wrap(err, "failed to start provider '"+fieldInfo.Provider+"'")
 	}
 
 	conn, err := res.Instance.Plugin.Connect(&plugin.ConnectReq{

@@ -2,12 +2,13 @@ package gcpberglas
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	berglas "github.com/GoogleCloudPlatform/berglas/pkg/berglas"
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/providers-sdk/v1/vault"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 type storageType string
@@ -57,7 +58,7 @@ func (v *Vault) About(context.Context, *vault.Empty) (*vault.VaultInfo, error) {
 func (v *Vault) client(ctx context.Context) (*berglas.Client, error) {
 	client, err := berglas.New(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to setup gcp berglas client")
+		return nil, multierr.Wrap(err, "failed to setup gcp berglas client")
 	}
 	return client, nil
 }

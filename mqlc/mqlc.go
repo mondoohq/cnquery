@@ -15,8 +15,8 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc/parser"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
-	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/sortx"
 )
 
 type variable struct {

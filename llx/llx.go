@@ -9,10 +9,10 @@ import (
 	"sync"
 
 	uuid "github.com/gofrs/uuid"
-	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 // ResultCallback function type
@@ -615,10 +615,9 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 	}
 
 	err := b.runFunctionBlocks([][]*RawData{fargs}, fref, func(results []arrayBlockCallResult, errs []error) {
-		var anyError error
-		if len(errs) > 0 {
-			anyError = multierror.Append(anyError, errs...)
-		}
+		var err multierr.Errors
+		err.Add(errs...)
+
 		if len(results) > 0 {
 			fun := b.ctx.code.Block(fref)
 			if fun.SingleValue {
@@ -632,7 +631,7 @@ func (b *blockExecutor) runBlock(bind *RawData, functionRef *Primitive, args []*
 		}
 
 		data := results[0].toRawData()
-		data.Error = anyError
+		data.Error = err.Deduplicate()
 		blockResult := data.Value.(map[string]interface{})
 
 		if bind != nil && bind.Type.IsResource() {

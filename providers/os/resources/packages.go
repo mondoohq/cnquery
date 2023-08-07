@@ -1,14 +1,15 @@
 package resources
 
 import (
+	"errors"
 	"regexp"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/packages"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 var PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)
@@ -33,7 +34,7 @@ func (x *mqlPackage) init(args map[string]interface{}) (map[string]interface{}, 
 
 	raw, err := CreateResource(x.MqlRuntime, "packages", nil)
 	if err != nil {
-		return nil, nil, errors.New("cannot get list of packages: " + err.Error())
+		return nil, nil, multierr.Wrap(err, "cannot get list of packages")
 	}
 	packages := raw.(*mqlPackages)
 
@@ -83,7 +84,7 @@ func (x *mqlPackages) list() ([]interface{}, error) {
 	// retrieve all system packages
 	osPkgs, err := pm.List()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not retrieve package list for platform")
+		return nil, multierr.Wrap(err, "could not retrieve package list for platform")
 	}
 
 	// TODO: do we really need to make this a blocking call, we could update available updates async

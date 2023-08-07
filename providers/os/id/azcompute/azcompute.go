@@ -2,15 +2,15 @@ package azcompute
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"strings"
 
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"go.mondoo.com/cnquery/providers/os/resources/powershell"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 const (
@@ -39,7 +39,7 @@ func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier
 	if pf.IsFamily(inventory.FAMILY_UNIX) || pf.IsFamily(inventory.FAMILY_WINDOWS) {
 		return &commandInstanceMetadata{conn, pf}, nil
 	}
-	return nil, errors.New(fmt.Sprintf("azure compute id detector is not supported for your asset: %s %s", pf.Name, pf.Version))
+	return nil, errors.New("azure compute id detector is not supported for your asset: " + pf.Name + " " + pf.Version)
 }
 
 type commandInstanceMetadata struct {
@@ -79,7 +79,7 @@ func (m *commandInstanceMetadata) Identify() (Identity, error) {
 	// parse into struct
 	md := instanceMetadata{}
 	if err := json.NewDecoder(strings.NewReader(instanceDocument)).Decode(&md); err != nil {
-		return Identity{}, errors.Wrap(err, "failed to decode Azure Instance Metadata")
+		return Identity{}, multierr.Wrap(err, "failed to decode Azure Instance Metadata")
 	}
 
 	return Identity{

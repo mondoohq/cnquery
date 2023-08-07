@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 type wrapResolved struct {
@@ -85,7 +85,7 @@ func (db *Db) UpdateData(ctx context.Context, assetMrn string, data map[string]*
 	executionJob := resolved.ExecutionJob
 
 	res := make(map[string]types.Type, len(data))
-	var errList error
+	var errs multierr.Errors
 	for dpChecksum, val := range data {
 		info, ok := executionJob.Datapoints[dpChecksum]
 		if !ok {
@@ -102,7 +102,7 @@ func (db *Db) UpdateData(ctx context.Context, assetMrn string, data map[string]*
 				Str("received", types.Type(val.Data.Type).Label()).
 				Msg("resolver.db> failed to store data, types don't match")
 
-			errList = multierror.Append(errList, fmt.Errorf("failed to store data for %q, %w: expected %s, got %s",
+			errs.Add(fmt.Errorf("failed to store data for %q, %w: expected %s, got %s",
 				dpChecksum, errTypesDontMatch, types.Type(info.Type).Label(), types.Type(val.Data.Type).Label()))
 
 			continue
@@ -110,7 +110,7 @@ func (db *Db) UpdateData(ctx context.Context, assetMrn string, data map[string]*
 
 		err := db.setDatum(ctx, assetMrn, dpChecksum, val)
 		if err != nil {
-			errList = multierror.Append(errList, err)
+			errs.Add(err)
 			continue
 		}
 
@@ -119,10 +119,9 @@ func (db *Db) UpdateData(ctx context.Context, assetMrn string, data map[string]*
 		res[dpChecksum] = types.Type(info.Type)
 	}
 
-	if errList != nil {
-		return nil, errList
+	if !errs.IsEmpty() {
+		return nil, errs.Deduplicate()
 	}
-
 	return res, nil
 }
 

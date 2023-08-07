@@ -14,8 +14,8 @@ import (
 	"go.mondoo.com/cnquery/providers/network/connection"
 	"go.mondoo.com/cnquery/providers/network/resources/dnsshake"
 	"go.mondoo.com/cnquery/providers/network/resources/domain"
-	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/sortx"
 )
 
 func (d *mqlDomainName) id() (string, error) {

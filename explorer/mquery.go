@@ -3,18 +3,19 @@ package explorer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/checksums"
 	llx "go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mrn"
-	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
+	"go.mondoo.com/cnquery/utils/sortx"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -68,7 +69,7 @@ func (m *Mquery) RefreshMRN(ownerMRN string) error {
 	nu, err := RefreshMRN(ownerMRN, m.Mrn, MRN_RESOURCE_QUERY, m.Uid)
 	if err != nil {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", m.Uid).Msg("failed to refresh mrn")
-		return errors.Wrap(err, "failed to refresh mrn for query "+m.Title)
+		return multierr.Wrap(err, "failed to refresh mrn for query "+m.Title)
 	}
 
 	m.Mrn = nu
@@ -82,7 +83,7 @@ func (m *ObjectRef) RefreshMRN(ownerMRN string) error {
 	nu, err := RefreshMRN(ownerMRN, m.Mrn, MRN_RESOURCE_QUERY, m.Uid)
 	if err != nil {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", m.Uid).Msg("failed to refresh mrn")
-		return errors.Wrap(err, "failed to refresh mrn for query reference "+m.Uid)
+		return multierr.Wrap(err, "failed to refresh mrn for query reference "+m.Uid)
 	}
 
 	m.Mrn = nu
@@ -237,7 +238,7 @@ func (m *Mquery) refreshChecksumAndType(queries map[string]*Mquery, props map[st
 
 	bundle, err := m.Compile(localProps, schema)
 	if err != nil {
-		return bundle, errors.New("failed to compile query '" + m.Mql + "': " + err.Error())
+		return bundle, multierr.Wrap(err, "failed to compile query '"+m.Mql+"'")
 	}
 
 	if bundle.GetCodeV2().GetId() == "" {
@@ -412,7 +413,7 @@ func (r *Remediation) MarshalJSON() ([]byte, error) {
 func ChecksumFilters(queries []*Mquery, schema llx.Schema) (string, error) {
 	for i := range queries {
 		if _, err := queries[i].refreshChecksumAndType(nil, nil, schema); err != nil {
-			return "", errors.New("failed to compile query: " + err.Error())
+			return "", multierr.Wrap(err, "failed to compile query")
 		}
 	}
 

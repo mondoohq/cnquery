@@ -3,13 +3,14 @@ package explorer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/cockroachdb/errors"
 	"go.mondoo.com/cnquery/checksums"
 	llx "go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 // NewFilters creates a Filters object from a simple list of MQL snippets
@@ -173,7 +174,7 @@ func (s *Filters) AddQueryFiltersFn(ctx context.Context, query *Mquery, lookupQu
 		mrn := query.Variants[i].Mrn
 		variant, err := lookupQuery(ctx, mrn)
 		if err != nil {
-			return errors.Wrap(err, "cannot find query variant "+mrn)
+			return multierr.Wrap(err, "cannot find query variant "+mrn)
 		}
 		s.AddQueryFiltersFn(ctx, variant, lookupQuery)
 	}

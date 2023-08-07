@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/mattn/go-isatty"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"github.com/spf13/viper"
@@ -26,6 +26,7 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
 	"go.mondoo.com/cnquery/providers-sdk/v1/upstream"
+	"go.mondoo.com/cnquery/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/protobuf/proto"
@@ -80,9 +81,11 @@ func (s *LocalScanner) Run(ctx context.Context, job *Job) (*explorer.ReportColle
 	reports, _, err := s.distributeJob(job, ctx, s.upstream)
 	if err != nil {
 		if code := status.Code(err); code == codes.Unauthenticated {
-			return nil, errors.Wrapf(err,
-				"The Mondoo Platform credentials provided at %s didn't successfully authenticate with Mondoo Platform. Please re-authenticate with Mondoo Platform. To learn how, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration.",
-				viper.ConfigFileUsed())
+			return nil, multierr.Wrap(err,
+				"The Mondoo Platform credentials provided at "+viper.ConfigFileUsed()+
+					" didn't successfully authenticate with Mondoo Platform. "+
+					"Please re-authenticate with Mondoo Platform. "+
+					"To learn how, read https://mondoo.com/docs/cnspec/cnspec-adv-install/registration.")
 		}
 		return nil, err
 	}
@@ -208,7 +211,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 				randID := "//" + explorer.SERVICE_NAME + "/" + explorer.MRN_RESOURCE_ASSET + "/" + ksuid.New().String()
 				x, err := mrn.NewMRN(randID)
 				if err != nil {
-					return nil, false, errors.Wrap(err, "failed to generate a random asset MRN")
+					return nil, false, multierr.Wrap(err, "failed to generate a random asset MRN")
 				}
 				cur.Mrn = x.String()
 			}
@@ -239,7 +242,7 @@ func (s *LocalScanner) distributeJob(job *Job, ctx context.Context, upstream *up
 		var err error
 		multiprogress, err = progress.NewMultiProgressBars(progressBarElements, orderedKeys)
 		if err != nil {
-			return nil, false, errors.Wrap(err, "failed to create progress bars")
+			return nil, false, multierr.Wrap(err, "failed to create progress bars")
 		}
 	} else {
 		// TODO: adjust naming
@@ -456,7 +459,7 @@ func (s *localAssetScanner) ensureBundle() error {
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "failed to run asset detection query")
+		return multierr.Wrap(err, "failed to run asset detection query")
 	}
 
 	// FIXME: remove hardcoded lookup and use embedded datastructures instead

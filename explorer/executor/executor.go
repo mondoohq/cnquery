@@ -2,15 +2,15 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/cli/progress"
 	"go.mondoo.com/cnquery/explorer"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 func RunExecutionJob(
@@ -127,7 +127,7 @@ func (e *instance) runCode(queries map[string]*explorer.ExecutionQuery, timeout 
 		}
 	}
 
-	var errs error
+	var errs multierr.Errors
 	for i := range queries {
 		query := queries[i]
 		if len(query.Properties) != 0 {
@@ -135,11 +135,11 @@ func (e *instance) runCode(queries map[string]*explorer.ExecutionQuery, timeout 
 		}
 
 		if err := e.runQuery(query.Code, nil); err != nil {
-			multierror.Append(errs, err)
+			errs.Add(err)
 		}
 	}
 
-	return errs
+	return errs.Deduplicate()
 }
 
 // One instance of the executor. May be returned but not instantiated
@@ -349,7 +349,7 @@ func (e *instance) collect(res *llx.RawResult) {
 
 		if fatalErr != nil {
 			e.mutex.Lock()
-			e.errors = multierror.Append(e.errors, fatalErr)
+			e.errors = errors.Join(e.errors, fatalErr)
 			e.isAborted = true
 			isAborted = true
 			e.mutex.Unlock()

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"go.mondoo.com/cnquery/llx"
-	"go.mondoo.com/cnquery/sortx"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/sortx"
 )
 
 // Results prints a full query with all data points
@@ -648,9 +648,8 @@ func (print *Printer) Data(typ types.Type, data interface{}, codeID string, bund
 func (print *Printer) DataWithLabel(r *llx.RawData, codeID string, bundle *llx.CodeBundle, indent string) string {
 	b := strings.Builder{}
 	if r.Error != nil {
-		b.WriteString(print.Error(
-			fmt.Sprintf("Query encountered errors:\n%s\n",
-				strings.TrimSpace(r.Error.Error()))))
+		b.WriteString(print.Error(strings.TrimSpace(r.Error.Error())))
+		b.WriteByte('\n')
 	}
 
 	b.WriteString(print.label(codeID, bundle, r.Type.IsResource()))

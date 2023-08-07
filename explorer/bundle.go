@@ -2,17 +2,18 @@ package explorer
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
 	"go.mondoo.com/cnquery/checksums"
 	llx "go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mrn"
+	"go.mondoo.com/cnquery/utils/multierr"
 	"sigs.k8s.io/yaml"
 )
 
@@ -70,7 +71,7 @@ func walkBundleFiles(filenames []string) ([]string, error) {
 		filename := filenames[i]
 		fi, err := os.Stat(filename)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not load bundle file: "+filename)
+			return nil, multierr.Wrap(err, "could not load bundle file: "+filename)
 		}
 
 		if fi.IsDir() {
@@ -108,7 +109,7 @@ func aggregateFilesToBundle(paths []string) (*Bundle, error) {
 		path := paths[i]
 		bundle, err := bundleFromSingleFile(path)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not load file: "+path)
+			return nil, multierr.Wrap(err, "could not load file: "+path)
 		}
 		combineBundles(mergedBundle, bundle)
 	}
@@ -245,11 +246,11 @@ func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, er
 
 		err := pack.RefreshMRN(ownerMrn)
 		if err != nil {
-			return nil, errors.New("failed to refresh query pack " + pack.Mrn + ": " + err.Error())
+			return nil, multierr.Wrap(err, "failed to refresh query pack "+pack.Mrn)
 		}
 
 		if err = pack.Filters.Compile(ownerMrn, schema); err != nil {
-			return nil, errors.Wrap(err, "failed to compile querypack filters")
+			return nil, multierr.Wrap(err, "failed to compile querypack filters")
 		}
 		pack.ComputedFilters.AddFilters(pack.Filters)
 
@@ -262,7 +263,7 @@ func (p *Bundle) Compile(ctx context.Context, schema llx.Schema) (*BundleMap, er
 
 			// When filters are initially added they haven't been compiled
 			if err = group.Filters.Compile(ownerMrn, schema); err != nil {
-				return nil, errors.Wrap(err, "failed to compile querypack filters")
+				return nil, multierr.Wrap(err, "failed to compile querypack filters")
 			}
 			pack.ComputedFilters.AddFilters(group.Filters)
 
@@ -405,7 +406,7 @@ func (c *bundleCache) precompileQuery(query *Mquery, pack *QueryPack) {
 func (c *bundleCache) compileQuery(query *Mquery) {
 	_, err := query.RefreshChecksumAndType(c.lookupQuery, c.lookupProp, c.schema)
 	if err != nil {
-		c.errors = append(c.errors, errors.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
+		c.errors = append(c.errors, multierr.Wrap(err, "failed to validate query '"+query.Mrn+"'"))
 	}
 }
 
@@ -426,7 +427,7 @@ func (c *bundleCache) compileProp(prop *Property) error {
 	} else {
 		m, err := mrn.NewMRN(prop.Mrn)
 		if err != nil {
-			return errors.Wrap(err, "failed to compile prop, invalid mrn: "+prop.Mrn)
+			return multierr.Wrap(err, "failed to compile prop, invalid mrn: "+prop.Mrn)
 		}
 
 		name = m.Basename()

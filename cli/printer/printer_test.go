@@ -9,7 +9,7 @@ import (
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/logger"
 	"go.mondoo.com/cnquery/providers-sdk/v1/testutils"
-	"go.mondoo.com/cnquery/sortx"
+	"go.mondoo.com/cnquery/utils/sortx"
 )
 
 var x = testutils.InitTester(testutils.LinuxMock("../../providers-sdk/v1/testutils"))
@@ -92,8 +92,7 @@ func TestPrinter(t *testing.T) {
 			"file('zzz') { content }",
 			"",
 			[]string{
-				"error: Query encountered errors:\n" +
-					"1 error occurred:\n" +
+				"error: 1 error occurred:\n" +
 					"\t* file 'zzz' not found\n" +
 					"file: {\n  content: error: file 'zzz' not found\n}",
 			},

@@ -2,13 +2,14 @@ package explorer
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	llx "go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/mrn"
+	"go.mondoo.com/cnquery/utils/multierr"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -218,7 +219,7 @@ func (s *LocalServices) addQueryToJob(ctx context.Context, query *Mquery, job *E
 
 			code, err := prop.Compile(nil, s.runtime.Schema())
 			if err != nil {
-				return errors.Wrap(err, "failed to compile property for query "+query.Mrn)
+				return multierr.Wrap(err, "failed to compile property for query "+query.Mrn)
 			}
 			job.Queries[prop.CodeId] = &ExecutionQuery{
 				Query:    prop.Mql,

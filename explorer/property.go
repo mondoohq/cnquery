@@ -2,8 +2,8 @@ package explorer
 
 import (
 	"context"
+	"errors"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery"
 	"go.mondoo.com/cnquery/checksums"
@@ -11,6 +11,7 @@ import (
 	"go.mondoo.com/cnquery/mqlc"
 	"go.mondoo.com/cnquery/mrn"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -20,7 +21,7 @@ func (p *Property) RefreshMRN(ownerMRN string) error {
 	nu, err := RefreshMRN(ownerMRN, p.Mrn, MRN_RESOURCE_QUERY, p.Uid)
 	if err != nil {
 		log.Error().Err(err).Str("owner", ownerMRN).Str("uid", p.Uid).Msg("failed to refresh mrn")
-		return errors.Wrap(err, "failed to refresh mrn for query "+p.Title)
+		return multierr.Wrap(err, "failed to refresh mrn for query "+p.Title)
 	}
 
 	p.Mrn = nu
@@ -41,7 +42,7 @@ func (p *Property) RefreshChecksumAndType(schema llx.Schema) (*llx.CodeBundle, e
 func (p *Property) refreshChecksumAndType(schema llx.Schema) (*llx.CodeBundle, error) {
 	bundle, err := p.Compile(nil, schema)
 	if err != nil {
-		return bundle, errors.New("failed to compile property '" + p.Mql + "': " + err.Error())
+		return bundle, multierr.Wrap(err, "failed to compile property '"+p.Mql+"'")
 	}
 
 	if bundle.GetCodeV2().GetId() == "" {

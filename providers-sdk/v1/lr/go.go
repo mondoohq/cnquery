@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 // Go produced go code for the LR file
@@ -55,7 +55,7 @@ func Go(packageName string, ast *LR, collector *Collector) (string, error) {
 	}
 
 	header := fmt.Sprintf(goHeader, coreImports, imports)
-	return header + o.data, nil
+	return header + o.data, o.errors.Deduplicate()
 }
 
 func hasTimeImports(ast *LR, b *goBuilder) bool {
@@ -101,7 +101,7 @@ type goBuilder struct {
 	data         string
 	collector    *Collector
 	ast          *LR
-	errors       error
+	errors       multierr.Errors
 	name         string
 	providerName string
 	packsInUse   map[string]struct{}
@@ -537,8 +537,7 @@ func resource2goname(s string, b *goBuilder) string {
 		resources, ok := b.ast.imports[pack[0]]
 		if ok {
 			if _, ok := resources[pack[1]]; !ok {
-				b.errors = multierror.Append(b.errors,
-					errors.New("cannot find resource "+pack[1]+" in imported resource pack "+pack[0]))
+				b.errors.Add(errors.New("cannot find resource " + pack[1] + " in imported resource pack " + pack[0]))
 			}
 			name = pack[0] + "." + strings.Title(string(
 				reMethodName.ReplaceAllFunc([]byte(pack[1]), capitalizeDot),

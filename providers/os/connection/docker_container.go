@@ -2,9 +2,9 @@ package connection
 
 import (
 	"context"
+	"errors"
 
 	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
 	"go.mondoo.com/cnquery/providers/os/connection/shared"
