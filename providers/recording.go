@@ -6,7 +6,6 @@ import (
 	"os"
 	"sort"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
@@ -505,17 +504,17 @@ func (a assetInfo) ToInventory() *inventory.Asset {
 
 func RawDataArgsToResultArgs(args map[string]*llx.RawData) (map[string]*llx.Result, error) {
 	all := make(map[string]*llx.Result, len(args))
-	var err error
+	var err multierr.Errors
 	for k, v := range args {
 		res := v.Result()
 		if res.Error != "" {
-			err = multierror.Append(err, errors.New("failed to convert '"+k+"': "+res.Error))
+			err.Add(errors.New("failed to convert '" + k + "': " + res.Error))
 		} else {
 			all[k] = res
 		}
 	}
 
-	return all, err
+	return all, err.Deduplicate()
 }
 
 func PrimitiveArgsToResultArgs(args map[string]*llx.Primitive) map[string]*llx.Result {

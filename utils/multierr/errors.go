@@ -26,18 +26,18 @@ func Wrap(err error, message string) error {
 	}
 }
 
-type MultiError struct {
+type Errors struct {
 	errors []error
 }
 
-func (m *MultiError) Add(err error) {
+func (m *Errors) Add(err ...error) {
 	if err == nil {
 		return
 	}
-	m.errors = append(m.errors, err)
+	m.errors = append(m.errors, err...)
 }
 
-func (m *MultiError) Error() string {
+func (m *Errors) Error() string {
 	var res strings.Builder
 
 	n := strconv.Itoa(len(m.errors))
@@ -48,14 +48,14 @@ func (m *MultiError) Error() string {
 	}
 
 	for i := range m.errors {
-		res.WriteString("\t * ")
+		res.WriteString("\t* ")
 		res.WriteString(m.errors[i].Error())
 		res.WriteByte('\n')
 	}
 	return res.String()
 }
 
-func (m MultiError) Deduplicate() error {
+func (m Errors) Deduplicate() error {
 	if len(m.errors) == 0 {
 		return nil
 	}
@@ -72,5 +72,9 @@ func (m MultiError) Deduplicate() error {
 		res[i] = v
 		i++
 	}
-	return &MultiError{errors: res}
+	return &Errors{errors: res}
+}
+
+func (m Errors) IsEmpty() bool {
+	return len(m.errors) == 0
 }

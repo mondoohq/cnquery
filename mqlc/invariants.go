@@ -3,8 +3,8 @@ package mqlc
 import (
 	"fmt"
 
-	"github.com/hashicorp/go-multierror"
 	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 // An Invariant is a condition that we expect compiled code to hold.
@@ -30,17 +30,17 @@ func (e InvariantFailed) Error() string {
 type InvariantList []Invariant
 
 func (l InvariantList) Check(cb *llx.CodeBundle) error {
-	var err error
+	var err multierr.Errors
 	for _, i := range l {
 		if !i.Checker(cb) {
-			err = multierror.Append(err, InvariantFailed{
+			err.Add(InvariantFailed{
 				ShortName: i.ShortName,
 				Source:    cb.Source,
 			})
 		}
 	}
 
-	return err
+	return err.Deduplicate()
 }
 
 var Invariants = InvariantList{

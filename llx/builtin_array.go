@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/hashicorp/go-multierror"
 	"go.mondoo.com/cnquery/types"
+	"go.mondoo.com/cnquery/utils/multierr"
 )
 
 var arrayBlockType = types.Array(types.Block)
@@ -141,31 +141,22 @@ func arrayBlockListV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64)
 	}
 
 	err = e.runFunctionBlocks(argList, fref, func(results []arrayBlockCallResult, errs []error) {
-		var anyError error
-		allResults := make([]interface{}, len(arr))
+		// This is quite heavy handed. If any of the block calls have an error, the whole
+		// thing becomes errored. If we don't do this, then we can have more fine grained
+		// errors. For example, if only one item in the list has errors, the block for that
+		// item will have an entrypoint with an error
+		var anyError multierr.Errors
+		anyError.Add(errs...)
 
+		allResults := make([]interface{}, len(arr))
 		for i, rd := range results {
 			allResults[i] = rd.toRawData().Value
 		}
-		if len(errs) > 0 {
-			dedupErrs := []error{}
-			dedupErrsMap := map[string]struct{}{}
-			for _, e := range errs {
-				if _, ok := dedupErrsMap[e.Error()]; !ok {
-					dedupErrs = append(dedupErrs, e)
-					dedupErrsMap[e.Error()] = struct{}{}
-				}
-			}
-			// This is quite heavy handed. If any of the block calls have an error, the whole
-			// thing becomes errored. If we don't do this, then we can have more fine grained
-			// errors. For example, if only one item in the list has errors, the block for that
-			// item will have an entrypoint with an error
-			anyError = multierror.Append(nil, dedupErrs...)
-		}
+
 		data := &RawData{
 			Type:  arrayBlockType,
 			Value: allResults,
-			Error: anyError,
+			Error: anyError.Deduplicate(),
 		}
 		e.cache.Store(ref, &stepCache{
 			Result:   data,

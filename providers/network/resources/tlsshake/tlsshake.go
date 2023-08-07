@@ -99,7 +99,7 @@ func (s *Tester) Test(conf ScanConfig) error {
 	}
 
 	workers := sync.WaitGroup{}
-	var errs multierr.MultiError
+	var errs multierr.Errors
 
 	remainingCiphers := func(cipher string) bool {
 		s.sync.Lock()

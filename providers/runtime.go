@@ -134,7 +134,7 @@ func (r *Runtime) DetectProvider(asset *inventory.Asset) error {
 		return errors.New("asset has no connections, can't detect provider")
 	}
 
-	var errs multierr.MultiError
+	var errs multierr.Errors
 	for i := range asset.Connections {
 		conn := asset.Connections[i]
 		if conn.Type == "" {
