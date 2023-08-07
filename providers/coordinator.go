@@ -226,16 +226,23 @@ func (c *coordinator) Shutdown() {
 	c.mutex.Unlock()
 }
 
-func (c *coordinator) LoadSchema(name string) *resources.Schema {
+func (c *coordinator) LoadSchema(name string) (*resources.Schema, error) {
 	if x, ok := builtinProviders[name]; ok {
-		return x.Runtime.Schema
+		return x.Runtime.Schema, nil
 	}
 
 	provider, ok := c.Providers[name]
 	if !ok {
-		return nil
+		return nil, errors.New("cannot find provider '" + name + "'")
 	}
-	return provider.Schema
+
+	if provider.Schema == nil {
+		if err := provider.LoadResources(); err != nil {
+			return nil, errors.Wrap(err, "failed to load provider '"+name+"' resources info")
+		}
+	}
+
+	return provider.Schema, nil
 }
 
 func addColorConfig(cmd *exec.Cmd) {

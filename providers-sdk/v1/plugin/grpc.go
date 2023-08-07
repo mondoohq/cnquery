@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"errors"
-
 	plugin "github.com/hashicorp/go-plugin"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -40,7 +38,12 @@ func (m *GRPCClient) Connect(req *ConnectReq, callback ProviderCallback) (*Conne
 
 	res, err := m.client.Connect(context.Background(), req)
 
-	s.Stop()
+	// Note: the reverse connection is not closed explicitly. It stays open
+	// until the process is eventually stopped. Connect should only be called
+	// once per connected asset, thus the reverse connection is also only
+	// open for the duration of said connection.
+	// In the future, we may want to explicitly disconnect and re-use providers.
+
 	return res, err
 }
 
@@ -69,7 +72,9 @@ func (m *GRPCServer) Connect(ctx context.Context, req *ConnectReq) (*ConnectRes,
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+
+	// Note: we do not close the connection from this side. It will get closed
+	// when the plugin caller decides to kill the process.
 
 	a := &GRPCProviderCallbackClient{NewProviderCallbackClient(conn)}
 	return m.Impl.Connect(req, a)
@@ -87,15 +92,16 @@ func (m *GRPCServer) StoreData(ctx context.Context, req *StoreReq) (*StoreRes, e
 type GRPCProviderCallbackClient struct{ client ProviderCallbackClient }
 
 func (m *GRPCProviderCallbackClient) Collect(req *DataRes) error {
-	return errors.New("collect data callback is not implemented for this provider")
+	_, err := m.client.Collect(context.Background(), req)
+	return err
 }
 
 func (m *GRPCProviderCallbackClient) GetRecording(req *DataReq) (*ResourceData, error) {
-	return nil, errors.New("get recording callback is not implemented for this provider")
+	return m.client.GetRecording(context.Background(), req)
 }
 
 func (m *GRPCProviderCallbackClient) GetData(req *DataReq) (*DataRes, error) {
-	return nil, errors.New("get data callback is not implemented for this provider")
+	return m.client.GetData(context.Background(), req)
 }
 
 // Here is the gRPC server that GRPCClient talks to.
