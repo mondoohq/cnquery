@@ -1,35 +1,27 @@
-package os
+package resources
 
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
+
+	"go.mondoo.com/cnquery/llx"
+	"go.mondoo.com/cnquery/types"
 )
 
 func (l *mqlLsblk) id() (string, error) {
 	return "lsblk", nil
 }
 
-func (l *mqlLsblk) GetList() ([]interface{}, error) {
-	osProvider, err := osProvider(l.MotorRuntime.Motor)
-	if err != nil {
-		return nil, err
+func (l *mqlLsblk) list() ([]interface{}, error) {
+	o, err := CreateResource(l.MqlRuntime, "command", map[string]*llx.RawData{
+		"command": llx.StringData("lsblk --json --fs"),
+	})
+	cmd := o.(*mqlCommand)
+	if exit := cmd.GetExitcode(); exit.Data != 0 {
+		return nil, errors.New("could not retrieve lsblk: " + cmd.Stderr.Data)
 	}
 
-	cmd, err := osProvider.RunCommand("lsblk --json --fs")
-	if err != nil {
-		return nil, err
-	}
-	data, err := ioutil.ReadAll(cmd.Stdout)
-	if err != nil {
-		return nil, err
-	}
-	if cmd.ExitStatus != 0 {
-		outErr, _ := ioutil.ReadAll(cmd.Stderr)
-		return nil, errors.New(string(outErr))
-	}
-	blockEntries, err := parseBlockEntries(data)
+	blockEntries, err := parseBlockEntries([]byte(cmd.Stdout.Data))
 	if err != nil {
 		return nil, err
 	}
@@ -40,13 +32,13 @@ func (l *mqlLsblk) GetList() ([]interface{}, error) {
 		for i := range d.Children {
 			entry := d.Children[i]
 			entry.Mountpoints = append(entry.Mountpoints, entry.Mountpoint)
-			mqlLsblkEntry, err := l.MotorRuntime.CreateResource("lsblk.entry",
-				"name", entry.Name,
-				"fstype", entry.Fstype,
-				"label", entry.Label,
-				"uuid", entry.Uuid,
-				"mountpoints", entry.Mountpoints,
-			)
+			mqlLsblkEntry, err := CreateResource(l.MqlRuntime, "lsblk.entry", map[string]*llx.RawData{
+				"name":        llx.StringData(entry.Name),
+				"fstype":      llx.StringData(entry.Fstype),
+				"label":       llx.StringData(entry.Label),
+				"uuid":        llx.StringData(entry.Uuid),
+				"mountpoints": llx.ArrayData(entry.Mountpoints, types.String),
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -65,15 +57,7 @@ func parseBlockEntries(data []byte) (blockdevices, error) {
 }
 
 func (l *mqlLsblkEntry) id() (string, error) {
-	name, err := l.Name()
-	if err != nil {
-		return "", err
-	}
-	fstype, err := l.Fstype()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s-%s", name, fstype), nil
+	return l.Name.Data + "-" + l.Fstype.Data, nil
 }
 
 type blockdevices struct {

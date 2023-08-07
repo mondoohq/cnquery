@@ -7,12 +7,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/os/mount"
+	"go.mondoo.com/cnquery/providers-sdk/v1/inventory"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/mount"
 )
 
 func TestMountLinuxParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
+	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+		Platform: &inventory.Platform{Family: []string{"linux"}},
+	})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -37,7 +40,9 @@ func TestMountLinuxParser(t *testing.T) {
 }
 
 func TestMountMacosParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/osx.toml")
+	mock, err := mock.New("./testdata/osx.toml", &inventory.Asset{
+		Platform: &inventory.Platform{Family: []string{"unix"}},
+	})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -63,7 +68,9 @@ func TestMountMacosParser(t *testing.T) {
 }
 
 func TestMountFreeBsdParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/freebsd12.toml")
+	mock, err := mock.New("./testdata/freebsd12.toml", &inventory.Asset{
+		Platform: &inventory.Platform{Family: []string{"unix"}},
+	})
 	require.NoError(t, err)
 
 	f, err := mock.RunCommand("mount")
@@ -87,10 +94,12 @@ func TestMountFreeBsdParser(t *testing.T) {
 }
 
 func TestProcModulesParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
+	mock, err := mock.New("./testdata/debian.toml", &inventory.Asset{
+		Platform: &inventory.Platform{Family: []string{"linux"}},
+	})
 	require.NoError(t, err)
 
-	f, err := mock.FS().Open("/proc/mounts")
+	f, err := mock.FileSystem().Open("/proc/mounts")
 	require.NoError(t, err)
 	defer f.Close()
 

@@ -5,15 +5,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/cnquery/motor/providers/mock"
-	"go.mondoo.com/cnquery/resources/packs/os/logindefs"
+	"go.mondoo.com/cnquery/providers/os/connection/mock"
+	"go.mondoo.com/cnquery/providers/os/resources/logindefs"
 )
 
 func TestLoginDefsParser(t *testing.T) {
-	mock, err := mock.NewFromTomlFile("./testdata/debian.toml")
+	mock, err := mock.New("./testdata/debian.toml", nil)
 	require.NoError(t, err)
 
-	f, err := mock.FS().Open("/etc/login.defs")
+	f, err := mock.FileSystem().Open("/etc/login.defs")
 	require.NoError(t, err)
 	defer f.Close()
 

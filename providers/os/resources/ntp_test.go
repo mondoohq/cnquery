@@ -1,4 +1,4 @@
-package os_test
+package resources_test
 
 import (
 	"testing"

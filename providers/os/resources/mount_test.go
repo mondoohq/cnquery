@@ -1,4 +1,4 @@
-package os_test
+package resources_test
 
 import (
 	"testing"
@@ -16,14 +16,14 @@ func TestResource_Mount(t *testing.T) {
 		res := x.TestQuery(t, "mount.list[0].device")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "overlay", res[0].Data.Value)
+		assert.Equal(t, "proc", res[0].Data.Value)
 	})
 
 	t.Run("search for mountpoint on root /", func(t *testing.T) {
 		res := x.TestQuery(t, "mount.where(path == \"/\").list[0].device")
 		assert.NotEmpty(t, res)
 		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "overlay", res[0].Data.Value)
+		assert.Equal(t, "/dev/sda1", res[0].Data.Value)
 	})
 
 	t.Run("check mount point resource", func(t *testing.T) {

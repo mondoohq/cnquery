@@ -20,19 +20,37 @@
       },
       "connections": [
         {
-          "url": "host://",
-          "provider": "network",
-          "connector": "",
-          "version": ""
-        },
-        {
           "url": "local://",
           "provider": "os",
           "connector": "local",
           "version": ""
+        },
+        {
+          "url": "host://",
+          "provider": "network",
+          "connector": "",
+          "version": ""
         }
       ],
       "resources": [
+        {
+          "Resource": "command",
+          "ID": "mount",
+          "Fields": {
+            "exitcode": {
+              "type": "\u0005",
+              "value": 0
+            },
+            "stderr": {
+              "type": "\u0007",
+              "value": ""
+            },
+            "stdout": {
+              "type": "\u0007",
+              "value": "overlay on / type overlay (rw,relatime)\nproc on /proc type proc (rw,nosuid,nodev,noexec,relatime)\ntmpfs on /dev type tmpfs (rw,nosuid,size=65536k,mode=755)"
+            }
+          }
+        },
         {
           "Resource": "file",
           "ID": "/dummy.array.json",
@@ -55,6 +73,31 @@
             "size": {
               "type": "\u0005",
               "value": 23
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.false.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "false\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.false.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 6
             }
           }
         },
@@ -85,6 +128,56 @@
         },
         {
           "Resource": "file",
+          "ID": "/dummy.null.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "null\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.null.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.number.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "1.23\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.number.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/dummy.plist",
           "Fields": {
             "content": {
@@ -105,6 +198,56 @@
             "size": {
               "type": "\u0005",
               "value": 1270
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.string.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "\"hi\"\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.string.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/dummy.true.json",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "true\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dummy.true.json"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 5
             }
           }
         },
@@ -215,6 +358,56 @@
         },
         {
           "Resource": "file",
+          "ID": "/etc/login.defs",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "FAIL_DELAY\t\t3\nLOG_UNKFAIL_ENAB\tno\nLOG_OK_LOGINS\t\tno\nSYSLOG_SU_ENAB\t\tyes\nSYSLOG_SG_ENAB\t\tyes\nCONSOLE\t\t/etc/securetty\nSU_NAME\t\tsu\nMAIL_DIR\t/var/spool/mail\nHUSHLOGIN_FILE\t.hushlogin\nENV_SUPATH\tPATH=/usr/local/sbin:/usr/local/bin:/usr/bin\nENV_PATH\tPATH=/usr/local/sbin:/usr/local/bin:/usr/bin\nTTYGROUP\ttty\nTTYPERM\t\t0600\nERASECHAR\t0177\nKILLCHAR\t025\nUMASK\t\t077\nPASS_MAX_DAYS\t99999\nPASS_MIN_DAYS\t0\nPASS_WARN_AGE\t7\nUID_MIN\t\t\t 1000\nUID_MAX\t\t\t60000\nSYS_UID_MIN\t\t  500\nSYS_UID_MAX\t\t  999\nGID_MIN\t\t\t 1000\nGID_MAX\t\t\t60000\nSYS_GID_MIN\t\t  500\nSYS_GID_MAX\t\t  999\nLOGIN_RETRIES\t\t5\nLOGIN_TIMEOUT\t\t60\nCHFN_RESTRICT\t\trwh\nDEFAULT_HOME\tyes\nUSERGROUPS_ENAB yes\nMOTD_FILE\nENCRYPT_METHOD\tSHA512\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/login.defs"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 670
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/ntp.conf",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "# --- GENERAL CONFIGURATION ---\nrestrict default ignore\nrestrict 66.187.224.4 mask 255.255.255.255 nomodify notrap noquery\nrestrict 18.26.4.105 mask 255.255.255.255 nomodify notrap noquery\nrestrict 128.249.1.10 mask 255.255.255.255 nomodify notrap noquery\n# Server config\nserver 127.127.1.0 # local clock\nfudge 127.127.1.0 stratum 10\nserver 66.187.224.4\nserver 18.26.4.105\nserver 128.249.1.10\n"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/ntp.conf"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 393
+            }
+          }
+        },
+        {
+          "Resource": "file",
           "ID": "/etc/passwd",
           "Fields": {
             "content": {
@@ -235,6 +428,31 @@
             "size": {
               "type": "\u0005",
               "value": 137
+            }
+          }
+        },
+        {
+          "Resource": "file",
+          "ID": "/etc/shadow",
+          "Fields": {
+            "content": {
+              "type": "\u0007",
+              "value": "root:!:14871::::::\nchris:*:18421:0:99999:7:::\nbin:!!:18360::::::"
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/etc/shadow"
+            },
+            "permissions": {
+              "type": "\u001bfile.permissions",
+              "value": {
+                "Name": "file.permissions",
+                "ID": "-rw-r--r--"
+              }
+            },
+            "size": {
+              "type": "\u0005",
+              "value": 23
             }
           }
         },
@@ -340,15 +558,19 @@
         },
         {
           "Resource": "file",
-          "ID": "/dummy.false.json",
+          "ID": "/etc/ssl/cert.pem",
           "Fields": {
             "content": {
               "type": "\u0007",
-              "value": "false\n"
+              "value": "# Amazon Root CA 1\n-----BEGIN CERTIFICATE-----\nMIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF\nADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6\nb24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL\nMAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv\nb3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj\nca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM\n9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw\nIFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6\nVOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L\n93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm\njgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC\nAYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA\nA4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI\nU5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs\nN+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv\no/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU\n5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy\nrqXRfboQnoZsG4q5WTP468SQvvG5\n-----END CERTIFICATE-----\n"
+            },
+            "exists": {
+              "type": "\u0004",
+              "value": true
             },
             "path": {
               "type": "\u0007",
-              "value": "/dummy.false.json"
+              "value": "/etc/ssl/cert.pem"
             },
             "permissions": {
               "type": "\u001bfile.permissions",
@@ -359,107 +581,7 @@
             },
             "size": {
               "type": "\u0005",
-              "value": 6
-            }
-          }
-        },
-        {
-          "Resource": "file",
-          "ID": "/dummy.null.json",
-          "Fields": {
-            "content": {
-              "type": "\u0007",
-              "value": "null\n"
-            },
-            "path": {
-              "type": "\u0007",
-              "value": "/dummy.null.json"
-            },
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "-rw-r--r--"
-              }
-            },
-            "size": {
-              "type": "\u0005",
-              "value": 5
-            }
-          }
-        },
-        {
-          "Resource": "file",
-          "ID": "/dummy.number.json",
-          "Fields": {
-            "content": {
-              "type": "\u0007",
-              "value": "1.23\n"
-            },
-            "path": {
-              "type": "\u0007",
-              "value": "/dummy.number.json"
-            },
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "-rw-r--r--"
-              }
-            },
-            "size": {
-              "type": "\u0005",
-              "value": 5
-            }
-          }
-        },
-        {
-          "Resource": "file",
-          "ID": "/dummy.string.json",
-          "Fields": {
-            "content": {
-              "type": "\u0007",
-              "value": "\"hi\"\n"
-            },
-            "path": {
-              "type": "\u0007",
-              "value": "/dummy.string.json"
-            },
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "-rw-r--r--"
-              }
-            },
-            "size": {
-              "type": "\u0005",
-              "value": 5
-            }
-          }
-        },
-        {
-          "Resource": "file",
-          "ID": "/dummy.true.json",
-          "Fields": {
-            "content": {
-              "type": "\u0007",
-              "value": "true\n"
-            },
-            "path": {
-              "type": "\u0007",
-              "value": "/dummy.true.json"
-            },
-            "permissions": {
-              "type": "\u001bfile.permissions",
-              "value": {
-                "Name": "file.permissions",
-                "ID": "-rw-r--r--"
-              }
-            },
-            "size": {
-              "type": "\u0005",
-              "value": 5
+              "value": 1207
             }
           }
         },
@@ -467,6 +589,14 @@
           "Resource": "file.permissions",
           "ID": "-rw-r--r--",
           "Fields": {
+            "isDirectory": {
+              "type": "\u0004",
+              "value": false
+            },
+            "isFile": {
+              "type": "\u0004",
+              "value": true
+            },
             "mode": {
               "type": "\u0005",
               "value": 420
@@ -475,12 +605,21 @@
               "type": "\u0007",
               "value": "-rw-r--r--"
             }
+
           }
         },
         {
           "Resource": "file.permissions",
           "ID": "drwxr-xr-x",
           "Fields": {
+            "isDirectory": {
+              "type": "\u0004",
+              "value": true
+            },
+            "isFile": {
+              "type": "\u0004",
+              "value": false
+            },
             "string": {
               "type": "\u0007",
               "value": "drwxr-xr-x"
@@ -633,6 +772,95 @@
             "size": {
               "type": "\u0007",
               "value": "36864"
+            }
+          }
+        },
+        {
+          "Resource": "mount",
+          "ID": "mount",
+          "Fields": {
+            "list": {
+              "type": "\u0019\u001bmount.point",
+              "value": [
+                {
+                  "Name": "mount.point",
+                  "ID": "/proc"
+                },
+                {
+                  "Name": "mount.point",
+                  "ID": "/"
+                },
+                {
+                  "Name": "mount.point",
+                  "ID": "/dev"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "mount.point",
+          "ID": "/",
+          "Fields": {
+            "device": {
+              "type": "\u0007",
+              "value": "/dev/sda1"
+            },
+            "fstype": {
+              "type": "\u0007",
+              "value": "ext4"
+            },
+            "mounted": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/"
+            }
+          }
+        },
+        {
+          "Resource": "mount.point",
+          "ID": "/dev",
+          "Fields": {
+            "device": {
+              "type": "\u0007",
+              "value": "dev"
+            },
+            "fstype": {
+              "type": "\u0007",
+              "value": "devtmpfs"
+            },
+            "mounted": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/dev"
+            }
+          }
+        },
+        {
+          "Resource": "mount.point",
+          "ID": "/proc",
+          "Fields": {
+            "device": {
+              "type": "\u0007",
+              "value": "proc"
+            },
+            "fstype": {
+              "type": "\u0007",
+              "value": "proc"
+            },
+            "mounted": {
+              "type": "\u0004",
+              "value": true
+            },
+            "path": {
+              "type": "\u0007",
+              "value": "/proc"
             }
           }
         },
