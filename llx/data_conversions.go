@@ -461,7 +461,8 @@ func (r *Result) RawData() *RawData {
 
 	data := &RawData{}
 	if r.Data != nil {
-		if r.Data.IsNil() {
+		// The type can be empty, when we do not have data
+		if r.Data.IsNil() || types.Type(r.Data.Type).IsEmpty() {
 			data.Type = types.Nil
 		} else {
 			data = r.Data.RawData()
