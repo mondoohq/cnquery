@@ -95,7 +95,7 @@ func (k *mqlRegistrykey) children() ([]interface{}, error) {
 		return nil, errors.New("could not retrieve registry key")
 	}
 
-	children, err := windows.ParseRegistryKeyChildren(strings.NewReader(cmd.GetStderr().Data))
+	children, err := windows.ParseRegistryKeyChildren(strings.NewReader(cmd.GetStdout().Data))
 	if err != nil {
 		return nil, err
 	}
