@@ -95,5 +95,10 @@ func (s *LinuxSmbiosManager) Info() (*SmBiosInfo, error) {
 		return nil
 	})
 
-	return &smInfo, wErr
+	// If the error is SkipDir we can safely ignore it
+	if wErr != nil && wErr != filepath.SkipDir {
+		return nil, wErr
+	}
+
+	return &smInfo, nil
 }
