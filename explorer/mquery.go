@@ -3,7 +3,6 @@ package explorer
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -114,11 +113,6 @@ func (m *Mquery) RefreshChecksum(
 		Add(m.Type).
 		Add(m.Title).Add("v2").
 		AddUint(m.Impact.Checksum())
-
-	if m.Mrn == "//policy.api.mondoo.app/queries/microsoft-azure-foundations--expiration-date-set-all-keys-non-rbac-key-vaults" {
-		label := types.Type(m.Type).Label()
-		fmt.Println(label)
-	}
 
 	for i := range m.Props {
 		prop := m.Props[i]
