@@ -45,7 +45,7 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 	}
 
 	// 3. mimic `service --status-all` by running `service x status` for each detected service
-	running, err := s.running(services)
+	running, err := s.running(statusServices)
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +53,8 @@ func (s *SysVServiceManager) List() ([]*Service, error) {
 	// aggregate data into service struct
 	res := []*Service{}
 
-	for i := range services {
+	for i := range statusServices {
 		service := services[i]
-
-		if stringx.Contains(ignored, service) {
-			continue
-		}
 
 		srv := &Service{
 			Name:      service,

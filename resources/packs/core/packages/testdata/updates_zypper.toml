@@ -1,4 +1,4 @@
-[commands."zypper --xmlout list-updates"]
+[commands."zypper -n --xmlout list-updates"]
 stdout = """<?xml version='1.0'?>
 <stream>
 <message type="info">Loading repository data...</message>
@@ -246,7 +246,7 @@ drop-in replacement for sysvinit.</description>
 </stream>
 """
 
-[commands."zypper --xmlout list-updates -t patch"]
+[commands."zypper -n --xmlout list-updates -t patch"]
 stdout = """<?xml version='1.0'?>
 <stream>
 <progress id="raw-refresh" name="Retrieving repository &apos;NON OSS&apos; metadata" value="0"/>
