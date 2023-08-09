@@ -1828,7 +1828,14 @@ func (c *compiler) addValueFieldChunks(ref uint64) {
 			return
 		}
 		path = append(path, node.id)
-		for _, child := range node.children {
+		sortedChildren := make([]string, 0, len(node.children))
+		for k := range node.children {
+			sortedChildren = append(sortedChildren, k)
+		}
+		sort.Strings(sortedChildren)
+
+		for _, childKey := range sortedChildren {
+			child := node.children[childKey]
 			visit(tree, child, path)
 			visitTreeNodes(tree, child, path, visit)
 		}
