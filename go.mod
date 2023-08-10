@@ -37,7 +37,7 @@ require (
 	github.com/golangci/golangci-lint v1.53.3
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
-	github.com/hashicorp/go-hclog v1.2.0
+	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/go-plugin v1.4.8
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/vault/api v1.8.2
