@@ -19,9 +19,9 @@ func DetectOS(conn shared.Connection) (*inventory.Platform, bool) {
 }
 
 // map that is organized by platform name, to quickly determine its families
-var osTree = platfromPartens(OperatingSystems)
+var osTree = platformParents(OperatingSystems)
 
-func platfromPartens(r *PlatformResolver) map[string][]string {
+func platformParents(r *PlatformResolver) map[string][]string {
 	return traverseFamily(r, []string{})
 }
 

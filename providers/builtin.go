@@ -17,10 +17,6 @@ import (
 	"go.mondoo.com/cnquery/providers-sdk/v1/resources"
 	coreconf "go.mondoo.com/cnquery/providers/core/config"
 	core "go.mondoo.com/cnquery/providers/core/provider"
-	// networkconf "go.mondoo.com/cnquery/providers/network/config"
-	// network "go.mondoo.com/cnquery/providers/network/provider"
-	// osconf "go.mondoo.com/cnquery/providers/os/config"
-	// os "go.mondoo.com/cnquery/providers/os/provider"
 )
 
 var BuiltinCoreID = coreconf.Config.ID

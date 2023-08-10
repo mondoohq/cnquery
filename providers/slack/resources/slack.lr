@@ -1,4 +1,5 @@
-option go_package = "go.mondoo.com/cnquery/resources/packs/slack"
+option provider = "go.mondoo.com/cnquery/providers/slack"
+option go_package = "go.mondoo.com/cnquery/providers/slack/resources"
 
 // Slack
 slack {
