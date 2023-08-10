@@ -301,6 +301,40 @@ func (s *mqlAwsEc2) getSecurityGroups(provider *aws_provider.Provider) []*jobpoo
 
 						mqlIpPermissions = append(mqlIpPermissions, mqlSecurityGroupIpPermission)
 					}
+					mqlIpPermissionsEgress := []interface{}{}
+
+					for p := range group.IpPermissionsEgress {
+						permission := group.IpPermissionsEgress[p]
+
+						ipRanges := []interface{}{}
+						for r := range permission.IpRanges {
+							iprange := permission.IpRanges[r]
+							if iprange.CidrIp != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIp)
+							}
+						}
+
+						ipv6Ranges := []interface{}{}
+						for r := range permission.Ipv6Ranges {
+							iprange := permission.Ipv6Ranges[r]
+							if iprange.CidrIpv6 != nil {
+								ipRanges = append(ipRanges, *iprange.CidrIpv6)
+							}
+						}
+						mqlSecurityGroupIpPermission, err := s.MotorRuntime.CreateResource("aws.ec2.securitygroup.ippermission",
+							"id", core.ToString(group.GroupId)+"-"+strconv.Itoa(p),
+							"fromPort", core.ToInt64From32(permission.FromPort),
+							"toPort", core.ToInt64From32(permission.ToPort),
+							"ipProtocol", core.ToString(permission.IpProtocol),
+							"ipRanges", ipRanges,
+							"ipv6Ranges", ipv6Ranges,
+						)
+						if err != nil {
+							return nil, err
+						}
+
+						mqlIpPermissionsEgress = append(mqlIpPermissionsEgress, mqlSecurityGroupIpPermission)
+					}
 
 					// NOTE: this will create the resource and determine the data in its init method
 					mqlVpc, err := s.MotorRuntime.CreateResource("aws.vpc",
@@ -317,7 +351,7 @@ func (s *mqlAwsEc2) getSecurityGroups(provider *aws_provider.Provider) []*jobpoo
 						"tags", Ec2TagsToMap(group.Tags),
 						"vpc", mqlVpc,
 						"ipPermissions", mqlIpPermissions,
-						"ipPermissionsEgress", []interface{}{},
+						"ipPermissionsEgress", mqlIpPermissionsEgress,
 						"region", regionVal,
 					)
 					if err != nil {
