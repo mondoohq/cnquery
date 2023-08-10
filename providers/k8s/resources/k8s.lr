@@ -1,0 +1,26 @@
+option provider = "go.mondoo.com/cnquery/providers/k8s"
+option go_package = "go.mondoo.com/cnquery/providers/k8s/resources"
+
+// Kubernetes cluster
+k8s {
+  // Cluster Nodes
+  nodes() []k8s.node
+}
+
+// Kubernetes node
+private k8s.node @defaults("name kind") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Labels
+  labels map[string]string
+  // Kubernetes Annotations
+  annotations map[string]string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // plural name of the resource
+  name string
+  // Kubernetes Object Type
+  kind string
+}

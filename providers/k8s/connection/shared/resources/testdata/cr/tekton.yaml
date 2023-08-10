@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: demo-pipeline
+  namespace: default
+  labels:
+    test: mondoo
+spec:
+  tasks:
+    - name: build-skaffold-web
+      taskRef:
+        name: build-push
+        kind: ClusterTask

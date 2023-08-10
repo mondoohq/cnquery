@@ -157,7 +157,8 @@ providers/build: providers/build/core \
 	providers/build/arista \
 	providers/build/equinix \
 	providers/build/vcd \
-	providers/build/gcp
+	providers/build/gcp \
+	providers/build/k8s
 
 providers/build/core: providers/lr
 	@$(call buildProvider, providers/core)
@@ -206,6 +207,9 @@ providers/build/equinix: providers/lr
 
 providers/build/vcd: providers/lr
 	@$(call buildProvider, providers/vcd)
+	
+providers/build/k8s: providers/lr
+	@$(call buildProvider, providers/k8s)
 
 providers/build/gcp: providers/lr
 	@$(call buildProvider, providers/gcp)
