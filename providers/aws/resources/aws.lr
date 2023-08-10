@@ -1,0 +1,12 @@
+option provider = "go.mondoo.com/cnquery/providers/aws"
+option go_package = "go.mondoo.com/cnquery/providers/aws/resources"
+
+// AWS Resource
+aws @defaults("account.id") {
+}
+
+// AWS Account
+aws.account @defaults("id") {
+  // Account ID
+  id() string
+}
