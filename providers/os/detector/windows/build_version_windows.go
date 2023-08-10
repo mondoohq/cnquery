@@ -6,12 +6,14 @@ package windows
 import (
 	"runtime"
 
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 	"golang.org/x/sys/windows/registry"
 )
 
-func GetWindowsOSBuild(conn connection.Connection) (*WindowsCurrentVersion, error) {
+func GetWindowsOSBuild(conn shared.Connection) (*WindowsCurrentVersion, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	if ok && runtime.GOOS == "windows" {
+	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion`, registry.QUERY_VALUE)
 		if err != nil {
 			return nil, err
@@ -41,5 +43,5 @@ func GetWindowsOSBuild(conn connection.Connection) (*WindowsCurrentVersion, erro
 	}
 
 	// for all non-local checks use powershell
-	return powershellGetWindowsOSBuild(p)
+	return powershellGetWindowsOSBuild(conn)
 }

@@ -9,9 +9,10 @@ import (
 
 	wmi "github.com/StackExchange/wmi"
 	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
-func windowsMachineId(conn connection.Connection) (string, error) {
+func windowsMachineId(conn shared.Connection) (string, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
 	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
 		// we always get a list or entries
@@ -32,5 +33,5 @@ func windowsMachineId(conn connection.Connection) (string, error) {
 		return *entries[0].UUID, nil
 	}
 
-	return PowershellWindowsMachineId(p)
+	return PowershellWindowsMachineId(conn)
 }
