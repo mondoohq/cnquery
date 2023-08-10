@@ -249,7 +249,7 @@ func (c *mqlK8s) GetNodes() *plugin.TValue[[]interface{}] {
 type mqlK8sNode struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlK8sNodeInternal it will be used here
+	mqlK8sNodeInternal
 	Id plugin.TValue[string]
 	Uid plugin.TValue[string]
 	Labels plugin.TValue[map[string]interface{}]
@@ -305,11 +305,15 @@ func (c *mqlK8sNode) GetUid() *plugin.TValue[string] {
 }
 
 func (c *mqlK8sNode) GetLabels() *plugin.TValue[map[string]interface{}] {
-	return &c.Labels
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
 }
 
 func (c *mqlK8sNode) GetAnnotations() *plugin.TValue[map[string]interface{}] {
-	return &c.Annotations
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
 }
 
 func (c *mqlK8sNode) GetResourceVersion() *plugin.TValue[string] {

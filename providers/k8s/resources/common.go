@@ -21,28 +21,6 @@ func k8sProvider(t plugin.Connection) (shared.Connection, error) {
 	return at, nil
 }
 
-// func k8sMetaObject(mqlResource *resources.Resource) (metav1.Object, error) {
-// 	entry, ok := mqlResource.Cache.Load("_resource")
-// 	if !ok {
-// 		return nil, errors.New("cannot get resource from cache")
-// 	}
-
-// 	obj, ok := entry.Data.(runtime.Object)
-// 	if !ok {
-// 		return nil, errors.New("cannot get resource from cache")
-// 	}
-
-// 	return meta.Accessor(obj)
-// }
-
-// func k8sAnnotations(mqlResource *resources.Resource) (interface{}, error) {
-// 	objM, err := k8sMetaObject(mqlResource)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return core.StrMapToInterface(objM.GetAnnotations()), nil
-// }
-
 func MapToInterfaceMap[T any](m map[string]T) map[string]interface{} {
 	res := make(map[string]interface{})
 	for k, v := range m {
@@ -50,14 +28,6 @@ func MapToInterfaceMap[T any](m map[string]T) map[string]interface{} {
 	}
 	return res
 }
-
-// func k8sLabels(mqlResource *resources.Resource) (interface{}, error) {
-// 	objM, err := k8sMetaObject(mqlResource)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return core.StrMapToInterface(objM.GetLabels()), nil
-// }
 
 type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error)
 
