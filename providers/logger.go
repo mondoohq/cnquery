@@ -89,6 +89,25 @@ func (l *hclogger) SetLevel(level hclog.Level) {
 	}
 }
 
+// Returns the current level
+func (l *hclogger) GetLevel() hclog.Level {
+	switch l.Logger.GetLevel() {
+	case zerolog.TraceLevel:
+		return hclog.Trace
+	case zerolog.DebugLevel:
+		return hclog.Debug
+	case zerolog.InfoLevel:
+		return hclog.Info
+	case zerolog.WarnLevel:
+		return hclog.Warn
+	case zerolog.ErrorLevel:
+		return hclog.Error
+	default:
+		log.Fatalf("unknown level %d", l.Logger.GetLevel())
+	}
+	return hclog.Trace
+}
+
 func (l *hclogger) Name() string {
 	return ""
 }
