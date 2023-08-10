@@ -9,13 +9,15 @@ import (
 	"strconv"
 
 	wmi "github.com/StackExchange/wmi"
+	"go.mondoo.com/cnquery/providers/os/connection"
+	"go.mondoo.com/cnquery/providers/os/connection/shared"
 )
 
 const wmiOSQuery = "SELECT Name, Caption, Manufacturer, OSArchitecture, Version, BuildNumber, Description, OSType, ProductType, SerialNumber FROM Win32_OperatingSystem"
 
-func GetWmiInformation(conn connection.Connection) (*WmicOSInformation, error) {
+func GetWmiInformation(conn shared.Connection) (*WmicOSInformation, error) {
 	// if we are running locally on windows, we want to avoid using powershell to be faster
-	if ok && runtime.GOOS == "windows" {
+	if conn.Type() == connection.Local && runtime.GOOS == "windows" {
 
 		// we always get a list or entries
 		type win32_OperatingSystem struct {
@@ -54,7 +56,7 @@ func GetWmiInformation(conn connection.Connection) (*WmicOSInformation, error) {
 		}, nil
 	}
 
-	return powershellGetWmiInformation(p)
+	return powershellGetWmiInformation(conn)
 }
 
 func toString(s *string) string {

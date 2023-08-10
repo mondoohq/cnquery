@@ -5,7 +5,7 @@ package connection
 
 import "os"
 
-func (c *Connection) fileowner(stat os.FileInfo) (int64, int64) {
+func (c *LocalConnection) fileowner(stat os.FileInfo) (int64, int64) {
 	uid := int64(-1)
 	gid := int64(-1)
 

@@ -76,7 +76,7 @@ build_bundle(){
   rm ${PROVIDER_DIST}/${PROVIDER_NAME}
 }
 
-# Build Darwin Architectures
+ Build Darwin Architectures
 build_bundle darwin amd64
 build_bundle darwin arm64
 
@@ -89,8 +89,8 @@ build_bundle linux arm 7
 build_bundle linux ppc64le
 
 # Build Windows Architectures
-# build_bundle windows amd64
-# build_bundle windows arm64
+build_bundle windows amd64
+build_bundle windows arm64
 
 # Generate SHA256 checksums
 echo "Generating SHA256 checksums..."
