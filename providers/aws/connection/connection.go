@@ -17,6 +17,7 @@ type AwsConnection struct {
 	asset     *inventory.Asset
 	cfg       aws.Config
 	accountId string
+	clients   map[string]map[string]interface{} // servicename: {region: client}
 }
 
 func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*AwsConnection, error) {
@@ -51,6 +52,7 @@ func NewAwsConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		asset:     asset,
 		cfg:       cfg,
 		accountId: *identity.Account,
+		clients:   make(map[string]map[string]interface{}),
 	}, nil
 }
 
