@@ -21,14 +21,6 @@ func k8sProvider(t plugin.Connection) (shared.Connection, error) {
 	return at, nil
 }
 
-func MapToInterfaceMap[T any](m map[string]T) map[string]interface{} {
-	res := make(map[string]interface{})
-	for k, v := range m {
-		res[k] = v
-	}
-	return res
-}
-
 type resourceConvertFn func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (interface{}, error)
 
 func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]interface{}, error) {
@@ -110,36 +102,25 @@ func k8sResourceToMql(r *plugin.Runtime, kind string, fn resourceConvertFn) ([]i
 // 	return identifierName, identifierNamespace, nil
 // }
 
-// type K8sNamespacedObject interface {
-// 	K8sObject
-// 	Namespace() (string, error)
-// }
+type K8sNamespacedObject interface {
+	K8sObject
+	Namespace() (string, error)
+}
 
-// type K8sObject interface {
-// 	Id() (string, error)
-// 	Kind() (string, error)
-// 	Name() (string, error)
-// 	Manifest() (interface{}, error)
-// }
+type K8sObject interface {
+	// Id() (string, error)
+	Kind() (string, error)
+	Name() (string, error)
+	Manifest() (interface{}, error)
+}
 
-// func objId(o K8sNamespacedObject) (string, error) {
-// 	kind, err := o.Kind()
-// 	if err != nil {
-// 		return "", err
-// 	}
+func objId(o runtime.Object, meta metav1.Object) (string, error) {
+	kind := o.GetObjectKind().GroupVersionKind().Kind
+	name := meta.GetName()
+	namespace := meta.GetNamespace()
 
-// 	name, err := o.Name()
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	namespace, err := o.Namespace()
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	return objIdFromFields(kind, namespace, name), nil
-// }
+	return objIdFromFields(kind, namespace, name), nil
+}
 
 func objIdFromK8sObj(o metav1.Object, objT metav1.Type) string {
 	return objIdFromFields(objT.GetKind(), o.GetNamespace(), o.GetName())
