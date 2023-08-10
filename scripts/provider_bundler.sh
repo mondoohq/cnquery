@@ -52,11 +52,19 @@ ${REPOROOT}/lr docs json ${PROVIDER_PATH}/resources/${PROVIDER_NAME}.lr.manifest
 build_bundle(){
   GOOS=$1
   GOARCH=$2
-  echo "Building for ${GOOS}/${GOARCH}..."
-  go build -o ${PROVIDER_DIST}/${PROVIDER_NAME} ${PROVIDER_PATH}/main.go
+  GOARM=$3
+
+  echo "Building for ${GOOS}/${GOARCH}/${GOARM}..."
+  GOOS=${GOOS} GOARCH=${GOARCH} GOARM=${GOARM} go build -o ${PROVIDER_DIST}/${PROVIDER_NAME} ${PROVIDER_PATH}/main.go
+
+  # set linux flags that do not work on macos
+  TAR_FLAGS=""
+  if uname -s | grep -q 'Linux'; then
+    TAR_FLAGS="--owner=0 --group=0 --no-same-owner"
+  fi
 
   tar -cf ${BUNDLE_DIST}/${PROVIDER_NAME}_${PROVIDER_VERSION}_${GOOS}_${GOARCH}.tar.xz \
-    --owner=0 --group=0 --no-same-owner --use-compress-program='xz -9v' \
+    ${TAR_FLAGS} --use-compress-program='xz -9v' \
     -C ${PROVIDER_DIST} \
     ${PROVIDER_NAME} ${PROVIDER_NAME}.json ${PROVIDER_NAME}.resources.json
 
@@ -76,13 +84,13 @@ build_bundle darwin arm64
 build_bundle linux amd64
 build_bundle linux 386
 build_bundle linux arm64
-build_bundle linux armv6
-build_bundle linux armv7
+build_bundle linux arm 6
+build_bundle linux arm 7
 build_bundle linux ppc64le
 
 # Build Windows Architectures
-build_bundle windows amd64
-build_bundle windows arm64
+# build_bundle windows amd64
+# build_bundle windows arm64
 
 # Generate SHA256 checksums
 echo "Generating SHA256 checksums..."
