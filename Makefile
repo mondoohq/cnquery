@@ -116,7 +116,7 @@ providers/lr:
 	go build -o lr ./providers-sdk/v1/lr/cli/main.go
 
 .PHONY: providers/build
-providers/build: providers/build/core providers/build/network providers/build/os
+providers/build: providers/build/core providers/build/network providers/build/os providers/build/k8s
 
 providers/build/core: providers/lr
 	@$(call genProvider, providers/core)
@@ -126,6 +126,9 @@ providers/build/network: providers/lr
 
 providers/build/os: providers/lr
 	@$(call genProvider, providers/os)
+
+providers/build/k8s: providers/lr
+	@$(call genProvider, providers/k8s)
 
 providers/install:
 #	@$(call installProvider, providers/core)
