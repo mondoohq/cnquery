@@ -14,9 +14,9 @@ private k8s.node @defaults("name kind") {
   // Kubernetes Object UID
   uid string
   // Kubernetes Labels
-  labels map[string]string
+  labels() map[string]string
   // Kubernetes Annotations
-  annotations map[string]string
+  annotations() map[string]string
   // Kubernetes Resource Version
   resourceVersion string
   // plural name of the resource
