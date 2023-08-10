@@ -38,7 +38,7 @@ func TestZypperUpdateParser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := mock.RunCommand("zypper --xmlout list-updates")
+	c, err := mock.RunCommand("zypper -n --xmlout list-updates")
 	if err != nil {
 		t.Fatal(err)
 	}

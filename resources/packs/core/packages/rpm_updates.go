@@ -49,7 +49,7 @@ type zypper struct {
 }
 
 // for Suse, updates are package updates
-// parses the output of `zypper --xmlout list-updates`
+// parses the output of `zypper -n --xmlout list-updates`
 func ParseZypperUpdates(input io.Reader) (map[string]PackageUpdate, error) {
 	pkgs := map[string]PackageUpdate{}
 	zypper, err := ParseZypper(input)
