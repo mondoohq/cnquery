@@ -168,7 +168,7 @@ func (s *mqlAwsEc2Networkacl) GetEntries() ([]interface{}, error) {
 	res := []interface{}{}
 	for _, entry := range networkacls.NetworkAcls[0].Entries {
 		args := []interface{}{
-			"egress", *entry.Egress,
+			"egress", core.ToBool(entry.Egress),
 			"ruleAction", string(entry.RuleAction),
 			"id", id + "-" + strconv.Itoa(core.ToIntFrom32(entry.RuleNumber)),
 		}
