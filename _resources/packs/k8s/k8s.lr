@@ -7,12 +7,8 @@ option go_package = "go.mondoo.com/cnquery/resources/packs/k8s"
 k8s {
   // Available Resource Types
   apiResources() []k8s.apiresource
-  // Cluster Nodes
-  nodes() []k8s.node
   // Cluster Namespaces
   namespaces() []k8s.namespace
-  // Cluster Pods
-  pods() []k8s.pod
   // Cluster Deployments
   deployments() []k8s.deployment
   // Cluster DaemonSets
@@ -73,24 +69,6 @@ private k8s.apiresource @defaults("name kind") {
   categories []string
 }
 
-// Kubernetes node
-private k8s.node @defaults("name kind") {
-  // Mondoo ID for Kubernetes Object
-  id string
-  // Kubernetes Object UID
-  uid string
-  // Kubernetes Labels
-  labels() map[string]string
-  // Kubernetes Annotations
-  annotations() map[string]string
-  // Kubernetes Resource Version
-  resourceVersion string
-  // plural name of the resource
-  name string
-  // Kubernetes Object Type
-  kind string
-}
-
 // Kubernetes Kubelet configuration
 private k8s.kubelet {
   // Kubelet config file
@@ -113,152 +91,6 @@ private k8s.namespace @defaults("name created") {
   created time
   // Full resource manifest
   manifest dict
-}
-
-// Kubernetes Pod
-private k8s.pod @defaults("namespace name created"){
-  // Mondoo ID for Kubernetes Object
-  id string
-  // Kubernetes Object UID
-  uid string
-  // Kubernetes Resource Version
-  resourceVersion string
-  // Kubernetes Labels
-  labels() map[string]string
-  // Kubernetes Annotations
-  annotations() map[string]string
-  // Kubernetes Object Name
-  name string
-  // Kubernetes Object Namespace
-  namespace string
-  // Kubernetes Object Version
-  apiVersion string
-  // Kubernetes Object Type
-  kind string
-  // Kubernetes Object Creation Timestamp
-  created time
-  // Full resource manifest
-  manifest dict
-  // PodSpec is a description of a pod
-  podSpec dict
-  // Ephemeral containers
-  ephemeralContainers() []k8s.ephemeralContainer
-  // Init containers
-  initContainers() []k8s.initContainer
-  // Contained Containers
-  containers() []k8s.container
-  // Node the pod runs on
-  node() k8s.node
-}
-
-// Kubernetes workload container
-private k8s.container @defaults("name") {
-  // Kubernetes Object UID
-  uid string
-  // Name of the container
-  name string
-  // Container image name
-  imageName string
-  // Deprecated. Use `imageName` instead.
-  image string
-  // Container image
-  containerImage() os.container.image
-  // Entrypoint array
-  command []string
-  // Arguments to the entrypoint
-  args []string
-  // Compute Resources required by this container
-  resources dict
-  // Pod volumes to mount into the container's filesystem
-  volumeMounts []dict
-  // volumeDevices is the list of block devices to be used by the container
-  volumeDevices []dict
-  // Periodic probe of container liveness
-  livenessProbe dict
-  // Periodic probe of container service readiness
-  readinessProbe dict
-  // Image pull policy, One of Always, Never, IfNotPresent
-  imagePullPolicy string
-  // Security options the pod should run with
-  securityContext dict
-  // Container's working directory
-  workingDir string
-  // Whether this container should allocate a TTY for itself
-  tty bool
-  // env variables
-  env dict
-  // envFrom settings
-  envFrom dict
-}
-
-// Kubernetes Init Container
-private k8s.initContainer @defaults("name") {
-  // Kubernetes Object UID
-  uid string
-  // Name of the container
-  name string
-  // Container image name
-  imageName string
-  // Deprecated. Use `imageName` instead.
-  image string
-  // Container image
-  containerImage() os.container.image
-  // Entrypoint array
-  command []string
-  // Arguments to the entrypoint
-  args []string
-  // Compute Resources required by this container
-  resources dict
-  // Pod volumes to mount into the container's filesystem
-  volumeMounts []dict
-  // volumeDevices is the list of block devices to be used by the container
-  volumeDevices []dict
-  // Image pull policy, One of Always, Never, IfNotPresent
-  imagePullPolicy string
-  // Security options the pod should run with
-  securityContext dict
-  // Container's working directory
-  workingDir string
-  // Whether this container should allocate a TTY for itself
-  tty bool
-  // env variables
-  env dict
-  // envFrom settings
-  envFrom dict
-}
-
-// Kubernetes Ephemeral Container
-private k8s.ephemeralContainer @defaults("name") {
-  // Kubernetes Object UID
-  uid string
-  // Name of the container
-  name string
-  // Container image name
-  imageName string
-  // Deprecated. Use `imageName` instead.
-  image string
-  // Container image
-  containerImage() os.container.image
-  // Entrypoint array
-  command []string
-  // Arguments to the entrypoint
-  args []string
-  // Pod volumes to mount into the container's filesystem
-  volumeMounts []dict
-  // volumeDevices is the list of block devices to be used by the container
-  volumeDevices []dict
-  // Image pull policy, One of Always, Never, IfNotPresent
-  imagePullPolicy string
-  // Security options the pod should run with
-  securityContext dict
-  // Container's working directory
-  workingDir string
-  // Whether this container should allocate a TTY for itself
-  tty bool
-  // env variables
-  env dict
-  // envFrom settings
-  envFrom dict
 }
 
 // Kubernetes Deployment

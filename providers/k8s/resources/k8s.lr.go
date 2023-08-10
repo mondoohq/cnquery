@@ -3,6 +3,7 @@ package resources
 
 import (
 	"errors"
+	"time"
 
 	"go.mondoo.com/cnquery/llx"
 	"go.mondoo.com/cnquery/providers-sdk/v1/plugin"
@@ -18,8 +19,24 @@ func init() {
 			Create: createK8s,
 		},
 		"k8s.node": {
-			// to override args, implement: initK8sNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init: initK8sNode,
 			Create: createK8sNode,
+		},
+		"k8s.pod": {
+			// to override args, implement: initK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sPod,
+		},
+		"k8s.container": {
+			// to override args, implement: initK8sContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sContainer,
+		},
+		"k8s.initContainer": {
+			// to override args, implement: initK8sInitContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sInitContainer,
+		},
+		"k8s.ephemeralContainer": {
+			// to override args, implement: initK8sEphemeralContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sEphemeralContainer,
 		},
 	}
 }
@@ -92,6 +109,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.nodes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetNodes()).ToDataRes(types.Array(types.Resource("k8s.node")))
 	},
+	"k8s.pods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetPods()).ToDataRes(types.Array(types.Resource("k8s.pod")))
+	},
 	"k8s.node.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetId()).ToDataRes(types.String)
 	},
@@ -113,6 +133,192 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.node.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sNode).GetKind()).ToDataRes(types.String)
 	},
+	"k8s.pod.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetId()).ToDataRes(types.String)
+	},
+	"k8s.pod.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.pod.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.pod.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.pod.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.pod.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetName()).ToDataRes(types.String)
+	},
+	"k8s.pod.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.pod.apiVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetApiVersion()).ToDataRes(types.String)
+	},
+	"k8s.pod.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.pod.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.pod.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.pod.podSpec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetPodSpec()).ToDataRes(types.Dict)
+	},
+	"k8s.pod.ephemeralContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetEphemeralContainers()).ToDataRes(types.Array(types.Resource("k8s.ephemeralContainer")))
+	},
+	"k8s.pod.initContainers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetInitContainers()).ToDataRes(types.Array(types.Resource("k8s.initContainer")))
+	},
+	"k8s.pod.containers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetContainers()).ToDataRes(types.Array(types.Resource("k8s.container")))
+	},
+	"k8s.pod.node": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sPod).GetNode()).ToDataRes(types.Resource("k8s.node"))
+	},
+	"k8s.container.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.container.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetName()).ToDataRes(types.String)
+	},
+	"k8s.container.imageName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetImageName()).ToDataRes(types.String)
+	},
+	"k8s.container.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetImage()).ToDataRes(types.String)
+	},
+	"k8s.container.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetCommand()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.container.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.container.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetResources()).ToDataRes(types.Dict)
+	},
+	"k8s.container.volumeMounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetVolumeMounts()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.container.volumeDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetVolumeDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.container.livenessProbe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetLivenessProbe()).ToDataRes(types.Dict)
+	},
+	"k8s.container.readinessProbe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetReadinessProbe()).ToDataRes(types.Dict)
+	},
+	"k8s.container.imagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetImagePullPolicy()).ToDataRes(types.String)
+	},
+	"k8s.container.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.container.workingDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetWorkingDir()).ToDataRes(types.String)
+	},
+	"k8s.container.tty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetTty()).ToDataRes(types.Bool)
+	},
+	"k8s.container.env": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetEnv()).ToDataRes(types.Dict)
+	},
+	"k8s.container.envFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sContainer).GetEnvFrom()).ToDataRes(types.Dict)
+	},
+	"k8s.initContainer.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.initContainer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetName()).ToDataRes(types.String)
+	},
+	"k8s.initContainer.imageName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetImageName()).ToDataRes(types.String)
+	},
+	"k8s.initContainer.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetImage()).ToDataRes(types.String)
+	},
+	"k8s.initContainer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetCommand()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.initContainer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.initContainer.resources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetResources()).ToDataRes(types.Dict)
+	},
+	"k8s.initContainer.volumeMounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetVolumeMounts()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.initContainer.volumeDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetVolumeDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.initContainer.imagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetImagePullPolicy()).ToDataRes(types.String)
+	},
+	"k8s.initContainer.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.initContainer.workingDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetWorkingDir()).ToDataRes(types.String)
+	},
+	"k8s.initContainer.tty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetTty()).ToDataRes(types.Bool)
+	},
+	"k8s.initContainer.env": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetEnv()).ToDataRes(types.Dict)
+	},
+	"k8s.initContainer.envFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sInitContainer).GetEnvFrom()).ToDataRes(types.Dict)
+	},
+	"k8s.ephemeralContainer.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.ephemeralContainer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetName()).ToDataRes(types.String)
+	},
+	"k8s.ephemeralContainer.imageName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetImageName()).ToDataRes(types.String)
+	},
+	"k8s.ephemeralContainer.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetImage()).ToDataRes(types.String)
+	},
+	"k8s.ephemeralContainer.command": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetCommand()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.ephemeralContainer.args": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetArgs()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.ephemeralContainer.volumeMounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetVolumeMounts()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.ephemeralContainer.volumeDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetVolumeDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"k8s.ephemeralContainer.imagePullPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetImagePullPolicy()).ToDataRes(types.String)
+	},
+	"k8s.ephemeralContainer.securityContext": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetSecurityContext()).ToDataRes(types.Dict)
+	},
+	"k8s.ephemeralContainer.workingDir": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetWorkingDir()).ToDataRes(types.String)
+	},
+	"k8s.ephemeralContainer.tty": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetTty()).ToDataRes(types.Bool)
+	},
+	"k8s.ephemeralContainer.env": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetEnv()).ToDataRes(types.Dict)
+	},
+	"k8s.ephemeralContainer.envFrom": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sEphemeralContainer).GetEnvFrom()).ToDataRes(types.Dict)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -131,6 +337,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		},
 	"k8s.nodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Nodes, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Pods, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.node.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -165,6 +375,270 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sNode).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"k8s.pod.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sPod).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.pod.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.apiVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).ApiVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.podSpec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).PodSpec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.ephemeralContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).EphemeralContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.initContainers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).InitContainers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Containers, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.pod.node": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sPod).Node, ok = plugin.RawToTValue[*mqlK8sNode](v.Value, v.Error)
+		return
+	},
+	"k8s.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sContainer).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.container.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.container.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.container.imageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.container.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.container.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Args, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Resources, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.volumeMounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).VolumeMounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.volumeDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).VolumeDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.livenessProbe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).LivenessProbe, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.readinessProbe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).ReadinessProbe, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.imagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).ImagePullPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.container.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).SecurityContext, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).WorkingDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.container.tty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Tty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.container.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).Env, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.container.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sContainer).EnvFrom, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sInitContainer).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.initContainer.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.imageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Args, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.resources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Resources, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.volumeMounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).VolumeMounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.volumeDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).VolumeDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.imagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).ImagePullPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).SecurityContext, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).WorkingDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.tty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Tty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).Env, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.initContainer.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sInitContainer).EnvFrom, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sEphemeralContainer).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ephemeralContainer.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.imageName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).ImageName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Image, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.command": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Command, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.args": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Args, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.volumeMounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).VolumeMounts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.volumeDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).VolumeDevices, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.imagePullPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).ImagePullPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.securityContext": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).SecurityContext, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.workingDir": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).WorkingDir, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.tty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Tty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.env": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).Env, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ephemeralContainer.envFrom": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sEphemeralContainer).EnvFrom, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -193,8 +667,9 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlK8s struct {
 	MqlRuntime *plugin.Runtime
 	__id string
-	// optional: if you define mqlK8sInternal it will be used here
+	mqlK8sInternal
 	Nodes plugin.TValue[[]interface{}]
+	Pods plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -242,6 +717,22 @@ func (c *mqlK8s) GetNodes() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.nodes()
+	})
+}
+
+func (c *mqlK8s) GetPods() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Pods, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "pods")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.pods()
 	})
 }
 
@@ -326,4 +817,542 @@ func (c *mqlK8sNode) GetName() *plugin.TValue[string] {
 
 func (c *mqlK8sNode) GetKind() *plugin.TValue[string] {
 	return &c.Kind
+}
+
+// mqlK8sPod for the k8s.pod resource
+type mqlK8sPod struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sPodInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	ApiVersion plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	PodSpec plugin.TValue[interface{}]
+	EphemeralContainers plugin.TValue[[]interface{}]
+	InitContainers plugin.TValue[[]interface{}]
+	Containers plugin.TValue[[]interface{}]
+	Node plugin.TValue[*mqlK8sNode]
+}
+
+// createK8sPod creates a new instance of this resource
+func createK8sPod(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sPod{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.pod", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sPod) MqlName() string {
+	return "k8s.pod"
+}
+
+func (c *mqlK8sPod) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sPod) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sPod) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sPod) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sPod) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sPod) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sPod) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sPod) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sPod) GetApiVersion() *plugin.TValue[string] {
+	return &c.ApiVersion
+}
+
+func (c *mqlK8sPod) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sPod) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sPod) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sPod) GetPodSpec() *plugin.TValue[interface{}] {
+	return &c.PodSpec
+}
+
+func (c *mqlK8sPod) GetEphemeralContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.EphemeralContainers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "ephemeralContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ephemeralContainers()
+	})
+}
+
+func (c *mqlK8sPod) GetInitContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.InitContainers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "initContainers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.initContainers()
+	})
+}
+
+func (c *mqlK8sPod) GetContainers() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Containers, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "containers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.containers()
+	})
+}
+
+func (c *mqlK8sPod) GetNode() *plugin.TValue[*mqlK8sNode] {
+	return plugin.GetOrCompute[*mqlK8sNode](&c.Node, func() (*mqlK8sNode, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s.pod", c.__id, "node")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlK8sNode), nil
+			}
+		}
+
+		return c.node()
+	})
+}
+
+// mqlK8sContainer for the k8s.container resource
+type mqlK8sContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sContainerInternal it will be used here
+	Uid plugin.TValue[string]
+	Name plugin.TValue[string]
+	ImageName plugin.TValue[string]
+	Image plugin.TValue[string]
+	Command plugin.TValue[[]interface{}]
+	Args plugin.TValue[[]interface{}]
+	Resources plugin.TValue[interface{}]
+	VolumeMounts plugin.TValue[[]interface{}]
+	VolumeDevices plugin.TValue[[]interface{}]
+	LivenessProbe plugin.TValue[interface{}]
+	ReadinessProbe plugin.TValue[interface{}]
+	ImagePullPolicy plugin.TValue[string]
+	SecurityContext plugin.TValue[interface{}]
+	WorkingDir plugin.TValue[string]
+	Tty plugin.TValue[bool]
+	Env plugin.TValue[interface{}]
+	EnvFrom plugin.TValue[interface{}]
+}
+
+// createK8sContainer creates a new instance of this resource
+func createK8sContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.container", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sContainer) MqlName() string {
+	return "k8s.container"
+}
+
+func (c *mqlK8sContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sContainer) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sContainer) GetImageName() *plugin.TValue[string] {
+	return &c.ImageName
+}
+
+func (c *mqlK8sContainer) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlK8sContainer) GetCommand() *plugin.TValue[[]interface{}] {
+	return &c.Command
+}
+
+func (c *mqlK8sContainer) GetArgs() *plugin.TValue[[]interface{}] {
+	return &c.Args
+}
+
+func (c *mqlK8sContainer) GetResources() *plugin.TValue[interface{}] {
+	return &c.Resources
+}
+
+func (c *mqlK8sContainer) GetVolumeMounts() *plugin.TValue[[]interface{}] {
+	return &c.VolumeMounts
+}
+
+func (c *mqlK8sContainer) GetVolumeDevices() *plugin.TValue[[]interface{}] {
+	return &c.VolumeDevices
+}
+
+func (c *mqlK8sContainer) GetLivenessProbe() *plugin.TValue[interface{}] {
+	return &c.LivenessProbe
+}
+
+func (c *mqlK8sContainer) GetReadinessProbe() *plugin.TValue[interface{}] {
+	return &c.ReadinessProbe
+}
+
+func (c *mqlK8sContainer) GetImagePullPolicy() *plugin.TValue[string] {
+	return &c.ImagePullPolicy
+}
+
+func (c *mqlK8sContainer) GetSecurityContext() *plugin.TValue[interface{}] {
+	return &c.SecurityContext
+}
+
+func (c *mqlK8sContainer) GetWorkingDir() *plugin.TValue[string] {
+	return &c.WorkingDir
+}
+
+func (c *mqlK8sContainer) GetTty() *plugin.TValue[bool] {
+	return &c.Tty
+}
+
+func (c *mqlK8sContainer) GetEnv() *plugin.TValue[interface{}] {
+	return &c.Env
+}
+
+func (c *mqlK8sContainer) GetEnvFrom() *plugin.TValue[interface{}] {
+	return &c.EnvFrom
+}
+
+// mqlK8sInitContainer for the k8s.initContainer resource
+type mqlK8sInitContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sInitContainerInternal it will be used here
+	Uid plugin.TValue[string]
+	Name plugin.TValue[string]
+	ImageName plugin.TValue[string]
+	Image plugin.TValue[string]
+	Command plugin.TValue[[]interface{}]
+	Args plugin.TValue[[]interface{}]
+	Resources plugin.TValue[interface{}]
+	VolumeMounts plugin.TValue[[]interface{}]
+	VolumeDevices plugin.TValue[[]interface{}]
+	ImagePullPolicy plugin.TValue[string]
+	SecurityContext plugin.TValue[interface{}]
+	WorkingDir plugin.TValue[string]
+	Tty plugin.TValue[bool]
+	Env plugin.TValue[interface{}]
+	EnvFrom plugin.TValue[interface{}]
+}
+
+// createK8sInitContainer creates a new instance of this resource
+func createK8sInitContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sInitContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.initContainer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sInitContainer) MqlName() string {
+	return "k8s.initContainer"
+}
+
+func (c *mqlK8sInitContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sInitContainer) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sInitContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sInitContainer) GetImageName() *plugin.TValue[string] {
+	return &c.ImageName
+}
+
+func (c *mqlK8sInitContainer) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlK8sInitContainer) GetCommand() *plugin.TValue[[]interface{}] {
+	return &c.Command
+}
+
+func (c *mqlK8sInitContainer) GetArgs() *plugin.TValue[[]interface{}] {
+	return &c.Args
+}
+
+func (c *mqlK8sInitContainer) GetResources() *plugin.TValue[interface{}] {
+	return &c.Resources
+}
+
+func (c *mqlK8sInitContainer) GetVolumeMounts() *plugin.TValue[[]interface{}] {
+	return &c.VolumeMounts
+}
+
+func (c *mqlK8sInitContainer) GetVolumeDevices() *plugin.TValue[[]interface{}] {
+	return &c.VolumeDevices
+}
+
+func (c *mqlK8sInitContainer) GetImagePullPolicy() *plugin.TValue[string] {
+	return &c.ImagePullPolicy
+}
+
+func (c *mqlK8sInitContainer) GetSecurityContext() *plugin.TValue[interface{}] {
+	return &c.SecurityContext
+}
+
+func (c *mqlK8sInitContainer) GetWorkingDir() *plugin.TValue[string] {
+	return &c.WorkingDir
+}
+
+func (c *mqlK8sInitContainer) GetTty() *plugin.TValue[bool] {
+	return &c.Tty
+}
+
+func (c *mqlK8sInitContainer) GetEnv() *plugin.TValue[interface{}] {
+	return &c.Env
+}
+
+func (c *mqlK8sInitContainer) GetEnvFrom() *plugin.TValue[interface{}] {
+	return &c.EnvFrom
+}
+
+// mqlK8sEphemeralContainer for the k8s.ephemeralContainer resource
+type mqlK8sEphemeralContainer struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sEphemeralContainerInternal it will be used here
+	Uid plugin.TValue[string]
+	Name plugin.TValue[string]
+	ImageName plugin.TValue[string]
+	Image plugin.TValue[string]
+	Command plugin.TValue[[]interface{}]
+	Args plugin.TValue[[]interface{}]
+	VolumeMounts plugin.TValue[[]interface{}]
+	VolumeDevices plugin.TValue[[]interface{}]
+	ImagePullPolicy plugin.TValue[string]
+	SecurityContext plugin.TValue[interface{}]
+	WorkingDir plugin.TValue[string]
+	Tty plugin.TValue[bool]
+	Env plugin.TValue[interface{}]
+	EnvFrom plugin.TValue[interface{}]
+}
+
+// createK8sEphemeralContainer creates a new instance of this resource
+func createK8sEphemeralContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sEphemeralContainer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ephemeralContainer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sEphemeralContainer) MqlName() string {
+	return "k8s.ephemeralContainer"
+}
+
+func (c *mqlK8sEphemeralContainer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sEphemeralContainer) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sEphemeralContainer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sEphemeralContainer) GetImageName() *plugin.TValue[string] {
+	return &c.ImageName
+}
+
+func (c *mqlK8sEphemeralContainer) GetImage() *plugin.TValue[string] {
+	return &c.Image
+}
+
+func (c *mqlK8sEphemeralContainer) GetCommand() *plugin.TValue[[]interface{}] {
+	return &c.Command
+}
+
+func (c *mqlK8sEphemeralContainer) GetArgs() *plugin.TValue[[]interface{}] {
+	return &c.Args
+}
+
+func (c *mqlK8sEphemeralContainer) GetVolumeMounts() *plugin.TValue[[]interface{}] {
+	return &c.VolumeMounts
+}
+
+func (c *mqlK8sEphemeralContainer) GetVolumeDevices() *plugin.TValue[[]interface{}] {
+	return &c.VolumeDevices
+}
+
+func (c *mqlK8sEphemeralContainer) GetImagePullPolicy() *plugin.TValue[string] {
+	return &c.ImagePullPolicy
+}
+
+func (c *mqlK8sEphemeralContainer) GetSecurityContext() *plugin.TValue[interface{}] {
+	return &c.SecurityContext
+}
+
+func (c *mqlK8sEphemeralContainer) GetWorkingDir() *plugin.TValue[string] {
+	return &c.WorkingDir
+}
+
+func (c *mqlK8sEphemeralContainer) GetTty() *plugin.TValue[bool] {
+	return &c.Tty
+}
+
+func (c *mqlK8sEphemeralContainer) GetEnv() *plugin.TValue[interface{}] {
+	return &c.Env
+}
+
+func (c *mqlK8sEphemeralContainer) GetEnvFrom() *plugin.TValue[interface{}] {
+	return &c.EnvFrom
 }
