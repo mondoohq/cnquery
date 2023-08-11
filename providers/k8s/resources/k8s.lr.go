@@ -82,6 +82,34 @@ func init() {
 			// to override args, implement: initK8sService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createK8sService,
 		},
+		"k8s.ingressresourceref": {
+			// to override args, implement: initK8sIngressresourceref(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sIngressresourceref,
+		},
+		"k8s.ingressservicebackend": {
+			// to override args, implement: initK8sIngressservicebackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sIngressservicebackend,
+		},
+		"k8s.ingressbackend": {
+			// to override args, implement: initK8sIngressbackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sIngressbackend,
+		},
+		"k8s.ingresshttprulepath": {
+			// to override args, implement: initK8sIngresshttprulepath(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sIngresshttprulepath,
+		},
+		"k8s.ingressrule": {
+			// to override args, implement: initK8sIngressrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sIngressrule,
+		},
+		"k8s.ingresstls": {
+			// to override args, implement: initK8sIngresstls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sIngresstls,
+		},
+		"k8s.ingress": {
+			// to override args, implement: initK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createK8sIngress,
+		},
 	}
 }
 
@@ -188,6 +216,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"k8s.services": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8s).GetServices()).ToDataRes(types.Array(types.Resource("k8s.service")))
+	},
+	"k8s.ingresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8s).GetIngresses()).ToDataRes(types.Array(types.Resource("k8s.ingress")))
 	},
 	"k8s.apiresource.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sApiresource).GetName()).ToDataRes(types.String)
@@ -780,6 +811,105 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"k8s.service.spec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlK8sService).GetSpec()).ToDataRes(types.Dict)
 	},
+	"k8s.ingressresourceref.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressresourceref).GetId()).ToDataRes(types.String)
+	},
+	"k8s.ingressresourceref.apiGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressresourceref).GetApiGroup()).ToDataRes(types.String)
+	},
+	"k8s.ingressresourceref.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressresourceref).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.ingressresourceref.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressresourceref).GetName()).ToDataRes(types.String)
+	},
+	"k8s.ingressservicebackend.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressservicebackend).GetId()).ToDataRes(types.String)
+	},
+	"k8s.ingressservicebackend.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressservicebackend).GetName()).ToDataRes(types.String)
+	},
+	"k8s.ingressservicebackend.portName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressservicebackend).GetPortName()).ToDataRes(types.String)
+	},
+	"k8s.ingressservicebackend.portNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressservicebackend).GetPortNumber()).ToDataRes(types.Int)
+	},
+	"k8s.ingressbackend.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressbackend).GetId()).ToDataRes(types.String)
+	},
+	"k8s.ingressbackend.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressbackend).GetService()).ToDataRes(types.Resource("k8s.ingressservicebackend"))
+	},
+	"k8s.ingressbackend.resourceRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressbackend).GetResourceRef()).ToDataRes(types.Resource("k8s.ingressresourceref"))
+	},
+	"k8s.ingresshttprulepath.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngresshttprulepath).GetId()).ToDataRes(types.String)
+	},
+	"k8s.ingresshttprulepath.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngresshttprulepath).GetPath()).ToDataRes(types.String)
+	},
+	"k8s.ingresshttprulepath.pathType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngresshttprulepath).GetPathType()).ToDataRes(types.String)
+	},
+	"k8s.ingresshttprulepath.backend": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngresshttprulepath).GetBackend()).ToDataRes(types.Resource("k8s.ingressbackend"))
+	},
+	"k8s.ingressrule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressrule).GetId()).ToDataRes(types.String)
+	},
+	"k8s.ingressrule.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressrule).GetHost()).ToDataRes(types.String)
+	},
+	"k8s.ingressrule.httpPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngressrule).GetHttpPaths()).ToDataRes(types.Array(types.Resource("k8s.ingresshttprulepath")))
+	},
+	"k8s.ingresstls.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngresstls).GetId()).ToDataRes(types.String)
+	},
+	"k8s.ingresstls.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngresstls).GetHosts()).ToDataRes(types.Array(types.String))
+	},
+	"k8s.ingresstls.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngresstls).GetCertificates()).ToDataRes(types.Array(types.Resource("core.certificate")))
+	},
+	"k8s.ingress.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetId()).ToDataRes(types.String)
+	},
+	"k8s.ingress.uid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetUid()).ToDataRes(types.String)
+	},
+	"k8s.ingress.resourceVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetResourceVersion()).ToDataRes(types.String)
+	},
+	"k8s.ingress.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.ingress.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"k8s.ingress.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetName()).ToDataRes(types.String)
+	},
+	"k8s.ingress.namespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetNamespace()).ToDataRes(types.String)
+	},
+	"k8s.ingress.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetKind()).ToDataRes(types.String)
+	},
+	"k8s.ingress.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetCreated()).ToDataRes(types.Time)
+	},
+	"k8s.ingress.manifest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetManifest()).ToDataRes(types.Dict)
+	},
+	"k8s.ingress.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetRules()).ToDataRes(types.Array(types.Resource("k8s.ingressrule")))
+	},
+	"k8s.ingress.tls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlK8sIngress).GetTls()).ToDataRes(types.Array(types.Resource("k8s.ingresstls")))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -846,6 +976,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 	},
 	"k8s.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlK8s).Services, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8s).Ingresses, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
 		return
 	},
 	"k8s.apiresource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1700,6 +1834,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool {
 		r.(*mqlK8sService).Spec, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
 		return
 	},
+	"k8s.ingressresourceref.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sIngressresourceref).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ingressresourceref.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressresourceref).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressresourceref.apiGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressresourceref).ApiGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressresourceref.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressresourceref).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressresourceref.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressresourceref).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressservicebackend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sIngressservicebackend).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ingressservicebackend.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressservicebackend).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressservicebackend.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressservicebackend).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressservicebackend.portName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressservicebackend).PortName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressservicebackend.portNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressservicebackend).PortNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressbackend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sIngressbackend).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ingressbackend.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressbackend).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressbackend.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressbackend).Service, ok = plugin.RawToTValue[*mqlK8sIngressservicebackend](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressbackend.resourceRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressbackend).ResourceRef, ok = plugin.RawToTValue[*mqlK8sIngressresourceref](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresshttprulepath.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sIngresshttprulepath).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ingresshttprulepath.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngresshttprulepath).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresshttprulepath.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngresshttprulepath).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresshttprulepath.pathType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngresshttprulepath).PathType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresshttprulepath.backend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngresshttprulepath).Backend, ok = plugin.RawToTValue[*mqlK8sIngressbackend](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressrule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sIngressrule).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ingressrule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressrule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressrule.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressrule).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingressrule.httpPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngressrule).HttpPaths, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresstls.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sIngresstls).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ingresstls.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngresstls).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresstls.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngresstls).Hosts, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingresstls.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngresstls).Certificates, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+			r.(*mqlK8sIngress).__id, ok = v.Value.(string)
+			return
+		},
+	"k8s.ingress.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.uid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Uid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.resourceVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).ResourceVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Labels, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Annotations, ok = plugin.RawToTValue[map[string]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.namespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Namespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.manifest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Manifest, ok = plugin.RawToTValue[interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Rules, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
+	"k8s.ingress.tls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlK8sIngress).Tls, ok = plugin.RawToTValue[[]interface{}](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1742,6 +2036,7 @@ type mqlK8s struct {
 	Secrets plugin.TValue[[]interface{}]
 	Configmaps plugin.TValue[[]interface{}]
 	Services plugin.TValue[[]interface{}]
+	Ingresses plugin.TValue[[]interface{}]
 }
 
 // createK8s creates a new instance of this resource
@@ -1981,6 +2276,22 @@ func (c *mqlK8s) GetServices() *plugin.TValue[[]interface{}] {
 		}
 
 		return c.services()
+	})
+}
+
+func (c *mqlK8s) GetIngresses() *plugin.TValue[[]interface{}] {
+	return plugin.GetOrCompute[[]interface{}](&c.Ingresses, func() ([]interface{}, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("k8s", c.__id, "ingresses")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]interface{}), nil
+			}
+		}
+
+		return c.ingresses()
 	})
 }
 
@@ -3955,4 +4266,481 @@ func (c *mqlK8sService) GetManifest() *plugin.TValue[interface{}] {
 
 func (c *mqlK8sService) GetSpec() *plugin.TValue[interface{}] {
 	return &c.Spec
+}
+
+// mqlK8sIngressresourceref for the k8s.ingressresourceref resource
+type mqlK8sIngressresourceref struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sIngressresourcerefInternal it will be used here
+	Id plugin.TValue[string]
+	ApiGroup plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Name plugin.TValue[string]
+}
+
+// createK8sIngressresourceref creates a new instance of this resource
+func createK8sIngressresourceref(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sIngressresourceref{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ingressresourceref", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sIngressresourceref) MqlName() string {
+	return "k8s.ingressresourceref"
+}
+
+func (c *mqlK8sIngressresourceref) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sIngressresourceref) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sIngressresourceref) GetApiGroup() *plugin.TValue[string] {
+	return &c.ApiGroup
+}
+
+func (c *mqlK8sIngressresourceref) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sIngressresourceref) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+// mqlK8sIngressservicebackend for the k8s.ingressservicebackend resource
+type mqlK8sIngressservicebackend struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sIngressservicebackendInternal it will be used here
+	Id plugin.TValue[string]
+	Name plugin.TValue[string]
+	PortName plugin.TValue[string]
+	PortNumber plugin.TValue[int64]
+}
+
+// createK8sIngressservicebackend creates a new instance of this resource
+func createK8sIngressservicebackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sIngressservicebackend{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ingressservicebackend", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sIngressservicebackend) MqlName() string {
+	return "k8s.ingressservicebackend"
+}
+
+func (c *mqlK8sIngressservicebackend) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sIngressservicebackend) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sIngressservicebackend) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sIngressservicebackend) GetPortName() *plugin.TValue[string] {
+	return &c.PortName
+}
+
+func (c *mqlK8sIngressservicebackend) GetPortNumber() *plugin.TValue[int64] {
+	return &c.PortNumber
+}
+
+// mqlK8sIngressbackend for the k8s.ingressbackend resource
+type mqlK8sIngressbackend struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sIngressbackendInternal it will be used here
+	Id plugin.TValue[string]
+	Service plugin.TValue[*mqlK8sIngressservicebackend]
+	ResourceRef plugin.TValue[*mqlK8sIngressresourceref]
+}
+
+// createK8sIngressbackend creates a new instance of this resource
+func createK8sIngressbackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sIngressbackend{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ingressbackend", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sIngressbackend) MqlName() string {
+	return "k8s.ingressbackend"
+}
+
+func (c *mqlK8sIngressbackend) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sIngressbackend) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sIngressbackend) GetService() *plugin.TValue[*mqlK8sIngressservicebackend] {
+	return &c.Service
+}
+
+func (c *mqlK8sIngressbackend) GetResourceRef() *plugin.TValue[*mqlK8sIngressresourceref] {
+	return &c.ResourceRef
+}
+
+// mqlK8sIngresshttprulepath for the k8s.ingresshttprulepath resource
+type mqlK8sIngresshttprulepath struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sIngresshttprulepathInternal it will be used here
+	Id plugin.TValue[string]
+	Path plugin.TValue[string]
+	PathType plugin.TValue[string]
+	Backend plugin.TValue[*mqlK8sIngressbackend]
+}
+
+// createK8sIngresshttprulepath creates a new instance of this resource
+func createK8sIngresshttprulepath(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sIngresshttprulepath{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ingresshttprulepath", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sIngresshttprulepath) MqlName() string {
+	return "k8s.ingresshttprulepath"
+}
+
+func (c *mqlK8sIngresshttprulepath) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sIngresshttprulepath) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sIngresshttprulepath) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlK8sIngresshttprulepath) GetPathType() *plugin.TValue[string] {
+	return &c.PathType
+}
+
+func (c *mqlK8sIngresshttprulepath) GetBackend() *plugin.TValue[*mqlK8sIngressbackend] {
+	return &c.Backend
+}
+
+// mqlK8sIngressrule for the k8s.ingressrule resource
+type mqlK8sIngressrule struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sIngressruleInternal it will be used here
+	Id plugin.TValue[string]
+	Host plugin.TValue[string]
+	HttpPaths plugin.TValue[[]interface{}]
+}
+
+// createK8sIngressrule creates a new instance of this resource
+func createK8sIngressrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sIngressrule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ingressrule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sIngressrule) MqlName() string {
+	return "k8s.ingressrule"
+}
+
+func (c *mqlK8sIngressrule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sIngressrule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sIngressrule) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlK8sIngressrule) GetHttpPaths() *plugin.TValue[[]interface{}] {
+	return &c.HttpPaths
+}
+
+// mqlK8sIngresstls for the k8s.ingresstls resource
+type mqlK8sIngresstls struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	// optional: if you define mqlK8sIngresstlsInternal it will be used here
+	Id plugin.TValue[string]
+	Hosts plugin.TValue[[]interface{}]
+	Certificates plugin.TValue[[]interface{}]
+}
+
+// createK8sIngresstls creates a new instance of this resource
+func createK8sIngresstls(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sIngresstls{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ingresstls", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sIngresstls) MqlName() string {
+	return "k8s.ingresstls"
+}
+
+func (c *mqlK8sIngresstls) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sIngresstls) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sIngresstls) GetHosts() *plugin.TValue[[]interface{}] {
+	return &c.Hosts
+}
+
+func (c *mqlK8sIngresstls) GetCertificates() *plugin.TValue[[]interface{}] {
+	return &c.Certificates
+}
+
+// mqlK8sIngress for the k8s.ingress resource
+type mqlK8sIngress struct {
+	MqlRuntime *plugin.Runtime
+	__id string
+	mqlK8sIngressInternal
+	Id plugin.TValue[string]
+	Uid plugin.TValue[string]
+	ResourceVersion plugin.TValue[string]
+	Labels plugin.TValue[map[string]interface{}]
+	Annotations plugin.TValue[map[string]interface{}]
+	Name plugin.TValue[string]
+	Namespace plugin.TValue[string]
+	Kind plugin.TValue[string]
+	Created plugin.TValue[*time.Time]
+	Manifest plugin.TValue[interface{}]
+	Rules plugin.TValue[[]interface{}]
+	Tls plugin.TValue[[]interface{}]
+}
+
+// createK8sIngress creates a new instance of this resource
+func createK8sIngress(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlK8sIngress{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+	res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("k8s.ingress", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlK8sIngress) MqlName() string {
+	return "k8s.ingress"
+}
+
+func (c *mqlK8sIngress) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlK8sIngress) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlK8sIngress) GetUid() *plugin.TValue[string] {
+	return &c.Uid
+}
+
+func (c *mqlK8sIngress) GetResourceVersion() *plugin.TValue[string] {
+	return &c.ResourceVersion
+}
+
+func (c *mqlK8sIngress) GetLabels() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Labels, func() (map[string]interface{}, error) {
+		return c.labels()
+	})
+}
+
+func (c *mqlK8sIngress) GetAnnotations() *plugin.TValue[map[string]interface{}] {
+	return plugin.GetOrCompute[map[string]interface{}](&c.Annotations, func() (map[string]interface{}, error) {
+		return c.annotations()
+	})
+}
+
+func (c *mqlK8sIngress) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlK8sIngress) GetNamespace() *plugin.TValue[string] {
+	return &c.Namespace
+}
+
+func (c *mqlK8sIngress) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlK8sIngress) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlK8sIngress) GetManifest() *plugin.TValue[interface{}] {
+	return &c.Manifest
+}
+
+func (c *mqlK8sIngress) GetRules() *plugin.TValue[[]interface{}] {
+	return &c.Rules
+}
+
+func (c *mqlK8sIngress) GetTls() *plugin.TValue[[]interface{}] {
+	return &c.Tls
 }

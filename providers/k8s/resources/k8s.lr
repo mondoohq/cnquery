@@ -31,6 +31,8 @@ k8s {
   configmaps() []k8s.configmap
   // Kubernetes Services
   services() []k8s.service
+  // Kubernetes Ingresses
+  ingresses() []k8s.ingress
 }
 
 // Kubernetes API Resources
@@ -489,4 +491,98 @@ private k8s.service @defaults("namespace name created") {
   manifest dict
   // Service Spec
   spec dict
+}
+
+// Kubernetes Ingress Resource Backend
+private k8s.ingressresourceref @defaults("name kind") {
+  // Mondoo ID for Object
+  id string
+  // APIGroup specified as part of the resource reference
+  apiGroup string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Name
+  name string
+}
+
+// Kubernetes Ingress Service Backend
+private k8s.ingressservicebackend @defaults("name") {
+  // Mondoo ID for Object
+  id string
+  // Kubernetes Service Name
+  name string
+  // Kubernetes Service Port Name
+  portName string
+  // Kubernetes Service Port Number
+  portNumber int
+}
+
+// Kubernetes Ingress Backend
+private k8s.ingressbackend @defaults("id") {
+  // Mondoo ID for Object
+  id string
+  // Kubernetes Service for Ingress Backend
+  service k8s.ingressservicebackend
+  // Kubernetes Resource Reference for Ingress Backend
+  resourceRef k8s.ingressresourceref
+}
+
+// Kubernetes Ingress HTTP Rule
+private k8s.ingresshttprulepath {
+  // Mondoo ID for Object
+  id string
+  // HTTP path for Ingress Rule
+  path string
+  // PathType for Ingress Rule
+  pathType string
+  // Backend to forward matching Ingress Traffic
+  backend k8s.ingressbackend
+}
+
+// Kubernetes Ingress Rule
+private k8s.ingressrule {
+  // Mondoo ID for Object
+  id string
+  // Hostname to match for Ingress Rule
+  host string
+  // HTTP paths to managed Ingress for
+  httpPaths []k8s.ingresshttprulepath
+}
+
+// Kubernetes Ingress TLS
+private k8s.ingresstls {
+  // Mondoo ID for Object
+  id string
+  // List of hosts associated with TLS certificate
+  hosts []string
+  // Certificates data from TLS Secret
+  certificates []core.certificate
+}
+
+// Kubernetes Ingress
+private k8s.ingress @defaults("namespace name created") {
+  // Mondoo ID for Kubernetes Object
+  id string
+  // Kubernetes Object UID
+  uid string
+  // Kubernetes Resource Version
+  resourceVersion string
+  // Kubernetes Labels
+  labels() map[string]string
+  // Kubernetes Annotations
+  annotations() map[string]string
+  // Kubernetes Object Name
+  name string
+  // Kubernetes Object Namespace
+  namespace string
+  // Kubernetes Object Type
+  kind string
+  // Kubernetes Object Creation Timestamp
+  created time
+  // Full resource manifest
+  manifest dict
+  // Ingress rules
+  rules []k8s.ingressrule
+  // Ingress TLS data
+  tls []k8s.ingresstls
 }
